@@ -29,7 +29,8 @@ func _build() -> void:
 	anchor_bottom = 0.0
 	grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	grow_vertical = Control.GROW_DIRECTION_END
-	offset_top = 8.0
+	# Unter die HUD-Kopfleiste setzen, damit sich Debug-Panel und Punkte-Anzeige nicht überlappen.
+	offset_top = 60.0
 	offset_right = -8.0
 
 	var root := VBoxContainer.new()

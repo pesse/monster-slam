@@ -8,6 +8,7 @@ extends Node
 
 ## --- Wave / spawn lifecycle ---
 signal wave_started(wave_id: String)
+signal wave_totals(total: int)
 signal wave_cleared(wave_id: String)
 signal monster_spawned(monster: Dictionary)
 signal monster_reached_fortress(monster: Dictionary)

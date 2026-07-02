@@ -74,6 +74,9 @@ func show_stats(data: Dictionary) -> void:
 	var won := bool(data.get("won", true))
 	_title.text = "Welle %d geräumt!" % int(data.get("wave_number", 0)) if won \
 			else "Festung gefallen (Welle %d)" % int(data.get("wave_number", 0))
+	# Ergebnis-Titel einfärben (passt zu den grün/rot-Feedbackfarben des Spiels).
+	_title.add_theme_color_override("font_color",
+			Color(0.3, 1.0, 0.45) if won else Color(1.0, 0.35, 0.35))
 
 	for child in _lines.get_children():
 		child.queue_free()

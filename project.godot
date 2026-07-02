@@ -28,6 +28,10 @@ PlayerProgress="*res://src/learning/player_progress.gd"
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
+[gui]
+
+theme/custom="res://scenes/ui/ui_theme.tres"
+
 [rendering]
 
 renderer/rendering_method="gl_compatibility"

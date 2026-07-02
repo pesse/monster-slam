@@ -350,6 +350,8 @@ func _start_next_wave() -> void:
 		_total += int(entry.get("count", 0))
 	# Löst den HP-Reset (GameState) + HUD-Refresh aus.
 	EventBus.wave_started.emit(GameState.current_wave)
+	# Gesamtzahl der Welle bekanntgeben -> GameState füllt wave_total/wave_resolved (HUD-Balken).
+	EventBus.wave_totals.emit(_total)
 	for entry in spawns:
 		_run_spawn_batch(entry, gen)
 
