@@ -23,6 +23,7 @@ var _finished: bool = false
 var _cam_base: Vector3
 var _shake_left: float = 0.0
 var _shake_mag: float = SHAKE_MAGNITUDE
+var _rng := RandomNumberGenerator.new()
 
 @onready var _monsters: Node3D = $Monsters
 @onready var _camera: Camera3D = $CameraPivot/Camera3D
@@ -31,6 +32,7 @@ var _shake_mag: float = SHAKE_MAGNITUDE
 
 
 func _ready() -> void:
+	_rng.randomize()
 	_setup_view()
 	_setup_ground()
 	_decorate()
@@ -52,7 +54,7 @@ var _terrain_noise: FastNoiseLite
 
 func _setup_ground() -> void:
 	var noise := FastNoiseLite.new()
-	noise.seed = 1337
+	noise.seed = _rng.randi()
 	noise.frequency = 0.06
 	_terrain_noise = noise
 	var st := SurfaceTool.new()
@@ -116,52 +118,46 @@ func _ground_y(x: float, z: float) -> float:
 	return _terrain_height(x, z, _terrain_noise) if _terrain_noise != null else 0.0
 
 
-## Platziert ein Modell (filename inkl. Endung) auf Terrain-Höhe.
-func _scatter(parent: Node3D, filename: String, x: float, z: float, yaw: float, scale: float) -> void:
-	_place_model(parent, filename, Vector3(x, _ground_y(x, z), z), yaw, Vector3.ONE * scale)
+## Platziert ein Modell (filename inkl. Endung) auf Terrain-Höhe mit zufälliger
+## Drehung; Position/Skalierung kommen vom Aufrufer.
+func _scatter(parent: Node3D, filename: String, x: float, z: float, scale: float) -> void:
+	_place_model(parent, filename, Vector3(x, _ground_y(x, z), z), _rng.randf_range(0.0, 360.0), Vector3.ONE * scale)
 
 
-## Streudekoration im offenen Gelände: Bäume auf den Randhügeln, Grasbüschel und
-## Steine über dem Feld, dazu ein paar Requisiten und zwei Fackelsäulen. Keine
-## umschließenden Wände. Der Lauf-Korridor (x ~ -7..7) bleibt weitgehend frei.
+## Randomisierte Streudekoration (jeder Start anders): Bäume an den Seitenstreifen
+## (halten den Lauf-Korridor frei), Steine/Grasbüschel übers Feld, ein paar
+## Requisiten und Fackelsäulen. Alles hinter der Festung (z < 5). Fortress bleibt fix.
 func _decorate() -> void:
 	var d := Node3D.new()
 	d.name = "Decor"
 	add_child(d)
 
-	# Bäume am Rand / auf den Hügeln
-	_scatter(d, "tree.glb", -11.5, -13.0, 0.0, 1.0)
-	_scatter(d, "tree.glb", 11.5, -12.0, 40.0, 1.0)
-	_scatter(d, "tree.glb", -12.5, -5.0, 200.0, 1.0)
-	_scatter(d, "tree.glb", 12.0, -1.0, 120.0, 1.0)
-	_scatter(d, "tree.glb", -12.0, 4.0, 300.0, 0.9)
-	_scatter(d, "tree.glb", 12.0, 5.0, 60.0, 0.9)
+	# Bäume nur an den Seitenstreifen (|x| groß), damit die Bahn frei bleibt
+	for i in _rng.randi_range(5, 9):
+		var sx := (1.0 if _rng.randf() < 0.5 else -1.0) * _rng.randf_range(9.5, 12.5)
+		_scatter(d, "tree.glb", sx, _rng.randf_range(-13.0, 4.0), _rng.randf_range(0.85, 1.2))
 
-	# Steine
-	_scatter(d, "rock.glb", -6.5, -9.0, 15.0, 2.2)
-	_scatter(d, "rock.glb", 6.0, -3.0, 80.0, 2.0)
-	_scatter(d, "rock.glb", -4.5, 2.0, 200.0, 1.8)
+	# Steine über das Feld verteilt
+	for i in _rng.randi_range(3, 7):
+		_scatter(d, "rock.glb", _rng.randf_range(-10.0, 10.0), _rng.randf_range(-13.0, 4.0), _rng.randf_range(1.6, 2.6))
 
-	# Grasbüschel verstreut
-	var tufts := [
-		Vector2(-8, -10), Vector2(-3, -9), Vector2(4, -11), Vector2(8, -5),
-		Vector2(-6, -2), Vector2(2, 0), Vector2(7, 2), Vector2(-9, 3),
-		Vector2(0, -6), Vector2(-2, -12), Vector2(5, -7), Vector2(9, -1),
-	]
-	for p in tufts:
-		_scatter(d, "grass.glb", p.x, p.y, p.x * 37.0, 1.6)
+	# Grasbüschel
+	for i in _rng.randi_range(14, 22):
+		_scatter(d, "grass.glb", _rng.randf_range(-11.0, 11.0), _rng.randf_range(-13.0, 4.5), _rng.randf_range(1.2, 2.0))
 
-	# Requisiten
-	_scatter(d, "barrel_large.gltf", -9.0, -6.0, 20.0, 1.0)
-	_scatter(d, "crates_stacked.gltf", 9.0, -8.0, -15.0, 1.0)
-	_scatter(d, "barrel_large.gltf", 9.5, 0.0, 0.0, 1.0)
-	_scatter(d, "crates_stacked.gltf", -9.5, 1.0, 10.0, 1.0)
+	# Fässer/Kisten an den Rändern
+	for i in _rng.randi_range(2, 4):
+		var bx := (1.0 if _rng.randf() < 0.5 else -1.0) * _rng.randf_range(8.5, 10.5)
+		var kind := "barrel_large.gltf" if _rng.randf() < 0.5 else "crates_stacked.gltf"
+		_scatter(d, kind, bx, _rng.randf_range(-10.0, 2.0), 1.0)
 
-	# Fackelsäulen am hinteren Rand (auf Terrain-Höhe)
-	for x in [-10.0, 10.0]:
-		var gy := _ground_y(x, -11.0)
-		_place_model(d, "pillar.gltf", Vector3(x, gy, -11.0), 0.0, Vector3.ONE)
-		_place_model(d, "torch_lit.gltf", Vector3(x, gy + 4.0, -11.0), 0.0, Vector3.ONE)
+	# Zwei Fackelsäulen an zufälligen hinteren Randpositionen
+	for side: float in [-1.0, 1.0]:
+		var px := side * _rng.randf_range(9.5, 11.5)
+		var pz := _rng.randf_range(-12.0, -8.0)
+		var gy := _ground_y(px, pz)
+		_place_model(d, "pillar.gltf", Vector3(px, gy, pz), 0.0, Vector3.ONE)
+		_place_model(d, "torch_lit.gltf", Vector3(px, gy + 4.0, pz), 0.0, Vector3.ONE)
 
 
 ## Festung = fertiges Burg-Modell (CC0, Quaternius), skaliert und mittig am
