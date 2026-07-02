@@ -15,3 +15,6 @@ export_presets.cfg
 Thumbs.db
 .vscode/
 .idea/
+
+# Temp debug logs
+focus_debug.log

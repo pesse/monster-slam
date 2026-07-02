@@ -11,12 +11,14 @@ script = ExtResource("1_battle")
 [node name="Background" type="ColorRect" parent="." unique_id=491846598]
 offset_right = 1152.0
 offset_bottom = 648.0
+mouse_filter = 2
 color = Color(0.17, 0.15, 0.25, 1)
 
 [node name="Fortress" type="ColorRect" parent="." unique_id=1374900630]
 offset_top = 580.0
 offset_right = 1152.0
 offset_bottom = 648.0
+mouse_filter = 2
 color = Color(0.35, 0.3, 0.5, 1)
 
 [node name="Monsters" type="Node2D" parent="." unique_id=1608421053]
