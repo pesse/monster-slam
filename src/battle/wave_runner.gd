@@ -22,6 +22,7 @@ var _finished: bool = false
 
 var _cam_base: Vector3
 var _shake_left: float = 0.0
+var _shake_mag: float = SHAKE_MAGNITUDE
 
 @onready var _monsters: Node3D = $Monsters
 @onready var _camera: Camera3D = $CameraPivot/Camera3D
@@ -206,7 +207,7 @@ func _process(delta: float) -> void:
 	if _shake_left == 0.0:
 		_camera.position = _cam_base
 	else:
-		var mag := SHAKE_MAGNITUDE * (_shake_left / SHAKE_DURATION)
+		var mag := _shake_mag * (_shake_left / SHAKE_DURATION)
 		_camera.position = _cam_base + Vector3(randf_range(-mag, mag), randf_range(-mag, mag), 0.0)
 
 
@@ -270,8 +271,9 @@ func _on_answer_submitted(text: String) -> void:
 	_shake()
 
 
-func _shake() -> void:
+func _shake(magnitude: float = SHAKE_MAGNITUDE) -> void:
 	_shake_left = SHAKE_DURATION
+	_shake_mag = magnitude
 
 
 func _flash_feedback(color: Color) -> void:
@@ -282,9 +284,18 @@ func _flash_feedback(color: Color) -> void:
 
 func _defeat(monster: Monster) -> void:
 	_active.erase(monster)
+	_spawn_explosion(monster.position + Vector3(0.0, 1.0, 0.0), Color(0.7, 1.0, 0.4), 1.5)
 	EventBus.monster_defeated.emit(monster.monster_def, true)
 	monster.queue_free()
 	_check_end()
+
+
+## Instanziiert einen kurzlebigen Explosionseffekt an der Weltposition.
+func _spawn_explosion(pos: Vector3, color: Color, scale: float) -> void:
+	var fx := Explosion.new()
+	fx.setup(color, scale)
+	fx.position = pos
+	add_child(fx)
 
 
 ## Monster hat sich beim Erreichen der Festung selbst freigegeben.
@@ -292,6 +303,8 @@ func _on_monster_reached_goal(monster: Monster) -> void:
 	if not _active.has(monster):
 		return
 	_active.erase(monster)
+	_spawn_explosion(monster.position + Vector3(0.0, 1.0, 0.0), Color(1.0, 0.45, 0.12), 2.6)
+	_shake(0.9)
 	EventBus.fortress_damaged.emit(FORTRESS_HIT)
 	if GameState.fortress_health <= 0:
 		_end("Niederlage – die Festung ist gefallen.")
