@@ -8,20 +8,41 @@ const GOAL_Y := 560.0
 const SPAWN_Y := 40.0
 const FORTRESS_HIT := 10
 
+const SHAKE_DURATION := 0.35
+const SHAKE_MAGNITUDE := 14.0
+const FLASH_CORRECT := Color(0.3, 1.0, 0.45)
+const FLASH_WRONG := Color(1.0, 0.3, 0.3)
+
 var _evaluator := AnswerEvaluator.new()
 var _active: Array[Monster] = []
 var _total: int = 0
 var _spawned: int = 0
 var _finished: bool = false
 
+var _base_pos: Vector2
+var _shake_left: float = 0.0
+
 @onready var _monsters: Node2D = $Monsters
 @onready var _end_label: Label = $UI/EndLabel
+@onready var _flash: ColorRect = $UI/Flash
 
 
 func _ready() -> void:
+	_base_pos = position
 	GameState.reset()
 	EventBus.answer_submitted.connect(_on_answer_submitted)
 	start_wave("wave.tutorial_1")
+
+
+func _process(delta: float) -> void:
+	if _shake_left <= 0.0:
+		return
+	_shake_left = max(0.0, _shake_left - delta)
+	if _shake_left == 0.0:
+		position = _base_pos
+	else:
+		var mag := SHAKE_MAGNITUDE * (_shake_left / SHAKE_DURATION)
+		position = _base_pos + Vector2(randf_range(-mag, mag), randf_range(-mag, mag))
 
 
 func start_wave(wave_id: String) -> void:
@@ -76,8 +97,22 @@ func _on_answer_submitted(text: String) -> void:
 	for monster in _active:
 		if _evaluator.evaluate_vocab(monster.vocab, text):
 			_defeat(monster)
+			_flash_feedback(FLASH_CORRECT)
 			return
-	# Kein Treffer: bewusst ignoriert. Anknüpfpunkt für Lernsystem (Fehlversuch).
+	# Kein Treffer -> Falscheingabe: rotes Flash + Bildschirmwackeln.
+	# Anknüpfpunkt fürs Lernsystem (Fehlversuch protokollieren).
+	_flash_feedback(FLASH_WRONG)
+	_shake()
+
+
+func _shake() -> void:
+	_shake_left = SHAKE_DURATION
+
+
+func _flash_feedback(color: Color) -> void:
+	_flash.color = Color(color.r, color.g, color.b, 0.35)
+	_flash.modulate = Color(1, 1, 1, 1)
+	create_tween().tween_property(_flash, "modulate:a", 0.0, 0.4)
 
 
 func _defeat(monster: Monster) -> void:
