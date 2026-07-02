@@ -54,7 +54,7 @@ func _spawn(entry: Dictionary) -> void:
 	if def.is_empty():
 		push_warning("WaveRunner: unbekanntes Monster '%s'" % entry.get("monster", ""))
 		return
-	var candidates := ContentRegistry.vocabulary_by_tags(entry.get("vocab_tags", []))
+	var candidates: Array = ContentRegistry.vocabulary_by_tags(entry.get("vocab_tags", []))
 	if candidates.is_empty():
 		push_warning("WaveRunner: keine Vokabeln für Tags %s" % str(entry.get("vocab_tags", [])))
 		return

@@ -11,38 +11,45 @@ extends Node
 
 const DATA_ROOT := "res://data"
 
-## category name -> { id: Dictionary }
-var _catalog: Dictionary = {}
+## Per-category catalogs (id -> entry Dictionary). Filled by reload().
+var vocabulary: Dictionary = {}
+var monsters: Dictionary = {}
+var bosses: Dictionary = {}
+var skills: Dictionary = {}
+var waves: Dictionary = {}
 
-## Convenience accessors (populated in _ready).
-var vocabulary: Dictionary : get: return _catalog.get("vocabulary", {})
-var monsters: Dictionary : get: return _catalog.get("monsters", {})
-var bosses: Dictionary : get: return _catalog.get("bosses", {})
-var skills: Dictionary : get: return _catalog.get("skills", {})
-var waves: Dictionary : get: return _catalog.get("waves", {})
+## category name -> the Dictionary above (Dictionaries are references in GDScript,
+## so clearing/filling these in place also updates the member vars).
+var _by_category: Dictionary = {}
 
 
 func _ready() -> void:
+	_by_category = {
+		"vocabulary": vocabulary,
+		"monsters": monsters,
+		"bosses": bosses,
+		"skills": skills,
+		"waves": waves,
+	}
 	reload()
 
 
 ## Rescans the whole data tree. Safe to call at runtime (e.g. after adding files).
 func reload() -> void:
-	_catalog.clear()
-	for category in ["vocabulary", "monsters", "bosses", "skills", "waves"]:
-		var target: Dictionary = {}
+	for category in _by_category:
+		var target: Dictionary = _by_category[category]
+		target.clear()
 		_scan_dir("%s/%s" % [DATA_ROOT, category], target, category)
-		_catalog[category] = target
 
 
 ## Returns all entries of a category as an Array of Dictionaries.
 func all(category: String) -> Array:
-	return _catalog.get(category, {}).values()
+	return _by_category.get(category, {}).values()
 
 
 ## Returns a single entry by id, or {} if not found.
 func get_entry(category: String, id: String) -> Dictionary:
-	return _catalog.get(category, {}).get(id, {})
+	return _by_category.get(category, {}).get(id, {})
 
 
 ## Returns vocabulary entries whose "tags" intersect the requested tags.
