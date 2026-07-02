@@ -426,7 +426,9 @@ func _difficulty_to_speed(difficulty: int) -> float:
 ## Erzeugt die Spawn-Batches einer Welle prozedural. Rückgabe: Array von Dicts der Form
 ## {count, interval, task_pool} — dasselbe Format, das _run_spawn_batch/_spawn erwarten.
 func _generate_wave(difficulty: int, wave_number: int) -> Array:
-	var count := 4 + wave_number                       # wächst pro Welle
+	# Monsteranzahl wächst pro Welle UND mit der Schwierigkeit (Stufe 3 = neutral,
+	# je Stufe darüber/darunter +/- 2 Monster). Mindestens 2 Monster pro Welle.
+	var count := maxi(2, 2 + wave_number + (difficulty - 3) * 2)
 	var interval := maxf(1.5, 4.0 - 0.3 * difficulty)  # härter ⇒ schnellere Folge
 	return [{
 		"count": count,
@@ -618,8 +620,9 @@ func _finish_wave(won: bool) -> void:
 	})
 
 
-## Spieler hat auf dem Statistik-Screen die nächste Welle mit gewählter Schwierigkeit gerufen.
-func _on_next_wave_requested(difficulty: int) -> void:
-	_difficulty = difficulty
+## Spieler hat auf dem Statistik-Screen die nächste Welle gerufen. Die Wahl ist RELATIV:
+## `delta` (-2..+2) verschiebt die aktuelle Schwierigkeit, begrenzt auf 1..5.
+func _on_next_wave_requested(delta: int) -> void:
+	_difficulty = clampi(_difficulty + delta, 1, 5)
 	_wave_number += 1
 	_start_next_wave()

@@ -6,15 +6,25 @@ extends PanelContainer
 ## Controls setzen focus_mode=FOCUS_NONE, sonst reißt die Antwort-LineEdit (die sich per
 ## _process den Fokus zurückholt) den Klick weg.
 
-## Der Spieler hat die nächste Welle mit der gewählten Schwierigkeit gestartet.
-signal next_wave_requested(difficulty: int)
+## Der Spieler hat die nächste Welle gestartet; übergeben wird die Änderung der
+## Schwierigkeit RELATIV zur aktuellen (-2..+2), nicht ein absoluter Wert.
+signal next_wave_requested(difficulty_delta: int)
 
-const DIFFICULTIES := 5
+## Relative Auswahl: Beschriftung -> Delta auf die aktuelle Schwierigkeit.
+const DIFFICULTY_CHOICES := [
+	{"label": "Viel leichter", "delta": -2},
+	{"label": "Leichter", "delta": -1},
+	{"label": "Gleich", "delta": 0},
+	{"label": "Schwieriger", "delta": 1},
+	{"label": "Viel schwieriger", "delta": 2},
+]
+## Index der Standardauswahl ("Gleich").
+const DEFAULT_CHOICE := 2
 
 var _title: Label
 var _lines: VBoxContainer
-var _difficulty_buttons: Array[Button] = []
-var _selected_difficulty: int = 3
+var _choice_buttons: Array[Button] = []
+var _selected_choice: int = DEFAULT_CHOICE
 
 
 func _ready() -> void:
@@ -49,14 +59,13 @@ func _ready() -> void:
 
 	var row := HBoxContainer.new()
 	root.add_child(row)
-	for i in DIFFICULTIES:
-		var level := i + 1
+	for i in DIFFICULTY_CHOICES.size():
 		var button := Button.new()
-		button.text = str(level)
+		button.text = String(DIFFICULTY_CHOICES[i]["label"])
 		button.focus_mode = Control.FOCUS_NONE
-		button.pressed.connect(_on_difficulty_pressed.bind(level))
+		button.pressed.connect(_on_choice_pressed.bind(i))
 		row.add_child(button)
-		_difficulty_buttons.append(button)
+		_choice_buttons.append(button)
 
 	var start := Button.new()
 	start.text = "▶ Nächste Welle rufen"
@@ -64,7 +73,7 @@ func _ready() -> void:
 	start.pressed.connect(_on_start_pressed)
 	root.add_child(start)
 
-	_update_difficulty_highlight()
+	_update_choice_highlight()
 
 
 ## Befüllt den Screen mit den Statistiken einer Welle und zeigt ihn an.
@@ -87,9 +96,11 @@ func show_stats(data: Dictionary) -> void:
 	_add_line("Festung: %d HP" % int(data.get("fortress_health", 0)))
 	_add_line("Gemeisterte Aufgaben: %d  (Festungsstufe %d)" % [
 		int(data.get("mastered", 0)), int(data.get("fortress_tier", 0))])
+	_add_line("Schwierigkeit: %d / 5" % int(data.get("difficulty", 3)))
 
-	_selected_difficulty = clampi(int(data.get("difficulty", _selected_difficulty)), 1, DIFFICULTIES)
-	_update_difficulty_highlight()
+	# Auswahl startet jedesmal bei "Gleich" – die Wahl ist relativ zur eben gespielten Welle.
+	_selected_choice = DEFAULT_CHOICE
+	_update_choice_highlight()
 	visible = true
 
 
@@ -103,16 +114,16 @@ func _add_line(text: String) -> void:
 	_lines.add_child(label)
 
 
-func _on_difficulty_pressed(level: int) -> void:
-	_selected_difficulty = level
-	_update_difficulty_highlight()
+func _on_choice_pressed(index: int) -> void:
+	_selected_choice = index
+	_update_choice_highlight()
 
 
-## Markiert die gewählte Stufe (deaktivierter Button = optisch hervorgehoben).
-func _update_difficulty_highlight() -> void:
-	for i in _difficulty_buttons.size():
-		_difficulty_buttons[i].disabled = (i + 1 == _selected_difficulty)
+## Markiert die gewählte Option (deaktivierter Button = optisch hervorgehoben).
+func _update_choice_highlight() -> void:
+	for i in _choice_buttons.size():
+		_choice_buttons[i].disabled = (i == _selected_choice)
 
 
 func _on_start_pressed() -> void:
-	next_wave_requested.emit(_selected_difficulty)
+	next_wave_requested.emit(int(DIFFICULTY_CHOICES[_selected_choice]["delta"]))
