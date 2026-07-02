@@ -1,0 +1,23 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/ui/hud.gd" id="1_hud"]
+
+[node name="HUD" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("1_hud")
+
+[node name="HP" type="Label" parent="."]
+offset_left = 16.0
+offset_top = 12.0
+offset_right = 260.0
+offset_bottom = 40.0
+text = "Festung: 100"
+
+[node name="Score" type="Label" parent="."]
+offset_left = 16.0
+offset_top = 42.0
+offset_right = 260.0
+offset_bottom = 70.0
+text = "Punkte: 0"

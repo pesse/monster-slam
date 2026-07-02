@@ -1,0 +1,17 @@
+# Godot 4 - engine cache & imports
+.godot/
+/android/
+/build/
+/exports/
+
+# Godot export presets contain absolute paths / secrets
+export_presets.cfg
+
+# Auto-generated
+*.translation
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

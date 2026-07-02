@@ -1,0 +1,19 @@
+{
+  "id": "boss.grammar_golem",
+  "name": "Grammatik-Golem",
+  "description": "Kein Zeitdruck. Übersetze ganze Sätze; die Qualität bestimmt den Schaden.",
+  "hp": 5,
+  "sprite": "res://assets/sprites/bosses/grammar_golem.png",
+  "sentences": [
+    {
+      "prompt": "Der Hund läuft schnell durch den Garten.",
+      "reference": "The dog runs quickly through the garden.",
+      "hints": { "tense": "Präsens", "focus": "Adverb-Stellung" }
+    },
+    {
+      "prompt": "Gestern haben wir ein neues Haus gekauft.",
+      "reference": "Yesterday we bought a new house.",
+      "hints": { "tense": "Vergangenheit (simple past)" }
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+[gd_scene format=3 uid="uid://cbks1j2hqpynt"]
+
+[ext_resource type="Script" uid="uid://b371iyt78hokj" path="res://src/battle/wave_runner.gd" id="1_battle"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="2_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/answer_input.tscn" id="3_input"]
+
+[node name="Battle" type="Node2D" unique_id=890027799]
+position = Vector2(-1, 1)
+script = ExtResource("1_battle")
+
+[node name="Background" type="ColorRect" parent="." unique_id=491846598]
+offset_right = 1152.0
+offset_bottom = 648.0
+color = Color(0.17, 0.15, 0.25, 1)
+
+[node name="Fortress" type="ColorRect" parent="." unique_id=1374900630]
+offset_top = 580.0
+offset_right = 1152.0
+offset_bottom = 648.0
+color = Color(0.35, 0.3, 0.5, 1)
+
+[node name="Monsters" type="Node2D" parent="." unique_id=1608421053]
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=866392879]
+
+[node name="HUD" parent="UI" unique_id=1763007302 instance=ExtResource("2_hud")]
+layout_mode = 3
+anchors_preset = 15
+
+[node name="AnswerInput" parent="UI" unique_id=1649322953 instance=ExtResource("3_input")]
+anchors_preset = 7
+
+[node name="EndLabel" type="Label" parent="UI" unique_id=539658834]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = -40.0
+offset_right = 260.0
+offset_bottom = 40.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 32
+horizontal_alignment = 1
+vertical_alignment = 1

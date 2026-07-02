@@ -1,0 +1,44 @@
+[
+  {
+    "id": "skill.first_letter",
+    "name": "Erster Buchstabe",
+    "description": "Zeigt den ersten Buchstaben der Lösung an.",
+    "effect": "reveal_first_letter",
+    "cooldown": 12.0,
+    "cost": 0
+  },
+  {
+    "id": "skill.grammar_hint",
+    "name": "Grammatikhinweis",
+    "description": "Zeigt Zeitform oder Wortart der geforderten Antwort.",
+    "effect": "show_grammar_hint",
+    "cooldown": 20.0,
+    "cost": 0
+  },
+  {
+    "id": "skill.slow_time",
+    "name": "Zeitlupe",
+    "description": "Verlangsamt alle Monster kurzzeitig.",
+    "effect": "slow_monsters",
+    "params": { "factor": 0.4, "duration": 4.0 },
+    "cooldown": 30.0,
+    "cost": 0
+  },
+  {
+    "id": "skill.freeze",
+    "name": "Einfrieren",
+    "description": "Friert das nächste Monster kurz ein.",
+    "effect": "freeze_nearest",
+    "params": { "duration": 3.0 },
+    "cooldown": 25.0,
+    "cost": 0
+  },
+  {
+    "id": "skill.retry",
+    "name": "Zweite Chance",
+    "description": "Erlaubt einen erneuten Versuch nach einer falschen Antwort.",
+    "effect": "retry_answer",
+    "cooldown": 40.0,
+    "cost": 0
+  }
+]

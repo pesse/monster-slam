@@ -1,0 +1,27 @@
+[
+  {
+    "id": "wave.tutorial_1",
+    "name": "Erste Begegnung",
+    "time_pressure": "low",
+    "description": "Neue Vokabeln werden ohne Zeitdruck eingeführt.",
+    "spawns": [
+      { "monster": "monster.slime", "count": 5, "interval": 4.0, "vocab_tags": ["basics"] }
+    ]
+  },
+  {
+    "id": "wave.recall_1",
+    "name": "Schneller Abruf",
+    "time_pressure": "medium",
+    "description": "Bereits bekannte Vokabeln in schnelleren Wellen.",
+    "spawns": [
+      { "monster": "monster.goblin", "count": 6, "interval": 2.5, "vocab_tags": ["basics"] },
+      { "monster": "monster.bat", "count": 3, "interval": 2.0, "vocab_tags": ["basics"], "review_only": true }
+    ]
+  },
+  {
+    "id": "wave.boss_1",
+    "name": "Der Grammatik-Golem",
+    "time_pressure": "none",
+    "boss": "boss.grammar_golem"
+  }
+]
