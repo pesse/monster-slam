@@ -58,9 +58,8 @@ func _ready() -> void:
 	_cam_base = _camera.position
 	GameState.reset()
 	EventBus.answer_submitted.connect(_on_answer_submitted)
-	# Festung wächst mit dem Lernfortschritt: nach jeder verbuchten Antwort prüfen,
-	# ob eine höhere Stufe erreicht wurde.
-	EventBus.item_reviewed.connect(_on_item_reviewed)
+	# Die Festung wächst mit dem Lernfortschritt, aber erst NACH einer gewonnenen Welle
+	# (siehe _finish_wave) – nicht mehr mitten im Kampf.
 	var debug_panel := $UI/DebugPanel
 	if debug_panel.has_signal("fortress_tier_selected"):
 		debug_panel.fortress_tier_selected.connect(_on_debug_tier_selected)
@@ -271,17 +270,9 @@ func _rebuild_fortress(tier: int) -> void:
 	_spawn_explosion(Vector3(0.0, 1.5, GOAL_Z + 2.0), Color(1.0, 0.9, 0.4), 2.0)
 
 
-## Nach jeder verbuchten Antwort: Festung wachsen lassen, wenn eine höhere Stufe
-## erreicht ist. Bewusst nur wachsend innerhalb eines Laufs (nie schrumpfen).
-func _on_item_reviewed(_task_id: String, _correct: bool) -> void:
-	var tier := PlayerProgress.fortress_tier()
-	if tier > _fortress_tier:
-		_play_upgrade_cutscene(tier)
-
-
-## Kleine „Cutscene" beim Festungsausbau: Kamera fährt auf die neu gebaute Festung
-## heran, ein festlicher Blitz + Banner feiern die neue Stufe, danach fährt die Kamera
-## zurück. Läuft parallel zum Spiel (kurz gehalten), unterdrückt aber das Kamera-Wackeln.
+## „Cutscene" beim Festungsausbau (nach gewonnener Welle, vor der Statistik): die
+## Kamera zoomt kräftig auf die neu gebaute Festung, ein festlicher Blitz + Banner
+## feiern die neue Stufe, danach fährt die Kamera zurück. Unterdrückt das Kamera-Wackeln.
 func _play_upgrade_cutscene(tier: int) -> void:
 	_rebuild_fortress(tier)
 	# Überlappende Cutscenes vermeiden: nur die erste inszeniert, weitere bauen still um.
@@ -289,24 +280,24 @@ func _play_upgrade_cutscene(tier: int) -> void:
 		return
 	_cutscene = true
 	_shake_left = 0.0                 # laufendes Wackeln stoppen, sonst kämpft es mit der Fahrt
-	_answer_input.visible = false     # Fokus für den Moment auf die Festung
 
 	var pivot := $CameraPivot as Node3D
 	var pivot_base := pivot.position
 	var size_base := _camera.size
-	var focus := Vector3(0.0, pivot_base.y, GOAL_Z + 1.0)
+	# Ziel: Festungsmitte im Bild, deutlich herangezoomt (kleinere ortho-Größe = näher).
+	var focus := Vector3(0.0, pivot_base.y, GOAL_Z + 3.0)
 
 	# Festlicher goldener Blitz an der Festung + Banner.
 	_spawn_explosion(Vector3(0.0, 2.0, GOAL_Z + 2.0), Color(1.0, 0.85, 0.3), 3.0)
 	_show_upgrade_banner(tier)
 
-	# Heranfahren + hineinzoomen.
+	# Heranfahren + kräftig hineinzoomen.
 	var tw_in := create_tween()
 	tw_in.set_parallel(true)
-	tw_in.tween_property(pivot, "position", focus, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tw_in.tween_property(_camera, "size", size_base * 0.6, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw_in.tween_property(pivot, "position", focus, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw_in.tween_property(_camera, "size", size_base * 0.42, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	await tw_in.finished
-	await get_tree().create_timer(0.9).timeout
+	await get_tree().create_timer(1.1).timeout
 
 	# Zurückfahren.
 	var tw_out := create_tween()
@@ -315,8 +306,6 @@ func _play_upgrade_cutscene(tier: int) -> void:
 	tw_out.tween_property(_camera, "size", size_base, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await tw_out.finished
 
-	if not _finished:
-		_answer_input.visible = true
 	_cutscene = false
 
 
@@ -538,24 +527,29 @@ func _defeat(monster: Monster) -> void:
 	_check_end()
 
 
-## Kurzlebiger 3D-Text (+Punkte), der über der Trefferstelle aufsteigt und ausblendet.
-## Als Label3D (Billboard) im Stil der vorhandenen Monster-Beschriftungen.
+## Deutlich sichtbarer 3D-Text (+Punkte), der an der Trefferstelle aufpoppt, aufsteigt
+## und ausblendet. Als Label3D (Billboard) im Stil der vorhandenen Monster-Beschriftungen.
 func _spawn_score_popup(pos: Vector3, amount: int) -> void:
 	var label := Label3D.new()
 	label.text = "+%d" % amount
-	label.font_size = 96
-	label.pixel_size = 0.01
+	label.font_size = 200
+	label.pixel_size = 0.02
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.no_depth_test = true
-	label.modulate = Color(1.0, 0.85, 0.3)
-	label.outline_size = 12
-	label.outline_modulate = Color(0.1, 0.08, 0.0, 1.0)
+	label.modulate = Color(1.0, 0.9, 0.25)
+	label.outline_size = 32
+	label.outline_modulate = Color(0.15, 0.08, 0.0, 1.0)
 	label.position = pos
+	label.scale = Vector3.ONE * 0.4
 	add_child(label)
 	var tw := create_tween()
 	tw.set_parallel(true)
-	tw.tween_property(label, "position:y", pos.y + 2.5, 0.8).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tw.tween_property(label, "modulate:a", 0.0, 0.8).set_ease(Tween.EASE_IN)
+	# Kräftiger Pop beim Erscheinen.
+	tw.tween_property(label, "scale", Vector3.ONE * 1.15, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	# Deutlich höher aufsteigen, über die volle Dauer.
+	tw.tween_property(label, "position:y", pos.y + 4.0, 1.2).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	# Erst gegen Ende ausblenden, damit die Zahl gut lesbar bleibt.
+	tw.tween_property(label, "modulate:a", 0.0, 0.5).set_delay(0.7)
 	tw.chain().tween_callback(label.queue_free)
 
 
@@ -601,6 +595,11 @@ func _finish_wave(won: bool) -> void:
 	_finished = true
 	_last_won = won
 	_answer_input.visible = false
+	# Festungsausbau erst jetzt (nach gewonnener Welle), als Cutscene VOR der Statistik.
+	if won:
+		var new_tier := PlayerProgress.fortress_tier()
+		if new_tier > _fortress_tier:
+			await _play_upgrade_cutscene(new_tier)
 	var total := _wave_correct + _wave_leaked
 	var accuracy := 100.0 * float(_wave_correct) / float(max(1, total))
 	_stats.show_stats({
