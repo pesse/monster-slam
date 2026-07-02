@@ -39,6 +39,7 @@ var _rng := RandomNumberGenerator.new()
 
 var _fortress: Node3D = null
 var _fortress_tier: int = -1
+var _cutscene: bool = false   # läuft gerade die Ausbau-Cutscene? (unterdrückt Kamera-Wackeln)
 
 @onready var _monsters: Node3D = $Monsters
 @onready var _camera: Camera3D = $CameraPivot/Camera3D
@@ -275,7 +276,76 @@ func _rebuild_fortress(tier: int) -> void:
 func _on_item_reviewed(_task_id: String, _correct: bool) -> void:
 	var tier := PlayerProgress.fortress_tier()
 	if tier > _fortress_tier:
-		_rebuild_fortress(tier)
+		_play_upgrade_cutscene(tier)
+
+
+## Kleine „Cutscene" beim Festungsausbau: Kamera fährt auf die neu gebaute Festung
+## heran, ein festlicher Blitz + Banner feiern die neue Stufe, danach fährt die Kamera
+## zurück. Läuft parallel zum Spiel (kurz gehalten), unterdrückt aber das Kamera-Wackeln.
+func _play_upgrade_cutscene(tier: int) -> void:
+	_rebuild_fortress(tier)
+	# Überlappende Cutscenes vermeiden: nur die erste inszeniert, weitere bauen still um.
+	if _cutscene:
+		return
+	_cutscene = true
+	_shake_left = 0.0                 # laufendes Wackeln stoppen, sonst kämpft es mit der Fahrt
+	_answer_input.visible = false     # Fokus für den Moment auf die Festung
+
+	var pivot := $CameraPivot as Node3D
+	var pivot_base := pivot.position
+	var size_base := _camera.size
+	var focus := Vector3(0.0, pivot_base.y, GOAL_Z + 1.0)
+
+	# Festlicher goldener Blitz an der Festung + Banner.
+	_spawn_explosion(Vector3(0.0, 2.0, GOAL_Z + 2.0), Color(1.0, 0.85, 0.3), 3.0)
+	_show_upgrade_banner(tier)
+
+	# Heranfahren + hineinzoomen.
+	var tw_in := create_tween()
+	tw_in.set_parallel(true)
+	tw_in.tween_property(pivot, "position", focus, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw_in.tween_property(_camera, "size", size_base * 0.6, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	await tw_in.finished
+	await get_tree().create_timer(0.9).timeout
+
+	# Zurückfahren.
+	var tw_out := create_tween()
+	tw_out.set_parallel(true)
+	tw_out.tween_property(pivot, "position", pivot_base, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw_out.tween_property(_camera, "size", size_base, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await tw_out.finished
+
+	if not _finished:
+		_answer_input.visible = true
+	_cutscene = false
+
+
+## Blendet für die Ausbau-Cutscene ein gerahmtes Banner ein (steigt auf + blendet aus).
+func _show_upgrade_banner(tier: int) -> void:
+	var panel := PanelContainer.new()
+	panel.anchor_left = 0.5
+	panel.anchor_right = 0.5
+	panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	panel.grow_vertical = Control.GROW_DIRECTION_END
+	panel.offset_top = 110.0
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	($UI as CanvasLayer).add_child(panel)
+
+	var label := Label.new()
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 40)
+	label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.35))
+	label.text = "🏰 Festung ausgebaut!\nStufe %d" % tier
+	panel.add_child(label)
+
+	panel.modulate = Color(1, 1, 1, 0)
+	var tw := create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(panel, "modulate:a", 1.0, 0.3)
+	tw.tween_property(panel, "offset_top", 90.0, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.chain().tween_interval(1.0)
+	tw.chain().tween_property(panel, "modulate:a", 0.0, 0.4)
+	tw.chain().tween_callback(panel.queue_free)
 
 
 ## Debug-Panel (nur im Debug-Build vorhanden): erlaubt das direkte Setzen der
@@ -315,6 +385,8 @@ func _setup_view() -> void:
 
 
 func _process(delta: float) -> void:
+	if _cutscene:
+		return
 	if _shake_left <= 0.0:
 		return
 	_shake_left = max(0.0, _shake_left - delta)
@@ -440,6 +512,8 @@ func _on_answer_submitted(text: String) -> void:
 
 
 func _shake(magnitude: float = SHAKE_MAGNITUDE) -> void:
+	if _cutscene:
+		return
 	_shake_left = SHAKE_DURATION
 	_shake_mag = magnitude
 
@@ -454,12 +528,35 @@ func _defeat(monster: Monster) -> void:
 	_active.erase(monster)
 	_wave_correct += 1
 	_spawn_explosion(monster.position + Vector3(0.0, 1.0, 0.0), Color(0.7, 1.0, 0.4), 1.5)
+	# Kleine aufsteigende „+Punkte"-Animation an der Stelle des Monsters.
+	_spawn_score_popup(monster.position + Vector3(0.0, 2.0, 0.0), monster.reward)
 	# Reward aus der monster_task_rule an GameState durchreichen (Score).
 	var info := monster.monster_def.duplicate()
 	info["reward"] = monster.reward
 	EventBus.monster_defeated.emit(info, true)
 	monster.queue_free()
 	_check_end()
+
+
+## Kurzlebiger 3D-Text (+Punkte), der über der Trefferstelle aufsteigt und ausblendet.
+## Als Label3D (Billboard) im Stil der vorhandenen Monster-Beschriftungen.
+func _spawn_score_popup(pos: Vector3, amount: int) -> void:
+	var label := Label3D.new()
+	label.text = "+%d" % amount
+	label.font_size = 96
+	label.pixel_size = 0.01
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	label.modulate = Color(1.0, 0.85, 0.3)
+	label.outline_size = 12
+	label.outline_modulate = Color(0.1, 0.08, 0.0, 1.0)
+	label.position = pos
+	add_child(label)
+	var tw := create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(label, "position:y", pos.y + 2.5, 0.8).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(label, "modulate:a", 0.0, 0.8).set_ease(Tween.EASE_IN)
+	tw.chain().tween_callback(label.queue_free)
 
 
 ## Instanziiert einen kurzlebigen Explosionseffekt an der Weltposition.
