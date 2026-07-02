@@ -34,12 +34,50 @@ func _ready() -> void:
 
 ## Lädt das 3D-Modell aus dem "model"-Feld (GLTF/GLB/scn). Fehlt es oder existiert
 ## die Datei (noch) nicht, bleibt das Platzhalter-Mesh sichtbar.
+## Optionale JSON-Felder: "model_scale" (Standard 1.0) und "model_yaw" (Grad,
+## um das Modell in Laufrichtung zu drehen).
 func _apply_model() -> void:
 	var path := str(monster_def.get("model", ""))
-	if path != "" and ResourceLoader.exists(path):
-		var packed: PackedScene = load(path)
-		add_child(packed.instantiate())
-		_placeholder.visible = false
+	if path == "" or not ResourceLoader.exists(path):
+		return
+	var packed: PackedScene = load(path)
+	var inst := packed.instantiate() as Node3D
+	inst.scale = Vector3.ONE * float(monster_def.get("model_scale", 1.0))
+	inst.rotation_degrees.y = float(monster_def.get("model_yaw", 0.0))
+	add_child(inst)
+	_placeholder.visible = false
+	_play_loop_animation(inst)
+
+
+## Sucht einen AnimationPlayer im geladenen Modell und loopt eine Lauf-/Idle-
+## Animation (bevorzugt gängige Namen, sonst die erste vorhandene).
+func _play_loop_animation(root: Node) -> void:
+	var anim := _find_animation_player(root)
+	if anim == null:
+		return
+	var name := ""
+	for candidate in ["Walking_A", "Walk", "Walking", "Run", "Idle", "Idle_A"]:
+		if anim.has_animation(candidate):
+			name = candidate
+			break
+	if name == "" and not anim.get_animation_list().is_empty():
+		name = anim.get_animation_list()[0]
+	if name == "":
+		return
+	var clip := anim.get_animation(name)
+	if clip:
+		clip.loop_mode = Animation.LOOP_LINEAR
+	anim.play(name)
+
+
+func _find_animation_player(node: Node) -> AnimationPlayer:
+	if node is AnimationPlayer:
+		return node
+	for child in node.get_children():
+		var found := _find_animation_player(child)
+		if found != null:
+			return found
+	return null
 
 
 func _physics_process(delta: float) -> void:
