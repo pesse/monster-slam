@@ -25,6 +25,9 @@ var _shake_left: float = 0.0
 var _shake_mag: float = SHAKE_MAGNITUDE
 var _rng := RandomNumberGenerator.new()
 
+var _fortress: Node3D = null
+var _fortress_tier: int = -1
+
 @onready var _monsters: Node3D = $Monsters
 @onready var _camera: Camera3D = $CameraPivot/Camera3D
 @onready var _end_label: Label = $UI/EndLabel
@@ -40,6 +43,12 @@ func _ready() -> void:
 	_cam_base = _camera.position
 	GameState.reset()
 	EventBus.answer_submitted.connect(_on_answer_submitted)
+	# Festung wächst mit dem Lernfortschritt: nach jeder verbuchten Antwort prüfen,
+	# ob eine höhere Stufe erreicht wurde.
+	EventBus.item_reviewed.connect(_on_item_reviewed)
+	var debug_panel := $UI/DebugPanel
+	if debug_panel.has_signal("fortress_tier_selected"):
+		debug_panel.fortress_tier_selected.connect(_on_debug_tier_selected)
 	start_wave("wave.tutorial_1")
 
 
@@ -160,30 +169,115 @@ func _decorate() -> void:
 		_place_model(d, "torch_lit.gltf", Vector3(px, gy + 4.0, pz), 0.0, Vector3.ONE)
 
 
-## Festung = fertiges Burg-Modell (CC0, Quaternius), skaliert und mittig am
-## vorderen Feldrand platziert. Fehlt die Datei, bleibt das Feld trotzdem spielbar.
+## Festung = modular aus dem KayKit Medieval Hexagon Pack (CC0, Kay Lousberg)
+## zusammengesetzt und stufenweise mit dem Lernfortschritt gewachsen. Modelle unter
+## assets/models/hexagon/ (blaue Farbvariante, passend zu den Sample-Renders).
+const HEX_DIR := "hexagon"
+const FORTRESS_SCALE := 3.0
+
 func _build_fortress() -> void:
+	_fortress_tier = PlayerProgress.fortress_tier()
+	_spawn_fortress(_fortress_tier)
+
+
+## Baut die Festung passend zur Stufe (0..4) neu auf. Additiv: höhere Stufen zeigen
+## mehr Türme/Mauern/Nebengebäude. Nur die -z-Front (Angriffsfront) liegt im Bild,
+## Burg + Nebengebäude laufen nach hinten (+z) aus dem sichtbaren Feld.
+func _spawn_fortress(tier: int) -> void:
 	var fort := Node3D.new()
 	fort.name = "Fortress"
 	add_child(fort)
-	# Groß und zur Front geschoben: nur der vordere Teil (Angriffsfront) liegt im
-	# Feld, der Rest läuft unten aus dem Bild.
-	_place_model(fort, "castle.glb", Vector3(0.0, 0.4, GOAL_Z + 9.0), 0.0, Vector3.ONE * 8.0)
+	_fortress = fort
+
+	var fz := GOAL_Z              # Mauerfront = Ziel-Linie der Monster
+	var seg := 2.0 * FORTRESS_SCALE   # Weltbreite eines Mauersegments
+
+	print("[FORTRESS] Stufe %d (%d Aufgaben gemeistert)" % [tier, PlayerProgress.mastered_count()])
+
+	if tier <= 0:
+		# Baustelle: Turmstumpf + Baugerüst. Kleine Stufe an den hinteren Rand
+		# (Verteidiger-Rückseite = +z, näher zur Kamera) gezogen, weg von der
+		# Monster-Front, aber noch komplett im Bild.
+		_hex(fort, "building_tower_base_blue", 0.0, fz + 3.5)
+		_hex(fort, "building_scaffolding", seg * 0.7, fz + 3.5)
+		return
+
+	# Ab Stufe 2: Wehrmauer mit Tor + Ecktürmen.
+	if tier >= 2:
+		_hex(fort, "wall_straight", -seg, fz)
+		_hex(fort, "wall_straight_gate", 0.0, fz)
+		_hex(fort, "wall_straight", seg, fz)
+		var end_tower := "building_tower_catapult_blue" if tier >= 4 else "building_tower_B_blue"
+		_hex(fort, end_tower, -seg * 1.5, fz)
+		_hex(fort, end_tower, seg * 1.5, fz)
+
+	# Zentrum: erst ein Turm (Stufe 1/2), ab Stufe 3 die große Burg.
+	if tier >= 3:
+		_hex(fort, "building_castle_blue", 0.0, fz + 3.0)
+	elif tier == 2:
+		_hex(fort, "building_tower_A_blue", 0.0, fz + 1.0)  # hinter der Mauer
+	else:
+		# Stufe 1 ohne Mauer: Turm an den hinteren Rand (+z), weg von der Front.
+		_hex(fort, "building_tower_A_blue", 0.0, fz + 3.0)
+
+	# Vollausbau: Nebengebäude hinter der Mauer + Fahnen auf den Ecktürmen.
+	if tier >= 4:
+		_hex(fort, "building_barracks_blue", -seg * 1.3, fz + 4.5, 20.0)
+		_hex(fort, "building_blacksmith_blue", seg * 1.3, fz + 4.5, -20.0)
+		_hex(fort, "building_home_A_blue", -seg * 0.6, fz + 6.5)
+		_hex(fort, "building_home_B_blue", seg * 0.6, fz + 6.5)
+		_hex(fort, "building_church_blue", 0.0, fz + 8.0)
+		_hex(fort, "building_windmill_blue", -seg * 1.9, fz + 2.5)
+		var flag_y := 2.2 * FORTRESS_SCALE
+		for sx: float in [-seg * 1.5, seg * 1.5]:
+			var flag := _hex(fort, "flag_blue", sx, fz)
+			if flag != null:
+				flag.position.y += flag_y
+
+
+## Platziert ein Hexagon-Pack-Modell (ohne .gltf-Endung) auf Terrain-Höhe, skaliert
+## mit FORTRESS_SCALE. Gibt die Instanz zurück (null wenn Modell fehlt).
+func _hex(parent: Node3D, model: String, x: float, z: float, yaw := 0.0, extra := 1.0) -> Node3D:
+	return _place_model(parent, "%s.gltf" % model, Vector3(x, _ground_y(x, z), z), yaw, Vector3.ONE * FORTRESS_SCALE * extra, HEX_DIR)
+
+
+## Baut die Festung bei einem Stufenanstieg neu auf, mit kurzem Bau-Effekt als Feedback.
+func _rebuild_fortress(tier: int) -> void:
+	_fortress_tier = tier
+	if is_instance_valid(_fortress):
+		_fortress.queue_free()
+	_spawn_fortress(tier)
+	_spawn_explosion(Vector3(0.0, 1.5, GOAL_Z + 2.0), Color(1.0, 0.9, 0.4), 2.0)
+
+
+## Nach jeder verbuchten Antwort: Festung wachsen lassen, wenn eine höhere Stufe
+## erreicht ist. Bewusst nur wachsend innerhalb eines Laufs (nie schrumpfen).
+func _on_item_reviewed(_task_id: String, _correct: bool) -> void:
+	var tier := PlayerProgress.fortress_tier()
+	if tier > _fortress_tier:
+		_rebuild_fortress(tier)
+
+
+## Debug-Panel (nur im Debug-Build vorhanden): erlaubt das direkte Setzen der
+## Festungsstufe, um jede Ausbaustufe ohne Lernfortschritt begutachten zu können.
+func _on_debug_tier_selected(tier: int) -> void:
+	_rebuild_fortress(tier)
 
 
 func _place_prop(parent: Node3D, name: String, pos: Vector3, yaw_deg: float, scale := Vector3.ONE) -> void:
 	_place_model(parent, "%s.gltf" % name, pos, yaw_deg, scale)
 
 
-func _place_model(parent: Node3D, filename: String, pos: Vector3, yaw_deg: float, scale := Vector3.ONE) -> void:
-	var path := "res://assets/models/props/%s" % filename
+func _place_model(parent: Node3D, filename: String, pos: Vector3, yaw_deg: float, scale := Vector3.ONE, subdir := "props") -> Node3D:
+	var path := "res://assets/models/%s/%s" % [subdir, filename]
 	if not ResourceLoader.exists(path):
-		return
+		return null
 	var inst := (load(path) as PackedScene).instantiate() as Node3D
 	inst.position = pos
 	inst.rotation_degrees.y = yaw_deg
 	inst.scale = scale
 	parent.add_child(inst)
+	return inst
 
 
 ## Orthografische Iso-Kamera + Sonne. Per Code, damit die .tscn keine

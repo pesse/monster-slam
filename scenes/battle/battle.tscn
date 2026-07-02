@@ -1,8 +1,9 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://src/battle/wave_runner.gd" id="1_battle"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="2_hud"]
 [ext_resource type="PackedScene" path="res://scenes/ui/answer_input.tscn" id="3_input"]
+[ext_resource type="PackedScene" path="res://scenes/ui/debug_panel.tscn" id="4_debug"]
 
 [sub_resource type="Environment" id="Env_1"]
 background_mode = 1
@@ -51,6 +52,8 @@ modulate = Color(1, 1, 1, 0)
 [node name="HUD" parent="UI" instance=ExtResource("2_hud")]
 
 [node name="AnswerInput" parent="UI" instance=ExtResource("3_input")]
+
+[node name="DebugPanel" parent="UI" instance=ExtResource("4_debug")]
 
 [node name="EndLabel" type="Label" parent="UI"]
 anchor_left = 0.5

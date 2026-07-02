@@ -10,6 +10,12 @@ extends Node
 
 const SAVE_DIR := "user://progress"
 
+## Ab dieser Confidence (0..1) gilt eine Aufgabe als „gemeistert".
+const MASTERY_CONFIDENCE := 0.8
+## Festungsstufen-Schwellen: ab so vielen gemeisterten Aufgaben steigt die Stufe
+## um 1 (0 → 1 → 2 → 3 → 4). Bewusst als Konstante, damit leicht justierbar.
+const FORTRESS_TIER_THRESHOLDS := [1, 3, 6, 10]
+
 ## task_template_id -> {
 ##   confidence: float (0..1), attempts: int, correct_total: int,
 ##   current_streak: int, best_streak: int, last_correct: bool,
@@ -86,6 +92,26 @@ func confidence(task_id: String) -> float:
 
 func has_seen(task_id: String) -> bool:
 	return _records.has(task_id)
+
+
+## Anzahl Aufgaben, deren Confidence die Meisterungs-Schwelle erreicht — Grundlage
+## der Festungsstufe (mehr gemeistert = größere Festung).
+func mastered_count(threshold := MASTERY_CONFIDENCE) -> int:
+	var n := 0
+	for rec in _records.values():
+		if float(rec.get("confidence", 0.0)) >= threshold:
+			n += 1
+	return n
+
+
+## Festungsstufe 0..4 aus der Zahl gemeisterter Aufgaben (siehe FORTRESS_TIER_THRESHOLDS).
+func fortress_tier() -> int:
+	var m := mastered_count()
+	var tier := 0
+	for t in FORTRESS_TIER_THRESHOLDS:
+		if m >= int(t):
+			tier += 1
+	return tier
 
 
 func reset() -> void:
