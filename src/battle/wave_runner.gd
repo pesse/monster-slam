@@ -1,15 +1,16 @@
-extends Node2D
-## Fährt eine einzelne Welle: spawnt Monster aus der Wave-Definition, gleicht
+extends Node3D
+## Fährt eine einzelne Welle in 3D: spawnt Monster aus der Wave-Definition, gleicht
 ## Spielerantworten gegen aktive Monster ab und erkennt das Wellenende.
 ## Nutzt ausschließlich bestehende Autoloads + AnswerEvaluator — rein additiv.
 
 const MONSTER_SCENE := preload("res://scenes/entities/monster.tscn")
-const GOAL_Y := 560.0
-const SPAWN_Y := 40.0
+const GOAL_Z := 6.5           # Festungsfront (Monster-Ziel)
+const SPAWN_Z := -11.0        # Spawn am hinteren Ende der Bahn
+const LANE_HALF_WIDTH := 7.0
 const FORTRESS_HIT := 10
 
 const SHAKE_DURATION := 0.35
-const SHAKE_MAGNITUDE := 14.0
+const SHAKE_MAGNITUDE := 0.35 # in 3D-Einheiten
 const FLASH_CORRECT := Color(0.3, 1.0, 0.45)
 const FLASH_WRONG := Color(1.0, 0.3, 0.3)
 
@@ -19,19 +20,31 @@ var _total: int = 0
 var _spawned: int = 0
 var _finished: bool = false
 
-var _base_pos: Vector2
+var _cam_base: Vector3
 var _shake_left: float = 0.0
 
-@onready var _monsters: Node2D = $Monsters
+@onready var _monsters: Node3D = $Monsters
+@onready var _camera: Camera3D = $CameraPivot/Camera3D
 @onready var _end_label: Label = $UI/EndLabel
 @onready var _flash: ColorRect = $UI/Flash
 
 
 func _ready() -> void:
-	_base_pos = position
+	_setup_view()
+	_cam_base = _camera.position
 	GameState.reset()
 	EventBus.answer_submitted.connect(_on_answer_submitted)
 	start_wave("wave.tutorial_1")
+
+
+## Orthografische Iso-Kamera + Sonne. Per Code, damit die .tscn keine
+## Transform-Basis-Mathematik enthalten muss.
+func _setup_view() -> void:
+	($CameraPivot as Node3D).rotation_degrees = Vector3(-30.0, 45.0, 0.0)
+	_camera.projection = Camera3D.PROJECTION_ORTHOGONAL
+	_camera.size = 24.0
+	_camera.position = Vector3(0.0, 0.0, 32.0)
+	($Sun as DirectionalLight3D).rotation_degrees = Vector3(-55.0, -35.0, 0.0)
 
 
 func _process(delta: float) -> void:
@@ -39,10 +52,10 @@ func _process(delta: float) -> void:
 		return
 	_shake_left = max(0.0, _shake_left - delta)
 	if _shake_left == 0.0:
-		position = _base_pos
+		_camera.position = _cam_base
 	else:
 		var mag := SHAKE_MAGNITUDE * (_shake_left / SHAKE_DURATION)
-		position = _base_pos + Vector2(randf_range(-mag, mag), randf_range(-mag, mag))
+		_camera.position = _cam_base + Vector3(randf_range(-mag, mag), randf_range(-mag, mag), 0.0)
 
 
 func start_wave(wave_id: String) -> void:
@@ -82,8 +95,8 @@ func _spawn(entry: Dictionary) -> void:
 	var vocab: Dictionary = candidates[randi() % candidates.size()]
 
 	var monster := MONSTER_SCENE.instantiate() as Monster
-	monster.setup(def, vocab, GOAL_Y)
-	monster.position = Vector2(randf_range(120.0, 1000.0), SPAWN_Y)
+	monster.setup(def, vocab, GOAL_Z)
+	monster.position = Vector3(randf_range(-LANE_HALF_WIDTH, LANE_HALF_WIDTH), 0.0, SPAWN_Z)
 	monster.reached_goal.connect(_on_monster_reached_goal)
 	_monsters.add_child(monster)
 	_active.append(monster)
@@ -99,7 +112,7 @@ func _on_answer_submitted(text: String) -> void:
 			_defeat(monster)
 			_flash_feedback(FLASH_CORRECT)
 			return
-	# Kein Treffer -> Falscheingabe: rotes Flash + Bildschirmwackeln.
+	# Kein Treffer -> Falscheingabe: rotes Flash + Kamera-Wackeln.
 	# Anknüpfpunkt fürs Lernsystem (Fehlversuch protokollieren).
 	_flash_feedback(FLASH_WRONG)
 	_shake()

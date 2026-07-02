@@ -7,7 +7,7 @@
     "hp": 1,
     "carries": "vocabulary",
     "difficulty": 1,
-    "sprite": "res://assets/sprites/monsters/slime.png"
+    "model": "res://assets/models/monsters/slime.glb"
   },
   {
     "id": "monster.goblin",
@@ -17,7 +17,7 @@
     "hp": 1,
     "carries": "vocabulary",
     "difficulty": 2,
-    "sprite": "res://assets/sprites/monsters/goblin.png"
+    "model": "res://assets/models/monsters/goblin.glb"
   },
   {
     "id": "monster.bat",
@@ -27,6 +27,6 @@
     "hp": 1,
     "carries": "vocabulary",
     "difficulty": 3,
-    "sprite": "res://assets/sprites/monsters/bat.png"
+    "model": "res://assets/models/monsters/bat.glb"
   }
 ]

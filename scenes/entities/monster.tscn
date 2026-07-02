@@ -1,24 +1,26 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://src/entities/monster.gd" id="1_monster"]
 
-[node name="Monster" type="Node2D"]
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_1"]
+radius = 0.5
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="Mat_1"]
+albedo_color = Color(0.43, 0.9, 0.72, 1)
+
+[node name="Monster" type="Node3D"]
 script = ExtResource("1_monster")
 
-[node name="Sprite" type="Sprite2D" parent="."]
+[node name="Placeholder" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+mesh = SubResource("CapsuleMesh_1")
+surface_material_override/0 = SubResource("Mat_1")
 
-[node name="Body" type="ColorRect" parent="."]
-offset_left = -55.0
-offset_top = -22.0
-offset_right = 55.0
-offset_bottom = 22.0
-color = Color(0.43, 0.9, 0.72, 1)
-
-[node name="Label" type="Label" parent="."]
-offset_left = -55.0
-offset_top = -14.0
-offset_right = 55.0
-offset_bottom = 14.0
-theme_override_colors/font_color = Color(0.12, 0.11, 0.2, 1)
-horizontal_alignment = 1
-vertical_alignment = 1
+[node name="Label" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+billboard = 1
+pixel_size = 0.015
+font_size = 64
+outline_size = 10
+text = "?"

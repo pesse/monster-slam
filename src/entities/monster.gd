@@ -1,7 +1,8 @@
 class_name Monster
-extends Node2D
-## Ein normales Monster: trägt eine Vokabel, bewegt sich Richtung Festung.
-## Rein präsentierend + Bewegung — Kampf-/Wellenlogik liegt im WaveRunner.
+extends Node3D
+## Ein normales Monster in 3D: trägt eine Vokabel (schwebendes Label3D) und
+## bewegt sich entlang +Z auf die Festung zu. Präsentation + Bewegung;
+## Kampf-/Wellenlogik liegt im WaveRunner.
 
 ## Wird ausgelöst, wenn dieses Monster die Festung erreicht (Node-Handling im WaveRunner).
 signal reached_goal(monster: Monster)
@@ -9,44 +10,43 @@ signal reached_goal(monster: Monster)
 var monster_def: Dictionary = {}
 var vocab: Dictionary = {}
 
-var _speed: float = 40.0
-var _target_y: float = 0.0
+var _speed: float = 2.0
+var _target_z: float = 0.0
 var _done: bool = false
 
-@onready var _label: Label = $Label
-@onready var _sprite: Sprite2D = $Sprite
-@onready var _body: ColorRect = $Body
+@onready var _label: Label3D = $Label
+@onready var _placeholder: MeshInstance3D = $Placeholder
 
 
-## Muss VOR add_child aufgerufen werden, damit _ready das Label korrekt setzt.
-func setup(def: Dictionary, vocab_entry: Dictionary, target_y: float) -> void:
+## Muss VOR add_child aufgerufen werden, damit _ready Label/Modell korrekt setzt.
+func setup(def: Dictionary, vocab_entry: Dictionary, target_z: float) -> void:
 	monster_def = def
 	vocab = vocab_entry
-	_speed = float(def.get("speed", 40.0))
-	_target_y = target_y
+	# 2D-Pixelgeschwindigkeiten (~35..120) auf 3D-Einheiten/s herunterskalieren.
+	_speed = float(def.get("speed", 40.0)) / 20.0
+	_target_z = target_z
 
 
 func _ready() -> void:
 	_label.text = str(vocab.get("prompt", "?"))
-	_apply_sprite()
+	_apply_model()
 
 
-## Lädt die Textur aus dem "sprite"-Feld der Monster-Definition. Fehlt sie oder
-## existiert die Datei (noch) nicht, bleibt das farbige Rechteck als Fallback.
-func _apply_sprite() -> void:
-	var path := str(monster_def.get("sprite", ""))
+## Lädt das 3D-Modell aus dem "model"-Feld (GLTF/GLB/scn). Fehlt es oder existiert
+## die Datei (noch) nicht, bleibt das Platzhalter-Mesh sichtbar.
+func _apply_model() -> void:
+	var path := str(monster_def.get("model", ""))
 	if path != "" and ResourceLoader.exists(path):
-		_sprite.texture = load(path)
-		_body.visible = false
-	else:
-		_sprite.visible = false
+		var packed: PackedScene = load(path)
+		add_child(packed.instantiate())
+		_placeholder.visible = false
 
 
 func _physics_process(delta: float) -> void:
 	if _done:
 		return
-	position.y += _speed * delta
-	if position.y >= _target_y:
+	position.z += _speed * delta
+	if position.z >= _target_z:
 		_done = true
 		EventBus.monster_reached_fortress.emit(monster_def)
 		reached_goal.emit(self)
