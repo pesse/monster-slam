@@ -34,8 +34,8 @@ Darstellung unabhängig wachsen können (siehe `docs/ADDING_CONTENT.md`):
   der Wortanzahl**. Die konkrete Aufgabe entsteht erst zur Laufzeit aus
   *Definition × Lexeme (× Form/Relation)*; es gibt keine per-Wort-Aufgaben mehr.
 - **monster_task_rules** — *Wie* eine Aufgabe dargestellt wird: `(task_type, direction)
-  → monster_type` + `base_damage/base_reward/weight`. **Kein** Tempo — Geschwindigkeit
-  ist Schwierigkeit (siehe unten), kein Darstellungswert.
+  → monster_type` + `base_damage/weight`. **Kein** Tempo und **keine** Punkte —
+  beide sind Projektionen der Schwierigkeit (siehe unten), keine Darstellungswerte.
 - **player_progress** — *Wie gut* der Spieler eine konkrete Aufgabe kann, adressiert über
   einen kanonischen **`learnable_id`** (Task-Typ + Richtung + Lexeme/Form/Relation; Schema
   in `TaskResolver.learnable_id()`). Nicht im Content, sondern beschreibbar in `user://`.
@@ -69,6 +69,12 @@ speed = REFERENCE_SPEED · clamp(1 + K·e) · speed_scale
 
 Die Differenzierung „opposite/synonym sind schwerer als translate" lebt damit allein in
 `task_definition.difficulty` — nicht in per-Monster- oder per-Regel-Geschwindigkeiten.
+
+**Punkte folgen derselben Schwierigkeit, invers zum Tempo:** je schwerer das Monster
+(hohe Grundschwierigkeit, niedrige Confidence, härtere Welle), desto **mehr** Punkte —
+`reward = REFERENCE_REWARD · clamp(1 + K_r·(t − c)) · speed_scale`. Ein hartes Monster ist
+also langsam *und* wertvoll; das Abrufen unsicherer/schwerer Aufgaben lohnt sich. Auch die
+Punkte kommen damit ausschließlich aus der Schwierigkeit, nicht aus per-Regel-Werten.
 
 ### 2. EventBus (`src/core/event_bus.gd`)
 Globaler Signal-Hub. Systeme kommunizieren über Signale statt direkter

@@ -30,6 +30,12 @@ const SPEED_SENSITIVITY := 0.3
 ## Obergrenze der difficulty-Skala für die Normalisierung auf 0..1.
 const DIFFICULTY_MAX := 5
 
+## Referenz-Punktzahl bei neutraler Schwierigkeit (Netto-Können e = 0). Wie beim Tempo
+## ist die Schwierigkeit die einzige Quelle — es gibt keine per-Regel-Punkte mehr.
+const REFERENCE_REWARD := 12
+## Empfindlichkeit: wie stark die Schwierigkeit (t - c) die Punkte auslenkt.
+const REWARD_SENSITIVITY := 0.6
+
 ## Globaler Tempo-Multiplikator, vom WaveRunner aus der gewählten Wellen-Schwierigkeit gesetzt
 ## (1.0 = neutral, >1 schneller/schwerer, <1 langsamer/leichter). Ist selbst eine
 ## Schwierigkeits-Quelle und wirkt daher multiplikativ auf das Referenztempo.
@@ -142,21 +148,25 @@ func _build_plan(candidate: Dictionary) -> Dictionary:
 		push_warning("WaveGenerator: unbekannter monster_type '%s'" % rule.get("monster_type", ""))
 		return {}
 
-	# Tempo = wie weit die Confidence die Grundschwierigkeit der Aufgabe übersteigt.
-	# Geschwindigkeit IST Schwierigkeit und entsteht ausschließlich hieraus:
+	# Schwierigkeit dieses konkreten Monsters, aus zwei Quellen (+ Wellenfaktor):
 	#   t = Grundschwierigkeit der Aufgaben-Art (task_definition.difficulty, 0..1)
 	#   c = Confidence des Spielers für diese konkrete Aufgabe (0..1)
-	#   e = c - t   (Netto-Können; e<0 -> langsamer, e=0 -> Referenztempo, e>0 -> schneller)
-	# Nur wenn die Confidence die Grundschwierigkeit übersteigt, wird das Monster schneller.
-	# speed_scale trägt zusätzlich die gewählte Wellen-Schwierigkeit.
+	#   e = c - t   (Netto-Können; e<0 = für den Spieler schwer, e>0 = sicher beherrscht)
 	var t := _difficulty_norm(int(task.get("difficulty", 1)))
 	var c := PlayerProgress.confidence(task["learnable_id"])
-	var factor := clampf(1.0 + SPEED_SENSITIVITY * (c - t), 0.7, 1.3)
-	var speed := REFERENCE_SPEED * factor * speed_scale
+
+	# Tempo = sichtbare Projektion der Schwierigkeit: schwer -> langsamer (Zeit zum
+	# Abrufen), nur wenn die Confidence die Grundschwierigkeit übersteigt -> schneller.
+	var speed := REFERENCE_SPEED * clampf(1.0 + SPEED_SENSITIVITY * (c - t), 0.7, 1.3) * speed_scale
+
+	# Punkte skalieren mit derselben Schwierigkeit, aber invers zum Tempo: je schwerer
+	# das Monster (hohe Grundschwierigkeit, niedrige Confidence, härtere Welle), desto
+	# mehr Punkte. So lohnt sich das Abrufen unsicherer/harter Aufgaben.
+	var reward := int(round(REFERENCE_REWARD * clampf(1.0 + REWARD_SENSITIVITY * (t - c), 0.4, 1.6) * speed_scale))
 	return {
 		"task": task,
 		"monster_def": monster_def,
 		"speed": speed,
 		"damage": int(rule.get("base_damage", 10)),
-		"reward": int(rule.get("base_reward", 10)),
+		"reward": reward,
 	}

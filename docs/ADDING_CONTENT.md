@@ -77,13 +77,14 @@ Schwierigkeit, siehe unten). Welcher Aufgabentyp welches Monster spawnt, legt ei
 
 ## Aufgabe↔Monster verknüpfen → `data/monster_task_rules/…json`
 ```json
-{ "id": "mrule.opposite.en_en", "task_type": "opposite", "direction": "en_to_en", "monster_type": "monster.skeleton_warrior", "base_damage": 12, "base_reward": 20, "weight": 1.0 }
+{ "id": "mrule.opposite.en_en", "task_type": "opposite", "direction": "en_to_en", "monster_type": "monster.skeleton_warrior", "base_damage": 12, "weight": 1.0 }
 ```
-Die Regel trägt **kein Tempo**. Die Monster-Geschwindigkeit ist die sichtbare Projektion der
-Schwierigkeit und entsteht ausschließlich aus `task_definition.difficulty` + der
-`PlayerProgress.confidence` der konkreten Aufgabe + der Wellen-Schwierigkeit
-(siehe `docs/ARCHITECTURE.md`, „Tempo = Schwierigkeit"). Ein schwererer Aufgabentyp macht das
-Monster also **langsamer** (mehr Zeit zum Abrufen), nicht schneller.
+Die Regel trägt **weder Tempo noch Punkte**. Beide sind Projektionen der Schwierigkeit und
+entstehen ausschließlich aus `task_definition.difficulty` + der `PlayerProgress.confidence`
+der konkreten Aufgabe + der Wellen-Schwierigkeit (siehe `docs/ARCHITECTURE.md`,
+„Tempo = Schwierigkeit"):
+- Ein schwererer Aufgabentyp macht das Monster **langsamer** (mehr Zeit zum Abrufen), nicht schneller.
+- Und er gibt **mehr Punkte** — je schwerer (auch: je unsicherer der Spieler), desto höher der Reward.
 
 ## Boss hinzufügen → `data/bosses/…json`
 ```json
