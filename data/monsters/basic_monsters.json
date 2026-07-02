@@ -2,11 +2,9 @@
   {
     "id": "monster.skeleton_minion",
     "name": "Skelett-Diener",
-    "description": "Langsamer Einstiegsgegner. Wenig Zeitdruck.",
-    "speed": 35.0,
+    "description": "Einfacher Fußsoldat der Untotenhorde.",
     "hp": 1,
     "carries": "vocabulary",
-    "difficulty": 1,
     "model": "res://assets/models/monsters/Skeleton_Minion.glb",
     "model_scale": 2.4,
     "model_yaw": 0.0
@@ -14,11 +12,9 @@
   {
     "id": "monster.skeleton_rogue",
     "name": "Skelett-Schurke",
-    "description": "Mittleres Tempo. Erzeugt spürbaren Recall-Druck.",
-    "speed": 70.0,
+    "description": "Wendiger Kämpfer mit leichter Rüstung.",
     "hp": 1,
     "carries": "vocabulary",
-    "difficulty": 2,
     "model": "res://assets/models/monsters/Skeleton_Rogue.glb",
     "model_scale": 2.4,
     "model_yaw": 0.0
@@ -26,11 +22,9 @@
   {
     "id": "monster.skeleton_warrior",
     "name": "Skelett-Krieger",
-    "description": "Schnell und aggressiv. Nur für bereits bekannte Vokabeln.",
-    "speed": 100.0,
+    "description": "Schwer gepanzerter Frontkämpfer.",
     "hp": 1,
     "carries": "vocabulary",
-    "difficulty": 3,
     "model": "res://assets/models/monsters/Skeleton_Warrior.glb",
     "model_scale": 2.4,
     "model_yaw": 0.0

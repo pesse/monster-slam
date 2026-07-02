@@ -6,21 +6,26 @@ automatisch. Jedes Objekt braucht eine eindeutige `id`.
 
 ## Sprachdaten & Aufgaben (ERM)
 
-Sprachdaten, Aufgaben und Darstellung sind getrennt (siehe `docs/ARCHITECTURE.md`).
-Ein neues Wort abzufragen heißt: **Lexem anlegen → Aufgabe (task_template) anlegen**.
+Sprachdaten, Aufgaben-Regeln und Darstellung sind getrennt (siehe `docs/ARCHITECTURE.md`).
+Aufgaben werden **nicht mehr pro Wort** angelegt: Es gibt wenige statische
+**task_definitions** (Regeln), und der `WaveGenerator` kombiniert sie zur Laufzeit mit
+passenden Lexemen. Ein neues Wort abzufragen heißt daher meist nur: **Lexem anlegen** —
+für bestehende Aufgabentypen (translate/…) entstehen die Aufgaben automatisch.
 Formen und Relationen sind optional und nur für bestimmte Aufgabentypen nötig.
 
 ### 1. Lexem → `data/lexemes/…json`
 Das Wort selbst (Was?).
 ```json
-{ "id": "lex.en.cat", "type": "noun", "lemma_de": "die Katze", "lemma_en": "cat", "difficulty": 1, "tags": ["noun", "basics", "animals"] }
+{ "id": "lex.en.cat", "type": "noun", "lemma_de": "die Katze", "lemma_en": "cat", "tags": ["noun", "basics", "animals"] }
 ```
 `type`: `noun` | `verb` | `adjective` | `phrase`. `tags` steuern, welche Lexeme eine Welle zieht.
+Am Lexem gibt es **keine** `difficulty` — wie schwer ein Wort ist, ergibt sich aus dem
+Lernstand (`PlayerProgress.confidence`); Aufgaben-Schwierigkeit steht auf der `task_definition`.
 
 **Mehrfachübersetzungen** über optionale Arrays `lemma_en_alt` / `lemma_de_alt` — alle
 gelten bei `translate` als richtig (Prompt zeigt weiter das primäre Lemma):
 ```json
-{ "id": "lex.en.go", "type": "verb", "lemma_de": "gehen", "lemma_en": "go", "lemma_en_alt": ["walk"], "lemma_de_alt": ["laufen"], "difficulty": 1, "tags": ["verb", "basics"] }
+{ "id": "lex.en.go", "type": "verb", "lemma_de": "gehen", "lemma_en": "go", "lemma_en_alt": ["walk"], "lemma_de_alt": ["laufen"], "tags": ["verb", "basics"] }
 ```
 So akzeptiert „gehen" → `go`/`walk` und „go" → `gehen`/`laufen`. Für reine Varianten
 (z. B. `quick`/`fast`, `colour`/`color`) sind die Alt-Listen gedacht. Ist die Alternative
@@ -38,29 +43,47 @@ selbst ein eigenes Lernwort mit eigenen Aufgaben, lege besser ein zweites Lexem 
 ```
 `relation_type`: `opposite` | `synonym` | `confused_with` | `related`.
 
-### 4. Aufgabe → `data/task_templates/…json`
-Beschreibt, **was** abgefragt wird (noch kein Monster).
+### 4. Aufgaben-*Regel* → `data/task_definitions/…json`
+Beschreibt eine **Regel**, was abgefragt wird — **nicht** pro Wort, sondern einmal pro
+Aufgabentyp/Richtung. Der `WaveGenerator` kombiniert sie zur Laufzeit mit allen passenden
+Lexemen. Für die vorhandenen Typen (translate/opposite/synonym/conjugation) existieren die
+Definitions bereits; ein neues Wort braucht hier **keine** neue Zeile.
 ```json
-{ "id": "task.translate.cat.de_en", "task_type": "translate", "direction": "de_to_en", "source_lexeme_id": "lex.en.cat", "difficulty": 1, "review_status": "approved" }
+{ "id": "def.translate.de_en", "task_type": "translate", "direction": "de_to_en", "allowed_types": ["*"], "difficulty": 1 }
+{ "id": "def.opposite", "task_type": "opposite", "direction": "en_to_en", "requires_relation": "opposite", "allowed_types": ["adjective"], "difficulty": 3 }
+{ "id": "def.conj.past_simple", "task_type": "conjugation", "direction": "en", "requires_form": "past_simple", "allowed_types": ["verb"], "difficulty": 2 }
 ```
 `task_type`: `translate` | `opposite` | `synonym` | `conjugation` | `tense` | `fill_gap`* | `sentence`*.
-`direction`: `de_to_en` | `en_to_de` | `en_to_en` | `en` (Konjugation). Für `opposite`/`synonym`
-zusätzlich `target_lexeme_id`, für `conjugation`/`tense` zusätzlich `form_type`.
-Nur `review_status: "approved"` wird im Spiel verwendet. (\*`fill_gap`/`sentence` sind vorerst zurückgestellt.)
+`direction`: `de_to_en` | `en_to_de` | `en_to_en` | `en` (Konjugation).
+`allowed_types`: welche Lexem-`type`s die Definition annimmt (`["*"]` = alle) — verhindert
+unmögliche Kombinationen (z. B. Adjektiv konjugieren).
+`requires_relation` (opposite/synonym) bzw. `requires_form` (conjugation/tense): nur Lexeme,
+die die Relation/Form besitzen, werden zu Kandidaten; die Enumeration expandiert über die
+tatsächlich vorhandenen Relationen/Formen.
+`difficulty`: Basis-Schwierigkeit der Aufgaben-*Art*; der Wave-`difficulty_max` schaltet damit
+Aufgabentypen frei/aus. (\*`fill_gap`/`sentence` sind vorerst zurückgestellt.)
+
+Der Fortschritt wird pro **`learnable_id`** geführt (Task-Typ + Richtung + Lexeme/Form/Relation,
+z. B. `translate:de_to_en:lex.en.cat`, `opposite:lex.en.big:lex.en.small`,
+`conjugation:lex.en.go:past_simple`) — Schema in `TaskResolver.learnable_id()`.
 
 ## Monster hinzufügen → `data/monsters/…json`
-Monster sind **reine Darstellung**. Welcher Aufgabentyp welches Monster spawnt, legt eine
+Monster sind **reine Darstellung** — kein `speed`, keine `difficulty` (Geschwindigkeit ist
+Schwierigkeit, siehe unten). Welcher Aufgabentyp welches Monster spawnt, legt eine
 `monster_task_rule` fest.
 ```json
-{ "id": "monster.wraith", "name": "Schemen", "speed": 95.0, "hp": 1, "difficulty": 3, "model": "res://assets/models/monsters/Wraith.glb", "model_scale": 2.4, "model_yaw": 0.0 }
+{ "id": "monster.wraith", "name": "Schemen", "hp": 1, "model": "res://assets/models/monsters/Wraith.glb", "model_scale": 2.4, "model_yaw": 0.0 }
 ```
 
 ## Aufgabe↔Monster verknüpfen → `data/monster_task_rules/…json`
 ```json
-{ "id": "mrule.opposite.en_en", "task_type": "opposite", "direction": "en_to_en", "monster_type": "monster.skeleton_warrior", "base_speed": 100.0, "base_damage": 12, "base_reward": 20, "weight": 1.0 }
+{ "id": "mrule.opposite.en_en", "task_type": "opposite", "direction": "en_to_en", "monster_type": "monster.skeleton_warrior", "base_damage": 12, "base_reward": 20, "weight": 1.0 }
 ```
-`base_speed` ist das Grundtempo; zur Laufzeit skaliert es zusätzlich mit der
-`PlayerProgress.confidence` der konkreten Aufgabe (gut gekonnt → schneller).
+Die Regel trägt **kein Tempo**. Die Monster-Geschwindigkeit ist die sichtbare Projektion der
+Schwierigkeit und entsteht ausschließlich aus `task_definition.difficulty` + der
+`PlayerProgress.confidence` der konkreten Aufgabe + der Wellen-Schwierigkeit
+(siehe `docs/ARCHITECTURE.md`, „Tempo = Schwierigkeit"). Ein schwererer Aufgabentyp macht das
+Monster also **langsamer** (mehr Zeit zum Abrufen), nicht schneller.
 
 ## Boss hinzufügen → `data/bosses/…json`
 ```json

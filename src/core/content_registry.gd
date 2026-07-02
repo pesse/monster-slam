@@ -14,7 +14,8 @@ const DATA_ROOT := "res://data"
 ## Per-category catalogs (id -> entry Dictionary). Filled by reload().
 ##
 ## Sprachdaten und Aufgaben sind normalisiert (ERM, siehe docs/ARCHITECTURE.md):
-## lexemes/forms/relations beschreiben die Sprache, task_templates die Aufgaben,
+## lexemes/forms/relations beschreiben die Sprache, task_definitions die Aufgaben-Regeln
+## (die konkrete Aufgabe wird zur Laufzeit aus Definition × Lexeme erzeugt),
 ## monster_task_rules nur die Darstellung. sentences/sentence_lexemes sind für das
 ## (noch zurückgestellte) Satz-/Boss-Feature reserviert und vorerst leer.
 var lexemes: Dictionary = {}
@@ -22,7 +23,7 @@ var lexeme_forms: Dictionary = {}
 var lexeme_relations: Dictionary = {}
 var sentences: Dictionary = {}
 var sentence_lexemes: Dictionary = {}
-var task_templates: Dictionary = {}
+var task_definitions: Dictionary = {}
 var monster_task_rules: Dictionary = {}
 var monsters: Dictionary = {}
 var bosses: Dictionary = {}
@@ -41,7 +42,7 @@ func _ready() -> void:
 		"lexeme_relations": lexeme_relations,
 		"sentences": sentences,
 		"sentence_lexemes": sentence_lexemes,
-		"task_templates": task_templates,
+		"task_definitions": task_definitions,
 		"monster_task_rules": monster_task_rules,
 		"monsters": monsters,
 		"bosses": bosses,

@@ -8,7 +8,7 @@ und Mechaniken sollen sich ergänzen lassen, ohne bestehende Systeme zu ändern.
 ### 1. ContentRegistry (`src/core/content_registry.gd`)
 Datengetriebener Katalog. Scannt beim Start rekursiv `res://data/<kategorie>/`
 und lädt jede `.json`-Datei. Kategorien: `lexemes`, `lexeme_forms`,
-`lexeme_relations`, `sentences`, `sentence_lexemes`, `task_templates`,
+`lexeme_relations`, `sentences`, `sentence_lexemes`, `task_definitions`,
 `monster_task_rules`, `monsters`, `bosses`, `skills`, `waves`.
 
 - Jede JSON-Datei enthält ein Objekt **oder** ein Array von Objekten.
@@ -25,19 +25,50 @@ Der Lernstoff ist normalisiert, damit Sprachdaten, Aufgaben, Fortschritt und
 Darstellung unabhängig wachsen können (siehe `docs/ADDING_CONTENT.md`):
 
 - **lexemes / lexeme_forms / lexeme_relations** — *Was* ist das Wort, welche Formen
-  (Konjugation/Zeit) und Relationen (opposite/synonym/…) hat es.
-- **task_templates** — *Was wird abgefragt* (translate/opposite/synonym/conjugation/…
-  + `direction`). Referenziert Lexeme/Formen/Relationen, ist aber noch kein Monster.
+  (Konjugation/Zeit) und Relationen (opposite/synonym/…) hat es. **Keine** `difficulty`
+  am Lexem: wie schwer ein Wort ist, ergibt sich aus dem Lernstand (Confidence), nicht
+  aus dem Wort selbst.
+- **task_definitions** — *Regeln*, was abgefragt wird (translate/opposite/synonym/
+  conjugation/… + `direction`, `allowed_types`, `requires_relation`/`requires_form`,
+  `difficulty`). Wenige, statische Einträge (Größenordnung ~10–20) — **unabhängig von
+  der Wortanzahl**. Die konkrete Aufgabe entsteht erst zur Laufzeit aus
+  *Definition × Lexeme (× Form/Relation)*; es gibt keine per-Wort-Aufgaben mehr.
 - **monster_task_rules** — *Wie* eine Aufgabe dargestellt wird: `(task_type, direction)
-  → monster_type` + `base_speed/base_damage/base_reward`.
-- **player_task_progress** — *Wie gut* der Spieler die konkrete Aufgabe kann
-  (nicht im Content, sondern beschreibbar in `user://`, siehe unten).
+  → monster_type` + `base_damage/base_reward/weight`. **Kein** Tempo — Geschwindigkeit
+  ist Schwierigkeit (siehe unten), kein Darstellungswert.
+- **player_progress** — *Wie gut* der Spieler eine konkrete Aufgabe kann, adressiert über
+  einen kanonischen **`learnable_id`** (Task-Typ + Richtung + Lexeme/Form/Relation; Schema
+  in `TaskResolver.learnable_id()`). Nicht im Content, sondern beschreibbar in `user://`.
 - **sentences / sentence_lexemes** — für Boss-/Satzübungen; Schema vorhanden, Feature
   (task_type `sentence`/`fill_gap`, Boss-Runner) noch zurückgestellt.
 
-Die Auflösung Template → spielbare Aufgabe `{prompt, accepted_answers, …}` macht
-`src/learning/task_resolver.gd`; die Auswahl fälliger/neuer Aufgaben + Monster-Mapping
-`src/battle/wave_generator.gd`.
+Die Auflösung Definition × Lexeme → spielbare Aufgabe `{prompt, accepted_answers, …}`
+macht `src/learning/task_resolver.gd`; die Enumeration der Kandidaten (Definition × Lexeme)
+und die Auswahl fälliger/neuer Aufgaben + Monster-Mapping `src/battle/wave_generator.gd`.
+
+### Tempo = Schwierigkeit (Monster-Geschwindigkeit)
+Geschwindigkeit ist **kein eigenständiges Attribut**, sondern die sichtbare Projektion der
+Schwierigkeit. Es gibt genau eine Achse — Schwierigkeit — und Tempo ist ihre Ausgabe.
+Daraus zwei Regeln: (1) Tempo entsteht **ausschließlich** aus Schwierigkeits-Quellen
+(Grundschwierigkeit der Aufgaben-Art, Confidence, Wellen-Schwierigkeit) — kein Monster und
+keine Regel trägt ein eigenes Tempo; (2) jede Tempo-Änderung ist eine Schwierigkeits-Änderung
+und daher monoton und begrenzt zu behandeln.
+
+Formel (`src/battle/wave_generator.gd`), mit `c` = Confidence (0..1) und `t` =
+normalisierte `task_definition.difficulty` (0..1):
+
+```
+e = c − t                                    # Netto-Können
+speed = REFERENCE_SPEED · clamp(1 + K·e) · speed_scale
+```
+
+- `e < 0` (Confidence unter Grundschwierigkeit) → **langsamer** (Zeit zum Abrufen).
+- `e = 0` → **Referenztempo**. `REFERENCE_SPEED` ist der Nullpunkt der Skala, kein Deko-Wert;
+  es zu ändern verschiebt die Schwierigkeit **aller** Aufgaben.
+- `e > 0` (Confidence übersteigt die Grundschwierigkeit) → **schneller** (mehr Druck).
+
+Die Differenzierung „opposite/synonym sind schwerer als translate" lebt damit allein in
+`task_definition.difficulty` — nicht in per-Monster- oder per-Regel-Geschwindigkeiten.
 
 ### 2. EventBus (`src/core/event_bus.gd`)
 Globaler Signal-Hub. Systeme kommunizieren über Signale statt direkter
@@ -61,7 +92,8 @@ Score, aktive Welle) und reagiert selbst nur über EventBus-Signale.
 
 | Erweiterung | Wie | Bestehender Code betroffen? |
 |---|---|---|
-| Neues Wort/Aufgabe | JSON in `data/lexemes/` + `data/task_templates/` | nein |
+| Neues Wort | JSON in `data/lexemes/` (Aufgaben entstehen automatisch aus Definitions) | nein |
+| Neuer Aufgaben-*Typ* | JSON in `data/task_definitions/` (+ ggf. Resolver-Zweig) | ggf. Resolver |
 | Neues Monster | JSON in `data/monsters/` | nein |
 | Neuer Boss | JSON in `data/bosses/` | nein |
 | Neue Welle | JSON in `data/waves/` | nein |

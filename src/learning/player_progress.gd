@@ -1,9 +1,10 @@
 extends Node
 ## Persistenter Spielerfortschritt pro Aufgabe (Autoload `PlayerProgress`).
 ##
-## Hält player_task_progress-Records (ERM) und kapselt den SM-2-Scheduler
+## Hält player_progress-Records (ERM) und kapselt den SM-2-Scheduler
 ## (src/learning/spaced_repetition.gd, unverändert wiederverwendet). Der Lernstand
-## hängt nur an Spieler + task_template_id — nicht am Monster.
+## hängt nur an Spieler + learnable_id (Task-Typ + Richtung + Lexeme/Form/Relation),
+## nicht am Monster. Siehe TaskResolver.learnable_id() für das Schlüssel-Schema.
 ##
 ## Persistenz: JSON unter user://progress/<player_id>.json. Content (lexemes, tasks…)
 ## bleibt versioniertes JSON unter res://data/ — hier landet NUR der Fortschritt.
@@ -16,7 +17,7 @@ const MASTERY_CONFIDENCE := 0.8
 ## um 1 (0 → 1 → 2 → 3 → 4). Bewusst als Konstante, damit leicht justierbar.
 const FORTRESS_TIER_THRESHOLDS := [1, 3, 6, 10]
 
-## task_template_id -> {
+## learnable_id -> {
 ##   confidence: float (0..1), attempts: int, correct_total: int,
 ##   current_streak: int, best_streak: int, last_correct: bool,
 ##   last_response_time_ms: int, last_seen_at: int (unix), next_review_at: int (unix)
@@ -79,7 +80,7 @@ func _due_day(task_id: String) -> int:
 	return int(_sr.to_dict().get(task_id, {}).get("due", _today()))
 
 
-## task_template_ids, die heute oder früher fällig sind (überfälligste zuerst).
+## learnable_ids, die heute oder früher fällig sind (überfälligste zuerst).
 ## Nur bereits gesehene Aufgaben; neue (ohne Record) wählt der WaveGenerator separat.
 func due_task_ids() -> Array:
 	return _sr.due_items(_today())

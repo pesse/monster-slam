@@ -3,7 +3,7 @@ extends Node3D
 ## Ein normales Monster in 3D: trägt eine aufgelöste Aufgabe (schwebendes Label3D
 ## mit dem Prompt) und bewegt sich entlang +Z auf die Festung zu. Präsentation +
 ## Bewegung; Kampf-/Wellenlogik liegt im WaveRunner. Das Monster kennt die Aufgabe
-## nur als { prompt, accepted_answers, template_id, ... } (siehe TaskResolver).
+## nur als { prompt, accepted_answers, learnable_id, ... } (siehe TaskResolver).
 
 ## Wird ausgelöst, wenn dieses Monster die Festung erreicht (Node-Handling im WaveRunner).
 signal reached_goal(monster: Monster)
@@ -27,8 +27,10 @@ var _done: bool = false
 
 
 ## Muss VOR add_child aufgerufen werden, damit _ready Label/Modell korrekt setzt.
-## `speed_units` ist die (aus Confidence skalierte) Geschwindigkeit in der bisherigen
-## Pixel-Skala (~35..120); sie wird hier auf 3D-Einheiten/s heruntergerechnet.
+## `speed_units` ist die vom WaveGenerator aus der Schwierigkeit (Grundschwierigkeit
+## der Aufgabe + Confidence + Wellenfaktor) berechnete Geschwindigkeit; sie wird hier
+## auf 3D-Einheiten/s heruntergerechnet. Geschwindigkeit IST Schwierigkeit — das Monster
+## selbst trägt kein eigenes Tempo mehr.
 func setup(def: Dictionary, task_data: Dictionary, target_z: float, speed_units: float) -> void:
 	monster_def = def
 	task = task_data

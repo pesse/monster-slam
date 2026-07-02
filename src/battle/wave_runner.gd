@@ -488,7 +488,7 @@ func _on_answer_submitted(text: String) -> void:
 	for monster in _active:
 		if _evaluator.evaluate_answers(monster.task.get("accepted_answers", []), text):
 			var rt := Time.get_ticks_msec() - monster.spawned_at_ms
-			var task_id := str(monster.task.get("template_id", ""))
+			var task_id := str(monster.task.get("learnable_id", ""))
 			PlayerProgress.record(task_id, true, rt)
 			EventBus.item_reviewed.emit(task_id, true)
 			_defeat(monster)
@@ -572,7 +572,7 @@ func _on_monster_reached_goal(monster: Monster) -> void:
 	_spawn_explosion(monster.position + Vector3(0.0, 1.0, 0.0), Color(1.0, 0.45, 0.12), 2.6)
 	_shake(0.9)
 	# Monster durchgelassen = Aufgabe nicht rechtzeitig abgerufen -> als Fehler verbuchen.
-	var task_id := str(monster.task.get("template_id", ""))
+	var task_id := str(monster.task.get("learnable_id", ""))
 	PlayerProgress.record(task_id, false)
 	EventBus.item_reviewed.emit(task_id, false)
 	EventBus.fortress_damaged.emit(monster.damage)
