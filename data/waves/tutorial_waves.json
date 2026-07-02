@@ -5,7 +5,9 @@
     "time_pressure": "low",
     "description": "Neue Vokabeln werden ohne Zeitdruck eingeführt.",
     "spawns": [
-      { "monster": "monster.slime", "count": 5, "interval": 4.0, "vocab_tags": ["basics"] }
+      { "monster": "monster.skeleton_minion", "count": 3, "interval": 4.0, "vocab_tags": ["basics"] },
+      { "monster": "monster.skeleton_rogue", "count": 2, "interval": 6.0, "vocab_tags": ["basics"] },
+      { "monster": "monster.skeleton_warrior", "count": 2, "interval": 7.0, "vocab_tags": ["basics"] }
     ]
   },
   {
@@ -14,8 +16,8 @@
     "time_pressure": "medium",
     "description": "Bereits bekannte Vokabeln in schnelleren Wellen.",
     "spawns": [
-      { "monster": "monster.goblin", "count": 6, "interval": 2.5, "vocab_tags": ["basics"] },
-      { "monster": "monster.bat", "count": 3, "interval": 2.0, "vocab_tags": ["basics"], "review_only": true }
+      { "monster": "monster.skeleton_rogue", "count": 6, "interval": 2.5, "vocab_tags": ["basics"] },
+      { "monster": "monster.skeleton_warrior", "count": 3, "interval": 2.0, "vocab_tags": ["basics"], "review_only": true }
     ]
   },
   {

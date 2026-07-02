@@ -46,38 +46,44 @@ func _apply_model() -> void:
 	inst.rotation_degrees.y = float(monster_def.get("model_yaw", 0.0))
 	add_child(inst)
 	_placeholder.visible = false
-	_play_loop_animation(inst)
+	_setup_animation(inst)
 
 
-## Sucht einen AnimationPlayer im geladenen Modell und loopt eine Lauf-/Idle-
-## Animation (bevorzugt gängige Namen, sonst die erste vorhandene).
-func _play_loop_animation(root: Node) -> void:
-	var anim := _find_animation_player(root)
-	if anim == null:
+## KayKit-Charaktere haben keine eigenen Animationen — diese liegen in einer
+## separaten Rig-Datei mit identischem "Rig_Medium/Skeleton3D"-Aufbau. Wir hängen
+## einen AnimationPlayer an den Modell-Root, dessen root_node dorthin zeigt, und
+## bespielen ihn mit der geteilten Bewegungs-Library (loopt "Walking_A").
+func _setup_animation(model_root: Node3D) -> void:
+	var lib := _get_movement_library()
+	if lib == null:
 		return
-	var name := ""
-	for candidate in ["Walking_A", "Walk", "Walking", "Run", "Idle", "Idle_A"]:
-		if anim.has_animation(candidate):
-			name = candidate
-			break
-	if name == "" and not anim.get_animation_list().is_empty():
-		name = anim.get_animation_list()[0]
-	if name == "":
-		return
-	var clip := anim.get_animation(name)
-	if clip:
-		clip.loop_mode = Animation.LOOP_LINEAR
-	anim.play(name)
+	var anim := AnimationPlayer.new()
+	model_root.add_child(anim)
+	anim.root_node = anim.get_path_to(model_root)
+	anim.add_animation_library("", lib)
+	for candidate in ["Walking_A", "Walking_B", "Walking_C", "Running_A"]:
+		if lib.has_animation(candidate):
+			lib.get_animation(candidate).loop_mode = Animation.LOOP_LINEAR
+			anim.play(candidate)
+			return
 
 
-func _find_animation_player(node: Node) -> AnimationPlayer:
-	if node is AnimationPlayer:
-		return node
-	for child in node.get_children():
-		var found := _find_animation_player(child)
-		if found != null:
-			return found
-	return null
+## Lädt die Bewegungs-AnimationLibrary einmalig und teilt sie zwischen allen Monstern.
+static var _movement_library: AnimationLibrary
+
+static func _get_movement_library() -> AnimationLibrary:
+	const ANIM_SCENE := "res://assets/models/animations/Rig_Medium_MovementBasic.glb"
+	if _movement_library != null:
+		return _movement_library
+	if not ResourceLoader.exists(ANIM_SCENE):
+		return null
+	var scene: PackedScene = load(ANIM_SCENE)
+	var inst := scene.instantiate()
+	var src := inst.find_child("AnimationPlayer", true, false) as AnimationPlayer
+	if src != null and not src.get_animation_library_list().is_empty():
+		_movement_library = src.get_animation_library(src.get_animation_library_list()[0])
+	inst.free()
+	return _movement_library
 
 
 func _physics_process(delta: float) -> void:

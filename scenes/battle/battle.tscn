@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://src/battle/wave_runner.gd" id="1_battle"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="2_hud"]
@@ -17,12 +17,6 @@ size = Vector2(22, 26)
 [sub_resource type="StandardMaterial3D" id="GroundMat_1"]
 albedo_color = Color(0.22, 0.24, 0.2, 1)
 
-[sub_resource type="BoxMesh" id="Box_1"]
-size = Vector3(18, 3, 1.5)
-
-[sub_resource type="StandardMaterial3D" id="FortMat_1"]
-albedo_color = Color(0.4, 0.36, 0.5, 1)
-
 [node name="Battle" type="Node3D"]
 script = ExtResource("1_battle")
 
@@ -39,11 +33,6 @@ shadow_enabled = true
 [node name="Ground" type="MeshInstance3D" parent="."]
 mesh = SubResource("Plane_1")
 surface_material_override/0 = SubResource("GroundMat_1")
-
-[node name="Fortress" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 7.5)
-mesh = SubResource("Box_1")
-surface_material_override/0 = SubResource("FortMat_1")
 
 [node name="Monsters" type="Node3D" parent="."]
 

@@ -18,8 +18,10 @@ mesh = SubResource("CapsuleMesh_1")
 surface_material_override/0 = SubResource("Mat_1")
 
 [node name="Label" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.6, 0)
 billboard = 1
+no_depth_test = true
+render_priority = 10
 pixel_size = 0.015
 font_size = 64
 outline_size = 10
