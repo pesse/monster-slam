@@ -1,29 +1,29 @@
 [
   {
-    "id": "wave.tutorial_1",
-    "name": "Erste Begegnung",
-    "time_pressure": "low",
-    "description": "Neue Vokabeln werden ohne Zeitdruck eingeführt.",
-    "spawns": [
-      { "monster": "monster.skeleton_minion", "count": 3, "interval": 4.0, "vocab_tags": ["basics"] },
-      { "monster": "monster.skeleton_rogue", "count": 2, "interval": 6.0, "vocab_tags": ["basics"] },
-      { "monster": "monster.skeleton_warrior", "count": 2, "interval": 7.0, "vocab_tags": ["basics"] }
-    ]
+	"id": "wave.tutorial_1",
+	"name": "Erste Begegnung",
+	"time_pressure": "low",
+	"description": "Neue Vokabeln werden ohne Zeitdruck eingeführt. Das Monster ergibt sich aus dem Aufgabentyp (monster_task_rules).",
+	"spawns": [
+	  { "count": 3, "interval": 4.0, "task_pool": { "task_types": ["translate"], "direction": "de_to_en", "tags": ["basics"], "difficulty_max": 1 } },
+	  { "count": 2, "interval": 6.0, "task_pool": { "task_types": ["translate"], "tags": ["basics"], "difficulty_max": 2 } },
+	  { "count": 2, "interval": 7.0, "task_pool": { "task_types": ["translate", "opposite"], "tags": ["basics"], "difficulty_max": 3 } }
+	]
   },
   {
-    "id": "wave.recall_1",
-    "name": "Schneller Abruf",
-    "time_pressure": "medium",
-    "description": "Bereits bekannte Vokabeln in schnelleren Wellen.",
-    "spawns": [
-      { "monster": "monster.skeleton_rogue", "count": 6, "interval": 2.5, "vocab_tags": ["basics"] },
-      { "monster": "monster.skeleton_warrior", "count": 3, "interval": 2.0, "vocab_tags": ["basics"], "review_only": true }
-    ]
+	"id": "wave.recall_1",
+	"name": "Schneller Abruf",
+	"time_pressure": "medium",
+	"description": "Gemischte Aufgabentypen in schnellerer Folge; fällige Aufgaben werden bevorzugt.",
+	"spawns": [
+	  { "count": 6, "interval": 2.5, "task_pool": { "task_types": ["translate", "opposite", "synonym"], "tags": ["basics"] } },
+	  { "count": 3, "interval": 2.0, "task_pool": { "task_types": ["conjugation"] } }
+	]
   },
   {
-    "id": "wave.boss_1",
-    "name": "Der Grammatik-Golem",
-    "time_pressure": "none",
-    "boss": "boss.grammar_golem"
+	"id": "wave.boss_1",
+	"name": "Der Grammatik-Golem",
+	"time_pressure": "none",
+	"boss": "boss.grammar_golem"
   }
 ]

@@ -16,12 +16,18 @@ var sentence_backend: Callable = Callable()
 
 
 ## Returns true if `answer` matches any accepted answer (case/whitespace-insensitive).
-func evaluate_vocab(entry: Dictionary, answer: String) -> bool:
+## Nimmt direkt die Liste gültiger Antworten (z. B. task.accepted_answers).
+func evaluate_answers(accepted: Array, answer: String) -> bool:
 	var normalized := _normalize(answer)
-	for accepted in entry.get("answers", []):
-		if _normalize(str(accepted)) == normalized:
+	for a in accepted:
+		if _normalize(str(a)) == normalized:
 			return true
 	return false
+
+
+## Kompatibilitäts-Helfer: prüft gegen entry["answers"].
+func evaluate_vocab(entry: Dictionary, answer: String) -> bool:
+	return evaluate_answers(entry.get("answers", []), answer)
 
 
 ## Returns { "quality": 0.0..1.0, "feedback": String }.

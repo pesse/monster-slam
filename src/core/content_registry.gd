@@ -12,7 +12,18 @@ extends Node
 const DATA_ROOT := "res://data"
 
 ## Per-category catalogs (id -> entry Dictionary). Filled by reload().
-var vocabulary: Dictionary = {}
+##
+## Sprachdaten und Aufgaben sind normalisiert (ERM, siehe docs/ARCHITECTURE.md):
+## lexemes/forms/relations beschreiben die Sprache, task_templates die Aufgaben,
+## monster_task_rules nur die Darstellung. sentences/sentence_lexemes sind für das
+## (noch zurückgestellte) Satz-/Boss-Feature reserviert und vorerst leer.
+var lexemes: Dictionary = {}
+var lexeme_forms: Dictionary = {}
+var lexeme_relations: Dictionary = {}
+var sentences: Dictionary = {}
+var sentence_lexemes: Dictionary = {}
+var task_templates: Dictionary = {}
+var monster_task_rules: Dictionary = {}
 var monsters: Dictionary = {}
 var bosses: Dictionary = {}
 var skills: Dictionary = {}
@@ -25,7 +36,13 @@ var _by_category: Dictionary = {}
 
 func _ready() -> void:
 	_by_category = {
-		"vocabulary": vocabulary,
+		"lexemes": lexemes,
+		"lexeme_forms": lexeme_forms,
+		"lexeme_relations": lexeme_relations,
+		"sentences": sentences,
+		"sentence_lexemes": sentence_lexemes,
+		"task_templates": task_templates,
+		"monster_task_rules": monster_task_rules,
 		"monsters": monsters,
 		"bosses": bosses,
 		"skills": skills,
@@ -52,15 +69,50 @@ func get_entry(category: String, id: String) -> Dictionary:
 	return _by_category.get(category, {}).get(id, {})
 
 
-## Returns vocabulary entries whose "tags" intersect the requested tags.
-func vocabulary_by_tags(tags: Array) -> Array:
+## Returns lexeme entries whose "tags" intersect the requested tags.
+## Leere `tags` -> alle Lexeme (kein Filter).
+func lexemes_by_tags(tags: Array) -> Array:
+	if tags.is_empty():
+		return lexemes.values()
 	var result: Array = []
-	for entry in vocabulary.values():
+	for entry in lexemes.values():
 		for tag in entry.get("tags", []):
 			if tag in tags:
 				result.append(entry)
 				break
 	return result
+
+
+## Alle Formen eines Lexems; optional auf einen form_type gefiltert.
+func forms_for(lexeme_id: String, form_type: String = "") -> Array:
+	var result: Array = []
+	for entry in lexeme_forms.values():
+		if entry.get("lexeme_id", "") != lexeme_id:
+			continue
+		if form_type != "" and entry.get("form_type", "") != form_type:
+			continue
+		result.append(entry)
+	return result
+
+
+## Relationen, die von `lexeme_id` ausgehen und den gewünschten Typ haben
+## (opposite | synonym | confused_with | related).
+func relations_of(lexeme_id: String, relation_type: String) -> Array:
+	var result: Array = []
+	for entry in lexeme_relations.values():
+		if entry.get("from_lexeme_id", "") == lexeme_id \
+				and entry.get("relation_type", "") == relation_type:
+			result.append(entry)
+	return result
+
+
+## Findet die monster_task_rule für (task_type, direction), oder {} wenn keine passt.
+func monster_rule_for(task_type: String, direction: String) -> Dictionary:
+	for entry in monster_task_rules.values():
+		if entry.get("task_type", "") == task_type \
+				and entry.get("direction", "") == direction:
+			return entry
+	return {}
 
 
 func _scan_dir(path: String, target: Dictionary, category: String) -> void:

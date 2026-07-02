@@ -1,14 +1,22 @@
 class_name Monster
 extends Node3D
-## Ein normales Monster in 3D: trägt eine Vokabel (schwebendes Label3D) und
-## bewegt sich entlang +Z auf die Festung zu. Präsentation + Bewegung;
-## Kampf-/Wellenlogik liegt im WaveRunner.
+## Ein normales Monster in 3D: trägt eine aufgelöste Aufgabe (schwebendes Label3D
+## mit dem Prompt) und bewegt sich entlang +Z auf die Festung zu. Präsentation +
+## Bewegung; Kampf-/Wellenlogik liegt im WaveRunner. Das Monster kennt die Aufgabe
+## nur als { prompt, accepted_answers, template_id, ... } (siehe TaskResolver).
 
 ## Wird ausgelöst, wenn dieses Monster die Festung erreicht (Node-Handling im WaveRunner).
 signal reached_goal(monster: Monster)
 
 var monster_def: Dictionary = {}
-var vocab: Dictionary = {}
+var task: Dictionary = {}
+
+## Aus der monster_task_rule abgeleitet und vom WaveGenerator gesetzt.
+var damage: int = 10
+var reward: int = 10
+
+## Zeitpunkt des Spawns (ms) für die Antwortzeit-Messung; vom WaveRunner gesetzt.
+var spawned_at_ms: int = 0
 
 var _speed: float = 2.0
 var _target_z: float = 0.0
@@ -19,16 +27,17 @@ var _done: bool = false
 
 
 ## Muss VOR add_child aufgerufen werden, damit _ready Label/Modell korrekt setzt.
-func setup(def: Dictionary, vocab_entry: Dictionary, target_z: float) -> void:
+## `speed_units` ist die (aus Confidence skalierte) Geschwindigkeit in der bisherigen
+## Pixel-Skala (~35..120); sie wird hier auf 3D-Einheiten/s heruntergerechnet.
+func setup(def: Dictionary, task_data: Dictionary, target_z: float, speed_units: float) -> void:
 	monster_def = def
-	vocab = vocab_entry
-	# 2D-Pixelgeschwindigkeiten (~35..120) auf 3D-Einheiten/s herunterskalieren.
-	_speed = float(def.get("speed", 40.0)) / 20.0
+	task = task_data
+	_speed = speed_units / 20.0
 	_target_z = target_z
 
 
 func _ready() -> void:
-	_label.text = str(vocab.get("prompt", "?"))
+	_label.text = str(task.get("prompt", "?"))
 	_apply_model()
 
 

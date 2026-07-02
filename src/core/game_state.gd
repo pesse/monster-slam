@@ -29,6 +29,6 @@ func _on_fortress_damaged(amount: int) -> void:
 	fortress_health = max(0, fortress_health - amount)
 
 
-func _on_monster_defeated(_monster: Dictionary, was_correct: bool) -> void:
+func _on_monster_defeated(monster: Dictionary, was_correct: bool) -> void:
 	if was_correct:
-		score += 10
+		score += int(monster.get("reward", 10))

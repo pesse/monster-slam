@@ -7,7 +7,6 @@ const MONSTER_SCENE := preload("res://scenes/entities/monster.tscn")
 const GOAL_Z := 6.5           # Festungsfront (Monster-Ziel)
 const SPAWN_Z := -11.0        # Spawn am hinteren Ende der Bahn
 const LANE_HALF_WIDTH := 7.0
-const FORTRESS_HIT := 10
 
 const SHAKE_DURATION := 0.35
 const SHAKE_MAGNITUDE := 0.35 # in 3D-Einheiten
@@ -15,6 +14,7 @@ const FLASH_CORRECT := Color(0.3, 1.0, 0.45)
 const FLASH_WRONG := Color(1.0, 0.3, 0.3)
 
 var _evaluator := AnswerEvaluator.new()
+var _generator := WaveGenerator.new()
 var _active: Array[Monster] = []
 var _total: int = 0
 var _spawned: int = 0
@@ -233,36 +233,42 @@ func _run_spawn_batch(entry: Dictionary) -> void:
 
 
 func _spawn(entry: Dictionary) -> void:
-	var def: Dictionary = ContentRegistry.monsters.get(entry.get("monster", ""), {})
-	if def.is_empty():
-		push_warning("WaveRunner: unbekanntes Monster '%s'" % entry.get("monster", ""))
+	# Der WaveGenerator wählt anhand des Spieler-Fortschritts eine Aufgabe aus dem
+	# Pool, löst sie auf und bestimmt Darstellung (monster_task_rules) + Basiswerte.
+	var plan: Dictionary = _generator.pick(entry.get("task_pool", {}))
+	if plan.is_empty():
+		push_warning("WaveRunner: keine spielbare Aufgabe für Pool %s" % str(entry.get("task_pool", {})))
 		return
-	var candidates: Array = ContentRegistry.vocabulary_by_tags(entry.get("vocab_tags", []))
-	if candidates.is_empty():
-		push_warning("WaveRunner: keine Vokabeln für Tags %s" % str(entry.get("vocab_tags", [])))
-		return
-	var vocab: Dictionary = candidates[randi() % candidates.size()]
 
 	var monster := MONSTER_SCENE.instantiate() as Monster
-	monster.setup(def, vocab, GOAL_Z)
+	monster.setup(plan["monster_def"], plan["task"], GOAL_Z, plan["speed"])
+	monster.damage = plan["damage"]
+	monster.reward = plan["reward"]
+	monster.spawned_at_ms = Time.get_ticks_msec()
 	monster.position = Vector3(randf_range(-LANE_HALF_WIDTH, LANE_HALF_WIDTH), 0.0, SPAWN_Z)
 	monster.reached_goal.connect(_on_monster_reached_goal)
 	_monsters.add_child(monster)
 	_active.append(monster)
 	_spawned += 1
-	EventBus.monster_spawned.emit(def)
+	EventBus.monster_spawned.emit(plan["monster_def"])
 
 
 func _on_answer_submitted(text: String) -> void:
 	if _finished:
 		return
 	for monster in _active:
-		if _evaluator.evaluate_vocab(monster.vocab, text):
+		if _evaluator.evaluate_answers(monster.task.get("accepted_answers", []), text):
+			var rt := Time.get_ticks_msec() - monster.spawned_at_ms
+			var task_id := str(monster.task.get("template_id", ""))
+			PlayerProgress.record(task_id, true, rt)
+			EventBus.item_reviewed.emit(task_id, true)
 			_defeat(monster)
 			_flash_feedback(FLASH_CORRECT)
 			return
 	# Kein Treffer -> Falscheingabe: rotes Flash + Kamera-Wackeln.
-	# Anknüpfpunkt fürs Lernsystem (Fehlversuch protokollieren).
+	# Bewusst KEIN Fortschritts-Eintrag: eine Falscheingabe lässt sich keiner
+	# konkreten Aufgabe zuordnen (mehrere Monster gleichzeitig). Ein echtes
+	# Scheitern wird beim Erreichen der Festung verbucht (_on_monster_reached_goal).
 	_flash_feedback(FLASH_WRONG)
 	_shake()
 
@@ -281,7 +287,10 @@ func _flash_feedback(color: Color) -> void:
 func _defeat(monster: Monster) -> void:
 	_active.erase(monster)
 	_spawn_explosion(monster.position + Vector3(0.0, 1.0, 0.0), Color(0.7, 1.0, 0.4), 1.5)
-	EventBus.monster_defeated.emit(monster.monster_def, true)
+	# Reward aus der monster_task_rule an GameState durchreichen (Score).
+	var info := monster.monster_def.duplicate()
+	info["reward"] = monster.reward
+	EventBus.monster_defeated.emit(info, true)
 	monster.queue_free()
 	_check_end()
 
@@ -301,7 +310,11 @@ func _on_monster_reached_goal(monster: Monster) -> void:
 	_active.erase(monster)
 	_spawn_explosion(monster.position + Vector3(0.0, 1.0, 0.0), Color(1.0, 0.45, 0.12), 2.6)
 	_shake(0.9)
-	EventBus.fortress_damaged.emit(FORTRESS_HIT)
+	# Monster durchgelassen = Aufgabe nicht rechtzeitig abgerufen -> als Fehler verbuchen.
+	var task_id := str(monster.task.get("template_id", ""))
+	PlayerProgress.record(task_id, false)
+	EventBus.item_reviewed.emit(task_id, false)
+	EventBus.fortress_damaged.emit(monster.damage)
 	if GameState.fortress_health <= 0:
 		_end("Niederlage – die Festung ist gefallen.")
 		return
