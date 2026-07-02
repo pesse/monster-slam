@@ -16,6 +16,8 @@ var active_skills: Array[String] = []
 func _ready() -> void:
 	EventBus.fortress_damaged.connect(_on_fortress_damaged)
 	EventBus.monster_defeated.connect(_on_monster_defeated)
+	# Jede Welle startet mit voller Festung — HP wird pro Welle zurückgesetzt.
+	EventBus.wave_started.connect(_on_wave_started)
 
 
 func reset() -> void:
@@ -23,6 +25,10 @@ func reset() -> void:
 	score = 0
 	current_wave = ""
 	active_skills.clear()
+
+
+func _on_wave_started(_wave_id: String) -> void:
+	fortress_health = FORTRESS_MAX_HEALTH
 
 
 func _on_fortress_damaged(amount: int) -> void:

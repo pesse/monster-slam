@@ -20,6 +20,18 @@ var _total: int = 0
 var _spawned: int = 0
 var _finished: bool = false
 
+# Prozedurale Wellen (nicht mehr aus Content-Dateien): Schwierigkeit + Wellennummer
+# steuern Erzeugung und Tempo. Der Spieler wählt die Schwierigkeit auf dem Statistik-Screen.
+var _difficulty: int = 3           # 1..5, vom Spieler gewählt
+var _wave_number: int = 1          # laufende Nummer (Anzeige + Skalierung)
+var _wave_correct: int = 0         # richtig besiegte Monster dieser Welle
+var _wave_leaked: int = 0          # an der Festung durchgelassene Monster dieser Welle
+var _score_at_start: int = 0       # Punktestand zu Wellenbeginn (für "+X" im Screen)
+var _last_won: bool = true         # Ausgang der zuletzt beendeten Welle
+# Generation-Zähler: bricht Spawn-Coroutinen einer alten Welle ab, sobald eine neue
+# startet (der _finished-Check allein reicht nicht, da die neue Welle _finished=false setzt).
+var _wave_gen: int = 0
+
 var _cam_base: Vector3
 var _shake_left: float = 0.0
 var _shake_mag: float = SHAKE_MAGNITUDE
@@ -32,6 +44,8 @@ var _fortress_tier: int = -1
 @onready var _camera: Camera3D = $CameraPivot/Camera3D
 @onready var _end_label: Label = $UI/EndLabel
 @onready var _flash: ColorRect = $UI/Flash
+@onready var _stats: PanelContainer = $UI/WaveStats
+@onready var _answer_input: LineEdit = $UI/AnswerInput
 
 
 func _ready() -> void:
@@ -49,7 +63,9 @@ func _ready() -> void:
 	var debug_panel := $UI/DebugPanel
 	if debug_panel.has_signal("fortress_tier_selected"):
 		debug_panel.fortress_tier_selected.connect(_on_debug_tier_selected)
-	start_wave("wave.tutorial_1")
+	if _stats.has_signal("next_wave_requested"):
+		_stats.next_wave_requested.connect(_on_next_wave_requested)
+	_start_next_wave()
 
 
 ## Prozedurales Low-Poly-Terrain: flaches Innenfeld (Spielfläche/Props/Festung),
@@ -309,27 +325,73 @@ func _process(delta: float) -> void:
 		_camera.position = _cam_base + Vector3(randf_range(-mag, mag), randf_range(-mag, mag), 0.0)
 
 
-func start_wave(wave_id: String) -> void:
-	var wave: Dictionary = ContentRegistry.waves.get(wave_id, {})
-	if wave.is_empty():
-		push_error("WaveRunner: unbekannte Welle '%s'" % wave_id)
-		return
-	GameState.current_wave = wave_id
-	var spawns: Array = wave.get("spawns", [])
+## Startet die nächste (prozedural erzeugte) Welle mit der aktuell gewählten Schwierigkeit.
+## Ersetzt das frühere content-basierte start_wave(): Wellen sind nicht mehr vordefiniert,
+## sondern werden aus Schwierigkeit + Wellennummer generiert.
+func _start_next_wave() -> void:
+	_wave_gen += 1
+	var gen := _wave_gen
+	# Wellen-Zustand zurücksetzen (auch bei Wiederholung nach Niederlage).
+	_clear_active_monsters()
+	_total = 0
+	_spawned = 0
+	_finished = false
+	_wave_correct = 0
+	_wave_leaked = 0
+	_score_at_start = GameState.score
+	_end_label.visible = false
+	_stats.hide_stats()
+	_answer_input.visible = true
+
+	GameState.current_wave = "procedural_%d" % _wave_number
+	_generator.speed_scale = _difficulty_to_speed(_difficulty)
+	var spawns := _generate_wave(_difficulty, _wave_number)
 	for entry in spawns:
 		_total += int(entry.get("count", 0))
-	EventBus.wave_started.emit(wave_id)
+	# Löst den HP-Reset (GameState) + HUD-Refresh aus.
+	EventBus.wave_started.emit(GameState.current_wave)
 	for entry in spawns:
-		_run_spawn_batch(entry)
+		_run_spawn_batch(entry, gen)
+
+
+## Schwierigkeit (1..5) -> Tempo-Multiplikator auf die Basis-Geschwindigkeit
+## (Stufe 1..5 ⇒ 0.6 .. 1.4, also -40 % … +40 %).
+func _difficulty_to_speed(difficulty: int) -> float:
+	return 0.6 + 0.2 * float(clampi(difficulty, 1, 5) - 1)
+
+
+## Erzeugt die Spawn-Batches einer Welle prozedural. Rückgabe: Array von Dicts der Form
+## {count, interval, task_pool} — dasselbe Format, das _run_spawn_batch/_spawn erwarten.
+func _generate_wave(difficulty: int, wave_number: int) -> Array:
+	var count := 4 + wave_number                       # wächst pro Welle
+	var interval := maxf(1.5, 4.0 - 0.3 * difficulty)  # härter ⇒ schnellere Folge
+	return [{
+		"count": count,
+		"interval": interval,
+		"task_pool": {
+			"task_types": ["translate", "opposite", "synonym"],
+			"tags": ["basics"],
+			"difficulty_max": clampi(difficulty, 1, 5),
+		},
+	}]
+
+
+## Entfernt noch aktive Monster (z. B. Reste einer verlorenen Welle) vom Feld.
+func _clear_active_monsters() -> void:
+	for monster in _active:
+		if is_instance_valid(monster):
+			monster.queue_free()
+	_active.clear()
 
 
 ## Läuft als Coroutine — mehrere Batches spawnen dadurch nebenläufig im Takt.
-func _run_spawn_batch(entry: Dictionary) -> void:
+## `gen` bindet die Coroutine an ihre Welle: startet inzwischen eine neue Welle, bricht sie ab.
+func _run_spawn_batch(entry: Dictionary, gen: int) -> void:
 	var count := int(entry.get("count", 0))
 	var interval := float(entry.get("interval", 2.0))
 	for i in count:
 		await get_tree().create_timer(interval).timeout
-		if _finished or not is_inside_tree():
+		if _finished or not is_inside_tree() or gen != _wave_gen:
 			return
 		_spawn(entry)
 
@@ -388,6 +450,7 @@ func _flash_feedback(color: Color) -> void:
 
 func _defeat(monster: Monster) -> void:
 	_active.erase(monster)
+	_wave_correct += 1
 	_spawn_explosion(monster.position + Vector3(0.0, 1.0, 0.0), Color(0.7, 1.0, 0.4), 1.5)
 	# Reward aus der monster_task_rule an GameState durchreichen (Score).
 	var info := monster.monster_def.duplicate()
@@ -410,6 +473,7 @@ func _on_monster_reached_goal(monster: Monster) -> void:
 	if not _active.has(monster):
 		return
 	_active.erase(monster)
+	_wave_leaked += 1
 	_spawn_explosion(monster.position + Vector3(0.0, 1.0, 0.0), Color(1.0, 0.45, 0.12), 2.6)
 	_shake(0.9)
 	# Monster durchgelassen = Aufgabe nicht rechtzeitig abgerufen -> als Fehler verbuchen.
@@ -418,7 +482,7 @@ func _on_monster_reached_goal(monster: Monster) -> void:
 	EventBus.item_reviewed.emit(task_id, false)
 	EventBus.fortress_damaged.emit(monster.damage)
 	if GameState.fortress_health <= 0:
-		_end("Niederlage – die Festung ist gefallen.")
+		_finish_wave(false)
 		return
 	_check_end()
 
@@ -428,10 +492,36 @@ func _check_end() -> void:
 		return
 	if _spawned >= _total and _active.is_empty():
 		EventBus.wave_cleared.emit(GameState.current_wave)
-		_end("Welle geräumt!")
+		_finish_wave(true)
 
 
-func _end(message: String) -> void:
+## Beendet die Welle und zeigt den Statistik-Screen (Sieg oder Niederlage).
+func _finish_wave(won: bool) -> void:
+	if _finished:
+		return
 	_finished = true
-	_end_label.text = message
-	_end_label.visible = true
+	_last_won = won
+	_answer_input.visible = false
+	var total := _wave_correct + _wave_leaked
+	var accuracy := 100.0 * float(_wave_correct) / float(max(1, total))
+	_stats.show_stats({
+		"won": won,
+		"wave_number": _wave_number,
+		"difficulty": _difficulty,
+		"correct": _wave_correct,
+		"leaked": _wave_leaked,
+		"total": total,
+		"accuracy": accuracy,
+		"score_gained": GameState.score - _score_at_start,
+		"score_total": GameState.score,
+		"fortress_health": GameState.fortress_health,
+		"mastered": PlayerProgress.mastered_count(),
+		"fortress_tier": PlayerProgress.fortress_tier(),
+	})
+
+
+## Spieler hat auf dem Statistik-Screen die nächste Welle mit gewählter Schwierigkeit gerufen.
+func _on_next_wave_requested(difficulty: int) -> void:
+	_difficulty = difficulty
+	_wave_number += 1
+	_start_next_wave()

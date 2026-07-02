@@ -10,6 +10,8 @@ extends Control
 func _ready() -> void:
 	EventBus.fortress_damaged.connect(func(_amount): _refresh())
 	EventBus.monster_defeated.connect(func(_monster, _correct): _refresh())
+	# Zu Wellenbeginn wird die Festungs-HP zurückgesetzt -> Anzeige sofort auffrischen.
+	EventBus.wave_started.connect(func(_wave_id): _refresh())
 	_refresh()
 
 

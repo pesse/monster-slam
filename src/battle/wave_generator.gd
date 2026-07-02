@@ -17,6 +17,11 @@ extends RefCounted
 
 var _resolver := TaskResolver.new()
 
+## Globaler Tempo-Multiplikator, vom WaveRunner aus der gewählten Schwierigkeit gesetzt
+## (1.0 = neutral, >1 schneller/schwerer, <1 langsamer/leichter). Wirkt auf die
+## Basis-Geschwindigkeit, additiv zur bereits vorhandenen Confidence-Skalierung.
+var speed_scale: float = 1.0
+
 
 func pick(pool: Dictionary) -> Dictionary:
 	var candidates := _candidates(pool)
@@ -91,7 +96,7 @@ func _build_plan(template: Dictionary) -> Dictionary:
 	# Confidence skaliert das Tempo: gut gekonnt -> schneller (mehr Druck),
 	# neu/unsicher -> langsamer (mehr Zeit zum Abrufen).
 	var conf := PlayerProgress.confidence(task["template_id"])
-	var speed := float(rule.get("base_speed", 40.0)) * (0.7 + 0.6 * conf)
+	var speed := float(rule.get("base_speed", 40.0)) * (0.7 + 0.6 * conf) * speed_scale
 	return {
 		"task": task,
 		"monster_def": monster_def,
