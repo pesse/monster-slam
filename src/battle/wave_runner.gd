@@ -5,7 +5,7 @@ extends Node3D
 
 const MONSTER_SCENE := preload("res://scenes/entities/monster.tscn")
 const GOAL_Z := 6.5           # Festungsfront (Monster-Ziel)
-const SPAWN_Z := -11.0        # Spawn am hinteren Ende der Bahn
+const SPAWN_Z := -24.0        # Spawn am hinteren Ende der Bahn (längerer Anmarsch)
 const LANE_HALF_WIDTH := 7.0
 
 const SHAKE_DURATION := 0.35
@@ -56,7 +56,8 @@ func _ready() -> void:
 ## sanfte facettierte Hügel am Rand, dezente Grün-Variation je Facette. Flat-Shading
 ## über manuell gesetzte Face-Normalen — passt zum Stil von Burg/Skeletten.
 const TERRAIN_HALF_X := 13.0
-const TERRAIN_HALF_Z := 15.0
+const TERRAIN_Z_BACK := -28.0   # hinter dem Spawn (Hügel)
+const TERRAIN_Z_FRONT := 17.0   # nur knapp hinter die Festung, sonst leere Fläche
 const TERRAIN_STEP := 3.0
 
 var _terrain_noise: FastNoiseLite
@@ -70,8 +71,8 @@ func _setup_ground() -> void:
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var x := -TERRAIN_HALF_X
 	while x < TERRAIN_HALF_X - 0.001:
-		var z := -TERRAIN_HALF_Z
-		while z < TERRAIN_HALF_Z - 0.001:
+		var z := TERRAIN_Z_BACK
+		while z < TERRAIN_Z_FRONT - 0.001:
 			var a := _terrain_point(x, z, noise)
 			var b := _terrain_point(x, z + TERRAIN_STEP, noise)
 			var c := _terrain_point(x + TERRAIN_STEP, z + TERRAIN_STEP, noise)
@@ -94,8 +95,8 @@ func _terrain_point(x: float, z: float, noise: FastNoiseLite) -> Vector3:
 
 
 func _terrain_height(x: float, z: float, noise: FastNoiseLite) -> float:
-	# Innenfeld flach halten; nur außerhalb sanfte Hügel.
-	var edge := maxf(absf(x) - 9.0, -z - 11.0)
+	# Innenfeld flach halten (bis knapp hinter den Spawn); nur außerhalb sanfte Hügel.
+	var edge := maxf(absf(x) - 9.0, -z + SPAWN_Z)
 	if edge <= 0.0:
 		return 0.0
 	var n := noise.get_noise_2d(x, z) * 0.5 + 0.5
@@ -141,29 +142,32 @@ func _decorate() -> void:
 	d.name = "Decor"
 	add_child(d)
 
+	var z_back := SPAWN_Z - 2.0    # bis knapp hinter den Spawn
+	var z_front := GOAL_Z - 2.0    # bis kurz vor die Festung
+
 	# Bäume nur an den Seitenstreifen (|x| groß), damit die Bahn frei bleibt
-	for i in _rng.randi_range(5, 9):
+	for i in _rng.randi_range(8, 14):
 		var sx := (1.0 if _rng.randf() < 0.5 else -1.0) * _rng.randf_range(9.5, 12.5)
-		_scatter(d, "tree.glb", sx, _rng.randf_range(-13.0, 4.0), _rng.randf_range(0.85, 1.2))
+		_scatter(d, "tree.glb", sx, _rng.randf_range(z_back, z_front), _rng.randf_range(0.85, 1.2))
 
 	# Steine über das Feld verteilt
-	for i in _rng.randi_range(3, 7):
-		_scatter(d, "rock.glb", _rng.randf_range(-10.0, 10.0), _rng.randf_range(-13.0, 4.0), _rng.randf_range(1.6, 2.6))
+	for i in _rng.randi_range(5, 10):
+		_scatter(d, "rock.glb", _rng.randf_range(-10.0, 10.0), _rng.randf_range(z_back, z_front), _rng.randf_range(1.6, 2.6))
 
 	# Grasbüschel
-	for i in _rng.randi_range(14, 22):
-		_scatter(d, "grass.glb", _rng.randf_range(-11.0, 11.0), _rng.randf_range(-13.0, 4.5), _rng.randf_range(1.2, 2.0))
+	for i in _rng.randi_range(22, 34):
+		_scatter(d, "grass.glb", _rng.randf_range(-11.0, 11.0), _rng.randf_range(z_back, z_front + 0.5), _rng.randf_range(1.2, 2.0))
 
 	# Fässer/Kisten an den Rändern
-	for i in _rng.randi_range(2, 4):
+	for i in _rng.randi_range(3, 6):
 		var bx := (1.0 if _rng.randf() < 0.5 else -1.0) * _rng.randf_range(8.5, 10.5)
 		var kind := "barrel_large.gltf" if _rng.randf() < 0.5 else "crates_stacked.gltf"
-		_scatter(d, kind, bx, _rng.randf_range(-10.0, 2.0), 1.0)
+		_scatter(d, kind, bx, _rng.randf_range(SPAWN_Z + 4.0, GOAL_Z - 3.0), 1.0)
 
-	# Zwei Fackelsäulen an zufälligen hinteren Randpositionen
+	# Zwei Fackelsäulen am hinteren Rand (Spawn-Seite)
 	for side: float in [-1.0, 1.0]:
 		var px := side * _rng.randf_range(9.5, 11.5)
-		var pz := _rng.randf_range(-12.0, -8.0)
+		var pz := _rng.randf_range(SPAWN_Z + 1.0, SPAWN_Z + 5.0)
 		var gy := _ground_y(px, pz)
 		_place_model(d, "pillar.gltf", Vector3(px, gy, pz), 0.0, Vector3.ONE)
 		_place_model(d, "torch_lit.gltf", Vector3(px, gy + 4.0, pz), 0.0, Vector3.ONE)
@@ -283,9 +287,13 @@ func _place_model(parent: Node3D, filename: String, pos: Vector3, yaw_deg: float
 ## Orthografische Iso-Kamera + Sonne. Per Code, damit die .tscn keine
 ## Transform-Basis-Mathematik enthalten muss.
 func _setup_view() -> void:
-	($CameraPivot as Node3D).rotation_degrees = Vector3(-30.0, 45.0, 0.0)
+	var pivot := $CameraPivot as Node3D
+	pivot.rotation_degrees = Vector3(-30.0, 45.0, 0.0)
+	# Auf die Mitte des Terrains zentrieren, damit der längere Anmarsch komplett
+	# im Bild bleibt, ohne leere Fläche hinter der Festung.
+	pivot.position = Vector3(0.0, 0.0, (TERRAIN_Z_BACK + TERRAIN_Z_FRONT) * 0.5)
 	_camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	_camera.size = 24.0
+	_camera.size = 32.0
 	_camera.position = Vector3(0.0, 0.0, 32.0)
 	($Sun as DirectionalLight3D).rotation_degrees = Vector3(-55.0, -35.0, 0.0)
 
