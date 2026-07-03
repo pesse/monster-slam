@@ -22,6 +22,17 @@ Das Wort selbst (Was?).
 Am Lexem gibt es **keine** `difficulty` — wie schwer ein Wort ist, ergibt sich aus dem
 Lernstand (`PlayerProgress.confidence`); Aufgaben-Schwierigkeit steht auf der `task_definition`.
 
+**Optionale Felder** am Lexem:
+- `cefr` (`A1`…`C2`) und `frequency_band` (`core`/`high`/`common`/`mid`/`low`/`rare`) sind
+  deskriptive Metadaten. Sie setzen **keine** `difficulty`, liefern aber einen *Prior* für die
+  Start-`confidence` einer noch ungesehenen Aufgabe (`WaveGenerator._confidence_prior`):
+  schwerere/seltenere Wörter starten unsicherer → langsameres Monster + mehr Punkte. Fehlen die
+  Felder, gilt `PlayerProgress.DEFAULT_CONFIDENCE`.
+- `notes`: Freitext für Review/Zweifelsfälle (BE/AE-Hinweis, „warum draft"). Wird vom Spiel
+  nicht gelesen, hilft aber bei generierten Sets.
+- Unregelmäßige Verben mit dem Tag `"irregular"` markieren (kein eigenes Feld) — so lässt sich
+  später eine „unregelmäßige Verben"-Welle über den Tag-Filter ziehen.
+
 **Mehrfachübersetzungen** über optionale Arrays `lemma_en_alt` / `lemma_de_alt` — alle
 gelten bei `translate` als richtig (Prompt zeigt weiter das primäre Lemma):
 ```json
@@ -42,6 +53,10 @@ selbst ein eigenes Lernwort mit eigenen Aufgaben, lege besser ein zweites Lexem 
 { "id": "rel.big.small", "from_lexeme_id": "lex.en.big", "to_lexeme_id": "lex.en.small", "relation_type": "opposite", "confidence": 1.0, "review_status": "approved" }
 ```
 `relation_type`: `opposite` | `synonym` | `confused_with` | `related`.
+`opposite`/`synonym` erzeugen Aufgaben nur für Adjektive; `confused_with` erzeugt
+`confusables`-Aufgaben (Verwechslungspaare, alle Wortarten, siehe unten) und sollte in
+**beiden** Richtungen angelegt werden (`relations_of` schaut nur auf `from_lexeme_id`).
+`related` ist Datenbestand ohne Aufgabe.
 
 ### 4. Aufgaben-*Regel* → `data/task_definitions/…json`
 Beschreibt eine **Regel**, was abgefragt wird — **nicht** pro Wort, sondern einmal pro
@@ -53,7 +68,12 @@ Definitions bereits; ein neues Wort braucht hier **keine** neue Zeile.
 { "id": "def.opposite", "task_type": "opposite", "direction": "en_to_en", "requires_relation": "opposite", "allowed_types": ["adjective"], "difficulty": 3 }
 { "id": "def.conj.past_simple", "task_type": "conjugation", "direction": "en", "requires_form": "past_simple", "allowed_types": ["verb"], "difficulty": 2 }
 ```
-`task_type`: `translate` | `opposite` | `synonym` | `conjugation` | `tense` | `fill_gap`* | `sentence`*.
+```json
+{ "id": "def.confusables", "task_type": "confusables", "direction": "de_to_en", "requires_relation": "confused_with", "allowed_types": ["*"], "difficulty": 3 }
+```
+`task_type`: `translate` | `opposite` | `synonym` | `confusables` | `conjugation` | `tense` | `fill_gap`* | `sentence`*.
+`confusables` zeigt die deutsche Bedeutung + beide englischen Kandidaten des Verwechslungspaars
+(z. B. „sich leihen — borrow oder lend?") und akzeptiert das passende Lemma.
 `direction`: `de_to_en` | `en_to_de` | `en_to_en` | `en` (Konjugation).
 `allowed_types`: welche Lexem-`type`s die Definition annimmt (`["*"]` = alle) — verhindert
 unmögliche Kombinationen (z. B. Adjektiv konjugieren).
@@ -65,7 +85,8 @@ Aufgabentypen frei/aus. (\*`fill_gap`/`sentence` sind vorerst zurückgestellt.)
 
 Der Fortschritt wird pro **`learnable_id`** geführt (Task-Typ + Richtung + Lexeme/Form/Relation,
 z. B. `translate:de_to_en:lex.en.cat`, `opposite:lex.en.big:lex.en.small`,
-`conjugation:lex.en.go:past_simple`) — Schema in `TaskResolver.learnable_id()`.
+`confusables:lex.en.borrow:lex.en.lend`, `conjugation:lex.en.go:past_simple`) —
+Schema in `TaskResolver.learnable_id()`.
 
 ## Monster hinzufügen → `data/monsters/…json`
 Monster sind **reine Darstellung** — kein `speed`, keine `difficulty` (Geschwindigkeit ist

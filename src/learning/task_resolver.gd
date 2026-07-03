@@ -17,8 +17,8 @@ extends RefCounted
 ##   "difficulty": int,               # kommt aus der Definition
 ## }
 ## `extra` trägt die aufgaben-spezifischen Bausteine:
-##   opposite/synonym -> { "target_lexeme_id": String }
-##   conjugation      -> { "form_type": String }
+##   opposite/synonym/confusables -> { "target_lexeme_id": String }
+##   conjugation                  -> { "form_type": String }
 ## Gibt {} zurück, wenn die Aufgabe nicht auflösbar ist (fehlende Daten oder ein
 ## noch zurückgestellter task_type wie fill_gap/sentence).
 
@@ -41,6 +41,8 @@ func resolve(definition: Dictionary, source: Dictionary, extra: Dictionary = {})
 			return _resolve_translate(definition, source, extra)
 		"opposite", "synonym":
 			return _resolve_relation(definition, source, extra)
+		"confusables":
+			return _resolve_confusables(definition, source, extra)
 		"conjugation", "tense":
 			return _resolve_conjugation(definition, source, extra)
 		"fill_gap", "sentence":
@@ -61,7 +63,7 @@ func learnable_id(task_type: String, direction: String, source_id: String, extra
 	match task_type:
 		"translate":
 			return "translate:%s:%s" % [direction, source_id]
-		"opposite", "synonym":
+		"opposite", "synonym", "confusables":
 			return "%s:%s:%s" % [task_type, source_id, str(extra.get("target_lexeme_id", ""))]
 		"conjugation", "tense":
 			return "%s:%s:%s" % [task_type, source_id, str(extra.get("form_type", ""))]
@@ -102,6 +104,25 @@ func _resolve_relation(definition: Dictionary, source: Dictionary, extra: Dictio
 		return {}
 	var answers: Array = [str(target.get("lemma_en", ""))]
 	answers.append_array(target.get("lemma_en_alt", []))
+	return _build(definition, source, prompt, answers, extra)
+
+
+## „Confusables": typische Verwechslungspaare (borrow/lend, say/tell …). Der Spieler
+## bekommt die deutsche Bedeutung des Quell-Lexems plus BEIDE englischen Kandidaten und
+## muss den passenden wählen (Freitext). Baut auf `confused_with`-Relationen auf; das
+## konkrete Partner-Lexem kommt aus der Enumeration (WaveGenerator). Antwort = das
+## Quell-Lemma; die Optionen sind alphabetisch sortiert, damit die Lösung nicht immer
+## an derselben Position steht.
+func _resolve_confusables(definition: Dictionary, source: Dictionary, extra: Dictionary) -> Dictionary:
+	var target := _lexeme(extra.get("target_lexeme_id", ""))
+	if target.is_empty():
+		push_warning("TaskResolver: kein Partner-Lexem für confusables (%s)" % definition.get("id", ""))
+		return {}
+	var options := [str(source.get("lemma_en", "")), str(target.get("lemma_en", ""))]
+	options.sort()
+	var prompt := "%s — %s oder %s?" % [source.get("lemma_de", ""), options[0], options[1]]
+	var answers: Array = [str(source.get("lemma_en", ""))]
+	answers.append_array(source.get("lemma_en_alt", []))
 	return _build(definition, source, prompt, answers, extra)
 
 

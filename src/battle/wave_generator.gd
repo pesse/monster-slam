@@ -41,6 +41,37 @@ const REWARD_SENSITIVITY := 0.6
 ## Schwierigkeits-Quelle und wirkt daher multiplikativ auf das Referenztempo.
 var speed_scale: float = 1.0
 
+## Start-Confidence (Prior) für eine noch ungesehene Aufgabe, abgeleitet aus den
+## deskriptiven Lexem-Metadaten `cefr` / `frequency_band`. Das bricht NICHT das Prinzip
+## „Schwierigkeit = Projektion der Confidence": difficulty bleibt an der task_definition,
+## der Prior ist nur eine bessere Anfangsschätzung des Lernstands als der Pauschal-Default.
+## Schwerere/seltenere Wörter starten unsicherer -> langsameres Monster, mehr Punkte.
+## Fehlen beide Felder, bleibt es beim neutralen PlayerProgress.DEFAULT_CONFIDENCE.
+const CEFR_PRIOR := {
+	"A1": 0.50, "A2": 0.40, "B1": 0.30, "B2": 0.20, "C1": 0.12, "C2": 0.08,
+}
+const FREQUENCY_PRIOR := {
+	"core": 0.45, "high": 0.42, "common": 0.35, "mid": 0.30, "low": 0.20, "rare": 0.12,
+}
+
+
+## Mittelt die vorhandenen Prior-Signale (CEFR, Frequenzband) eines Lexems; ohne
+## Signal -> neutraler Default. Ergebnis in 0..1.
+func _confidence_prior(source: Dictionary) -> float:
+	var priors: Array = []
+	var cefr := str(source.get("cefr", "")).to_upper()
+	if CEFR_PRIOR.has(cefr):
+		priors.append(float(CEFR_PRIOR[cefr]))
+	var band := str(source.get("frequency_band", "")).to_lower()
+	if FREQUENCY_PRIOR.has(band):
+		priors.append(float(FREQUENCY_PRIOR[band]))
+	if priors.is_empty():
+		return PlayerProgress.DEFAULT_CONFIDENCE
+	var sum := 0.0
+	for p in priors:
+		sum += p
+	return sum / float(priors.size())
+
 
 func pick(pool: Dictionary) -> Dictionary:
 	var candidates := _candidates(pool)
@@ -153,7 +184,11 @@ func _build_plan(candidate: Dictionary) -> Dictionary:
 	#   c = Confidence des Spielers für diese konkrete Aufgabe (0..1)
 	#   e = c - t   (Netto-Können; e<0 = für den Spieler schwer, e>0 = sicher beherrscht)
 	var t := _difficulty_norm(int(task.get("difficulty", 1)))
-	var c := PlayerProgress.confidence(task["learnable_id"])
+	# Prior aus den Lexem-Metadaten: gilt als Confidence, solange die Aufgabe ungesehen ist,
+	# und als Start-Confidence des Records beim ersten echten Kontakt (siehe WaveRunner).
+	var prior := _confidence_prior(candidate["source"])
+	task["initial_confidence"] = prior
+	var c := PlayerProgress.confidence(task["learnable_id"], prior)
 
 	# Tempo = sichtbare Projektion der Schwierigkeit: schwer -> langsamer (Zeit zum
 	# Abrufen), nur wenn die Confidence die Grundschwierigkeit übersteigt -> schneller.

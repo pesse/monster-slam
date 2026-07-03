@@ -434,7 +434,7 @@ func _generate_wave(difficulty: int, wave_number: int) -> Array:
 		"count": count,
 		"interval": interval,
 		"task_pool": {
-			"task_types": ["translate", "opposite", "synonym"],
+			"task_types": ["translate", "opposite", "synonym", "confusables"],
 			"tags": ["basics"],
 			"difficulty_max": clampi(difficulty, 1, 5),
 		},
@@ -489,7 +489,7 @@ func _on_answer_submitted(text: String) -> void:
 		if _evaluator.evaluate_answers(monster.task.get("accepted_answers", []), text):
 			var rt := Time.get_ticks_msec() - monster.spawned_at_ms
 			var task_id := str(monster.task.get("learnable_id", ""))
-			PlayerProgress.record(task_id, true, rt)
+			PlayerProgress.record(task_id, true, rt, float(monster.task.get("initial_confidence", -1.0)))
 			EventBus.item_reviewed.emit(task_id, true)
 			_defeat(monster)
 			_flash_feedback(FLASH_CORRECT)
@@ -573,7 +573,7 @@ func _on_monster_reached_goal(monster: Monster) -> void:
 	_shake(0.9)
 	# Monster durchgelassen = Aufgabe nicht rechtzeitig abgerufen -> als Fehler verbuchen.
 	var task_id := str(monster.task.get("learnable_id", ""))
-	PlayerProgress.record(task_id, false)
+	PlayerProgress.record(task_id, false, 0, float(monster.task.get("initial_confidence", -1.0)))
 	EventBus.item_reviewed.emit(task_id, false)
 	EventBus.fortress_damaged.emit(monster.damage)
 	if GameState.fortress_health <= 0:

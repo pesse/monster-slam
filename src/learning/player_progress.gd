@@ -13,6 +13,10 @@ const SAVE_DIR := "user://progress"
 
 ## Ab dieser Confidence (0..1) gilt eine Aufgabe als „gemeistert".
 const MASTERY_CONFIDENCE := 0.8
+## Start-Confidence einer noch ungesehenen Aufgabe ohne weitere Information. Ein aus
+## CEFR/Frequenz des Lexems abgeleiteter Prior (WaveGenerator) kann diesen Wert beim
+## ersten Kontakt ersetzen — schwerere/seltenere Wörter starten dann unsicherer.
+const DEFAULT_CONFIDENCE := 0.3
 ## Festungsstufen-Schwellen: ab so vielen gemeisterten Aufgaben steigt die Stufe
 ## um 1 (0 → 1 → 2 → 3 → 4). Bewusst als Konstante, damit leicht justierbar.
 const FORTRESS_TIER_THRESHOLDS := [1, 3, 6, 10]
@@ -38,10 +42,14 @@ func _today() -> int:
 	return int(Time.get_unix_time_from_system() / 86400.0)
 
 
-func _ensure(task_id: String) -> void:
+## `initial_confidence` >= 0 setzt die Start-Confidence eines NEU angelegten Records
+## (der Prior aus CEFR/Frequenz); < 0 fällt auf DEFAULT_CONFIDENCE zurück. Bestehende
+## Records bleiben unberührt.
+func _ensure(task_id: String, initial_confidence: float = -1.0) -> void:
 	if not _records.has(task_id):
+		var start_conf := initial_confidence if initial_confidence >= 0.0 else DEFAULT_CONFIDENCE
 		_records[task_id] = {
-			"confidence": 0.3, "attempts": 0, "correct_total": 0,
+			"confidence": start_conf, "attempts": 0, "correct_total": 0,
 			"current_streak": 0, "best_streak": 0, "last_correct": false,
 			"last_response_time_ms": 0, "last_seen_at": 0, "next_review_at": 0,
 		}
@@ -49,8 +57,8 @@ func _ensure(task_id: String) -> void:
 
 
 ## Verbucht ein Antwort-Ergebnis für eine Aufgabe und aktualisiert Fortschritt + Scheduler.
-func record(task_id: String, correct: bool, response_time_ms: int = 0) -> void:
-	_ensure(task_id)
+func record(task_id: String, correct: bool, response_time_ms: int = 0, initial_confidence: float = -1.0) -> void:
+	_ensure(task_id, initial_confidence)
 	var rec: Dictionary = _records[task_id]
 	rec["attempts"] += 1
 	rec["last_correct"] = correct
@@ -86,9 +94,10 @@ func due_task_ids() -> Array:
 	return _sr.due_items(_today())
 
 
-## Confidence 0..1 für eine Aufgabe; Default für ungesehene Aufgaben.
-func confidence(task_id: String) -> float:
-	return float(_records.get(task_id, {}).get("confidence", 0.3))
+## Confidence 0..1 für eine Aufgabe. Für noch ungesehene Aufgaben liefert `default_value`
+## den Wert — der WaveGenerator übergibt hier den CEFR/Frequenz-Prior des Lexems.
+func confidence(task_id: String, default_value: float = DEFAULT_CONFIDENCE) -> float:
+	return float(_records.get(task_id, {}).get("confidence", default_value))
 
 
 func has_seen(task_id: String) -> bool:
