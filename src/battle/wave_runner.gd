@@ -435,7 +435,9 @@ func _generate_wave(difficulty: int, wave_number: int) -> Array:
 		"interval": interval,
 		"task_pool": {
 			"task_types": ["translate", "opposite", "synonym", "confusables"],
-			"tags": ["basics"],
+			# "basics" = kleiner Starter-Satz, "core" = produktiver Kernwortschatz
+			# (en_klasse9). "receptive"-Wörter bleiben bewusst außen vor (nur verstehen).
+			"tags": ["basics", "core"],
 			"difficulty_max": clampi(difficulty, 1, 5),
 		},
 	}]
