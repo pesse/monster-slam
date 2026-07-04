@@ -32,6 +32,8 @@ var player_id: String = "default"
 
 
 func _ready() -> void:
+	# Aktives Profil aus den Einstellungen übernehmen (UserSettings lädt vorher, siehe [autoload]).
+	player_id = UserSettings.active_profile()
 	load_progress()
 	# Nach geräumter Welle sichern; günstiger Zeitpunkt ohne eigenes Autosave.
 	EventBus.wave_cleared.connect(func(_wave_id): save_progress())
@@ -127,6 +129,76 @@ func fortress_tier() -> int:
 func reset() -> void:
 	_records.clear()
 	_sr = SpacedRepetition.new()
+
+
+## Speichert den aktuellen Stand und wechselt zum Profil `id` (lädt dessen Fortschritt).
+## load_progress() kehrt früh zurück, wenn das Profil noch keine Datei hat -> leerer Start.
+func switch_to(id: String) -> void:
+	save_progress()
+	reset()
+	player_id = id
+	load_progress()
+
+
+# --- Aggregierte Statistik ----------------------------------------------------
+
+## Summe aller Antwortversuche über alle Aufgaben.
+func total_attempts() -> int:
+	var n := 0
+	for rec in _records.values():
+		n += int(rec.get("attempts", 0))
+	return n
+
+
+## Summe aller korrekten Antworten über alle Aufgaben.
+func total_correct() -> int:
+	var n := 0
+	for rec in _records.values():
+		n += int(rec.get("correct_total", 0))
+	return n
+
+
+## Gesamt-Genauigkeit 0..1 (korrekt / Versuche); 0.0 wenn noch keine Versuche.
+func overall_accuracy() -> float:
+	return float(total_correct()) / float(max(1, total_attempts()))
+
+
+## Höchste je erreichte Serie über alle Aufgaben.
+func best_streak_overall() -> int:
+	var best := 0
+	for rec in _records.values():
+		best = max(best, int(rec.get("best_streak", 0)))
+	return best
+
+
+## Anzahl bisher gesehener (mindestens einmal geübter) Aufgaben.
+func seen_count() -> int:
+	return _records.size()
+
+
+## Anzahl heute (oder früher) fälliger Wiederholungen.
+func due_count() -> int:
+	return due_task_ids().size()
+
+
+## Sortierte Liste für die Wort-Tabelle im Menü (schwächste Confidence zuerst).
+## Rückgabe: Array von { id, label, confidence, mastered, attempts, correct }.
+func records_for_display() -> Array:
+	var resolver := TaskResolver.new()
+	var rows: Array = []
+	for id in _records:
+		var rec: Dictionary = _records[id]
+		var conf := float(rec.get("confidence", 0.0))
+		rows.append({
+			"id": id,
+			"label": resolver.describe_learnable(id),
+			"confidence": conf,
+			"mastered": conf >= MASTERY_CONFIDENCE,
+			"attempts": int(rec.get("attempts", 0)),
+			"correct": int(rec.get("correct_total", 0)),
+		})
+	rows.sort_custom(func(a, b): return a["confidence"] < b["confidence"])
+	return rows
 
 
 # --- Persistenz ---------------------------------------------------------------

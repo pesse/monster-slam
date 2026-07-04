@@ -71,6 +71,40 @@ func learnable_id(task_type: String, direction: String, source_id: String, extra
 			return "%s:%s:%s" % [task_type, direction, source_id]
 
 
+## Wandelt einen learnable_id in ein menschenlesbares Label für die Statistik-Liste.
+## Kehrt das id-Schema aus learnable_id() um und schlägt die Lemmata über die
+## ContentRegistry nach. Nicht auflösbare ids (fehlendes Lexem) fallen auf den rohen
+## id-String zurück, damit nie ein Eintrag verschluckt wird.
+func describe_learnable(id: String) -> String:
+	var parts := id.split(":")
+	if parts.size() < 3:
+		return id
+	match parts[0]:
+		"translate":
+			var lex := _lexeme(parts[2])
+			if lex.is_empty():
+				return id
+			var de := str(lex.get("lemma_de", ""))
+			var en := str(lex.get("lemma_en", ""))
+			return "%s → %s" % [en, de] if parts[1] == "en_to_de" else "%s → %s" % [de, en]
+		"opposite", "synonym", "confusables":
+			var src := _lexeme(parts[1])
+			var tgt := _lexeme(parts[2])
+			if src.is_empty() or tgt.is_empty():
+				return id
+			var label := str({
+				"opposite": "Gegenteil", "synonym": "Synonym", "confusables": "Verwechslung",
+			}.get(parts[0], parts[0]))
+			return "%s: %s → %s" % [label, src.get("lemma_en", ""), tgt.get("lemma_en", "")]
+		"conjugation", "tense":
+			var lex := _lexeme(parts[1])
+			if lex.is_empty():
+				return id
+			return "%s (%s)" % [lex.get("lemma_en", ""), FORM_LABELS.get(parts[2], parts[2])]
+		_:
+			return id
+
+
 func _resolve_translate(definition: Dictionary, source: Dictionary, extra: Dictionary) -> Dictionary:
 	var direction := str(definition.get("direction", "de_to_en"))
 	var prompt: String

@@ -10,6 +10,9 @@ extends PanelContainer
 ## Schwierigkeit RELATIV zur aktuellen (-2..+2), nicht ein absoluter Wert.
 signal next_wave_requested(difficulty_delta: int)
 
+## Der Spieler will zurück zum Profil-/Statistik-Menü (verlässt die laufende Partie).
+signal back_to_menu_requested
+
 ## Relative Auswahl: Beschriftung -> Delta auf die aktuelle Schwierigkeit.
 const DIFFICULTY_CHOICES := [
 	{"label": "Viel leichter", "delta": -2},
@@ -72,6 +75,12 @@ func _ready() -> void:
 	start.focus_mode = Control.FOCUS_NONE
 	start.pressed.connect(_on_start_pressed)
 	root.add_child(start)
+
+	var menu := Button.new()
+	menu.text = "⟵ Zurück zum Menü"
+	menu.focus_mode = Control.FOCUS_NONE
+	menu.pressed.connect(func(): back_to_menu_requested.emit())
+	root.add_child(menu)
 
 	_update_choice_highlight()
 

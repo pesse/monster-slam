@@ -43,6 +43,14 @@ func _build() -> void:
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	margin.add_child(row)
 
+	# --- Spieler (ganz links) ---
+	# Profilname aus den Einstellungen; ändert sich während des Kampfes nicht -> nur hier gesetzt.
+	var player := _make_section()
+	player.add_child(_make_caption("👤 %s" % UserSettings.display_name()))
+	row.add_child(_section_panel(player))
+
+	row.add_child(_spacer())
+
 	# --- Leben (links) ---
 	var life := _make_section()
 	life.add_child(_make_caption("🏰 Festung"))

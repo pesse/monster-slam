@@ -65,6 +65,10 @@ func _ready() -> void:
 		debug_panel.fortress_tier_selected.connect(_on_debug_tier_selected)
 	if _stats.has_signal("next_wave_requested"):
 		_stats.next_wave_requested.connect(_on_next_wave_requested)
+	if _stats.has_signal("back_to_menu_requested"):
+		_stats.back_to_menu_requested.connect(_on_back_to_menu)
+	# Startschwierigkeit aus den persistenten Einstellungen des aktiven Profils.
+	_difficulty = UserSettings.default_difficulty()
 	_start_next_wave()
 
 
@@ -628,3 +632,10 @@ func _on_next_wave_requested(delta: int) -> void:
 	_difficulty = clampi(_difficulty + delta, 1, 5)
 	_wave_number += 1
 	_start_next_wave()
+
+
+## Spieler kehrt vom Statistik-Screen ins Menü zurück. Fortschritt explizit sichern
+## (der Niederlage-Pfad emittiert kein wave_cleared) und die Menü-Szene laden.
+func _on_back_to_menu() -> void:
+	PlayerProgress.save_progress()
+	get_tree().change_scene_to_file("res://scenes/ui/profile_menu.tscn")
