@@ -53,8 +53,18 @@ func _heuristic_sentence(reference: String, answer: String) -> Dictionary:
 	return {"quality": quality, "feedback": feedback}
 
 
+## Ziel ist Englisch lernen, nicht Deutsch — deshalb ist der deutsche Artikel
+## optional. Wird auf Eingabe UND hinterlegte Antwort angewendet, sodass
+## "das Haus" und "Haus" gleichwertig akzeptiert werden (keine Datenmigration).
+const _DE_ARTICLES := ["der ", "die ", "das ", "eine ", "ein "]
+
+
 func _normalize(s: String) -> String:
-	return s.strip_edges().to_lower()
+	var normalized := s.strip_edges().to_lower()
+	for article in _DE_ARTICLES:
+		if normalized.begins_with(article):
+			return normalized.substr(article.length()).strip_edges()
+	return normalized
 
 
 func _tokens(s: String) -> PackedStringArray:
