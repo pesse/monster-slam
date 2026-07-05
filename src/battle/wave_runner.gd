@@ -26,6 +26,7 @@ var _difficulty: int = 3           # 1..5, vom Spieler gewählt
 var _wave_number: int = 1          # laufende Nummer (Anzeige + Skalierung)
 var _wave_correct: int = 0         # richtig besiegte Monster dieser Welle
 var _wave_leaked: int = 0          # an der Festung durchgelassene Monster dieser Welle
+var _wave_leaked_tasks: Array[Dictionary] = []  # deren Aufgaben (prompt + accepted_answers), für die Auflösung
 var _score_at_start: int = 0       # Punktestand zu Wellenbeginn (für "+X" im Screen)
 var _last_won: bool = true         # Ausgang der zuletzt beendeten Welle
 # Generation-Zähler: bricht Spawn-Coroutinen einer alten Welle ab, sobald eine neue
@@ -46,6 +47,7 @@ var _cutscene: bool = false   # läuft gerade die Ausbau-Cutscene? (unterdrückt
 @onready var _end_label: Label = $UI/EndLabel
 @onready var _flash: ColorRect = $UI/Flash
 @onready var _stats: PanelContainer = $UI/WaveStats
+@onready var _leak_reveal: Control = $UI/LeakReveal
 @onready var _answer_input: LineEdit = $UI/AnswerInput
 
 
@@ -403,6 +405,7 @@ func _start_next_wave() -> void:
 	_finished = false
 	_wave_correct = 0
 	_wave_leaked = 0
+	_wave_leaked_tasks.clear()
 	_score_at_start = GameState.score
 	_end_label.visible = false
 	_stats.hide_stats()
@@ -575,6 +578,12 @@ func _on_monster_reached_goal(monster: Monster) -> void:
 		return
 	_active.erase(monster)
 	_wave_leaked += 1
+	# Durchgelassene Aufgabe für die Auflösung nach der Welle merken (vor dem
+	# Niederlage-Check, damit auch das die Festung fällende Monster dabei ist).
+	_wave_leaked_tasks.append({
+		"prompt": String(monster.task.get("prompt", "")),
+		"answers": (monster.task.get("accepted_answers", []) as Array).duplicate(),
+	})
 	_spawn_explosion(monster.position + Vector3(0.0, 1.0, 0.0), Color(1.0, 0.45, 0.12), 2.6)
 	_shake(0.9)
 	# Monster durchgelassen = Aufgabe nicht rechtzeitig abgerufen -> als Fehler verbuchen.
@@ -608,6 +617,10 @@ func _finish_wave(won: bool) -> void:
 		var new_tier := PlayerProgress.fortress_tier()
 		if new_tier > _fortress_tier:
 			await _play_upgrade_cutscene(new_tier)
+	# Durchgelassene Vokabeln mit korrekter Übersetzung auflösen (Sieg wie Niederlage),
+	# als Zwischenschritt VOR der Statistik. Bei 0 Leaks übersprungen.
+	if not _wave_leaked_tasks.is_empty():
+		await _leak_reveal.play(_wave_leaked_tasks)
 	var total := _wave_correct + _wave_leaked
 	var accuracy := 100.0 * float(_wave_correct) / float(max(1, total))
 	_stats.show_stats({
