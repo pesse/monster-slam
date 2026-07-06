@@ -10,6 +10,9 @@ export_presets.cfg
 # Auto-generated
 *.translation
 
+# gdUnit4 test reports
+/reports/
+
 # OS / editor
 .DS_Store
 Thumbs.db
