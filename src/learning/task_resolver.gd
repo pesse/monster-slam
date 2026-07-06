@@ -184,6 +184,7 @@ func _build(definition: Dictionary, source: Dictionary, prompt: String, answers:
 	var source_id := str(source.get("id", ""))
 	return {
 		"learnable_id": learnable_id(task_type, direction, source_id, extra),
+		"source_id": source_id,        # Quell-Lexem, für Dedup gleicher Grundwörter auf dem Feld
 		"prompt": prompt,
 		"accepted_answers": answers,
 		"task_type": task_type,

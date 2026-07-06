@@ -473,7 +473,12 @@ func _run_spawn_batch(entry: Dictionary, gen: int) -> void:
 func _spawn(entry: Dictionary) -> void:
 	# Der WaveGenerator wählt anhand des Spieler-Fortschritts eine Aufgabe aus dem
 	# Pool, löst sie auf und bestimmt Darstellung (monster_task_rules) + Basiswerte.
-	var plan: Dictionary = _generator.pick(entry.get("task_pool", {}))
+	# Bereits sichtbare Grundwörter ausschließen, damit dieselbe Vokabel nie
+	# gleichzeitig zweimal auf dem Feld steht.
+	var active_sources := {}
+	for m in _active:
+		active_sources[str(m.task.get("source_id", ""))] = true
+	var plan: Dictionary = _generator.pick(entry.get("task_pool", {}), active_sources)
 	if plan.is_empty():
 		push_warning("WaveRunner: keine spielbare Aufgabe für Pool %s" % str(entry.get("task_pool", {})))
 		return

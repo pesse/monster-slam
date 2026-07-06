@@ -73,7 +73,9 @@ func _confidence_prior(source: Dictionary) -> float:
 	return sum / float(priors.size())
 
 
-func pick(pool: Dictionary) -> Dictionary:
+## `exclude_sources` (als Set: Lexem-id -> true) verhindert, dass ein Grundwort
+## gewählt wird, das bereits als Monster auf dem Feld steht (Aufrufer: WaveRunner).
+func pick(pool: Dictionary, exclude_sources: Dictionary = {}) -> Dictionary:
 	var candidates := _candidates(pool)
 	if candidates.is_empty():
 		return {}
@@ -90,13 +92,19 @@ func pick(pool: Dictionary) -> Dictionary:
 			buckets["rest"].append(c)
 
 	# Erste nicht-leere Priorität durchprobieren, bis eine Aufgabe auflösbar ist.
-	for key in ["due", "new", "rest"]:
-		var pool_list: Array = buckets[key]
-		pool_list.shuffle()
-		for candidate in pool_list:
-			var plan := _build_plan(candidate)
-			if not plan.is_empty():
-				return plan
+	# Erster Durchlauf meidet bereits sichtbare Grundwörter; findet sich damit nichts
+	# Spielbares, lässt der zweite Durchlauf die Sperre fallen (lieber ein Duplikat
+	# als eine hängende Welle).
+	for respect_exclude in [true, false]:
+		for key in ["due", "new", "rest"]:
+			var pool_list: Array = buckets[key]
+			pool_list.shuffle()
+			for candidate in pool_list:
+				if respect_exclude and exclude_sources.has(str(candidate["source"].get("id", ""))):
+					continue
+				var plan := _build_plan(candidate)
+				if not plan.is_empty():
+					return plan
 	return {}
 
 
