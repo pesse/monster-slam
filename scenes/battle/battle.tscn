@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://src/battle/wave_runner.gd" id="1_battle"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="2_hud"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/debug_panel.tscn" id="4_debug"]
 [ext_resource type="PackedScene" path="res://scenes/ui/wave_stats.tscn" id="5_stats"]
 [ext_resource type="PackedScene" path="res://scenes/ui/leak_reveal.tscn" id="6_reveal"]
+[ext_resource type="PackedScene" path="res://scenes/ui/word_type_legend.tscn" id="7_legend"]
 
 [sub_resource type="Environment" id="Env_1"]
 background_mode = 1
@@ -13,6 +14,12 @@ background_color = Color(0.09, 0.08, 0.13, 1)
 ambient_light_source = 2
 ambient_light_color = Color(0.5, 0.52, 0.62, 1)
 ambient_light_energy = 1.0
+glow_enabled = true
+glow_intensity = 1.5
+glow_strength = 1.2
+glow_bloom = 0.15
+glow_blend_mode = 0
+glow_hdr_threshold = 0.7
 
 [sub_resource type="PlaneMesh" id="Plane_1"]
 size = Vector2(22, 26)
@@ -60,6 +67,8 @@ modulate = Color(1, 1, 1, 0)
 [node name="WaveStats" parent="UI" instance=ExtResource("5_stats")]
 
 [node name="LeakReveal" parent="UI" instance=ExtResource("6_reveal")]
+
+[node name="WordTypeLegend" parent="UI" instance=ExtResource("7_legend")]
 
 [node name="EndLabel" type="Label" parent="UI"]
 anchor_left = 0.5

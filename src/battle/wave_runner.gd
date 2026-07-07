@@ -588,6 +588,7 @@ func _on_monster_reached_goal(monster: Monster) -> void:
 	_wave_leaked_tasks.append({
 		"prompt": String(monster.task.get("prompt", "")),
 		"answers": (monster.task.get("accepted_answers", []) as Array).duplicate(),
+		"lexeme_type": String(monster.task.get("lexeme_type", "")),
 	})
 	_spawn_explosion(monster.position + Vector3(0.0, 1.0, 0.0), Color(1.0, 0.45, 0.12), 2.6)
 	_shake(0.9)

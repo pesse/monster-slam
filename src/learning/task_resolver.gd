@@ -190,4 +190,5 @@ func _build(definition: Dictionary, source: Dictionary, prompt: String, answers:
 		"task_type": task_type,
 		"direction": direction,
 		"difficulty": int(definition.get("difficulty", 1)),
+		"lexeme_type": str(source.get("type", "")),   # Wortart fürs Monster-Outline (siehe WordTypePalette)
 	}

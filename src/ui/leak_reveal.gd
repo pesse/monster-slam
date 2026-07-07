@@ -154,6 +154,16 @@ func _build_card(item: Dictionary, revealed: bool) -> Control:
 	box.add_theme_constant_override("separation", 10)
 	card.add_child(box)
 
+	# Wortart-Kennzeichnung in der Palettenfarbe (wie Monster-Outline & Legende).
+	var type_key := String(item.get("lexeme_type", ""))
+	if not type_key.is_empty():
+		var type_label := Label.new()
+		type_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		type_label.add_theme_font_size_override("font_size", 18)
+		type_label.add_theme_color_override("font_color", WordTypePalette.color_for(type_key))
+		type_label.text = String(WordTypePalette.LABELS.get(type_key, type_key))
+		box.add_child(type_label)
+
 	var prompt := Label.new()
 	prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	prompt.add_theme_font_size_override("font_size", 30)

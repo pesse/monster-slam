@@ -22,6 +22,13 @@ var _speed: float = 2.0
 var _target_z: float = 0.0
 var _done: bool = false
 
+## Wortart-Outline: Inverted-Hull-Shader, Farbe je Wortart (siehe WordTypePalette).
+const OUTLINE_SHADER := preload("res://assets/shaders/monster_outline.gdshader")
+const OUTLINE_WORLD_WIDTH := 0.12   # gewünschte Rand-Dicke in Welteinheiten
+const OUTLINE_GLOW_STRENGTH := 1.0  # Emission-Faktor; genau 1.0 => kein Kanal-Clipping,
+                                    # Outline-Farbe == Legenden-Farbe. Der Glow-Halo kommt
+                                    # aus dem WorldEnvironment (niedrige HDR-Schwelle).
+
 @onready var _label: Label3D = $Label
 @onready var _placeholder: MeshInstance3D = $Placeholder
 
@@ -49,15 +56,36 @@ func _ready() -> void:
 ## um das Modell in Laufrichtung zu drehen).
 func _apply_model() -> void:
 	var path := str(monster_def.get("model", ""))
+	var color := WordTypePalette.color_for(str(task.get("lexeme_type", "")))
 	if path == "" or not ResourceLoader.exists(path):
+		# Kein Modell -> Platzhalter-Kapsel behält die Wortart-Outline (Konsistenz).
+		_apply_outline(_placeholder, color, 1.0)
 		return
 	var packed: PackedScene = load(path)
 	var inst := packed.instantiate() as Node3D
-	inst.scale = Vector3.ONE * float(monster_def.get("model_scale", 1.0))
+	var model_scale := float(monster_def.get("model_scale", 1.0))
+	inst.scale = Vector3.ONE * model_scale
 	inst.rotation_degrees.y = float(monster_def.get("model_yaw", 0.0))
 	add_child(inst)
 	_placeholder.visible = false
+	_apply_outline(inst, color, model_scale)
 	_setup_animation(inst)
+
+
+## Legt die Wortart-Outline als material_overlay auf alle MeshInstance3D unterhalb von
+## `root`. Eine eigene ShaderMaterial-Instanz je Monster (kein geteiltes preload), damit
+## jede Wortart ihre Farbe bekommt, ohne importierte GLB-Materialien anzufassen.
+## Die Welt-Dicke bleibt trotz model_scale konstant, indem sie herausgerechnet wird.
+func _apply_outline(root: Node3D, color: Color, model_scale: float) -> void:
+	var mat := ShaderMaterial.new()
+	mat.shader = OUTLINE_SHADER
+	mat.set_shader_parameter("outline_color", color)
+	mat.set_shader_parameter("outline_width", OUTLINE_WORLD_WIDTH / maxf(model_scale, 0.001))
+	mat.set_shader_parameter("glow_strength", OUTLINE_GLOW_STRENGTH)
+	if root is MeshInstance3D:
+		(root as MeshInstance3D).material_overlay = mat
+	for mi in root.find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).material_overlay = mat
 
 
 ## KayKit-Charaktere haben keine eigenen Animationen — diese liegen in einer
