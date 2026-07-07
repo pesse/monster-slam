@@ -1,137 +1,34 @@
 extends Control
 ## Start- und Profil-/Statistik-Screen (eigene Szene, run/main_scene).
 ##
-## Baut sein Layout — wie WaveStats/DebugPanel — komplett im Code auf. Anders als die
-## Kampf-Overlays gibt es hier KEINE Antwort-LineEdit, die den Fokus stiehlt, daher
-## bleiben die Controls normal fokussierbar (kein focus_mode = FOCUS_NONE nötig).
-##
-## Einstellungen (Profil, Standard-Schwierigkeit, Reset) liegen in UserSettings +
-## PlayerProgress; hier wird nur bedient und angezeigt.
+## Das Layout liegt in profile_menu.tscn (im Editor sichtbar); hier wird nur bedient und
+## angezeigt. Einstellungen (Profil, Standard-Schwierigkeit, Reset) liegen in UserSettings
+## + PlayerProgress. Anders als die Kampf-Overlays gibt es hier KEINE Antwort-LineEdit,
+## die den Fokus stiehlt, daher bleiben die Controls normal fokussierbar.
 
 const BATTLE_SCENE := "res://scenes/battle/battle.tscn"
 
-var _profile_select: OptionButton
-var _rename_input: LineEdit
-var _name_input: LineEdit
-var _diff_buttons: Array[Button] = []
-var _reset_confirm: ConfirmationDialog
-var _stats_lines: VBoxContainer
-var _word_list: VBoxContainer
+@onready var _profile_select: OptionButton = %ProfileSelect
+@onready var _rename_input: LineEdit = %RenameInput
+@onready var _name_input: LineEdit = %NameInput
+@onready var _diff_buttons: Array = %DiffRow.get_children()
+@onready var _reset_confirm: ConfirmationDialog = %ResetDialog
+@onready var _stats_lines: VBoxContainer = %Statistik
+@onready var _word_list: VBoxContainer = %WordList
 
 
 func _ready() -> void:
-	_build()
-	_refresh()
-
-
-func _build() -> void:
-	var margin := MarginContainer.new()
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side in ["left", "top", "right", "bottom"]:
-		margin.add_theme_constant_override("margin_%s" % side, 24)
-	add_child(margin)
-
-	var root := VBoxContainer.new()
-	root.add_theme_constant_override("separation", 12)
-	margin.add_child(root)
-
-	var title := Label.new()
-	title.text = "Monster Slam"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 40)
-	root.add_child(title)
-
-	var play := Button.new()
-	play.text = "▶ Spielen"
-	play.pressed.connect(func(): get_tree().change_scene_to_file(BATTLE_SCENE))
-	root.add_child(play)
-
-	var tabs := TabContainer.new()
-	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root.add_child(tabs)
-	_build_profile_tab(tabs)
-	_build_stats_tab(tabs)
-	_build_words_tab(tabs)
-
-	# Bestätigungsdialog fürs Zurücksetzen (als Kind gehalten, per popup_centered gezeigt).
-	_reset_confirm = ConfirmationDialog.new()
-	_reset_confirm.dialog_text = "Fortschritt dieses Profils wirklich löschen?"
-	_reset_confirm.confirmed.connect(_on_reset_confirmed)
-	add_child(_reset_confirm)
-
-
-func _build_profile_tab(tabs: TabContainer) -> void:
-	var box := VBoxContainer.new()
-	box.name = "Profil"
-	box.add_theme_constant_override("separation", 10)
-	tabs.add_child(box)
-
-	var pick_label := Label.new()
-	pick_label.text = "Aktives Profil"
-	box.add_child(pick_label)
-
-	_profile_select = OptionButton.new()
+	(%PlayButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(BATTLE_SCENE))
 	_profile_select.item_selected.connect(_on_profile_selected)
-	box.add_child(_profile_select)
-
-	# Aktives Profil umbenennen (ändert nur den Anzeigenamen, nicht die player_id).
-	var rename_row := HBoxContainer.new()
-	box.add_child(rename_row)
-	_rename_input = LineEdit.new()
-	_rename_input.placeholder_text = "Profilname"
-	_rename_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_rename_input.text_submitted.connect(func(_t): _on_rename_profile())
-	rename_row.add_child(_rename_input)
-	var rename_button := Button.new()
-	rename_button.text = "Umbenennen"
-	rename_button.pressed.connect(_on_rename_profile)
-	rename_row.add_child(rename_button)
-
-	var new_row := HBoxContainer.new()
-	box.add_child(new_row)
-	_name_input = LineEdit.new()
-	_name_input.placeholder_text = "Neuer Profilname"
-	_name_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	new_row.add_child(_name_input)
-	var add_button := Button.new()
-	add_button.text = "Neues Profil"
-	add_button.pressed.connect(_on_create_profile)
-	new_row.add_child(add_button)
-
-	var diff_label := Label.new()
-	diff_label.text = "Standard-Schwierigkeit"
-	box.add_child(diff_label)
-
-	var diff_row := HBoxContainer.new()
-	box.add_child(diff_row)
-	for level in range(1, 6):
-		var button := Button.new()
-		button.text = str(level)
-		button.pressed.connect(_on_difficulty_pressed.bind(level))
-		diff_row.add_child(button)
-		_diff_buttons.append(button)
-
-	var reset_button := Button.new()
-	reset_button.text = "Fortschritt zurücksetzen"
-	reset_button.pressed.connect(func(): _reset_confirm.popup_centered())
-	box.add_child(reset_button)
-
-
-func _build_stats_tab(tabs: TabContainer) -> void:
-	_stats_lines = VBoxContainer.new()
-	_stats_lines.name = "Statistik"
-	_stats_lines.add_theme_constant_override("separation", 6)
-	tabs.add_child(_stats_lines)
-
-
-func _build_words_tab(tabs: TabContainer) -> void:
-	var scroll := ScrollContainer.new()
-	scroll.name = "Wörter"
-	tabs.add_child(scroll)
-	_word_list = VBoxContainer.new()
-	_word_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_word_list.add_theme_constant_override("separation", 4)
-	scroll.add_child(_word_list)
+	(%RenameButton as Button).pressed.connect(_on_rename_profile)
+	(%AddButton as Button).pressed.connect(_on_create_profile)
+	# Standard-Schwierigkeits-Buttons 1..5 (Reihenfolge in DiffRow = Stufe i+1).
+	for i in _diff_buttons.size():
+		(_diff_buttons[i] as Button).pressed.connect(_on_difficulty_pressed.bind(i + 1))
+	(%ResetButton as Button).pressed.connect(func(): _reset_confirm.popup_centered())
+	_reset_confirm.confirmed.connect(_on_reset_confirmed)
+	_refresh()
 
 
 ## Baut Profil-Auswahl, Schwierigkeits-Hervorhebung, Statistik-Zeilen und Wortliste neu auf.
@@ -160,7 +57,7 @@ func _refresh_difficulty() -> void:
 	var current := UserSettings.default_difficulty()
 	for i in _diff_buttons.size():
 		# Gewählte Stufe optisch hervorheben (deaktivierter Button = markiert, wie in WaveStats).
-		_diff_buttons[i].disabled = (i + 1 == current)
+		(_diff_buttons[i] as Button).disabled = (i + 1 == current)
 
 
 func _refresh_stats() -> void:
