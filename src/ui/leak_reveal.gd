@@ -6,8 +6,9 @@ extends PanelContainer
 ## wischen); danach kann der Spieler mit Pfeilen frei blättern und mit "Weiter" zum
 ## Statistik-Screen gehen.
 ##
-## Baut sein Layout — wie wave_stats/DebugPanel — komplett im Code auf. Alle inter-
-## aktiven Controls setzen focus_mode=FOCUS_NONE, sonst reißt die Antwort-LineEdit
+## Die statische Hülle (Titel, Bühne, Fortschritt, Nav-Buttons) liegt in leak_reveal.tscn;
+## hier bleibt nur das dynamische Karten-Karussell. Alle interaktiven Controls haben
+## focus_mode=FOCUS_NONE (in der Szene gesetzt), sonst reißt die Antwort-LineEdit
 ## (die sich per _process den Fokus zurückholt) den Klick weg.
 
 const CORRECT_COLOR := Color(0.3, 1.0, 0.45)   # grün, wie FLASH_CORRECT im WaveRunner
@@ -16,76 +17,21 @@ const HOLD_TIME := 3.0                          # Standzeit pro Karte im Auto-Du
 const READ_QUESTION_TIME := 0.5                 # kurze Pause auf der Frage vor dem Aufdecken
 const SWIPE_TIME := 0.35
 const REVEAL_TIME := 0.3
-const STAGE_MIN := Vector2(600, 200)
 
 var _items: Array = []
 var _index: int = 0
 
-var _title: Label
-var _stage: Control
-var _progress: Label
-var _prev_btn: Button
-var _next_btn: Button
-var _continue_btn: Button
+@onready var _stage: Control = %Stage
+@onready var _progress: Label = %Progress
+@onready var _prev_btn: Button = %PrevBtn
+@onready var _next_btn: Button = %NextBtn
+@onready var _continue_btn: Button = %ContinueBtn
 var _current_card: Control = null
 
 
 func _ready() -> void:
-	# Bildschirm-zentriert, wächst zur Inhaltsgröße.
-	anchor_left = 0.5
-	anchor_top = 0.5
-	anchor_right = 0.5
-	anchor_bottom = 0.5
-	grow_horizontal = Control.GROW_DIRECTION_BOTH
-	grow_vertical = Control.GROW_DIRECTION_BOTH
-
-	var margin := MarginContainer.new()
-	for side in ["left", "top", "right", "bottom"]:
-		margin.add_theme_constant_override("margin_%s" % side, 24)
-	add_child(margin)
-
-	var root := VBoxContainer.new()
-	root.add_theme_constant_override("separation", 12)
-	margin.add_child(root)
-
-	_title = Label.new()
-	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_title.add_theme_font_size_override("font_size", 32)
-	_title.text = "Durchgelassen — die richtigen Antworten"
-	root.add_child(_title)
-
-	# Karten-Bühne: schneidet den Ein-/Auswisch am Rand ab, nimmt genau eine Karte auf.
-	_stage = Control.new()
-	_stage.custom_minimum_size = STAGE_MIN
-	_stage.clip_contents = true
-	_stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	root.add_child(_stage)
-
-	_progress = Label.new()
-	_progress.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	root.add_child(_progress)
-
-	var nav := HBoxContainer.new()
-	nav.alignment = BoxContainer.ALIGNMENT_CENTER
-	nav.add_theme_constant_override("separation", 24)
-	root.add_child(nav)
-
-	_prev_btn = Button.new()
-	_prev_btn.text = "◀"
-	_prev_btn.focus_mode = Control.FOCUS_NONE
 	_prev_btn.pressed.connect(func(): _goto(_index - 1))
-	nav.add_child(_prev_btn)
-
-	_next_btn = Button.new()
-	_next_btn.text = "▶"
-	_next_btn.focus_mode = Control.FOCUS_NONE
 	_next_btn.pressed.connect(func(): _goto(_index + 1))
-	nav.add_child(_next_btn)
-
-	_continue_btn = Button.new()
-	_continue_btn.text = "✔ Weiter"
-	_continue_btn.focus_mode = Control.FOCUS_NONE
-	root.add_child(_continue_btn)
 
 
 ## Awaitbar: zeigt das Karussell, spielt einmal automatisch durch und kehrt erst

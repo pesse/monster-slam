@@ -3,5 +3,64 @@
 [ext_resource type="Script" path="res://src/ui/wave_stats.gd" id="1_stats"]
 
 [node name="WaveStats" type="PanelContainer"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
 visible = false
 script = ExtResource("1_stats")
+
+[node name="Margin" type="MarginContainer" parent="."]
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="Root" type="VBoxContainer" parent="Margin"]
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Margin/Root"]
+unique_name_in_owner = true
+theme_override_font_sizes/font_size = 32
+horizontal_alignment = 1
+
+[node name="Lines" type="VBoxContainer" parent="Margin/Root"]
+unique_name_in_owner = true
+
+[node name="DiffLabel" type="Label" parent="Margin/Root"]
+text = "Schwierigkeit der nächsten Welle"
+
+[node name="ChoiceRow" type="HBoxContainer" parent="Margin/Root"]
+unique_name_in_owner = true
+
+[node name="Choice0" type="Button" parent="Margin/Root/ChoiceRow"]
+focus_mode = 0
+text = "Viel leichter"
+
+[node name="Choice1" type="Button" parent="Margin/Root/ChoiceRow"]
+focus_mode = 0
+text = "Leichter"
+
+[node name="Choice2" type="Button" parent="Margin/Root/ChoiceRow"]
+focus_mode = 0
+text = "Gleich"
+
+[node name="Choice3" type="Button" parent="Margin/Root/ChoiceRow"]
+focus_mode = 0
+text = "Schwieriger"
+
+[node name="Choice4" type="Button" parent="Margin/Root/ChoiceRow"]
+focus_mode = 0
+text = "Viel schwieriger"
+
+[node name="StartButton" type="Button" parent="Margin/Root"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "▶ Nächste Welle rufen"
+
+[node name="MenuButton" type="Button" parent="Margin/Root"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "⟵ Zurück zum Menü"

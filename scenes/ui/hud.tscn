@@ -1,9 +1,114 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://src/ui/hud.gd" id="1_hud"]
+
+[sub_resource type="StyleBoxFlat" id="HpFill"]
+bg_color = Color(0.3, 1, 0.45, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
 
 [node name="HUD" type="Control"]
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
 script = ExtResource("1_hud")
+
+[node name="Margin" type="MarginContainer" parent="."]
+anchor_right = 1.0
+mouse_filter = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="Row" type="HBoxContainer" parent="Margin"]
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="PlayerPanel" type="PanelContainer" parent="Margin/Row"]
+mouse_filter = 2
+
+[node name="PlayerBox" type="HBoxContainer" parent="Margin/Row/PlayerPanel"]
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="PlayerName" type="Label" parent="Margin/Row/PlayerPanel/PlayerBox"]
+unique_name_in_owner = true
+text = "👤 Spieler"
+vertical_alignment = 1
+
+[node name="Spacer1" type="Control" parent="Margin/Row"]
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="LifePanel" type="PanelContainer" parent="Margin/Row"]
+mouse_filter = 2
+
+[node name="LifeBox" type="HBoxContainer" parent="Margin/Row/LifePanel"]
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="LifeCaption" type="Label" parent="Margin/Row/LifePanel/LifeBox"]
+text = "🏰 Festung"
+vertical_alignment = 1
+
+[node name="HpBar" type="ProgressBar" parent="Margin/Row/LifePanel/LifeBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 20)
+size_flags_vertical = 4
+theme_override_styles/fill = SubResource("HpFill")
+show_percentage = false
+
+[node name="HpText" type="Label" parent="Margin/Row/LifePanel/LifeBox"]
+unique_name_in_owner = true
+text = "100/100"
+vertical_alignment = 1
+
+[node name="Spacer2" type="Control" parent="Margin/Row"]
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="WavePanel" type="PanelContainer" parent="Margin/Row"]
+mouse_filter = 2
+
+[node name="WaveBox" type="HBoxContainer" parent="Margin/Row/WavePanel"]
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="WaveCaption" type="Label" parent="Margin/Row/WavePanel/WaveBox"]
+text = "⚔ Welle"
+vertical_alignment = 1
+
+[node name="WaveBar" type="ProgressBar" parent="Margin/Row/WavePanel/WaveBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 20)
+size_flags_vertical = 4
+show_percentage = false
+
+[node name="WaveText" type="Label" parent="Margin/Row/WavePanel/WaveBox"]
+unique_name_in_owner = true
+text = "0/0"
+vertical_alignment = 1
+
+[node name="Spacer3" type="Control" parent="Margin/Row"]
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="StatsPanel" type="PanelContainer" parent="Margin/Row"]
+mouse_filter = 2
+
+[node name="StatsBox" type="HBoxContainer" parent="Margin/Row/StatsPanel"]
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="Kills" type="Label" parent="Margin/Row/StatsPanel/StatsBox"]
+unique_name_in_owner = true
+text = "💀 0"
+vertical_alignment = 1
+
+[node name="Score" type="Label" parent="Margin/Row/StatsPanel/StatsBox"]
+unique_name_in_owner = true
+text = "💰 0"
+vertical_alignment = 1

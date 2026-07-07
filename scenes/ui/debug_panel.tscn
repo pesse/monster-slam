@@ -3,4 +3,43 @@
 [ext_resource type="Script" path="res://src/ui/debug_panel.gd" id="1_debug"]
 
 [node name="DebugPanel" type="PanelContainer"]
+anchor_left = 1.0
+anchor_right = 1.0
+offset_top = 60.0
+offset_right = -8.0
+grow_horizontal = 0
 script = ExtResource("1_debug")
+
+[node name="Root" type="VBoxContainer" parent="."]
+
+[node name="Toggle" type="CheckButton" parent="Root"]
+focus_mode = 0
+button_pressed = true
+text = "🐞 Debug"
+
+[node name="Body" type="VBoxContainer" parent="Root"]
+
+[node name="TierLabel" type="Label" parent="Root/Body"]
+text = "Festung-Stufe"
+
+[node name="TierRow" type="HBoxContainer" parent="Root/Body"]
+
+[node name="Tier0" type="Button" parent="Root/Body/TierRow"]
+focus_mode = 0
+text = "0"
+
+[node name="Tier1" type="Button" parent="Root/Body/TierRow"]
+focus_mode = 0
+text = "1"
+
+[node name="Tier2" type="Button" parent="Root/Body/TierRow"]
+focus_mode = 0
+text = "2"
+
+[node name="Tier3" type="Button" parent="Root/Body/TierRow"]
+focus_mode = 0
+text = "3"
+
+[node name="Tier4" type="Button" parent="Root/Body/TierRow"]
+focus_mode = 0
+text = "4"

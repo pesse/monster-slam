@@ -2,9 +2,9 @@ extends PanelContainer
 ## Statistik-Overlay nach einer Welle. Zeigt die Leistung der Welle + Lernfortschritt
 ## und lässt den Spieler die Schwierigkeit (1..5) der nächsten Welle wählen und starten.
 ##
-## Baut sein Layout — wie das DebugPanel — komplett im Code auf. Alle interaktiven
-## Controls setzen focus_mode=FOCUS_NONE, sonst reißt die Antwort-LineEdit (die sich per
-## _process den Fokus zurückholt) den Klick weg.
+## Das Layout liegt in wave_stats.tscn; hier nur die Befüllung (show_stats) und die
+## Auswahl-Logik. Interaktive Controls haben focus_mode=FOCUS_NONE (in der Szene gesetzt),
+## sonst reißt die Antwort-LineEdit (die sich per _process den Fokus zurückholt) den Klick weg.
 
 ## Der Spieler hat die nächste Welle gestartet; übergeben wird die Änderung der
 ## Schwierigkeit RELATIV zur aktuellen (-2..+2), nicht ein absoluter Wert.
@@ -13,75 +13,22 @@ signal next_wave_requested(difficulty_delta: int)
 ## Der Spieler will zurück zum Profil-/Statistik-Menü (verlässt die laufende Partie).
 signal back_to_menu_requested
 
-## Relative Auswahl: Beschriftung -> Delta auf die aktuelle Schwierigkeit.
-const DIFFICULTY_CHOICES := [
-	{"label": "Viel leichter", "delta": -2},
-	{"label": "Leichter", "delta": -1},
-	{"label": "Gleich", "delta": 0},
-	{"label": "Schwieriger", "delta": 1},
-	{"label": "Viel schwieriger", "delta": 2},
-]
+## Deltas der Schwierigkeitswahl, in Reihenfolge der Buttons in ChoiceRow (wave_stats.tscn).
+const CHOICE_DELTAS := [-2, -1, 0, 1, 2]
 ## Index der Standardauswahl ("Gleich").
 const DEFAULT_CHOICE := 2
 
-var _title: Label
-var _lines: VBoxContainer
-var _choice_buttons: Array[Button] = []
+@onready var _title: Label = %Title
+@onready var _lines: VBoxContainer = %Lines
+@onready var _choice_buttons: Array = %ChoiceRow.get_children()
 var _selected_choice: int = DEFAULT_CHOICE
 
 
 func _ready() -> void:
-	# Bildschirm-zentriert, wächst zur Inhaltsgröße.
-	anchor_left = 0.5
-	anchor_top = 0.5
-	anchor_right = 0.5
-	anchor_bottom = 0.5
-	grow_horizontal = Control.GROW_DIRECTION_BOTH
-	grow_vertical = Control.GROW_DIRECTION_BOTH
-
-	var margin := MarginContainer.new()
-	for side in ["left", "top", "right", "bottom"]:
-		margin.add_theme_constant_override("margin_%s" % side, 24)
-	add_child(margin)
-
-	var root := VBoxContainer.new()
-	root.add_theme_constant_override("separation", 10)
-	margin.add_child(root)
-
-	_title = Label.new()
-	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_title.add_theme_font_size_override("font_size", 32)
-	root.add_child(_title)
-
-	_lines = VBoxContainer.new()
-	root.add_child(_lines)
-
-	var diff_label := Label.new()
-	diff_label.text = "Schwierigkeit der nächsten Welle"
-	root.add_child(diff_label)
-
-	var row := HBoxContainer.new()
-	root.add_child(row)
-	for i in DIFFICULTY_CHOICES.size():
-		var button := Button.new()
-		button.text = String(DIFFICULTY_CHOICES[i]["label"])
-		button.focus_mode = Control.FOCUS_NONE
-		button.pressed.connect(_on_choice_pressed.bind(i))
-		row.add_child(button)
-		_choice_buttons.append(button)
-
-	var start := Button.new()
-	start.text = "▶ Nächste Welle rufen"
-	start.focus_mode = Control.FOCUS_NONE
-	start.pressed.connect(_on_start_pressed)
-	root.add_child(start)
-
-	var menu := Button.new()
-	menu.text = "⟵ Zurück zum Menü"
-	menu.focus_mode = Control.FOCUS_NONE
-	menu.pressed.connect(func(): back_to_menu_requested.emit())
-	root.add_child(menu)
-
+	for i in _choice_buttons.size():
+		(_choice_buttons[i] as Button).pressed.connect(_on_choice_pressed.bind(i))
+	(%StartButton as Button).pressed.connect(_on_start_pressed)
+	(%MenuButton as Button).pressed.connect(func(): back_to_menu_requested.emit())
 	_update_choice_highlight()
 
 
@@ -131,8 +78,8 @@ func _on_choice_pressed(index: int) -> void:
 ## Markiert die gewählte Option (deaktivierter Button = optisch hervorgehoben).
 func _update_choice_highlight() -> void:
 	for i in _choice_buttons.size():
-		_choice_buttons[i].disabled = (i == _selected_choice)
+		(_choice_buttons[i] as Button).disabled = (i == _selected_choice)
 
 
 func _on_start_pressed() -> void:
-	next_wave_requested.emit(int(DIFFICULTY_CHOICES[_selected_choice]["delta"]))
+	next_wave_requested.emit(CHOICE_DELTAS[_selected_choice])
