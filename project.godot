@@ -24,14 +24,14 @@ GameState="*res://src/core/game_state.gd"
 UserSettings="*res://src/core/user_settings.gd"
 PlayerProgress="*res://src/learning/player_progress.gd"
 
-[editor_plugins]
-
-enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")
-
 [display]
 
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")
 
 [gui]
 
