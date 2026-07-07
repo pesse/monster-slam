@@ -23,7 +23,7 @@ var _resolver := TaskResolver.new()
 ## deckt die Grundschwierigkeit der Aufgabe genau. KEIN kosmetisches Attribut — Geschwindigkeit
 ## IST Schwierigkeit und entsteht ausschließlich hieraus. REFERENCE_SPEED zu ändern verschiebt
 ## die gesamte Skala für alle Aufgaben gleichzeitig; mit Vorsicht behandeln.
-const REFERENCE_SPEED := 50.0
+const REFERENCE_SPEED := 35.0
 ## Empfindlichkeit: wie stark das Netto-Können (c - t) das Tempo auslenkt. Klein halten,
 ## da jede Tempo-Änderung eine Schwierigkeits-Änderung ist.
 const SPEED_SENSITIVITY := 0.3
