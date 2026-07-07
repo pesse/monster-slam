@@ -11,8 +11,7 @@ extends PanelContainer
 ## focus_mode=FOCUS_NONE (in der Szene gesetzt), sonst reißt die Antwort-LineEdit
 ## (die sich per _process den Fokus zurückholt) den Klick weg.
 
-const CORRECT_COLOR := Color(0.3, 1.0, 0.45)   # grün, wie FLASH_CORRECT im WaveRunner
-const ALT_COLOR := Color(0.6, 0.85, 0.65)      # gedämpftes Grün für Alternativen
+const CARD_SCENE := preload("res://scenes/ui/reveal_card.tscn")
 const HOLD_TIME := 3.0                          # Standzeit pro Karte im Auto-Durchlauf
 const READ_QUESTION_TIME := 0.5                 # kurze Pause auf der Frage vor dem Aufdecken
 const SWIPE_TIME := 0.35
@@ -84,79 +83,12 @@ func _place_card(index: int, revealed: bool, offscreen: bool) -> void:
 	if is_instance_valid(_current_card):
 		_current_card.queue_free()
 	var w := _stage.size.x
-	var card := _build_card(_items[index], revealed)
+	var card := CARD_SCENE.instantiate() as RevealCard
+	_stage.add_child(card)                 # zuerst in den Baum -> onready-Knoten stehen
+	card.setup(_items[index], revealed)
 	card.size = Vector2(w, _stage.size.y)
 	card.position = Vector2(w if offscreen else 0.0, 0.0)
-	_stage.add_child(card)
 	_current_card = card
-
-
-func _build_card(item: Dictionary, revealed: bool) -> Control:
-	var card := PanelContainer.new()
-	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-	var box := VBoxContainer.new()
-	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.add_theme_constant_override("separation", 10)
-	card.add_child(box)
-
-	# Wortart-Kennzeichnung in der Palettenfarbe (wie Monster-Outline & Legende).
-	var type_key := String(item.get("lexeme_type", ""))
-	if not type_key.is_empty():
-		var type_label := Label.new()
-		type_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		type_label.add_theme_font_size_override("font_size", 18)
-		type_label.add_theme_color_override("font_color", WordTypePalette.color_for(type_key))
-		type_label.text = String(WordTypePalette.LABELS.get(type_key, type_key))
-		box.add_child(type_label)
-
-	var prompt := Label.new()
-	prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	prompt.add_theme_font_size_override("font_size", 30)
-	prompt.text = String(item.get("prompt", ""))
-	box.add_child(prompt)
-
-	# Lösungsteil (primäre Antwort + Alternativen). Startet je nach `revealed` sichtbar
-	# oder verdeckt; _reveal_solution() blendet ihn ein.
-	var sol := VBoxContainer.new()
-	sol.alignment = BoxContainer.ALIGNMENT_CENTER
-	sol.add_theme_constant_override("separation", 4)
-	sol.modulate.a = 1.0 if revealed else 0.0
-	box.add_child(sol)
-
-	var answers: Array = item.get("answers", [])
-	var arrow := Label.new()
-	arrow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	arrow.add_theme_font_size_override("font_size", 22)
-	arrow.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
-	arrow.text = "↓"
-	sol.add_child(arrow)
-
-	var primary := Label.new()
-	primary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	primary.add_theme_font_size_override("font_size", 30)
-	primary.add_theme_color_override("font_color", CORRECT_COLOR)
-	primary.text = String(answers[0]) if not answers.is_empty() else "—"
-	sol.add_child(primary)
-
-	if answers.size() > 1:
-		var alt := Label.new()
-		alt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		alt.add_theme_font_size_override("font_size", 20)
-		alt.add_theme_color_override("font_color", ALT_COLOR)
-		alt.text = "auch: %s" % ", ".join(_rest_as_strings(answers))
-		sol.add_child(alt)
-
-	card.set_meta("sol", sol)
-	return card
-
-
-## answers[1..] als String-Array (join braucht String-Elemente).
-func _rest_as_strings(answers: Array) -> PackedStringArray:
-	var out := PackedStringArray()
-	for i in range(1, answers.size()):
-		out.append(String(answers[i]))
-	return out
 
 
 func _swipe_in() -> void:
@@ -177,7 +109,7 @@ func _swipe_out() -> void:
 func _reveal_solution() -> void:
 	if not is_instance_valid(_current_card):
 		return
-	var sol := _current_card.get_meta("sol") as CanvasItem
+	var sol := (_current_card as RevealCard).solution()
 	sol.modulate.a = 0.0
 	var tw := create_tween()
 	tw.tween_property(sol, "modulate:a", 1.0, REVEAL_TIME)
