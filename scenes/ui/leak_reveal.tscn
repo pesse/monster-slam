@@ -50,6 +50,39 @@ unique_name_in_owner = true
 focus_mode = 0
 text = "▶"
 
+[node name="Actions" type="HBoxContainer" parent="Margin/Root"]
+theme_override_constants/separation = 24
+alignment = 1
+
+[node name="ShowAllBtn" type="Button" parent="Margin/Root/Actions"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "Alle anzeigen"
+
+[node name="FlagBtn" type="Button" parent="Margin/Root/Actions"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "⚑ Melden"
+
+[node name="FlagInput" type="HBoxContainer" parent="Margin/Root"]
+unique_name_in_owner = true
+visible = false
+theme_override_constants/separation = 8
+
+[node name="FlagComment" type="LineEdit" parent="Margin/Root/FlagInput"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+placeholder_text = "Was stimmt nicht? (z.B. Wortart falsch)"
+
+[node name="FlagSubmit" type="Button" parent="Margin/Root/FlagInput"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "Absenden"
+
+[node name="FlagStatus" type="Label" parent="Margin/Root"]
+unique_name_in_owner = true
+horizontal_alignment = 1
+
 [node name="ContinueBtn" type="Button" parent="Margin/Root"]
 unique_name_in_owner = true
 focus_mode = 0

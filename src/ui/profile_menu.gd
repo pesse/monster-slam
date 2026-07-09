@@ -15,6 +15,7 @@ const BATTLE_SCENE := "res://scenes/battle/battle.tscn"
 @onready var _reset_confirm: ConfirmationDialog = %ResetDialog
 @onready var _stats_lines: VBoxContainer = %Statistik
 @onready var _word_list: VBoxContainer = %WordList
+@onready var _flag_list: VBoxContainer = %FlagList
 
 
 func _ready() -> void:
@@ -37,6 +38,7 @@ func _refresh() -> void:
 	_refresh_difficulty()
 	_refresh_stats()
 	_refresh_words()
+	_refresh_flags()
 
 
 func _refresh_profiles() -> void:
@@ -94,6 +96,33 @@ func _refresh_words() -> void:
 		var mastered_label := Label.new()
 		mastered_label.text = "  ✓" if bool(row["mastered"]) else "   "
 		line.add_child(mastered_label)
+
+
+## Zeigt die im Reveal geflaggten Lexeme mit Kommentar (aus der Quell-JSON).
+func _refresh_flags() -> void:
+	for child in _flag_list.get_children():
+		child.queue_free()
+	var flagged := ContentRegistry.flagged_lexemes()
+	if flagged.is_empty():
+		var empty := Label.new()
+		empty.text = "Keine markierten Einträge."
+		_flag_list.add_child(empty)
+		return
+	for entry in flagged:
+		var box := VBoxContainer.new()
+		box.add_theme_constant_override("separation", 0)
+		_flag_list.add_child(box)
+		var type_key := String(entry.get("type", ""))
+		var type_label := String(WordTypePalette.LABELS.get(type_key, type_key))
+		var header := Label.new()
+		header.text = "%s → %s  ·  %s" % [
+			str(entry.get("lemma_de", "")), str(entry.get("lemma_en", "")), type_label]
+		box.add_child(header)
+		var flag: Dictionary = entry.get("flag", {})
+		var comment := Label.new()
+		comment.text = "⚑ %s" % str(flag.get("comment", ""))
+		comment.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		box.add_child(comment)
 
 
 func _add_stat(text: String) -> void:

@@ -18,7 +18,9 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	if not has_focus():
+	# Nur zurückholen, wenn sichtbar — sonst würde die (unsichtbare) Kampfeingabe
+	# den Fokus anderer Controls klauen, z.B. dem Kommentarfeld im Leak-Reveal.
+	if visible and not has_focus():
 		grab_focus()
 
 

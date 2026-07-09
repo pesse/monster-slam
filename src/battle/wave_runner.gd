@@ -27,6 +27,7 @@ var _wave_number: int = 1          # laufende Nummer (Anzeige + Skalierung)
 var _wave_correct: int = 0         # richtig besiegte Monster dieser Welle
 var _wave_leaked: int = 0          # an der Festung durchgelassene Monster dieser Welle
 var _wave_leaked_tasks: Array[Dictionary] = []  # deren Aufgaben (prompt + accepted_answers), für die Auflösung
+var _wave_played_tasks: Array[Dictionary] = []  # ALLE gespielten Aufgaben (richtig + falsch), fürs freie Durchblättern im Reveal
 var _score_at_start: int = 0       # Punktestand zu Wellenbeginn (für "+X" im Screen)
 var _last_won: bool = true         # Ausgang der zuletzt beendeten Welle
 # Generation-Zähler: bricht Spawn-Coroutinen einer alten Welle ab, sobald eine neue
@@ -406,6 +407,7 @@ func _start_next_wave() -> void:
 	_wave_correct = 0
 	_wave_leaked = 0
 	_wave_leaked_tasks.clear()
+	_wave_played_tasks.clear()
 	_score_at_start = GameState.score
 	_end_label.visible = false
 	_stats.hide_stats()
@@ -529,9 +531,24 @@ func _flash_feedback(color: Color) -> void:
 	create_tween().tween_property(_flash, "modulate:a", 0.0, 0.4)
 
 
+## Momentaufnahme der Aufgabe eines Monsters für die Nach-Wellen-Auflösung.
+## `leaked` = wurde durchgelassen (falsch); source_id/learnable_id werden fürs
+## Flaggen der Vokabel im Reveal benötigt.
+func _task_snapshot(monster: Monster, leaked: bool) -> Dictionary:
+	return {
+		"prompt": String(monster.task.get("prompt", "")),
+		"answers": (monster.task.get("accepted_answers", []) as Array).duplicate(),
+		"lexeme_type": String(monster.task.get("lexeme_type", "")),
+		"source_id": String(monster.task.get("source_id", "")),
+		"learnable_id": String(monster.task.get("learnable_id", "")),
+		"leaked": leaked,
+	}
+
+
 func _defeat(monster: Monster) -> void:
 	_active.erase(monster)
 	_wave_correct += 1
+	_wave_played_tasks.append(_task_snapshot(monster, false))
 	_spawn_explosion(monster.position + Vector3(0.0, 1.0, 0.0), Color(0.7, 1.0, 0.4), 1.5)
 	# Kleine aufsteigende „+Punkte"-Animation an der Stelle des Monsters.
 	_spawn_score_popup(monster.position + Vector3(0.0, 2.0, 0.0), monster.reward)
@@ -585,11 +602,9 @@ func _on_monster_reached_goal(monster: Monster) -> void:
 	_wave_leaked += 1
 	# Durchgelassene Aufgabe für die Auflösung nach der Welle merken (vor dem
 	# Niederlage-Check, damit auch das die Festung fällende Monster dabei ist).
-	_wave_leaked_tasks.append({
-		"prompt": String(monster.task.get("prompt", "")),
-		"answers": (monster.task.get("accepted_answers", []) as Array).duplicate(),
-		"lexeme_type": String(monster.task.get("lexeme_type", "")),
-	})
+	var snapshot := _task_snapshot(monster, true)
+	_wave_leaked_tasks.append(snapshot)
+	_wave_played_tasks.append(snapshot)
 	_spawn_explosion(monster.position + Vector3(0.0, 1.0, 0.0), Color(1.0, 0.45, 0.12), 2.6)
 	_shake(0.9)
 	# Monster durchgelassen = Aufgabe nicht rechtzeitig abgerufen -> als Fehler verbuchen.
@@ -623,10 +638,11 @@ func _finish_wave(won: bool) -> void:
 		var new_tier := PlayerProgress.fortress_tier()
 		if new_tier > _fortress_tier:
 			await _play_upgrade_cutscene(new_tier)
-	# Durchgelassene Vokabeln mit korrekter Übersetzung auflösen (Sieg wie Niederlage),
-	# als Zwischenschritt VOR der Statistik. Bei 0 Leaks übersprungen.
-	if not _wave_leaked_tasks.is_empty():
-		await _leak_reveal.play(_wave_leaked_tasks)
+	# Vokabeln mit korrekter Übersetzung auflösen (Sieg wie Niederlage), als
+	# Zwischenschritt VOR der Statistik. Übergeben wird die volle Liste; das Reveal
+	# animiert die durchgelassenen zuerst und lässt danach alle durchblättern.
+	if not _wave_played_tasks.is_empty():
+		await _leak_reveal.play(_wave_played_tasks)
 	var total := _wave_correct + _wave_leaked
 	var accuracy := 100.0 * float(_wave_correct) / float(max(1, total))
 	_stats.show_stats({

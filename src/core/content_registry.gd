@@ -34,6 +34,10 @@ var waves: Dictionary = {}
 ## so clearing/filling these in place also updates the member vars).
 var _by_category: Dictionary = {}
 
+## "<category>|<id>" -> Quelldatei-Pfad. Wird beim Laden gefüllt, damit
+## Bearbeitungen (z.B. flag_lexeme) in die richtige Quell-JSON zurückschreiben.
+var _source_files: Dictionary = {}
+
 
 func _ready() -> void:
 	_by_category = {
@@ -54,6 +58,7 @@ func _ready() -> void:
 
 ## Rescans the whole data tree. Safe to call at runtime (e.g. after adding files).
 func reload() -> void:
+	_source_files.clear()
 	for category in _by_category:
 		var target: Dictionary = _by_category[category]
 		target.clear()
@@ -116,6 +121,64 @@ func monster_rule_for(task_type: String, direction: String) -> Dictionary:
 	return {}
 
 
+## Quelldatei-Pfad, aus dem der Eintrag geladen wurde, oder "" wenn unbekannt.
+func source_file(category: String, id: String) -> String:
+	return _source_files.get("%s|%s" % [category, id], "")
+
+
+## Lexeme, die eine Nutzer-Meldung tragen (Feld "flag"), für die Menü-Anzeige.
+func flagged_lexemes() -> Array:
+	var result: Array = []
+	for entry in lexemes.values():
+		if entry.has("flag"):
+			result.append(entry)
+	return result
+
+
+## Schreibt eine Meldung ("flag") in die Quell-JSON des Lexems zurück und
+## aktualisiert die In-Memory-Kopie. Gibt false zurück, wenn das Lexem, seine
+## Quelldatei oder der Eintrag darin nicht gefunden/geschrieben werden kann.
+## Hinweis: res:// ist nur im Editor/Dev-Run schreibbar (Authoring-Workflow).
+func flag_lexeme(lexeme_id: String, comment: String, learnable_id: String) -> bool:
+	if not lexemes.has(lexeme_id):
+		push_warning("ContentRegistry: flag für unbekanntes Lexem '%s'" % lexeme_id)
+		return false
+	var file_path := source_file("lexemes", lexeme_id)
+	if file_path.is_empty():
+		push_warning("ContentRegistry: keine Quelldatei für Lexem '%s'" % lexeme_id)
+		return false
+	var text := FileAccess.get_file_as_string(file_path)
+	var parsed: Variant = JSON.parse_string(text)
+	if parsed == null:
+		push_error("ContentRegistry: '%s' nicht lesbar/parsebar" % file_path)
+		return false
+	var flag := {
+		"comment": comment,
+		"learnable_id": learnable_id,
+		"at": Time.get_datetime_string_from_system(),
+	}
+	# Datei kann ein einzelnes Objekt ODER ein Array von Objekten enthalten.
+	var entries: Array = parsed if parsed is Array else [parsed]
+	var found := false
+	for entry in entries:
+		if entry is Dictionary and str(entry.get("id", "")) == lexeme_id:
+			entry["flag"] = flag
+			found = true
+			break
+	if not found:
+		push_warning("ContentRegistry: Lexem '%s' nicht in '%s'" % [lexeme_id, file_path])
+		return false
+	var file := FileAccess.open(file_path, FileAccess.WRITE)
+	if file == null:
+		push_error("ContentRegistry: '%s' nicht schreibbar (Export?)" % file_path)
+		return false
+	file.store_string(JSON.stringify(parsed, "\t"))
+	file.close()
+	# In-Memory-Kopie mitziehen, damit flagged_lexemes() ohne reload() stimmt.
+	lexemes[lexeme_id]["flag"] = flag
+	return true
+
+
 func _scan_dir(path: String, target: Dictionary, category: String) -> void:
 	var dir := DirAccess.open(path)
 	if dir == null:
@@ -159,3 +222,4 @@ func _register(entry: Variant, target: Dictionary, category: String, file_path: 
 	if target.has(id):
 		push_warning("ContentRegistry: duplicate %s id '%s' (from %s)" % [category, id, file_path])
 	target[id] = entry
+	_source_files["%s|%s" % [category, id]] = file_path

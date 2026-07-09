@@ -103,6 +103,13 @@ unique_name_in_owner = true
 size_flags_horizontal = 3
 theme_override_constants/separation = 4
 
+[node name="Markiert" type="ScrollContainer" parent="Margin/Root/Tabs"]
+
+[node name="FlagList" type="VBoxContainer" parent="Margin/Root/Tabs/Markiert"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
 [node name="ResetDialog" type="ConfirmationDialog" parent="."]
 unique_name_in_owner = true
 dialog_text = "Fortschritt dieses Profils wirklich löschen?"

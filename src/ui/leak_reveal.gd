@@ -1,15 +1,21 @@
 extends PanelContainer
-## Löst nach dem Wellenende die durchgelassenen Vokabeln auf: zeigt sie als Karten-
+## Löst nach dem Wellenende die gespielten Vokabeln auf: zeigt sie als Karten-
 ## Karussell (immer EINE Karte sichtbar) mit "Wort -> korrekte Übersetzung", inkl.
 ## aller alternativen Antworten. Beim ersten Durchlauf läuft eine automatische
-## Animation (Karte einwischen -> Lösung aufdecken -> 3 s halten -> zur nächsten
-## wischen); danach kann der Spieler mit Pfeilen frei blättern und mit "Weiter" zum
-## Statistik-Screen gehen.
+## Animation über die DURCHGELASSENEN (falschen) Vokabeln (Karte einwischen ->
+## Lösung aufdecken -> 3 s halten -> zur nächsten wischen); danach kann der Spieler
+## mit Pfeilen frei blättern, per "Alle anzeigen" auch die richtig beantworteten
+## dazunehmen, einzelne Vokabeln per "⚑ Melden" mit Kommentar flaggen und mit
+## "Weiter" zum Statistik-Screen gehen.
 ##
-## Die statische Hülle (Titel, Bühne, Fortschritt, Nav-Buttons) liegt in leak_reveal.tscn;
-## hier bleibt nur das dynamische Karten-Karussell. Alle interaktiven Controls haben
-## focus_mode=FOCUS_NONE (in der Szene gesetzt), sonst reißt die Antwort-LineEdit
-## (die sich per _process den Fokus zurückholt) den Klick weg.
+## Bei perfekter Welle (0 durchgelassen) erscheint der Screen ohne Animation und
+## geht direkt in den freien Blätter-Modus über alle gespielten Vokabeln.
+##
+## Die statische Hülle (Titel, Bühne, Fortschritt, Nav-/Aktions-Buttons) liegt in
+## leak_reveal.tscn; hier bleibt nur das dynamische Karten-Karussell. Die Nav-/
+## Aktions-Controls haben focus_mode=FOCUS_NONE (in der Szene gesetzt); das
+## Kommentarfeld darf fokussiert werden (die Kampf-Antwort-LineEdit ist während des
+## Reveals unsichtbar und stiehlt den Fokus dann nicht, siehe answer_input.gd).
 
 const CARD_SCENE := preload("res://scenes/ui/reveal_card.tscn")
 const HOLD_TIME := 3.0                          # Standzeit pro Karte im Auto-Durchlauf
@@ -17,13 +23,22 @@ const READ_QUESTION_TIME := 0.5                 # kurze Pause auf der Frage vor 
 const SWIPE_TIME := 0.35
 const REVEAL_TIME := 0.3
 
-var _items: Array = []
+var _items: Array = []          # aktuell durchblätterbare Menge (erst nur falsche, dann ggf. alle)
+var _leaked: Array = []         # durchgelassene (falsche) Vokabeln — Reihenfolge fürs Autoplay
+var _all_ordered: Array = []    # alle: falsche zuerst, dann richtige
+var _showing_all: bool = false
 var _index: int = 0
 
 @onready var _stage: Control = %Stage
 @onready var _progress: Label = %Progress
 @onready var _prev_btn: Button = %PrevBtn
 @onready var _next_btn: Button = %NextBtn
+@onready var _show_all_btn: Button = %ShowAllBtn
+@onready var _flag_btn: Button = %FlagBtn
+@onready var _flag_input: HBoxContainer = %FlagInput
+@onready var _flag_comment: LineEdit = %FlagComment
+@onready var _flag_submit: Button = %FlagSubmit
+@onready var _flag_status: Label = %FlagStatus
 @onready var _continue_btn: Button = %ContinueBtn
 var _current_card: Control = null
 
@@ -31,27 +46,48 @@ var _current_card: Control = null
 func _ready() -> void:
 	_prev_btn.pressed.connect(func(): _goto(_index - 1))
 	_next_btn.pressed.connect(func(): _goto(_index + 1))
+	_show_all_btn.pressed.connect(_on_show_all)
+	_flag_btn.pressed.connect(_on_flag_toggle)
+	_flag_submit.pressed.connect(_on_flag_submit)
+	_flag_comment.text_submitted.connect(func(_t): _on_flag_submit())
 
 
-## Awaitbar: zeigt das Karussell, spielt einmal automatisch durch und kehrt erst
-## zurück, wenn der Spieler "Weiter" klickt. Erwartet je Eintrag:
-## {"prompt": String, "answers": Array}.
-func play(leaked: Array) -> void:
-	if leaked.is_empty():
+## Awaitbar: zeigt das Karussell, spielt die falschen einmal automatisch durch und
+## kehrt erst zurück, wenn der Spieler "Weiter" klickt. Erwartet je Eintrag:
+## {"prompt", "answers", "lexeme_type", "source_id", "learnable_id", "leaked"}.
+func play(played: Array) -> void:
+	if played.is_empty():
 		return
-	_items = leaked
+	_leaked = played.filter(func(t): return bool(t.get("leaked", false)))
+	var correct := played.filter(func(t): return not bool(t.get("leaked", false)))
+	_all_ordered = _leaked + correct
+	_showing_all = false
 	_index = 0
+	_reset_flag_ui()
 	visible = true
+	# Während des Auto-Durchlaufs alle Interaktion sperren.
 	_prev_btn.disabled = true
 	_next_btn.disabled = true
 	_continue_btn.disabled = true
+	_show_all_btn.disabled = true
+	_flag_btn.disabled = true
 	# Ein Frame, damit die Bühne ihre echte Größe hat (für die Wisch-Distanz).
 	await get_tree().process_frame
 
-	await _autoplay()
+	if _leaked.is_empty():
+		# Perfekte Welle: keine Animation, direkt alle frei durchblättern.
+		_showing_all = true
+		_items = _all_ordered
+		_index = 0
+		_place_card(0, true, false)
+	else:
+		_items = _leaked
+		await _autoplay()
 
 	_continue_btn.disabled = false
+	_flag_btn.disabled = false
 	_update_nav()
+	_update_show_all()
 	await _continue_btn.pressed
 	hide_reveal()
 
@@ -63,7 +99,7 @@ func hide_reveal() -> void:
 		_current_card = null
 
 
-## Spielt alle Karten einmal automatisch durch.
+## Spielt alle Karten der aktuellen Menge einmal automatisch durch.
 func _autoplay() -> void:
 	for i in _items.size():
 		_index = i
@@ -120,14 +156,74 @@ func _reveal_solution() -> void:
 func _goto(index: int) -> void:
 	_index = clampi(index, 0, _items.size() - 1)
 	_place_card(_index, true, false)
+	_reset_flag_ui()
 	_update_nav()
+
+
+## "Alle anzeigen": erweitert die Blätter-Menge auf alle gespielten (falsche zuerst,
+## dann richtige) und blendet sich danach aus.
+func _on_show_all() -> void:
+	_showing_all = true
+	_items = _all_ordered
+	_reset_flag_ui()
+	_update_nav()
+	_update_show_all()
+
+
+func _update_show_all() -> void:
+	# Nur anbieten, wenn es zusätzliche (richtige) Vokabeln gibt und noch nicht alle
+	# gezeigt werden.
+	_show_all_btn.visible = _all_ordered.size() > _leaked.size() and not _showing_all
 
 
 func _update_nav() -> void:
 	_prev_btn.disabled = _index <= 0
 	_next_btn.disabled = _index >= _items.size() - 1
+	# Flaggen nur möglich, wenn die Vokabel ein Quell-Lexem trägt.
+	_flag_btn.disabled = _current_item_source_id().is_empty()
 	_update_progress()
 
 
 func _update_progress() -> void:
 	_progress.text = "Karte %d / %d" % [_index + 1, _items.size()]
+
+
+# --- Flaggen -----------------------------------------------------------------
+
+func _current_item_source_id() -> String:
+	if _index < 0 or _index >= _items.size():
+		return ""
+	return String(_items[_index].get("source_id", ""))
+
+
+func _reset_flag_ui() -> void:
+	_flag_input.visible = false
+	_flag_comment.text = ""
+	_flag_status.text = ""
+
+
+## "⚑ Melden": klappt das Kommentarfeld auf/zu.
+func _on_flag_toggle() -> void:
+	_flag_input.visible = not _flag_input.visible
+	_flag_status.text = ""
+	if _flag_input.visible:
+		_flag_comment.grab_focus()
+
+
+func _on_flag_submit() -> void:
+	var comment := _flag_comment.text.strip_edges()
+	if comment.is_empty():
+		_flag_status.text = "Bitte einen Kommentar eingeben."
+		return
+	var item: Dictionary = _items[_index]
+	var source_id := String(item.get("source_id", ""))
+	if source_id.is_empty():
+		_flag_status.text = "Kein Lexem zum Melden."
+		return
+	var ok := ContentRegistry.flag_lexeme(source_id, comment, String(item.get("learnable_id", "")))
+	if ok:
+		_flag_input.visible = false
+		_flag_comment.text = ""
+		_flag_status.text = "✔ Gemeldet: %s" % String(item.get("prompt", ""))
+	else:
+		_flag_status.text = "Melden fehlgeschlagen (siehe Log)."
