@@ -12,6 +12,9 @@ extends Node
 const PATH := "user://settings.cfg"
 const DEFAULT_PROFILE := "default"
 const DEFAULT_DIFFICULTY := 3
+const DEFAULT_BASE_SPEED := 1.0
+const MIN_BASE_SPEED := 0.5
+const MAX_BASE_SPEED := 1.5
 
 ## Das aktive Profil hat gewechselt (id = neuer player_id). Erlaubt Live-Refresh im UI.
 signal active_profile_changed(id: String)
@@ -100,6 +103,20 @@ func default_difficulty(profile := "") -> int:
 func set_default_difficulty(value: int, profile := "") -> void:
 	var id := profile if not profile.is_empty() else active_profile()
 	_config.set_value("difficulty", id, clampi(value, 1, 5))
+	_save()
+
+
+## Grund-Geschwindigkeit eines Profils als Multiplikator (0.5..1.5, Default 1.0). Wirkt als
+## globaler Tempo-Faktor ZUSÄTZLICH zur Schwierigkeit (siehe WaveRunner) und verschiebt so das
+## Grundtempo, ohne die Schwierigkeitsskala selbst zu verändern. Leeres `profile` -> aktives Profil.
+func base_speed(profile := "") -> float:
+	var id := profile if not profile.is_empty() else active_profile()
+	return clampf(float(_config.get_value("base_speed", id, DEFAULT_BASE_SPEED)), MIN_BASE_SPEED, MAX_BASE_SPEED)
+
+
+func set_base_speed(value: float, profile := "") -> void:
+	var id := profile if not profile.is_empty() else active_profile()
+	_config.set_value("base_speed", id, clampf(value, MIN_BASE_SPEED, MAX_BASE_SPEED))
 	_save()
 
 

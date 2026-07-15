@@ -414,7 +414,8 @@ func _start_next_wave() -> void:
 	_answer_input.visible = true
 
 	GameState.current_wave = "procedural_%d" % _wave_number
-	_generator.speed_scale = _difficulty_to_speed(_difficulty)
+	# Tempo = Schwierigkeit × profilweite Grund-Geschwindigkeit (Barrierefreiheit / Grundtempo).
+	_generator.speed_scale = _difficulty_to_speed(_difficulty) * UserSettings.base_speed()
 	var spawns := _generate_wave(_difficulty, _wave_number)
 	for entry in spawns:
 		_total += int(entry.get("count", 0))

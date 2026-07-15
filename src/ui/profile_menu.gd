@@ -12,6 +12,8 @@ const SESSION_SETUP_SCENE := "res://scenes/ui/session_setup.tscn"
 @onready var _rename_input: LineEdit = %RenameInput
 @onready var _name_input: LineEdit = %NameInput
 @onready var _diff_buttons: Array = %DiffRow.get_children()
+@onready var _speed_slider: HSlider = %SpeedSlider
+@onready var _speed_label: Label = %SpeedLabel
 @onready var _reset_confirm: ConfirmationDialog = %ResetDialog
 @onready var _stats_lines: VBoxContainer = %Statistik
 @onready var _word_list: VBoxContainer = %WordList
@@ -27,6 +29,7 @@ func _ready() -> void:
 	# Standard-Schwierigkeits-Buttons 1..5 (Reihenfolge in DiffRow = Stufe i+1).
 	for i in _diff_buttons.size():
 		(_diff_buttons[i] as Button).pressed.connect(_on_difficulty_pressed.bind(i + 1))
+	_speed_slider.value_changed.connect(_on_speed_changed)
 	(%ResetButton as Button).pressed.connect(func(): _reset_confirm.popup_centered())
 	_reset_confirm.confirmed.connect(_on_reset_confirmed)
 	_refresh()
@@ -36,6 +39,7 @@ func _ready() -> void:
 func _refresh() -> void:
 	_refresh_profiles()
 	_refresh_difficulty()
+	_refresh_speed()
 	_refresh_stats()
 	_refresh_words()
 	_refresh_flags()
@@ -60,6 +64,18 @@ func _refresh_difficulty() -> void:
 	for i in _diff_buttons.size():
 		# Gewählte Stufe optisch hervorheben (deaktivierter Button = markiert, wie in WaveStats).
 		(_diff_buttons[i] as Button).disabled = (i + 1 == current)
+
+
+## Slider auf die Grund-Geschwindigkeit des aktiven Profils setzen (ohne value_changed
+## auszulösen, sonst würde _refresh beim Profilwechsel ein überflüssiges Speichern triggern).
+func _refresh_speed() -> void:
+	var value := UserSettings.base_speed()
+	_speed_slider.set_value_no_signal(value)
+	_update_speed_label(value)
+
+
+func _update_speed_label(value: float) -> void:
+	_speed_label.text = "Grund-Geschwindigkeit: %d %%" % int(round(value * 100.0))
 
 
 func _refresh_stats() -> void:
@@ -156,6 +172,11 @@ func _on_create_profile() -> void:
 func _on_difficulty_pressed(level: int) -> void:
 	UserSettings.set_default_difficulty(level)
 	_refresh_difficulty()
+
+
+func _on_speed_changed(value: float) -> void:
+	UserSettings.set_base_speed(value)
+	_update_speed_label(value)
 
 
 func _on_reset_confirmed() -> void:
