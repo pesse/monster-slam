@@ -89,6 +89,43 @@ func lexemes_by_tags(tags: Array) -> Array:
 	return result
 
 
+## Alle distinkten Lexem-Tags über den gesamten Katalog, alphabetisch sortiert.
+## Für datengetriebene Auswahl-UIs (Session-Setup).
+func all_lexeme_tags() -> PackedStringArray:
+	var seen := {}
+	for entry in lexemes.values():
+		for tag in entry.get("tags", []):
+			seen[str(tag)] = true
+	var result := PackedStringArray(seen.keys())
+	result.sort()
+	return result
+
+
+## Alle distinkten Vokabel-Typen (Lexem-Feld "type") über den gesamten Katalog,
+## alphabetisch sortiert. Für die Vokabel-Typ-Auswahl im Session-Setup.
+func all_lexeme_types() -> PackedStringArray:
+	var seen := {}
+	for entry in lexemes.values():
+		var type := str(entry.get("type", ""))
+		if not type.is_empty():
+			seen[type] = true
+	var result := PackedStringArray(seen.keys())
+	result.sort()
+	return result
+
+
+## Alle distinkten task_type-Werte aus den task_definitions, alphabetisch sortiert.
+func all_task_types() -> PackedStringArray:
+	var seen := {}
+	for definition in task_definitions.values():
+		var task_type := str(definition.get("task_type", ""))
+		if not task_type.is_empty():
+			seen[task_type] = true
+	var result := PackedStringArray(seen.keys())
+	result.sort()
+	return result
+
+
 ## Alle Formen eines Lexems; optional auf einen form_type gefiltert.
 func forms_for(lexeme_id: String, form_type: String = "") -> Array:
 	var result: Array = []

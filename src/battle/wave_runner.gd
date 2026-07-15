@@ -443,10 +443,12 @@ func _generate_wave(difficulty: int, wave_number: int) -> Array:
 		"count": count,
 		"interval": interval,
 		"task_pool": {
-			"task_types": ["translate", "opposite", "synonym", "confusables"],
-			# "basics" = kleiner Starter-Satz, "core" = produktiver Kernwortschatz
-			# (en_klasse9). "receptive"-Wörter bleiben bewusst außen vor (nur verstehen).
-			"tags": ["basics", "core"],
+			# Aufgabentypen und Tags kommen aus der Profil-Auswahl (Session-Setup).
+			# Leere Auswahl bedeutet in _candidates()/lexemes_by_tags() automatisch
+			# "alle" — es entsteht also nie eine leere/hängende Welle.
+			"task_types": Array(UserSettings.selected_task_types()),
+			"lexeme_types": Array(UserSettings.selected_lexeme_types()),
+			"tags": Array(UserSettings.selected_tags()),
 			"difficulty_max": clampi(difficulty, 1, 5),
 		},
 	}]

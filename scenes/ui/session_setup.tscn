@@ -1,0 +1,96 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/ui/session_setup.gd" id="1_setup"]
+
+[node name="SessionSetup" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_setup")
+
+[node name="Margin" type="MarginContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="Root" type="VBoxContainer" parent="Margin"]
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="Margin/Root"]
+theme_override_font_sizes/font_size = 40
+text = "Runde vorbereiten"
+horizontal_alignment = 1
+
+[node name="Hint" type="Label" parent="Margin/Root"]
+text = "Abwählen, was du nicht üben willst. Tags leer lassen = alle Themen."
+horizontal_alignment = 1
+
+[node name="Scroll" type="ScrollContainer" parent="Margin/Root"]
+size_flags_vertical = 3
+
+[node name="Body" type="VBoxContainer" parent="Margin/Root/Scroll"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="TaskTypeHeader" type="Button" parent="Margin/Root/Scroll/Body"]
+unique_name_in_owner = true
+theme_override_font_sizes/font_size = 24
+alignment = 0
+text = "Aufgabentypen"
+
+[node name="TaskTypeList" type="GridContainer" parent="Margin/Root/Scroll/Body"]
+unique_name_in_owner = true
+visible = false
+theme_override_constants/h_separation = 16
+theme_override_constants/v_separation = 2
+columns = 3
+
+[node name="LexemeTypeHeader" type="Button" parent="Margin/Root/Scroll/Body"]
+unique_name_in_owner = true
+theme_override_font_sizes/font_size = 24
+alignment = 0
+text = "Vokabel-Typen"
+
+[node name="LexemeTypeList" type="GridContainer" parent="Margin/Root/Scroll/Body"]
+unique_name_in_owner = true
+visible = false
+theme_override_constants/h_separation = 16
+theme_override_constants/v_separation = 2
+columns = 3
+
+[node name="TagLabel" type="Label" parent="Margin/Root/Scroll/Body"]
+theme_override_font_sizes/font_size = 24
+text = "Tags"
+
+[node name="TagInput" type="LineEdit" parent="Margin/Root/Scroll/Body"]
+unique_name_in_owner = true
+placeholder_text = "Tag eingeben und auswählen…"
+
+[node name="TagSuggestions" type="VBoxContainer" parent="Margin/Root/Scroll/Body"]
+unique_name_in_owner = true
+theme_override_constants/separation = 2
+
+[node name="TagBadges" type="HFlowContainer" parent="Margin/Root/Scroll/Body"]
+unique_name_in_owner = true
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 6
+
+[node name="Buttons" type="HBoxContainer" parent="Margin/Root"]
+theme_override_constants/separation = 12
+
+[node name="BackButton" type="Button" parent="Margin/Root/Buttons"]
+unique_name_in_owner = true
+text = "◀ Zurück"
+
+[node name="StartButton" type="Button" parent="Margin/Root/Buttons"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+text = "▶ Kampf starten"

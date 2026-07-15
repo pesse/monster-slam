@@ -6,7 +6,7 @@ extends Control
 ## + PlayerProgress. Anders als die Kampf-Overlays gibt es hier KEINE Antwort-LineEdit,
 ## die den Fokus stiehlt, daher bleiben die Controls normal fokussierbar.
 
-const BATTLE_SCENE := "res://scenes/battle/battle.tscn"
+const SESSION_SETUP_SCENE := "res://scenes/ui/session_setup.tscn"
 
 @onready var _profile_select: OptionButton = %ProfileSelect
 @onready var _rename_input: LineEdit = %RenameInput
@@ -19,7 +19,7 @@ const BATTLE_SCENE := "res://scenes/battle/battle.tscn"
 
 
 func _ready() -> void:
-	(%PlayButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(BATTLE_SCENE))
+	(%PlayButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(SESSION_SETUP_SCENE))
 	_profile_select.item_selected.connect(_on_profile_selected)
 	_rename_input.text_submitted.connect(func(_t): _on_rename_profile())
 	(%RenameButton as Button).pressed.connect(_on_rename_profile)

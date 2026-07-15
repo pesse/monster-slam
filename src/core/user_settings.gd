@@ -103,6 +103,45 @@ func set_default_difficulty(value: int, profile := "") -> void:
 	_save()
 
 
+## Ausgewählte Lexem-Tags eines Profils (Session-Filter). Leer -> keine Einschränkung
+## (alle Tags). Leeres `profile` -> aktives Profil.
+func selected_tags(profile := "") -> PackedStringArray:
+	var id := profile if not profile.is_empty() else active_profile()
+	return PackedStringArray(_config.get_value("tags", id, PackedStringArray([])))
+
+
+func set_selected_tags(tags: PackedStringArray, profile := "") -> void:
+	var id := profile if not profile.is_empty() else active_profile()
+	_config.set_value("tags", id, tags)
+	_save()
+
+
+## Ausgewählte Aufgabentypen eines Profils (Session-Filter). Leer -> keine Einschränkung
+## (alle Typen). Leeres `profile` -> aktives Profil.
+func selected_task_types(profile := "") -> PackedStringArray:
+	var id := profile if not profile.is_empty() else active_profile()
+	return PackedStringArray(_config.get_value("task_types", id, PackedStringArray([])))
+
+
+func set_selected_task_types(types: PackedStringArray, profile := "") -> void:
+	var id := profile if not profile.is_empty() else active_profile()
+	_config.set_value("task_types", id, types)
+	_save()
+
+
+## Ausgewählte Vokabel-Typen (Lexem-`type`, z.B. noun/verb) eines Profils. Leer ->
+## keine Einschränkung (alle Typen). Leeres `profile` -> aktives Profil.
+func selected_lexeme_types(profile := "") -> PackedStringArray:
+	var id := profile if not profile.is_empty() else active_profile()
+	return PackedStringArray(_config.get_value("lexeme_types", id, PackedStringArray([])))
+
+
+func set_selected_lexeme_types(types: PackedStringArray, profile := "") -> void:
+	var id := profile if not profile.is_empty() else active_profile()
+	_config.set_value("lexeme_types", id, types)
+	_save()
+
+
 ## Anzeigename -> sicherer player_id: klein, Leerzeichen zu '_', nur [a-z0-9_-].
 func _sanitize(name: String) -> String:
 	var lowered := name.strip_edges().to_lower()
