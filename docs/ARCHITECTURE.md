@@ -16,6 +16,9 @@ und lädt jede `.json`-Datei. Kategorien: `lexemes`, `lexeme_forms`,
 - Zugriff: `ContentRegistry.monsters`, `.get_entry("lexemes", "lex.en.house")`,
   `.all("waves")`, `.lexemes_by_tags(["basics"])`, `.forms_for(id, form_type)`,
   `.relations_of(id, "opposite")`, `.monster_rule_for(task_type, direction)`.
+- Auswahl-Filter fürs Session-Setup: `.lexemes_scoped(scope, tags)` (Schnitt aus
+  Curriculum-Scope UND Themen, siehe unten), plus `.all_books()` / `.units_for(book)`
+  für den Buch▸Unit-Picker.
 - `reload()` scannt zur Laufzeit neu.
 
 **Folge:** Content hinzufügen = Datei ablegen. Kein Code-Edit.
@@ -28,6 +31,14 @@ Darstellung unabhängig wachsen können (siehe `docs/ADDING_CONTENT.md`):
   (Konjugation/Zeit) und Relationen (opposite/synonym/…) hat es. **Keine** `difficulty`
   am Lexem: wie schwer ein Wort ist, ergibt sich aus dem Lernstand (Confidence), nicht
   aus dem Wort selbst.
+  - **Zwei getrennte Klassifikations-Achsen** am Lexem (für die Session-Auswahl):
+	*Curriculum* über die Felder `book` (z.B. `"access2"`) + `unit` (int) — woher das
+	Wort stammt; *Themen* über `tags` (z.B. `body`, `animals`) — worum es geht. Die
+	Wortart steckt in `type`, **nicht** in `tags`. `.lexemes_scoped(scope, tags)`
+	schneidet beide Achsen (Scope UND Themen; innerhalb der Tags ODER), leer = keine
+	Einschränkung. So ist z.B. „Körperteile aus Access 2 / Unit 6" ausdrückbar. Lexeme
+    ohne `book`/`unit` (Grundwortschatz) sind keinem Curriculum zugeordnet und erscheinen
+    nur, wenn kein Scope gewählt ist.
 - **task_definitions** — *Regeln*, was abgefragt wird (translate/opposite/synonym/
   conjugation/… + `direction`, `allowed_types`, `requires_relation`/`requires_form`,
   `difficulty`). Wenige, statische Einträge (Größenordnung ~10–20) — **unabhängig von
