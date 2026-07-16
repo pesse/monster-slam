@@ -131,10 +131,11 @@ func _build_lexeme_types() -> void:
 		_add_check(_lexeme_type_list, lexeme_type, label, on, _save_lexeme_types)
 
 
-## Erzeugt einen CheckButton für eine Option. `value` (roher Tag/Typ) wird als
+## Erzeugt eine CheckBox für eine Option. `value` (roher Tag/Typ) wird als
 ## Metadatum abgelegt, damit die Auswahl beim Speichern rekonstruierbar ist.
+## CheckBox (echtes Kästchen [ ]/[x] vor dem Label), nicht CheckButton (Toggle nach dem Label).
 func _add_check(container: Container, value: String, label: String, on: bool, save: Callable) -> void:
-	var check := CheckButton.new()
+	var check := CheckBox.new()
 	check.text = label
 	check.button_pressed = on
 	check.focus_mode = Control.FOCUS_NONE
@@ -148,7 +149,7 @@ func _add_check(container: Container, value: String, label: String, on: bool, sa
 func _collect(container: Container) -> PackedStringArray:
 	var result := PackedStringArray()
 	for child in container.get_children():
-		if child is CheckButton and child.button_pressed:
+		if child is CheckBox and child.button_pressed:
 			result.append(str(child.get_meta("value")))
 	return result
 

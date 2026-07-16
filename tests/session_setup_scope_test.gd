@@ -16,7 +16,7 @@ func _scope_values(scope_list: Node) -> Array:
 	for child in scope_list.get_children():
 		if child is GridContainer:
 			for check in child.get_children():
-				if check is CheckButton:
+				if check is CheckBox:
 					values.append(str(check.get_meta("value")))
 	return values
 
@@ -34,5 +34,5 @@ func test_scope_checkboxes_default_unchecked() -> void:
 	for child in scope_list.get_children():
 		if child is GridContainer:
 			for check in child.get_children():
-				if check is CheckButton:
+				if check is CheckBox:
 					assert_bool(check.button_pressed).is_false()
