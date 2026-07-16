@@ -89,6 +89,61 @@ func lexemes_by_tags(tags: Array) -> Array:
 	return result
 
 
+## Alle distinkten Bücher (Lexem-Feld "book") über den Katalog, alphabetisch sortiert.
+## Für den Curriculum-Scope-Picker im Session-Setup. Lexeme ohne "book" (z.B. Grundwortschatz)
+## erscheinen hier nicht — sie sind bewusst keinem Buch/Unit zugeordnet.
+func all_books() -> PackedStringArray:
+	var seen := {}
+	for entry in lexemes.values():
+		var book := str(entry.get("book", ""))
+		if not book.is_empty():
+			seen[book] = true
+	var result := PackedStringArray(seen.keys())
+	result.sort()
+	return result
+
+
+## Alle distinkten Units eines Buchs (Lexem-Feld "unit"), numerisch aufsteigend sortiert.
+func units_for(book: String) -> Array:
+	var seen := {}
+	for entry in lexemes.values():
+		if str(entry.get("book", "")) == book and entry.has("unit"):
+			seen[int(entry["unit"])] = true
+	var result: Array = seen.keys()
+	result.sort()
+	return result
+
+
+## Curriculum-Scope-Schlüssel eines Lexems: ["<book>", "<book>/<unit>"] — beides, damit
+## sowohl "ganzes Buch" als auch "einzelne Unit" im Scope matchen. Leer, wenn kein "book".
+func _scope_keys(entry: Dictionary) -> Array:
+	var book := str(entry.get("book", ""))
+	if book.is_empty():
+		return []
+	if entry.has("unit"):
+		return [book, "%s/%d" % [book, int(entry["unit"])]]
+	return [book]
+
+
+## Lexeme gefiltert nach Curriculum-Scope UND Themen-Tags (die beiden Achsen aus dem
+## Session-Setup). `scope`: Schlüssel wie "access2" (ganzes Buch) oder "access2/6" (eine Unit)
+## — leer = keine Scope-Einschränkung (auch Lexeme ohne Buch/Unit bleiben drin). `tags` wird
+## wie in lexemes_by_tags() als ODER innerhalb der Themen behandelt (leer = alle Themen).
+## Ein Lexem muss BEIDE Achsen erfüllen (Schnitt): so ergibt z.B. scope=["access2/6"] +
+## tags=["body"] genau die Körperteile aus Unit 6.
+func lexemes_scoped(scope: Array, tags: Array) -> Array:
+	var base := lexemes_by_tags(tags)
+	if scope.is_empty():
+		return base
+	var result: Array = []
+	for entry in base:
+		for key in _scope_keys(entry):
+			if key in scope:
+				result.append(entry)
+				break
+	return result
+
+
 ## Alle distinkten Lexem-Tags über den gesamten Katalog, alphabetisch sortiert.
 ## Für datengetriebene Auswahl-UIs (Session-Setup).
 func all_lexeme_tags() -> PackedStringArray:

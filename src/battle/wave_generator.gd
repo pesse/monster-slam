@@ -113,10 +113,11 @@ func pick(pool: Dictionary, exclude_sources: Dictionary = {}) -> Dictionary:
 func _candidates(pool: Dictionary) -> Array:
 	var task_types: Array = pool.get("task_types", [])
 	var tags: Array = pool.get("tags", [])
+	var scope: Array = pool.get("scope", []) # leer -> alle Bücher/Units
 	var lexeme_types: Array = pool.get("lexeme_types", []) # leer -> alle Wortarten
 	var direction := str(pool.get("direction", "")) # "" = beliebige Richtung
 	var difficulty_max: int = int(pool.get("difficulty_max", 0)) # 0 = kein Limit
-	var lexemes := ContentRegistry.lexemes_by_tags(tags) # leere tags -> alle Lexeme
+	var lexemes := ContentRegistry.lexemes_scoped(scope, tags) # leerer scope/tags -> alle Lexeme
 	if not lexeme_types.is_empty():
 		lexemes = lexemes.filter(func(lx): return str(lx.get("type", "")) in lexeme_types)
 	var result: Array = []

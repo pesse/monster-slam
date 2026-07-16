@@ -30,7 +30,7 @@ text = "Runde vorbereiten"
 horizontal_alignment = 1
 
 [node name="Hint" type="Label" parent="Margin/Root"]
-text = "Abwählen, was du nicht üben willst. Tags leer lassen = alle Themen."
+text = "Filter kombinieren sich: Buch/Unit UND Themen. Nichts wählen = keine Einschränkung."
 horizontal_alignment = 1
 
 [node name="Scroll" type="ScrollContainer" parent="Margin/Root"]
@@ -39,6 +39,17 @@ size_flags_vertical = 3
 [node name="Body" type="VBoxContainer" parent="Margin/Root/Scroll"]
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
+
+[node name="ScopeHeader" type="Button" parent="Margin/Root/Scroll/Body"]
+unique_name_in_owner = true
+theme_override_font_sizes/font_size = 24
+alignment = 0
+text = "Bücher & Units"
+
+[node name="ScopeList" type="VBoxContainer" parent="Margin/Root/Scroll/Body"]
+unique_name_in_owner = true
+visible = false
+theme_override_constants/separation = 6
 
 [node name="TaskTypeHeader" type="Button" parent="Margin/Root/Scroll/Body"]
 unique_name_in_owner = true

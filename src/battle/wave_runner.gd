@@ -449,6 +449,7 @@ func _generate_wave(difficulty: int, wave_number: int) -> Array:
 			# "alle" — es entsteht also nie eine leere/hängende Welle.
 			"task_types": Array(UserSettings.selected_task_types()),
 			"lexeme_types": Array(UserSettings.selected_lexeme_types()),
+			"scope": Array(UserSettings.selected_scope()),
 			"tags": Array(UserSettings.selected_tags()),
 			"difficulty_max": clampi(difficulty, 1, 5),
 		},

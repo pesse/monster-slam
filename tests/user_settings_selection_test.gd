@@ -12,6 +12,7 @@ func before_test() -> void:
 	UserSettings.set_selected_tags(PackedStringArray([]), PROFILE)
 	UserSettings.set_selected_task_types(PackedStringArray([]), PROFILE)
 	UserSettings.set_selected_lexeme_types(PackedStringArray([]), PROFILE)
+	UserSettings.set_selected_scope(PackedStringArray([]), PROFILE)
 
 
 func test_selected_tags_default_empty() -> void:
@@ -47,6 +48,18 @@ func test_selected_lexeme_types_roundtrip() -> void:
 	var got := UserSettings.selected_lexeme_types(PROFILE)
 	assert_bool("noun" in got).is_true()
 	assert_bool("verb" in got).is_true()
+	assert_int(got.size()).is_equal(2)
+
+
+func test_selected_scope_default_empty() -> void:
+	assert_int(UserSettings.selected_scope(PROFILE).size()).is_equal(0)
+
+
+func test_selected_scope_roundtrip() -> void:
+	UserSettings.set_selected_scope(PackedStringArray(["access2/6", "access2/7"]), PROFILE)
+	var got := UserSettings.selected_scope(PROFILE)
+	assert_bool("access2/6" in got).is_true()
+	assert_bool("access2/7" in got).is_true()
 	assert_int(got.size()).is_equal(2)
 
 

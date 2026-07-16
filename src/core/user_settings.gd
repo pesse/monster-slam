@@ -133,6 +133,20 @@ func set_selected_tags(tags: PackedStringArray, profile := "") -> void:
 	_save()
 
 
+## Ausgewählter Curriculum-Scope eines Profils (Session-Filter): Schlüssel wie "access2"
+## (ganzes Buch) oder "access2/6" (eine Unit). Leer -> keine Einschränkung (alle Lexeme,
+## auch die ohne Buch/Unit). Leeres `profile` -> aktives Profil.
+func selected_scope(profile := "") -> PackedStringArray:
+	var id := profile if not profile.is_empty() else active_profile()
+	return PackedStringArray(_config.get_value("scope", id, PackedStringArray([])))
+
+
+func set_selected_scope(scope: PackedStringArray, profile := "") -> void:
+	var id := profile if not profile.is_empty() else active_profile()
+	_config.set_value("scope", id, scope)
+	_save()
+
+
 ## Ausgewählte Aufgabentypen eines Profils (Session-Filter). Leer -> keine Einschränkung
 ## (alle Typen). Leeres `profile` -> aktives Profil.
 func selected_task_types(profile := "") -> PackedStringArray:

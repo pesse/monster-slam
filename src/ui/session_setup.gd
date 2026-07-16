@@ -32,6 +32,7 @@ const TASK_TYPE_LABELS := {
 ## Wie viele Auto-Vervollständigungs-Vorschläge maximal angezeigt werden.
 const MAX_SUGGESTIONS := 10
 
+@onready var _scope_list: VBoxContainer = %ScopeList
 @onready var _task_type_list: GridContainer = %TaskTypeList
 @onready var _lexeme_type_list: GridContainer = %LexemeTypeList
 @onready var _tag_input: LineEdit = %TagInput
@@ -45,10 +46,12 @@ var _selected_tags: Array = []
 func _ready() -> void:
 	(%StartButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(BATTLE_SCENE))
 	(%BackButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(MENU_SCENE))
+	_build_scope()
 	_build_task_types()
 	_build_lexeme_types()
 	_build_tags()
-	# Beide Checkbox-Bereiche als aufklappbare Panels, standardmäßig zugeklappt.
+	# Alle Filterbereiche als aufklappbare Panels, standardmäßig zugeklappt.
+	_setup_section(%ScopeHeader, _scope_list, "Bücher & Units")
 	_setup_section(%TaskTypeHeader, _task_type_list, "Aufgabentypen")
 	_setup_section(%LexemeTypeHeader, _lexeme_type_list, "Vokabel-Typen")
 
@@ -62,6 +65,53 @@ func _setup_section(header: Button, content: Control, title: String) -> void:
 		content.visible = not content.visible
 		header.text = ("▾ " if content.visible else "▸ ") + title
 	)
+
+
+# --- Curriculum-Scope: Bücher ▸ Units (hierarchisch) ----------------------------
+
+## Baut pro Buch eine Überschrift + ein Raster von Unit-Checkboxen. Anders als die übrigen
+## Filter starten die Checkboxen LEER: leere Scope-Auswahl = keine Einschränkung (auch Lexeme
+## ohne Buch/Unit bleiben spielbar). Wert je Checkbox: "<book>/<unit>".
+func _build_scope() -> void:
+	var selected := UserSettings.selected_scope()
+	for book in ContentRegistry.all_books():
+		var label := Label.new()
+		label.text = _book_label(book)
+		label.add_theme_font_size_override("font_size", 18)
+		_scope_list.add_child(label)
+		var grid := GridContainer.new()
+		grid.columns = 3
+		grid.add_theme_constant_override("h_separation", 16)
+		grid.add_theme_constant_override("v_separation", 2)
+		_scope_list.add_child(grid)
+		for unit in ContentRegistry.units_for(book):
+			var key := "%s/%d" % [book, unit]
+			# book-Schlüssel (ganzes Buch) im Scope hakt alle seine Units mit an.
+			var on := key in selected or book in selected
+			_add_check(grid, key, "Unit %d" % unit, on, _save_scope)
+
+
+func _save_scope() -> void:
+	UserSettings.set_selected_scope(_collect_scope())
+
+
+## Sammelt die aktiven Unit-Werte aus allen Buch-Rastern unter %ScopeList.
+func _collect_scope() -> PackedStringArray:
+	var result := PackedStringArray()
+	for child in _scope_list.get_children():
+		if child is GridContainer:
+			result.append_array(_collect(child))
+	return result
+
+
+## "access2" -> "Access 2": nachgestellte Ziffern mit Leerzeichen abtrennen, Rest als Titel.
+func _book_label(book: String) -> String:
+	var i := book.length()
+	while i > 0 and book[i - 1] >= "0" and book[i - 1] <= "9":
+		i -= 1
+	var name := book.substr(0, i).capitalize()
+	var num := book.substr(i)
+	return name if num.is_empty() else "%s %s" % [name, num]
 
 
 func _build_task_types() -> void:
