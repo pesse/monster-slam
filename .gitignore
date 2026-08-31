@@ -4,9 +4,6 @@
 /build/
 /exports/
 
-# Godot export presets contain absolute paths / secrets
-export_presets.cfg
-
 # Auto-generated
 *.translation
 
@@ -18,6 +15,13 @@ export_presets.cfg
 Thumbs.db
 .vscode/
 .idea/
+
+# Signier-Schlüssel: der öffentliche Teil steht in src/update/release_key.gd,
+# der private gehört ausschließlich in das GitHub-Secret RELEASE_SIGNING_KEY.
+*.pem
+
+# Python-Bytecode der Werkzeuge unter tools/
+__pycache__/
 
 # Temp debug logs
 focus_debug.log

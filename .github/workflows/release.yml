@@ -1,0 +1,165 @@
+name: Release
+
+# Baut, signiert und veröffentlicht eine Windows-Fassung; Auslöser ist ein in GitHub
+# publiziertes Release. Die Release-Beschreibung landet als `notes` in latest.json und
+# damit im Update-Dialog des Spiels.
+#
+# Der Release-Tag ist die einzige Quelle der App-Version — das verhindert vergessene oder
+# abweichende Bumps in project.godot.
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+env:
+  # Muss zur lokalen Toolchain passen (siehe CLAUDE.md). Godot bringt keine
+  # Rückwärtskompatibilität über Minor-Versionen, deshalb steht die Zahl fest.
+  GODOT_VERSION: "4.7-stable"
+  GODOT_TEMPLATE_DIR: "4.7.stable"
+  PRESET: "Windows Desktop"
+
+jobs:
+  build:
+    runs-on: windows-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      exe: ${{ steps.version.outputs.exe }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Genau den getaggten Stand bauen.
+          ref: ${{ github.event.release.tag_name }}
+          # Sprachdaten bleiben absichtlich draußen: sie sind privat und gehören nicht in
+          # die verteilte EXE, sondern in einen Content-Pack (siehe docs/adr/0001-…).
+          submodules: false
+
+      - name: Version aus dem Tag setzen
+        id: version
+        shell: bash
+        run: |
+          VERSION="${TAG#v}"
+          EXE="exports/MonsterSlam-${VERSION}.exe"
+          tools/release/set_version.sh "$VERSION" "$EXE"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "exe=$EXE" >> "$GITHUB_OUTPUT"
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+
+      - name: Godot und Export-Templates holen
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}"
+          curl -fsSL -o godot.zip "${BASE}/Godot_v${GODOT_VERSION}_win64.exe.zip"
+          curl -fsSL -o templates.tpz "${BASE}/Godot_v${GODOT_VERSION}_export_templates.tpz"
+          unzip -q godot.zip -d godot
+          # Die .tpz ist ein ZIP mit einem templates/-Verzeichnis; Godot erwartet dessen
+          # Inhalt direkt unter <version>/.
+          unzip -q templates.tpz -d tpz
+          TARGET="$(cygpath "$APPDATA")/Godot/export_templates/${GODOT_TEMPLATE_DIR}"
+          mkdir -p "$TARGET"
+          mv tpz/templates/* "$TARGET/"
+          echo "GODOT=$(pwd)/godot/Godot_v${GODOT_VERSION}_win64.exe" >> "$GITHUB_ENV"
+
+      - name: Projekt importieren
+        shell: bash
+        run: '"$GODOT" --headless --import 2>&1 | tr -d "\r"'
+
+      - name: Tests
+        shell: bash
+        run: |
+          "$GODOT" --headless -s res://addons/gdUnit4/bin/GdUnitCmdTool.gd \
+            --ignoreHeadlessMode -a res://tests 2>&1 | tr -d '\r' | tail -20
+
+      - name: Exportieren
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p exports
+          # rcedit fehlt auf dem Runner, deshalb warnt der Export über nicht gesetzte
+          # EXE-Metadaten. Das Ergebnis ist davon unberührt.
+          "$GODOT" --headless --export-release "$PRESET" "${{ steps.version.outputs.exe }}" 2>&1 \
+            | tr -d '\r' | grep -iE "error|warn|template|\[ done \]" || true
+          test -f "${{ steps.version.outputs.exe }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-exe
+          path: ${{ steps.version.outputs.exe }}
+          retention-days: 1
+
+  # Signieren und Manifest auf Linux, weil openssl und jq dort verlässlich vorliegen.
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          submodules: false
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-exe
+          path: exports
+
+      - name: Signieren und latest.json erzeugen
+        shell: bash
+        env:
+          SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
+          TAG: ${{ github.event.release.tag_name }}
+          NOTES: ${{ github.event.release.body }}
+          VERSION: ${{ needs.build.outputs.version }}
+          EXE: ${{ needs.build.outputs.exe }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SIGNING_KEY}" ]; then
+            echo "::error::Secret RELEASE_SIGNING_KEY ist nicht gesetzt — ohne Signatur lehnt das Spiel das Update ab."
+            exit 1
+          fi
+          KEY="$(mktemp)"
+          trap 'rm -f "$KEY"' EXIT
+          printf '%s' "$SIGNING_KEY" > "$KEY"
+          printf '%s' "$NOTES" > notes.md
+          URL="${{ github.server_url }}/${{ github.repository }}/releases/download/${TAG}/$(basename "$EXE")"
+          tools/release/make_latest_json.sh "$EXE" "$VERSION" notes.md "$KEY" "$URL" latest.json
+
+      - name: An das Release hängen
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{ github.event.release.tag_name }}" \
+            "${{ needs.build.outputs.exe }}" latest.json --clobber
+
+  # Schreibt die freigegebene Version in den Default-Branch zurück, damit der committete
+  # Stand nicht hinter den Releases zurückbleibt — die Versionsschranke der Content-Packs
+  # misst im Debug-Build an genau diesem Wert.
+  version-bump:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          submodules: false
+
+      - name: Version committen
+        shell: bash
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+          BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          tools/release/set_version.sh "${TAG#v}"
+          if git diff --quiet; then
+            echo "Version ist bereits committet — nichts zu tun."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add project.godot export_presets.cfg
+          git commit -m "chore: Version ${TAG#v} (Release-Bump) [skip ci]"
+          git push origin "HEAD:$BRANCH"

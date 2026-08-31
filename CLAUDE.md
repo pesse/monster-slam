@@ -40,3 +40,33 @@ abgeleitet und dürfen **nicht** dorthin — sie liegen im privaten Repo
 
 Vor dem Commit im Hauptrepo prüfen, dass keine Lemmata/Wortlisten in Code, Docs
 oder Reports gelandet sind. Schema-Beispiele mit einzelnen Allerweltswörtern sind ok.
+
+## Ausliefern: EXE ohne Sprachdaten, Inhalte als Packs
+
+`data/language/*` steht im `exclude_filter` des Export-Presets — die verteilte EXE
+enthält **keine** Vokabeln und holt sie als Content-Packs nach
+`user://content/<pack-id>/`. Das ist der Grund, aus dem es die Pack-Mechanik gibt;
+Entscheidung und Begründung in `docs/adr/0001-app-und-content-update.md`, Dateiformat
+in `docs/PACK_FORMAT.md`.
+
+Beim Arbeiten daran zu beachten:
+
+- **Kategorien stehen an drei Stellen** und müssen übereinstimmen: `_by_category` in
+  `src/core/content_registry.gd`, `CATEGORIES` in `src/content/pack_installer.gd`,
+  `CATEGORIES` in `tools/packs/build_packs.py`. Eine neue Kategorie in nur einer davon
+  heißt: der Pack liefert sie aus, der Installer verwirft sie (oder umgekehrt).
+- **Jede Datei unter `data/` braucht eine Zuordnung** in `data/language/packs.yaml`.
+  Der Pack-Build ist fail-closed: keine oder mehrere Zuordnungen brechen ab. Nach dem
+  Anlegen einer neuen Datei prüfen mit
+  `python3 tools/packs/build_packs.py --config data/language/packs.yaml --dry-run`.
+- **Nie ein Glob, das `data/**` unter `data/language/` mitnimmt.** Das Submodule liegt
+  *innerhalb* von `data/`; ein `**/*.json` im offenen `game`-Pack hat genau deshalb
+  einmal die geschützten Lexeme eingesammelt. Kategorien einzeln angeben.
+- **`user://` ist der einzige beschreibbare Ort.** `res://` ist im Export read-only:
+  Spielerdaten (Fortschritt, Einstellungen, Meldungen via `LexemeFlags`) gehören nach
+  `user://`, nicht in die Quell-JSON.
+- **Nach einem Test, der Packs installiert, `user://content` aufräumen** — ein
+  liegengebliebener Pack überschreibt im Entwicklungslauf das Submodule.
+- **Der private Signierschlüssel** gehört ausschließlich in das GitHub-Secret
+  `RELEASE_SIGNING_KEY`; `*.pem` ist gitignored. Der öffentliche Schlüssel steht
+  bewusst als Konstante in `src/update/release_key.gd`.

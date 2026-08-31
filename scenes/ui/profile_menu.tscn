@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://src/ui/profile_menu.gd" id="1_menu"]
+[ext_resource type="PackedScene" path="res://scenes/ui/update_dialog.tscn" id="2_update"]
 
 [node name="ProfileMenu" type="Control"]
 layout_mode = 3
@@ -55,3 +56,15 @@ text = "▶ Spielen"
 [node name="SettingsButton" type="Button" parent="Margin/Root"]
 unique_name_in_owner = true
 text = "⚙ Einstellungen & Statistik"
+
+[node name="ContentButton" type="Button" parent="Margin/Root"]
+unique_name_in_owner = true
+text = "📚 Inhalte"
+
+[node name="UpdateButton" type="Button" parent="Margin/Root"]
+unique_name_in_owner = true
+visible = false
+text = "⬆ Update verfügbar"
+
+[node name="UpdateDialog" parent="." instance=ExtResource("2_update")]
+unique_name_in_owner = true

@@ -11,13 +11,26 @@ und lädt jede `.json`-Datei. Kategorien: `lexemes`, `lexeme_forms`,
 `lexeme_relations`, `sentences`, `sentence_lexemes`, `task_definitions`,
 `monster_task_rules`, `monsters`, `bosses`, `skills`, `waves`.
 
-**Zwei Roots.** Die Sprachkategorien (`lexemes`, `lexeme_forms`,
-`lexeme_relations`, `sentences`, `sentence_lexemes`) werden aus
-`res://data/language/` gelesen — einem separaten **privaten** Repo, eingehängt
-als Submodule, weil die Daten aus urheberrechtlich geschütztem Lehrbuchmaterial
-abgeleitet sind. Alle übrigen Kategorien liegen unter `res://data/` im
-öffentlichen Repo. Fehlt der Submodule-Checkout, startet das Spiel mit leeren
-Sprachkatalogen und einer Warnung.
+**Drei Roots, in Vorrangfolge** (`_roots()`): bei gleicher `id` gewinnt der spätere.
+
+| # | Root | Inhalt | im Export? |
+|---|---|---|---|
+| 1 | `res://data/` | Spielkonfiguration (Monster, Wellen, Skills, Aufgaben-Regeln) | ja |
+| 2 | `res://data/language/` | Sprachdaten — privates Submodule, nur in der Entwicklung | **nein** |
+| 3 | `user://content/<pack-id>/` | installierte Content-Packs | — |
+
+Root 2 ist ein separates **privates** Repo, weil die Daten aus urheberrechtlich
+geschütztem Lehrbuchmaterial abgeleitet sind. Es wird per `exclude_filter` **aus dem
+Export ausgeschlossen** — die verteilte EXE enthält keine Vokabeln und holt sie über
+Content-Packs (Root 3). Root 3 ist damit kein Sonderfall, sondern der Normalweg beim
+Spieler; dass ein Pack einen eingebauten Eintrag überschreiben *kann*, ist gewollt.
+
+Fehlen Sprachdaten in allen Roots, startet das Spiel mit leeren Sprachkatalogen und
+einer Warnung, die beide Wege nennt (Pack installieren / Submodule auschecken).
+
+Kollisionen werden pro Root beurteilt (`_origins`): zwei Dateien **desselben** Roots
+mit gleicher `id` sind ein Fehler und werden gemeldet; ein Pack, der einen eingebauten
+Eintrag ersetzt, ist der Zweck der Übung und bleibt still.
 
 - Jede JSON-Datei enthält ein Objekt **oder** ein Array von Objekten.
 - Jedes Objekt braucht eine eindeutige `id` (String).
@@ -138,11 +151,56 @@ vorhandenen Handlern. (Noch zu implementieren — siehe `docs/ADDING_CONTENT.md`
 - **Content** (Aufgaben, Monster, Wellen, …): JSON unter `data/` — versioniert, agent-editierbar.
 - **Sprachdaten** (Lexeme, Formen, Relationen, Sätze): JSON unter `data/language/`
   — eigenes privates Repo (Submodule), Änderungen werden dort committet.
+- **Nutzer-Meldungen** („dieses Wort ist falsch", `LexemeFlags`,
+  `src/core/lexeme_flags.gd`): JSON unter `user://lexeme_flags.json`, lexeme_id → Meldung.
+  Bewusst **nicht** in der Quell-JSON: `res://` ist im Export read-only, und eine
+  veränderte Pack-Datei würde beim nächsten Pack-Update übersprungen. `ContentRegistry`
+  legt die Meldungen nach jedem Laden über die Lexeme (`_apply_flags()`), sodass
+  `flagged_lexemes()` unverändert funktioniert.
 - **Spielerfortschritt** (`player_task_progress`): der Autoload `PlayerProgress`
   (`src/learning/player_progress.gd`) hält je Aufgabe Confidence/Streak/Fälligkeit und
   kapselt den SM-2-Scheduler. Persistenz: JSON unter `user://progress/<player>.json`
   (schreibintensiv, wächst → bewusst nicht in `data/`). SQLite ist die vorgesehene
   Ausbaustufe für größere Historien.
+
+## Ausliefern: zwei getrennte Update-Kanäle
+
+Entscheidung und Begründung: `docs/adr/0001-app-und-content-update.md`;
+Pack-Dateiformat: `docs/PACK_FORMAT.md`.
+
+| | App-Kanal | Content-Kanal |
+|---|---|---|
+| Was | die ganze EXE (~120 MB) | Content-Packs (KB) |
+| Wie oft | selten | oft |
+| Quelle | `latest.json` am GitHub-Release des Hauptrepos | `index.json` im Transport-Repo |
+| Autoload | `UpdateService` (`src/update/`) | `ContentService` (`src/content/`) |
+| UI | `scenes/ui/update_dialog.tscn` | `scenes/ui/content_manager.tscn` |
+| Prüfung | SHA-256 **und** RSA-Signatur (`ReleaseKey`) | SHA-256; geschützte Packs zusätzlich AES-CBC + HMAC |
+| Einbau | EXE umbenennen, ersetzen, neu starten (Rollback bei Fehler) | nach `user://content/<pack-id>/` auspacken |
+
+Zwei Kanäle, weil die beiden Dinge unterschiedlich groß und unterschiedlich häufig sind:
+neue Vokabeln dürfen nicht 120 MB kosten, und ein Fehler im Content-Kanal darf die
+installierte App nicht beschädigen.
+
+**Versions-Tor in beide Richtungen** (`SemVer`, `PackStatus`): ein Pack nennt
+`minVersion` — ist die App älter, wird der Pack als `APP_OUTDATED` blockiert (kein
+Zugangscode hebt das auf), und der App-Kanal wird zum Update gedrängt. Umgekehrt nervt ein
+veralteter Pack (`UPDATE`, vorausgewählt), blockiert aber nichts. In Debug-Builds gibt es
+kein Tor, damit die Entwicklung nicht an ihren eigenen Versionsnummern hängt.
+
+**Geschützte Packs.** Ein Pack aus Lehrbuchmaterial wird verschlüsselt ausgeliefert und
+braucht einen Zugangscode (`AccessCodes`, `PackCrypto`). Der Code steht in
+`user://codes.cfg` und ist ausdrücklich **kein** Geheimnisspeicher — er hält den Inhalt
+aus dem öffentlichen Netz heraus, nicht vor dem Besitzer des Rechners.
+
+**Bauen und Veröffentlichen.** Die Packs baut `tools/packs/build_packs.py` nach der
+Zuordnung in `packs.yaml` (im privaten Content-Repo, weil sie entscheidet, was geschützt
+bleibt) — fail-closed: eine Datei ohne eindeutige Zuordnung bricht den Build ab. Drei
+unabhängige Sicherungen halten geschütztes Material aus offenen Packs heraus: die
+Pfadregeln, ein Blick in die Lexeme (`protected_books`) und
+`tools/packs/check_open_packs.py` am fertigen ZIP. Es gibt genau ein `index.json`, also
+auch nur einen Veröffentlicher: der Workflow im Content-Repo, den eine Änderung an
+`data/**` im Hauptrepo per `repository_dispatch` mit anstößt.
 
 ## Sprachwahl: GDScript (C# nur bei Bedarf punktuell)
 

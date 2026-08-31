@@ -34,18 +34,8 @@ fi
 
 OUT="exports/MonsterSlam-${VERSION}.exe"
 
-# EXE-Metadaten wollen ein 4-teiliges Format (z. B. 0.1.0 -> 0.1.0.0).
-PE_VERSION="$VERSION"
-while [[ "$(tr -cd '.' <<<"$PE_VERSION" | wc -c)" -lt 3 ]]; do
-	PE_VERSION="${PE_VERSION}.0"
-done
-
-# export_presets.cfg auf die aktuelle Version syncen (idempotent).
-sed -i \
-	-e "s|^export_path=.*|export_path=\"${OUT}\"|" \
-	-e "s|^application/file_version=.*|application/file_version=\"${PE_VERSION}\"|" \
-	-e "s|^application/product_version=.*|application/product_version=\"${PE_VERSION}\"|" \
-	export_presets.cfg
+# Version an alle abgeleiteten Stellen schreiben (idempotent, dasselbe Skript nutzt die CI).
+tools/release/set_version.sh "$VERSION" "$OUT"
 
 mkdir -p exports
 

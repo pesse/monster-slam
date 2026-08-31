@@ -10,6 +10,9 @@ automatisch. Jedes Objekt braucht eine eindeutige `id`.
 > Lehrbuchmaterial abgeleitet sind. Spielkonfiguration (Monster, Bosse, Wellen,
 > Skills, Aufgaben-Regeln) liegt direkt unter `data/` im öffentlichen Repo.
 > Änderungen an Sprachdaten werden im Submodule committet und gepusht.
+>
+> **Achtung:** eine Datei im Repo ist noch nicht beim Spieler — die verteilte EXE
+> enthält keine Sprachdaten. Siehe „Wie kommt neuer Stoff zum Spieler?" unten.
 
 ## Sprachdaten & Aufgaben (ERM)
 
@@ -181,8 +184,48 @@ abonniert (z. B. `monster_defeated`, `answer_submitted`). Kein bestehendes Syste
 muss das neue kennen. Braucht die Mechanik neue Ereignisse, ein Signal im
 `EventBus` ergänzen (additiv).
 
+## Wie kommt neuer Stoff zum Spieler?
+
+Eine JSON-Datei im Repo ist im *Entwicklungs*-Spiel sofort da — beim Spieler nicht. Die
+verteilte EXE enthält **keine** Sprachdaten (`data/language/*` ist aus dem Export
+ausgeschlossen); sie holt Inhalte als **Content-Packs** nach `user://content/<pack-id>/`.
+Hintergrund: `docs/ARCHITECTURE.md` („Ausliefern: zwei getrennte Update-Kanäle").
+
+Der Weg einer neuen Datei:
+
+1. **Ablegen und committen** — Sprachdaten im privaten Submodule `data/language/`,
+   Spielkonfiguration im Hauptrepo unter `data/`.
+2. **Zuordnen.** Jede Datei muss von genau einem Pack in `packs.yaml` (im Content-Repo)
+   beansprucht werden. Passt kein Muster oder passen zwei, **bricht der Build ab** —
+   Absicht: eine unklare Datei darf nicht versehentlich im offen verteilten Pack landen.
+   Neues Buch = neuer Pack-Eintrag (`protected: true`, `password_env`, `key_version`) und
+   das Buch-Kürzel zusätzlich in `protected_books`.
+3. **Bauen** — der Workflow im Content-Repo baut die Packs und hängt sie an das Release
+   mit dem festen Tag `packs` im Transport-Repo. Eine Änderung unter `data/` im Hauptrepo
+   stößt denselben Workflow per `repository_dispatch` an; lokal prüfen:
+   `python3 tools/packs/build_packs.py --config data/language/packs.yaml --dry-run`.
+4. **Holen** — der Spieler sieht den Pack unter „📚 Inhalte" mit Version und Größe,
+   geschützte Packs erst nach Eingabe des Zugangscodes.
+
+Was das für Autoren heißt:
+
+- **Nur die `id` zählt.** Dateinamen dürfen sich ändern, IDs nicht: der Installer erkennt
+  eine zurückgezogene Datei am Namen und entfernt sie, eine geänderte `id` ist dagegen ein
+  neuer Eintrag und der alte bleibt beim Spieler liegen, bis seine Datei verschwindet.
+- **Ein Pack überschreibt Eingebautes** bei gleicher `id` — so lassen sich Werte
+  korrigieren, ohne eine neue EXE zu verteilen.
+- **Ein neues Feld, das Code braucht, braucht `min_app_version`.** Sonst bekommt ein
+  Spieler mit alter EXE Daten, die sie nicht versteht. Die Nummer in `packs.yaml` hochziehen;
+  ältere Apps blockieren den Pack dann sichtbar statt still falsch zu spielen.
+- **Nutzer-Meldungen (⚑) landen nicht im Content**, sondern in
+  `user://lexeme_flags.json`. Eine gemeldete Datei wird also weiter aktualisiert; die
+  Meldung selbst ist im Repo nicht zu sehen — sie muss aus dem Spiel abgeschrieben werden.
+
 ## Checkliste
 - [ ] Eindeutige `id` im Schema `kategorie.name`.
 - [ ] Referenzierte IDs existieren (Welle → Monster/Boss; Boss/Monster → Sprite-Pfad).
 - [ ] Gültiges JSON (die Registry loggt Fehler in die Godot-Konsole).
 - [ ] Spielstart zeigt die neuen Zahlen in der Content-Übersicht.
+- [ ] Von genau einem Pack in `packs.yaml` beansprucht (`build_packs.py --dry-run` läuft
+      grün) — sonst kommt die Datei beim Spieler nie an.
+- [ ] Braucht die Datei neuen Code? Dann `min_app_version` in `packs.yaml` hochziehen.

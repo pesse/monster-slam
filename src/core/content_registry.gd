@@ -2,9 +2,10 @@ extends Node
 ## Central, data-driven content registry (autoload).
 ##
 ## Scans <root>/<category>/ at startup and loads EVERY .json file it finds
-## (recursively, so subfolders per language or unit work). Es gibt zwei Roots:
-## Spielkonfiguration liegt unter res://data, Sprachdaten unter res://data/language
-## (privates Submodule, siehe LANGUAGE_ROOT).
+## (recursively, so subfolders per language or unit work). Es gibt DREI Roots, in
+## Vorrangfolge: Spielkonfiguration unter res://data, Sprachdaten unter res://data/language
+## (privates Submodule, siehe LANGUAGE_ROOT) und installierte Content-Packs unter
+## user://content/<pack-id>/ (siehe USER_CONTENT_ROOT).
 ##
 ## To add new content — a monster, a skill, a vocab pack, a boss, a wave —
 ## drop a JSON file into the matching folder. No code changes required.
@@ -21,6 +22,12 @@ const DATA_ROOT := "res://data"
 const LANGUAGE_ROOT := "res://data/language"
 
 ## Die Kategorien, die aus LANGUAGE_ROOT statt aus DATA_ROOT gelesen werden.
+## Installierte Content-Packs. Jeder Pack liegt in seinem eigenen Unterverzeichnis
+## (user://content/<pack-id>/<kategorie>/…) und wird NACH den res://-Roots gelesen: bei
+## gleicher `id` gewinnt der Pack. Das ist der Weg, auf dem die ausgelieferte EXE zu
+## Vokabeln kommt — sie enthält keine (siehe docs/adr/0001-app-und-content-update.md).
+const USER_CONTENT_ROOT := "user://content"
+
 const LANGUAGE_CATEGORIES: Array[String] = [
 	"lexemes",
 	"lexeme_forms",
@@ -56,6 +63,11 @@ var _by_category: Dictionary = {}
 ## Bearbeitungen (z.B. flag_lexeme) in die richtige Quell-JSON zurückschreiben.
 var _source_files: Dictionary = {}
 
+## "<category>|<id>" -> Root, aus dem der Eintrag stammt. Trennt die zwei Fälle, die sonst
+## gleich aussehen: zwei Dateien DESSELBEN Roots mit gleicher id sind ein Fehler, ein Pack,
+## der einen eingebauten Eintrag überschreibt, ist der Zweck der Übung.
+var _origins: Dictionary = {}
+
 
 func _ready() -> void:
 	_by_category = {
@@ -74,26 +86,77 @@ func _ready() -> void:
 	reload()
 
 
-## Rescans the whole data tree. Safe to call at runtime (e.g. after adding files).
+## Rescans the whole data tree. Safe to call at runtime (e.g. after adding files) —
+## ContentService ruft es nach jeder Pack-Installation.
 func reload() -> void:
 	_source_files.clear()
-	var has_language := DirAccess.dir_exists_absolute(LANGUAGE_ROOT)
-	if not has_language:
-		push_warning(
-			"ContentRegistry: keine Sprachdaten — Submodule '%s' fehlt. "
-			% LANGUAGE_ROOT + "Mit 'git submodule update --init' auschecken."
-		)
+	_origins.clear()
 	for category in _by_category:
-		var target: Dictionary = _by_category[category]
-		target.clear()
-		if category in LANGUAGE_CATEGORIES:
-			if has_language:
-				_scan_dir("%s/%s" % [LANGUAGE_ROOT, category], target, category)
-		else:
-			_scan_dir("%s/%s" % [DATA_ROOT, category], target, category)
+		(_by_category[category] as Dictionary).clear()
+
+	for root in _roots():
+		for category in root["categories"]:
+			var path := "%s/%s" % [root["path"], category]
+			if not DirAccess.dir_exists_absolute(path):
+				if root["required"]:
+					push_warning("ContentRegistry: missing data folder '%s'" % path)
+				continue
+			_scan_dir(path, _by_category[category], category, root["path"])
+
+	if lexemes.is_empty():
+		push_warning(
+			"ContentRegistry: keine Sprachdaten. Im Spiel einen Vokabel-Pack installieren; "
+			+ "in der Entwicklung das Submodule '%s' auschecken " % LANGUAGE_ROOT
+			+ "('git submodule update --init')."
+		)
+
+	_apply_flags()
+
+
+## Die Roots in Vorrangfolge: ein späterer überschreibt bei gleicher `id` einen früheren.
+func _roots() -> Array:
+	var game_categories: Array[String] = []
+	for category in _by_category:
+		if category not in LANGUAGE_CATEGORIES:
+			game_categories.append(category)
+
+	var roots: Array = [
+		{"path": DATA_ROOT, "categories": game_categories, "required": true},
+	]
+	# Der Submodule-Checkout ist der Weg der Entwicklung; im Export fehlt er absichtlich.
+	if DirAccess.dir_exists_absolute(LANGUAGE_ROOT):
+		roots.append({"path": LANGUAGE_ROOT, "categories": LANGUAGE_CATEGORIES, "required": false})
+	for pack_path in _pack_roots():
+		roots.append({"path": pack_path, "categories": _by_category.keys(), "required": false})
+	return roots
+
+
+## Verzeichnisse installierter Packs, alphabetisch — damit die Vorrangfolge unter Packs
+## nicht von der Reihenfolge des Dateisystems abhängt. Punkt-Verzeichnisse (der
+## Installationszustand) bleiben außen vor.
+func _pack_roots() -> Array:
+	var dir := DirAccess.open(USER_CONTENT_ROOT)
+	if dir == null:
+		return []
+	var names: Array = []
+	for name in dir.get_directories():
+		if not name.begins_with("."):
+			names.append(name)
+	names.sort()
+	var out: Array = []
+	for name in names:
+		out.append("%s/%s" % [USER_CONTENT_ROOT, name])
+	return out
 
 
 ## Returns all entries of a category as an Array of Dictionaries.
+## Alle bekannten Kategorien. Muss mit `CATEGORIES` in src/content/pack_installer.gd und
+## in tools/packs/build_packs.py übereinstimmen — sonst liefert ein Pack Dateien aus, die
+## der Installer verwirft (oder umgekehrt).
+func categories() -> Array:
+	return _by_category.keys()
+
+
 func all(category: String) -> Array:
 	return _by_category.get(category, {}).values()
 
@@ -255,51 +318,46 @@ func flagged_lexemes() -> Array:
 	return result
 
 
-## Schreibt eine Meldung ("flag") in die Quell-JSON des Lexems zurück und
-## aktualisiert die In-Memory-Kopie. Gibt false zurück, wenn das Lexem, seine
-## Quelldatei oder der Eintrag darin nicht gefunden/geschrieben werden kann.
-## Hinweis: res:// ist nur im Editor/Dev-Run schreibbar (Authoring-Workflow).
+## Speichert eine Meldung ("flag") zum Lexem in `user://` und aktualisiert die
+## In-Memory-Kopie, damit `flagged_lexemes()` ohne `reload()` stimmt.
+## Gibt false zurück, wenn das Lexem unbekannt oder die Datei nicht schreibbar ist.
+## Bewusst NICHT in die Quell-JSON: `res://` ist im Export read-only, und eine geänderte
+## Pack-Datei würde beim nächsten Pack-Update übersprungen (siehe LexemeFlags).
 func flag_lexeme(lexeme_id: String, comment: String, learnable_id: String) -> bool:
 	if not lexemes.has(lexeme_id):
 		push_warning("ContentRegistry: flag für unbekanntes Lexem '%s'" % lexeme_id)
 		return false
-	var file_path := source_file("lexemes", lexeme_id)
-	if file_path.is_empty():
-		push_warning("ContentRegistry: keine Quelldatei für Lexem '%s'" % lexeme_id)
+	var flags := LexemeFlags.load_all()
+	flags[lexeme_id] = LexemeFlags.entry(comment, learnable_id)
+	if not LexemeFlags.save_all(flags):
 		return false
-	var text := FileAccess.get_file_as_string(file_path)
-	var parsed: Variant = JSON.parse_string(text)
-	if parsed == null:
-		push_error("ContentRegistry: '%s' nicht lesbar/parsebar" % file_path)
-		return false
-	var flag := {
-		"comment": comment,
-		"learnable_id": learnable_id,
-		"at": Time.get_datetime_string_from_system(),
-	}
-	# Datei kann ein einzelnes Objekt ODER ein Array von Objekten enthalten.
-	var entries: Array = parsed if parsed is Array else [parsed]
-	var found := false
-	for entry in entries:
-		if entry is Dictionary and str(entry.get("id", "")) == lexeme_id:
-			entry["flag"] = flag
-			found = true
-			break
-	if not found:
-		push_warning("ContentRegistry: Lexem '%s' nicht in '%s'" % [lexeme_id, file_path])
-		return false
-	var file := FileAccess.open(file_path, FileAccess.WRITE)
-	if file == null:
-		push_error("ContentRegistry: '%s' nicht schreibbar (Export?)" % file_path)
-		return false
-	file.store_string(JSON.stringify(parsed, "\t"))
-	file.close()
-	# In-Memory-Kopie mitziehen, damit flagged_lexemes() ohne reload() stimmt.
-	lexemes[lexeme_id]["flag"] = flag
+	lexemes[lexeme_id]["flag"] = flags[lexeme_id]
 	return true
 
 
-func _scan_dir(path: String, target: Dictionary, category: String) -> void:
+## Nimmt eine Meldung zurück. false, wenn zu dem Lexem keine gespeichert war.
+func unflag_lexeme(lexeme_id: String) -> bool:
+	var flags := LexemeFlags.load_all()
+	if not flags.erase(lexeme_id):
+		return false
+	if not LexemeFlags.save_all(flags):
+		return false
+	if lexemes.has(lexeme_id):
+		lexemes[lexeme_id].erase("flag")
+	return true
+
+
+## Meldungen liegen getrennt vom Content, müssen also nach jedem Laden wieder über die
+## Lexeme gelegt werden. Meldungen zu Lexemen, die es nicht mehr gibt (Pack deinstalliert),
+## bleiben in der Datei stehen und tauchen wieder auf, wenn der Pack zurückkommt.
+func _apply_flags() -> void:
+	var flags := LexemeFlags.load_all()
+	for lexeme_id in flags:
+		if lexemes.has(lexeme_id):
+			lexemes[lexeme_id]["flag"] = flags[lexeme_id]
+
+
+func _scan_dir(path: String, target: Dictionary, category: String, origin: String) -> void:
 	var dir := DirAccess.open(path)
 	if dir == null:
 		push_warning("ContentRegistry: missing data folder '%s'" % path)
@@ -309,14 +367,14 @@ func _scan_dir(path: String, target: Dictionary, category: String) -> void:
 	while file_name != "":
 		var full_path := "%s/%s" % [path, file_name]
 		if dir.current_is_dir():
-			_scan_dir(full_path, target, category)
+			_scan_dir(full_path, target, category, origin)
 		elif file_name.ends_with(".json"):
-			_load_file(full_path, target, category)
+			_load_file(full_path, target, category, origin)
 		file_name = dir.get_next()
 	dir.list_dir_end()
 
 
-func _load_file(file_path: String, target: Dictionary, category: String) -> void:
+func _load_file(file_path: String, target: Dictionary, category: String, origin: String) -> void:
 	var text := FileAccess.get_file_as_string(file_path)
 	if text.is_empty():
 		push_warning("ContentRegistry: empty or unreadable '%s'" % file_path)
@@ -327,19 +385,25 @@ func _load_file(file_path: String, target: Dictionary, category: String) -> void
 		return
 	if parsed is Array:
 		for entry in parsed:
-			_register(entry, target, category, file_path)
+			_register(entry, target, category, file_path, origin)
 	elif parsed is Dictionary:
-		_register(parsed, target, category, file_path)
+		_register(parsed, target, category, file_path, origin)
 	else:
 		push_error("ContentRegistry: '%s' must contain an object or array" % file_path)
 
 
-func _register(entry: Variant, target: Dictionary, category: String, file_path: String) -> void:
+func _register(
+	entry: Variant, target: Dictionary, category: String, file_path: String, origin: String
+) -> void:
 	if not (entry is Dictionary) or not entry.has("id"):
 		push_error("ContentRegistry: entry without 'id' in '%s'" % file_path)
 		return
 	var id: String = str(entry["id"])
-	if target.has(id):
+	var key := "%s|%s" % [category, id]
+	# Nur innerhalb EINES Roots ist eine doppelte id ein Fehler; über Roots hinweg ist das
+	# Überschreiben die Vorrangregel.
+	if target.has(id) and str(_origins.get(key, "")) == origin:
 		push_warning("ContentRegistry: duplicate %s id '%s' (from %s)" % [category, id, file_path])
 	target[id] = entry
-	_source_files["%s|%s" % [category, id]] = file_path
+	_source_files[key] = file_path
+	_origins[key] = origin

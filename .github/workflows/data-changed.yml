@@ -1,0 +1,36 @@
+name: Content-Packs anstossen
+
+# Die Spielkonfiguration (data/monsters, data/waves, ...) wird hier gepflegt, ausgeliefert
+# wird sie aber als `game`-Pack aus dem privaten Content-Repo — dort liegt packs.yaml, und es
+# gibt nur ein index.json, also nur einen Veroeffentlicher. Damit eine Aenderung hier nicht
+# liegen bleibt, bis dort zufaellig jemand pusht, loest dieser Job den Pack-Build drueben aus.
+#
+# Braucht das Secret CONTENT_DISPATCH_TOKEN (Fine-grained PAT auf
+# pesse/monster-slam-content mit "Contents: write" — das verlangt der Dispatch-Endpunkt).
+# Fehlt es, laeuft der Job nicht ins Rote, sondern sagt es und ueberlaesst den Bau dem
+# manuellen workflow_dispatch drueben.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "data/**"
+      - "tools/packs/**"
+  workflow_dispatch:
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: repository_dispatch an das Content-Repo
+        env:
+          GH_TOKEN: ${{ secrets.CONTENT_DISPATCH_TOKEN }}
+          SHA: ${{ github.sha }}
+        run: |
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "::warning::CONTENT_DISPATCH_TOKEN nicht gesetzt — Pack-Build nicht ausgeloest."
+            exit 0
+          fi
+          gh api "repos/pesse/monster-slam-content/dispatches" \
+            -f event_type=game-data-changed \
+            -f "client_payload[app_sha]=${SHA}"
