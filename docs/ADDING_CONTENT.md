@@ -4,6 +4,13 @@ Für den KI-Agenten und Content-Autoren. Grundregel: **eine JSON-Datei ablegen,
 fertig.** Die `ContentRegistry` lädt sie beim nächsten Start (oder `reload()`)
 automatisch. Jedes Objekt braucht eine eindeutige `id`.
 
+> **Wo liegt was?** Sprachdaten (`lexemes`, `lexeme_forms`, `lexeme_relations`,
+> `sentences`, `sentence_lexemes`) liegen unter `data/language/` — ein separates
+> **privates** Submodule, weil sie aus urheberrechtlich geschütztem
+> Lehrbuchmaterial abgeleitet sind. Spielkonfiguration (Monster, Bosse, Wellen,
+> Skills, Aufgaben-Regeln) liegt direkt unter `data/` im öffentlichen Repo.
+> Änderungen an Sprachdaten werden im Submodule committet und gepusht.
+
 ## Sprachdaten & Aufgaben (ERM)
 
 Sprachdaten, Aufgaben-Regeln und Darstellung sind getrennt (siehe `docs/ARCHITECTURE.md`).
@@ -13,7 +20,7 @@ passenden Lexemen. Ein neues Wort abzufragen heißt daher meist nur: **Lexem anl
 für bestehende Aufgabentypen (translate/…) entstehen die Aufgaben automatisch.
 Formen und Relationen sind optional und nur für bestimmte Aufgabentypen nötig.
 
-### 1. Lexem → `data/lexemes/…json`
+### 1. Lexem → `data/language/lexemes/…json`
 Das Wort selbst (Was?).
 ```json
 { "id": "lex.en.cat", "type": "noun", "lemma_de": "die Katze", "lemma_en": "cat", "tags": ["animals"] }
@@ -53,13 +60,13 @@ So akzeptiert „gehen" → `go`/`walk` und „go" → `gehen`/`laufen`. Für re
 (z. B. `quick`/`fast`, `colour`/`color`) sind die Alt-Listen gedacht. Ist die Alternative
 selbst ein eigenes Lernwort mit eigenen Aufgaben, lege besser ein zweites Lexem an.
 
-### 2. Form (nur für Konjugation/Zeitformen) → `data/lexeme_forms/…json`
+### 2. Form (nur für Konjugation/Zeitformen) → `data/language/lexeme_forms/…json`
 ```json
 { "id": "form.eat.past", "lexeme_id": "lex.en.eat", "language": "en", "form_type": "past_simple", "value": "ate" }
 ```
 `form_type`: `base` | `3sg_present` | `past_simple` | `past_participle` | `present_participle` | …
 
-### 3. Relation (nur für opposite/synonym) → `data/lexeme_relations/…json`
+### 3. Relation (nur für opposite/synonym) → `data/language/lexeme_relations/…json`
 ```json
 { "id": "rel.big.small", "from_lexeme_id": "lex.en.big", "to_lexeme_id": "lex.en.small", "relation_type": "opposite", "confidence": 1.0, "review_status": "approved" }
 ```

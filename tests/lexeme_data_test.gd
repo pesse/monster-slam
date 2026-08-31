@@ -6,7 +6,7 @@ extends GdUnitTestSuite
 ## wörtlicher String behandelt und sind praktisch unlösbar. Mehrfachformen gehören in
 ## die strukturierten Arrays lemma_de_alt / lemma_en_alt (siehe docs/TESTING.md).
 
-const LEXEME_DIR := "res://data/lexemes"
+const LEXEME_DIR := "res://data/language/lexemes"
 const VARIANT_SEP := " / "
 
 

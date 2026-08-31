@@ -27,8 +27,8 @@ Monster + mehr Punkte. Demo-Annotation am Paar `dangerous`/`safe`.
 Neuer `task_type: confusables` (`TaskResolver._resolve_confusables`): zeigt die deutsche
 Bedeutung + beide englischen Kandidaten des Verwechslungspaars und akzeptiert das passende
 Lemma. Enthält `def.confusables`, `mrule.confusables.de_en`, ist im Default-Wellenpool
-aktiv. Demodaten: `data/lexemes/en_confusables.json` +
-`data/lexeme_relations/en_confusables.json` (borrow/lend, say/tell, jeweils beide
+aktiv. Demodaten: `data/language/lexemes/en_confusables.json` +
+`data/language/lexeme_relations/en_confusables.json` (borrow/lend, say/tell, jeweils beide
 Richtungen).
 
 ### Produktiv/rezeptiv-Zielverteilung als Vorgabe

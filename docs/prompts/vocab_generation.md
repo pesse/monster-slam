@@ -61,7 +61,7 @@ ca. 600 rezeptiv/erweiternd (Tag "receptive"). Keine seltenen Spezialwörter ohn
 Nutzen für Klasse 9.
 
 --------------------------------------------------------------------------------
-2. Lexeme  ->  data/lexemes/en_klasse9.json  (Array)
+2. Lexeme  ->  data/language/lexemes/en_klasse9.json  (Array)
 --------------------------------------------------------------------------------
 Format je Eintrag:
 
@@ -100,7 +100,7 @@ Regeln:
   unregelmäßige Verben über Tag "irregular".
 
 --------------------------------------------------------------------------------
-3. Verben anreichern  ->  data/lexeme_forms/en_klasse9.json  (Array)
+3. Verben anreichern  ->  data/language/lexeme_forms/en_klasse9.json  (Array)
 --------------------------------------------------------------------------------
 FLACHE Einzelzeilen, eine pro Form, jede mit eigener `id` — KEIN verschachteltes
 "forms"-Array:
@@ -119,7 +119,7 @@ Regeln:
   past_participle, present_participle liefern.
 
 --------------------------------------------------------------------------------
-4. Relationen  ->  data/lexeme_relations/en_klasse9.json  (Array)
+4. Relationen  ->  data/language/lexeme_relations/en_klasse9.json  (Array)
 --------------------------------------------------------------------------------
 {
   "id": "rel.dangerous.safe",
@@ -148,7 +148,7 @@ Regeln:
 - confidence < 0.8 => review_status "draft". Keine erfundenen Relationen.
 
 --------------------------------------------------------------------------------
-5. + 6. Sätze (Beispiel- UND Boss-Sätze)  ->  data/sentences/en_klasse9.json (Array)
+5. + 6. Sätze (Beispiel- UND Boss-Sätze)  ->  data/language/sentences/en_klasse9.json (Array)
 --------------------------------------------------------------------------------
 Hinweis: Das Satz-/Boss-Feature ist im Spiel derzeit ZURÜCKGESTELLT. Die Daten
 werden aber schon im finalen Schema vorbereitet. Es gibt KEINE getrennte
@@ -179,7 +179,7 @@ Regeln:
 - `source_language`/`target_language`: "de"/"en".
 - Deutsch und Englisch müssen semantisch übereinstimmen; kurz und natürlich.
 
-Satz<->Lexem-Verknüpfung  ->  data/sentence_lexemes/en_klasse9.json  (Array)
+Satz<->Lexem-Verknüpfung  ->  data/language/sentence_lexemes/en_klasse9.json  (Array)
 (ersetzt das nicht existierende Feld "required_lexeme_ids"):
 
 { "id": "slx.forest_dangerous_key.forest", "sentence_id": "sen.forest_dangerous_key", "lexeme_id": "lex.en.forest" }
@@ -207,11 +207,11 @@ Satz<->Lexem-Verknüpfung  ->  data/sentence_lexemes/en_klasse9.json  (Array)
 --------------------------------------------------------------------------------
 8. Ausgabe (Dateien in die Registry-Ordner)
 --------------------------------------------------------------------------------
-- data/lexemes/en_klasse9.json
-- data/lexeme_forms/en_klasse9.json
-- data/lexeme_relations/en_klasse9.json
-- data/sentences/en_klasse9.json
-- data/sentence_lexemes/en_klasse9.json
+- data/language/lexemes/en_klasse9.json
+- data/language/lexeme_forms/en_klasse9.json
+- data/language/lexeme_relations/en_klasse9.json
+- data/language/sentences/en_klasse9.json
+- data/language/sentence_lexemes/en_klasse9.json
 - import_report.md
 
 import_report.md enthält:

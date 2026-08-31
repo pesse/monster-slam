@@ -6,10 +6,18 @@ und Mechaniken sollen sich ergänzen lassen, ohne bestehende Systeme zu ändern.
 ## Zwei Autoload-Säulen
 
 ### 1. ContentRegistry (`src/core/content_registry.gd`)
-Datengetriebener Katalog. Scannt beim Start rekursiv `res://data/<kategorie>/`
+Datengetriebener Katalog. Scannt beim Start rekursiv `<root>/<kategorie>/`
 und lädt jede `.json`-Datei. Kategorien: `lexemes`, `lexeme_forms`,
 `lexeme_relations`, `sentences`, `sentence_lexemes`, `task_definitions`,
 `monster_task_rules`, `monsters`, `bosses`, `skills`, `waves`.
+
+**Zwei Roots.** Die Sprachkategorien (`lexemes`, `lexeme_forms`,
+`lexeme_relations`, `sentences`, `sentence_lexemes`) werden aus
+`res://data/language/` gelesen — einem separaten **privaten** Repo, eingehängt
+als Submodule, weil die Daten aus urheberrechtlich geschütztem Lehrbuchmaterial
+abgeleitet sind. Alle übrigen Kategorien liegen unter `res://data/` im
+öffentlichen Repo. Fehlt der Submodule-Checkout, startet das Spiel mit leeren
+Sprachkatalogen und einer Warnung.
 
 - Jede JSON-Datei enthält ein Objekt **oder** ein Array von Objekten.
 - Jedes Objekt braucht eine eindeutige `id` (String).
@@ -109,7 +117,7 @@ Score, aktive Welle) und reagiert selbst nur über EventBus-Signale.
 
 | Erweiterung | Wie | Bestehender Code betroffen? |
 |---|---|---|
-| Neues Wort | JSON in `data/lexemes/` (Aufgaben entstehen automatisch aus Definitions) | nein |
+| Neues Wort | JSON in `data/language/lexemes/` (Aufgaben entstehen automatisch aus Definitions) | nein |
 | Neuer Aufgaben-*Typ* | JSON in `data/task_definitions/` (+ ggf. Resolver-Zweig) | ggf. Resolver |
 | Neues Monster | JSON in `data/monsters/` | nein |
 | Neuer Boss | JSON in `data/bosses/` | nein |
@@ -127,7 +135,9 @@ vorhandenen Handlern. (Noch zu implementieren — siehe `docs/ADDING_CONTENT.md`
 
 ## Datenpersistenz
 
-- **Content** (Lexeme, Aufgaben, Monster, …): JSON unter `data/` — versioniert, agent-editierbar.
+- **Content** (Aufgaben, Monster, Wellen, …): JSON unter `data/` — versioniert, agent-editierbar.
+- **Sprachdaten** (Lexeme, Formen, Relationen, Sätze): JSON unter `data/language/`
+  — eigenes privates Repo (Submodule), Änderungen werden dort committet.
 - **Spielerfortschritt** (`player_task_progress`): der Autoload `PlayerProgress`
   (`src/learning/player_progress.gd`) hält je Aufgabe Confidence/Streak/Fälligkeit und
   kapselt den SM-2-Scheduler. Persistenz: JSON unter `user://progress/<player>.json`

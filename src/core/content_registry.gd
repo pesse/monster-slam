@@ -1,8 +1,10 @@
 extends Node
 ## Central, data-driven content registry (autoload).
 ##
-## Scans res://data/<category>/ at startup and loads EVERY .json file it finds
-## (recursively, so language subfolders like vocabulary/en/ work).
+## Scans <root>/<category>/ at startup and loads EVERY .json file it finds
+## (recursively, so subfolders per language or unit work). Es gibt zwei Roots:
+## Spielkonfiguration liegt unter res://data, Sprachdaten unter res://data/language
+## (privates Submodule, siehe LANGUAGE_ROOT).
 ##
 ## To add new content — a monster, a skill, a vocab pack, a boss, a wave —
 ## drop a JSON file into the matching folder. No code changes required.
@@ -10,6 +12,22 @@ extends Node
 ## Every object MUST have a unique string "id".
 
 const DATA_ROOT := "res://data"
+
+## Sprachdaten (Lexeme, Formen, Relationen, Sätze) liegen in einem separaten,
+## PRIVATEN Repo — sie sind aus urheberrechtlich geschütztem Lehrbuchmaterial
+## abgeleitet und dürfen nicht ins öffentliche Hauptrepo. Eingehängt als
+## Submodule unter res://data/language (`git submodule update --init`).
+## Ohne ausgecheckten Submodule startet das Spiel, hat aber keine Vokabeln.
+const LANGUAGE_ROOT := "res://data/language"
+
+## Die Kategorien, die aus LANGUAGE_ROOT statt aus DATA_ROOT gelesen werden.
+const LANGUAGE_CATEGORIES: Array[String] = [
+	"lexemes",
+	"lexeme_forms",
+	"lexeme_relations",
+	"sentences",
+	"sentence_lexemes",
+]
 
 ## Per-category catalogs (id -> entry Dictionary). Filled by reload().
 ##
@@ -59,10 +77,20 @@ func _ready() -> void:
 ## Rescans the whole data tree. Safe to call at runtime (e.g. after adding files).
 func reload() -> void:
 	_source_files.clear()
+	var has_language := DirAccess.dir_exists_absolute(LANGUAGE_ROOT)
+	if not has_language:
+		push_warning(
+			"ContentRegistry: keine Sprachdaten — Submodule '%s' fehlt. "
+			% LANGUAGE_ROOT + "Mit 'git submodule update --init' auschecken."
+		)
 	for category in _by_category:
 		var target: Dictionary = _by_category[category]
 		target.clear()
-		_scan_dir("%s/%s" % [DATA_ROOT, category], target, category)
+		if category in LANGUAGE_CATEGORIES:
+			if has_language:
+				_scan_dir("%s/%s" % [LANGUAGE_ROOT, category], target, category)
+		else:
+			_scan_dir("%s/%s" % [DATA_ROOT, category], target, category)
 
 
 ## Returns all entries of a category as an Array of Dictionaries.

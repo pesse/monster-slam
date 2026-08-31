@@ -23,3 +23,20 @@ Notes:
 - Physics runs at real-time 60 Hz even when headless, so `SceneTreeTimer`-based
   spawns fire on wall-clock time — run long enough to observe them.
 - Use this to verify GDScript changes end-to-end before reporting them as working.
+
+## Sprachdaten liegen in einem privaten Submodule
+
+Das Hauptrepo (`pesse/monster-slam`) ist **public**. Vokabel- und Satzdaten sind
+aus urheberrechtlich geschütztem Lehrbuchmaterial (Cornelsen *Access 2* u. a.)
+abgeleitet und dürfen **nicht** dorthin — sie liegen im privaten Repo
+`pesse/monster-slam-content`, eingehängt als Submodule unter `data/language/`.
+
+- **Sprachdaten** (`lexemes`, `lexeme_forms`, `lexeme_relations`, `sentences`,
+  `sentence_lexemes`) → `data/language/…` → Commit/Push **im Submodule**,
+  danach den neuen Submodule-Pointer im Hauptrepo committen.
+- **Spielkonfiguration** (`monsters`, `bosses`, `waves`, `skills`,
+  `task_definitions`, `monster_task_rules`) → `data/…` → Hauptrepo.
+- `raw/` (Buchscans/-fotos) ist gitignored und gehört in **kein** Repo.
+
+Vor dem Commit im Hauptrepo prüfen, dass keine Lemmata/Wortlisten in Code, Docs
+oder Reports gelandet sind. Schema-Beispiele mit einzelnen Allerweltswörtern sind ok.
