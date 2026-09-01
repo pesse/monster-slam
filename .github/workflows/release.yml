@@ -169,7 +169,10 @@ jobs:
         run: |
           set -euo pipefail
           bash tools/release/set_version.sh "${TAG#v}"
-          if git diff --quiet; then
+          # Nur die beiden Dateien prüfen, die dieser Job committet. Ein `git diff` über
+          # den ganzen Baum hat hier schon einmal wegen einer unbeteiligten Datei
+          # angeschlagen und dann mit "nothing added to commit" abgebrochen.
+          if git diff --quiet -- project.godot export_presets.cfg; then
             echo "Version ist bereits committet — nichts zu tun."
             exit 0
           fi
