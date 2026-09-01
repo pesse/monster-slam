@@ -50,6 +50,7 @@ var _cutscene: bool = false   # läuft gerade die Ausbau-Cutscene? (unterdrückt
 @onready var _stats: PanelContainer = $UI/WaveStats
 @onready var _leak_reveal: Control = $UI/LeakReveal
 @onready var _answer_input: LineEdit = $UI/AnswerInput
+@onready var _slow_motion: SlowMotion = $SlowMotion
 
 
 func _ready() -> void:
@@ -637,6 +638,8 @@ func _finish_wave(won: bool) -> void:
 	_finished = true
 	_last_won = won
 	_answer_input.visible = false
+	# Cutscene, Auflösung und Statistik immer in Normaltempo.
+	_slow_motion.stop()
 	# Festungsausbau erst jetzt (nach gewonnener Welle), als Cutscene VOR der Statistik.
 	if won:
 		var new_tier := PlayerProgress.fortress_tier()

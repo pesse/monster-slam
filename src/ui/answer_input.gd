@@ -14,6 +14,7 @@ func _ready() -> void:
 	placeholder_text = "Übersetzung eingeben und Enter…"
 	keep_editing_on_text_submit = true
 	text_submitted.connect(_on_text_submitted)
+	text_changed.connect(_on_text_changed)
 	grab_focus()
 
 
@@ -24,8 +25,17 @@ func _process(_delta: float) -> void:
 		grab_focus()
 
 
+## Nur bei nicht-leerem Feld: das clear() nach dem Absenden löst selbst ein
+## text_changed aus und würde die eben beendete Slow-Mo sonst neu starten.
+func _on_text_changed(new_text: String) -> void:
+	if not new_text.is_empty():
+		EventBus.typing_activity.emit()
+
+
 func _on_text_submitted(new_text: String) -> void:
 	var answer := new_text.strip_edges()
+	# Vor der Auswertung, damit die schon in Normaltempo läuft.
+	EventBus.typing_stopped.emit()
 	if not answer.is_empty():
 		EventBus.answer_submitted.emit(answer)
 	clear()

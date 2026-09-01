@@ -1,0 +1,22 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://src/ui/slow_mo_vignette.gd" id="1_vignette"]
+[ext_resource type="Shader" path="res://assets/shaders/slow_mo_vignette.gdshader" id="2_shader"]
+
+[sub_resource type="ShaderMaterial" id="VignetteMat"]
+shader = ExtResource("2_shader")
+shader_parameter/tint = Color(0.04, 0.06, 0.14, 0.75)
+shader_parameter/strength = 0.0
+shader_parameter/inner_radius = 0.35
+shader_parameter/outer_radius = 0.85
+
+[node name="SlowMoVignette" type="ColorRect"]
+material = SubResource("VignetteMat")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+visible = false
+script = ExtResource("1_vignette")

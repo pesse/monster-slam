@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://src/battle/wave_runner.gd" id="1_battle"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="2_hud"]
@@ -7,6 +7,8 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/wave_stats.tscn" id="5_stats"]
 [ext_resource type="PackedScene" path="res://scenes/ui/leak_reveal.tscn" id="6_reveal"]
 [ext_resource type="PackedScene" path="res://scenes/ui/word_type_legend.tscn" id="7_legend"]
+[ext_resource type="Script" path="res://src/battle/slow_motion.gd" id="8_slowmo"]
+[ext_resource type="PackedScene" path="res://scenes/ui/slow_mo_vignette.tscn" id="9_vignette"]
 
 [sub_resource type="Environment" id="Env_1"]
 background_mode = 1
@@ -46,6 +48,9 @@ surface_material_override/0 = SubResource("GroundMat_1")
 
 [node name="Monsters" type="Node3D" parent="."]
 
+[node name="SlowMotion" type="Node" parent="."]
+script = ExtResource("8_slowmo")
+
 [node name="UI" type="CanvasLayer" parent="."]
 
 [node name="Flash" type="ColorRect" parent="UI"]
@@ -57,6 +62,8 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(1, 0, 0, 0.35)
 modulate = Color(1, 1, 1, 0)
+
+[node name="SlowMoVignette" parent="UI" instance=ExtResource("9_vignette")]
 
 [node name="HUD" parent="UI" instance=ExtResource("2_hud")]
 

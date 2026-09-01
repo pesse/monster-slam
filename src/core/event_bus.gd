@@ -15,6 +15,12 @@ signal monster_reached_fortress(monster: Dictionary)
 
 ## --- Player input & combat ---
 signal answer_submitted(text: String)
+## Jede Zeichenänderung in der Antwort-Eingabe (treibt die Tipp-Slow-Motion).
+signal typing_activity()
+## Eingabe abgeschickt/beendet — eine laufende Slow-Motion endet sofort.
+signal typing_stopped()
+## Stärke der Tipp-Slow-Motion: 0.0 = Normaltempo, 1.0 = voll verlangsamt.
+signal slow_motion_changed(intensity: float)
 signal monster_defeated(monster: Dictionary, was_correct: bool)
 signal fortress_damaged(amount: int)
 
