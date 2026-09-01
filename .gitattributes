@@ -1,0 +1,22 @@
+# Zeilenenden NICHT anfassen, wo die Bytes selbst der Prüfgegenstand sind.
+#
+# Grund: `tests/fixtures/update/payload.bin` ist zwar ASCII, aber Prüfsumme UND Signatur
+# gehen über genau diese Bytes. Auf einem Windows-Runner steht `core.autocrlf` auf true;
+# git hat aus dem einen LF ein CRLF gemacht, damit stimmte die SHA-256 nicht mehr, und
+# fünf Tests der Release-Prüfung fielen um. Für Fixtures gilt deshalb ausnahmslos:
+# keine EOL-Umwandlung, weder beim Checkout noch beim Commit.
+tests/fixtures/** -text
+
+# Container-Formate zur Sicherheit ausdrücklich, statt sich auf die Heuristik zu verlassen.
+*.zip binary
+*.enc binary
+*.pem -text
+
+# Godot- und Werkzeugquellen mit LF, damit ein Windows-Checkout nicht CRLF einführt
+# (Godot selbst ist tolerant, Prüfsummen und Shell-Skripte sind es nicht).
+*.gd text eol=lf
+*.tscn text eol=lf
+*.tres text eol=lf
+*.sh text eol=lf
+*.py text eol=lf
+*.yml text eol=lf
