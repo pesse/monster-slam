@@ -1,11 +1,14 @@
 extends Node
 ## Zentrale Soundausgabe für kurze Effekte (Autoload `Sfx`).
 ##
-## Namenskonvention: eine Id entspricht genau einer Datei `res://assets/audio/<id>.wav`
-## — gleiche Schreibweise, snake_case, Endung .wav. WAV, weil kurze One-Shots damit ohne
-## Dekodierschritt starten und die CC0-Quellen ohnehin WAV liefern; Musik kommt später als
-## .ogg dazu, dort lohnt die Kompression. Neue Sounds brauchen einen Eintrag in
-## [constant PATHS], sonst sind sie über [method play] nicht erreichbar.
+## Namenskonvention: eine Id heißt wie ihre Datei unter `res://assets/audio/`, snake_case.
+## Der Dateiname steht trotzdem ausgeschrieben in [constant SOUNDS] — so kann eine einzelne
+## Quelle auch mal ein anderes Format mitbringen, ohne dass Code sich ändert. Standard ist
+## .wav: kurze One-Shots starten damit ohne Dekodierschritt, und die CC0-Quellen liefern
+## ohnehin WAV. Musik kommt später als .ogg dazu, dort lohnt die Kompression.
+##
+## Neue Sounds brauchen einen Eintrag in [constant SOUNDS], sonst sind sie über
+## [method play] nicht erreichbar.
 ##
 ## Nicht-positional (`AudioStreamPlayer`, kein …3D): die Kamera steht fest isometrisch,
 ## alles Hörbare ist im Bild — Panning nach Weltposition wäre Aufwand ohne Gewinn.
@@ -16,12 +19,30 @@ extends Node
 
 const AUDIO_DIR := "res://assets/audio/"
 
-## Id -> Datei. Absichtlich explizit statt Verzeichnis-Scan: ein Tippfehler im Aufruf soll
-## als Warnung auffallen, nicht als stiller Nicht-Ton.
-const PATHS := {
-	&"slow_mo_in": AUDIO_DIR + "slow_mo_in.wav",
-	&"slow_mo_out": AUDIO_DIR + "slow_mo_out.wav",
-	&"monster_kill": AUDIO_DIR + "monster_kill.wav",
+## Id -> Datei und Pegel. Absichtlich explizit statt Verzeichnis-Scan: ein Tippfehler im
+## Aufruf soll als Warnung auffallen, nicht als stiller Nicht-Ton.
+##
+## `db` ist die MISCHUNG, nicht die Lautstärke des Spielers. Zwei Gründe, warum sie pro
+## Sound stehen muss: Quelldateien sind unterschiedlich ausgesteuert (eine Blechfanfare
+## kommt lauter aus dem Netz als ein gehauchtes „nein"), und ein Sound, den man bei jeder
+## Falscheingabe hört, darf nicht so laut sein wie einer, der einmal pro Welle kommt.
+## 0.0 = Datei unverändert, negative Werte leiser. Der Regler des Spielers sitzt DARÜBER
+## auf dem Bus (siehe [method apply_volumes]) und verschiebt alles gemeinsam.
+## Die dB-Werte sind an den gemessenen RMS-Pegeln der Dateien ausgerichtet (Zielband um
+## -20 dBFS), danach nach Rolle verschoben: was oft kommt, liegt darunter, was einmal pro
+## Welle kommt, darüber. `monster_kill` kam mit -11.7 dBFS RMS und fast an der
+## Aussteuerungsgrenze aus der Quelle — ohne die -8 hier wäre alles andere nur noch Beiwerk.
+const SOUNDS := {
+	# Dauerläufer: bei jedem Tippen bzw. jedem erledigten Monster.
+	&"slow_mo_in": {"file": "slow_mo_in.wav", "db": -2.0},
+	&"slow_mo_out": {"file": "slow_mo_out.wav", "db": -2.0},
+	&"monster_kill": {"file": "monster_kill.wav", "db": -8.0},
+	# Bewusst der leiseste im Spiel: er trifft niemanden, der gerade gut spielt.
+	&"wrong_answer": {"file": "wrong_answer.wav", "db": -3.5},
+	# Einmalige Ereignisse, dürfen tragen.
+	&"fortress_hit": {"file": "fortress_hit.mp3", "db": 2.5},
+	&"wave_cleared": {"file": "wave_cleared.wav", "db": 3.5},
+	&"fortress_destroyed": {"file": "fortress_destroyed.wav", "db": 4.5},
 }
 
 const BUS_SFX := &"SFX"
@@ -34,9 +55,12 @@ const COOLDOWN_MS := 40
 ## Streuung der Tonhöhe je Ausgabe — ohne sie klingt der zehnte Kill mechanisch.
 const PITCH_SPREAD := 0.1
 
-## Test-Seam: zuletzt ANGENOMMENE Id (unbekannte und per Cooldown verworfene Aufrufe
-## ändern sie nicht). Erlaubt Tests ohne Audiodateien und ohne hörbare Ausgabe.
+## Test-Seam: zuletzt ANGENOMMENE Id und der Pegel, mit dem sie ausgegeben wird
+## (unbekannte und per Cooldown verworfene Aufrufe ändern beides nicht). Beides wird
+## gesetzt, bevor Stream und freier Player geprüft werden — so ist die Auswahl auch ohne
+## Audiodateien und ohne hörbare Ausgabe prüfbar.
 var last_played: StringName = &""
+var last_volume_db: float = 0.0
 
 var _players: Array[AudioStreamPlayer] = []
 var _streams: Dictionary = {}
@@ -44,8 +68,8 @@ var _next_allowed_ms: Dictionary = {}
 
 
 func _ready() -> void:
-	for id: StringName in PATHS:
-		var path: String = PATHS[id]
+	for id: StringName in SOUNDS:
+		var path := _path_of(id)
 		# Einmalig laden: `play()` läuft im Kampf mehrmals pro Sekunde, ein Ladeversuch je
 		# Aufruf wäre bei fehlender Datei zudem eine Warnung je Aufruf.
 		if ResourceLoader.exists(path):
@@ -64,7 +88,7 @@ func _ready() -> void:
 ## Jeder dieser Fälle ist ein stilles Verwerfen — ein Effektsound ist nie so wichtig,
 ## dass er warten oder gar den Aufrufer aufhalten dürfte.
 func play(id: StringName) -> void:
-	if not PATHS.has(id):
+	if not SOUNDS.has(id):
 		push_warning("Sfx: unbekannte Id '%s'" % id)
 		return
 	# Echtzeit, NICHT delta: Engine.time_scale sinkt beim Tippen auf 0.15 (siehe SlowMotion),
@@ -74,6 +98,7 @@ func play(id: StringName) -> void:
 		return
 	_next_allowed_ms[id] = now + COOLDOWN_MS
 	last_played = id
+	last_volume_db = gain_db(id)
 	var stream: AudioStream = _streams.get(id)
 	if stream == null:
 		return
@@ -81,8 +106,21 @@ func play(id: StringName) -> void:
 	if player == null:
 		return
 	player.stream = stream
+	# Jedes Mal setzen: ein Player kommt aus dem Pool mit dem Pegel seines Vorgängers.
+	player.volume_db = last_volume_db
 	player.pitch_scale = randf_range(1.0 - PITCH_SPREAD, 1.0 + PITCH_SPREAD)
 	player.play()
+
+
+## Mischpegel einer Id in dB (0.0 = Datei unverändert). Unbekannte Id -> 0.0, damit ein
+## Tippfehler nicht zusätzlich zur Warnung auch noch den Pegel verbiegt.
+func gain_db(id: StringName) -> float:
+	var entry: Dictionary = SOUNDS.get(id, {})
+	return float(entry.get("db", 0.0))
+
+
+func _path_of(id: StringName) -> String:
+	return AUDIO_DIR + str((SOUNDS[id] as Dictionary)["file"])
 
 
 ## Überträgt die Lautstärken aus UserSettings auf die Busse. Öffentlich, damit ein späterer

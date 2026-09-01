@@ -521,6 +521,7 @@ func _on_answer_submitted(text: String) -> void:
 	# Scheitern wird beim Erreichen der Festung verbucht (_on_monster_reached_goal).
 	_flash_feedback(FLASH_WRONG)
 	_shake()
+	Sfx.play(&"wrong_answer")
 
 
 func _shake(magnitude: float = SHAKE_MAGNITUDE) -> void:
@@ -615,6 +616,10 @@ func _on_monster_reached_goal(monster: Monster) -> void:
 	_wave_played_tasks.append(snapshot)
 	_spawn_explosion(monster.position + Vector3(0.0, 1.0, 0.0), Color(1.0, 0.45, 0.12), 2.6)
 	_shake(0.9)
+	# Tiefer als der Kill-Sound (600 statt 809 Hz Schwerpunkt): gleiche Ereignisklasse,
+	# gegenteilige Bedeutung — das muss man auch dann auseinanderhalten, wenn beides
+	# kurz hintereinander kommt.
+	Sfx.play(&"fortress_hit")
 	# Monster durchgelassen = Aufgabe nicht rechtzeitig abgerufen -> als Fehler verbuchen.
 	var task_id := str(monster.task.get("learnable_id", ""))
 	PlayerProgress.record(task_id, false, 0, float(monster.task.get("initial_confidence", -1.0)))
@@ -643,6 +648,11 @@ func _finish_wave(won: bool) -> void:
 	_answer_input.visible = false
 	# Cutscene, Auflösung und Statistik immer in Normaltempo.
 	_slow_motion.stop()
+	# VOR der Cutscene: der Festungsausbau bringt seinen eigenen goldenen Blitz mit, die
+	# Fanfare soll ihn ankündigen statt mit ihm zu kollidieren. Bei Niederlage legt sich
+	# der Sting über die Festungsexplosion desselben Monsters — die trägt die Wucht,
+	# dieser hier die Stimmung.
+	Sfx.play(&"wave_cleared" if won else &"fortress_destroyed")
 	# Festungsausbau erst jetzt (nach gewonnener Welle), als Cutscene VOR der Statistik.
 	if won:
 		var new_tier := PlayerProgress.fortress_tier()
