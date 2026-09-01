@@ -70,3 +70,24 @@ Beim Arbeiten daran zu beachten:
 - **Der private Signierschlüssel** gehört ausschließlich in das GitHub-Secret
   `RELEASE_SIGNING_KEY`; `*.pem` ist gitignored. Der öffentliche Schlüssel steht
   bewusst als Konstante in `src/update/release_key.gd`.
+
+## Drei Fallen, die schon zugeschlagen haben
+
+**`--import` schreibt offene Markdown-Dateien um.** Sind `.md`-Dateien im Godot-Skript-
+editor offen (gemerkt in `.godot/editor/script_editor_cache.cfg`, `editor_layout.cfg`,
+`project_metadata.cfg`), speichert Godot sie beim Import mit — und wandelt dabei führende
+Leerzeichen in Tabs. In Markdown macht das aus Fortsetzungszeilen Codeblöcke. Nach jedem
+`--import` also `git status` prüfen; unerwartete `.md`-Änderungen sind das, nicht deine.
+Dauerhaft weg ist es, wenn keine `.md` im Editor offen ist — `.godot/editor/` löschen
+setzt Docklayout und offene Tabs zurück und behebt es (Verzeichnis ist regenerierbar).
+
+**Fixtures dürfen keine Zeilenenden-Umwandlung sehen.** `tests/fixtures/update/payload.bin`
+ist ASCII, aber Prüfsumme *und* Signatur gehen über genau diese Bytes; auf einem
+Windows-Runner (`core.autocrlf=true`) machte git aus dem LF ein CRLF und fünf Tests fielen
+um. `.gitattributes` nimmt `tests/fixtures/**` deshalb von jeder Umwandlung aus. Neue
+Fixtures dort ablegen, nicht daneben.
+
+**Tests müssen neben echten Packs gelten.** `user://` ist projektübergreifend dasselbe
+Verzeichnis, und Packs werden nach Id sortiert — der letzte gewinnt. Ein Fixture-Pack
+braucht deshalb eine Id, die zuletzt sortiert (`zz-…`), sonst gewinnt auf einem Rechner mit
+installierten Inhalten `game` oder `language-*` und der Test wird grundlos rot.

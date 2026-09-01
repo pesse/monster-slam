@@ -4,9 +4,14 @@ extends GdUnitTestSuite
 ##
 ## Fasst den echten ContentRegistry-Autoload an und räumt danach auf: der Katalog ist
 ## globaler Zustand, ein liegengebliebener Pack würde andere Tests verfälschen.
+##
+## Die Pack-Id beginnt mit `zz-`, weil Packs untereinander nach Id sortiert werden und der
+## letzte gewinnt: auf einem Rechner, auf dem echte Packs installiert sind (`game`,
+## `language-*`), würde ein Fixture-Pack namens `fixture-roots` verlieren und der Test
+## grundlos rot. Er muss auch neben installierten Inhalten gelten.
 
 const OVERRIDE_PACK := "res://tests/fixtures/packs/open_override.zip"
-const PACK_ID := "fixture-roots"
+const PACK_ID := "zz-fixture-roots"
 const ENTRY := {"version": "ovr", "minVersion": "0.2.0"}
 
 ## Aus data/monsters/basic_monsters.json — die Kollision, an der sich der Vorrang zeigt.
