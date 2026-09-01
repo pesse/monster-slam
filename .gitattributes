@@ -10,6 +10,8 @@ tests/fixtures/** -text
 # Container-Formate zur Sicherheit ausdrücklich, statt sich auf die Heuristik zu verlassen.
 *.zip binary
 *.enc binary
+*.wav binary
+*.ogg binary
 *.pem -text
 
 # Godot- und Werkzeugquellen mit LF, damit ein Windows-Checkout nicht CRLF einführt

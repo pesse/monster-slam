@@ -17,12 +17,17 @@ run/main_scene="res://scenes/ui/profile_menu.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
 
+[audio]
+
+buses/default_bus_layout="res://default_bus_layout.tres"
+
 [autoload]
 
 EventBus="*res://src/core/event_bus.gd"
 ContentRegistry="*res://src/core/content_registry.gd"
 GameState="*res://src/core/game_state.gd"
 UserSettings="*res://src/core/user_settings.gd"
+Sfx="*res://src/core/sfx.gd"
 PlayerProgress="*res://src/learning/player_progress.gd"
 UpdateService="*res://src/update/update_service.gd"
 ContentService="*res://src/content/content_service.gd"

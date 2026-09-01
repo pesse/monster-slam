@@ -555,6 +555,9 @@ func _defeat(monster: Monster) -> void:
 	_wave_correct += 1
 	_wave_played_tasks.append(_task_snapshot(monster, false))
 	_spawn_explosion(monster.position + Vector3(0.0, 1.0, 0.0), Color(0.7, 1.0, 0.4), 1.5)
+	# Hier und nicht in _spawn_explosion(): denselben Effekt nutzen auch der Festungsausbau
+	# und der Aufschlag eines durchgelassenen Monsters — die klingen nicht gleich.
+	Sfx.play(&"monster_kill")
 	# Kleine aufsteigende „+Punkte"-Animation an der Stelle des Monsters.
 	_spawn_score_popup(monster.position + Vector3(0.0, 2.0, 0.0), monster.reward)
 	# Reward aus der monster_task_rule an GameState durchreichen (Score).

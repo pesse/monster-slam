@@ -15,6 +15,7 @@ const DEFAULT_DIFFICULTY := 3
 const DEFAULT_BASE_SPEED := 1.0
 const MIN_BASE_SPEED := 0.5
 const MAX_BASE_SPEED := 1.5
+const DEFAULT_VOLUME := 1.0
 
 ## Das aktive Profil hat gewechselt (id = neuer player_id). Erlaubt Live-Refresh im UI.
 signal active_profile_changed(id: String)
@@ -117,6 +118,28 @@ func base_speed(profile := "") -> float:
 func set_base_speed(value: float, profile := "") -> void:
 	var id := profile if not profile.is_empty() else active_profile()
 	_config.set_value("base_speed", id, clampf(value, MIN_BASE_SPEED, MAX_BASE_SPEED))
+	_save()
+
+
+## Lautstärke der Effekte (0.0..1.0, Default 1.0). Bewusst in [general] und damit
+## geräteweit statt pro Profil: wie laut es hier sein darf, hängt an Boxen und Uhrzeit,
+## nicht daran, wer gerade spielt.
+func sfx_volume() -> float:
+	return clampf(float(_config.get_value("general", "sfx_volume", DEFAULT_VOLUME)), 0.0, 1.0)
+
+
+func set_sfx_volume(value: float) -> void:
+	_config.set_value("general", "sfx_volume", clampf(value, 0.0, 1.0))
+	_save()
+
+
+## Lautstärke der Musik (0.0..1.0, Default 1.0). Ebenfalls geräteweit, siehe sfx_volume().
+func music_volume() -> float:
+	return clampf(float(_config.get_value("general", "music_volume", DEFAULT_VOLUME)), 0.0, 1.0)
+
+
+func set_music_volume(value: float) -> void:
+	_config.set_value("general", "music_volume", clampf(value, 0.0, 1.0))
 	_save()
 
 
