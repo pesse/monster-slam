@@ -47,9 +47,7 @@ func test_save_und_load_round_trip() -> void:
 	assert_str(String(loaded["lex.x"]["at"])).is_not_empty()
 
 
-func test_flag_lexeme_schreibt_nicht_in_die_quelldatei() -> void:
-	if _lexeme_id.is_empty():
-		return  # ohne Sprachdaten (EXE-Build, Submodule fehlt) nicht prüfbar
+func test_flag_lexeme_schreibt_nicht_in_die_quelldatei(do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:
 	var source := ContentRegistry.source_file("lexemes", _lexeme_id)
 	var before := FileAccess.get_file_as_string(source)
 	assert_bool(ContentRegistry.flag_lexeme(_lexeme_id, "Tippfehler", "learn.y")).is_true()
@@ -57,9 +55,7 @@ func test_flag_lexeme_schreibt_nicht_in_die_quelldatei() -> void:
 	assert_dict(LexemeFlags.load_all()).contains_keys([_lexeme_id])
 
 
-func test_flag_lexeme_wirkt_sofort_in_flagged_lexemes() -> void:
-	if _lexeme_id.is_empty():
-		return
+func test_flag_lexeme_wirkt_sofort_in_flagged_lexemes(do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:
 	ContentRegistry.flag_lexeme(_lexeme_id, "Tippfehler", "learn.y")
 	var ids: Array = []
 	for entry in ContentRegistry.flagged_lexemes():
@@ -67,9 +63,7 @@ func test_flag_lexeme_wirkt_sofort_in_flagged_lexemes() -> void:
 	assert_array(ids).contains([_lexeme_id])
 
 
-func test_meldung_uebersteht_reload() -> void:
-	if _lexeme_id.is_empty():
-		return
+func test_meldung_uebersteht_reload(do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:
 	ContentRegistry.flag_lexeme(_lexeme_id, "Tippfehler", "learn.y")
 	ContentRegistry.reload()
 	var flag: Dictionary = ContentRegistry.lexemes[_lexeme_id].get("flag", {})
@@ -81,9 +75,7 @@ func test_flag_lexeme_lehnt_unbekanntes_lexem_ab() -> void:
 	assert_dict(LexemeFlags.load_all()).is_empty()
 
 
-func test_unflag_lexeme_nimmt_zurueck() -> void:
-	if _lexeme_id.is_empty():
-		return
+func test_unflag_lexeme_nimmt_zurueck(do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:
 	ContentRegistry.flag_lexeme(_lexeme_id, "Tippfehler", "learn.y")
 	assert_bool(ContentRegistry.unflag_lexeme(_lexeme_id)).is_true()
 	assert_dict(LexemeFlags.load_all()).is_empty()

@@ -3,13 +3,13 @@ extends GdUnitTestSuite
 ## datengetrieben füllen (all_lexeme_tags / all_task_types).
 
 
-func test_all_lexeme_tags_contains_known_tags() -> void:
+func test_all_lexeme_tags_contains_known_tags(do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:
 	var tags := ContentRegistry.all_lexeme_tags()
 	assert_bool("basics" in tags).is_true()
 	assert_bool("core" in tags).is_true()
 
 
-func test_all_lexeme_tags_sorted_and_distinct() -> void:
+func test_all_lexeme_tags_sorted_and_distinct(do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:
 	var tags := ContentRegistry.all_lexeme_tags()
 	var seen := {}
 	var prev := ""
@@ -20,7 +20,7 @@ func test_all_lexeme_tags_sorted_and_distinct() -> void:
 		prev = tag
 
 
-func test_all_lexeme_types_contains_known_types() -> void:
+func test_all_lexeme_types_contains_known_types(do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:
 	var types := ContentRegistry.all_lexeme_types()
 	assert_bool("noun" in types).is_true()
 	assert_bool("verb" in types).is_true()

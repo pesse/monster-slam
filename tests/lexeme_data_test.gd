@@ -7,6 +7,13 @@ extends GdUnitTestSuite
 ## die strukturierten Arrays lemma_de_alt / lemma_en_alt (siehe docs/TESTING.md).
 
 const LEXEME_DIR := "res://data/language/lexemes"
+
+
+## Ohne Sprachdaten gibt es nichts zu validieren — die Suite entfällt dann (LanguageData).
+## Als Suite, nicht je Test: bei einer Suite, deren einziger Test übersprungen wird, lässt
+## gdUnit einen Orphan-Node zurück und der Lauf endet mit Exit-Code 101 (Warnung).
+func before(do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:
+	pass
 const VARIANT_SEP := " / "
 
 

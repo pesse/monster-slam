@@ -67,11 +67,26 @@ jobs:
         shell: bash
         run: '"$GODOT" --headless --import 2>&1 | tr -d "\r"'
 
+      # --continue, damit ein Fehler nicht den Rest seiner Suite verdeckt. Die Ausgabe
+      # laeuft ungekuerzt ins Log: ein `tail` hat hier schon einmal genau die Zeilen
+      # weggeworfen, die sagen, WELCHER Test rot war.
+      #
+      # Ohne Submodule fehlen die Sprachdaten. Tests, die auf konkreten Vokabeln bestehen,
+      # ueberspringen sich dann selbst (tests/language_data.gd) — sie sind hier nicht
+      # pruefbar und duerfen weder rot sein noch still durchlaufen.
       - name: Tests
         shell: bash
         run: |
           "$GODOT" --headless -s res://addons/gdUnit4/bin/GdUnitCmdTool.gd \
-            --ignoreHeadlessMode -a res://tests 2>&1 | tr -d '\r' | tail -20
+            --ignoreHeadlessMode --continue -a res://tests 2>&1 | tr -d '\r'
+
+      - name: Test-Report sichern
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gdunit-report
+          path: reports/
+          if-no-files-found: ignore
 
       - name: Exportieren
         shell: bash

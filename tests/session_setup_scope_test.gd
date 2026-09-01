@@ -5,6 +5,12 @@ extends GdUnitTestSuite
 const SCENE := "res://scenes/ui/session_setup.tscn"
 
 
+## Ohne Sprachdaten gibt es keine Bücher, also auch keinen Picker zu prüfen — die ganze
+## Suite entfällt dann (siehe LanguageData).
+func before(do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:
+	pass
+
+
 ## Der Screen liest den Scope des AKTIVEN Profils; für Determinismus vor jedem Test leeren.
 func before_test() -> void:
 	UserSettings.set_selected_scope(PackedStringArray([]))
