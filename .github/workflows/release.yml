@@ -41,7 +41,7 @@ jobs:
         run: |
           VERSION="${TAG#v}"
           EXE="exports/MonsterSlam-${VERSION}.exe"
-          tools/release/set_version.sh "$VERSION" "$EXE"
+          bash tools/release/set_version.sh "$VERSION" "$EXE"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "exe=$EXE" >> "$GITHUB_OUTPUT"
         env:
@@ -139,7 +139,7 @@ jobs:
           printf '%s' "$SIGNING_KEY" > "$KEY"
           printf '%s' "$NOTES" > notes.md
           URL="${{ github.server_url }}/${{ github.repository }}/releases/download/${TAG}/$(basename "$EXE")"
-          tools/release/make_latest_json.sh "$EXE" "$VERSION" notes.md "$KEY" "$URL" latest.json
+          bash tools/release/make_latest_json.sh "$EXE" "$VERSION" notes.md "$KEY" "$URL" latest.json
 
       - name: An das Release hängen
         shell: bash
@@ -168,7 +168,7 @@ jobs:
           BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           set -euo pipefail
-          tools/release/set_version.sh "${TAG#v}"
+          bash tools/release/set_version.sh "${TAG#v}"
           if git diff --quiet; then
             echo "Version ist bereits committet — nichts zu tun."
             exit 0

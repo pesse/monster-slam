@@ -35,7 +35,7 @@ fi
 OUT="exports/MonsterSlam-${VERSION}.exe"
 
 # Version an alle abgeleiteten Stellen schreiben (idempotent, dasselbe Skript nutzt die CI).
-tools/release/set_version.sh "$VERSION" "$OUT"
+bash tools/release/set_version.sh "$VERSION" "$OUT"
 
 mkdir -p exports
 
