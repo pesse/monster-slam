@@ -30,6 +30,7 @@ horizontal_alignment = 1
 unique_name_in_owner = true
 
 [node name="DiffLabel" type="Label" parent="Margin/Root"]
+unique_name_in_owner = true
 text = "Schwierigkeit der nächsten Welle"
 
 [node name="ChoiceRow" type="HBoxContainer" parent="Margin/Root"]

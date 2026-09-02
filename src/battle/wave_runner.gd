@@ -461,7 +461,8 @@ func _start_next_wave() -> void:
 		return
 	for entry in spawns:
 		_total += int(entry.get("count", 0))
-	# Löst den HP-Reset (GameState) + HUD-Refresh aus.
+	# Löst den Wellenstart in GameState + HUD-Refresh aus. Die Festungs-HP bleiben dabei
+	# unangetastet — der Stand wird über die Wellen hinweg mitgenommen (siehe GameState).
 	EventBus.wave_started.emit(GameState.current_wave)
 	# Gesamtzahl der Welle bekanntgeben -> GameState füllt wave_total/wave_resolved (HUD-Balken).
 	EventBus.wave_totals.emit(_total)
@@ -746,6 +747,12 @@ func _finish_wave(won: bool) -> void:
 ## Spieler hat auf dem Statistik-Screen die nächste Welle gerufen. Die Wahl ist RELATIV:
 ## `delta` (-2..+2) verschiebt die aktuelle Schwierigkeit, begrenzt auf 1..5.
 func _on_next_wave_requested(delta: int) -> void:
+	# Eine gefallene Festung beendet den Lauf: der Statistik-Screen blendet die
+	# Schwierigkeitswahl und den Startknopf dann aus (wave_stats.gd). Der Riegel steht
+	# hier nochmal, damit die Regel nicht allein an der Sichtbarkeit eines Knopfes hängt
+	# — mit 0 HP wäre die Folgewelle ohnehin beim ersten Treffer wieder verloren.
+	if not _last_won:
+		return
 	_difficulty = clampi(_difficulty + delta, 1, 5)
 	_wave_number += 1
 	_start_next_wave()

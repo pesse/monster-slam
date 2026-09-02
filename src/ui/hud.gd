@@ -27,7 +27,8 @@ func _ready() -> void:
 	_player_name.text = "👤 %s" % UserSettings.display_name()
 	EventBus.fortress_damaged.connect(func(_amount): _refresh())
 	EventBus.monster_defeated.connect(func(_monster, _correct): _refresh())
-	# Wellenstart setzt HP + wave_total/wave_resolved zurück -> sofort auffrischen.
+	# Wellenstart setzt wave_total/wave_resolved zurück -> sofort auffrischen.
+	# Die HP rührt er nicht an, der Stand läuft über die Wellen weiter.
 	EventBus.wave_started.connect(func(_wave_id): _refresh())
 	EventBus.wave_totals.connect(func(_total): _refresh())
 	_refresh()
@@ -35,10 +36,12 @@ func _ready() -> void:
 
 func _refresh() -> void:
 	# Lebensbalken: Wert + Farbe nach Anteil.
-	var max_hp: float = float(GameState.FORTRESS_MAX_HEALTH)
+	# Das Maximum ist Lauf-Zustand (Talente können es anheben), keine Konstante ->
+	# bei jedem Refresh neu lesen, sonst zeigt der Balken einen veralteten Nenner.
+	var max_hp: float = float(GameState.fortress_max_health)
 	_hp_bar.max_value = max_hp
 	_hp_bar.value = GameState.fortress_health
-	_hp_text.text = "%d/%d" % [GameState.fortress_health, GameState.FORTRESS_MAX_HEALTH]
+	_hp_text.text = "%d/%d" % [GameState.fortress_health, GameState.fortress_max_health]
 	var ratio := GameState.fortress_health / max_hp if max_hp > 0.0 else 0.0
 	if ratio > HP_OK:
 		_hp_fill.bg_color = COLOR_HP_OK
