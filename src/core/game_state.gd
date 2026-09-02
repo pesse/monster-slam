@@ -16,8 +16,9 @@ var active_skills: Array[String] = []
 var monsters_defeated: int = 0   # per korrekter Antwort erledigt
 var monsters_leaked: int = 0     # bis zur Festung durchgelassen
 
-## Wellen-Fortschritt: wave_total kommt beim Wellenstart über EventBus.wave_totals,
-## wave_resolved zählt erledigte Monster (besiegt + durchgelassen).
+## Wellen-Fortschritt: wave_total kommt über EventBus.wave_totals (Wellenstart, und
+## nochmal, wenn ein Spawn ausfällt), wave_resolved zählt erledigte Monster
+## (besiegt + durchgelassen) und wird beim Wellenstart zurückgesetzt.
 var wave_total: int = 0
 var wave_resolved: int = 0
 
@@ -43,11 +44,14 @@ func reset() -> void:
 
 func _on_wave_started(_wave_id: String) -> void:
 	fortress_health = FORTRESS_MAX_HEALTH
+	# Der Zähler gehört zum Wellenstart, nicht zur Gesamtzahl: wave_totals kann sich
+	# mitten in der Welle nochmal ändern (ausgefallener Spawn, WaveRunner._spawn) —
+	# ein Reset dort würde den HUD-Balken grundlos zurückwerfen.
+	wave_resolved = 0
 
 
 func _on_wave_totals(total: int) -> void:
 	wave_total = total
-	wave_resolved = 0
 
 
 func _on_fortress_damaged(amount: int) -> void:

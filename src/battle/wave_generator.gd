@@ -73,6 +73,44 @@ func _confidence_prior(source: Dictionary) -> float:
 	return sum / float(priors.size())
 
 
+## Aufgaben-Pool aus der Auswahl des aktiven Profils (Session-Setup). EINE Quelle für
+## beide Fragen: welche Aufgaben der Kampf spawnt (WaveRunner._generate_wave) und ob
+## überhaupt etwas spielbar ist (has_playable, Menü-Knöpfe). Getrennte Pools hier hießen:
+## der Knopf gibt frei, wo die Welle nichts findet — oder umgekehrt.
+## Semantik der LEEREN Auswahl: keine Einschränkung (siehe _candidates()).
+static func pool_from_settings(difficulty: int) -> Dictionary:
+	return {
+		"task_types": Array(UserSettings.selected_task_types()),
+		"lexeme_types": Array(UserSettings.selected_lexeme_types()),
+		"scope": Array(UserSettings.selected_scope()),
+		"tags": Array(UserSettings.selected_tags()),
+		"difficulty_max": clampi(difficulty, 1, 5),
+	}
+
+
+## Wie viele Kandidaten die Stichprobe in has_playable() höchstens erzeugt, bevor sie
+## den ganzen Pool durchsieht. Der volle Kandidatensatz kostet bei ~2000 Lexemen rund
+## 300 ms — zu viel für einen Screen, der nach jeder Filteränderung neu fragt.
+const PROBE_CANDIDATES := 64
+
+
+## Gibt der Pool überhaupt eine auflösbare Aufgabe her? Hält beim ersten Treffer an.
+##
+## Ohne das hängt der Kampf: ein Spawn ohne Plan zählt nicht mit (_spawned), das
+## Wellenende tritt nie ein und aus dem leeren Schlachtfeld führt kein Weg zurück.
+## Deshalb fragen die Menüs VOR dem Kampf und der WaveRunner vor dem Wellenstart.
+##
+## Zwei Durchläufe: eine Stichprobe genügt praktisch immer und ist in Millisekunden
+## fertig; erst wenn davon KEIN Kandidat auflösbar ist, wird der ganze Pool durchgesehen.
+## Ein „nein" bleibt damit ein belastbares „nichts Spielbares", kein Stichprobenglück.
+func has_playable(pool: Dictionary) -> bool:
+	for limit in [PROBE_CANDIDATES, 0]:
+		for candidate in _candidates(pool, limit):
+			if not _build_plan(candidate).is_empty():
+				return true
+	return false
+
+
 ## `exclude_sources` (als Set: Lexem-id -> true) verhindert, dass ein Grundwort
 ## gewählt wird, das bereits als Monster auf dem Feld steht (Aufrufer: WaveRunner).
 func pick(pool: Dictionary, exclude_sources: Dictionary = {}) -> Dictionary:
@@ -110,7 +148,11 @@ func pick(pool: Dictionary, exclude_sources: Dictionary = {}) -> Dictionary:
 
 ## Erzeugt alle spielbaren Kandidaten (Definition × Lexeme [× Form/Relation]) für den
 ## Wave-Pool. Jeder Kandidat kennt bereits seinen learnable_id für die Bucket-Zuordnung.
-func _candidates(pool: Dictionary) -> Array:
+##
+## `limit` > 0 bricht ab, sobald so viele Kandidaten zusammen sind — nur für die
+## Stichprobe in has_playable(). pick() braucht ALLE: die Auswahl fällt über die
+## Fälligkeits-Buckets, und eine abgeschnittene Menge verzerrte sie.
+func _candidates(pool: Dictionary, limit: int = 0) -> Array:
 	var task_types: Array = pool.get("task_types", [])
 	var tags: Array = pool.get("tags", [])
 	var scope: Array = pool.get("scope", []) # leer -> alle Bücher/Units
@@ -129,18 +171,22 @@ func _candidates(pool: Dictionary) -> Array:
 			continue
 		if difficulty_max > 0 and int(definition.get("difficulty", 1)) > difficulty_max:
 			continue
-		_expand(definition, lexemes, result)
+		_expand(definition, lexemes, result, limit)
+		if limit > 0 and result.size() >= limit:
+			break
 	return result
 
 
 ## Verbindet eine Definition mit allen kompatiblen Lexemen und hängt die Kandidaten an.
 ## Relations-/Formaufgaben expandieren über die tatsächlich vorhandenen Relationen/Formen,
 ## sodass nie eine unauflösbare Instanz entsteht.
-func _expand(definition: Dictionary, lexemes: Array, result: Array) -> void:
+func _expand(definition: Dictionary, lexemes: Array, result: Array, limit: int = 0) -> void:
 	var allowed: Array = definition.get("allowed_types", ["*"])
 	var relation_req := str(definition.get("requires_relation", ""))
 	var form_req := str(definition.get("requires_form", ""))
 	for source in lexemes:
+		if limit > 0 and result.size() >= limit:
+			return
 		if not _type_allowed(source, allowed):
 			continue
 		var source_id := str(source.get("id", ""))

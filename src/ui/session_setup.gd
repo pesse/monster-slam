@@ -13,6 +13,9 @@ extends Control
 ## und der Kampf läuft auch bei leerer Auswahl sauber. Der Screen ist bewusst
 ## eigenständig, damit hier künftig weitere Session-Einstellungen Platz finden.
 ##
+## Eine ENGE Auswahl kann dagegen leer ausgehen (die Filter kombinieren sich mit UND).
+## Dann sperrt "Kampf starten" — siehe _refresh_start_gate().
+##
 ## Das statische Layout liegt in session_setup.tscn; hier nur die datengetriebenen
 ## Inhalte (Muster wie profile_menu._refresh_words()).
 
@@ -38,13 +41,17 @@ const MAX_SUGGESTIONS := 10
 @onready var _tag_input: LineEdit = %TagInput
 @onready var _tag_suggestions: VBoxContainer = %TagSuggestions
 @onready var _tag_badges: HFlowContainer = %TagBadges
+@onready var _start_button: Button = %StartButton
+@onready var _start_hint: Label = %StartHint
 
 var _all_tags: PackedStringArray = PackedStringArray()
 var _selected_tags: Array = []
+## Nur für die Verfügbarkeitsprüfung (has_playable) — der Kampf hat seinen eigenen.
+var _generator := WaveGenerator.new()
 
 
 func _ready() -> void:
-	(%StartButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(BATTLE_SCENE))
+	_start_button.pressed.connect(func(): get_tree().change_scene_to_file(BATTLE_SCENE))
 	(%BackButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(MENU_SCENE))
 	_build_scope()
 	_build_task_types()
@@ -54,6 +61,19 @@ func _ready() -> void:
 	_setup_section(%ScopeHeader, _scope_list, "Bücher & Units")
 	_setup_section(%TaskTypeHeader, _task_type_list, "Aufgabentypen")
 	_setup_section(%LexemeTypeHeader, _lexeme_type_list, "Vokabel-Typen")
+	_refresh_start_gate()
+
+
+## Sperrt „Kampf starten", solange die Auswahl keine spielbare Aufgabe übrig lässt.
+## Die Filter kombinieren sich (UND) und können sich gegenseitig ausschließen — dann
+## fände der WaveRunner nichts zu spawnen, die Welle endete nie und das Schlachtfeld
+## wäre leer. Lieber hier sagen, dass die Auswahl zu eng ist, als dort.
+## Läuft nach jeder Änderung, weil jeder Filter das Ergebnis kippen kann.
+func _refresh_start_gate() -> void:
+	var pool := WaveGenerator.pool_from_settings(UserSettings.default_difficulty())
+	var playable := _generator.has_playable(pool)
+	_start_button.disabled = not playable
+	_start_hint.visible = not playable
 
 
 ## Macht `header` zum Auf-/Zuklapp-Schalter für `content` (Pfeil ▸/▾), zugeklappt.
@@ -93,6 +113,7 @@ func _build_scope() -> void:
 
 func _save_scope() -> void:
 	UserSettings.set_selected_scope(_collect_scope())
+	_refresh_start_gate()
 
 
 ## Sammelt die aktiven Unit-Werte aus allen Buch-Rastern unter %ScopeList.
@@ -156,10 +177,12 @@ func _collect(container: Container) -> PackedStringArray:
 
 func _save_task_types() -> void:
 	UserSettings.set_selected_task_types(_collect(_task_type_list))
+	_refresh_start_gate()
 
 
 func _save_lexeme_types() -> void:
 	UserSettings.set_selected_lexeme_types(_collect(_lexeme_type_list))
+	_refresh_start_gate()
 
 
 # --- Tags: Auto-Vervollständigung + Badges --------------------------------------
@@ -180,6 +203,7 @@ func _add_tag(tag: String) -> void:
 	_selected_tags.append(tag)
 	UserSettings.set_selected_tags(PackedStringArray(_selected_tags))
 	_refresh_badges()
+	_refresh_start_gate()
 	_tag_input.clear()
 	_clear_suggestions()
 
@@ -188,6 +212,7 @@ func _remove_tag(tag: String) -> void:
 	_selected_tags.erase(tag)
 	UserSettings.set_selected_tags(PackedStringArray(_selected_tags))
 	_refresh_badges()
+	_refresh_start_gate()
 
 
 ## Baut die Badge-Leiste der gewählten Tags neu auf (je Tag "tag ✕", Klick entfernt).
