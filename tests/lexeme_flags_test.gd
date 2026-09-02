@@ -81,3 +81,38 @@ func test_unflag_lexeme_nimmt_zurueck(do_skip := LanguageData.missing(), skip_re
 	assert_dict(LexemeFlags.load_all()).is_empty()
 	assert_bool(ContentRegistry.lexemes[_lexeme_id].has("flag")).is_false()
 	assert_bool(ContentRegistry.unflag_lexeme(_lexeme_id)).is_false()
+
+
+## --- Warteschlange des Rückkanals (siehe docs/adr/0002-melde-rueckkanal.md) ---
+
+func test_neue_meldung_ist_offen() -> void:
+	LexemeFlags.save_all({"lex.x": LexemeFlags.entry("falsch", "learn.x")})
+	var open := LexemeFlags.pending()
+	assert_int(open.size()).is_equal(1)
+	assert_str(String(open[0]["lexeme_id"])).is_equal("lex.x")
+	assert_str(String(open[0]["comment"])).is_equal("falsch")
+
+
+## Meldungen aus einer Fassung vor dem Rückkanal haben kein Feld `sent` — sie sollen
+## mitgehen, nicht stillschweigend verfallen.
+func test_meldung_ohne_sent_feld_gilt_als_offen() -> void:
+	LexemeFlags.save_all({"lex.alt": {"comment": "falsch", "learnable_id": "learn.x", "at": "2026-01-01T00:00:00"}})
+	assert_int(LexemeFlags.pending().size()).is_equal(1)
+
+
+func test_mark_sent_nimmt_aus_der_warteschlange() -> void:
+	LexemeFlags.save_all({"lex.x": LexemeFlags.entry("falsch", "learn.x")})
+	assert_bool(LexemeFlags.mark_sent("lex.x")).is_true()
+	assert_array(LexemeFlags.pending()).is_empty()
+	assert_bool(bool(LexemeFlags.load_all()["lex.x"]["sent"])).is_true()
+
+
+func test_mark_sent_fuer_unbekannte_meldung_ist_false() -> void:
+	assert_bool(LexemeFlags.mark_sent("lex.gibt.es.nicht")).is_false()
+
+
+func test_mark_flag_sent_wirkt_sofort_in_der_anzeige(do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:
+	ContentRegistry.flag_lexeme(_lexeme_id, "Tippfehler", "learn.y")
+	assert_bool(ContentRegistry.mark_flag_sent(_lexeme_id)).is_true()
+	assert_bool(bool(ContentRegistry.lexemes[_lexeme_id]["flag"]["sent"])).is_true()
+	assert_array(LexemeFlags.pending()).is_empty()
