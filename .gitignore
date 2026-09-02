@@ -20,6 +20,12 @@ Thumbs.db
 # der private gehört ausschließlich in das GitHub-Secret RELEASE_SIGNING_KEY.
 *.pem
 
+# Melde-Rückkanal: das HMAC-Geheimnis gehört ausschließlich auf den Server
+# (server/melden/README.md), geprägte Token teilt man mit, man committet sie nicht.
+ms-secret.php
+*.report-secret
+report-tokens.txt
+
 # Python-Bytecode der Werkzeuge unter tools/
 __pycache__/
 

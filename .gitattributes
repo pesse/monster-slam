@@ -22,6 +22,7 @@ tests/fixtures/** -text
 *.sh text eol=lf
 *.py text eol=lf
 *.yml text eol=lf
+*.php text eol=lf
 
 # Fremder Code bleibt unangetastet. `addons/` ist vendored (gdUnit4); dort liegt eine
 # .tscn mit CRLF im Repo, die die Regeln oben sonst umnormalisieren wollen — ein Diff in
