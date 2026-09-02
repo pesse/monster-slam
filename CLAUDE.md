@@ -2,27 +2,31 @@
 
 ## Running the game headless (to read logs/errors directly)
 
-Godot 4.7 project. Godot is installed on Windows at `C:\dev\_tools\godot`.
-Always use the **console** build — the plain `.exe` is GUI-only and prints
-nothing to stdout/stderr; the `_console.exe` build does, so logs are captured
-from WSL.
+Godot 4.7 project. **Immer über `tools/godot.sh` aufrufen, nie direkt.** Der Wrapper
+kennt den Godot-Pfad, setzt `--headless` und die Windows-Schreibweise des Projektpfads
+und nimmt hinterher zurück, was der Editor an offenen Dateien anrichtet (siehe unten).
 
 ```bash
-GODOT="/mnt/c/dev/_tools/godot/Godot_v4.7-stable_win64_console.exe"
+# Parse-/Ladeprüfung (beendet sich nach 60 Frames):
+tools/godot.sh --quit-after 60
 
-# Quick parse/load check (quits after 60 frames):
-"$GODOT" --headless --path "C:/dev/privat/monster-slam" --quit-after 60 2>&1 | tr -d '\r'
+# Import (nötig, wenn neue class_name-Dateien dazugekommen sind):
+tools/godot.sh --import
 
-# Longer run to exercise runtime/spawns (kill after N seconds):
-timeout 14 "$GODOT" --headless --path "C:/dev/privat/monster-slam" 2>&1 | tr -d '\r'
+# Testsuite:
+tools/godot.sh -s res://addons/gdUnit4/bin/GdUnitCmdTool.gd --ignoreHeadlessMode -a res://tests
+
+# Längerer Lauf, um Spawns zu beobachten:
+timeout 14 tools/godot.sh
 ```
 
 Notes:
-- Pass the **Windows-style** `--path` (`C:/...`), not the WSL `/mnt/c` path.
-- Pipe through `tr -d '\r'` to strip Windows CRLF.
-- Physics runs at real-time 60 Hz even when headless, so `SceneTreeTimer`-based
-  spawns fire on wall-clock time — run long enough to observe them.
-- Use this to verify GDScript changes end-to-end before reporting them as working.
+- Godot-Pfad per `GODOT=... tools/godot.sh …` überschreibbar. Der Wrapper besteht auf dem
+  **Konsolen**-Build: die schlichte `.exe` ist GUI-only und schreibt nichts auf stdout.
+- CRLF strippt der Wrapper bereits, ein eigenes `tr -d '\r'` ist unnötig.
+- Physics läuft auch headless in Echtzeit mit 60 Hz, `SceneTreeTimer`-Spawns feuern also
+  nach Wanduhr — lange genug laufen lassen, um sie zu sehen.
+- Damit GDScript-Änderungen end-to-end prüfen, bevor sie als funktionierend gemeldet werden.
 
 ## Sprachdaten liegen in einem privaten Submodule
 
@@ -73,13 +77,20 @@ Beim Arbeiten daran zu beachten:
 
 ## Drei Fallen, die schon zugeschlagen haben
 
-**`--import` schreibt offene Markdown-Dateien um.** Sind `.md`-Dateien im Godot-Skript-
-editor offen (gemerkt in `.godot/editor/script_editor_cache.cfg`, `editor_layout.cfg`,
-`project_metadata.cfg`), speichert Godot sie beim Import mit — und wandelt dabei führende
-Leerzeichen in Tabs. In Markdown macht das aus Fortsetzungszeilen Codeblöcke. Nach jedem
-`--import` also `git status` prüfen; unerwartete `.md`-Änderungen sind das, nicht deine.
-Dauerhaft weg ist es, wenn keine `.md` im Editor offen ist — `.godot/editor/` löschen
-setzt Docklayout und offene Tabs zurück und behebt es (Verzeichnis ist regenerierbar).
+**Godot-Läufe schreiben offene Dateien um — dagegen gibt es `tools/godot.sh`.** Welche
+Dateien im Skripteditor offen sind, merkt sich `.godot/editor/script_editor_cache.cfg`;
+Godot lädt und speichert sie bei jedem Lauf mit, auch headless, und normalisiert dabei
+ihre Einrückung auf Tabs (`text_editor/behavior/indent/type=0` plus Godots Standard
+`convert_indent_on_save=true`). Für `.gd` ist das gewollt, sonst nirgends: in Markdown
+werden aus eingerückten Fortsetzungszeilen Codeblöcke, in Spieldaten-JSON ändern sich
+zehn Zeilen ohne Grund. Betroffen waren hier schon `docs/*.md`, `data/bosses/*.json` —
+und `data/language/README.md`, also das private Submodule.
+
+`tools/godot.sh` setzt nach dem Lauf genau die Dateien zurück, die vorher sauber waren
+**und** sich nur in der Einrückung unterscheiden; alles andere meldet es und lässt es
+liegen. Deshalb Godot nie direkt aufrufen. Wer es an der Wurzel abstellen will, setzt in
+den Godot-Editor-Einstellungen `text_editor/behavior/files/convert_indent_on_save` auf
+`false` — das gilt aber nur für den eigenen Rechner, der Wrapper gilt für alle.
 
 **Fixtures dürfen keine Zeilenenden-Umwandlung sehen.** `tests/fixtures/update/payload.bin`
 ist ASCII, aber Prüfsumme *und* Signatur gehen über genau diese Bytes; auf einem
