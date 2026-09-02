@@ -1,0 +1,47 @@
+name: Melde-Endpunkt
+
+# Der Rueckkanal fuer Meldungen (ADR 0002) hat zwei Teile, die auseinanderlaufen koennen:
+# das Token-Format steht in tools/report/mint_token.py (praegt) UND in
+# server/melden/token.php (prueft). Laufen sie auseinander, stimmt kein einziges Token
+# mehr — und zwar erst auf dem Rechner eines Kindes, nicht hier. Deshalb rechnen beide
+# Seiten bei jedem Push dieselben Vektoren nach.
+#
+# Dazu der Pruefstand des Endpunkts: er startet den PHP-eigenen Webserver gegen ein
+# Wegwerf-Docroot und spielt die Faelle durch (Token, Doppelmeldung, Rate-Limit, Rotation,
+# HTTPS-Zwang, Ablage nicht abrufbar). Braucht kein Secret und kein Netz.
+#
+# ubuntu-latest bringt PHP mit; tools/report/php.sh nimmt dann die vorhandene Installation
+# und keinen Container.
+
+on:
+  push:
+    paths:
+      - "server/**"
+      - "tools/report/**"
+      - ".devcontainer/**"
+      - ".github/workflows/endpoint.yml"
+  pull_request:
+    paths:
+      - "server/**"
+      - "tools/report/**"
+      - ".devcontainer/**"
+  workflow_dispatch:
+
+jobs:
+  endpunkt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fassungen nennen
+        run: |
+          php --version
+          python3 --version
+
+      - name: Token-Format, beide Implementierungen gegen dieselben Vektoren
+        run: |
+          python3 tools/report/mint_token.py --self-test
+          tools/report/php.sh server/melden/verify_token.php --self-test
+
+      - name: Endpunkt-Pruefstand
+        run: tools/report/php.sh server/melden/test_endpoint.php

@@ -1,6 +1,6 @@
 # ADR 0002 — Rückkanal für Meldungen über einen eigenen Endpunkt
 
-Status: **umgesetzt** (Endpunkt noch nicht deployt) · Datum: 2026-09-02 · Baut auf: ADR 0001
+Status: **umgesetzt** (Endpunkt geprüft, noch nicht deployt) · Datum: 2026-09-02 · Baut auf: ADR 0001
 
 ## Kontext
 
@@ -370,8 +370,23 @@ Umgesetzt am 2026-09-02. Was anders kam als oben geplant, und warum:
    `lexeme_flags.json` liegen schon Meldungen aus der Zeit vor dem Rückkanal. Sie sollen
    mitgehen, nicht stillschweigend verfallen.
 
+8. **PHP kommt aus einem Container, nicht vom Rechner.** Der Plan sagte nichts dazu, wie
+   der Endpunkt geprüft wird. Er wird es jetzt: `.devcontainer/` ist eine PHP-Werkbank
+   (PHP 8.3 plus python3, damit beide Hälften des Token-Formats darin rechnen können),
+   `tools/report/php.sh` zieht sie für einen einzelnen Aufruf hoch — dieselbe Regel wie
+   bei `tools/godot.sh`, und aus demselben Grund: der Aufruf soll überall gleich aussehen.
+   `server/melden/test_endpoint.php` startet `php -S` gegen ein Wegwerf-Docroot, das die
+   Ablage aus der README nachbaut, und spielt 48 Prüfungen durch. Die CI
+   (`.github/workflows/endpoint.yml`) fährt das plus beide `--self-test` bei jeder Änderung
+   an `server/**` — das ist die eigentliche Absicherung gegen das Auseinanderlaufen der
+   zwei Formatimplementierungen.
+
 **Noch offen:** `ReportService.ENDPOINT` ist leer, damit ist der Kanal aus — die URL kommt
-mit dem Deployment. Und `server/melden/melden.php` ist noch nie gelaufen: auf dieser
-Maschine gibt es kein PHP. Geprüft ist die Base32-Rechnung beider Seiten gegeneinander,
-nicht der Endpunkt selbst; Schritt 4 und 5 der README (beide `--self-test`, dann die
-`curl`-Runde) sind vor dem ersten echten Token Pflicht, nicht Kür.
+mit dem Deployment.
+
+Der Endpunkt selbst ist inzwischen gelaufen: 48 Prüfungen im Prüfstand, und das
+Token-Format stimmt zwischen `mint_token.py` und `token.php` nicht mehr nur nachgerechnet,
+sondern gemessen. Was der Prüfstand **nicht** abdeckt, bleibt die PHP-Fassung des Hosts,
+die Schreibrechte über dem Docroot, TLS und die Authorization-Header-Falle von Apache (der
+eingebaute Server reicht den Header durch). Die `curl`-Runde aus der README gegen die echte
+Domain ist deshalb vor dem ersten echten Token weiter Pflicht.

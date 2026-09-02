@@ -62,10 +62,10 @@ Das ist die schlechtere Variante — sie schützt nur, solange Apache die `.htac
    Konfiguration nicht genau eine Ebene über dem Docroot, die Konstante `MS_CONFIG`
    am Kopf von `melden.php` anpassen — sie ist der einzige Pfad, der zu setzen ist.
 
-4. **Gegenprobe des Formats** auf dem Host (oder lokal, wenn dort PHP liegt):
+4. **Gegenprobe des Formats**:
 
    ```bash
-   php server/melden/verify_token.php --self-test
+   tools/report/php.sh server/melden/verify_token.php --self-test
    python3 tools/report/mint_token.py --self-test
    ```
 
@@ -80,6 +80,34 @@ Das ist die schlechtere Variante — sie schützt nur, solange Apache die `.htac
 
 6. **Die URL in die App eintragen**: `ENDPOINT` in `src/report/report_service.gd`.
    Solange sie leer ist, ist der Rückkanal aus und „Melden" erscheint nirgends.
+
+## Örtlich prüfen, ohne PHP zu installieren
+
+PHP kommt aus dem Container in `.devcontainer/`, nicht vom Rechner. Der Wrapper
+`tools/report/php.sh` nimmt, was da ist: eine vorhandene PHP-Installation (so läuft es in
+der CI), sonst podman oder docker mit dem Abbild aus dem Dockerfile — beim ersten Aufruf
+wird es gebaut, danach kommt es aus dem Cache.
+
+```bash
+tools/report/php.sh server/melden/test_endpoint.php
+```
+
+Der Prüfstand baut die Ablage aus diesem Dokument in einem Wegwerf-Verzeichnis nach,
+startet `php -S` davor und spielt die Fälle durch: Token (gültig, verfälscht, abgetippt,
+fehlend), Meldung annehmen, Doppelmeldung, Abweisungen, gesperrtes Label, Rate-Limit,
+Rotation, HTTPS-Zwang, und dass die Meldungsdatei über keine URL abrufbar ist. Er braucht
+kein Netz und kein Geheimnis; die CI fährt ihn bei jeder Änderung an `server/**`.
+
+Wer den ganzen Container will (VS Code: „Reopen in Container"): dort liegen PHP und
+Python nebeneinander, damit beide Hälften des Token-Formats geprüft werden können. Der
+Container ist die **PHP-Werkbank**, nicht die Entwicklungsumgebung des Spiels — Godot läuft
+als Windows-Binary über `tools/godot.sh` und ist darin nicht enthalten.
+
+**Ganz durch, mit dem echten Spiel**: im Container `php -S 0.0.0.0:8080 -t <docroot>`
+starten (Port 8080 ist in `devcontainer.json` weitergegeben), in der Konfiguration
+`MS_REQUIRE_HTTPS = false` setzen und Godot im Debug-Build mit
+`MONSTER_SLAM_REPORT_URL=http://localhost:8080/melden/melden.php` starten. Dann meldet das
+Spiel wirklich, und die Zeile landet wirklich in der JSONL.
 
 ## Von Hand durchspielen
 
@@ -109,6 +137,11 @@ curl -s -X POST "$URL" -H "Authorization: Bearer mia.0000000000000000" \
 curl -s -o /dev/null -w '%{http_code}\n' https://<domain>/ms-reports/reports.jsonl
 # -> 403 oder 404, niemals 200
 ```
+
+Diese Runde gegen die echte Domain bleibt Pflicht: der Prüfstand oben deckt die Logik ab,
+aber nicht die PHP-Fassung des Hosts, nicht die Schreibrechte über dem Docroot, nicht TLS
+— und ausdrücklich nicht die Header-Falle darunter, weil der eingebaute Server den
+Authorization-Header einfach durchreicht.
 
 Antwortet `verify` mit `bad_token`, obwohl das Token stimmt, reicht Apache den
 `Authorization`-Header nicht durch (CGI/FastCGI). Dann in `<Docroot>/melden/.htaccess`:

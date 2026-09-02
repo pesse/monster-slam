@@ -89,6 +89,12 @@ Beim Arbeiten daran:
   `server/melden/token.php` prüft. Eine Änderung ist eine Änderung an beiden Stellen, und
   beide Seiten haben dieselben Vektoren: `mint_token.py --self-test` und
   `php server/melden/verify_token.php --self-test` müssen übereinstimmen.
+- **PHP läuft im Container, nicht auf dem Rechner** — immer über `tools/report/php.sh`
+  aufrufen. Der Wrapper nimmt eine vorhandene Installation (CI) oder podman/docker mit dem
+  Abbild aus `.devcontainer/Dockerfile`; das erste Mal baut er es, danach ist es Cache.
+  Den Endpunkt prüfen: `tools/report/php.sh server/melden/test_endpoint.php` — startet
+  `php -S` gegen ein Wegwerf-Docroot und spielt die Fälle durch. Der Container ist die
+  PHP-Werkbank, nicht die Entwicklungsumgebung des Spiels.
 - **Ohne Token kein „Melden"** — der Knopf im Reveal und die Liste im Einstellungs-Screen
   erscheinen dann nicht. Bedienungsentscheidung, keine Schranke; die sitzt im Endpunkt.
 - **Gemeldet wird erst lokal, gesendet danach.** Ein Netzfehler ist ein Zustand: die

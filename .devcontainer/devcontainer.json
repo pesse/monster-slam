@@ -1,0 +1,22 @@
+{
+	"name": "Monster Slam — PHP-Werkbank",
+	"build": { "dockerfile": "Dockerfile" },
+
+	// Gleicher Pfad wie in tools/report/php.sh, damit Aufrufe drinnen und draußen
+	// identisch aussehen.
+	"workspaceFolder": "/work",
+	"workspaceMount": "source=${localWorkspaceFolder},target=/work,type=bind,consistency=cached",
+
+	// Für den Durchlauf Spiel -> Endpunkt: `php -S 0.0.0.0:8080 -t <docroot>` im Container,
+	// dann zeigt MONSTER_SLAM_REPORT_URL im Godot-Debug-Build auf http://localhost:8080/…
+	"forwardPorts": [8080],
+
+	"postCreateCommand": "php --version && python3 --version",
+	"remoteUser": "dev",
+
+	"customizations": {
+		"vscode": {
+			"extensions": ["bmewburn.vscode-intelephense-client"]
+		}
+	}
+}
