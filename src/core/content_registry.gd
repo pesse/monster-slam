@@ -309,6 +309,22 @@ func source_file(category: String, id: String) -> String:
 	return _source_files.get("%s|%s" % [category, id], "")
 
 
+## Root, aus dem der Eintrag stammt (DATA_ROOT, LANGUAGE_ROOT oder
+## USER_CONTENT_ROOT/<pack-id>), oder "" wenn unbekannt.
+func origin(category: String, id: String) -> String:
+	return str(_origins.get("%s|%s" % [category, id], ""))
+
+
+## Pack-Id, aus deren Installation der Eintrag stammt, oder "" wenn er aus `res://` kommt.
+## Trägt im Rückkanal die Herkunft mit: eine Meldung zu einem Wort, das inzwischen
+## korrigiert wurde, ist sonst nicht von einer aktuellen zu unterscheiden.
+func pack_of(category: String, id: String) -> String:
+	var from := origin(category, id)
+	if not from.begins_with(USER_CONTENT_ROOT + "/"):
+		return ""
+	return from.trim_prefix(USER_CONTENT_ROOT + "/").split("/")[0]
+
+
 ## Lexeme, die eine Nutzer-Meldung tragen (Feld "flag"), für die Menü-Anzeige.
 func flagged_lexemes() -> Array:
 	var result: Array = []
@@ -344,6 +360,17 @@ func unflag_lexeme(lexeme_id: String) -> bool:
 		return false
 	if lexemes.has(lexeme_id):
 		lexemes[lexeme_id].erase("flag")
+	return true
+
+
+## Hakt eine Meldung als gesendet ab (Rückkanal, siehe
+## docs/adr/0002-melde-rueckkanal.md) — in der Datei UND in der In-Memory-Kopie, damit die
+## Anzeige ohne `reload()` stimmt. Wie `flag_lexeme`, nur in die andere Richtung.
+func mark_flag_sent(lexeme_id: String) -> bool:
+	if not LexemeFlags.mark_sent(lexeme_id):
+		return false
+	if lexemes.has(lexeme_id) and lexemes[lexeme_id].has("flag"):
+		lexemes[lexeme_id]["flag"]["sent"] = true
 	return true
 
 

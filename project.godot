@@ -31,6 +31,7 @@ Sfx="*res://src/core/sfx.gd"
 PlayerProgress="*res://src/learning/player_progress.gd"
 UpdateService="*res://src/update/update_service.gd"
 ContentService="*res://src/content/content_service.gd"
+ReportService="*res://src/report/report_service.gd"
 
 [display]
 
