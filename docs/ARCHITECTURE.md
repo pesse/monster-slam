@@ -156,7 +156,9 @@ vorhandenen Handlern. (Noch zu implementieren — siehe `docs/ADDING_CONTENT.md`
   Bewusst **nicht** in der Quell-JSON: `res://` ist im Export read-only, und eine
   veränderte Pack-Datei würde beim nächsten Pack-Update übersprungen. `ContentRegistry`
   legt die Meldungen nach jedem Laden über die Lexeme (`_apply_flags()`), sodass
-  `flagged_lexemes()` unverändert funktioniert.
+  `flagged_lexemes()` unverändert funktioniert. Jede Meldung trägt ein Feld `sent`: das
+  ist die Warteschlange des Melde-Kanals (siehe unten) — was noch nicht abgehakt ist,
+  geht beim nächsten Start mit.
 - **Spielerfortschritt** (`player_task_progress`): der Autoload `PlayerProgress`
   (`src/learning/player_progress.gd`) hält je Aufgabe Confidence/Streak/Fälligkeit und
   kapselt den SM-2-Scheduler. Persistenz: JSON unter `user://progress/<player>.json`
@@ -201,6 +203,39 @@ Pfadregeln, ein Blick in die Lexeme (`protected_books`) und
 `tools/packs/check_open_packs.py` am fertigen ZIP. Es gibt genau ein `index.json`, also
 auch nur einen Veröffentlicher: der Workflow im Content-Repo, den eine Änderung an
 `data/**` im Hauptrepo per `repository_dispatch` mit anstößt.
+
+## Der Melde-Kanal: der Weg zurück
+
+Entscheidung und Begründung: `docs/adr/0002-melde-rueckkanal.md`.
+
+Die beiden Kanäle oben liefern **zum** Spieler. Der dritte geht nach oben: eine Meldung
+(„dieses Wort ist falsch") wird zu einer Korrektur im privaten Content-Repo und kommt über
+den Content-Kanal als Pack-Update zurück.
+
+| | Melde-Kanal |
+|---|---|
+| Was | eine Meldung: Ziel-Id, Kommentar, App- und Pack-Fassung (wenige Bytes) |
+| Autoload | `ReportService` (`src/report/`) |
+| Ziel | eigener PHP-Endpunkt, `server/melden/melden.php`; Ablage als JSON Lines **über** dem Docroot |
+| Berechtigung | Melde-Token je Person, `<label>.<mac>` mit HMAC — geprägt von `tools/report/mint_token.py`, geprüft vom Endpunkt |
+| Ablage des Tokens | `user://codes.cfg`, Sektion `report` (`ReportToken`) — wie die Zugangscodes **kein** Geheimnisspeicher |
+| UI | Reiter „Melden" in `scenes/ui/settings_menu.tscn`; „⚑ Melden" im Reveal |
+
+**Ohne hinterlegtes Token gibt es „Melden" nicht** — der Knopf im Reveal und die
+Meldungsliste erscheinen nicht. Das ist eine Bedienungsentscheidung, keine Schranke: eine
+Meldung, die nirgends ankommt, ist ärgerlicher als ein fehlender Knopf. Die Schranke sitzt
+im Endpunkt, der das Token prüft, Größe und Rate deckelt und ein zurückgezogenes Label
+sperrt.
+
+Gemeldet wird **immer erst lokal**, gesendet danach: ein Netzfehler lässt die Meldung offen
+stehen (`sent` bleibt false), sie geht beim nächsten Start mit, und eine doppelt gesendete
+erkennt der Endpunkt. Das Bündeln zu GitHub-Issues liegt bewusst hinter dem Endpunkt und
+nicht in ihm — eine Störung dort darf keine Meldung verschlucken.
+
+Das HMAC-Geheimnis liegt **ausschließlich** auf dem Server (`server/melden/README.md`). Die
+Endpunkt-URL ist dagegen eine Konstante im öffentlichen Repo (`ReportService.ENDPOINT`) —
+kein Geheimnis, und genau deshalb muss der Endpunkt seine Grenzen selbst setzen. Ist sie
+leer, ist der Kanal aus.
 
 ## Sprachwahl: GDScript (C# nur bei Bedarf punktuell)
 

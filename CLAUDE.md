@@ -75,6 +75,26 @@ Beim Arbeiten daran zu beachten:
   `RELEASE_SIGNING_KEY`; `*.pem` ist gitignored. Der öffentliche Schlüssel steht
   bewusst als Konstante in `src/update/release_key.gd`.
 
+## Melde-Rückkanal: das Geheimnis liegt nur auf dem Server
+
+Meldungen („dieses Wort ist falsch") gehen über einen eigenen PHP-Endpunkt zurück
+(`server/melden/`, Autoload `ReportService`, ADR `docs/adr/0002-melde-rueckkanal.md`).
+Beim Arbeiten daran:
+
+- **Das HMAC-Geheimnis gehört ausschließlich in `ms-secret.php` über dem Docroot** — nicht
+  ins Repo, nicht in ein GitHub-Secret, nicht in eine Konstante. Geprägte Token teilt man
+  mit, man committet sie nicht (`.gitignore`). Öffentlich ist nur die Endpunkt-URL, so wie
+  die Manifest-URL des App-Kanals.
+- **Das Token-Format hat zwei Implementierungen**: `tools/report/mint_token.py` prägt,
+  `server/melden/token.php` prüft. Eine Änderung ist eine Änderung an beiden Stellen, und
+  beide Seiten haben dieselben Vektoren: `mint_token.py --self-test` und
+  `php server/melden/verify_token.php --self-test` müssen übereinstimmen.
+- **Ohne Token kein „Melden"** — der Knopf im Reveal und die Liste im Einstellungs-Screen
+  erscheinen dann nicht. Bedienungsentscheidung, keine Schranke; die sitzt im Endpunkt.
+- **Gemeldet wird erst lokal, gesendet danach.** Ein Netzfehler ist ein Zustand: die
+  Meldung bleibt in `user://lexeme_flags.json` offen (`sent: false`) und geht beim nächsten
+  Start mit.
+
 ## Drei Fallen, die schon zugeschlagen haben
 
 **Godot-Läufe schreiben offene Dateien um — dagegen gibt es `tools/godot.sh`.** Welche
