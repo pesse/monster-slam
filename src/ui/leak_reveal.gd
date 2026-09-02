@@ -8,6 +8,10 @@ extends PanelContainer
 ## dazunehmen, einzelne Vokabeln per "⚑ Melden" mit Kommentar flaggen und mit
 ## "Weiter" zum Statistik-Screen gehen.
 ##
+## "⚑ Melden" erscheint nur, wenn dieser Rechner einen Rückkanal hat (Melde-Token
+## hinterlegt, siehe ReportService und docs/adr/0002-melde-rueckkanal.md). Ohne ihn wäre
+## die Meldung ohne Folge — und ein Knopf ohne Folge ist ärgerlicher als keiner.
+##
 ## Bei perfekter Welle (0 durchgelassen) erscheint der Screen ohne Animation und
 ## geht direkt in den freien Blätter-Modus über alle gespielten Vokabeln.
 ##
@@ -64,6 +68,7 @@ func play(played: Array) -> void:
 	_showing_all = false
 	_index = 0
 	_reset_flag_ui()
+	_apply_report_gate()
 	visible = true
 	# Während des Auto-Durchlaufs alle Interaktion sperren.
 	_prev_btn.disabled = true
@@ -190,6 +195,13 @@ func _update_progress() -> void:
 
 # --- Flaggen -----------------------------------------------------------------
 
+## Ohne Rückkanal (kein Melde-Token) gibt es kein "Melden" — der Knopf erscheint nicht.
+## Einmal je Reveal: an das Token kommt man nur im Einstellungs-Screen, der Rückkanal
+## kann sich während einer Welle also nicht ändern.
+func _apply_report_gate() -> void:
+	_flag_btn.visible = ReportService.can_report()
+
+
 func _current_item_source_id() -> String:
 	if _index < 0 or _index >= _items.size():
 		return ""
@@ -221,9 +233,13 @@ func _on_flag_submit() -> void:
 		_flag_status.text = "Kein Lexem zum Melden."
 		return
 	var ok := ContentRegistry.flag_lexeme(source_id, comment, String(item.get("learnable_id", "")))
-	if ok:
-		_flag_input.visible = false
-		_flag_comment.text = ""
-		_flag_status.text = "✔ Gemeldet: %s" % String(item.get("prompt", ""))
-	else:
+	if not ok:
 		_flag_status.text = "Melden fehlgeschlagen (siehe Log)."
+		return
+	_flag_input.visible = false
+	_flag_comment.text = ""
+	_flag_status.text = "✔ Gemeldet: %s" % String(item.get("prompt", ""))
+	# Gemeldet ist die Vokabel schon — lokal. Der Versand ist der zweite Schritt; klappt
+	# er nicht, bleibt die Meldung offen und geht beim nächsten Start mit.
+	if not await ReportService.send_pending(true):
+		_flag_status.text = "⚑ Gemerkt — Versand später (%s)" % ReportService.error

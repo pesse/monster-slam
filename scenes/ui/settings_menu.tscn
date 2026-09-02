@@ -106,9 +106,41 @@ unique_name_in_owner = true
 size_flags_horizontal = 3
 theme_override_constants/separation = 4
 
-[node name="Markiert" type="ScrollContainer" parent="Margin/Root/Tabs"]
+[node name="Melden" type="VBoxContainer" parent="Margin/Root/Tabs"]
+theme_override_constants/separation = 8
 
-[node name="FlagList" type="VBoxContainer" parent="Margin/Root/Tabs/Markiert"]
+[node name="TokenLabel" type="Label" parent="Margin/Root/Tabs/Melden"]
+theme_override_font_sizes/font_size = 18
+text = "Melde-Token"
+
+[node name="TokenHint" type="Label" parent="Margin/Root/Tabs/Melden"]
+autowrap_mode = 3
+text = "Mit einem Melde-Token kannst du falsche oder unklare Vokabeln melden. Übertragen werden dann: das gemeldete Wort, dein Kommentar, die Spielversion und der Name, der im Token steht — kein Profilname und keine Fortschrittsdaten."
+
+[node name="TokenRow" type="HBoxContainer" parent="Margin/Root/Tabs/Melden"]
+
+[node name="TokenInput" type="LineEdit" parent="Margin/Root/Tabs/Melden/TokenRow"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+placeholder_text = "name.XXXX-XXXX-XXXX-XXXX"
+
+[node name="TokenButton" type="Button" parent="Margin/Root/Tabs/Melden/TokenRow"]
+unique_name_in_owner = true
+text = "Eintragen"
+
+[node name="TokenForget" type="Button" parent="Margin/Root/Tabs/Melden/TokenRow"]
+unique_name_in_owner = true
+text = "Vergessen"
+
+[node name="TokenStatus" type="Label" parent="Margin/Root/Tabs/Melden"]
+unique_name_in_owner = true
+autowrap_mode = 3
+
+[node name="FlagScroll" type="ScrollContainer" parent="Margin/Root/Tabs/Melden"]
+unique_name_in_owner = true
+size_flags_vertical = 3
+
+[node name="FlagList" type="VBoxContainer" parent="Margin/Root/Tabs/Melden/FlagScroll"]
 unique_name_in_owner = true
 size_flags_horizontal = 3
 theme_override_constants/separation = 4

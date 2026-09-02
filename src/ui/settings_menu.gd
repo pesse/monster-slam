@@ -1,6 +1,11 @@
 extends Control
 ## Einstellungs- und Statistik-Screen (Profil, Standard-Schwierigkeit, Grund-Geschwindigkeit,
-## Reset, Statistik, Wortliste, markierte Einträge).
+## Reset, Statistik, Wortliste, Melden).
+##
+## Der Reiter „Melden" ist die einzige Stelle, an der ein Melde-Token eingetragen wird
+## (siehe ReportService, docs/adr/0002-melde-rueckkanal.md). Er bleibt deshalb immer
+## sichtbar; die Liste der Meldungen darunter erscheint erst mit hinterlegtem Token —
+## ohne Rückkanal gibt es auch nichts zu melden.
 ##
 ## Ausgelagert aus dem Start-Screen (profile_menu). Das Layout liegt in settings_menu.tscn
 ## (im Editor sichtbar); hier wird nur bedient und angezeigt. Einstellungen liegen in
@@ -17,6 +22,11 @@ const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 @onready var _stats_lines: VBoxContainer = %Statistik
 @onready var _word_list: VBoxContainer = %WordList
 @onready var _flag_list: VBoxContainer = %FlagList
+@onready var _flag_scroll: ScrollContainer = %FlagScroll
+@onready var _token_input: LineEdit = %TokenInput
+@onready var _token_button: Button = %TokenButton
+@onready var _token_forget: Button = %TokenForget
+@onready var _token_status: Label = %TokenStatus
 
 
 func _ready() -> void:
@@ -30,6 +40,11 @@ func _ready() -> void:
 	_speed_slider.value_changed.connect(_on_speed_changed)
 	(%ResetButton as Button).pressed.connect(func(): _reset_confirm.popup_centered())
 	_reset_confirm.confirmed.connect(_on_reset_confirmed)
+	_token_button.pressed.connect(_on_token_submit)
+	_token_input.text_submitted.connect(func(_t): _on_token_submit())
+	_token_forget.pressed.connect(_on_token_forget)
+	# Der Dienst meldet jeden Zustandswechsel; die Anzeige hängt daran statt zu pollen.
+	ReportService.changed.connect(_refresh_report)
 	_refresh()
 
 
@@ -40,7 +55,7 @@ func _refresh() -> void:
 	_refresh_speed()
 	_refresh_stats()
 	_refresh_words()
-	_refresh_flags()
+	_refresh_report()
 
 
 func _refresh_profiles() -> void:
@@ -112,14 +127,64 @@ func _refresh_words() -> void:
 		line.add_child(mastered_label)
 
 
-## Zeigt die im Reveal geflaggten Lexeme mit Kommentar (aus der Quell-JSON).
+## Reiter „Melden": Zustand des Rückkanals oben, die eigenen Meldungen darunter.
+func _refresh_report() -> void:
+	_refresh_token()
+	_refresh_flags()
+
+
+func _refresh_token() -> void:
+	var available := ReportService.configured()
+	_token_input.editable = available
+	_token_button.disabled = not available
+	_token_forget.visible = ReportService.can_report()
+	if not available:
+		_token_status.text = "Diese Fassung hat keinen Rückkanal — Melden ist aus."
+		return
+	if ReportService.state == ReportService.State.ERROR:
+		_token_status.text = "⚠ %s" % ReportService.error
+		return
+	if not ReportService.can_report():
+		_token_status.text = "Kein Token hinterlegt. Ohne Token gibt es kein Melden."
+		return
+	var open := ReportService.pending_count()
+	_token_status.text = "✔ Token gilt für „%s“." % ReportService.label()
+	if open > 0:
+		_token_status.text += "   %d Meldung(en) warten auf den Versand." % open
+
+
+func _on_token_submit() -> void:
+	var raw := _token_input.text.strip_edges()
+	if raw.is_empty():
+		return
+	_token_button.disabled = true
+	_token_status.text = "Token wird geprüft …"
+	var ok := await ReportService.verify(raw)
+	_token_button.disabled = false
+	if ok:
+		_token_input.text = ""
+		# Was schon lokal gemeldet wurde, geht jetzt mit.
+		await ReportService.send_pending(true)
+	_refresh_report()
+
+
+func _on_token_forget() -> void:
+	ReportService.forget()
+	_refresh_report()
+
+
+## Zeigt die im Reveal gemeldeten Lexeme mit Kommentar und Versandstand. Ohne Token
+## bleibt die Liste aus: dann gibt es keinen Weg, auf dem eine Meldung ankäme.
 func _refresh_flags() -> void:
 	for child in _flag_list.get_children():
 		child.queue_free()
+	_flag_scroll.visible = ReportService.can_report()
+	if not _flag_scroll.visible:
+		return
 	var flagged := ContentRegistry.flagged_lexemes()
 	if flagged.is_empty():
 		var empty := Label.new()
-		empty.text = "Keine markierten Einträge."
+		empty.text = "Keine Meldungen."
 		_flag_list.add_child(empty)
 		return
 	for entry in flagged:
@@ -134,7 +199,9 @@ func _refresh_flags() -> void:
 		box.add_child(header)
 		var flag: Dictionary = entry.get("flag", {})
 		var comment := Label.new()
-		comment.text = "⚑ %s" % str(flag.get("comment", ""))
+		# Der Haken sagt, was beim Content-Autor angekommen ist — offen heißt: geht noch raus.
+		var mark := "✔" if bool(flag.get("sent", false)) else "⚑"
+		comment.text = "%s %s" % [mark, str(flag.get("comment", ""))]
 		comment.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		box.add_child(comment)
 
