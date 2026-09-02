@@ -1,6 +1,6 @@
 # ADR 0002 — Rückkanal für Meldungen über einen eigenen Endpunkt
 
-Status: **vorgeschlagen** · Datum: 2026-09-02 · Baut auf: ADR 0001
+Status: **umgesetzt** (Endpunkt noch nicht deployt) · Datum: 2026-09-02 · Baut auf: ADR 0001
 
 ## Kontext
 
@@ -334,3 +334,44 @@ angekommen ist und ein doppelter Versand `stored:false` erzeugt.
     `class_name`-Dateien brauchen `--import` vor dem Testlauf.
 15. `docs/ARCHITECTURE.md` um den dritten Kanal ergänzen; in `CLAUDE.md` einen
     Satz, dass das Melde-Geheimnis ausschließlich auf dem Server liegt.
+
+## Abweichungen in der Umsetzung
+
+Umgesetzt am 2026-09-02. Was anders kam als oben geplant, und warum:
+
+1. **`key_version` wird beim Prüfen NICHT mitgesendet, beim Melden schon.** Der Plan sagte
+   nur „Rotation über `keyVersion`" und ließ offen, woher die App die Zahl kennt — das
+   Token trägt sie nicht. Also: `verify` schickt sie nicht mit, der Endpunkt antwortet mit
+   seiner, und die App legt sie neben dem Token ab. `report` schickt sie dann mit, und
+   genau daran erkennt der Endpunkt nach einer Rotation ein altes Token (`stale_key`).
+
+2. **Der Melder-Name ist abgeleitet, nicht gespeichert.** Erst hielt `ReportService` ihn in
+   einem Feld, gefüllt aus der `verify`-Antwort. Der UI-Test hat das als Zustandsmüll
+   entlarvt: ein direkt hinterlegtes Token ließ das Feld leer zurück. Der Name steht im
+   Token, und der Endpunkt leitet ihn genauso ab — ein Feld daneben kann nur falsch werden.
+
+3. **Rate-Limit und Doppelerkennung teilen einen Lesevorgang.** Geplant waren sie als zwei
+   Prüfungen; sie brauchen beide dasselbe Ende der Datei, also durchläuft der Endpunkt es
+   einmal. Kein zweiter Speicher, keine zweite Datei.
+
+4. **PHP 7.1 als Untergrenze.** Der Rückgabetyp `never` (erst 8.1) ist wieder `void`
+   geworden — welche Fassung auf dem Strato-Paket läuft, steht noch nicht fest, und der
+   Endpunkt braucht kein einziges 8.x-Merkmal.
+
+5. **`_apply_report_gate()` als eigene Funktion im Reveal.** Eine Zeile in `play()` wäre
+   nicht prüfbar gewesen, ohne den ganzen Auto-Durchlauf samt Timern anzustoßen. Die
+   Entscheidung „ohne Token kein Knopf" ist der Kern der Anforderung und gehört unter Test.
+
+6. **Der Reiter heißt jetzt „Melden", nicht „Markiert".** Er trägt beides — die
+   Token-Eingabe und die eigenen Meldungen —, und „markiert" beschrieb nur den lokalen
+   Teil.
+
+7. **Meldungen ohne Feld `sent` gelten als offen.** In der ADR nicht bedacht: in
+   `lexeme_flags.json` liegen schon Meldungen aus der Zeit vor dem Rückkanal. Sie sollen
+   mitgehen, nicht stillschweigend verfallen.
+
+**Noch offen:** `ReportService.ENDPOINT` ist leer, damit ist der Kanal aus — die URL kommt
+mit dem Deployment. Und `server/melden/melden.php` ist noch nie gelaufen: auf dieser
+Maschine gibt es kein PHP. Geprüft ist die Base32-Rechnung beider Seiten gegeneinander,
+nicht der Endpunkt selbst; Schritt 4 und 5 der README (beide `--self-test`, dann die
+`curl`-Runde) sind vor dem ersten echten Token Pflicht, nicht Kür.
