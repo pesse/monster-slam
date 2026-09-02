@@ -100,6 +100,12 @@ Beim Arbeiten daran:
 - **Gemeldet wird erst lokal, gesendet danach.** Ein Netzfehler ist ein Zustand: die
   Meldung bleibt in `user://lexeme_flags.json` offen (`sent: false`) und geht beim nächsten
   Start mit.
+- **Ausgewertet wird lokal, nicht auf dem Server**: `tools/report/to_issues.py` bündelt die
+  JSON Lines zu Issues im privaten Content-Repo (ein Issue je gemeldetem Wort). Es braucht
+  den Submodule-Checkout, weil nur dort das Lemma zu einer Id steht — der Endpunkt kennt
+  keine Wörter, und das soll so bleiben. Es hält keinen Zustand, sondern erkennt schon
+  Eingetragenes an Markern im Issue-Text; **die nicht aus Issues löschen**, sonst wird die
+  Meldung erneut angelegt.
 
 ## Drei Fallen, die schon zugeschlagen haben
 

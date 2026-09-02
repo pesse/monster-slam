@@ -232,6 +232,14 @@ stehen (`sent` bleibt false), sie geht beim nächsten Start mit, und eine doppel
 erkennt der Endpunkt. Das Bündeln zu GitHub-Issues liegt bewusst hinter dem Endpunkt und
 nicht in ihm — eine Störung dort darf keine Meldung verschlucken.
 
+Gearbeitet wird nicht an der Ablage, sondern an Issues im privaten Content-Repo:
+`tools/report/to_issues.py` macht aus den JSON Lines **ein Issue je gemeldetem Wort** mit
+allen Meldungen dazu als Belege. Es läuft **lokal** — `gh` ist dort angemeldet (kein Token
+auf dem Webhost), und das Lemma zu einer Id steht nur im Checkout des Submodules, der
+Endpunkt kennt bloß Ids. Zustand hält es keinen: es liest per `gh issue list`, was schon
+dort steht, erkennt Vorhandenes an unsichtbaren Markern im Issue-Text und trägt nur
+Fehlendes nach, also beliebig oft wiederholbar (`server/melden/README.md`).
+
 Das HMAC-Geheimnis liegt **ausschließlich** auf dem Server (`server/melden/README.md`). Die
 Endpunkt-URL ist dagegen eine Konstante im öffentlichen Repo (`ReportService.ENDPOINT`) —
 kein Geheimnis, und genau deshalb muss der Endpunkt seine Grenzen selbst setzen. Ist sie

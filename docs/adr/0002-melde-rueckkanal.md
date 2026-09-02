@@ -370,7 +370,21 @@ Umgesetzt am 2026-09-02. Was anders kam als oben geplant, und warum:
    `lexeme_flags.json` liegen schon Meldungen aus der Zeit vor dem Rückkanal. Sie sollen
    mitgehen, nicht stillschweigend verfallen.
 
-8. **PHP kommt aus einem Container, nicht vom Rechner.** Der Plan sagte nichts dazu, wie
+8. **Ein Issue je gemeldetem Wort, nicht je Meldung.** Der Plan sagte „neue JSONL-Zeilen zu
+   Issues bündeln" und ließ offen, was ein Issue ist. Drei Kinder, die dasselbe Wort melden,
+   sind ein Problem und nicht drei: `tools/report/to_issues.py` gruppiert nach Ziel-Id und
+   hängt die Meldungen als Belege darunter. Es hält **keinen** Zustand — kein „schon
+   verarbeitet"-Vermerk neben der Datei, der mit der Wirklichkeit auseinanderlaufen könnte.
+   Stattdessen liest jeder Lauf per `gh issue list`, was in GitHub steht, und erkennt
+   Vorhandenes an unsichtbaren Markern im Issue-Text; der Schlüssel darin ist derselbe, an
+   dem der Endpunkt Doppelmeldungen erkennt. Damit ist jeder Lauf wiederholbar, und die
+   halbe Datei nachzureichen ist harmlos. Preis: die Marker sind Daten im Fließtext — wer
+   sie aus einem Issue löscht, bekommt die Meldung erneut eingetragen. Erreicht
+   `gh issue list` die Obergrenze, bricht der Lauf ab, statt mit halber Sicht Duplikate
+   anzulegen. Aufgelöst wird die Id **lokal** im Submodule-Checkout: der Endpunkt kennt
+   keine Wörter, und ein GitHub-Token auf dem Webhost wäre das Gegenteil dieser ADR.
+
+9. **PHP kommt aus einem Container, nicht vom Rechner.** Der Plan sagte nichts dazu, wie
    der Endpunkt geprüft wird. Er wird es jetzt: `.devcontainer/` ist eine PHP-Werkbank
    (PHP 8.3 plus python3, damit beide Hälften des Token-Formats darin rechnen können),
    `tools/report/php.sh` zieht sie für einen einzelnen Aufruf hoch — dieselbe Regel wie
@@ -380,6 +394,13 @@ Umgesetzt am 2026-09-02. Was anders kam als oben geplant, und warum:
    (`.github/workflows/endpoint.yml`) fährt das plus beide `--self-test` bei jeder Änderung
    an `server/**` — das ist die eigentliche Absicherung gegen das Auseinanderlaufen der
    zwei Formatimplementierungen.
+
+10. **Eine Ansichtsseite auf dem Webhost gibt es (noch) nicht.** Naheliegend wäre eine
+    `ansicht.php` hinter Basic-Auth. Sie ist bewusst zurückgestellt: die Issues sind die
+    bessere Arbeitsfläche (Verlauf, Zuordnung, Bezug zur Korrektur), und eine Seite, die
+    Meldungen anzeigt, müsste ausgerechnet auf dem Webhost Wörter darstellen. Der Weg
+    „Datei per SFTP holen, `to_issues.py` laufen lassen" braucht sie nicht.
+    `--from-url` bleibt im Skript, falls sie später doch kommt.
 
 **Noch offen:** `ReportService.ENDPOINT` ist leer, damit ist der Kanal aus — die URL kommt
 mit dem Deployment.

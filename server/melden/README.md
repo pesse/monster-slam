@@ -162,5 +162,43 @@ RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
   abgelaufen, bitte neu eintragen" statt „ungültig".
 - **Auswerten**: Datei herunterladen und lesen, z. B.
   `jq -r '[.received_at,.label,.target_id,.comment] | @tsv' reports.jsonl`.
-  Das Bündeln zu GitHub-Issues im privaten Content-Repo ist ein eigener Schritt und
-  bewusst nicht Teil des Endpunkts.
+
+## Meldungen zu Issues bündeln
+
+Die Ablage ist ein Protokoll, keine Arbeitsliste: Ids, keine Wörter, und dreimal dasselbe
+Wort sind drei Zeilen. Gearbeitet wird an Issues im privaten Content-Repo — **ein Issue je
+gemeldetem Wort**, mit allen Meldungen dazu als Belege. Das macht `tools/report/to_issues.py`:
+
+```bash
+# reports.jsonl per SFTP holen (sie ist über keine URL abrufbar), dann:
+python3 tools/report/to_issues.py --from-file reports.jsonl --dry-run
+python3 tools/report/to_issues.py --from-file reports.jsonl
+```
+
+Warum das ein eigener Schritt ist und nicht im Endpunkt steckt:
+
+- **Der Webhost soll den Korpus nie sehen.** Der Endpunkt kennt nur Ids; das Lemma steht im
+  Checkout des Submodules, und nur dort wird aufgelöst. Ein Issue-Titel mit Wort entsteht
+  also auf dem eigenen Rechner.
+- **Kein Token, das irgendwo liegen müsste.** Das Skript ruft `gh` auf, und `gh` ist hier
+  schon angemeldet. Ein GitHub-Token auf dem Webhost wäre das Gegenteil der Entscheidung
+  aus ADR 0002.
+- **Eine Störung bei GitHub darf keine Meldung verschlucken.** Der Endpunkt nimmt an und
+  schreibt; alles andere passiert später und beliebig oft.
+
+Das Skript hält **keinen Zustand**. Jeder Lauf liest per `gh issue list`, was schon dort
+steht, und trägt nur Fehlendes nach — erkannt an unsichtbaren Markern im Issue-Text
+(`<!-- ms-report-target: … -->` für das Ziel, `<!-- ms-report: label|id|zeit -->` je
+Meldung, derselbe Schlüssel, an dem der Endpunkt Doppelmeldungen erkennt). Daraus folgt:
+
+- Zweimal denselben Lauf: nichts passiert. Die halbe Datei nachreichen: nichts doppelt.
+- Ein geschlossenes Issue, zu dem eine **neue** Meldung kommt, wird wieder geöffnet — das
+  Wort ist offenbar noch falsch.
+- **Die Marker nicht aus Issue-Texten löschen.** Wer sie entfernt, macht die Meldung für
+  den nächsten Lauf unsichtbar, und sie wird erneut eingetragen. Kommentieren, schließen,
+  umbenennen ist dagegen gefahrlos.
+- Erreicht `gh issue list` die Obergrenze (`--limit`, Standard 500), **bricht der Lauf ab**
+  statt mit halber Sicht Duplikate anzulegen.
+
+Die reinen Funktionen (Marker lesen, Schlüssel bilden, Text bauen) prüft
+`python3 tools/report/to_issues.py --self-test` ohne Netz und ohne `gh`; die CI fährt ihn mit.
