@@ -33,7 +33,7 @@ text = "← Zurück"
 [node name="Title" type="Label" parent="Margin/Root/Header"]
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 28
-text = "Einstellungen & Statistik"
+text = "Einstellungen"
 horizontal_alignment = 1
 
 [node name="Tabs" type="TabContainer" parent="Margin/Root"]
@@ -94,17 +94,6 @@ value = 1.0
 [node name="ResetButton" type="Button" parent="Margin/Root/Tabs/Profil"]
 unique_name_in_owner = true
 text = "Fortschritt zurücksetzen"
-
-[node name="Statistik" type="VBoxContainer" parent="Margin/Root/Tabs"]
-unique_name_in_owner = true
-theme_override_constants/separation = 6
-
-[node name="Wörter" type="ScrollContainer" parent="Margin/Root/Tabs"]
-
-[node name="WordList" type="VBoxContainer" parent="Margin/Root/Tabs/Wörter"]
-unique_name_in_owner = true
-size_flags_horizontal = 3
-theme_override_constants/separation = 4
 
 [node name="Melden" type="VBoxContainer" parent="Margin/Root/Tabs"]
 theme_override_constants/separation = 8

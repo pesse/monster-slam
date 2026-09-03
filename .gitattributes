@@ -1,30 +1,61 @@
-# Zeilenenden NICHT anfassen, wo die Bytes selbst der Prüfgegenstand sind.
-#
-# Grund: `tests/fixtures/update/payload.bin` ist zwar ASCII, aber Prüfsumme UND Signatur
-# gehen über genau diese Bytes. Auf einem Windows-Runner steht `core.autocrlf` auf true;
-# git hat aus dem einen LF ein CRLF gemacht, damit stimmte die SHA-256 nicht mehr, und
-# fünf Tests der Release-Prüfung fielen um. Für Fixtures gilt deshalb ausnahmslos:
-# keine EOL-Umwandlung, weder beim Checkout noch beim Commit.
-tests/fixtures/** -text
-
-# Container-Formate zur Sicherheit ausdrücklich, statt sich auf die Heuristik zu verlassen.
-*.zip binary
-*.enc binary
-*.wav binary
-*.ogg binary
-*.pem -text
+# Zeilenenden. Zwei Hälften, und die Reihenfolge ist Teil der Aussage: bei mehreren
+# passenden Mustern gewinnt das LETZTE. Oben stehen deshalb die Textdateien, unten die
+# Ausnahmen, die keine Umwandlung sehen dürfen — sonst hebelt eine Endungs-Regel sie aus
+# (`tests/fixtures/** -text` stand vor `*.py text` und galt für make_fixtures.py nicht).
 
 # Godot- und Werkzeugquellen mit LF, damit ein Windows-Checkout nicht CRLF einführt
 # (Godot selbst ist tolerant, Prüfsummen und Shell-Skripte sind es nicht).
 *.gd text eol=lf
 *.tscn text eol=lf
 *.tres text eol=lf
+*.gdshader text eol=lf
 *.sh text eol=lf
 *.py text eol=lf
 *.yml text eol=lf
 *.php text eol=lf
 
-# Fremder Code bleibt unangetastet. `addons/` ist vendored (gdUnit4); dort liegt eine
-# .tscn mit CRLF im Repo, die die Regeln oben sonst umnormalisieren wollen — ein Diff in
-# fremdem Code, den niemand bestellt hat, und er hat den Versions-Bump der CI angehalten.
+# Alles weitere, was Godot bei einem Lauf umschreibt (siehe CLAUDE.md, "Drei Fallen"):
+# er speichert offene Dateien mit CRLF, und dann steht die ganze Datei ohne inhaltlichen
+# Grund im Diff. Betroffen waren hier schon CLAUDE.md, docs/*.md, data/**/*.json,
+# project.godot, export_presets.cfg und die .uid-Dateien neben jedem Skript.
+*.uid text eol=lf
+*.import text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.cfg text eol=lf
+*.godot text eol=lf
+*.html text eol=lf
+*.txt text eol=lf
+Dockerfile text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
+
+# Container- und Medienformate ausdrücklich, statt sich auf die Heuristik zu verlassen:
+# git hält eine Datei ohne NUL-Byte in den ersten 8000 Bytes für Text, und genau das sind
+# die glTF-Puffer (*.bin), *.glb und *.mp3 — eine EOL-Umwandlung zerstörte sie still.
+*.zip binary
+*.enc binary
+*.wav binary
+*.ogg binary
+*.mp3 binary
+*.glb binary
+*.bin binary
+*.png binary
+
+# Ab hier die Ausnahmen, die jede Regel darüber schlagen.
+
+# Wo die Bytes selbst der Prüfgegenstand sind, gilt: keine Umwandlung, ausnahmslos.
+#
+# Grund: `tests/fixtures/update/payload.bin` ist zwar ASCII, aber Prüfsumme UND Signatur
+# gehen über genau diese Bytes. Auf einem Windows-Runner steht `core.autocrlf` auf true;
+# git hat aus dem einen LF ein CRLF gemacht, damit stimmte die SHA-256 nicht mehr, und
+# fünf Tests der Release-Prüfung fielen um. Für Fixtures gilt deshalb weder beim Checkout
+# noch beim Commit eine Umwandlung.
+tests/fixtures/** -text
+*.pem -text
+
+# Fremder Code bleibt unangetastet. `addons/` ist vendored (gdUnit4); dort liegen eine
+# .tscn mit CRLF und Dateien aller obigen Endungen im Repo, die die Regeln sonst
+# umnormalisieren wollen — ein Diff in fremdem Code, den niemand bestellt hat, und er hat
+# den Versions-Bump der CI angehalten.
 addons/** -text

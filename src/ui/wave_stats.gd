@@ -1,6 +1,8 @@
 extends PanelContainer
 ## Statistik-Overlay nach einer Welle. Zeigt die Leistung der Welle + Lernfortschritt
 ## und lässt den Spieler die Schwierigkeit (1..5) der nächsten Welle wählen und starten.
+## Nach einer Niederlage ist der Lauf zu Ende: Schwierigkeitswahl und Startknopf sind
+## dann ausgeblendet, es bleibt der Weg ins Menü (siehe show_stats).
 ##
 ## Das Layout liegt in wave_stats.tscn; hier nur die Befüllung (show_stats) und die
 ## Auswahl-Logik. Interaktive Controls haben focus_mode=FOCUS_NONE (in der Szene gesetzt),
@@ -20,6 +22,9 @@ const DEFAULT_CHOICE := 2
 
 @onready var _title: Label = %Title
 @onready var _lines: VBoxContainer = %Lines
+@onready var _diff_label: Label = %DiffLabel
+@onready var _choice_row: HBoxContainer = %ChoiceRow
+@onready var _start_button: Button = %StartButton
 @onready var _choice_buttons: Array = %ChoiceRow.get_children()
 var _selected_choice: int = DEFAULT_CHOICE
 
@@ -27,7 +32,7 @@ var _selected_choice: int = DEFAULT_CHOICE
 func _ready() -> void:
 	for i in _choice_buttons.size():
 		(_choice_buttons[i] as Button).pressed.connect(_on_choice_pressed.bind(i))
-	(%StartButton as Button).pressed.connect(_on_start_pressed)
+	_start_button.pressed.connect(_on_start_pressed)
 	(%MenuButton as Button).pressed.connect(func(): back_to_menu_requested.emit())
 	_update_choice_highlight()
 
@@ -53,6 +58,13 @@ func show_stats(data: Dictionary) -> void:
 	_add_line("Gemeisterte Aufgaben: %d  (Festungsstufe %d)" % [
 		int(data.get("mastered", 0)), int(data.get("fortress_tier", 0))])
 	_add_line("Schwierigkeit: %d / 5" % int(data.get("difficulty", 3)))
+
+	# Gefallene Festung = Ende des Laufs. Es gibt keine nächste Welle, also auch keine
+	# Schwierigkeitswahl und keinen Startknopf — nur den Weg ins Menü. Damit muss der
+	# Wellenstart die HP auch nie „retten": ein neuer Lauf beginnt über GameState.reset().
+	_diff_label.visible = won
+	_choice_row.visible = won
+	_start_button.visible = won
 
 	# Auswahl startet jedesmal bei "Gleich" – die Wahl ist relativ zur eben gespielten Welle.
 	_selected_choice = DEFAULT_CHOICE

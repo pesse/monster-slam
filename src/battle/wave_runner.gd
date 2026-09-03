@@ -4,6 +4,7 @@ extends Node3D
 ## Nutzt ausschließlich bestehende Autoloads + AnswerEvaluator — rein additiv.
 
 const MONSTER_SCENE := preload("res://scenes/entities/monster.tscn")
+const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 const GOAL_Z := 6.5           # Festungsfront (Monster-Ziel)
 const SPAWN_Z := -24.0        # Spawn am hinteren Ende der Bahn (längerer Anmarsch)
 const LANE_HALF_WIDTH := 7.0
@@ -19,6 +20,9 @@ var _active: Array[Monster] = []
 var _total: int = 0
 var _spawned: int = 0
 var _finished: bool = false
+## Kein Spawn möglich (keine Inhalte / Auswahl trifft nichts): es läuft keine Welle,
+## der Hinweis steht, und Escape ist der einzige (aber vorhandene) Weg zurück.
+var _no_content: bool = false
 
 # Prozedurale Wellen (nicht mehr aus Content-Dateien): Schwierigkeit + Wellennummer
 # steuern Erzeugung und Tempo. Der Spieler wählt die Schwierigkeit auf dem Statistik-Screen.
@@ -61,6 +65,9 @@ func _ready() -> void:
 	_build_fortress()
 	_cam_base = _camera.position
 	GameState.reset()
+	# Der Lauf beginnt hier, nicht mit der ersten Welle: alles, was über die Wellen hinweg
+	# zählt (Sitzungs-Log, GameState-Zähler), hängt an diesem Punkt.
+	EventBus.run_started.emit()
 	EventBus.answer_submitted.connect(_on_answer_submitted)
 	# Die Festung wächst mit dem Lernfortschritt, aber erst NACH einer gewonnenen Welle
 	# (siehe _finish_wave) – nicht mehr mitten im Kampf.
@@ -394,6 +401,37 @@ func _process(delta: float) -> void:
 		_camera.position = _cam_base + Vector3(randf_range(-mag, mag), randf_range(-mag, mag), 0.0)
 
 
+## Escape bricht den laufenden Kampf ab. Bewusst `_input` und nicht `_unhandled_input`:
+## die Antwort-Eingabe hält den Fokus, und eine LineEdit verbraucht Escape für das Ende
+## ihres Editier-Zustands — dasselbe Muster wie im UpdateDialog.
+func _input(event: InputEvent) -> void:
+	if not event.is_action_pressed("ui_cancel"):
+		return
+	# Nach dem Wellenende führen Auflösung und Statistik-Screen selbst zurück; nur der
+	# Hinweis ohne Inhalte braucht den Ausgang auch im beendeten Zustand.
+	if _finished and not _no_content:
+		return
+	# set_input_as_handled() statt accept_event(): das gibt es nur an Control/Viewport,
+	# der WaveRunner ist ein Node3D.
+	get_viewport().set_input_as_handled()
+	_abort_battle()
+
+
+## Zurück ins Menü, ohne die Welle zu beenden.
+##
+## Bewusst NICHT über _finish_wave(): ein Abbruch ist keine Niederlage — keine Statistik,
+## kein wave_cleared, kein Festungsausbau. Der Lernfortschritt dieser Welle wird nicht
+## gespeichert; PlayerProgress schreibt erst bei wave_cleared bzw. beim Verlassen über den
+## Statistik-Screen (_on_back_to_menu). Was schon beantwortet wurde, verfällt damit — das
+## ist der Preis des Abbruchs und besser, als eine halbe Welle als Lernstand zu buchen.
+func _abort_battle() -> void:
+	_finished = true
+	_report_run_ended()
+	_wave_gen += 1   # bindet laufende Spawn-Coroutinen ab (siehe _run_spawn_batch)
+	_slow_motion.stop()
+	get_tree().change_scene_to_file(MENU_SCENE)
+
+
 ## Startet die nächste (prozedural erzeugte) Welle mit der aktuell gewählten Schwierigkeit.
 ## Ersetzt das frühere content-basierte start_wave(): Wellen sind nicht mehr vordefiniert,
 ## sondern werden aus Schwierigkeit + Wellennummer generiert.
@@ -405,6 +443,7 @@ func _start_next_wave() -> void:
 	_total = 0
 	_spawned = 0
 	_finished = false
+	_no_content = false
 	_wave_correct = 0
 	_wave_leaked = 0
 	_wave_leaked_tasks.clear()
@@ -418,9 +457,16 @@ func _start_next_wave() -> void:
 	# Tempo = Schwierigkeit × profilweite Grund-Geschwindigkeit (Barrierefreiheit / Grundtempo).
 	_generator.speed_scale = _difficulty_to_speed(_difficulty) * UserSettings.base_speed()
 	var spawns := _generate_wave(_difficulty, _wave_number)
+	# Gar nicht erst anfangen, wenn der Pool nichts hergibt: ein Spawn ohne Plan zählt
+	# nicht mit (_spawned), _check_end() wird nie wahr und das leere Schlachtfeld hätte
+	# keinen Ausgang. Der Knopf im Menü sperrt schon — das hier ist die letzte Instanz.
+	if _nothing_playable(spawns):
+		_show_no_content()
+		return
 	for entry in spawns:
 		_total += int(entry.get("count", 0))
-	# Löst den HP-Reset (GameState) + HUD-Refresh aus.
+	# Löst den Wellenstart in GameState + HUD-Refresh aus. Die Festungs-HP bleiben dabei
+	# unangetastet — der Stand wird über die Wellen hinweg mitgenommen (siehe GameState).
 	EventBus.wave_started.emit(GameState.current_wave)
 	# Gesamtzahl der Welle bekanntgeben -> GameState füllt wave_total/wave_resolved (HUD-Balken).
 	EventBus.wave_totals.emit(_total)
@@ -444,17 +490,31 @@ func _generate_wave(difficulty: int, wave_number: int) -> Array:
 	return [{
 		"count": count,
 		"interval": interval,
-		"task_pool": {
-			# Aufgabentypen und Tags kommen aus der Profil-Auswahl (Session-Setup).
-			# Leere Auswahl bedeutet in _candidates()/lexemes_by_tags() automatisch
-			# "alle" — es entsteht also nie eine leere/hängende Welle.
-			"task_types": Array(UserSettings.selected_task_types()),
-			"lexeme_types": Array(UserSettings.selected_lexeme_types()),
-			"scope": Array(UserSettings.selected_scope()),
-			"tags": Array(UserSettings.selected_tags()),
-			"difficulty_max": clampi(difficulty, 1, 5),
-		},
+		# Aufgabentypen, Wortarten, Scope und Tags kommen aus der Profil-Auswahl
+		# (Session-Setup); leere Auswahl heißt dort "alle". Dieselbe Funktion fragen die
+		# Menüs für ihre Verfügbarkeitsprüfung — Pool und Sperre dürfen nicht auseinanderlaufen.
+		"task_pool": WaveGenerator.pool_from_settings(difficulty),
 	}]
+
+
+## True, wenn KEIN Batch der Welle eine spielbare Aufgabe hergibt.
+func _nothing_playable(spawns: Array) -> bool:
+	for entry in spawns:
+		if _generator.has_playable(entry.get("task_pool", {})):
+			return false
+	return true
+
+
+## Nichts zu spielen: Hinweis statt Kampf, mit dem Weg zu den Inhalten und dem Rückweg
+## ins Menü. Kein _finish_wave() — es gibt keine Welle, die zu verbuchen wäre.
+func _show_no_content() -> void:
+	_no_content = true
+	_finished = true
+	_answer_input.visible = false
+	_stats.hide_stats()
+	_end_label.text = "Keine spielbaren Aufgaben.\n\nFilter prüfen oder über „📚 Inhalte“\neinen Vokabel-Pack installieren.\n\n[Esc] zurück ins Menü"
+	_end_label.visible = true
+	push_warning("WaveRunner: keine spielbare Aufgabe im Pool — Welle nicht gestartet")
 
 
 ## Entfernt noch aktive Monster (z. B. Reste einer verlorenen Welle) vom Feld.
@@ -487,7 +547,14 @@ func _spawn(entry: Dictionary) -> void:
 		active_sources[str(m.task.get("source_id", ""))] = true
 	var plan: Dictionary = _generator.pick(entry.get("task_pool", {}), active_sources)
 	if plan.is_empty():
+		# Kein Plan heißt „im Pool ist nichts Spielbares" und NICHT „steht gerade alles
+		# auf dem Feld": WaveGenerator.pick() lässt im zweiten Durchlauf die
+		# active_sources-Sperre fallen. Der Spawn fällt also endgültig aus — dann muss er
+		# aus dem Soll verschwinden, sonst wartet _check_end() für immer auf ihn.
 		push_warning("WaveRunner: keine spielbare Aufgabe für Pool %s" % str(entry.get("task_pool", {})))
+		_total = maxi(0, _total - 1)
+		EventBus.wave_totals.emit(_total)
+		_check_end()
 		return
 
 	var monster := MONSTER_SCENE.instantiate() as Monster
@@ -511,7 +578,7 @@ func _on_answer_submitted(text: String) -> void:
 			var rt := Time.get_ticks_msec() - monster.spawned_at_ms
 			var task_id := str(monster.task.get("learnable_id", ""))
 			PlayerProgress.record(task_id, true, rt, float(monster.task.get("initial_confidence", -1.0)))
-			EventBus.item_reviewed.emit(task_id, true)
+			EventBus.item_reviewed.emit(task_id, true, rt)
 			_defeat(monster)
 			_flash_feedback(FLASH_CORRECT)
 			return
@@ -623,7 +690,8 @@ func _on_monster_reached_goal(monster: Monster) -> void:
 	# Monster durchgelassen = Aufgabe nicht rechtzeitig abgerufen -> als Fehler verbuchen.
 	var task_id := str(monster.task.get("learnable_id", ""))
 	PlayerProgress.record(task_id, false, 0, float(monster.task.get("initial_confidence", -1.0)))
-	EventBus.item_reviewed.emit(task_id, false)
+	# 0 ms: ein durchgelassenes Monster hat keine gemessene Antwortzeit.
+	EventBus.item_reviewed.emit(task_id, false, 0)
 	EventBus.fortress_damaged.emit(monster.damage)
 	if GameState.fortress_health <= 0:
 		_finish_wave(false)
@@ -684,6 +752,12 @@ func _finish_wave(won: bool) -> void:
 ## Spieler hat auf dem Statistik-Screen die nächste Welle gerufen. Die Wahl ist RELATIV:
 ## `delta` (-2..+2) verschiebt die aktuelle Schwierigkeit, begrenzt auf 1..5.
 func _on_next_wave_requested(delta: int) -> void:
+	# Eine gefallene Festung beendet den Lauf: der Statistik-Screen blendet die
+	# Schwierigkeitswahl und den Startknopf dann aus (wave_stats.gd). Der Riegel steht
+	# hier nochmal, damit die Regel nicht allein an der Sichtbarkeit eines Knopfes hängt
+	# — mit 0 HP wäre die Folgewelle ohnehin beim ersten Treffer wieder verloren.
+	if not _last_won:
+		return
 	_difficulty = clampi(_difficulty + delta, 1, 5)
 	_wave_number += 1
 	_start_next_wave()
@@ -693,4 +767,17 @@ func _on_next_wave_requested(delta: int) -> void:
 ## (der Niederlage-Pfad emittiert kein wave_cleared) und die Menü-Szene laden.
 func _on_back_to_menu() -> void:
 	PlayerProgress.save_progress()
-	get_tree().change_scene_to_file("res://scenes/ui/profile_menu.tscn")
+	_report_run_ended()
+	get_tree().change_scene_to_file(MENU_SCENE)
+
+
+## Meldet das Ende des Laufs mit dem, was nur hier bekannt ist. Beide Ausgänge gehen
+## darüber — der Rückweg über den Statistik-Screen und der Abbruch mitten in der Welle.
+## Ein freiwilliger Ausstieg ist genauso ein Sitzungsende wie eine gefallene Festung;
+## SessionLog.end() ist gegen doppelte Meldung abgesichert.
+func _report_run_ended() -> void:
+	EventBus.run_ended.emit({
+		"wave_reached": _wave_number,
+		"difficulty_last": _difficulty,
+		"last_wave_won": _last_won,
+	})

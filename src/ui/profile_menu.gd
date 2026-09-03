@@ -2,21 +2,25 @@ extends Control
 ## Start-Screen (run/main_scene): Titel, aktive Profilauswahl und Einstieg ins Spiel.
 ##
 ## Das Layout liegt in profile_menu.tscn (im Editor sichtbar); hier wird nur bedient und
-## angezeigt. Einstellungen (Profil, Standard-Schwierigkeit, Reset) und Statistik sind in
-## den eigenen settings_menu-Screen ausgelagert.
+## angezeigt. Einstellungen (Profil, Standard-Schwierigkeit, Reset) liegen im
+## settings_menu-Screen, der Lernstand im stats_screen-Screen.
 
 const SESSION_SETUP_SCENE := "res://scenes/ui/session_setup.tscn"
 const SETTINGS_SCENE := "res://scenes/ui/settings_menu.tscn"
+const STATS_SCENE := "res://scenes/ui/stats_screen.tscn"
 const CONTENT_SCENE := "res://scenes/ui/content_manager.tscn"
 
 @onready var _profile_select: OptionButton = %ProfileSelect
 @onready var _name_input: LineEdit = %NameInput
 @onready var _update_button: Button = %UpdateButton
 @onready var _content_button: Button = %ContentButton
+@onready var _play_button: Button = %PlayButton
+@onready var _play_hint: Label = %PlayHint
 
 
 func _ready() -> void:
-	(%PlayButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(SESSION_SETUP_SCENE))
+	_play_button.pressed.connect(func(): get_tree().change_scene_to_file(SESSION_SETUP_SCENE))
+	(%StatsButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(STATS_SCENE))
 	(%SettingsButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(SETTINGS_SCENE))
 	_profile_select.item_selected.connect(_on_profile_selected)
 	_name_input.text_submitted.connect(func(_t): _on_create_profile())
@@ -28,6 +32,7 @@ func _ready() -> void:
 	_refresh_profiles()
 	_refresh_update_badge()
 	_refresh_content_badge()
+	_refresh_play_gate()
 	# Beide Kanäle still prüfen: das Abzeichen soll dastehen, ohne dass jemand nachsieht.
 	# Netzfehler bleiben in der Konsole (siehe UpdateService._fail / ContentService._fail).
 	ContentService.refresh()
@@ -73,6 +78,19 @@ func _refresh_update_badge() -> void:
 		_update_button.text = "⬆ Update %s bereit" % UpdateService.version
 	else:
 		_update_button.text = "⬆ Update auf %s" % UpdateService.version
+
+
+## Ohne Vokabeln gibt es nichts zu spielen: der Kampf hätte keine Monster, kein
+## Wellenende und (vor dem Abbruch per Escape) keinen Rückweg. Der Knopf sperrt also,
+## bis Inhalte da sind, und sagt wohin.
+##
+## Bewusst UNGEFILTERT geprüft (leerer Pool = keine Einschränkung) und nicht mit der
+## Profil-Auswahl: sonst sperrt eine zu enge Filterauswahl genau den Weg zum Screen,
+## auf dem man sie wieder lockern könnte. Die Auswahl prüft das Session-Setup selbst.
+func _refresh_play_gate() -> void:
+	var playable := WaveGenerator.new().has_playable({})
+	_play_button.disabled = not playable
+	_play_hint.visible = not playable
 
 
 ## Zeigt an, wenn Inhalte nachzuziehen sind. „Programm zu alt" zählt hier nicht mit — dagegen

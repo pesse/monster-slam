@@ -53,9 +53,21 @@ text = "Neues Profil"
 unique_name_in_owner = true
 text = "▶ Spielen"
 
+[node name="PlayHint" type="Label" parent="Margin/Root"]
+unique_name_in_owner = true
+visible = false
+theme_override_colors/font_color = Color(1, 0.8, 0.35, 1)
+text = "Noch keine Vokabeln vorhanden — unten über „📚 Inhalte“ einen Vokabel-Pack installieren."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="StatsButton" type="Button" parent="Margin/Root"]
+unique_name_in_owner = true
+text = "📊 Statistik"
+
 [node name="SettingsButton" type="Button" parent="Margin/Root"]
 unique_name_in_owner = true
-text = "⚙ Einstellungen & Statistik"
+text = "⚙ Einstellungen"
 
 [node name="ContentButton" type="Button" parent="Margin/Root"]
 unique_name_in_owner = true

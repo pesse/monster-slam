@@ -1,6 +1,9 @@
 extends Control
-## Einstellungs- und Statistik-Screen (Profil, Standard-Schwierigkeit, Grund-Geschwindigkeit,
-## Reset, Statistik, Wortliste, Melden).
+## Einstellungs-Screen (Profil, Standard-Schwierigkeit, Grund-Geschwindigkeit, Reset,
+## Melden).
+##
+## Statistik und Wortliste sind hier ausgezogen und liegen im eigenen Statistik-Screen
+## (stats_screen, Issue #5) — sie hingen zwischen Profilauswahl, Reset und Melde-Token.
 ##
 ## Der Reiter „Melden" ist die einzige Stelle, an der ein Melde-Token eingetragen wird
 ## (siehe ReportService, docs/adr/0002-melde-rueckkanal.md). Er bleibt deshalb immer
@@ -9,7 +12,7 @@ extends Control
 ##
 ## Ausgelagert aus dem Start-Screen (profile_menu). Das Layout liegt in settings_menu.tscn
 ## (im Editor sichtbar); hier wird nur bedient und angezeigt. Einstellungen liegen in
-## UserSettings + PlayerProgress.
+## UserSettings, der Fortschritt (Reset) in PlayerProgress.
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 
@@ -19,8 +22,6 @@ const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 @onready var _speed_slider: HSlider = %SpeedSlider
 @onready var _speed_label: Label = %SpeedLabel
 @onready var _reset_confirm: ConfirmationDialog = %ResetDialog
-@onready var _stats_lines: VBoxContainer = %Statistik
-@onready var _word_list: VBoxContainer = %WordList
 @onready var _flag_list: VBoxContainer = %FlagList
 @onready var _flag_scroll: ScrollContainer = %FlagScroll
 @onready var _token_input: LineEdit = %TokenInput
@@ -48,13 +49,11 @@ func _ready() -> void:
 	_refresh()
 
 
-## Baut Profil-Auswahl, Schwierigkeits-Hervorhebung, Statistik-Zeilen und Wortliste neu auf.
+## Baut Profil-Auswahl, Schwierigkeits-Hervorhebung, Tempo und Melde-Reiter neu auf.
 func _refresh() -> void:
 	_refresh_profiles()
 	_refresh_difficulty()
 	_refresh_speed()
-	_refresh_stats()
-	_refresh_words()
 	_refresh_report()
 
 
@@ -89,42 +88,6 @@ func _refresh_speed() -> void:
 
 func _update_speed_label(value: float) -> void:
 	_speed_label.text = "Grund-Geschwindigkeit: %d %%" % int(round(value * 100.0))
-
-
-func _refresh_stats() -> void:
-	for child in _stats_lines.get_children():
-		child.queue_free()
-	_add_stat("Gemeisterte Aufgaben: %d  (Festungsstufe %d)" % [
-		PlayerProgress.mastered_count(), PlayerProgress.fortress_tier()])
-	_add_stat("Gesamt-Genauigkeit: %d %%" % int(round(PlayerProgress.overall_accuracy() * 100.0)))
-	_add_stat("Gesehene Wörter: %d    Versuche: %d" % [
-		PlayerProgress.seen_count(), PlayerProgress.total_attempts()])
-	_add_stat("Beste Serie: %d" % PlayerProgress.best_streak_overall())
-	_add_stat("Heute fällig: %d" % PlayerProgress.due_count())
-
-
-func _refresh_words() -> void:
-	for child in _word_list.get_children():
-		child.queue_free()
-	var rows := PlayerProgress.records_for_display()
-	if rows.is_empty():
-		var empty := Label.new()
-		empty.text = "Noch keine Wörter geübt."
-		_word_list.add_child(empty)
-		return
-	for row in rows:
-		var line := HBoxContainer.new()
-		_word_list.add_child(line)
-		var name_label := Label.new()
-		name_label.text = str(row["label"])
-		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		line.add_child(name_label)
-		var conf_label := Label.new()
-		conf_label.text = "%d %%" % int(round(float(row["confidence"]) * 100.0))
-		line.add_child(conf_label)
-		var mastered_label := Label.new()
-		mastered_label.text = "  ✓" if bool(row["mastered"]) else "   "
-		line.add_child(mastered_label)
 
 
 ## Reiter „Melden": Zustand des Rückkanals oben, die eigenen Meldungen darunter.
@@ -204,12 +167,6 @@ func _refresh_flags() -> void:
 		comment.text = "%s %s" % [mark, str(flag.get("comment", ""))]
 		comment.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		box.add_child(comment)
-
-
-func _add_stat(text: String) -> void:
-	var label := Label.new()
-	label.text = text
-	_stats_lines.add_child(label)
 
 
 func _on_profile_selected(index: int) -> void:

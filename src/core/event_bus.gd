@@ -33,5 +33,16 @@ signal boss_answer_evaluated(quality: float, feedback: String)
 signal skill_activated(skill_id: String)
 signal skill_ready(skill_id: String)
 
+## --- Lauf (Sitzung) ---
+## Ein neuer Lauf beginnt: Kampfszene betreten, GameState zurückgesetzt. Die Welle
+## darunter ist die kleinere Einheit — ein Lauf umfasst alle Wellen bis zur gefallenen
+## Festung oder zum Rückweg ins Menü.
+signal run_started()
+## Der Lauf ist zu Ende, über den Statistik-Screen oder per Abbruch. `summary` trägt,
+## was nur der WaveRunner weiß: wave_reached, difficulty_last, last_wave_won.
+signal run_ended(summary: Dictionary)
+
 ## --- Learning / spaced repetition ---
-signal item_reviewed(item_id: String, correct: bool)
+## `response_time_ms` ist 0, wo es keine gemessene Zeit gibt (durchgelassenes Monster) —
+## dieselbe Konvention wie in PlayerProgress.record().
+signal item_reviewed(item_id: String, correct: bool, response_time_ms: int)
