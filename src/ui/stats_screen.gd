@@ -18,6 +18,13 @@ const PROGRESS_ROW_SCENE := preload("res://scenes/ui/progress_row.tscn")
 ## So viele Wörter stehen auf der Fahndungsliste. Kurz halten: eine lange Liste ist
 ## keine Fahndung mehr, sondern die Wortliste im zweiten Reiter.
 const WANTED_COUNT := 5
+## So viele Einträge zeigen „Frisch gemeistert" und „Comeback" — aus demselben Grund
+## gekappt wie die Fahndungsliste.
+const LIST_COUNT := 5
+## „Frisch" ist die letzte Woche.
+const FRESH_DAYS := 7
+## Ab so vielen Fehlversuchen ist eine wiedergewonnene Aufgabe ein Comeback.
+const COMEBACK_MISSES := 3
 
 @onready var _streak_label: Label = %StreakLabel
 @onready var _coin_label: Label = %CoinLabel
@@ -25,6 +32,8 @@ const WANTED_COUNT := 5
 @onready var _stat_lines: VBoxContainer = %StatLines
 @onready var _curve: StatsChart = %Curve
 @onready var _curve_caption: Label = %CurveCaption
+@onready var _fresh_list: VBoxContainer = %FreshList
+@onready var _comeback_list: VBoxContainer = %ComebackList
 @onready var _wanted_list: VBoxContainer = %WantedList
 @onready var _unit_list: VBoxContainer = %UnitList
 @onready var _tag_list: VBoxContainer = %TagList
@@ -40,6 +49,7 @@ func _refresh() -> void:
 	_refresh_streak()
 	_refresh_numbers()
 	_refresh_curve()
+	_refresh_lists()
 	_refresh_wanted()
 	_refresh_progress()
 	_refresh_words()
@@ -111,6 +121,77 @@ func _refresh_curve() -> void:
 static func short_date(unix: int) -> String:
 	var d := Time.get_datetime_dict_from_unix_time(unix)
 	return "%d.%d." % [int(d["day"]), int(d["month"])]
+
+
+## „Frisch gemeistert": Aufgaben, deren erste Meisterung im Zeitraum ab `since` (unix)
+## liegt — jüngste zuerst, gekappt auf `limit`.
+##
+## Records ohne Zeitstempel (mastered_at = 0, Altbestand von vor der Zeitmessung) bleiben
+## außen vor: ihre Meisterung liegt vor dem Messbeginn und wäre hier ein Eintrag vom
+## 01.01.1970. Dieselbe Regel wie in PlayerProgress.mastered_since.
+static func fresh_rows(rows: Array, since: int, limit := LIST_COUNT) -> Array:
+	var fresh: Array = []
+	for row in rows:
+		var at := int(row.get("mastered_at", 0))
+		if at > 0 and at >= since:
+			fresh.append(row)
+	fresh.sort_custom(func(a, b): return int(a["mastered_at"]) > int(b["mastered_at"]))
+	return fresh.slice(0, limit)
+
+
+## „Comeback": Aufgaben, die mindestens `min_misses` Mal entwischt sind und jetzt trotzdem
+## sitzen — die mit den meisten Fehlversuchen zuerst, bei gleichem Stand die jüngste
+## Meisterung. Gekappt auf `limit`.
+##
+## Ohne Zeitfenster, anders als bei „frisch gemeistert": ein zurückgeholtes Wort bleibt
+## eine Auszeichnung, auch wenn es vier Wochen her ist. Der Altbestand ohne Zeitstempel
+## darf hier deshalb mitkommen — die Sortierung nimmt ihn nur nach hinten.
+static func comeback_rows(rows: Array, limit := LIST_COUNT, min_misses := COMEBACK_MISSES) -> Array:
+	var comeback: Array = []
+	for row in rows:
+		if bool(row["mastered"]) and misses(row) >= min_misses:
+			comeback.append(row)
+	comeback.sort_custom(func(a, b):
+		if misses(a) == misses(b):
+			return int(a.get("mastered_at", 0)) > int(b.get("mastered_at", 0))
+		return misses(a) > misses(b))
+	return comeback.slice(0, limit)
+
+
+## Die beiden Listen, die genau das belohnen, was belohnt werden soll (Issue #9).
+##
+## Mit Wortlaut und nicht als Zahl — der Wiedererkennungswert ist der Punkt, „71 %
+## Genauigkeit" sagt darüber nichts. Beide Listen haben einen freundlichen Leertext statt
+## einer leeren Fläche; beim Comeback ist leer der Normalfall.
+func _refresh_lists() -> void:
+	var rows := PlayerProgress.records_for_display()
+	var since := int(Time.get_unix_time_from_system()) - FRESH_DAYS * 86400
+
+	_clear(_fresh_list)
+	var fresh := fresh_rows(rows, since)
+	if fresh.is_empty():
+		_add_line(_fresh_list, "Diese Woche noch keins — das nächste sitzt bald.")
+	for row in fresh:
+		_add_row(_fresh_list, str(row["label"]), _when(int(row["mastered_at"])), "✓")
+
+	_clear(_comeback_list)
+	var comeback := comeback_rows(rows)
+	if comeback.is_empty():
+		_add_line(_comeback_list, "Noch keins — dafür muss ein Wort erst dreimal entwischen.")
+	for row in comeback:
+		_add_row(_comeback_list, str(row["label"]), "%d× entwischt" % misses(row), "✓")
+
+
+## „heute" / „gestern" / „vor 3 Tagen" für einen Meisterungs-Zeitpunkt. Lokale Tage wie
+## in der Tages-Serie (SessionLog.local_day), damit nicht zwei Tagesgrenzen im Screen
+## gelten. Bei „frisch gemeistert" liegt der Zeitpunkt höchstens eine Woche zurück.
+func _when(unix: int) -> String:
+	var days := SessionLog.local_day(int(Time.get_unix_time_from_system())) - SessionLog.local_day(unix)
+	if days <= 0:
+		return "heute"
+	if days == 1:
+		return "gestern"
+	return "vor %d Tagen" % days
 
 
 ## Wählt die Fahndungsfälle aus den Zeilen von PlayerProgress.records_for_display():

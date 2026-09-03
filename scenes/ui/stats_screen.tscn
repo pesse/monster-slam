@@ -94,6 +94,40 @@ theme_override_colors/font_color = Color(0.75, 0.75, 0.75, 1)
 theme_override_font_sizes/font_size = 14
 autowrap_mode = 3
 
+[node name="FreshSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview"]
+theme_override_constants/separation = 4
+
+[node name="FreshTitle" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/FreshSection"]
+theme_override_font_sizes/font_size = 20
+text = "🌱 Frisch gemeistert"
+
+[node name="FreshHint" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/FreshSection"]
+theme_override_colors/font_color = Color(0.75, 0.75, 0.75, 1)
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
+text = "Diese Wörter sitzen seit dieser Woche."
+
+[node name="FreshList" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview/FreshSection"]
+unique_name_in_owner = true
+theme_override_constants/separation = 4
+
+[node name="ComebackSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview"]
+theme_override_constants/separation = 4
+
+[node name="ComebackTitle" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/ComebackSection"]
+theme_override_font_sizes/font_size = 20
+text = "🏅 Comeback"
+
+[node name="ComebackHint" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/ComebackSection"]
+theme_override_colors/font_color = Color(0.75, 0.75, 0.75, 1)
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
+text = "Dreimal entwischt oder öfter — und jetzt sitzen sie doch."
+
+[node name="ComebackList" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview/ComebackSection"]
+unique_name_in_owner = true
+theme_override_constants/separation = 4
+
 [node name="WantedSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview"]
 theme_override_constants/separation = 4
 

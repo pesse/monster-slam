@@ -306,7 +306,11 @@ static func mastered_lexemes_in(records: Dictionary, threshold := MASTERY_CONFID
 
 
 ## Sortierte Liste für die Wort-Tabelle im Menü (schwächste Confidence zuerst).
-## Rückgabe: Array von { id, label, confidence, mastered, attempts, correct }.
+## Rückgabe: Array von { id, label, confidence, mastered, attempts, correct, mastered_at }.
+##
+## `mastered_at` (0 = nie/unbekannt) fährt mit, damit die Listen „frisch gemeistert" und
+## „Comeback" aus DIESER einen Abfrage entstehen und nicht aus einer zweiten daneben —
+## das Auflösen der Labels über den TaskResolver ist der teure Teil.
 func records_for_display() -> Array:
 	var resolver := TaskResolver.new()
 	var rows: Array = []
@@ -320,6 +324,7 @@ func records_for_display() -> Array:
 			"mastered": conf >= MASTERY_CONFIDENCE,
 			"attempts": int(rec.get("attempts", 0)),
 			"correct": int(rec.get("correct_total", 0)),
+			"mastered_at": int(rec.get("mastered_at", 0)),
 		})
 	rows.sort_custom(func(a, b): return a["confidence"] < b["confidence"])
 	return rows
