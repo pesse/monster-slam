@@ -12,7 +12,7 @@ config_version=5
 
 config/name="Monster Slam"
 config/description="Offline-Singleplayer-Lernspiel in isometrischer Fantasy-Welt. Verteidige die Festung durch das Lösen deutscher und englischer Sprachaufgaben."
-config/version="0.3.1"
+config/version="0.4.0"
 run/main_scene="res://scenes/ui/profile_menu.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
