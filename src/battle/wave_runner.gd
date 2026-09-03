@@ -573,15 +573,26 @@ func _spawn(entry: Dictionary) -> void:
 func _on_answer_submitted(text: String) -> void:
 	if _finished:
 		return
+	# Zwei Durchläufe, weil die Auswertung Toleranz kennt (AnswerEvaluator): ein
+	# vollständig passendes Monster muss gewinnen, sonst schnappt sich bei mehreren
+	# Monstern auf dem Feld ein nur im Kern passendes den Treffer weg
+	# ("take" gegen "take (on sth.)").
+	var partial: Monster = null
+	var partial_form := ""
 	for monster in _active:
-		if _evaluator.evaluate_answers(monster.task.get("accepted_answers", []), text):
-			var rt := Time.get_ticks_msec() - monster.spawned_at_ms
-			var task_id := str(monster.task.get("learnable_id", ""))
-			PlayerProgress.record(task_id, true, rt, float(monster.task.get("initial_confidence", -1.0)))
-			EventBus.item_reviewed.emit(task_id, true, rt)
-			_defeat(monster)
-			_flash_feedback(FLASH_CORRECT)
+		var verdict := _evaluator.evaluate(monster.task.get("accepted_answers", []), text)
+		if not bool(verdict["matched"]):
+			continue
+		if bool(verdict["complete"]):
+			_score_hit(monster)
 			return
+		if partial == null:
+			partial = monster
+			partial_form = str(verdict["canonical"])
+	if partial != null:
+		# Richtig, aber etwas Optionales fehlte — die Vollform wird eingeblendet.
+		_score_hit(partial, partial_form)
+		return
 	# Kein Treffer -> Falscheingabe: rotes Flash + Kamera-Wackeln.
 	# Bewusst KEIN Fortschritts-Eintrag: eine Falscheingabe lässt sich keiner
 	# konkreten Aufgabe zuordnen (mehrere Monster gleichzeitig). Ein echtes
@@ -589,6 +600,22 @@ func _on_answer_submitted(text: String) -> void:
 	_flash_feedback(FLASH_WRONG)
 	_shake()
 	Sfx.play(&"wrong_answer")
+
+
+## Treffer verbuchen. `full_form` != "" heißt: die Antwort war richtig, ließ aber einen
+## optionalen Bestandteil weg ("criticize" statt "criticize sb. (for)"). Das kostet
+## nichts — die vollständige Form wird nur zusätzlich eingeblendet, damit das Muster
+## trotzdem einmal zu sehen war.
+func _score_hit(monster: Monster, full_form: String = "") -> void:
+	var rt := Time.get_ticks_msec() - monster.spawned_at_ms
+	var task_id := str(monster.task.get("learnable_id", ""))
+	PlayerProgress.record(task_id, true, rt, float(monster.task.get("initial_confidence", -1.0)))
+	EventBus.item_reviewed.emit(task_id, true, rt)
+	var pos := monster.position
+	_defeat(monster)
+	_flash_feedback(FLASH_CORRECT)
+	if not full_form.is_empty():
+		_spawn_form_hint(pos + Vector3(0.0, 3.4, 0.0), full_form)
 
 
 func _shake(magnitude: float = SHAKE_MAGNITUDE) -> void:
@@ -659,6 +686,27 @@ func _spawn_score_popup(pos: Vector3, amount: int) -> void:
 	tw.tween_property(label, "position:y", pos.y + 4.0, 1.2).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	# Erst gegen Ende ausblenden, damit die Zahl gut lesbar bleibt.
 	tw.tween_property(label, "modulate:a", 0.0, 0.5).set_delay(0.7)
+	tw.chain().tween_callback(label.queue_free)
+
+
+## Die vollständige Form nach einem nur im Kern richtigen Treffer. Bewusst ruhiger als
+## das "+Punkte"-Popup (kein Pop, längere Standzeit): es ist ein Hinweis, kein Tadel.
+func _spawn_form_hint(pos: Vector3, form: String) -> void:
+	var label := Label3D.new()
+	label.text = form
+	label.font_size = 130
+	label.pixel_size = 0.02
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	label.modulate = Color(0.85, 0.95, 1.0)
+	label.outline_size = 28
+	label.outline_modulate = Color(0.05, 0.1, 0.2, 1.0)
+	label.position = pos
+	add_child(label)
+	var tw := create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(label, "position:y", pos.y + 2.0, 1.8).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(label, "modulate:a", 0.0, 0.6).set_delay(1.2)
 	tw.chain().tween_callback(label.queue_free)
 
 
