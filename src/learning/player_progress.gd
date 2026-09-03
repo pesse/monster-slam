@@ -24,8 +24,14 @@ const FORTRESS_TIER_THRESHOLDS := [1, 3, 6, 10]
 ## learnable_id -> {
 ##   confidence: float (0..1), attempts: int, correct_total: int,
 ##   current_streak: int, best_streak: int, last_correct: bool,
-##   last_response_time_ms: int, last_seen_at: int (unix), next_review_at: int (unix)
+##   last_response_time_ms: int, last_seen_at: int (unix), next_review_at: int (unix),
+##   first_seen_at: int (unix), mastered_at: int (unix, 0 = nie/unbekannt)
 ## }
+##
+## `first_seen_at` und `mastered_at` sind die Zeitachse des Lernstands (Issue #4): ohne sie
+## lässt sich nicht sagen, WANN etwas gemeistert wurde, und Lernkurve wie „frisch gemeistert"
+## sind nicht darstellbar. Fortschrittsdateien von vor dieser Änderung haben die Felder nicht;
+## fehlend heißt 0 = „unbekannt" und wird NICHT mit einem erfundenen Datum aufgefüllt.
 var _records: Dictionary = {}
 var _sr := SpacedRepetition.new()
 var player_id: String = "default"
@@ -54,6 +60,9 @@ func _ensure(task_id: String, initial_confidence: float = -1.0) -> void:
 			"confidence": start_conf, "attempts": 0, "correct_total": 0,
 			"current_streak": 0, "best_streak": 0, "last_correct": false,
 			"last_response_time_ms": 0, "last_seen_at": 0, "next_review_at": 0,
+			# Erstkontakt: der Zeitpunkt gehört zum Anlegen des Records, nicht zur ersten
+			# Antwort — `record()` legt ihn über _ensure() unmittelbar davor an.
+			"first_seen_at": int(Time.get_unix_time_from_system()), "mastered_at": 0,
 		}
 	_sr.register(task_id)
 
@@ -76,6 +85,13 @@ func record(task_id: String, correct: bool, response_time_ms: int = 0, initial_c
 	else:
 		rec["current_streak"] = 0
 		rec["confidence"] = maxf(0.0, rec["confidence"] * 0.5)
+
+	# Zeitpunkt der ERSTEN Meisterung festhalten. Bewusst einmalig und ohne Rücknahme:
+	# fällt die Confidence später unter die Schwelle und steigt wieder, bleibt das Datum
+	# der ersten Meisterung stehen — sonst taucht dasselbe Wort immer wieder unter
+	# „frisch gemeistert" auf und die Lernkurve bekäme Sprünge in die Vergangenheit.
+	if int(rec.get("mastered_at", 0)) == 0 and float(rec["confidence"]) >= MASTERY_CONFIDENCE:
+		rec["mastered_at"] = rec["last_seen_at"]
 
 	# SM-2-Qualität (0..5): schnell+richtig hoch, falsch < 3 (Reset im Scheduler).
 	var quality := 2
@@ -179,6 +195,35 @@ func seen_count() -> int:
 ## Anzahl heute (oder früher) fälliger Wiederholungen.
 func due_count() -> int:
 	return due_task_ids().size()
+
+
+## learnable_ids, die seit `since` (unix) erstmals gemeistert wurden — jüngste zuerst.
+## Records ohne Zeitstempel (Altbestand von vor der Zeitmessung) bleiben außen vor: ihre
+## Meisterung liegt vor dem Messbeginn und wäre hier ein Eintrag vom 01.01.1970.
+func mastered_since(since: int) -> Array:
+	var ids: Array = []
+	for id in _records:
+		var at := int(_records[id].get("mastered_at", 0))
+		if at > 0 and at >= since:
+			ids.append(id)
+	ids.sort_custom(func(a, b): return int(_records[a]["mastered_at"]) > int(_records[b]["mastered_at"]))
+	return ids
+
+
+## Anzahl der Aufgaben, die vor `before` (unix) gemeistert wurden — der Startwert einer
+## Lernkurve. Altbestand ohne Zeitstempel zählt mit, sofern er JETZT gemeistert ist: die
+## Meisterung liegt irgendwann vor dem Messbeginn, und die Kurve soll bei ihm anfangen
+## statt bei null.
+func mastered_count_before(before: int, threshold := MASTERY_CONFIDENCE) -> int:
+	var n := 0
+	for rec in _records.values():
+		var at := int(rec.get("mastered_at", 0))
+		if at == 0:
+			if float(rec.get("confidence", 0.0)) >= threshold:
+				n += 1
+		elif at < before:
+			n += 1
+	return n
 
 
 ## Sortierte Liste für die Wort-Tabelle im Menü (schwächste Confidence zuerst).
