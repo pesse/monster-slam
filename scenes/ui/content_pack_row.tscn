@@ -6,16 +6,11 @@
 script = ExtResource("1_row")
 
 [node name="Margin" type="MarginContainer" parent="."]
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 10
 
 [node name="Root" type="VBoxContainer" parent="Margin"]
-theme_override_constants/separation = 4
+theme_type_variation = &"Tight"
 
 [node name="Head" type="HBoxContainer" parent="Margin/Root"]
-theme_override_constants/separation = 10
 
 [node name="Select" type="CheckBox" parent="Margin/Root/Head"]
 unique_name_in_owner = true
@@ -23,7 +18,6 @@ unique_name_in_owner = true
 [node name="Name" type="Label" parent="Margin/Root/Head"]
 unique_name_in_owner = true
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 18
 text = "Pack"
 
 [node name="State" type="Label" parent="Margin/Root/Head"]
@@ -31,14 +25,13 @@ unique_name_in_owner = true
 text = "Zustand"
 
 [node name="Info" type="Label" parent="Margin/Root"]
+theme_type_variation = &"Caption"
 unique_name_in_owner = true
 autowrap_mode = 3
-theme_override_font_sizes/font_size = 12
 
 [node name="CodeRow" type="HBoxContainer" parent="Margin/Root"]
 unique_name_in_owner = true
 visible = false
-theme_override_constants/separation = 8
 
 [node name="CodeInput" type="LineEdit" parent="Margin/Root/CodeRow"]
 unique_name_in_owner = true

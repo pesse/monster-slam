@@ -29,24 +29,24 @@ grow_vertical = 2
 custom_minimum_size = Vector2(560, 0)
 
 [node name="Margin" type="MarginContainer" parent="Center/Panel"]
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 20
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 20
 
 [node name="Root" type="VBoxContainer" parent="Center/Panel/Margin"]
-theme_override_constants/separation = 12
+theme_type_variation = &"ScreenStack"
 
 [node name="Title" type="Label" parent="Center/Panel/Margin/Root"]
+theme_type_variation = &"SectionTitle"
 unique_name_in_owner = true
-theme_override_font_sizes/font_size = 24
 text = "Update verfügbar"
 
 [node name="NotesScroll" type="ScrollContainer" parent="Center/Panel/Margin/Root"]
 custom_minimum_size = Vector2(0, 200)
 horizontal_scroll_mode = 0
 
-[node name="Notes" type="RichTextLabel" parent="Center/Panel/Margin/Root/NotesScroll"]
+[node name="Gutter" type="MarginContainer" parent="Center/Panel/Margin/Root/NotesScroll"]
+theme_type_variation = &"ScrollGutter"
+size_flags_horizontal = 3
+
+[node name="Notes" type="RichTextLabel" parent="Center/Panel/Margin/Root/NotesScroll/Gutter"]
 unique_name_in_owner = true
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -67,7 +67,6 @@ show_percentage = false
 
 [node name="Buttons" type="HBoxContainer" parent="Center/Panel/Margin/Root"]
 alignment = 2
-theme_override_constants/separation = 10
 
 [node name="LaterButton" type="Button" parent="Center/Panel/Margin/Root/Buttons"]
 unique_name_in_owner = true

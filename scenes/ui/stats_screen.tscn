@@ -14,17 +14,14 @@ grow_vertical = 2
 script = ExtResource("1_stats")
 
 [node name="Margin" type="MarginContainer" parent="."]
+theme_type_variation = &"ScreenMargin"
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 24
 
 [node name="Root" type="VBoxContainer" parent="Margin"]
-theme_override_constants/separation = 12
+theme_type_variation = &"ScreenStack"
 
 [node name="Header" type="HBoxContainer" parent="Margin/Root"]
 
@@ -33,8 +30,8 @@ unique_name_in_owner = true
 text = "← Zurück"
 
 [node name="Title" type="Label" parent="Margin/Root/Header"]
+theme_type_variation = &"Title"
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 28
 text = "Statistik"
 horizontal_alignment = 1
 
@@ -43,145 +40,150 @@ size_flags_vertical = 3
 
 [node name="Überblick" type="ScrollContainer" parent="Margin/Root/Tabs"]
 
-[node name="Overview" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick"]
+[node name="Gutter" type="MarginContainer" parent="Margin/Root/Tabs/Überblick"]
+theme_type_variation = &"ScrollGutter"
 size_flags_horizontal = 3
-theme_override_constants/separation = 14
 
-[node name="StreakSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview"]
-theme_override_constants/separation = 6
+[node name="Overview" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter"]
+theme_type_variation = &"SectionStack"
+size_flags_horizontal = 3
 
-[node name="StreakLabel" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/StreakSection"]
+[node name="StreakSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter/Overview"]
+theme_type_variation = &"Tight"
+
+[node name="StreakLabel" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/StreakSection"]
+theme_type_variation = &"SectionTitle"
 unique_name_in_owner = true
-theme_override_font_sizes/font_size = 22
 text = "🔥 0 Tage in Folge geübt"
 
-[node name="CoinLabel" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/StreakSection"]
+[node name="CoinLabel" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/StreakSection"]
+theme_type_variation = &"Accent"
 unique_name_in_owner = true
-theme_override_colors/font_color = Color(1, 0.8, 0.35, 1)
-theme_override_font_sizes/font_size = 15
 autowrap_mode = 3
 text = "🪙 0 Goldstücke gesammelt"
 
-[node name="CoinStrip" parent="Margin/Root/Tabs/Überblick/Overview/StreakSection" instance=ExtResource("2_coins")]
+[node name="CoinStrip" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/StreakSection" instance=ExtResource("2_coins")]
 unique_name_in_owner = true
 
-[node name="StatLines" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview"]
+[node name="StatLines" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter/Overview"]
+theme_type_variation = &"Tight"
 unique_name_in_owner = true
-theme_override_constants/separation = 6
 
-[node name="CurveSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview"]
-theme_override_constants/separation = 4
+[node name="CurveSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter/Overview"]
+theme_type_variation = &"Tight"
 
-[node name="CurveTitle" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/CurveSection"]
-theme_override_font_sizes/font_size = 20
+[node name="CurveTitle" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/CurveSection"]
+theme_type_variation = &"SectionTitle"
 text = "📈 Lernkurve"
 
-[node name="CurveHint" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/CurveSection"]
-theme_override_colors/font_color = Color(0.75, 0.75, 0.75, 1)
-theme_override_font_sizes/font_size = 14
+[node name="CurveHint" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/CurveSection"]
+theme_type_variation = &"Hint"
 autowrap_mode = 3
 text = "Gemeisterte Aufgaben, aufgesammelt über die Wochen — diese Linie geht nicht zurück."
 
-[node name="Curve" type="Control" parent="Margin/Root/Tabs/Überblick/Overview/CurveSection"]
+[node name="Curve" type="Control" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/CurveSection"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
 script = ExtResource("3_chart")
 
-[node name="CurveCaption" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/CurveSection"]
+[node name="CurveCaption" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/CurveSection"]
+theme_type_variation = &"Hint"
 unique_name_in_owner = true
-theme_override_colors/font_color = Color(0.75, 0.75, 0.75, 1)
-theme_override_font_sizes/font_size = 14
 autowrap_mode = 3
 
-[node name="FreshSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview"]
-theme_override_constants/separation = 4
+[node name="FreshSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter/Overview"]
+theme_type_variation = &"Tight"
 
-[node name="FreshTitle" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/FreshSection"]
-theme_override_font_sizes/font_size = 20
+[node name="FreshTitle" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/FreshSection"]
+theme_type_variation = &"SectionTitle"
 text = "🌱 Frisch gemeistert"
 
-[node name="FreshHint" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/FreshSection"]
-theme_override_colors/font_color = Color(0.75, 0.75, 0.75, 1)
-theme_override_font_sizes/font_size = 14
+[node name="FreshHint" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/FreshSection"]
+theme_type_variation = &"Hint"
 autowrap_mode = 3
 text = "Diese Wörter sitzen seit dieser Woche."
 
-[node name="FreshList" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview/FreshSection"]
+[node name="FreshList" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/FreshSection"]
+theme_type_variation = &"Tight"
 unique_name_in_owner = true
-theme_override_constants/separation = 4
 
-[node name="ComebackSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview"]
-theme_override_constants/separation = 4
+[node name="ComebackSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter/Overview"]
+theme_type_variation = &"Tight"
 
-[node name="ComebackTitle" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/ComebackSection"]
-theme_override_font_sizes/font_size = 20
+[node name="ComebackTitle" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/ComebackSection"]
+theme_type_variation = &"SectionTitle"
 text = "🏅 Comeback"
 
-[node name="ComebackHint" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/ComebackSection"]
-theme_override_colors/font_color = Color(0.75, 0.75, 0.75, 1)
-theme_override_font_sizes/font_size = 14
+[node name="ComebackHint" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/ComebackSection"]
+theme_type_variation = &"Hint"
 autowrap_mode = 3
 text = "Dreimal entwischt oder öfter — und jetzt sitzen sie doch."
 
-[node name="ComebackList" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview/ComebackSection"]
+[node name="ComebackList" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/ComebackSection"]
+theme_type_variation = &"Tight"
 unique_name_in_owner = true
-theme_override_constants/separation = 4
 
-[node name="WantedSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview"]
-theme_override_constants/separation = 4
+[node name="WantedSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter/Overview"]
+theme_type_variation = &"Tight"
 
-[node name="WantedTitle" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/WantedSection"]
-theme_override_font_sizes/font_size = 20
+[node name="WantedTitle" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/WantedSection"]
+theme_type_variation = &"SectionTitle"
 text = "🎯 Fahndungsliste"
 
-[node name="WantedHint" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/WantedSection"]
-theme_override_colors/font_color = Color(0.75, 0.75, 0.75, 1)
-theme_override_font_sizes/font_size = 14
+[node name="WantedHint" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/WantedSection"]
+theme_type_variation = &"Hint"
 text = "Diese Wörter sind dir schon entwischt — hol sie dir zurück."
 autowrap_mode = 3
 
-[node name="WantedList" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview/WantedSection"]
+[node name="WantedList" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/WantedSection"]
+theme_type_variation = &"Tight"
 unique_name_in_owner = true
-theme_override_constants/separation = 4
 
 [node name="Fortschritt" type="ScrollContainer" parent="Margin/Root/Tabs"]
 
-[node name="Progress" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt"]
+[node name="Gutter" type="MarginContainer" parent="Margin/Root/Tabs/Fortschritt"]
+theme_type_variation = &"ScrollGutter"
 size_flags_horizontal = 3
-theme_override_constants/separation = 14
 
-[node name="UnitSection" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt/Progress"]
-theme_override_constants/separation = 4
+[node name="Progress" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt/Gutter"]
+theme_type_variation = &"SectionStack"
+size_flags_horizontal = 3
 
-[node name="UnitTitle" type="Label" parent="Margin/Root/Tabs/Fortschritt/Progress/UnitSection"]
-theme_override_font_sizes/font_size = 20
+[node name="UnitSection" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt/Gutter/Progress"]
+theme_type_variation = &"Tight"
+
+[node name="UnitTitle" type="Label" parent="Margin/Root/Tabs/Fortschritt/Gutter/Progress/UnitSection"]
+theme_type_variation = &"SectionTitle"
 text = "📚 Nach Unit"
 
-[node name="UnitHint" type="Label" parent="Margin/Root/Tabs/Fortschritt/Progress/UnitSection"]
-theme_override_colors/font_color = Color(0.75, 0.75, 0.75, 1)
-theme_override_font_sizes/font_size = 14
+[node name="UnitHint" type="Label" parent="Margin/Root/Tabs/Fortschritt/Gutter/Progress/UnitSection"]
+theme_type_variation = &"Hint"
 autowrap_mode = 3
 text = "Ein Wort zählt als gemeistert, wenn du es in beide Richtungen sicher übersetzt."
 
-[node name="UnitList" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt/Progress/UnitSection"]
+[node name="UnitList" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt/Gutter/Progress/UnitSection"]
+theme_type_variation = &"Tight"
 unique_name_in_owner = true
-theme_override_constants/separation = 4
 
-[node name="TagSection" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt/Progress"]
-theme_override_constants/separation = 4
+[node name="TagSection" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt/Gutter/Progress"]
+theme_type_variation = &"Tight"
 
-[node name="TagTitle" type="Label" parent="Margin/Root/Tabs/Fortschritt/Progress/TagSection"]
-theme_override_font_sizes/font_size = 20
+[node name="TagTitle" type="Label" parent="Margin/Root/Tabs/Fortschritt/Gutter/Progress/TagSection"]
+theme_type_variation = &"SectionTitle"
 text = "🏷️ Nach Thema"
 
-[node name="TagList" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt/Progress/TagSection"]
+[node name="TagList" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt/Gutter/Progress/TagSection"]
+theme_type_variation = &"Tight"
 unique_name_in_owner = true
-theme_override_constants/separation = 4
 
 [node name="Wörter" type="ScrollContainer" parent="Margin/Root/Tabs"]
 
-[node name="WordList" type="VBoxContainer" parent="Margin/Root/Tabs/Wörter"]
+[node name="Gutter" type="MarginContainer" parent="Margin/Root/Tabs/Wörter"]
+theme_type_variation = &"ScrollGutter"
+size_flags_horizontal = 3
+
+[node name="WordList" type="VBoxContainer" parent="Margin/Root/Tabs/Wörter/Gutter"]
+theme_type_variation = &"Tight"
 unique_name_in_owner = true
 size_flags_horizontal = 3
-theme_override_constants/separation = 4

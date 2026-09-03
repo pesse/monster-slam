@@ -12,27 +12,25 @@ grow_vertical = 2
 script = ExtResource("1_setup")
 
 [node name="Margin" type="MarginContainer" parent="." unique_id=581506577]
+theme_type_variation = &"ScreenMargin"
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 24
 
 [node name="Root" type="VBoxContainer" parent="Margin" unique_id=2010398413]
+theme_type_variation = &"ScreenStack"
 layout_mode = 2
-theme_override_constants/separation = 12
 
 [node name="Title" type="Label" parent="Margin/Root" unique_id=1336642419]
+theme_type_variation = &"Display"
 layout_mode = 2
-theme_override_font_sizes/font_size = 40
 text = "Runde vorbereiten"
 horizontal_alignment = 1
 
 [node name="Hint" type="Label" parent="Margin/Root" unique_id=759819543]
+theme_type_variation = &"Hint"
 layout_mode = 2
 text = "Filter kombinieren sich: Buch/Unit UND Themen. Nichts wählen = keine Einschränkung."
 horizontal_alignment = 1
@@ -41,87 +39,83 @@ horizontal_alignment = 1
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Body" type="VBoxContainer" parent="Margin/Root/Scroll" unique_id=2029362911]
+[node name="Gutter" type="MarginContainer" parent="Margin/Root/Scroll"]
+theme_type_variation = &"ScrollGutter"
+size_flags_horizontal = 3
+
+[node name="Body" type="VBoxContainer" parent="Margin/Root/Scroll/Gutter" unique_id=2029362911]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 8
 
-[node name="ScopeHeader" type="Button" parent="Margin/Root/Scroll/Body" unique_id=2025215384]
+[node name="ScopeHeader" type="Button" parent="Margin/Root/Scroll/Gutter/Body" unique_id=2025215384]
+theme_type_variation = &"SectionButton"
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
 text = "Bücher & Units"
 alignment = 0
 
-[node name="ScopeList" type="VBoxContainer" parent="Margin/Root/Scroll/Body" unique_id=1459443538]
+[node name="ScopeList" type="VBoxContainer" parent="Margin/Root/Scroll/Gutter/Body" unique_id=1459443538]
+theme_type_variation = &"Tight"
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-theme_override_constants/separation = 6
 
-[node name="TaskTypeHeader" type="Button" parent="Margin/Root/Scroll/Body" unique_id=400200138]
+[node name="TaskTypeHeader" type="Button" parent="Margin/Root/Scroll/Gutter/Body" unique_id=400200138]
+theme_type_variation = &"SectionButton"
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
 text = "Aufgabentypen"
 alignment = 0
 
-[node name="TaskTypeList" type="GridContainer" parent="Margin/Root/Scroll/Body" unique_id=1832070586]
+[node name="TaskTypeList" type="GridContainer" parent="Margin/Root/Scroll/Gutter/Body" unique_id=1832070586]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-theme_override_constants/h_separation = 16
-theme_override_constants/v_separation = 2
 columns = 3
 
-[node name="LexemeTypeHeader" type="Button" parent="Margin/Root/Scroll/Body" unique_id=374934982]
+[node name="LexemeTypeHeader" type="Button" parent="Margin/Root/Scroll/Gutter/Body" unique_id=374934982]
+theme_type_variation = &"SectionButton"
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
 text = "Vokabel-Typen"
 alignment = 0
 
-[node name="LexemeTypeList" type="GridContainer" parent="Margin/Root/Scroll/Body" unique_id=1644193433]
+[node name="LexemeTypeList" type="GridContainer" parent="Margin/Root/Scroll/Gutter/Body" unique_id=1644193433]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-theme_override_constants/h_separation = 16
-theme_override_constants/v_separation = 2
 columns = 3
 
-[node name="TagLabel" type="Label" parent="Margin/Root/Scroll/Body" unique_id=308408134]
+[node name="TagLabel" type="Label" parent="Margin/Root/Scroll/Gutter/Body" unique_id=308408134]
+theme_type_variation = &"SectionTitle"
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
 text = "Tags"
 
-[node name="TagInput" type="LineEdit" parent="Margin/Root/Scroll/Body" unique_id=31595036]
+[node name="TagInput" type="LineEdit" parent="Margin/Root/Scroll/Gutter/Body" unique_id=31595036]
 unique_name_in_owner = true
 layout_mode = 2
 placeholder_text = "Tag eingeben und auswählen…"
 
-[node name="TagSuggestions" type="VBoxContainer" parent="Margin/Root/Scroll/Body" unique_id=280008345]
+[node name="TagSuggestions" type="VBoxContainer" parent="Margin/Root/Scroll/Gutter/Body" unique_id=280008345]
+theme_type_variation = &"Tight"
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/separation = 2
 
-[node name="TagBadges" type="HFlowContainer" parent="Margin/Root/Scroll/Body" unique_id=420770308]
+[node name="TagBadges" type="HFlowContainer" parent="Margin/Root/Scroll/Gutter/Body" unique_id=420770308]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/h_separation = 6
-theme_override_constants/v_separation = 6
 
 [node name="StartHint" type="Label" parent="Margin/Root" unique_id=1873204615]
+theme_type_variation = &"Accent"
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.8, 0.35, 1)
 text = "Diese Auswahl trifft keine Vokabel — Filter lockern oder Inhalte installieren."
 horizontal_alignment = 1
 autowrap_mode = 3
 
 [node name="Buttons" type="HBoxContainer" parent="Margin/Root" unique_id=1041803236]
 layout_mode = 2
-theme_override_constants/separation = 12
 
 [node name="BackButton" type="Button" parent="Margin/Root/Buttons" unique_id=1244154423]
 unique_name_in_owner = true

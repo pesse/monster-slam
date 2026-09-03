@@ -107,6 +107,56 @@ Beim Arbeiten daran:
   Eingetragenes an Markern im Issue-Text; **die nicht aus Issues löschen**, sonst wird die
   Meldung erneut angelegt.
 
+## Abstände und Schriftgrößen stehen im Theme, nicht in der Szene
+
+`scenes/ui/ui_theme.tres` ist die einzige Quelle für Raum und Typografie. Vorher lagen
+sie als `theme_override_…` in den Szenen und hatten sich auf 14 Schriftgrößen und 12
+Abstandswerte summiert — im Statistik-Screen standen sieben Größen auf einem Bildschirm,
+darunter 14 neben 15.
+
+Rollen gibt es als **Type-Variations**, gesetzt über `theme_type_variation`:
+
+| Text | | Container | |
+|---|---|---|---|
+| `Display` | 40 | `ScreenMargin` | Screen-Rand 24 |
+| `Title` | 28 | `ScreenStack` | 16 |
+| `SectionTitle` | 20 | `SectionStack` | 24, zwischen Abschnitten |
+| — (Grundgröße) | 18 | `Tight` | 4, Listenzeilen |
+| `Hint` | 14, gedämpft | (Klassenvorgabe) | 8 |
+| `Caption` | 12, gedämpft | | |
+| `Accent` | Gold, für Hinweise mit Nachdruck | | |
+| `SectionButton` | 20, für klappbare Abschnitte | `ScrollGutter` | 8 rechts, in jedem ScrollContainer |
+
+Abstände dürfen nur die Stufen **0 / 4 / 8 / 16 / 24** benutzen. Karten-Innenabstand
+kommt aus `PanelContainer/styles/panel` (16) — **keinen MarginContainer in eine
+PanelContainer legen**, das addiert sich; genau das war in `content_pack_row` und
+`update_dialog` passiert.
+
+**In jeden ScrollContainer gehört ein `Gutter`** (MarginContainer mit `ScrollGutter`)
+zwischen Balken und Inhalt. Godot legt den Scrollbalken an die Innenkante des
+ScrollContainers und gibt dem Kind exakt den Rest — die Lücke muss also aus dem Inhalt
+kommen. Ein Rand am ScrollContainer selbst (`ScrollContainer/styles/panel`) hilft nicht:
+der verschiebt Balken und Inhalt gemeinsam, gemessen mit content_margin_right=8 →
+Inhalt 386, Balken 386..392.
+
+**`CheckBox` und `CheckButton` brauchen eigene Styles**, sonst greift die Theme-Suche über
+die Klassenkette auf `Button/styles/*` zurück — ein Kästchen sah dadurch aus wie ein
+Druckknopf, und angehakt nahm es `btn_pressed` (bg 0.09/0.11/0.16, fast die
+Hintergrundfarbe), stand also rahmenlos neben den gerahmten nicht angehakten. Jetzt ist
+beides `StyleBoxEmpty`; der Unterschied ist das Häkchen, wie es sein soll.
+
+`tests/theme_discipline_test.gd` hält die Regel: er meldet `theme_override_…` in
+`scenes/**.tscn` und `add_theme_*_override` in `src/**.gd`, prüft die Skala im Theme und
+schlägt bei einem Tippfehler in einer Variation an (den Godot sonst stillschweigend
+verschluckt). Die Kampf- und Effekt-Oberflächen (`hud`, `reveal_card`, `leak_reveal`,
+`wave_stats`, `battle`, Combo-Zahlen) stehen mit Begründung in der Ausnahmeliste `ALLOWED`
+— sie haben eine eigene, lautere Typografie und sind noch nicht umgestellt.
+
+Was das Theme **nicht** kann: `size_flags_*`, `custom_minimum_size`, `autowrap_mode` und
+Anchors sind Knoten-Eigenschaften und bleiben in der Szene. Layout-Struktur auch — der
+Titel im Header ist deshalb noch um halbe Knopfbreite außermittig (HBox mit Knopf plus
+gedehntem Label zentriert im Restplatz, nicht im Screen).
+
 ## Drei Fallen, die schon zugeschlagen haben
 
 **Godot-Läufe schreiben offene Dateien um — dagegen gibt es `tools/godot.sh`.** Welche

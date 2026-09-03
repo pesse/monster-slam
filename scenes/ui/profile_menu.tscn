@@ -13,21 +13,18 @@ grow_vertical = 2
 script = ExtResource("1_menu")
 
 [node name="Margin" type="MarginContainer" parent="."]
+theme_type_variation = &"ScreenMargin"
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 24
 
 [node name="Root" type="VBoxContainer" parent="Margin"]
+theme_type_variation = &"ScreenStack"
 alignment = 1
-theme_override_constants/separation = 16
 
 [node name="Title" type="Label" parent="Margin/Root"]
-theme_override_font_sizes/font_size = 40
+theme_type_variation = &"Display"
 text = "Monster Slam"
 horizontal_alignment = 1
 
@@ -54,9 +51,9 @@ unique_name_in_owner = true
 text = "▶ Spielen"
 
 [node name="PlayHint" type="Label" parent="Margin/Root"]
+theme_type_variation = &"Accent"
 unique_name_in_owner = true
 visible = false
-theme_override_colors/font_color = Color(1, 0.8, 0.35, 1)
 text = "Noch keine Vokabeln vorhanden — unten über „📚 Inhalte“ einen Vokabel-Pack installieren."
 horizontal_alignment = 1
 autowrap_mode = 3

@@ -3,7 +3,6 @@
 [ext_resource type="Script" path="res://src/ui/stat_row.gd" id="1_row"]
 
 [node name="StatRow" type="HBoxContainer"]
-theme_override_constants/separation = 8
 script = ExtResource("1_row")
 
 [node name="Name" type="Label" parent="."]

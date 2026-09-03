@@ -97,12 +97,9 @@ func _build_scope() -> void:
 	for book in ContentRegistry.all_books():
 		var label := Label.new()
 		label.text = ContentRegistry.book_label(book)
-		label.add_theme_font_size_override("font_size", 18)
 		_scope_list.add_child(label)
 		var grid := GridContainer.new()
 		grid.columns = 3
-		grid.add_theme_constant_override("h_separation", 16)
-		grid.add_theme_constant_override("v_separation", 2)
 		_scope_list.add_child(grid)
 		for unit in ContentRegistry.units_for(book):
 			var key := "%s/%d" % [book, unit]
@@ -150,7 +147,6 @@ func _add_check(container: Container, value: String, label: String, on: bool, sa
 	check.text = label
 	check.button_pressed = on
 	check.focus_mode = Control.FOCUS_NONE
-	check.size_flags_horizontal = Control.SIZE_EXPAND_FILL  # gleichmäßige Grid-Spalten
 	check.set_meta("value", value)
 	check.toggled.connect(func(_pressed: bool): save.call())
 	container.add_child(check)

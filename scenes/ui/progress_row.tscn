@@ -3,7 +3,6 @@
 [ext_resource type="Script" path="res://src/ui/progress_row.gd" id="1_progress_row"]
 
 [node name="ProgressRow" type="HBoxContainer"]
-theme_override_constants/separation = 8
 script = ExtResource("1_progress_row")
 
 [node name="Name" type="Label" parent="."]

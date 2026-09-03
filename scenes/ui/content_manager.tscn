@@ -14,17 +14,14 @@ script = ExtResource("1_content")
 row_template = ExtResource("2_row")
 
 [node name="Margin" type="MarginContainer" parent="."]
+theme_type_variation = &"ScreenMargin"
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 24
 
 [node name="Root" type="VBoxContainer" parent="Margin"]
-theme_override_constants/separation = 12
+theme_type_variation = &"ScreenStack"
 
 [node name="Header" type="HBoxContainer" parent="Margin/Root"]
 
@@ -33,8 +30,8 @@ unique_name_in_owner = true
 text = "← Zurück"
 
 [node name="Title" type="Label" parent="Margin/Root/Header"]
+theme_type_variation = &"Title"
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 28
 text = "Inhalte"
 horizontal_alignment = 1
 
@@ -50,14 +47,16 @@ autowrap_mode = 3
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="Packs" type="VBoxContainer" parent="Margin/Root/Scroll"]
+[node name="Gutter" type="MarginContainer" parent="Margin/Root/Scroll"]
+theme_type_variation = &"ScrollGutter"
+size_flags_horizontal = 3
+
+[node name="Packs" type="VBoxContainer" parent="Margin/Root/Scroll/Gutter"]
 unique_name_in_owner = true
 size_flags_horizontal = 3
-theme_override_constants/separation = 8
 
 [node name="Footer" type="HBoxContainer" parent="Margin/Root"]
 alignment = 2
-theme_override_constants/separation = 10
 
 [node name="AdoptButton" type="Button" parent="Margin/Root/Footer"]
 unique_name_in_owner = true

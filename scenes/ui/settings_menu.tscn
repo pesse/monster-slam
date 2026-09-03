@@ -12,17 +12,14 @@ grow_vertical = 2
 script = ExtResource("1_settings")
 
 [node name="Margin" type="MarginContainer" parent="."]
+theme_type_variation = &"ScreenMargin"
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 24
 
 [node name="Root" type="VBoxContainer" parent="Margin"]
-theme_override_constants/separation = 12
+theme_type_variation = &"ScreenStack"
 
 [node name="Header" type="HBoxContainer" parent="Margin/Root"]
 
@@ -31,8 +28,8 @@ unique_name_in_owner = true
 text = "← Zurück"
 
 [node name="Title" type="Label" parent="Margin/Root/Header"]
+theme_type_variation = &"Title"
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 28
 text = "Einstellungen"
 horizontal_alignment = 1
 
@@ -40,7 +37,6 @@ horizontal_alignment = 1
 size_flags_vertical = 3
 
 [node name="Profil" type="VBoxContainer" parent="Margin/Root/Tabs"]
-theme_override_constants/separation = 10
 
 [node name="PickLabel" type="Label" parent="Margin/Root/Tabs/Profil"]
 text = "Aktives Profil"
@@ -96,13 +92,13 @@ unique_name_in_owner = true
 text = "Fortschritt zurücksetzen"
 
 [node name="Melden" type="VBoxContainer" parent="Margin/Root/Tabs"]
-theme_override_constants/separation = 8
 
 [node name="TokenLabel" type="Label" parent="Margin/Root/Tabs/Melden"]
-theme_override_font_sizes/font_size = 18
+theme_type_variation = &"SectionTitle"
 text = "Melde-Token"
 
 [node name="TokenHint" type="Label" parent="Margin/Root/Tabs/Melden"]
+theme_type_variation = &"Hint"
 autowrap_mode = 3
 text = "Mit einem Melde-Token kannst du falsche oder unklare Vokabeln melden. Übertragen werden dann: das gemeldete Wort, dein Kommentar, die Spielversion und der Name, der im Token steht — kein Profilname und keine Fortschrittsdaten."
 
@@ -129,10 +125,14 @@ autowrap_mode = 3
 unique_name_in_owner = true
 size_flags_vertical = 3
 
-[node name="FlagList" type="VBoxContainer" parent="Margin/Root/Tabs/Melden/FlagScroll"]
+[node name="Gutter" type="MarginContainer" parent="Margin/Root/Tabs/Melden/FlagScroll"]
+theme_type_variation = &"ScrollGutter"
+size_flags_horizontal = 3
+
+[node name="FlagList" type="VBoxContainer" parent="Margin/Root/Tabs/Melden/FlagScroll/Gutter"]
+theme_type_variation = &"Tight"
 unique_name_in_owner = true
 size_flags_horizontal = 3
-theme_override_constants/separation = 4
 
 [node name="ResetDialog" type="ConfirmationDialog" parent="."]
 unique_name_in_owner = true
