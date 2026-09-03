@@ -8,6 +8,7 @@ verschiedener Wege vergleichbar zu machen. Pro Lauf ein Eintrag; Vergleichstabel
 | Lauf | Datum | Ansatz | Modell | Agenten | ~Agent-Tokens | ~Kosten | Output-Objekte | Validierung |
 |---|---|---|---|---|---|---|---|---|
 | #1 | 2026-07-03 | Parallel-Fan-out + Merge/Validate-Skript | Sonnet (Agenten), Opus (Orchestrierung) | 40 | ~2,0 Mio. | **~40 $** | 7.377 | 0 Fehler / 0 Dubletten |
+| #2 | 2026-09-03 | Ein-Kontext-Lauf aus Buchfotos (Vision) + Merge/Validate-Skript | Opus | 0 | ~2 Mio. (geschätzt) | ~30 $ (geschätzt) | 1.166 | 0 Fehler / 0 Dubletten |
 
 ---
 
@@ -71,3 +72,60 @@ Grobe Richtwerte: ~0,02 $/Agent-Objekt bzw. ~1 $ je 185 Output-Objekte.
 - **Ein-Kontext-Lauf** (kein Fan-out) als Baseline für Konsistenz vs. Durchsatz.
 - Einheitliche Metriken je Lauf: $ gesamt, $/Objekt, Draft-Quote, Dublettenquote,
   Referenzfehler, manuelle Korrekturzeit.
+
+---
+
+## Lauf #2 — Access 4, Units 1–4 (aus Buchfotos)
+
+**Datum:** 2026-09-03
+**Ziel:** Das Vokabelverzeichnis eines Lehrbuchs als eigenständiges Inhaltspaket
+(`language-access4`), Units 1–4.
+
+### Ansatz
+- **Kein Fan-out** — der in Lauf #1 als Vergleich vorgemerkte *Ein-Kontext-Lauf*.
+  Ein Kontext liest die Fotos, transkribiert Seite für Seite in ein Staging-JSON je
+  Seite und führt am Ende zusammen. Keine Agenten, keine Cross-Batch-Redundanz.
+- **Quelle sind Fotos, kein Wissen des Modells**: 29 abfotografierte Seiten unter
+  `raw/` (gitignored). Vor dem Lesen ein Inventar per Bild-Montagen (Kopf-/Fußzeilen),
+  weil die Fotos weder sortiert noch mit EXIF-Zeitstempeln versehen waren; zwei
+  Doppelseiten mussten gedreht und geteilt, eine unscharfe Seite geschärft werden.
+- **Determinismus/Integrität im Skript**: Slug-/Id-Vergabe aus dem englischen Lemma,
+  Dedup keep-first, Kollisionsauflösung statt stillem Überschreiben, regelbasierte
+  BE-Verbformen mit expliziten Ausnahmen, Abgeschlossenheitsprüfung.
+- **Standalone-Regel**: Dedupliziert wird NUR innerhalb des Pakets. Überschneidung mit
+  dem Grundwortschatz bleibt bewusst stehen (eigene Ids `lex.en.a4.*`), weil jedes
+  Inhaltspaket allein spielbar sein muss.
+
+### Aufwand
+| | Lauf #2 |
+|---|---|
+| Agenten | 0 (ein Kontext) |
+| Bild-Eingaben | 29 Seitenfotos + ~15 Montagen/Ausschnitte |
+| ~Tokens | ~2 Mio. (geschätzt, nicht gemessen: wachsender Kontext × 29 Seiten) |
+| Wall-clock | ~2 h über zwei Kontextfenster |
+
+### Output (1.166 Objekte)
+| Kategorie | Objekte | Kernzahlen |
+|---|---|---|
+| lexemes | 587 | Unit 1: 161 / 2: 119 / 3: 143 / 4: 164 |
+| lexeme_forms | 565 | 113 Einträge × 5 Formen (84 regelbasiert, 29 explizit) |
+| lexeme_relations | 14 | 7 Paare opposite/synonym, beidseitig |
+
+### Qualität
+- **Automatisch:** 0 JSON-Fehler, 0 doppelte Ids (auch keine gegen den Bestand),
+  0 Referenzen aus dem Paket heraus, Godot lädt alle 587 Lexeme in den richtigen
+  Unit-Scopes, Testsuite 241/241 grün.
+- **Aufgelöst statt verworfen:** 5 Slug-Kollisionen (gleiches Stichwort in anderer
+  Wortart oder anderer Bedeutung) bekamen eigene Ids; echte Dubletten gab es keine.
+- **Bewusst verworfen:** 20 opposite/synonym-Angaben, deren Gegenwort nicht im Buch
+  steht — sie würden die Abgeschlossenheit des Pakets brechen (Issue #15).
+- **Lücke:** zwei Buchseiten (Unit 2) fehlen als Foto, ~40 Wörter. Nachzufotografieren.
+
+### Stärken / Schwächen dieses Ansatzes
+- **+** Keine Redundanz, keine Scratch-Dateien, durchgehend konsistente Tag-Vergabe
+  (ein Kontext hält das Tag-Vokabular fest, statt es 40× neu zu erfinden).
+- **+** Die Vorlage ist das Buch — Übersetzungen und Nuancen sind belegt, nicht erfunden.
+- **−** Nicht parallelisierbar: Wall-clock ≈ Anzahl Seiten; der Kontext läuft voll und
+  muss zusammengefasst werden.
+- **−** Bildqualität ist die Untergrenze der Datenqualität (Bundsteg, Unschärfe,
+  Seitenkrümmung). Vor dem nächsten Buch: gerade, vollständige Fotos einsammeln.
