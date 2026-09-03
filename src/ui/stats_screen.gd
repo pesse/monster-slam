@@ -22,6 +22,8 @@ const WANTED_COUNT := 5
 @onready var _coin_label: Label = %CoinLabel
 @onready var _coin_strip: CoinStrip = %CoinStrip
 @onready var _stat_lines: VBoxContainer = %StatLines
+@onready var _curve: StatsChart = %Curve
+@onready var _curve_caption: Label = %CurveCaption
 @onready var _wanted_list: VBoxContainer = %WantedList
 @onready var _word_list: VBoxContainer = %WordList
 
@@ -34,6 +36,7 @@ func _ready() -> void:
 func _refresh() -> void:
 	_refresh_streak()
 	_refresh_numbers()
+	_refresh_curve()
 	_refresh_wanted()
 	_refresh_words()
 
@@ -73,6 +76,37 @@ func _refresh_numbers() -> void:
 		PlayerProgress.seen_count(), PlayerProgress.total_attempts()])
 	_add_line(_stat_lines, "Beste Serie: %d" % PlayerProgress.best_streak_overall())
 	_add_line(_stat_lines, "Heute fällig: %d" % PlayerProgress.due_count())
+
+
+## Lernkurve „gemeisterte Aufgaben" (Issue #7).
+##
+## Gezeichnet wird die kumulierte Zahl je Wochenende (PlayerProgress.mastery_curve) —
+## eine Linie, die nicht zurückgeht. Die Bilanzzeile darunter sagt, was im Zeitraum
+## dazugekommen ist: eine Kurve ohne Zahl liest sich, aber man nimmt nichts mit.
+func _refresh_curve() -> void:
+	var curve := PlayerProgress.mastery_curve()
+	var values: Array = []
+	for point in curve:
+		values.append(int(point["count"]))
+	# Anfang der Zeitachse ist der BEGINN der ersten Woche, nicht ihr Ende.
+	var start := int(curve[0]["end"]) - 7 * 86400
+	_curve.show_series(values, short_date(start), "heute")
+
+	var first := int(values[0])
+	var last := int(values[values.size() - 1])
+	if last == 0:
+		_curve_caption.text = "Noch keine gemeisterte Aufgabe — die erste hebt die Linie."
+	elif last == first:
+		_curve_caption.text = "%d gemeistert, alle vor diesem Zeitraum — die nächste hebt die Linie." % last
+	else:
+		_curve_caption.text = "%d dazugekommen in %d Wochen — jetzt %d gemeistert." % [
+			last - first, curve.size(), last]
+
+
+## Kurzes Datum „9.6." für die Achsen-Beschriftung.
+static func short_date(unix: int) -> String:
+	var d := Time.get_datetime_dict_from_unix_time(unix)
+	return "%d.%d." % [int(d["day"]), int(d["month"])]
 
 
 ## Wählt die Fahndungsfälle aus den Zeilen von PlayerProgress.records_for_display():

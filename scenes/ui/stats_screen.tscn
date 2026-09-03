@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://src/ui/stats_screen.gd" id="1_stats"]
 [ext_resource type="PackedScene" path="res://scenes/ui/coin_strip.tscn" id="2_coins"]
+[ext_resource type="Script" path="res://src/ui/stats_chart.gd" id="3_chart"]
 
 [node name="StatsScreen" type="Control"]
 layout_mode = 3
@@ -67,6 +68,31 @@ unique_name_in_owner = true
 [node name="StatLines" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview"]
 unique_name_in_owner = true
 theme_override_constants/separation = 6
+
+[node name="CurveSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview"]
+theme_override_constants/separation = 4
+
+[node name="CurveTitle" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/CurveSection"]
+theme_override_font_sizes/font_size = 20
+text = "📈 Lernkurve"
+
+[node name="CurveHint" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/CurveSection"]
+theme_override_colors/font_color = Color(0.75, 0.75, 0.75, 1)
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
+text = "Gemeisterte Aufgaben, aufgesammelt über die Wochen — diese Linie geht nicht zurück."
+
+[node name="Curve" type="Control" parent="Margin/Root/Tabs/Überblick/Overview/CurveSection"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 2
+script = ExtResource("3_chart")
+
+[node name="CurveCaption" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/CurveSection"]
+unique_name_in_owner = true
+theme_override_colors/font_color = Color(0.75, 0.75, 0.75, 1)
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
 
 [node name="WantedSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview"]
 theme_override_constants/separation = 4

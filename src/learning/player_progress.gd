@@ -20,6 +20,10 @@ const DEFAULT_CONFIDENCE := 0.3
 ## Festungsstufen-Schwellen: ab so vielen gemeisterten Aufgaben steigt die Stufe
 ## um 1 (0 → 1 → 2 → 3 → 4). Bewusst als Konstante, damit leicht justierbar.
 const FORTRESS_TIER_THRESHOLDS := [1, 3, 6, 10]
+## So viele Wochen umfasst die Lernkurve (siehe mastery_curve). Fest und nicht
+## umschaltbar: ein Vierteljahr ist lang genug für einen Verlauf und kurz genug, dass
+## die letzte Woche noch zu erkennen ist.
+const CURVE_WEEKS := 12
 
 ## learnable_id -> {
 ##   confidence: float (0..1), attempts: int, correct_total: int,
@@ -224,6 +228,38 @@ func mastered_count_before(before: int, threshold := MASTERY_CONFIDENCE) -> int:
 		elif at < before:
 			n += 1
 	return n
+
+
+## Kumulierte Lernkurve „gemeisterte Aufgaben" über die letzten `weeks` Wochen (Issue #7).
+##
+## Rückgabe: Array von { "end": int (unix, Ende der Woche, exklusiv), "count": int },
+## älteste Woche zuerst, `weeks` Einträge. `count` ist der Stand am Ende der Woche, also
+## kumuliert — die Kurve steigt und geht nie zurück, anders als die Genauigkeit, die beim
+## Üben schwerer Wörter einbricht. Das ist der ganze Punkt der Darstellung.
+##
+## Der Startwert enthält den Altbestand ohne Zeitstempel (siehe mastered_count_before):
+## dessen Meisterung liegt vor dem Messbeginn, und die Kurve fängt bei ihm an statt bei
+## null — als Sprung am 01.01.1970 taucht er nirgends auf.
+##
+## Die Wochen enden am Ende des heutigen (lokalen) Tages, nicht am Kalender-Sonntag: die
+## letzte Stütze soll den Stand von jetzt zeigen. `now` (unix) ist für Tests einsetzbar,
+## < 0 heißt Systemzeit.
+func mastery_curve(weeks := CURVE_WEEKS, now := -1) -> Array:
+	var now_unix := now if now >= 0 else int(Time.get_unix_time_from_system())
+	var last_end := _local_day_end(now_unix)
+	var out: Array = []
+	for i in range(maxi(1, weeks) - 1, -1, -1):
+		var week_end := last_end - i * 7 * 86400
+		out.append({"end": week_end, "count": mastered_count_before(week_end)})
+	return out
+
+
+## Ende des lokalen Tages, in dem `unix` liegt (exklusiv, also die Mitternacht danach).
+## Lokal und nicht UTC, aus demselben Grund wie SessionLog.local_day: sonst wechselt der
+## Tag abends mitten in der Sitzung.
+func _local_day_end(unix: int) -> int:
+	var bias := int(Time.get_time_zone_from_system().get("bias", 0)) * 60
+	return (floori(float(unix + bias) / 86400.0) + 1) * 86400 - bias
 
 
 ## Sortierte Liste für die Wort-Tabelle im Menü (schwächste Confidence zuerst).
