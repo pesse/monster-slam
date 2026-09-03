@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/ui/coin_strip.gd" id="1_strip"]
+
+[node name="CoinStrip" type="VBoxContainer"]
+theme_override_constants/separation = 4
+script = ExtResource("1_strip")
+
+[node name="Coins" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+theme_override_constants/separation = 3
+
+[node name="Caption" type="Label" parent="."]
+unique_name_in_owner = true
+theme_override_colors/font_color = Color(0.6, 0.6, 0.65, 1)
+theme_override_font_sizes/font_size = 12
+text = "Monat"
