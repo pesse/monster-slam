@@ -111,6 +111,40 @@ autowrap_mode = 3
 unique_name_in_owner = true
 theme_override_constants/separation = 4
 
+[node name="Fortschritt" type="ScrollContainer" parent="Margin/Root/Tabs"]
+
+[node name="Progress" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="UnitSection" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt/Progress"]
+theme_override_constants/separation = 4
+
+[node name="UnitTitle" type="Label" parent="Margin/Root/Tabs/Fortschritt/Progress/UnitSection"]
+theme_override_font_sizes/font_size = 20
+text = "📚 Nach Unit"
+
+[node name="UnitHint" type="Label" parent="Margin/Root/Tabs/Fortschritt/Progress/UnitSection"]
+theme_override_colors/font_color = Color(0.75, 0.75, 0.75, 1)
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
+text = "Ein Wort zählt als gemeistert, wenn du es in beide Richtungen sicher übersetzt."
+
+[node name="UnitList" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt/Progress/UnitSection"]
+unique_name_in_owner = true
+theme_override_constants/separation = 4
+
+[node name="TagSection" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt/Progress"]
+theme_override_constants/separation = 4
+
+[node name="TagTitle" type="Label" parent="Margin/Root/Tabs/Fortschritt/Progress/TagSection"]
+theme_override_font_sizes/font_size = 20
+text = "🏷️ Nach Thema"
+
+[node name="TagList" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt/Progress/TagSection"]
+unique_name_in_owner = true
+theme_override_constants/separation = 4
+
 [node name="Wörter" type="ScrollContainer" parent="Margin/Root/Tabs"]
 
 [node name="WordList" type="VBoxContainer" parent="Margin/Root/Tabs/Wörter"]

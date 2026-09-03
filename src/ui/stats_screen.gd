@@ -13,6 +13,7 @@ extends Control
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 const ROW_SCENE := preload("res://scenes/ui/stat_row.tscn")
+const PROGRESS_ROW_SCENE := preload("res://scenes/ui/progress_row.tscn")
 
 ## So viele Wörter stehen auf der Fahndungsliste. Kurz halten: eine lange Liste ist
 ## keine Fahndung mehr, sondern die Wortliste im zweiten Reiter.
@@ -25,6 +26,8 @@ const WANTED_COUNT := 5
 @onready var _curve: StatsChart = %Curve
 @onready var _curve_caption: Label = %CurveCaption
 @onready var _wanted_list: VBoxContainer = %WantedList
+@onready var _unit_list: VBoxContainer = %UnitList
+@onready var _tag_list: VBoxContainer = %TagList
 @onready var _word_list: VBoxContainer = %WordList
 
 
@@ -38,6 +41,7 @@ func _refresh() -> void:
 	_refresh_numbers()
 	_refresh_curve()
 	_refresh_wanted()
+	_refresh_progress()
 	_refresh_words()
 
 
@@ -141,6 +145,86 @@ func _refresh_wanted() -> void:
 	for row in wanted:
 		_add_row(_wanted_list, str(row["label"]),
 				"%d× entwischt" % misses(row), _percent(row))
+
+
+## Fortschrittsbalken pro Unit und pro Thema (Issue #8).
+##
+## Der Bezugsrahmen ist der Curriculum-Scope aus dem Session-Setup: angezeigt werden nur
+## Units und Themen, die darin überhaupt vorkommen. Ohne Auswahl ist es der ganze
+## Katalog. Die Themen-Auswahl (die zweite Achse) bleibt hier bewusst außen vor — sonst
+## stünde bei „Unit 6: 8 von 12" nur der ausgewählte Teil der Unit, und die Zahl wäre
+## nicht die, nach der ein Elternteil oder eine Lehrkraft fragt.
+func _refresh_progress() -> void:
+	var pool := ContentRegistry.lexemes_scoped(UserSettings.selected_scope(), [])
+	var mastered := PlayerProgress.mastered_lexemes()
+	_fill_progress(_unit_list, unit_rows(pool, mastered, ContentRegistry.book_label),
+			"Keine Units im gewählten Bereich.")
+	_fill_progress(_tag_list, tag_rows(pool, mastered), "Noch keine Themen im gewählten Bereich.")
+
+
+## Fortschrittszeilen je Unit: { label, done, total }, nach Buch und Unit sortiert.
+## Lexeme ohne Buch/Unit (Grundwortschatz) haben keine Unit und bleiben außen vor.
+## `book_label` benennt das Buch für die Anzeige (ContentRegistry.book_label).
+##
+## Statisch und ohne Autoload, damit die Zählung für sich prüfbar bleibt
+## (siehe tests/mastered_lexemes_test.gd).
+static func unit_rows(lexemes: Array, mastered: Dictionary, book_label: Callable) -> Array:
+	var groups := {}
+	for entry in lexemes:
+		var book := str(entry.get("book", ""))
+		if book.is_empty() or not entry.has("unit"):
+			continue
+		_count_into(groups, "%s/%04d" % [book, int(entry["unit"])], entry, mastered)
+	var keys: Array = groups.keys()
+	keys.sort()
+	var rows: Array = []
+	for key in keys:
+		var parts := str(key).split("/")
+		var group: Dictionary = groups[key]
+		rows.append({
+			"label": "%s, Unit %d" % [book_label.call(parts[0]), int(parts[1])],
+			"done": int(group["done"]), "total": int(group["total"]),
+		})
+	return rows
+
+
+## Fortschrittszeilen je Thema (Lexem-Tag), alphabetisch. Ein Lexem mit mehreren Tags
+## zählt in jedem davon mit — die Themen sind keine Aufteilung, sondern Sichten.
+static func tag_rows(lexemes: Array, mastered: Dictionary) -> Array:
+	var groups := {}
+	for entry in lexemes:
+		for tag in entry.get("tags", []):
+			_count_into(groups, str(tag), entry, mastered)
+	var keys: Array = groups.keys()
+	keys.sort()
+	var rows: Array = []
+	for key in keys:
+		var group: Dictionary = groups[key]
+		rows.append({
+			"label": str(key), "done": int(group["done"]), "total": int(group["total"]),
+		})
+	return rows
+
+
+## Zählt ein Lexem in die Gruppe `key`: eines mehr insgesamt, und eines mehr gemeistert,
+## wenn es in der Menge steht (siehe PlayerProgress.mastered_lexemes).
+static func _count_into(groups: Dictionary, key: String, entry: Dictionary, mastered: Dictionary) -> void:
+	if not groups.has(key):
+		groups[key] = {"done": 0, "total": 0}
+	groups[key]["total"] += 1
+	if mastered.has(str(entry.get("id", ""))):
+		groups[key]["done"] += 1
+
+
+func _fill_progress(box: VBoxContainer, rows: Array, empty_text: String) -> void:
+	_clear(box)
+	if rows.is_empty():
+		_add_line(box, empty_text)
+		return
+	for row in rows:
+		var bar := PROGRESS_ROW_SCENE.instantiate() as ProgressRow
+		box.add_child(bar)
+		bar.setup(str(row["label"]), int(row["done"]), int(row["total"]))
 
 
 ## Alle geübten Wörter, schwächste Confidence zuerst (die Sortierung liefert
