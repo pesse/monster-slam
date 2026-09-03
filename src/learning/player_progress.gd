@@ -20,6 +20,13 @@ const DEFAULT_CONFIDENCE := 0.3
 ## Festungsstufen-Schwellen: ab so vielen gemeisterten Aufgaben steigt die Stufe
 ## um 1 (0 → 1 → 2 → 3 → 4). Bewusst als Konstante, damit leicht justierbar.
 const FORTRESS_TIER_THRESHOLDS := [1, 3, 6, 10]
+## Die Richtungen, in denen die Übersetzungsaufgabe eines Lexems sitzen muss, damit das
+## WORT als gemeistert gilt (siehe mastered_lexemes).
+const LEXEME_MASTERY_DIRECTIONS := ["de_to_en", "en_to_de"]
+## So viele Wochen umfasst die Lernkurve (siehe mastery_curve). Fest und nicht
+## umschaltbar: ein Vierteljahr ist lang genug für einen Verlauf und kurz genug, dass
+## die letzte Woche noch zu erkennen ist.
+const CURVE_WEEKS := 12
 
 ## learnable_id -> {
 ##   confidence: float (0..1), attempts: int, correct_total: int,
@@ -226,8 +233,84 @@ func mastered_count_before(before: int, threshold := MASTERY_CONFIDENCE) -> int:
 	return n
 
 
+## Kumulierte Lernkurve „gemeisterte Aufgaben" über die letzten `weeks` Wochen (Issue #7).
+##
+## Rückgabe: Array von { "end": int (unix, Ende der Woche, exklusiv), "count": int },
+## älteste Woche zuerst, `weeks` Einträge. `count` ist der Stand am Ende der Woche, also
+## kumuliert — die Kurve steigt und geht nie zurück, anders als die Genauigkeit, die beim
+## Üben schwerer Wörter einbricht. Das ist der ganze Punkt der Darstellung.
+##
+## Der Startwert enthält den Altbestand ohne Zeitstempel (siehe mastered_count_before):
+## dessen Meisterung liegt vor dem Messbeginn, und die Kurve fängt bei ihm an statt bei
+## null — als Sprung am 01.01.1970 taucht er nirgends auf.
+##
+## Die Wochen enden am Ende des heutigen (lokalen) Tages, nicht am Kalender-Sonntag: die
+## letzte Stütze soll den Stand von jetzt zeigen. `now` (unix) ist für Tests einsetzbar,
+## < 0 heißt Systemzeit.
+func mastery_curve(weeks := CURVE_WEEKS, now := -1) -> Array:
+	var now_unix := now if now >= 0 else int(Time.get_unix_time_from_system())
+	var last_end := _local_day_end(now_unix)
+	var out: Array = []
+	for i in range(maxi(1, weeks) - 1, -1, -1):
+		var week_end := last_end - i * 7 * 86400
+		out.append({"end": week_end, "count": mastered_count_before(week_end)})
+	return out
+
+
+## Ende des lokalen Tages, in dem `unix` liegt (exklusiv, also die Mitternacht danach).
+## Lokal und nicht UTC, aus demselben Grund wie SessionLog.local_day: sonst wechselt der
+## Tag abends mitten in der Sitzung.
+func _local_day_end(unix: int) -> int:
+	var bias := int(Time.get_time_zone_from_system().get("bias", 0)) * 60
+	return (floori(float(unix + bias) / 86400.0) + 1) * 86400 - bias
+
+
+## Lexem-Ids, die als gemeistert gelten — als Menge (id -> true), für die
+## Fortschrittsbalken pro Unit und Thema (Issue #8).
+##
+## Die Regel: ein WORT ist gemeistert, wenn die Übersetzungsaufgabe in BEIDEN Richtungen
+## gemeistert ist (de→en und en→de). mastered_count() zählt learnable_ids, und davon hat
+## ein Wort mehrere (Richtungen, Formen, Relationen) — „18 von 24 Wörtern" bräuchte sonst
+## keine Regel, sondern eine Ausrede: der Balken zählte Äpfel gegen Birnen und könnte über
+## 100 % gehen. Beide Richtungen, weil ein Wort erkennen (en→de) leichter ist als es
+## produzieren (de→en); wer nur die eine Richtung kann, kann das Wort noch nicht.
+##
+## Formen und Relationen (Konjugation, Gegenteil …) bleiben außen vor: sie hängen an
+## Zusatzdaten, die nur ein Teil der Lexeme hat, und wären als Bedingung eine Hürde, die
+## vom Wort selbst nicht abhängt.
+func mastered_lexemes(threshold := MASTERY_CONFIDENCE) -> Dictionary:
+	return mastered_lexemes_in(_records, threshold)
+
+
+## Wie mastered_lexemes(), aber über übergebene Records — statisch und ohne Autoload,
+## damit die Regel für sich prüfbar bleibt (siehe tests/mastered_lexemes_test.gd).
+static func mastered_lexemes_in(records: Dictionary, threshold := MASTERY_CONFIDENCE) -> Dictionary:
+	# lexeme_id -> Menge der gemeisterten Richtungen.
+	var hits := {}
+	for id in records:
+		if float(records[id].get("confidence", 0.0)) < threshold:
+			continue
+		var parts := str(id).split(":")
+		if parts.size() != 3 or parts[0] != "translate":
+			continue
+		if not (parts[1] in LEXEME_MASTERY_DIRECTIONS):
+			continue
+		if not hits.has(parts[2]):
+			hits[parts[2]] = {}
+		hits[parts[2]][parts[1]] = true
+	var out := {}
+	for lexeme_id in hits:
+		if hits[lexeme_id].size() == LEXEME_MASTERY_DIRECTIONS.size():
+			out[lexeme_id] = true
+	return out
+
+
 ## Sortierte Liste für die Wort-Tabelle im Menü (schwächste Confidence zuerst).
-## Rückgabe: Array von { id, label, confidence, mastered, attempts, correct }.
+## Rückgabe: Array von { id, label, confidence, mastered, attempts, correct, mastered_at }.
+##
+## `mastered_at` (0 = nie/unbekannt) fährt mit, damit die Listen „frisch gemeistert" und
+## „Comeback" aus DIESER einen Abfrage entstehen und nicht aus einer zweiten daneben —
+## das Auflösen der Labels über den TaskResolver ist der teure Teil.
 func records_for_display() -> Array:
 	var resolver := TaskResolver.new()
 	var rows: Array = []
@@ -241,6 +324,7 @@ func records_for_display() -> Array:
 			"mastered": conf >= MASTERY_CONFIDENCE,
 			"attempts": int(rec.get("attempts", 0)),
 			"correct": int(rec.get("correct_total", 0)),
+			"mastered_at": int(rec.get("mastered_at", 0)),
 		})
 	rows.sort_custom(func(a, b): return a["confidence"] < b["confidence"])
 	return rows

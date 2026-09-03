@@ -194,6 +194,19 @@ func all_books() -> PackedStringArray:
 	return result
 
 
+## „access2" -> „Access 2": nachgestellte Ziffern mit Leerzeichen abtrennen, Rest als
+## Titel. Die Buch-Ids sind klein und ohne Trennzeichen, für die Anzeige taugen sie nicht.
+## Steht hier und nicht in einem Screen, weil inzwischen mehrere Screens Bücher benennen
+## (Session-Setup, Statistik) und zwei Regeln irgendwann auseinanderlaufen.
+func book_label(book: String) -> String:
+	var i := book.length()
+	while i > 0 and book[i - 1] >= "0" and book[i - 1] <= "9":
+		i -= 1
+	var name := book.substr(0, i).capitalize()
+	var num := book.substr(i)
+	return name if num.is_empty() else "%s %s" % [name, num]
+
+
 ## Alle distinkten Units eines Buchs (Lexem-Feld "unit"), numerisch aufsteigend sortiert.
 func units_for(book: String) -> Array:
 	var seen := {}

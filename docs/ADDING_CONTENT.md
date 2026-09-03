@@ -63,6 +63,23 @@ So akzeptiert „gehen" → `go`/`walk` und „go" → `gehen`/`laufen`. Für re
 (z. B. `quick`/`fast`, `colour`/`color`) sind die Alt-Listen gedacht. Ist die Alternative
 selbst ein eigenes Lernwort mit eigenen Aufgaben, lege besser ein zweites Lexem an.
 
+**Grammatik-Notation darf im Lemma stehen** — `sb.`/`sth.`, `jn.`/`jm.`, `etwas`, `…` und
+Klammern wie in `criticize sb. (for)` / `jn. kritisieren (wegen)`. Der `AnswerEvaluator`
+behandelt sie beim Vergleich als optional, auf der Eingabe- *und* der Datenseite:
+
+- Platzhalter sind untereinander gleichwertig. `criticize sb for`, `criticize sb. (for)`
+  und `criticize somebody for` gelten alle als vollständig richtig.
+- Klammerinhalte darf man tippen, mit oder ohne Klammern, oder weglassen. Das gilt auch
+  für reine Erklärungen (`tragen (Kleidung)`, `die Süßigkeiten (Pl.)`).
+- Wer nur den Kern tippt (`criticize`), bekommt den Treffer trotzdem; eingeblendet wird
+  dann zusätzlich die vollständige Form. Deshalb ist die Notation kein Ärgernis mehr und
+  soll ruhig im Lemma stehen — sie ist die Information über den Gebrauch.
+
+Nicht toleriert werden Schreibvarianten (`criticise`) — die gehören in `lemma_en_alt`.
+Zwei Dinge prüft `tests/lexeme_data_test.gd`: Klammern müssen balanciert sein, und beim
+Weglassen aller optionalen Teile muss ein Kern übrig bleiben (ein Lemma, das nur aus
+Notation besteht, wäre unauswertbar).
+
 ### 2. Form (nur für Konjugation/Zeitformen) → `data/language/lexeme_forms/…json`
 ```json
 { "id": "form.eat.past", "lexeme_id": "lex.en.eat", "language": "en", "form_type": "past_simple", "value": "ate" }

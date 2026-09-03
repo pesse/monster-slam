@@ -1,28 +1,46 @@
 extends Control
-## Statistik-Screen: Zahlen zum Lernstand, Fahndungsliste, Wortliste (Issue #5).
+## Statistik-Screen: Zahlen zum Lernstand, Lernkurve, Listen, Fortschritt, Wortliste.
 ##
 ## Ausgelagert aus dem Einstellungs-Screen. Dort hing die Statistik zwischen
 ## Profilauswahl, Reset und Melde-Token — sie ist aber der motivierende Teil und
 ## verdient einen eigenen Screen, direkt vom Start-Screen (profile_menu) aus erreichbar.
 ##
-## Das Layout liegt in stats_screen.tscn (im Editor gestaltbar), die Zeilen-Vorlage in
-## stat_row.tscn, die Tages-Leiste in coin_strip.tscn; hier wird nur befüllt. Die
-## weiteren Verlaufs-Statistiken (Lernkurve, Fortschritt pro Unit, Kampf-Rekorde) kommen
-## als weitere Abschnitte in den Reiter „Überblick"; die Daten dafür liegen in SessionLog
-## und PlayerProgress bereit.
+## Das Layout liegt in stats_screen.tscn (im Editor gestaltbar), die Zeilen-Vorlagen in
+## stat_row.tscn und progress_row.tscn, die Tages-Leiste in coin_strip.tscn, der
+## Zeichen-Control der Kurve in stats_chart.gd; hier wird nur befüllt.
+##
+## Drei Reiter: „Überblick" trägt die Abschnitte, die zum Weiterspielen motivieren
+## (Tages-Serie #6, Kennzahlen #5, Lernkurve #7, frisch gemeistert und Comeback #9,
+## Fahndungsliste #5), „Fortschritt" die Balken pro Unit und Thema (#8) — die wachsen mit
+## dem Katalog und schöben im Überblick alles andere aus dem Bild —, „Wörter" die
+## vollständige Liste. Was noch fehlt (Kampf-Rekorde), liegt in SessionLog bereit.
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 const ROW_SCENE := preload("res://scenes/ui/stat_row.tscn")
+const PROGRESS_ROW_SCENE := preload("res://scenes/ui/progress_row.tscn")
 
 ## So viele Wörter stehen auf der Fahndungsliste. Kurz halten: eine lange Liste ist
 ## keine Fahndung mehr, sondern die Wortliste im zweiten Reiter.
 const WANTED_COUNT := 5
+## So viele Einträge zeigen „Frisch gemeistert" und „Comeback" — aus demselben Grund
+## gekappt wie die Fahndungsliste.
+const LIST_COUNT := 5
+## „Frisch" ist die letzte Woche.
+const FRESH_DAYS := 7
+## Ab so vielen Fehlversuchen ist eine wiedergewonnene Aufgabe ein Comeback.
+const COMEBACK_MISSES := 3
 
 @onready var _streak_label: Label = %StreakLabel
 @onready var _coin_label: Label = %CoinLabel
 @onready var _coin_strip: CoinStrip = %CoinStrip
 @onready var _stat_lines: VBoxContainer = %StatLines
+@onready var _curve: StatsChart = %Curve
+@onready var _curve_caption: Label = %CurveCaption
+@onready var _fresh_list: VBoxContainer = %FreshList
+@onready var _comeback_list: VBoxContainer = %ComebackList
 @onready var _wanted_list: VBoxContainer = %WantedList
+@onready var _unit_list: VBoxContainer = %UnitList
+@onready var _tag_list: VBoxContainer = %TagList
 @onready var _word_list: VBoxContainer = %WordList
 
 
@@ -34,7 +52,10 @@ func _ready() -> void:
 func _refresh() -> void:
 	_refresh_streak()
 	_refresh_numbers()
+	_refresh_curve()
+	_refresh_lists()
 	_refresh_wanted()
+	_refresh_progress()
 	_refresh_words()
 
 
@@ -75,6 +96,108 @@ func _refresh_numbers() -> void:
 	_add_line(_stat_lines, "Heute fällig: %d" % PlayerProgress.due_count())
 
 
+## Lernkurve „gemeisterte Aufgaben" (Issue #7).
+##
+## Gezeichnet wird die kumulierte Zahl je Wochenende (PlayerProgress.mastery_curve) —
+## eine Linie, die nicht zurückgeht. Die Bilanzzeile darunter sagt, was im Zeitraum
+## dazugekommen ist: eine Kurve ohne Zahl liest sich, aber man nimmt nichts mit.
+func _refresh_curve() -> void:
+	var curve := PlayerProgress.mastery_curve()
+	var values: Array = []
+	for point in curve:
+		values.append(int(point["count"]))
+	# Anfang der Zeitachse ist der BEGINN der ersten Woche, nicht ihr Ende.
+	var start := int(curve[0]["end"]) - 7 * 86400
+	_curve.show_series(values, short_date(start), "heute")
+
+	var first := int(values[0])
+	var last := int(values[values.size() - 1])
+	if last == 0:
+		_curve_caption.text = "Noch keine gemeisterte Aufgabe — die erste hebt die Linie."
+	elif last == first:
+		_curve_caption.text = "%d gemeistert, alle vor diesem Zeitraum — die nächste hebt die Linie." % last
+	else:
+		_curve_caption.text = "%d dazugekommen in %d Wochen — jetzt %d gemeistert." % [
+			last - first, curve.size(), last]
+
+
+## Kurzes Datum „9.6." für die Achsen-Beschriftung.
+static func short_date(unix: int) -> String:
+	var d := Time.get_datetime_dict_from_unix_time(unix)
+	return "%d.%d." % [int(d["day"]), int(d["month"])]
+
+
+## „Frisch gemeistert": Aufgaben, deren erste Meisterung im Zeitraum ab `since` (unix)
+## liegt — jüngste zuerst, gekappt auf `limit`.
+##
+## Records ohne Zeitstempel (mastered_at = 0, Altbestand von vor der Zeitmessung) bleiben
+## außen vor: ihre Meisterung liegt vor dem Messbeginn und wäre hier ein Eintrag vom
+## 01.01.1970. Dieselbe Regel wie in PlayerProgress.mastered_since.
+static func fresh_rows(rows: Array, since: int, limit := LIST_COUNT) -> Array:
+	var fresh: Array = []
+	for row in rows:
+		var at := int(row.get("mastered_at", 0))
+		if at > 0 and at >= since:
+			fresh.append(row)
+	fresh.sort_custom(func(a, b): return int(a["mastered_at"]) > int(b["mastered_at"]))
+	return fresh.slice(0, limit)
+
+
+## „Comeback": Aufgaben, die mindestens `min_misses` Mal entwischt sind und jetzt trotzdem
+## sitzen — die mit den meisten Fehlversuchen zuerst, bei gleichem Stand die jüngste
+## Meisterung. Gekappt auf `limit`.
+##
+## Ohne Zeitfenster, anders als bei „frisch gemeistert": ein zurückgeholtes Wort bleibt
+## eine Auszeichnung, auch wenn es vier Wochen her ist. Der Altbestand ohne Zeitstempel
+## darf hier deshalb mitkommen — die Sortierung nimmt ihn nur nach hinten.
+static func comeback_rows(rows: Array, limit := LIST_COUNT, min_misses := COMEBACK_MISSES) -> Array:
+	var comeback: Array = []
+	for row in rows:
+		if bool(row["mastered"]) and misses(row) >= min_misses:
+			comeback.append(row)
+	comeback.sort_custom(func(a, b):
+		if misses(a) == misses(b):
+			return int(a.get("mastered_at", 0)) > int(b.get("mastered_at", 0))
+		return misses(a) > misses(b))
+	return comeback.slice(0, limit)
+
+
+## Die beiden Listen, die genau das belohnen, was belohnt werden soll (Issue #9).
+##
+## Mit Wortlaut und nicht als Zahl — der Wiedererkennungswert ist der Punkt, „71 %
+## Genauigkeit" sagt darüber nichts. Beide Listen haben einen freundlichen Leertext statt
+## einer leeren Fläche; beim Comeback ist leer der Normalfall.
+func _refresh_lists() -> void:
+	var rows := PlayerProgress.records_for_display()
+	var since := int(Time.get_unix_time_from_system()) - FRESH_DAYS * 86400
+
+	_clear(_fresh_list)
+	var fresh := fresh_rows(rows, since)
+	if fresh.is_empty():
+		_add_line(_fresh_list, "Diese Woche noch keins — das nächste sitzt bald.")
+	for row in fresh:
+		_add_row(_fresh_list, str(row["label"]), _when(int(row["mastered_at"])), "✓")
+
+	_clear(_comeback_list)
+	var comeback := comeback_rows(rows)
+	if comeback.is_empty():
+		_add_line(_comeback_list, "Noch keins — dafür muss ein Wort erst dreimal entwischen.")
+	for row in comeback:
+		_add_row(_comeback_list, str(row["label"]), "%d× entwischt" % misses(row), "✓")
+
+
+## „heute" / „gestern" / „vor 3 Tagen" für einen Meisterungs-Zeitpunkt. Lokale Tage wie
+## in der Tages-Serie (SessionLog.local_day), damit nicht zwei Tagesgrenzen im Screen
+## gelten. Bei „frisch gemeistert" liegt der Zeitpunkt höchstens eine Woche zurück.
+func _when(unix: int) -> String:
+	var days := SessionLog.local_day(int(Time.get_unix_time_from_system())) - SessionLog.local_day(unix)
+	if days <= 0:
+		return "heute"
+	if days == 1:
+		return "gestern"
+	return "vor %d Tagen" % days
+
+
 ## Wählt die Fahndungsfälle aus den Zeilen von PlayerProgress.records_for_display():
 ## schwächste Confidence zuerst, bei gleicher Confidence die mit den meisten
 ## Fehlversuchen, gekappt auf `limit`.
@@ -107,6 +230,86 @@ func _refresh_wanted() -> void:
 	for row in wanted:
 		_add_row(_wanted_list, str(row["label"]),
 				"%d× entwischt" % misses(row), _percent(row))
+
+
+## Fortschrittsbalken pro Unit und pro Thema (Issue #8).
+##
+## Der Bezugsrahmen ist der Curriculum-Scope aus dem Session-Setup: angezeigt werden nur
+## Units und Themen, die darin überhaupt vorkommen. Ohne Auswahl ist es der ganze
+## Katalog. Die Themen-Auswahl (die zweite Achse) bleibt hier bewusst außen vor — sonst
+## stünde bei „Unit 6: 8 von 12" nur der ausgewählte Teil der Unit, und die Zahl wäre
+## nicht die, nach der ein Elternteil oder eine Lehrkraft fragt.
+func _refresh_progress() -> void:
+	var pool := ContentRegistry.lexemes_scoped(UserSettings.selected_scope(), [])
+	var mastered := PlayerProgress.mastered_lexemes()
+	_fill_progress(_unit_list, unit_rows(pool, mastered, ContentRegistry.book_label),
+			"Keine Units im gewählten Bereich.")
+	_fill_progress(_tag_list, tag_rows(pool, mastered), "Noch keine Themen im gewählten Bereich.")
+
+
+## Fortschrittszeilen je Unit: { label, done, total }, nach Buch und Unit sortiert.
+## Lexeme ohne Buch/Unit (Grundwortschatz) haben keine Unit und bleiben außen vor.
+## `book_label` benennt das Buch für die Anzeige (ContentRegistry.book_label).
+##
+## Statisch und ohne Autoload, damit die Zählung für sich prüfbar bleibt
+## (siehe tests/mastered_lexemes_test.gd).
+static func unit_rows(lexemes: Array, mastered: Dictionary, book_label: Callable) -> Array:
+	var groups := {}
+	for entry in lexemes:
+		var book := str(entry.get("book", ""))
+		if book.is_empty() or not entry.has("unit"):
+			continue
+		_count_into(groups, "%s/%04d" % [book, int(entry["unit"])], entry, mastered)
+	var keys: Array = groups.keys()
+	keys.sort()
+	var rows: Array = []
+	for key in keys:
+		var parts := str(key).split("/")
+		var group: Dictionary = groups[key]
+		rows.append({
+			"label": "%s, Unit %d" % [book_label.call(parts[0]), int(parts[1])],
+			"done": int(group["done"]), "total": int(group["total"]),
+		})
+	return rows
+
+
+## Fortschrittszeilen je Thema (Lexem-Tag), alphabetisch. Ein Lexem mit mehreren Tags
+## zählt in jedem davon mit — die Themen sind keine Aufteilung, sondern Sichten.
+static func tag_rows(lexemes: Array, mastered: Dictionary) -> Array:
+	var groups := {}
+	for entry in lexemes:
+		for tag in entry.get("tags", []):
+			_count_into(groups, str(tag), entry, mastered)
+	var keys: Array = groups.keys()
+	keys.sort()
+	var rows: Array = []
+	for key in keys:
+		var group: Dictionary = groups[key]
+		rows.append({
+			"label": str(key), "done": int(group["done"]), "total": int(group["total"]),
+		})
+	return rows
+
+
+## Zählt ein Lexem in die Gruppe `key`: eines mehr insgesamt, und eines mehr gemeistert,
+## wenn es in der Menge steht (siehe PlayerProgress.mastered_lexemes).
+static func _count_into(groups: Dictionary, key: String, entry: Dictionary, mastered: Dictionary) -> void:
+	if not groups.has(key):
+		groups[key] = {"done": 0, "total": 0}
+	groups[key]["total"] += 1
+	if mastered.has(str(entry.get("id", ""))):
+		groups[key]["done"] += 1
+
+
+func _fill_progress(box: VBoxContainer, rows: Array, empty_text: String) -> void:
+	_clear(box)
+	if rows.is_empty():
+		_add_line(box, empty_text)
+		return
+	for row in rows:
+		var bar := PROGRESS_ROW_SCENE.instantiate() as ProgressRow
+		box.add_child(bar)
+		bar.setup(str(row["label"]), int(row["done"]), int(row["total"]))
 
 
 ## Alle geübten Wörter, schwächste Confidence zuerst (die Sortierung liefert

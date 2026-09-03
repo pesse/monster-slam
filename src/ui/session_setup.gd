@@ -96,7 +96,7 @@ func _build_scope() -> void:
 	var selected := UserSettings.selected_scope()
 	for book in ContentRegistry.all_books():
 		var label := Label.new()
-		label.text = _book_label(book)
+		label.text = ContentRegistry.book_label(book)
 		label.add_theme_font_size_override("font_size", 18)
 		_scope_list.add_child(label)
 		var grid := GridContainer.new()
@@ -123,16 +123,6 @@ func _collect_scope() -> PackedStringArray:
 		if child is GridContainer:
 			result.append_array(_collect(child))
 	return result
-
-
-## "access2" -> "Access 2": nachgestellte Ziffern mit Leerzeichen abtrennen, Rest als Titel.
-func _book_label(book: String) -> String:
-	var i := book.length()
-	while i > 0 and book[i - 1] >= "0" and book[i - 1] <= "9":
-		i -= 1
-	var name := book.substr(0, i).capitalize()
-	var num := book.substr(i)
-	return name if num.is_empty() else "%s %s" % [name, num]
 
 
 func _build_task_types() -> void:

@@ -1,5 +1,5 @@
 extends GdUnitTestSuite
-## Statistik-Screen: Auswahlregel der Fahndungsliste und Aufbau der Szene (Issue #5).
+## Statistik-Screen: Auswahlregeln der Listen und Aufbau der Szene (Issue #5, #9).
 ##
 ## Die Auswahl wird an der statischen wanted_rows() geprüft — mit erfundenen Zeilen im
 ## Format von PlayerProgress.records_for_display(), also ohne den echten Lernstand des
@@ -10,10 +10,11 @@ const STATS_SCREEN := preload("res://src/ui/stats_screen.gd")
 const STATS_SCENE := preload("res://scenes/ui/stats_screen.tscn")
 
 
-func _row(label: String, confidence: float, attempts: int, correct: int) -> Dictionary:
+func _row(label: String, confidence: float, attempts: int, correct: int, mastered_at := 0) -> Dictionary:
 	return {
 		"id": label, "label": label, "confidence": confidence,
 		"mastered": confidence >= 0.8, "attempts": attempts, "correct": correct,
+		"mastered_at": mastered_at,
 	}
 
 
@@ -57,6 +58,66 @@ func test_misses_are_attempts_minus_correct() -> void:
 	assert_int(STATS_SCREEN.misses(_row("x", 0.5, 7, 3))).is_equal(4)
 
 
+# --- „Frisch gemeistert" und „Comeback" (Issue #9) ------------------------------
+
+## Records ohne Zeitstempel (Altbestand von vor der Zeitmessung) sind nicht „frisch" —
+## sonst stünde dort eine Meisterung vom 01.01.1970.
+func test_rows_without_a_timestamp_are_not_fresh() -> void:
+	var rows := [_row("alt", 0.9, 5, 5, 0), _row("neu", 0.9, 5, 5, 2000)]
+	var fresh := STATS_SCREEN.fresh_rows(rows, 1000)
+	assert_int(fresh.size()).is_equal(1)
+	assert_str(str(fresh[0]["label"])).is_equal("neu")
+
+
+func test_masteries_before_the_window_are_not_fresh() -> void:
+	var rows := [_row("vorher", 0.9, 5, 5, 500), _row("drin", 0.9, 5, 5, 1500)]
+	assert_int(STATS_SCREEN.fresh_rows(rows, 1000).size()).is_equal(1)
+
+
+## Jüngste zuerst — oben steht, was gerade gesessen hat.
+func test_fresh_list_is_newest_first_and_capped() -> void:
+	var rows: Array = []
+	for i in 8:
+		rows.append(_row("wort%d" % i, 0.9, 5, 5, 1000 + i))
+	var fresh := STATS_SCREEN.fresh_rows(rows, 0)
+	assert_int(fresh.size()).is_equal(STATS_SCREEN.LIST_COUNT)
+	assert_str(str(fresh[0]["label"])).is_equal("wort7")
+	assert_int(STATS_SCREEN.fresh_rows(rows, 0, 2).size()).is_equal(2)
+
+
+func test_a_week_without_a_mastery_yields_an_empty_fresh_list() -> void:
+	assert_array(STATS_SCREEN.fresh_rows([_row("alt", 0.9, 5, 5, 100)], 1000)).is_empty()
+
+
+## Ein Comeback ist beides: dreimal entwischt UND jetzt gemeistert.
+func test_comeback_needs_misses_and_mastery() -> void:
+	var rows := [
+		_row("noch offen", 0.4, 6, 2, 0),       # dreimal entwischt, sitzt aber nicht
+		_row("glatt", 0.9, 5, 5, 2000),         # gemeistert, nie entwischt
+		_row("comeback", 0.9, 8, 5, 3000),      # dreimal entwischt und gemeistert
+	]
+	var comeback := STATS_SCREEN.comeback_rows(rows)
+	assert_int(comeback.size()).is_equal(1)
+	assert_str(str(comeback[0]["label"])).is_equal("comeback")
+
+
+## Zwei Fehlversuche sind noch kein Comeback.
+func test_two_misses_are_not_yet_a_comeback() -> void:
+	assert_array(STATS_SCREEN.comeback_rows([_row("knapp", 0.9, 7, 5, 2000)])).is_empty()
+
+
+## Das größte Comeback zuerst, bei gleichem Stand die jüngere Meisterung.
+func test_comeback_list_is_sorted_by_misses_then_recency() -> void:
+	var rows := [
+		_row("dreimal alt", 0.9, 8, 5, 1000),
+		_row("dreimal neu", 0.9, 8, 5, 5000),
+		_row("fünfmal", 0.9, 10, 5, 2000),
+	]
+	var comeback := STATS_SCREEN.comeback_rows(rows)
+	assert_str(str(comeback[0]["label"])).is_equal("fünfmal")
+	assert_str(str(comeback[1]["label"])).is_equal("dreimal neu")
+
+
 ## Die Szene muss sich bauen lassen und ihre drei Listen über die eindeutigen Namen
 ## finden — genau das geht in einer handgeschriebenen .tscn leicht schief.
 func test_scene_builds_and_finds_its_lists() -> void:
@@ -64,6 +125,8 @@ func test_scene_builds_and_finds_its_lists() -> void:
 	add_child(screen)
 	assert_object(screen.get_node("%StatLines")).is_not_null()
 	assert_object(screen.get_node("%WantedList")).is_not_null()
+	assert_object(screen.get_node("%FreshList")).is_not_null()
+	assert_object(screen.get_node("%ComebackList")).is_not_null()
 	assert_object(screen.get_node("%WordList")).is_not_null()
 	assert_object(screen.get_node("%BackButton")).is_not_null()
 	# Fünf Kennzahlen-Zeilen füllt _refresh_numbers beim Betreten.

@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://src/ui/stats_screen.gd" id="1_stats"]
 [ext_resource type="PackedScene" path="res://scenes/ui/coin_strip.tscn" id="2_coins"]
+[ext_resource type="Script" path="res://src/ui/stats_chart.gd" id="3_chart"]
 
 [node name="StatsScreen" type="Control"]
 layout_mode = 3
@@ -68,6 +69,65 @@ unique_name_in_owner = true
 unique_name_in_owner = true
 theme_override_constants/separation = 6
 
+[node name="CurveSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview"]
+theme_override_constants/separation = 4
+
+[node name="CurveTitle" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/CurveSection"]
+theme_override_font_sizes/font_size = 20
+text = "📈 Lernkurve"
+
+[node name="CurveHint" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/CurveSection"]
+theme_override_colors/font_color = Color(0.75, 0.75, 0.75, 1)
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
+text = "Gemeisterte Aufgaben, aufgesammelt über die Wochen — diese Linie geht nicht zurück."
+
+[node name="Curve" type="Control" parent="Margin/Root/Tabs/Überblick/Overview/CurveSection"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 2
+script = ExtResource("3_chart")
+
+[node name="CurveCaption" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/CurveSection"]
+unique_name_in_owner = true
+theme_override_colors/font_color = Color(0.75, 0.75, 0.75, 1)
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
+
+[node name="FreshSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview"]
+theme_override_constants/separation = 4
+
+[node name="FreshTitle" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/FreshSection"]
+theme_override_font_sizes/font_size = 20
+text = "🌱 Frisch gemeistert"
+
+[node name="FreshHint" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/FreshSection"]
+theme_override_colors/font_color = Color(0.75, 0.75, 0.75, 1)
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
+text = "Diese Wörter sitzen seit dieser Woche."
+
+[node name="FreshList" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview/FreshSection"]
+unique_name_in_owner = true
+theme_override_constants/separation = 4
+
+[node name="ComebackSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview"]
+theme_override_constants/separation = 4
+
+[node name="ComebackTitle" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/ComebackSection"]
+theme_override_font_sizes/font_size = 20
+text = "🏅 Comeback"
+
+[node name="ComebackHint" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/ComebackSection"]
+theme_override_colors/font_color = Color(0.75, 0.75, 0.75, 1)
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
+text = "Dreimal entwischt oder öfter — und jetzt sitzen sie doch."
+
+[node name="ComebackList" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview/ComebackSection"]
+unique_name_in_owner = true
+theme_override_constants/separation = 4
+
 [node name="WantedSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview"]
 theme_override_constants/separation = 4
 
@@ -82,6 +142,40 @@ text = "Diese Wörter sind dir schon entwischt — hol sie dir zurück."
 autowrap_mode = 3
 
 [node name="WantedList" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview/WantedSection"]
+unique_name_in_owner = true
+theme_override_constants/separation = 4
+
+[node name="Fortschritt" type="ScrollContainer" parent="Margin/Root/Tabs"]
+
+[node name="Progress" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="UnitSection" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt/Progress"]
+theme_override_constants/separation = 4
+
+[node name="UnitTitle" type="Label" parent="Margin/Root/Tabs/Fortschritt/Progress/UnitSection"]
+theme_override_font_sizes/font_size = 20
+text = "📚 Nach Unit"
+
+[node name="UnitHint" type="Label" parent="Margin/Root/Tabs/Fortschritt/Progress/UnitSection"]
+theme_override_colors/font_color = Color(0.75, 0.75, 0.75, 1)
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
+text = "Ein Wort zählt als gemeistert, wenn du es in beide Richtungen sicher übersetzt."
+
+[node name="UnitList" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt/Progress/UnitSection"]
+unique_name_in_owner = true
+theme_override_constants/separation = 4
+
+[node name="TagSection" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt/Progress"]
+theme_override_constants/separation = 4
+
+[node name="TagTitle" type="Label" parent="Margin/Root/Tabs/Fortschritt/Progress/TagSection"]
+theme_override_font_sizes/font_size = 20
+text = "🏷️ Nach Thema"
+
+[node name="TagList" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt/Progress/TagSection"]
 unique_name_in_owner = true
 theme_override_constants/separation = 4
 
