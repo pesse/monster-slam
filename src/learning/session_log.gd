@@ -161,7 +161,7 @@ func sessions_between(from_unix: int, to_unix: int) -> Array:
 
 
 ## Lokale Tagesindizes (Tage seit Epoche) mit mindestens einer Sitzung im Zeitraum,
-## aufsteigend. Grundlage für das Monatsraster.
+## aufsteigend. Grundlage für die Goldstück-Leiste (siehe CoinStrip).
 func played_days(from_unix: int, to_unix: int) -> Array:
 	var seen := {}
 	for entry in sessions_between(from_unix, to_unix):
@@ -194,6 +194,28 @@ func current_streak() -> int:
 		n += 1
 		cursor -= 1
 	return n
+
+
+## Wurde heute (lokal) schon geübt? Für die Nachfrage, ob die Serie heute noch wartet —
+## die Serie selbst bricht deshalb nicht (siehe current_streak).
+func played_today() -> bool:
+	var today := local_day(int(Time.get_unix_time_from_system()))
+	for entry in _all_entries():
+		if local_day(int(entry.get("started_at", 0))) == today:
+			return true
+	return false
+
+
+## Zahl der Tage mit mindestens einer Sitzung — der Vorrat, aus dem die Goldstücke der
+## Tages-Leiste kommen (ein geübter Tag = ein Goldstück, mehrere Sitzungen am selben Tag
+## sind eines). Sollen die Stücke später eingesammelt und ausgegeben werden können,
+## braucht das einen EIGENEN Zähler für Ausgegebenes; Sitzungen zu löschen wäre der
+## falsche Weg — sie sind die Lernhistorie, nicht die Geldbörse.
+func played_day_count() -> int:
+	var days := {}
+	for entry in _all_entries():
+		days[local_day(int(entry.get("started_at", 0)))] = true
+	return days.size()
 
 
 ## Bestwerte über alle Sitzungen — die Grundlage der Kampf-Rekorde.

@@ -175,11 +175,44 @@ func test_running_session_counts_for_the_streak() -> void:
 	assert_int(_log.current_streak()).is_equal(1)
 
 
+## „Heute schon geübt?" — die Frage hinter dem Hinweis unter der Serie. Sie ist nicht
+## dasselbe wie eine gebrochene Serie: gestern gespielt heißt Serie ja, heute nein.
+func test_played_today_distinguishes_today_from_yesterday() -> void:
+	_log._sessions = [_fake_session(-1)]
+	assert_bool(_log.played_today()).is_false()
+	assert_int(_log.current_streak()).is_equal(1)
+	_log._sessions.append(_fake_session(0))
+	assert_bool(_log.played_today()).is_true()
+
+
+func test_played_today_is_false_without_sessions() -> void:
+	assert_bool(_log.played_today()).is_false()
+
+
+## Die laufende Sitzung zählt auch hier mit.
+func test_played_today_sees_the_running_session() -> void:
+	_log.begin()
+	_log.note_answer(true, 900)
+	assert_bool(_log.played_today()).is_true()
+
+
 func test_played_days_are_unique_and_sorted() -> void:
 	_log._sessions = [_fake_session(-1), _fake_session(-3), _fake_session(-1)]
 	var days: Array = _log.played_days(_midday(-7), _midday(0))
 	assert_int(days.size()).is_equal(2)
 	assert_bool(int(days[0]) < int(days[1])).is_true()
+
+
+## Der Vorrat der Goldstück-Leiste: ein geübter Tag ist ein Stück, zwei Sitzungen am
+## selben Tag sind eines — und die Spanne der Leiste begrenzt ihn nicht, sie ist nur das
+## Fenster (siehe CoinStrip).
+func test_played_day_count_counts_days_not_sessions() -> void:
+	_log._sessions = [_fake_session(-1), _fake_session(-1), _fake_session(-40)]
+	assert_int(_log.played_day_count()).is_equal(2)
+
+
+func test_played_day_count_is_zero_without_sessions() -> void:
+	assert_int(_log.played_day_count()).is_equal(0)
 
 
 func test_sessions_between_filters_by_start() -> void:

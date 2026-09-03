@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://src/ui/stats_screen.gd" id="1_stats"]
+[ext_resource type="PackedScene" path="res://scenes/ui/coin_strip.tscn" id="2_coins"]
 
 [node name="StatsScreen" type="Control"]
 layout_mode = 3
@@ -44,6 +45,24 @@ size_flags_vertical = 3
 [node name="Overview" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick"]
 size_flags_horizontal = 3
 theme_override_constants/separation = 14
+
+[node name="StreakSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview"]
+theme_override_constants/separation = 6
+
+[node name="StreakLabel" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/StreakSection"]
+unique_name_in_owner = true
+theme_override_font_sizes/font_size = 22
+text = "🔥 0 Tage in Folge geübt"
+
+[node name="CoinLabel" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/StreakSection"]
+unique_name_in_owner = true
+theme_override_colors/font_color = Color(1, 0.8, 0.35, 1)
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
+text = "🪙 0 Goldstücke gesammelt"
+
+[node name="CoinStrip" parent="Margin/Root/Tabs/Überblick/Overview/StreakSection" instance=ExtResource("2_coins")]
+unique_name_in_owner = true
 
 [node name="StatLines" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview"]
 unique_name_in_owner = true

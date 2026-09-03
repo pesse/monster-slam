@@ -6,9 +6,10 @@ extends Control
 ## verdient einen eigenen Screen, direkt vom Start-Screen (profile_menu) aus erreichbar.
 ##
 ## Das Layout liegt in stats_screen.tscn (im Editor gestaltbar), die Zeilen-Vorlage in
-## stat_row.tscn; hier wird nur befüllt. Die Verlaufs-Statistiken (Tages-Serie,
-## Lernkurve, Fortschritt pro Unit, Kampf-Rekorde) kommen als weitere Abschnitte in den
-## Reiter „Überblick"; die Daten dafür liegen in SessionLog und PlayerProgress bereit.
+## stat_row.tscn, die Tages-Leiste in coin_strip.tscn; hier wird nur befüllt. Die
+## weiteren Verlaufs-Statistiken (Lernkurve, Fortschritt pro Unit, Kampf-Rekorde) kommen
+## als weitere Abschnitte in den Reiter „Überblick"; die Daten dafür liegen in SessionLog
+## und PlayerProgress bereit.
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 const ROW_SCENE := preload("res://scenes/ui/stat_row.tscn")
@@ -17,6 +18,9 @@ const ROW_SCENE := preload("res://scenes/ui/stat_row.tscn")
 ## keine Fahndung mehr, sondern die Wortliste im zweiten Reiter.
 const WANTED_COUNT := 5
 
+@onready var _streak_label: Label = %StreakLabel
+@onready var _coin_label: Label = %CoinLabel
+@onready var _coin_strip: CoinStrip = %CoinStrip
 @onready var _stat_lines: VBoxContainer = %StatLines
 @onready var _wanted_list: VBoxContainer = %WantedList
 @onready var _word_list: VBoxContainer = %WordList
@@ -28,9 +32,36 @@ func _ready() -> void:
 
 
 func _refresh() -> void:
+	_refresh_streak()
 	_refresh_numbers()
 	_refresh_wanted()
 	_refresh_words()
+
+
+## Tages-Serie und Goldstück-Leiste (Issue #6).
+##
+## Die Leiste zeigt einen wachsenden Vorrat statt eines Monatsrasters: ein Kalender führt
+## vor allem Lücken vor und liest sich wie eine Buchhaltung. Die Bilanzzeile darunter
+## nennt den Gesamtvorrat und sagt bei offenem Tag, dass heute noch eines zu holen ist —
+## der laufende Tag ist keine Lücke (SessionLog.current_streak zählt ihn auch nicht als
+## solche), das soll man lesen können und nicht an der Zahl ablesen müssen.
+func _refresh_streak() -> void:
+	var streak := SessionLog.current_streak()
+	_coin_strip.refresh()
+
+	if streak == 0:
+		_streak_label.text = "Noch keine Serie — heute ist ein guter Tag dafür."
+	elif streak == 1:
+		_streak_label.text = "🔥 1 Tag in Folge geübt"
+	else:
+		_streak_label.text = "🔥 %d Tage in Folge geübt" % streak
+
+	var total := SessionLog.played_day_count()
+	_coin_label.text = "🪙 %d Goldstück%s gesammelt" % [total, "" if total == 1 else "e"]
+	if SessionLog.played_today():
+		_coin_label.text += " — das von heute ist drin."
+	else:
+		_coin_label.text += " — heute wartet noch eines."
 
 
 func _refresh_numbers() -> void:
