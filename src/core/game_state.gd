@@ -27,6 +27,16 @@ var active_skills: Array[String] = []
 var monsters_defeated: int = 0   # per korrekter Antwort erledigt
 var monsters_leaked: int = 0     # bis zur Festung durchgelassen
 
+## Serie korrekt besiegter Monster ohne Durchgelassenes und ihr Bestwert im laufenden
+## Lauf. Sie stehen hier und nicht im SessionLog, weil GameState der Zustand DES LAUFS
+## ist; das Log liest sie am Laufende ab und schreibt sie fort (siehe SessionLog.end).
+var no_leak_streak: int = 0
+var best_no_leak_streak: int = 0
+
+## Tiefster Festungs-HP-Stand des laufenden Laufs (für Auszeichnungen wie
+## „nie unter 90 HP"). Wird beim Schaden nachgeführt, nicht beim Heilen.
+var min_fortress_health: int = FORTRESS_BASE_MAX_HEALTH
+
 ## Wellen-Fortschritt: wave_total kommt über EventBus.wave_totals (Wellenstart, und
 ## nochmal, wenn ein Spawn ausfällt), wave_resolved zählt erledigte Monster
 ## (besiegt + durchgelassen) und wird beim Wellenstart zurückgesetzt.
@@ -54,6 +64,9 @@ func reset() -> void:
 	active_skills.clear()
 	monsters_defeated = 0
 	monsters_leaked = 0
+	no_leak_streak = 0
+	best_no_leak_streak = 0
+	min_fortress_health = fortress_max_health
 	wave_total = 0
 	wave_resolved = 0
 
@@ -78,6 +91,8 @@ func _on_fortress_damaged(amount: int) -> void:
 	fortress_health = max(0, fortress_health - amount)
 	# Ein Schadensereignis = ein durchgelassenes Monster = ein erledigtes Monster.
 	monsters_leaked += 1
+	no_leak_streak = 0
+	min_fortress_health = mini(min_fortress_health, fortress_health)
 	wave_resolved += 1
 
 
@@ -85,6 +100,8 @@ func _on_monster_defeated(monster: Dictionary, was_correct: bool) -> void:
 	if was_correct:
 		score += int(monster.get("reward", 10))
 		monsters_defeated += 1
+		no_leak_streak += 1
+		best_no_leak_streak = maxi(best_no_leak_streak, no_leak_streak)
 		# Doppelte Belohnung: Monster erledigt UND Festung ein Stück repariert.
 		# Eine gefallene Festung (0 HP) heilt nicht mehr hoch — mit ihr ist der Lauf
 		# vorbei, aufgefüllt wird erst wieder beim Start eines neuen (reset()).

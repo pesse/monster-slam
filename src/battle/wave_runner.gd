@@ -65,6 +65,9 @@ func _ready() -> void:
 	_build_fortress()
 	_cam_base = _camera.position
 	GameState.reset()
+	# Der Lauf beginnt hier, nicht mit der ersten Welle: alles, was über die Wellen hinweg
+	# zählt (Sitzungs-Log, GameState-Zähler), hängt an diesem Punkt.
+	EventBus.run_started.emit()
 	EventBus.answer_submitted.connect(_on_answer_submitted)
 	# Die Festung wächst mit dem Lernfortschritt, aber erst NACH einer gewonnenen Welle
 	# (siehe _finish_wave) – nicht mehr mitten im Kampf.
@@ -423,6 +426,7 @@ func _input(event: InputEvent) -> void:
 ## ist der Preis des Abbruchs und besser, als eine halbe Welle als Lernstand zu buchen.
 func _abort_battle() -> void:
 	_finished = true
+	_report_run_ended()
 	_wave_gen += 1   # bindet laufende Spawn-Coroutinen ab (siehe _run_spawn_batch)
 	_slow_motion.stop()
 	get_tree().change_scene_to_file(MENU_SCENE)
@@ -574,7 +578,7 @@ func _on_answer_submitted(text: String) -> void:
 			var rt := Time.get_ticks_msec() - monster.spawned_at_ms
 			var task_id := str(monster.task.get("learnable_id", ""))
 			PlayerProgress.record(task_id, true, rt, float(monster.task.get("initial_confidence", -1.0)))
-			EventBus.item_reviewed.emit(task_id, true)
+			EventBus.item_reviewed.emit(task_id, true, rt)
 			_defeat(monster)
 			_flash_feedback(FLASH_CORRECT)
 			return
@@ -686,7 +690,8 @@ func _on_monster_reached_goal(monster: Monster) -> void:
 	# Monster durchgelassen = Aufgabe nicht rechtzeitig abgerufen -> als Fehler verbuchen.
 	var task_id := str(monster.task.get("learnable_id", ""))
 	PlayerProgress.record(task_id, false, 0, float(monster.task.get("initial_confidence", -1.0)))
-	EventBus.item_reviewed.emit(task_id, false)
+	# 0 ms: ein durchgelassenes Monster hat keine gemessene Antwortzeit.
+	EventBus.item_reviewed.emit(task_id, false, 0)
 	EventBus.fortress_damaged.emit(monster.damage)
 	if GameState.fortress_health <= 0:
 		_finish_wave(false)
@@ -762,4 +767,17 @@ func _on_next_wave_requested(delta: int) -> void:
 ## (der Niederlage-Pfad emittiert kein wave_cleared) und die Menü-Szene laden.
 func _on_back_to_menu() -> void:
 	PlayerProgress.save_progress()
+	_report_run_ended()
 	get_tree().change_scene_to_file(MENU_SCENE)
+
+
+## Meldet das Ende des Laufs mit dem, was nur hier bekannt ist. Beide Ausgänge gehen
+## darüber — der Rückweg über den Statistik-Screen und der Abbruch mitten in der Welle.
+## Ein freiwilliger Ausstieg ist genauso ein Sitzungsende wie eine gefallene Festung;
+## SessionLog.end() ist gegen doppelte Meldung abgesichert.
+func _report_run_ended() -> void:
+	EventBus.run_ended.emit({
+		"wave_reached": _wave_number,
+		"difficulty_last": _difficulty,
+		"last_wave_won": _last_won,
+	})
