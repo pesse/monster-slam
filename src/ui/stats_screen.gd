@@ -1,15 +1,19 @@
 extends Control
-## Statistik-Screen: Zahlen zum Lernstand, Fahndungsliste, Wortliste (Issue #5).
+## Statistik-Screen: Zahlen zum Lernstand, Lernkurve, Listen, Fortschritt, Wortliste.
 ##
 ## Ausgelagert aus dem Einstellungs-Screen. Dort hing die Statistik zwischen
 ## Profilauswahl, Reset und Melde-Token — sie ist aber der motivierende Teil und
 ## verdient einen eigenen Screen, direkt vom Start-Screen (profile_menu) aus erreichbar.
 ##
-## Das Layout liegt in stats_screen.tscn (im Editor gestaltbar), die Zeilen-Vorlage in
-## stat_row.tscn, die Tages-Leiste in coin_strip.tscn; hier wird nur befüllt. Die
-## weiteren Verlaufs-Statistiken (Lernkurve, Fortschritt pro Unit, Kampf-Rekorde) kommen
-## als weitere Abschnitte in den Reiter „Überblick"; die Daten dafür liegen in SessionLog
-## und PlayerProgress bereit.
+## Das Layout liegt in stats_screen.tscn (im Editor gestaltbar), die Zeilen-Vorlagen in
+## stat_row.tscn und progress_row.tscn, die Tages-Leiste in coin_strip.tscn, der
+## Zeichen-Control der Kurve in stats_chart.gd; hier wird nur befüllt.
+##
+## Drei Reiter: „Überblick" trägt die Abschnitte, die zum Weiterspielen motivieren
+## (Tages-Serie #6, Kennzahlen #5, Lernkurve #7, frisch gemeistert und Comeback #9,
+## Fahndungsliste #5), „Fortschritt" die Balken pro Unit und Thema (#8) — die wachsen mit
+## dem Katalog und schöben im Überblick alles andere aus dem Bild —, „Wörter" die
+## vollständige Liste. Was noch fehlt (Kampf-Rekorde), liegt in SessionLog bereit.
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 const ROW_SCENE := preload("res://scenes/ui/stat_row.tscn")
