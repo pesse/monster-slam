@@ -2,11 +2,12 @@ extends Control
 ## Start-Screen (run/main_scene): Titel, aktive Profilauswahl und Einstieg ins Spiel.
 ##
 ## Das Layout liegt in profile_menu.tscn (im Editor sichtbar); hier wird nur bedient und
-## angezeigt. Einstellungen (Profil, Standard-Schwierigkeit, Reset) und Statistik sind in
-## den eigenen settings_menu-Screen ausgelagert.
+## angezeigt. Einstellungen (Profil, Standard-Schwierigkeit, Reset) liegen im
+## settings_menu-Screen, der Lernstand im stats_screen-Screen.
 
 const SESSION_SETUP_SCENE := "res://scenes/ui/session_setup.tscn"
 const SETTINGS_SCENE := "res://scenes/ui/settings_menu.tscn"
+const STATS_SCENE := "res://scenes/ui/stats_screen.tscn"
 const CONTENT_SCENE := "res://scenes/ui/content_manager.tscn"
 
 @onready var _profile_select: OptionButton = %ProfileSelect
@@ -19,6 +20,7 @@ const CONTENT_SCENE := "res://scenes/ui/content_manager.tscn"
 
 func _ready() -> void:
 	_play_button.pressed.connect(func(): get_tree().change_scene_to_file(SESSION_SETUP_SCENE))
+	(%StatsButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(STATS_SCENE))
 	(%SettingsButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(SETTINGS_SCENE))
 	_profile_select.item_selected.connect(_on_profile_selected)
 	_name_input.text_submitted.connect(func(_t): _on_create_profile())

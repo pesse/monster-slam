@@ -1,0 +1,74 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/ui/stats_screen.gd" id="1_stats"]
+
+[node name="StatsScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_stats")
+
+[node name="Margin" type="MarginContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="Root" type="VBoxContainer" parent="Margin"]
+theme_override_constants/separation = 12
+
+[node name="Header" type="HBoxContainer" parent="Margin/Root"]
+
+[node name="BackButton" type="Button" parent="Margin/Root/Header"]
+unique_name_in_owner = true
+text = "← Zurück"
+
+[node name="Title" type="Label" parent="Margin/Root/Header"]
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
+text = "Statistik"
+horizontal_alignment = 1
+
+[node name="Tabs" type="TabContainer" parent="Margin/Root"]
+size_flags_vertical = 3
+
+[node name="Überblick" type="ScrollContainer" parent="Margin/Root/Tabs"]
+
+[node name="Overview" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="StatLines" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview"]
+unique_name_in_owner = true
+theme_override_constants/separation = 6
+
+[node name="WantedSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview"]
+theme_override_constants/separation = 4
+
+[node name="WantedTitle" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/WantedSection"]
+theme_override_font_sizes/font_size = 20
+text = "🎯 Fahndungsliste"
+
+[node name="WantedHint" type="Label" parent="Margin/Root/Tabs/Überblick/Overview/WantedSection"]
+theme_override_colors/font_color = Color(0.75, 0.75, 0.75, 1)
+theme_override_font_sizes/font_size = 14
+text = "Diese Wörter sind dir schon entwischt — hol sie dir zurück."
+autowrap_mode = 3
+
+[node name="WantedList" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Overview/WantedSection"]
+unique_name_in_owner = true
+theme_override_constants/separation = 4
+
+[node name="Wörter" type="ScrollContainer" parent="Margin/Root/Tabs"]
+
+[node name="WordList" type="VBoxContainer" parent="Margin/Root/Tabs/Wörter"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
