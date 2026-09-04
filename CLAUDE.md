@@ -107,6 +107,117 @@ Beim Arbeiten daran:
   Eingetragenes an Markern im Issue-Text; **die nicht aus Issues löschen**, sonst wird die
   Meldung erneut angelegt.
 
+## Gold: verdient in Kisten, gehalten im Profil
+
+Der Wellenabschluss läuft in **zwei Stufen** (`src/ui/wave_stats.gd`, eine Seite je
+Stufe in `wave_stats.tscn`): Ergebnis (Statistik **und** Schatzkiste) → Schwierigkeit der
+nächsten Welle. Die Vokabel-Auflösung (`leak_reveal`) gehört zum Ergebnis, liegt aber als
+eigenes Overlay davor. Die Wahl bleibt getrennt, weil sie eine Entscheidung will und das
+Ergebnis gelesen werden will — zusammen auf einer Seite hieß es: Zahlen überfliegen,
+„Nächste Welle" klicken.
+
+Beim Arbeiten daran zu beachten:
+
+- **Gold gehört zum Profil, nicht zum Lauf.** `Wallet` (Autoload, `src/economy/wallet.gd`)
+  hält den Stand in `user://progress/<player>_wallet.json` und sichert **sofort** bei
+  jeder Änderung. Eine gefallene Festung kostet den Lauf, nicht das Erspielte — deshalb
+  gibt es die Kiste auch nach einer Niederlage.
+- **Verbucht wird im `WaveRunner`, nicht im Screen.** Die Kiste meldet per `opened(gold)`,
+  `WaveStats` reicht das als `reward_collected` weiter, und erst
+  `WaveRunner._on_reward_collected` ruft `Wallet.earn`. Der Screen zeigt den neuen Stand
+  über `Wallet.changed` — er schreibt nichts, was er nur anzeigt. Das ist der Grund, aus
+  dem dieselbe Kiste später am Tagesziel oder nach einem Boss hängen kann.
+- **Die Wirtschaft justiert man an zwei Konstanten** in `src/economy/chest_reward.gd`:
+  `GOLD_PER_SCORE` (Menge; die Punkte tragen die Schwierigkeit der Monster schon in sich,
+  siehe `WaveGenerator.reward` — kein zweites Schwierigkeitsmaß daneben bauen) und
+  `TIER_FACTOR` (Zuschlag der Güte, die aus der Genauigkeit kommt).
+- **Die Größe des Screens steht fest, solange er sichtbar ist.** Er hängt in der
+  Bildmitte, jede Größenänderung verschiebt also auch den Knopf, auf den man gerade
+  geklickt hat. Zwei Regeln halten das: die Seiten liegen in einem `PageStack`
+  (`src/ui/page_stack.gd`, Mindestgröße = größte Seite, **auch die unsichtbare**), und
+  innerhalb einer Seite wird nichts ein- oder ausgeblendet, sondern nur gesperrt und
+  umbeschriftet. Deshalb ist bei zugesperrter Kiste der Menü-Knopf `disabled` und nicht
+  weg, und die Aufforderung an der Kiste wird zur Quittung („+5 Gold") statt von einer
+  zweiten Zeile ersetzt zu werden. Was sich doch ändern muss (ob es überhaupt eine Kiste
+  gibt, Sieg/Niederlage), wird in `show_stats` entschieden — vor dem Anzeigen.
+- **Aus der Kiste fliegt eine Münze je Goldstück** (`TreasureChest.coin_count`), nicht
+  eine gedeckelte Handvoll: der Haufen in der Luft ist der Fund, und eine Deckelung würde
+  lügen, sobald die Wellen größer werden. Gedeckelt ist nur der zeitliche *Versatz*
+  zwischen den Münzen (`COIN_STAGGER_TOTAL`) — sonst wird aus dem Platzen ein Rinnsal.
+- **Die Münzen sind Modelle (`coin.gltf`) und fliegen IN der 3D-Welt der Kiste**, nicht
+  als Zeichnung darüber. Sie fallen nicht auf einen Wert, sondern **unter die Kante des
+  Bildfelds** (`_floor_y()`, aus dem Bildfeld gerechnet und nicht als zweite Konstante
+  daneben): eine Münze, die im Bild liegen bleibt, ist kein Fund mehr, sondern Müll auf
+  dem Tisch. Alle Münzen teilen Mesh und Material des Packs — die Zahl der Münzen kostet
+  Knoten und Tweens, nichts weiter. Verblasst wird nicht: `GeometryInstance3D.transparency`
+  gibt es im `gl_compatibility`-Renderer nicht.
+- **An einer ungeöffneten Kiste führt kein Weg vorbei.** Zwei Sekunden Drücken sind kein
+  Hindernis, ein weggeklickter Fund ist einer.
+- **Die Münzen der Tages-Leiste sind keine Währung**, sondern Marken für geübte Tage
+  (`CoinStrip`/`DayCoin`, Vorrat aus `SessionLog.played_day_count()`). Die Leiste redet
+  deshalb von Tagen und nicht von Goldstücken. Dieselbe *Zeichnung* fliegt als Münze aus
+  der Kiste — Gold soll überall gleich aussehen.
+- **Die Kiste selbst ist ein Modell, keine Zeichnung** (`chest.gltf` aus dem
+  KayKit-Dungeon-Satz, Nachweis in `assets/models/CREDITS.md`). Sie steht in einem
+  `SubViewport` mit **eigener Welt** und durchsichtigem Hintergrund: der Wellenabschluss
+  hängt über dem Kampf, und ohne das stünde die Kiste zwischen den Skeletten und ihr Licht
+  in der Schlacht. Kamera- und Lichtdrehungen setzt `_setup_view()` im Code (wie
+  `WaveRunner._setup_view`), damit in der `.tscn` keine Transform-Basis-Mathematik steht.
+  Es ist EIN Modell für alle Güten (`CHEST_MODEL`); unterschieden wird der Beschlag.
+- **Die Güte sitzt im BESCHLAG, und die Farbe kommt aus dem Atlas** — kein Farbfilter.
+  Der Atlas des Packs ist ein Raster aus 8×4 Farbfeldern, jedes ein senkrechter Verlauf
+  (die eingebackene Beleuchtung). Die Kiste benutzt genau zwei Felder, Beschlag (1,0) und
+  Holz (4,0), und **kein Dreieck liegt in beiden** — nachgerechnet, nicht geschätzt.
+  Rückt man die UV-Koordinaten der Beschlag-Vertices um ganze Felder weiter, wird aus
+  Stahl Kupfer, Silber oder Gold, das Holz bleibt Holz und der Verlauf bleibt erhalten
+  (`TIER_METAL`, `_mesh_with_metal_cell`). Ein `material_override` wäre der falsche Weg:
+  dasselbe Material trägt Holz UND Beschlag, ein Tint träfe beide.
+- **Das Mesh aus dem Pack darf dabei nicht angefasst werden.** Godot hält geladene
+  Ressourcen im Cache — eine Änderung daran träfe jede weitere Kiste und jedes andere
+  Teil, das dasselbe Mesh benutzt. Deshalb entsteht ein eigenes `ArrayMesh` aus den
+  Kopien von `surface_get_arrays` (`test_the_metal_recolour_leaves_the_shared_mesh_alone`).
+- **Der Beschlag der Goldkiste hat genau die Farbe der Münzen**, weil er auf deren
+  Atlas-Feld landet. Das ist der Grund, aus dem `chest_gold.gltf` NICHT im Repo liegt: es
+  ist keine goldene Kiste, sondern dieselbe Kiste mit einem Münzhaufen darin — und der
+  Haufen ist bei uns das, was herausfliegt.
+- **Der 3D-Ausschnitt ist GRÖSSER als das Widget** (`STAGE_PAD`, `_layout_stage`). Ein
+  `Control` beschneidet seine Kinder nicht, ein `SubViewport` schneidet hart an seiner
+  Kante ab — ohne dieses Polster wären die Münzen im Kistenfenster gefangen. Verschoben
+  wird über die *Offsets* bei Ankern auf Vollbild, damit das Polster jeden Layout-Durchgang
+  des übergeordneten Containers überlebt. `CAM_SIZE` bezieht sich weiter auf die Höhe des
+  **Widgets**; das Bildfeld der Kamera wächst mit dem Polster (`_cam_size()`), sonst würde
+  die Kiste kleiner, sobald man den Münzen mehr Platz gibt.
+- **Der Rahmen ist gemessen, nicht geschätzt.** `CAM_SIZE`, `CAM_HEIGHT`, `STAGE_PAD` und
+  `LID_OPEN_DEG` hängen zusammen. `test_the_open_chest_stays_inside_the_widget` rechnet die
+  **echten Mesh-Eckpunkte** über `Camera3D.unproject_position` in das Widget-Rechteck —
+  nicht die AABB, deren Ecken weit außerhalb des Meshes liegen und Fehlalarm melden — und
+  prüft beide Größen (220×170 im Abschluss, 340×260 in der Werkbank), alle Güten und das
+  Überschwingen des Deckels. Gemessen wird gegen das **Widget**, nicht gegen den
+  Ausschnitt: die Kiste soll in ihrem Platz im Layout bleiben, die Münzen dürfen darüber
+  hinaus. Aus demselben Grund liegen die großen Varianten des Packs (`chest_large*`) nicht
+  im Repo: mit offenem Deckel passen sie nicht ins Widget, und kleingerechnet sind sie von
+  der normalen nicht zu unterscheiden.
+- **Die gezeichnete Kiste bleibt** (`use_model = false`, Umschalter in der Werkbank): zum
+  Vergleich Modell gegen Zeichnung und als Rückfall, wenn das Modell fehlt. Sie behält
+  ihre gezeichneten Münzen (`day_coin.tscn`) — ohne 3D-Welt gibt es nichts, worin ein
+  Modell fliegen könnte, und die Zeichnung ist dieselbe wie in der Tages-Leiste.
+- **Die Kiste hat eine eigene Werkbank:** `scenes/dev/chest_lab.tscn` (im Editor mit F6;
+  bewusst **kein Knopf im Startmenü** — das Startmenü ist der Weg des Spielers).
+  Güte, Gold, Münzzahl und Haltezeit einstellbar, Modell gegen Zeichnung umschaltbar,
+  „Sofort aufspringen lassen" für den Blick auf Deckel und Münzflug, und ein Block, der
+  die Belohnung einer erfundenen Welle über `ChestReward` ausrechnet. Zum Beurteilen
+  einer Wackel-Amplitude will man die Kiste zwanzigmal sehen, nicht zwanzig Wellen
+  spielen. Die Werkbank **verbucht nichts** und ist im Export ausgeschlossen
+  (`scenes/dev/*`, `src/dev/*` im `exclude_filter`). Ihre Debug-Nahtstellen an der Kiste
+  sind `present(tier, gold, coins)`, `hold_time` und `use_model` — alle drei mit Test,
+  damit sie beim nächsten Umbau nicht still verschwinden.
+- **Wallet-Tests laufen auf einer eigenen Instanz mit `zz-`Profil** und räumen ihre Datei
+  weg: `user://` ist projektübergreifend dasselbe Verzeichnis, und die Datei des aktiven
+  Profils ist das echte Gold des Spielers. Dasselbe gilt für ein Skript, das die
+  Geldbörse zum Ausprobieren umbiegt: `Wallet._ready()` setzt `player_id` aus
+  `UserSettings` und läuft NACH `_initialize()` eines `-s`-Skripts — eine früher gesetzte
+  Test-Id ist danach wieder weg.
+
 ## Abstände und Schriftgrößen stehen im Theme, nicht in der Szene
 
 `scenes/ui/ui_theme.tres` ist die einzige Quelle für Raum und Typografie. Vorher lagen

@@ -1,0 +1,61 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/ui/treasure_chest.gd" id="1_chest"]
+
+[sub_resource type="Environment" id="Env_1"]
+background_mode = 0
+ambient_light_source = 2
+ambient_light_color = Color(0.5, 0.52, 0.62, 1)
+ambient_light_energy = 1.0
+
+[node name="TreasureChest" type="Control"]
+custom_minimum_size = Vector2(220, 170)
+layout_mode = 3
+focus_mode = 0
+script = ExtResource("1_chest")
+
+[node name="Stage" type="SubViewportContainer" parent="."]
+unique_name_in_owner = true
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+stretch = true
+
+[node name="View" type="SubViewport" parent="Stage"]
+unique_name_in_owner = true
+own_world_3d = true
+transparent_bg = true
+handle_input_locally = false
+
+[node name="Env" type="WorldEnvironment" parent="Stage/View"]
+environment = SubResource("Env_1")
+
+[node name="Sun" type="DirectionalLight3D" parent="Stage/View"]
+unique_name_in_owner = true
+
+[node name="Fill" type="DirectionalLight3D" parent="Stage/View"]
+unique_name_in_owner = true
+light_energy = 0.4
+shadow_enabled = false
+
+[node name="Pivot" type="Node3D" parent="Stage/View"]
+unique_name_in_owner = true
+
+[node name="Coins3D" type="Node3D" parent="Stage/View"]
+unique_name_in_owner = true
+
+[node name="CamPivot" type="Node3D" parent="Stage/View"]
+unique_name_in_owner = true
+
+[node name="Cam" type="Camera3D" parent="Stage/View/CamPivot"]
+unique_name_in_owner = true
+
+[node name="Coins" type="Control" parent="."]
+unique_name_in_owner = true
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

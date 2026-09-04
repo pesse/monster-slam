@@ -10,6 +10,7 @@ const SETTINGS_SCENE := "res://scenes/ui/settings_menu.tscn"
 const STATS_SCENE := "res://scenes/ui/stats_screen.tscn"
 const CONTENT_SCENE := "res://scenes/ui/content_manager.tscn"
 
+@onready var _gold_label: Label = %GoldLabel
 @onready var _profile_select: OptionButton = %ProfileSelect
 @onready var _name_input: LineEdit = %NameInput
 @onready var _update_button: Button = %UpdateButton
@@ -29,7 +30,9 @@ func _ready() -> void:
 	_content_button.pressed.connect(func(): get_tree().change_scene_to_file(CONTENT_SCENE))
 	UpdateService.changed.connect(_refresh_update_badge)
 	ContentService.changed.connect(_refresh_content_badge)
+	Wallet.changed.connect(func(_gold): _refresh_gold())
 	_refresh_profiles()
+	_refresh_gold()
 	_refresh_update_badge()
 	_refresh_content_badge()
 	_refresh_play_gate()
@@ -54,6 +57,9 @@ func _on_profile_selected(index: int) -> void:
 	var id := str(_profile_select.get_item_metadata(index))
 	UserSettings.set_active_profile(id)
 	PlayerProgress.switch_to(id)
+	# Die Geldbörse schaltet über UserSettings.active_profile_changed selbst um (siehe
+	# Wallet._ready); hier muss nur die Anzeige nachziehen.
+	_refresh_gold()
 
 
 func _on_create_profile() -> void:
@@ -64,6 +70,13 @@ func _on_create_profile() -> void:
 	UserSettings.set_active_profile(id)
 	PlayerProgress.switch_to(id)
 	_refresh_profiles()
+	_refresh_gold()
+
+
+## Der Goldstand des aktiven Profils. Er steht auf dem Start-Screen und nicht nur in der
+## Statistik: Gold wird ausgegeben, und der Laden wird von hier aus erreichbar sein.
+func _refresh_gold() -> void:
+	_gold_label.text = "💰 %s" % Wallet.label()
 
 
 ## Das Abzeichen erscheint nur, wenn es etwas zu tun gibt. Ein Fehlschlag der Prüfung wird

@@ -1,0 +1,168 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/dev/chest_lab.gd" id="1_lab"]
+[ext_resource type="PackedScene" path="res://scenes/ui/treasure_chest.tscn" id="2_chest"]
+
+[node name="ChestLab" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_lab")
+
+[node name="Margin" type="MarginContainer" parent="."]
+theme_type_variation = &"ScreenMargin"
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Root" type="VBoxContainer" parent="Margin"]
+theme_type_variation = &"ScreenStack"
+
+[node name="Title" type="Label" parent="Margin/Root"]
+theme_type_variation = &"Display"
+text = "Schatzkisten-Werkbank"
+
+[node name="Hint" type="Label" parent="Margin/Root"]
+theme_type_variation = &"Hint"
+text = "Die Kiste ohne Spiel ausprobieren. Hier wird kein Gold verbucht."
+
+[node name="Columns" type="HBoxContainer" parent="Margin/Root"]
+theme_type_variation = &"SectionStack"
+size_flags_vertical = 3
+
+[node name="Settings" type="VBoxContainer" parent="Margin/Root/Columns"]
+custom_minimum_size = Vector2(280, 0)
+size_flags_vertical = 0
+
+[node name="TierCaption" type="Label" parent="Margin/Root/Columns/Settings"]
+theme_type_variation = &"Hint"
+text = "Güte der Kiste"
+
+[node name="TierSelect" type="OptionButton" parent="Margin/Root/Columns/Settings"]
+unique_name_in_owner = true
+
+[node name="GoldCaption" type="Label" parent="Margin/Root/Columns/Settings"]
+theme_type_variation = &"Hint"
+text = "Gold in der Kiste"
+
+[node name="GoldSpin" type="SpinBox" parent="Margin/Root/Columns/Settings"]
+unique_name_in_owner = true
+max_value = 999.0
+value = 12.0
+
+[node name="CoinCaption" type="Label" parent="Margin/Root/Columns/Settings"]
+theme_type_variation = &"Hint"
+text = "Münzen (0 = aus dem Gold rechnen)"
+autowrap_mode = 3
+
+[node name="CoinSpin" type="SpinBox" parent="Margin/Root/Columns/Settings"]
+unique_name_in_owner = true
+max_value = 999.0
+
+[node name="HoldLabel" type="Label" parent="Margin/Root/Columns/Settings"]
+theme_type_variation = &"Hint"
+unique_name_in_owner = true
+text = "Haltezeit: 2,0 s"
+
+[node name="HoldSlider" type="HSlider" parent="Margin/Root/Columns/Settings"]
+unique_name_in_owner = true
+min_value = 0.2
+max_value = 5.0
+step = 0.1
+value = 2.0
+
+[node name="LookCaption" type="Label" parent="Margin/Root/Columns/Settings"]
+theme_type_variation = &"Hint"
+text = "Darstellung"
+
+[node name="ModelToggle" type="CheckButton" parent="Margin/Root/Columns/Settings"]
+unique_name_in_owner = true
+button_pressed = true
+text = "Modell (aus: gezeichnet)"
+
+[node name="PresentButton" type="Button" parent="Margin/Root/Columns/Settings"]
+unique_name_in_owner = true
+text = "Neue Kiste hinstellen"
+
+[node name="OpenButton" type="Button" parent="Margin/Root/Columns/Settings"]
+unique_name_in_owner = true
+text = "Sofort aufspringen lassen"
+
+[node name="Stage" type="VBoxContainer" parent="Margin/Root/Columns"]
+size_flags_horizontal = 3
+
+[node name="ChestTitle" type="Label" parent="Margin/Root/Columns/Stage"]
+theme_type_variation = &"SectionTitle"
+unique_name_in_owner = true
+horizontal_alignment = 1
+text = "Silberkiste"
+
+[node name="ChestRow" type="CenterContainer" parent="Margin/Root/Columns/Stage"]
+size_flags_vertical = 3
+
+[node name="Chest" parent="Margin/Root/Columns/Stage/ChestRow" instance=ExtResource("2_chest")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(340, 260)
+
+[node name="Status" type="Label" parent="Margin/Root/Columns/Stage"]
+theme_type_variation = &"Accent"
+unique_name_in_owner = true
+horizontal_alignment = 1
+autowrap_mode = 3
+text = "Zu."
+
+[node name="Wave" type="VBoxContainer" parent="Margin/Root/Columns"]
+custom_minimum_size = Vector2(280, 0)
+size_flags_vertical = 0
+
+[node name="WaveTitle" type="Label" parent="Margin/Root/Columns/Wave"]
+theme_type_variation = &"SectionTitle"
+text = "Welle simulieren"
+
+[node name="WaveHint" type="Label" parent="Margin/Root/Columns/Wave"]
+theme_type_variation = &"Hint"
+text = "Dieselbe Rechnung wie im Spiel (ChestReward)."
+autowrap_mode = 3
+
+[node name="ScoreCaption" type="Label" parent="Margin/Root/Columns/Wave"]
+theme_type_variation = &"Hint"
+text = "Punkte der Welle"
+
+[node name="ScoreSpin" type="SpinBox" parent="Margin/Root/Columns/Wave"]
+unique_name_in_owner = true
+max_value = 2000.0
+value = 60.0
+
+[node name="CorrectCaption" type="Label" parent="Margin/Root/Columns/Wave"]
+theme_type_variation = &"Hint"
+text = "Richtig besiegt"
+
+[node name="CorrectSpin" type="SpinBox" parent="Margin/Root/Columns/Wave"]
+unique_name_in_owner = true
+max_value = 99.0
+value = 5.0
+
+[node name="LeakedCaption" type="Label" parent="Margin/Root/Columns/Wave"]
+theme_type_variation = &"Hint"
+text = "Durchgelassen"
+
+[node name="LeakedSpin" type="SpinBox" parent="Margin/Root/Columns/Wave"]
+unique_name_in_owner = true
+max_value = 99.0
+
+[node name="WaveButton" type="Button" parent="Margin/Root/Columns/Wave"]
+unique_name_in_owner = true
+text = "Belohnung berechnen"
+
+[node name="WaveResult" type="Label" parent="Margin/Root/Columns/Wave"]
+theme_type_variation = &"Accent"
+unique_name_in_owner = true
+autowrap_mode = 3
+
+[node name="BackButton" type="Button" parent="Margin/Root"]
+unique_name_in_owner = true
+text = "⟵ Zurück zum Menü"

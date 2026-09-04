@@ -1,14 +1,16 @@
 class_name DayCoin
 extends Control
-## Ein Goldstück der Tages-Leiste: verdient (gold), verpasst (grau), heute noch offen
-## oder ein leerer Platz für einen Tag, der erst kommt.
+## Die Münze der Tages-Leiste: geübt (gold), verpasst (grau), heute noch offen oder ein
+## leerer Platz für einen Tag, der erst kommt. Sie markiert einen TAG und ist keine
+## Währung — das Gold der Geldbörse (Wallet) zählt in Beträgen, nicht in Tagen.
 ##
 ## Gezeichnet statt als Sprite, weil es kein Münz-Asset gibt und ein späteres Einsammeln
 ## so ein Tween über Größe und Position ist — ohne Asset-Pipeline und in jeder Größe
 ## scharf. Die Größe steht in day_coin.tscn (im Editor änderbar), hier nur die Zustände.
 ##
-## Wenn die Goldstücke später eingesammelt und ausgegeben werden können, kommt ein
-## weiterer Zustand dazu (eingesammelt); der Vorrat selbst ist SessionLog.played_day_count().
+## Dieselbe Zeichnung fliegt als verdiente Münze aus der Schatzkiste (siehe
+## TreasureChest): Gold sieht im Spiel überall gleich aus. Der Vorrat der Leiste selbst
+## ist SessionLog.played_day_count().
 
 enum State {
 	EARNED,   ## An diesem Tag wurde geübt.

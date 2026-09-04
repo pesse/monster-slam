@@ -1,14 +1,17 @@
 class_name CoinStrip
 extends VBoxContainer
-## Monats-Leiste: ein Goldstück je Tag des laufenden Monats, verdiente in Gold, verpasste
+## Monats-Leiste: eine Münze je Tag des laufenden Monats — geübte Tage in Gold, verpasste
 ## ausgegraut, heute mit Ring, die Tage danach als leere Plätze (Issue #6).
 ##
 ## Bewusst eine Leiste und kein Raster: ein Kalender zeigt vor allem die Lücken und liest
-## sich wie eine Buchhaltung. Die Leiste zeigt einen Vorrat, der wächst — und ist die
-## Grundlage dafür, die Goldstücke später einsammeln zu können. Der Monat als Rahmen
-## (statt der letzten N Tage) gibt ihm ein Ziel: „18 von 30".
+## sich wie eine Buchhaltung. Die Leiste zeigt einen Vorrat, der wächst. Der Monat als
+## Rahmen (statt der letzten N Tage) gibt ihm ein Ziel: „18 von 30".
 ##
-## Das Layout liegt in coin_strip.tscn, das Goldstück in day_coin.tscn; hier wird nur
+## Die Münzen sind MARKEN für geübte Tage und keine Währung — Gold als Währung liegt in
+## der Geldbörse (Wallet) und wird in Schatzkisten verdient. Die Leiste redet deshalb von
+## Tagen: zwei Dinge, die „Goldstück" heißen, wären eines zu viel.
+##
+## Das Layout liegt in coin_strip.tscn, die Münze in day_coin.tscn; hier wird nur
 ## gerechnet und befüllt. Die Zustandsfolge und die Monatslänge stehen als statische
 ## Funktionen, damit sie ohne Szene, Autoload und Systemuhr prüfbar sind
 ## (siehe tests/coin_strip_test.gd).
@@ -23,8 +26,8 @@ const MONTH_NAMES := ["Januar", "Februar", "März", "April", "Mai", "Juni", "Jul
 @onready var _coins: HBoxContainer = %Coins
 
 
-## Baut die Leiste für den laufenden Monat neu und gibt zurück, wie viele Goldstücke
-## darin verdient wurden. Die geübten Tage kommen als lokale Tagesindizes vom SessionLog —
+## Baut die Leiste für den laufenden Monat neu und gibt zurück, an wie vielen Tagen
+## darin geübt wurde. Die geübten Tage kommen als lokale Tagesindizes vom SessionLog —
 ## dieselbe Zeitrechnung wie die Tages-Serie, damit beide an derselben Tagesgrenze hängen.
 func refresh() -> int:
 	var today_index: int = SessionLog.local_day(int(Time.get_unix_time_from_system()))
@@ -52,7 +55,7 @@ func refresh() -> int:
 		_coins.add_child(coin)
 		coin.setup(day_state, day_index == today_index, _hover_text(day_index, day_state))
 
-	_caption.text = "%s · %d von %d Goldstücken" % [MONTH_NAMES[month - 1], earned, day_count]
+	_caption.text = "%s · %d von %d Tagen" % [MONTH_NAMES[month - 1], earned, day_count]
 	return earned
 
 
@@ -98,9 +101,9 @@ static func _hover_text(day_index: int, day_state: DayCoin.State) -> String:
 	var date := date_label(day_index)
 	match day_state:
 		DayCoin.State.EARNED:
-			return "%s — Goldstück verdient" % date
+			return "%s — geübt" % date
 		DayCoin.State.OPEN:
-			return "%s — heute wartet noch eins" % date
+			return "%s — heute wartet noch einer" % date
 		DayCoin.State.FUTURE:
 			return "%s — noch nicht dran" % date
 		_:

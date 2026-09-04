@@ -59,7 +59,7 @@ func _refresh() -> void:
 	_refresh_words()
 
 
-## Tages-Serie und Goldstück-Leiste (Issue #6).
+## Tages-Serie und Tages-Leiste (Issue #6).
 ##
 ## Die Leiste zeigt einen wachsenden Vorrat statt eines Monatsrasters: ein Kalender führt
 ## vor allem Lücken vor und liest sich wie eine Buchhaltung. Die Bilanzzeile darunter
@@ -78,15 +78,19 @@ func _refresh_streak() -> void:
 		_streak_label.text = "🔥 %d Tage in Folge geübt" % streak
 
 	var total := SessionLog.played_day_count()
-	_coin_label.text = "🪙 %d Goldstück%s gesammelt" % [total, "" if total == 1 else "e"]
+	_coin_label.text = "🪙 An %d Tag%s geübt" % [total, "" if total == 1 else "en"]
 	if SessionLog.played_today():
-		_coin_label.text += " — das von heute ist drin."
+		_coin_label.text += " — heute ist dabei."
 	else:
-		_coin_label.text += " — heute wartet noch eines."
+		_coin_label.text += " — heute fehlt noch."
 
 
 func _refresh_numbers() -> void:
 	_clear(_stat_lines)
+	# Der Goldstand zuerst: er ist das einzige, was man ausgeben kann, und die Kisten
+	# sagen, wie oft es dafür schon einen Grund gab.
+	_add_line(_stat_lines, "💰 %s  (%d Schatzkiste%s geöffnet)" % [
+		Wallet.label(), Wallet.chests_opened, "" if Wallet.chests_opened == 1 else "n"])
 	_add_line(_stat_lines, "Gemeisterte Aufgaben: %d  (Festungsstufe %d)" % [
 		PlayerProgress.mastered_count(), PlayerProgress.fortress_tier()])
 	_add_line(_stat_lines, "Gesamt-Genauigkeit: %d %%" % int(round(PlayerProgress.overall_accuracy() * 100.0)))

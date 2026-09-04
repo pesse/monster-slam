@@ -161,7 +161,7 @@ func sessions_between(from_unix: int, to_unix: int) -> Array:
 
 
 ## Lokale Tagesindizes (Tage seit Epoche) mit mindestens einer Sitzung im Zeitraum,
-## aufsteigend. Grundlage für die Goldstück-Leiste (siehe CoinStrip).
+## aufsteigend. Grundlage für die Tages-Leiste (siehe CoinStrip).
 func played_days(from_unix: int, to_unix: int) -> Array:
 	var seen := {}
 	for entry in sessions_between(from_unix, to_unix):
@@ -206,8 +206,8 @@ func played_today() -> bool:
 	return false
 
 
-## Zahl der Tage mit mindestens einer Sitzung — der Vorrat, aus dem die Goldstücke der
-## Tages-Leiste kommen (ein geübter Tag = ein Goldstück, mehrere Sitzungen am selben Tag
+## Zahl der Tage mit mindestens einer Sitzung — der Vorrat, aus dem die Münzen der
+## Tages-Leiste kommen (ein geübter Tag = eine Münze, mehrere Sitzungen am selben Tag
 ## sind eines). Sollen die Stücke später eingesammelt und ausgegeben werden können,
 ## braucht das einen EIGENEN Zähler für Ausgegebenes; Sitzungen zu löschen wäre der
 ## falsche Weg — sie sind die Lernhistorie, nicht die Geldbörse.

@@ -78,6 +78,8 @@ func _ready() -> void:
 		_stats.next_wave_requested.connect(_on_next_wave_requested)
 	if _stats.has_signal("back_to_menu_requested"):
 		_stats.back_to_menu_requested.connect(_on_back_to_menu)
+	if _stats.has_signal("reward_collected"):
+		_stats.reward_collected.connect(_on_reward_collected)
 	# Startschwierigkeit aus den persistenten Einstellungen des aktiven Profils.
 	_difficulty = UserSettings.default_difficulty()
 	_start_next_wave()
@@ -781,6 +783,11 @@ func _finish_wave(won: bool) -> void:
 		await _leak_reveal.play(_wave_played_tasks)
 	var total := _wave_correct + _wave_leaked
 	var accuracy := 100.0 * float(_wave_correct) / float(max(1, total))
+	# Belohnung der Welle: die Punkte tragen die Schwierigkeit der besiegten Monster
+	# schon in sich (siehe ChestReward), die Güte der Kiste kommt aus der Genauigkeit.
+	# Gerechnet wird hier und nicht im Screen: was eine Welle wert ist, gehört zum Lauf,
+	# nicht zu seiner Anzeige.
+	var score_gained := GameState.score - _score_at_start
 	_stats.show_stats({
 		"won": won,
 		"wave_number": _wave_number,
@@ -789,12 +796,21 @@ func _finish_wave(won: bool) -> void:
 		"leaked": _wave_leaked,
 		"total": total,
 		"accuracy": accuracy,
-		"score_gained": GameState.score - _score_at_start,
+		"score_gained": score_gained,
 		"score_total": GameState.score,
 		"fortress_health": GameState.fortress_health,
 		"mastered": PlayerProgress.mastered_count(),
 		"fortress_tier": PlayerProgress.fortress_tier(),
+		"chest": ChestReward.for_wave(score_gained, _wave_correct, _wave_leaked),
 	})
+
+
+## Der Spieler hat die Schatzkiste aufgedrückt: das Gold gehört ihm. Verbucht wird hier
+## und nicht im Screen — das Gold hängt am Profil (Wallet), und der Screen soll nichts
+## schreiben, was er nur anzeigt. Die Geldbörse sichert sofort: ein Absturz auf dem Weg
+## in die nächste Welle darf die Kiste nicht rückgängig machen.
+func _on_reward_collected(gold: int) -> void:
+	Wallet.earn(gold, true)
 
 
 ## Spieler hat auf dem Statistik-Screen die nächste Welle gerufen. Die Wahl ist RELATIV:

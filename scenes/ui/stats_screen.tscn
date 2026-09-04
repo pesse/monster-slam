@@ -60,7 +60,7 @@ text = "🔥 0 Tage in Folge geübt"
 theme_type_variation = &"Accent"
 unique_name_in_owner = true
 autowrap_mode = 3
-text = "🪙 0 Goldstücke gesammelt"
+text = "🪙 An 0 Tagen geübt"
 
 [node name="CoinStrip" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/StreakSection" instance=ExtResource("2_coins")]
 unique_name_in_owner = true

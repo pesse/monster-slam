@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://src/ui/wave_stats.gd" id="1_stats"]
+[ext_resource type="PackedScene" path="res://scenes/ui/treasure_chest.tscn" id="2_chest"]
+[ext_resource type="Script" path="res://src/ui/page_stack.gd" id="3_pages"]
 
 [node name="WaveStats" type="PanelContainer"]
 anchor_left = 0.5
@@ -12,56 +14,110 @@ grow_vertical = 2
 visible = false
 script = ExtResource("1_stats")
 
-[node name="Margin" type="MarginContainer" parent="."]
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 24
+[node name="Root" type="VBoxContainer" parent="."]
+theme_type_variation = &"ScreenStack"
 
-[node name="Root" type="VBoxContainer" parent="Margin"]
-theme_override_constants/separation = 10
-
-[node name="Title" type="Label" parent="Margin/Root"]
+[node name="Title" type="Label" parent="Root"]
+theme_type_variation = &"Title"
 unique_name_in_owner = true
-theme_override_font_sizes/font_size = 32
 horizontal_alignment = 1
 
-[node name="Lines" type="VBoxContainer" parent="Margin/Root"]
+[node name="Pages" type="Container" parent="Root"]
+unique_name_in_owner = true
+script = ExtResource("3_pages")
+
+[node name="ResultPage" type="VBoxContainer" parent="Root/Pages"]
+theme_type_variation = &"SectionStack"
 unique_name_in_owner = true
 
-[node name="DiffLabel" type="Label" parent="Margin/Root"]
+[node name="Columns" type="HBoxContainer" parent="Root/Pages/ResultPage"]
+theme_type_variation = &"SectionStack"
+alignment = 1
+
+[node name="Lines" type="VBoxContainer" parent="Root/Pages/ResultPage/Columns"]
+theme_type_variation = &"Tight"
 unique_name_in_owner = true
+size_flags_vertical = 4
+
+[node name="Reward" type="VBoxContainer" parent="Root/Pages/ResultPage/Columns"]
+unique_name_in_owner = true
+size_flags_vertical = 4
+
+[node name="ChestName" type="Label" parent="Root/Pages/ResultPage/Columns/Reward"]
+theme_type_variation = &"SectionTitle"
+unique_name_in_owner = true
+horizontal_alignment = 1
+text = "Holzkiste"
+
+[node name="ChestRow" type="CenterContainer" parent="Root/Pages/ResultPage/Columns/Reward"]
+
+[node name="Chest" parent="Root/Pages/ResultPage/Columns/Reward/ChestRow" instance=ExtResource("2_chest")]
+unique_name_in_owner = true
+
+[node name="RewardLine" type="Label" parent="Root/Pages/ResultPage/Columns/Reward"]
+theme_type_variation = &"Accent"
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 0)
+horizontal_alignment = 1
+autowrap_mode = 3
+text = "2 Sekunden auf die Kiste drücken"
+
+[node name="GoldLabel" type="Label" parent="Root/Pages/ResultPage"]
+theme_type_variation = &"Caption"
+unique_name_in_owner = true
+horizontal_alignment = 1
+
+[node name="ResultContinue" type="Button" parent="Root/Pages/ResultPage"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "Weiter ▸"
+
+[node name="NextPage" type="VBoxContainer" parent="Root/Pages"]
+unique_name_in_owner = true
+visible = false
+
+[node name="DefeatLabel" type="Label" parent="Root/Pages/NextPage"]
+theme_type_variation = &"Accent"
+unique_name_in_owner = true
+visible = false
+horizontal_alignment = 1
+autowrap_mode = 3
+text = "Die Festung ist gefallen — dieser Lauf ist zu Ende. Das Gold bleibt dir."
+
+[node name="DiffLabel" type="Label" parent="Root/Pages/NextPage"]
+unique_name_in_owner = true
+horizontal_alignment = 1
 text = "Schwierigkeit der nächsten Welle"
 
-[node name="ChoiceRow" type="HBoxContainer" parent="Margin/Root"]
+[node name="ChoiceRow" type="HBoxContainer" parent="Root/Pages/NextPage"]
 unique_name_in_owner = true
 
-[node name="Choice0" type="Button" parent="Margin/Root/ChoiceRow"]
+[node name="Choice0" type="Button" parent="Root/Pages/NextPage/ChoiceRow"]
 focus_mode = 0
 text = "Viel leichter"
 
-[node name="Choice1" type="Button" parent="Margin/Root/ChoiceRow"]
+[node name="Choice1" type="Button" parent="Root/Pages/NextPage/ChoiceRow"]
 focus_mode = 0
 text = "Leichter"
 
-[node name="Choice2" type="Button" parent="Margin/Root/ChoiceRow"]
+[node name="Choice2" type="Button" parent="Root/Pages/NextPage/ChoiceRow"]
 focus_mode = 0
 text = "Gleich"
 
-[node name="Choice3" type="Button" parent="Margin/Root/ChoiceRow"]
+[node name="Choice3" type="Button" parent="Root/Pages/NextPage/ChoiceRow"]
 focus_mode = 0
 text = "Schwieriger"
 
-[node name="Choice4" type="Button" parent="Margin/Root/ChoiceRow"]
+[node name="Choice4" type="Button" parent="Root/Pages/NextPage/ChoiceRow"]
 focus_mode = 0
 text = "Viel schwieriger"
 
-[node name="StartButton" type="Button" parent="Margin/Root"]
+[node name="StartButton" type="Button" parent="Root/Pages/NextPage"]
 unique_name_in_owner = true
 focus_mode = 0
 text = "▶ Nächste Welle rufen"
 
-[node name="MenuButton" type="Button" parent="Margin/Root"]
+[node name="MenuButton" type="Button" parent="Root"]
 unique_name_in_owner = true
 focus_mode = 0
 text = "⟵ Zurück zum Menü"

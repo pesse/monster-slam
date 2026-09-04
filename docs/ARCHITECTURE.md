@@ -126,6 +126,60 @@ Score, aktive Welle) und reagiert selbst nur über EventBus-Signale.
 	Offline-Heuristik; ein lokales LLM lässt sich über `sentence_backend`
 	(Callable) einstecken — **ohne** Aufrufer zu ändern.
 
+## Wirtschaft: Gold und Schatzkisten (`src/economy/`)
+
+Gold ist die erste Währung. Verdient wird es als **Schatzkiste am Wellenende**, gehalten
+wird es im **Profil** — nicht im Lauf: eine gefallene Festung kostet den Lauf, nicht das
+Erspielte.
+
+| Baustein | Wo | Aufgabe |
+|---|---|---|
+| `ChestReward` | `src/economy/chest_reward.gd` | reine Rechnung: Güte der Kiste + Goldmenge |
+| `Wallet` (Autoload) | `src/economy/wallet.gd` | Goldstand des Profils, verdienen/ausgeben, Persistenz |
+| `TreasureChest` | `src/ui/treasure_chest.gd` + `scenes/ui/treasure_chest.tscn` | die Kiste zum Aufdrücken (2 s halten, Wackeln, Platzen, Münzflug) — ein 3D-Modell in eigener Welt |
+| `WaveStats` | `src/ui/wave_stats.gd` | Wellenabschluss in zwei Stufen: Ergebnis (Statistik + Kiste) → nächste Welle |
+| `PageStack` | `src/ui/page_stack.gd` | Seitenstapel mit fester Größe (Mindestgröße = größte Seite, auch unsichtbar) |
+| Werkbank | `scenes/dev/chest_lab.tscn` | die Kiste ohne Spiel ausprobieren (Güte, Gold, Münzen, Haltezeit, Modell/Zeichnung); im Export ausgeschlossen |
+
+- **Die Menge Gold kommt aus den PUNKTEN der Welle**, nicht aus der Zahl der Monster: die
+  Punkte je Monster tragen die Schwierigkeit schon in sich (`WaveGenerator.reward` steigt
+  mit der Grundschwierigkeit der Aufgabe, fällt mit der Confidence des Spielers, wächst
+  mit dem Wellentempo). Ein zweites Schwierigkeitsmaß daneben liefe auseinander, sobald
+  eines von beiden justiert wird.
+- **Die Güte kommt aus der Genauigkeit** (`WOOD`/`BRONZE`/`SILVER`/`GOLD`, perfekt = Gold)
+  und wirkt als Faktor auf die Menge. Sie ist das, was in DIESER Welle besser zu machen
+  war, und unabhängig davon, wie lang die Welle war.
+- **Verbucht wird im `WaveRunner`, nicht im Screen** (`_on_reward_collected` →
+  `Wallet.earn`). Die Kiste meldet per `opened` nur, dass sie offen ist; so ist dieselbe
+  Kiste später auch am Tagesziel oder nach einem Boss zu haben, ohne dass sie weiß, wem
+  sie etwas gutschreibt.
+- **Die Kiste ist ein 3D-Modell in einem eigenen SubViewport**, keine Zeichnung
+  (`chest.gltf` aus dem KayKit-Dungeon-Satz, Nachweis in `assets/models/CREDITS.md`).
+  Eigene Welt und durchsichtiger Hintergrund halten sie vom Kampf getrennt, über dem der
+  Abschluss-Screen hängt. Der Deckel ist ein eigener Knoten mit dem Scharnier als
+  Ursprung, Aufklappen also eine Drehung um X. Die gezeichnete Fassung bleibt erreichbar
+  (`use_model = false`): als Vergleich in der Werkbank und als Rückfall, wenn das Modell
+  fehlt.
+- **Die Güte sitzt im Beschlag und kommt aus dem Texturatlas**, nicht aus einem
+  Farbfilter: der Atlas ist ein Raster aus 8×4 Verlaufsfeldern, die Kiste benutzt genau
+  zwei (Beschlag, Holz), und ein Feldsprung in den UV-Koordinaten der Beschlag-Vertices
+  macht aus Stahl Kupfer, Silber oder Gold (`TIER_METAL`). Das Gold ist dasselbe Feld, aus
+  dem die Münze ihre Farbe nimmt.
+- **Aus der Kiste fliegt eine Münze je Goldstück** (`TreasureChest.coin_count`), als
+  Modell (`coin.gltf`) in derselben 3D-Welt, taumelnd und unten aus dem Bild. Gedeckelt
+  ist nur der zeitliche Versatz zwischen den Münzen, damit 200 Gold nicht tröpfeln. Weil
+  die Münzen mehr Platz brauchen als die Kiste, ist der gerenderte Ausschnitt größer als
+  das Widget (`STAGE_PAD`) — die Kiste selbst bleibt in ihrem Platz im Layout, geprüft
+  gegen das Widget-Rechteck.
+- **Die Größe des Abschluss-Screens steht fest**, solange er sichtbar ist: er hängt in
+  der Bildmitte, und eine Größenänderung beim Weiterblättern verschiebt die Knöpfe unter
+  dem Zeiger. Dafür der `PageStack` plus die Regel, innerhalb einer Seite nur zu sperren
+  und umzubeschriften statt ein- und auszublenden.
+- **Die Münzen der Tages-Leiste sind keine Währung.** Sie markieren geübte TAGE
+  (`CoinStrip`, `DayCoin`, Vorrat aus `SessionLog.played_day_count()`); Gold zählt in
+  Beträgen. Deshalb redet die Leiste von Tagen — zwei Dinge, die „Goldstück" heißen,
+  wären eines zu viel.
+
 ## Erweiterungspunkte für den KI-Agenten
 
 | Erweiterung | Wie | Bestehender Code betroffen? |
@@ -159,6 +213,10 @@ vorhandenen Handlern. (Noch zu implementieren — siehe `docs/ADDING_CONTENT.md`
   `flagged_lexemes()` unverändert funktioniert. Jede Meldung trägt ein Feld `sent`: das
   ist die Warteschlange des Melde-Kanals (siehe unten) — was noch nicht abgehakt ist,
   geht beim nächsten Start mit.
+- **Gold** (`Wallet`, `src/economy/wallet.gd`): JSON unter
+  `user://progress/<player>_wallet.json` — Stand, Lebensleistung und Zahl geöffneter
+  Kisten. Gesichert wird **sofort** bei jeder Änderung und nicht erst am Laufende:
+  verdientes Gold darf ein Absturz nicht kosten.
 - **Spielerfortschritt** (`player_task_progress`): der Autoload `PlayerProgress`
   (`src/learning/player_progress.gd`) hält je Aufgabe Confidence/Streak/Fälligkeit und
   kapselt den SM-2-Scheduler. Persistenz: JSON unter `user://progress/<player>.json`

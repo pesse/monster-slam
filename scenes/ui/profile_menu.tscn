@@ -28,6 +28,12 @@ theme_type_variation = &"Display"
 text = "Monster Slam"
 horizontal_alignment = 1
 
+[node name="GoldLabel" type="Label" parent="Margin/Root"]
+theme_type_variation = &"Accent"
+unique_name_in_owner = true
+text = "💰 0 Gold"
+horizontal_alignment = 1
+
 [node name="PickLabel" type="Label" parent="Margin/Root"]
 text = "Aktives Profil"
 horizontal_alignment = 1
