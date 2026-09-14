@@ -38,8 +38,8 @@ Eintrag ersetzt, ist der Zweck der Übung und bleibt still.
   `.all("waves")`, `.lexemes_by_tags(["basics"])`, `.forms_for(id, form_type)`,
   `.relations_of(id, "opposite")`, `.monster_rule_for(task_type, direction)`.
 - Auswahl-Filter fürs Session-Setup: `.lexemes_scoped(scope, tags)` (Schnitt aus
-  Curriculum-Scope UND Themen, siehe unten), plus `.all_books()` / `.units_for(book)`
-  für den Buch▸Unit-Picker.
+  Curriculum-Scope UND Themen, siehe unten), plus `.all_books()` / `.units_for(book)` /
+  `.parts_for(book, unit)` für den Buch▸Unit▸Teil-Picker.
 - `reload()` scannt zur Laufzeit neu.
 
 **Folge:** Content hinzufügen = Datei ablegen. Kein Code-Edit.
@@ -60,6 +60,12 @@ Darstellung unabhängig wachsen können (siehe `docs/ADDING_CONTENT.md`):
 	Einschränkung. So ist z.B. „Körperteile aus Access 2 / Unit 6" ausdrückbar. Lexeme
     ohne `book`/`unit` (Grundwortschatz) sind keinem Curriculum zugeordnet und erscheinen
     nur, wenn kein Scope gewählt ist.
+	Der Scope hat DREI Stufen: `"access2"`, `"access2/6"` und `"access2/6/2"` — das
+	zweite Viertel der Unit. Die Teile stehen NICHT in den Daten, sondern werden aus der
+	**Position** in der Unit gerechnet (`ContentRegistry._index_parts`, gleich große
+	Viertel, Rest nach vorn): die Lexeme stehen in Seitenreihenfolge in der Quelldatei,
+	damit ist Teil 1 der Anfang der Unit. Ein Teil ist damit ungefähr eine Woche
+	Unterricht — die Einheit, in der vor einer Arbeit tatsächlich geübt wird.
 - **task_definitions** — *Regeln*, was abgefragt wird (translate/opposite/synonym/
   conjugation/… + `direction`, `allowed_types`, `requires_relation`/`requires_form`,
   `difficulty`). Wenige, statische Einträge (Größenordnung ~10–20) — **unabhängig von

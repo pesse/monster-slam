@@ -63,3 +63,70 @@ func test_scope_and_tags_intersect(do_skip := LanguageData.missing(), skip_reaso
 
 func test_unknown_scope_returns_empty() -> void:
 	assert_int(ContentRegistry.lexemes_scoped(["nope/1"], []).size()).is_equal(0)
+
+
+# --- Teile einer Unit (positionsbasiertes Viertel) -------------------------------
+
+func test_a_unit_splits_into_part_count_parts(do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:
+	assert_int(ContentRegistry.parts_for("access2", 6)).is_equal(ContentRegistry.PART_COUNT)
+
+
+func test_an_unknown_unit_has_no_parts() -> void:
+	assert_int(ContentRegistry.parts_for("nope", 1)).is_equal(0)
+
+
+## Die Teile zerlegen die Unit vollständig und überschneidungsfrei — sonst fehlte je nach
+## Auswahl eine Vokabel oder käme doppelt.
+func test_the_parts_cover_the_unit_exactly(do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:
+	var unit := ContentRegistry.lexemes_scoped(["access2/6"], [])
+	var seen := {}
+	for part in range(1, ContentRegistry.parts_for("access2", 6) + 1):
+		for entry in ContentRegistry.lexemes_scoped(["access2/6/%d" % part], []):
+			var id := str(entry.get("id", ""))
+			assert_bool(seen.has(id)).is_false()
+			seen[id] = true
+	assert_int(seen.size()).is_equal(unit.size())
+
+
+## Gleich große Viertel, Rest nach vorn: zwischen größtem und kleinstem Teil liegt
+## höchstens eine Vokabel.
+func test_the_parts_are_of_equal_size(do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:
+	var sizes: Array = []
+	for part in range(1, ContentRegistry.parts_for("access2", 6) + 1):
+		sizes.append(ContentRegistry.lexemes_scoped(["access2/6/%d" % part], []).size())
+	sizes.sort()
+	assert_bool(sizes[0] > 0).is_true()
+	assert_bool(sizes[-1] - sizes[0] <= 1).is_true()
+
+
+## „Positionsbasiert" heißt: Teil 1 sind die ERSTEN Vokabeln der Unit in Bestandsreihenfolge
+## (die Reihenfolge der Quelldatei), nicht eine beliebige Auswahl.
+func test_part_one_holds_the_first_lexemes_of_the_unit(do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:
+	var in_order: Array = []
+	for id in ContentRegistry.lexemes:
+		var entry: Dictionary = ContentRegistry.lexemes[id]
+		if str(entry.get("book", "")) == "access2" and int(entry.get("unit", -1)) == 6:
+			in_order.append(str(id))
+	var first := ContentRegistry.lexemes_scoped(["access2/6/1"], [])
+	var first_ids := first.map(func(e): return str(e.get("id", "")))
+	assert_array(first_ids).contains_exactly_in_any_order(in_order.slice(0, first.size()))
+
+
+## Ein Teil-Schlüssel ist eine echte Teilmenge der Unit — und die Unit zieht ihre Teile
+## nicht mit in die Auswahl hinein, sondern deckt sie ab.
+func test_a_part_is_a_subset_of_its_unit(do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:
+	var part := ContentRegistry.lexemes_scoped(["access2/6/2"], [])
+	var unit := ContentRegistry.lexemes_scoped(["access2/6"], [])
+	assert_bool(part.size() > 0).is_true()
+	assert_bool(part.size() < unit.size()).is_true()
+	var unit_ids := unit.map(func(e): return str(e.get("id", "")))
+	for entry in part:
+		assert_bool(str(entry.get("id", "")) in unit_ids).is_true()
+
+
+## Teile und Themen schneiden sich wie Units und Themen (die Auswahl bleibt zwei Achsen).
+func test_part_and_tags_intersect(do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:
+	var scoped := ContentRegistry.lexemes_scoped(["access2/6/1", "access2/6/2"], ["body"])
+	for entry in scoped:
+		assert_bool("body" in entry.get("tags", [])).is_true()
+	assert_bool(scoped.size() <= ContentRegistry.lexemes_scoped(["access2/6"], ["body"]).size()).is_true()

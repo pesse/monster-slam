@@ -46,6 +46,9 @@ const MAX_SUGGESTIONS := 10
 
 var _all_tags: PackedStringArray = PackedStringArray()
 var _selected_tags: Array = []
+## Je Unit ein {"key", "check", "parts"} — die Auswahl wird daraus gelesen und nicht
+## aus dem Knotenbaum, weil die Teile in einer eigenen Zeile unter der Unit hängen.
+var _scope_rows: Array = []
 ## Nur für die Verfügbarkeitsprüfung (has_playable) — der Kampf hat seinen eigenen.
 var _generator := WaveGenerator.new()
 
@@ -87,25 +90,96 @@ func _setup_section(header: Button, content: Control, title: String) -> void:
 	)
 
 
-# --- Curriculum-Scope: Bücher ▸ Units (hierarchisch) ----------------------------
+# --- Curriculum-Scope: Bücher ▸ Units ▸ Teile (hierarchisch) --------------------
 
-## Baut pro Buch eine Überschrift + ein Raster von Unit-Checkboxen. Anders als die übrigen
-## Filter starten die Checkboxen LEER: leere Scope-Auswahl = keine Einschränkung (auch Lexeme
-## ohne Buch/Unit bleiben spielbar). Wert je Checkbox: "<book>/<unit>".
+## Baut pro Buch eine Überschrift und darunter je Unit eine aufklappbare Zeile. Anders als
+## die übrigen Filter starten die Checkboxen LEER: leere Scope-Auswahl = keine Einschränkung
+## (auch Lexeme ohne Buch/Unit bleiben spielbar).
 func _build_scope() -> void:
 	var selected := UserSettings.selected_scope()
 	for book in ContentRegistry.all_books():
 		var label := Label.new()
 		label.text = ContentRegistry.book_label(book)
 		_scope_list.add_child(label)
-		var grid := GridContainer.new()
-		grid.columns = 3
-		_scope_list.add_child(grid)
 		for unit in ContentRegistry.units_for(book):
-			var key := "%s/%d" % [book, unit]
-			# book-Schlüssel (ganzes Buch) im Scope hakt alle seine Units mit an.
-			var on := key in selected or book in selected
-			_add_check(grid, key, "Unit %d" % unit, on, _save_scope)
+			_add_unit_row(book, unit, selected)
+
+
+## Eine Unit-Zeile: Checkbox für die ganze Unit ("<book>/<unit>") und, dahinter aufklappbar,
+## die Teile ("<book>/<unit>/<teil>"). Die Teile sind positionsbasiert — Teil 1 sind die
+## ersten Vokabeln der Unit, also die ersten Seiten (ContentRegistry._index_parts).
+##
+## Die beiden Ebenen hängen zusammen: Unit an hakt alle Teile an, alle Teile an hakt die
+## Unit an. So bleibt die gespeicherte Auswahl immer die kürzeste, die dasselbe meint —
+## und ein abgehakter Teil ist sichtbar ein abgehakter Teil, keine stille Ausnahme unter
+## einer angehakten Unit.
+func _add_unit_row(book: String, unit: int, selected: PackedStringArray) -> void:
+	var unit_key := "%s/%d" % [book, unit]
+	# book-Schlüssel (ganzes Buch) im Scope hakt alle seine Units mit an.
+	var unit_on := unit_key in selected or book in selected
+
+	var row := HBoxContainer.new()
+	_scope_list.add_child(row)
+	var check := CheckBox.new()
+	check.text = "Unit %d" % unit
+	check.focus_mode = Control.FOCUS_NONE
+	check.set_meta("value", unit_key)
+	row.add_child(check)
+
+	# Eine Unit mit nur einem Teil hat nichts aufzuklappen — ihr Teil IST die Unit.
+	var parts: Array[CheckBox] = []
+	var part_row: HBoxContainer = null
+	if ContentRegistry.parts_for(book, unit) > 1:
+		part_row = HBoxContainer.new()
+		part_row.visible = false
+		_scope_list.add_child(part_row)
+		# Einrückung: Abstand ist Knoten-Sache (das Theme kennt nur Container-Abstände).
+		var indent := Control.new()
+		indent.custom_minimum_size.x = 24
+		part_row.add_child(indent)
+		for part in range(1, ContentRegistry.parts_for(book, unit) + 1):
+			var part_key := "%s/%d" % [unit_key, part]
+			var part_check := CheckBox.new()
+			part_check.text = str(part)
+			part_check.focus_mode = Control.FOCUS_NONE
+			part_check.set_meta("value", part_key)
+			part_check.set_pressed_no_signal(unit_on or part_key in selected)
+			part_row.add_child(part_check)
+			parts.append(part_check)
+
+	check.set_pressed_no_signal(unit_on or _all_checked(parts))
+	check.toggled.connect(func(pressed: bool):
+		for part_check in parts:
+			part_check.set_pressed_no_signal(pressed)
+		_save_scope()
+	)
+	for part_check in parts:
+		part_check.toggled.connect(func(_pressed: bool):
+			check.set_pressed_no_signal(_all_checked(parts))
+			_save_scope()
+		)
+
+	_scope_rows.append({"key": unit_key, "check": check, "parts": parts})
+
+	if part_row == null:
+		return
+	var toggle := Button.new()
+	toggle.text = "▸"
+	toggle.focus_mode = Control.FOCUS_NONE
+	toggle.pressed.connect(func():
+		part_row.visible = not part_row.visible
+		toggle.text = "▾" if part_row.visible else "▸"
+	)
+	row.add_child(toggle)
+
+
+func _all_checked(checks: Array[CheckBox]) -> bool:
+	if checks.is_empty():
+		return false
+	for check in checks:
+		if not check.button_pressed:
+			return false
+	return true
 
 
 func _save_scope() -> void:
@@ -113,12 +187,18 @@ func _save_scope() -> void:
 	_refresh_start_gate()
 
 
-## Sammelt die aktiven Unit-Werte aus allen Buch-Rastern unter %ScopeList.
+## Sammelt die Auswahl aus den Unit-Zeilen — je Zeile den Unit-Schlüssel ODER die einzeln
+## angehakten Teile, nie beides: der Unit-Schlüssel deckt seine Teile schon ab
+## (ContentRegistry._scope_keys).
 func _collect_scope() -> PackedStringArray:
 	var result := PackedStringArray()
-	for child in _scope_list.get_children():
-		if child is GridContainer:
-			result.append_array(_collect(child))
+	for row in _scope_rows:
+		if (row["check"] as CheckBox).button_pressed:
+			result.append(str(row["key"]))
+			continue
+		for part_check in row["parts"]:
+			if (part_check as CheckBox).button_pressed:
+				result.append(str(part_check.get_meta("value")))
 	return result
 
 

@@ -28,6 +28,11 @@ const LANGUAGE_ROOT := "res://data/language"
 ## Vokabeln kommt — sie enthält keine (siehe docs/adr/0001-app-und-content-update.md).
 const USER_CONTENT_ROOT := "user://content"
 
+## In so viele Teile zerfällt eine Unit für die Auswahl. Vier, weil eine Unit ungefähr
+## einen Monat Unterricht trägt und ein Teil damit etwa eine Woche — klein genug, um vor
+## einer Arbeit gezielt zu üben, groß genug, dass die Liste nicht zerfasert.
+const PART_COUNT := 4
+
 const LANGUAGE_CATEGORIES: Array[String] = [
 	"lexemes",
 	"lexeme_forms",
@@ -67,6 +72,10 @@ var _source_files: Dictionary = {}
 ## gleich aussehen: zwei Dateien DESSELBEN Roots mit gleicher id sind ein Fehler, ein Pack,
 ## der einen eingebauten Eintrag überschreibt, ist der Zweck der Übung.
 var _origins: Dictionary = {}
+
+## Lexem-Id -> Teil (1…PART_COUNT) innerhalb seiner Unit. Aus der Position berechnet,
+## siehe _index_parts(); Lexeme ohne Buch/Unit stehen nicht drin.
+var _parts: Dictionary = {}
 
 
 func _ready() -> void:
@@ -110,7 +119,46 @@ func reload() -> void:
 			+ "('git submodule update --init')."
 		)
 
+	_index_parts()
 	_apply_flags()
+
+
+## Teilt jede Unit in PART_COUNT gleich große Viertel und merkt sich je Lexem, in welches
+## es fällt. Maßgeblich ist die POSITION im Bestand, nicht ein Feld an den Daten: die
+## Reihenfolge der Lexeme in den JSON-Dateien ist die Reihenfolge im Buch, und ein
+## Dictionary hält seine Einfügereihenfolge. Damit gilt die Teilung rückwirkend für jedes
+## Buch, auch für schon installierte Packs — ein zusätzliches Feld hätte jeden Pack neu
+## gebaut und wäre in Bestandsinstallationen leer geblieben.
+##
+## Der Rest einer nicht glatt teilbaren Unit geht nach vorn (134 -> 34/34/33/33): die
+## vorderen Teile sind die, mit denen man anfängt, und ein Wort mehr fällt dort weniger auf
+## als eine ungleiche Lücke am Ende.
+func _index_parts() -> void:
+	_parts.clear()
+	var by_unit: Dictionary = {}   # "<book>/<unit>" -> Array[id], in Bestandsreihenfolge
+	for id in lexemes:
+		var entry: Dictionary = lexemes[id]
+		var book := str(entry.get("book", ""))
+		if book.is_empty() or not entry.has("unit"):
+			continue
+		var key := "%s/%d" % [book, int(entry["unit"])]
+		if not by_unit.has(key):
+			by_unit[key] = []
+		(by_unit[key] as Array).append(id)
+
+	for key in by_unit:
+		var ids: Array = by_unit[key]
+		var parts := mini(PART_COUNT, ids.size())
+		if parts <= 0:
+			continue
+		var base := ids.size() / parts
+		var rest := ids.size() % parts
+		var index := 0
+		for part in range(1, parts + 1):
+			var size := base + (1 if part <= rest else 0)
+			for _i in range(size):
+				_parts[ids[index]] = part
+				index += 1
 
 
 ## Die Roots in Vorrangfolge: ein späterer überschreibt bei gleicher `id` einen früheren.
@@ -218,15 +266,31 @@ func units_for(book: String) -> Array:
 	return result
 
 
-## Curriculum-Scope-Schlüssel eines Lexems: ["<book>", "<book>/<unit>"] — beides, damit
-## sowohl "ganzes Buch" als auch "einzelne Unit" im Scope matchen. Leer, wenn kein "book".
+## Curriculum-Scope-Schlüssel eines Lexems: ["<book>", "<book>/<unit>", "<book>/<unit>/<teil>"]
+## — alle drei, damit „ganzes Buch", „einzelne Unit" und „Viertel einer Unit" im selben
+## Scope matchen. Ein angehakter Unit-Schlüssel zieht seine Viertel also mit, ohne dass die
+## Auswahl sie einzeln aufzählen müsste. Leer, wenn kein "book".
 func _scope_keys(entry: Dictionary) -> Array:
 	var book := str(entry.get("book", ""))
 	if book.is_empty():
 		return []
-	if entry.has("unit"):
-		return [book, "%s/%d" % [book, int(entry["unit"])]]
-	return [book]
+	if not entry.has("unit"):
+		return [book]
+	var keys := [book, "%s/%d" % [book, int(entry["unit"])]]
+	var part: int = _parts.get(str(entry.get("id", "")), 0)
+	if part > 0:
+		keys.append("%s/%d/%d" % [book, int(entry["unit"]), part])
+	return keys
+
+
+## Anzahl der Teile, in die eine Unit zerfällt — PART_COUNT, außer die Unit hat weniger
+## Lexeme als das. Für die Auswahl-UI, damit sie keine leeren Teile anbietet.
+func parts_for(book: String, unit: int) -> int:
+	var count := 0
+	for entry in lexemes.values():
+		if str(entry.get("book", "")) == book and entry.has("unit") and int(entry["unit"]) == unit:
+			count += 1
+	return mini(PART_COUNT, count)
 
 
 ## Lexeme gefiltert nach Curriculum-Scope UND Themen-Tags (die beiden Achsen aus dem
