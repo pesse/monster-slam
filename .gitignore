@@ -35,3 +35,8 @@ _debug_shot.png
 
 # Rohmaterial (urheberrechtlich geschützte Buch-Scans/Fotos) — nicht committen
 raw/
+
+# lokale Werkzeug-Konfiguration (gh-Account, Claude-Einstellungen)
+.envrc
+.direnv/
+.claude/settings.local.json
