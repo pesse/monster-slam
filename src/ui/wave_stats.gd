@@ -18,6 +18,16 @@ extends PanelContainer
 ## Ergebnisseite wird nichts ein- oder ausgeblendet, sondern nur gesperrt und beschriftet.
 ## Der Screen hängt in der Bildmitte — jede Größenänderung verschiebt auch die Knöpfe.
 ##
+## **Jedes umbrechende Label braucht hier eine Mindestbreite** (`custom_minimum_size.x`).
+## Ein Label mit `autowrap_mode` meldet als Mindestbreite 1 Pixel und dazu die Höhe, die
+## der Text bei EINEM Pixel Breite braucht; korrigiert wird das erst, wenn es einmal eine
+## echte Breite zugeteilt bekommen hat — und die bekommt es auf einer unsichtbaren Seite
+## nie. Der PageStack rechnet unsichtbare Seiten aber mit, und der Screen wird nicht
+## gescrollt: das Niederlage-Label ohne Mindestbreite machte den Abschluss 1878 statt 542
+## Pixel hoch, und weil er in der Bildmitte hängt, lagen Kiste und Menü-Knopf außerhalb
+## des Bildes — die Niederlage war eine Sackgasse
+## (`test_the_defeat_screen_fits_into_the_base_resolution`).
+##
 ## Das Layout liegt in wave_stats.tscn; hier nur die Befüllung (show_stats), der
 ## Stufenwechsel und die Auswahl-Logik. Interaktive Controls haben focus_mode=FOCUS_NONE
 ## (in der Szene gesetzt), sonst reißt die Antwort-LineEdit (die sich per _process den

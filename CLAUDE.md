@@ -140,6 +140,16 @@ Beim Arbeiten daran zu beachten:
   weg, und die Aufforderung an der Kiste wird zur Quittung („+5 Gold") statt von einer
   zweiten Zeile ersetzt zu werden. Was sich doch ändern muss (ob es überhaupt eine Kiste
   gibt, Sieg/Niederlage), wird in `show_stats` entschieden — vor dem Anzeigen.
+- **Ein umbrechendes Label braucht dort eine Mindestbreite.** Ein `Label` mit
+  `autowrap_mode` meldet als Mindestbreite 1 Pixel und dazu die Höhe, die der Text bei
+  EINEM Pixel Breite braucht; das korrigiert sich erst mit einer echten zugeteilten
+  Breite — die eine unsichtbare Seite nie bekommt, während der `PageStack` sie trotzdem
+  mitrechnet. Ohne `custom_minimum_size.x` machte das Niederlage-Label den Abschluss 1878
+  statt 542 Pixel hoch; er hängt in der Bildmitte, also lagen Kiste und Menü-Knopf
+  außerhalb des Bildes und die Niederlage war eine Sackgasse. Gehalten von
+  `test_the_defeat_screen_fits_into_the_base_resolution` — und der prüft die Achsen
+  einzeln, weil `assert_vector(...).is_less_equal(...)` Vektoren lexikografisch
+  vergleicht (zu hoch wäre über die Breite durchgerutscht).
 - **Aus der Kiste fliegt eine Münze je Goldstück** (`TreasureChest.coin_count`), nicht
   eine gedeckelte Handvoll: der Haufen in der Luft ist der Fund, und eine Deckelung würde
   lügen, sobald die Wellen größer werden. Gedeckelt ist nur der zeitliche *Versatz*

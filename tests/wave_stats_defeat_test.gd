@@ -52,3 +52,36 @@ func test_controls_return_after_defeat_screen() -> void:
 	stats.show_stats({"won": true, "wave_number": 4, "difficulty": 3})
 	(stats.get_node("%ResultContinue") as Button).pressed.emit()
 	assert_bool((stats.get_node("%StartButton") as Button).visible).is_true()
+
+
+## Der Screen hängt in der Bildmitte und wird nicht gescrollt: was über die
+## Grundauflösung hinauswächst, hängt aus dem Bild — und ist damit unerreichbar. Genau
+## das war der Fall, solange das Niederlage-Label keine Mindestbreite hatte: ein
+## umbrechendes Label meldet 1 Pixel Breite und die Höhe für DIESE Breite (1737 px), der
+## PageStack nahm sie als Seitenhöhe, und der Menü-Knopf lag 800 Pixel unter dem
+## Bildrand. Geprüft wird die Mindestgröße gegen die Grundauflösung des Projekts,
+## nicht gegen eine hier hingeschriebene Zahl.
+func test_the_defeat_screen_fits_into_the_base_resolution() -> void:
+	# Wie im Spiel in einem CanvasLayer: der Screen hängt an den Ankern der Bildmitte
+	# und bekommt seine Breite von niemandem vorgegeben. Hängt er dagegen an einem
+	# Container, der ihm eine Breite aufzwingt, rechnet ein umbrechendes Label seine
+	# Höhe schon aus dieser Breite — dann fällt der Fehler hier gar nicht auf.
+	var layer: CanvasLayer = auto_free(CanvasLayer.new())
+	add_child(layer)
+	var stats := auto_free(STATS_SCENE.instantiate()) as PanelContainer
+	layer.add_child(stats)
+	# Mit Kiste, also die volle Ergebnisseite: die Niederlage bringt ihre Beute mit.
+	stats.show_stats({"won": false, "wave_number": 3, "difficulty": 3, "correct": 4,
+			"leaked": 2, "total": 6, "accuracy": 66.0, "score_gained": 40,
+			"score_total": 120, "fortress_health": 0, "mastered": 3, "fortress_tier": 0,
+			"chest": ChestReward.for_wave(40, 4, 2)})
+	for i in 5:
+		await get_tree().process_frame
+	var base := Vector2(
+			float(ProjectSettings.get_setting("display/window/size/viewport_width", 1152)),
+			float(ProjectSettings.get_setting("display/window/size/viewport_height", 648)))
+	# Je Achse geprüft: `assert_vector(...).is_less_equal(...)` vergleicht Vektoren
+	# lexikografisch (Godots `<=`), eine zu hohe Seite wäre über die x-Achse durchgerutscht.
+	var min_size := stats.get_combined_minimum_size()
+	assert_float(min_size.x).is_less_equal(base.x)
+	assert_float(min_size.y).is_less_equal(base.y)
