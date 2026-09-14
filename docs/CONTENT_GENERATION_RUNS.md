@@ -9,6 +9,7 @@ verschiedener Wege vergleichbar zu machen. Pro Lauf ein Eintrag; Vergleichstabel
 |---|---|---|---|---|---|---|---|---|
 | #1 | 2026-07-03 | Parallel-Fan-out + Merge/Validate-Skript | Sonnet (Agenten), Opus (Orchestrierung) | 40 | ~2,0 Mio. | **~40 $** | 7.377 | 0 Fehler / 0 Dubletten |
 | #2 | 2026-09-03 | Ein-Kontext-Lauf aus Buchfotos (Vision) + Merge/Validate-Skript | Opus | 0 | ~2 Mio. (geschätzt) | ~30 $ (geschätzt) | 1.166 | 0 Fehler / 0 Dubletten |
+| #3 | 2026-09-14 | Ein-Kontext-Lauf aus Buchfotos, ohne Beispielsätze | Opus | 0 | ~0,2 Mio. | ~3 $ | 279 | 0 Fehler / 0 Dubletten |
 
 ---
 
@@ -129,3 +130,59 @@ Grobe Richtwerte: ~0,02 $/Agent-Objekt bzw. ~1 $ je 185 Output-Objekte.
   muss zusammengefasst werden.
 - **−** Bildqualität ist die Untergrenze der Datenqualität (Bundsteg, Unschärfe,
   Seitenkrümmung). Vor dem nächsten Buch: gerade, vollständige Fotos einsammeln.
+
+---
+
+## Lauf #3 — Access 3, Unit 1 (aus Buchfotos, ohne Sätze)
+
+**Datum:** 2026-09-14
+**Ziel:** Das Vokabelverzeichnis von Unit 1 als neues Inhaltspaket (`language-access3`).
+
+### Ansatz
+Wie Lauf #2 (ein Kontext, Seite für Seite ins Staging, Merge/Validate im Skript), mit
+zwei Abweichungen:
+
+- **Beispielsätze bewusst weggelassen.** Gefordert waren nur die Vokabeln; damit fiel
+  die rechte Spalte des Verzeichnisses weg — genau die Spalte, die auf zwei der sechs
+  Fotos abgeschnitten ist. Die Lücke in den Fotos wurde so zur Nicht-Lücke im Ergebnis.
+- **Kasten-Vokabeln mitgenommen.** Die Grammatik- und Bildkästen des Verzeichnisses
+  (Himmelsrichtungen, Fahrtrichtungen, Gegensatzpaare, Verb-Kästen) führen Wörter, die
+  nicht als eigene Zeile in der Liste stehen. Sie sind im `notes`-Feld als solche
+  markiert, ebenso die wenigen deutschen Entsprechungen, die das Buch nicht glossiert
+  und die nach dem Muster des Haupteintrags ergänzt wurden.
+
+### Aufwand
+| | Lauf #3 |
+|---|---|
+| Agenten | 0 (ein Kontext) |
+| Bild-Eingaben | 6 Seitenfotos (2 gedreht) + 13 Ausschnitte/Kontrollmontagen |
+| ~Tokens | ~0,2 Mio. |
+| Wall-clock | ~25 min, ein Kontextfenster |
+
+### Output (279 Objekte)
+| Kategorie | Objekte | Kernzahlen |
+|---|---|---|
+| lexemes | 134 | 65 noun / 35 verb / 15 phrase / 12 adjective / 7 sonstige |
+| lexeme_forms | 145 | 29 Verben × 5 Formen (24 regelbasiert, 5 explizit unregelmäßig) |
+| lexeme_relations | 0 | keine beidseitig belegten Paare in dieser Unit |
+
+### Qualität
+- **Automatisch:** 0 JSON-Fehler, 0 doppelte Ids, 0 Formen ohne Lexem, Godot lädt alle
+  134 Lexeme im Scope `access3/1`, Testsuite 378/378 grün, Pack-Zuordnung eindeutig.
+- **Aufgelöst statt verworfen:** 1 Slug-Kollision (zwei Einträge mit demselben Stichwort
+  in verschiedener Wortart) bekam eine eigene Id.
+- **Ohne Formen:** 6 Einträge, die als Konstruktion mit *be* geführt werden — die Formen
+  gehören dort zum Hilfsverb, nicht zum Eintrag.
+- **Lücke:** auf zwei Fotos ist der Fuß der Seite angeschnitten (S. 174 und S. 177), je
+  bis zu drei Einträge. Nachzufotografieren.
+
+### Stärken / Schwächen dieses Ansatzes
+- **+** Eine Größenordnung billiger als Lauf #2 je Seite: ohne die Satzspalte schrumpft
+  sowohl das, was gelesen, als auch das, was geschrieben werden muss.
+- **+** Fotomängel am rechten Rand sind folgenlos, solange nur die linken zwei Spalten
+  gebraucht werden — die Anforderung an die Fotos sinkt mit dem Umfang des Ziels.
+- **−** Ohne Sätze fehlt dem Paket der Kontext, aus dem später Boss-/Satzaufgaben kommen
+  sollen; wer sie will, muss die Seiten erneut fotografieren und lesen.
+- **−** Angeschnittene Seitenfüße fallen erst beim Zählen auf, weil die Liste nahtlos
+  weiterläuft. Beim Fotografieren gehört die Fußzeile mit ins Bild — sie ist der Beleg,
+  dass die Seite vollständig ist.
