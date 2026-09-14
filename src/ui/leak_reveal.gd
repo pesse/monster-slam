@@ -126,6 +126,7 @@ func _place_card(index: int, revealed: bool, offscreen: bool) -> void:
 	var w := _stage.size.x
 	var card := CARD_SCENE.instantiate() as RevealCard
 	_stage.add_child(card)                 # zuerst in den Baum -> onready-Knoten stehen
+	card.set_width(w)                      # vor setup(): die langen Zeilen brechen sofort um
 	card.setup(_items[index], revealed)
 	card.size = Vector2(w, _stage.size.y)
 	card.position = Vector2(w if offscreen else 0.0, 0.0)

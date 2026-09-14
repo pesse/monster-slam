@@ -150,6 +150,11 @@ Beim Arbeiten daran zu beachten:
   `test_the_defeat_screen_fits_into_the_base_resolution` — und der prüft die Achsen
   einzeln, weil `assert_vector(...).is_less_equal(...)` Vektoren lexikografisch
   vergleicht (zu hoch wäre über die Breite durchgerutscht).
+  Dasselbe Label-Verhalten trifft jede Karte, deren Größe von Hand gesetzt wird:
+  `Control.size` wird an der Mindestgröße geklemmt, die Reveal-Karte blieb deshalb 5881
+  statt 340 Pixel hoch und trug ihren Inhalt aus der abschneidenden Bühne heraus.
+  `RevealCard.set_width()` gibt den umbrechenden Labels ihre Breite, BEVOR die Größe
+  gesetzt wird (`tests/leak_reveal_layout_test.gd`).
 - **Aus der Kiste fliegt eine Münze je Goldstück** (`TreasureChest.coin_count`), nicht
   eine gedeckelte Handvoll: der Haufen in der Luft ist der Fund, und eine Deckelung würde
   lügen, sobald die Wellen größer werden. Gedeckelt ist nur der zeitliche *Versatz*

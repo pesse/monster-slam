@@ -3,6 +3,11 @@ extends PanelContainer
 ## Eine Auflösungs-Karte im Leak-Reveal-Karussell: Wortart + Prompt + Lösung (primäre
 ## Antwort + Alternativen). Layout & Styling liegen in reveal_card.tscn (im Editor auf
 ## einen Blick sichtbar); die Inhalte setzt das LeakReveal per setup().
+##
+## Die langen Zeilen (Aufgabe, Alternativen, Bedeutung) brechen um — eine Aufgabe mit
+## mehreren Alternativantworten passt sonst nicht in die Breite und die Bühne schneidet
+## sie ab. Umbrechende Labels wollen dafür VOR dem ersten Layout-Durchgang ihre Breite
+## wissen, siehe set_width().
 
 @onready var _type: Label = %Type
 @onready var _prompt: Label = %Prompt
@@ -10,6 +15,23 @@ extends PanelContainer
 @onready var _primary: Label = %Primary
 @onready var _alt: Label = %Alt
 @onready var _meaning: Label = %Meaning
+
+
+## Stellt die Karte auf die Breite ein, in der sie stehen wird — vom LeakReveal vor dem
+## Setzen der Größe gerufen.
+##
+## Ein Label mit `autowrap_mode` rechnet seine Mindesthöhe aus der Breite, die es GERADE
+## hat: ohne zugeteilte Breite also aus null, und das sind für die Bedeutung ein paar
+## tausend Pixel. `Control.size` wird an der Mindestgröße geklemmt, die Karte bleibt
+## danach also hoch — gemessen 5881 statt 250 Pixel — und trägt ihren Inhalt weit aus der
+## Bühne heraus, die ihn abschneidet. Die zugeteilte Breite kommt erst einen
+## Layout-Durchgang später; deshalb wird sie hier von Hand gesetzt.
+func set_width(width: float) -> void:
+	var inner := width - get_theme_stylebox("panel").get_minimum_size().x
+	for label in [_prompt, _primary, _alt, _meaning]:
+		label.custom_minimum_size.x = inner
+		label.size.x = inner          # löst das Umbrechen jetzt aus, nicht erst im Layout
+	custom_minimum_size.x = width
 
 
 ## Der einblendbare Lösungsteil — vom LeakReveal für die Aufdeck-Animation getweent.
