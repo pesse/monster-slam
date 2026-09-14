@@ -17,6 +17,24 @@ func test_german_article_is_optional() -> void:
 	assert_bool(_evaluator.evaluate_answers(["das Haus"], "Haus")).is_true()
 
 
+func test_english_infinitive_to_is_optional() -> void:
+	# Im Lehrbuch steht mal "brainstorm", mal "to brainstorm" — für die Abfrage ist das
+	# dasselbe Wort, und zwar in beide Richtungen.
+	assert_bool(_evaluator.evaluate_answers(["brainstorm"], "to brainstorm")).is_true()
+	assert_bool(_evaluator.evaluate_answers(["to brainstorm"], "brainstorm")).is_true()
+	assert_bool(_evaluator.evaluate_answers(["to brainstorm"], "to brainstorm")).is_true()
+	# Vollständig ist der Treffer trotzdem: "to" ist Notation, kein Bestandteil.
+	assert_bool(_evaluator.evaluate(["brainstorm"], "to brainstorm")["complete"]).is_true()
+
+
+func test_the_word_to_itself_survives() -> void:
+	# Weggekürzt wird nur "to " MIT folgendem Wort, sonst bliebe von der Vokabel "to"
+	# nichts übrig und jede leere Eingabe träfe sie.
+	assert_bool(_evaluator.evaluate_answers(["to"], "to")).is_true()
+	assert_bool(_evaluator.evaluate_answers(["to"], "")).is_false()
+	assert_bool(_evaluator.evaluate_answers(["to"], "brainstorm")).is_false()
+
+
 func test_accepts_any_listed_variant() -> void:
 	# Regression zum Slash-Fix: "each" (en->de) liefert alle Genus-Formen als
 	# einzelne akzeptierte Antworten statt eines wörtlichen "jeder / jede / jedes".

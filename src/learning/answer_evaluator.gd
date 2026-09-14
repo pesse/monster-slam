@@ -14,10 +14,14 @@ extends RefCounted
 ## Optional callable: func(prompt, reference, answer) -> { "quality": float, "feedback": String }
 var sentence_backend: Callable = Callable()
 
-## Ziel ist Englisch lernen, nicht Deutsch — deshalb ist der deutsche Artikel
-## optional. Wird auf Eingabe UND hinterlegte Antwort angewendet, sodass
-## "das Haus" und "Haus" gleichwertig akzeptiert werden (keine Datenmigration).
-const _DE_ARTICLES := ["der ", "die ", "das ", "eine ", "ein "]
+## Wegkürzbare Anlaute: der deutsche Artikel (Ziel ist Englisch lernen, nicht Deutsch)
+## und das englische "to" vor dem Infinitiv — im Lehrbuch steht mal "brainstorm", mal
+## "to brainstorm", und beides ist dasselbe Wort. Wird auf Eingabe UND hinterlegte Antwort
+## angewendet, sodass "das Haus"/"Haus" und "to brainstorm"/"brainstorm" gleichwertig sind
+## (symmetrisch, also ohne Datenmigration).
+##
+## Nur mit folgendem Leerzeichen, damit die Vokabel "to" selbst nicht verschwindet.
+const _OPTIONAL_PREFIXES := ["der ", "die ", "das ", "eine ", "ein ", "to "]
 
 ## Grammatik-Platzhalter aus dem Lehrbuch ("criticize sb. (for)"). Sie werden auf EIN
 ## Wildcard-Token abgebildet, sodass Schreibweise und Sprache der Notation gleichgültig
@@ -126,7 +130,7 @@ func _variants(s: String) -> Dictionary:
 	# werden. Zwei Stufen, weil sich die Bereiche sonst überlappen würden.
 	for group_form in _expand(base, _group_slots(base)):
 		for form in _expand(str(group_form[0]), _placeholder_slots(str(group_form[0]))):
-			var key := _strip_article(str(form[0]))
+			var key := _strip_optional_prefix(str(form[0]))
 			if key.is_empty():
 				continue
 			var complete: bool = bool(group_form[1]) and bool(form[1])
@@ -203,13 +207,13 @@ func _normalize(s: String) -> String:
 	normalized = normalized.replace("–", "-").replace("—", "-")
 	while normalized.ends_with(".") or normalized.ends_with("!") or normalized.ends_with("?"):
 		normalized = normalized.substr(0, normalized.length() - 1).strip_edges()
-	return _strip_article(_collapse(normalized))
+	return _strip_optional_prefix(_collapse(normalized))
 
 
-func _strip_article(s: String) -> String:
-	for article in _DE_ARTICLES:
-		if s.begins_with(article):
-			return s.substr(article.length()).strip_edges()
+func _strip_optional_prefix(s: String) -> String:
+	for prefix in _OPTIONAL_PREFIXES:
+		if s.begins_with(prefix):
+			return s.substr(prefix.length()).strip_edges()
 	return s
 
 
