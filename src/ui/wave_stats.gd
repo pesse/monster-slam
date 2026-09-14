@@ -97,8 +97,9 @@ func _ready() -> void:
 
 ## Befüllt den Screen mit den Statistiken einer Welle und zeigt ihn an (Stufe 1).
 ## Erwartete Felder in `data`: won, wave_number, difficulty, correct, leaked, total,
-## accuracy, score_gained, score_total, fortress_health, mastered, fortress_tier und
-## optional chest = { tier, gold, name } (siehe ChestReward.for_wave).
+## accuracy, score_gained, score_total, fortress_health, mastered, fortress_tier,
+## xp_gained, levels_gained und optional chest = { tier, gold, name } (siehe
+## ChestReward.for_wave).
 func show_stats(data: Dictionary) -> void:
 	_won = bool(data.get("won", true))
 	_wave_number = int(data.get("wave_number", 0))
@@ -114,9 +115,25 @@ func show_stats(data: Dictionary) -> void:
 	_add_line("Gemeisterte Aufgaben: %d  (Festungsstufe %d)" % [
 		int(data.get("mastered", 0)), int(data.get("fortress_tier", 0))])
 	_add_line("Schwierigkeit: %d / 5" % int(data.get("difficulty", 3)))
+	# Erfahrung: der Zuwachs kommt aus der Welle, der Stand aus dem Profil (PlayerLevel)
+	# — dieselbe Aufteilung wie beim Gold. Verbucht ist er längst (WaveRunner._defeat);
+	# hier wird nur gelesen.
+	var progress := PlayerLevel.progress()
+	_add_line("Erfahrung: +%d XP  (Level %d, %d/%d)" % [
+		int(data.get("xp_gained", 0)), int(progress["level"]),
+		int(progress["xp_in_level"]), int(progress["xp_for_level_up"])])
+	# Der Aufstieg bekommt eine eigene Zeile, aber nur wenn es einen gab: eine
+	# Sichtbarkeits-Entscheidung ist hier erlaubt, solange sie VOR dem Anzeigen fällt
+	# (danach steht die Größe des Screens fest — siehe Kopf).
+	var levels := int(data.get("levels_gained", 0))
+	if levels > 0:
+		_add_line("⭐ Level %d erreicht — %d Skillpunkt%s" % [
+			int(progress["level"]), PlayerLevel.skill_points(),
+			"" if PlayerLevel.skill_points() == 1 else "e"])
 
-	# Kiste: die einzige Sichtbarkeitsentscheidung der Ergebnisseite, und sie fällt HIER
-	# — vor dem Anzeigen. Ab dann bleibt die Seite in ihrer Größe stehen.
+	# Kiste: die zweite Entscheidung über den Inhalt der Ergebnisseite (nach der
+	# Aufstiegs-Zeile), und wie jene fällt sie HIER — vor dem Anzeigen. Ab dann bleibt
+	# die Seite in ihrer Größe stehen.
 	var chest: Dictionary = data.get("chest", {})
 	_chest_gold = int(chest.get("gold", 0))
 	_reward.visible = _chest_gold > 0

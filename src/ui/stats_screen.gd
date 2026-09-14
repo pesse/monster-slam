@@ -91,6 +91,15 @@ func _refresh_numbers() -> void:
 	# sagen, wie oft es dafür schon einen Grund gab.
 	_add_line(_stat_lines, "💰 %s  (%d Schatzkiste%s geöffnet)" % [
 		Wallet.label(), Wallet.chests_opened, "" if Wallet.chests_opened == 1 else "n"])
+	# Danach das Level: es sagt, wie lange schon gespielt wird, und führt die Skillpunkte
+	# mit. Der Zusatz „noch nichts zum Ausgeben" steht da, solange es keine Fähigkeiten
+	# gibt — ein Punktestand ohne Laden ist sonst eine offene Frage.
+	var progress := PlayerLevel.progress()
+	var points := PlayerLevel.skill_points()
+	_add_line(_stat_lines, "⭐ Level %d  (%d/%d XP, insgesamt %s)  ·  %d Skillpunkt%s%s" % [
+		int(progress["level"]), int(progress["xp_in_level"]), int(progress["xp_for_level_up"]),
+		PlayerLevel.label(), points, "" if points == 1 else "e",
+		" — noch nichts zum Ausgeben" if points > 0 else ""])
 	_add_line(_stat_lines, "Gemeisterte Aufgaben: %d  (Festungsstufe %d)" % [
 		PlayerProgress.mastered_count(), PlayerProgress.fortress_tier()])
 	_add_line(_stat_lines, "Gesamt-Genauigkeit: %d %%" % int(round(PlayerProgress.overall_accuracy() * 100.0)))

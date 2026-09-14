@@ -228,6 +228,42 @@ Beim Arbeiten daran zu beachten:
   `UserSettings` und läuft NACH `_initialize()` eines `-s`-Skripts — eine früher gesetzte
   Test-Id ist danach wieder weg.
 
+## Erfahrung: Lernfortschritt, nicht Beute
+
+XP und Spielerlevel liegen in `src/progression/` — `Experience` (reine Regeln, wie
+`ChestReward`) und der Autoload `PlayerLevel` (Stand je Profil). Verdient wird an
+besiegten Monstern, verbucht in `WaveRunner._defeat`.
+
+Beim Arbeiten daran zu beachten:
+
+- **XP kommt aus DEMSELBEN Schwierigkeitsmaß wie Tempo und Punkte** — dem Netto-Maß
+  `t - c` in `WaveGenerator._build_plan` (Grundschwierigkeit der Aufgabe minus Confidence
+  des Spielers). Kein zweites Maß daneben bauen; die drei Projektionen justiert man an
+  ihren Empfindlichkeiten, nicht an einer eigenen Formel.
+- **Der Wellenfaktor `speed_scale` gehört NICHT in die XP-Rechnung.** Er hebt die Punkte,
+  weil eine härtere Welle mehr Beute bringt; das einzelne Wort wird davon nicht schwerer.
+  Sonst wäre die schnellste Welle der schnellste Weg zum Levelup
+  (`test_the_wave_factor_lifts_the_points_but_not_the_experience`).
+- **Ob eine Aufgabe gemeistert war, wird beim SPAWN entschieden** (dort steht die
+  Confidence im Plan, und dort kostet es nichts). Nach dem Treffer hat `PlayerProgress`
+  sie schon angehoben — wer erst dort fragt, nimmt genau dem Monster die volle Erfahrung
+  weg, das die Meisterung gebracht hat.
+- **Gespeichert wird nur `total_xp`.** Level, Levelfortschritt und Skillpunkte rechnet
+  `Experience` daraus; das Level in der Datei ist zum Mitlesen da und wird beim Laden
+  verworfen. Solange es keine Fähigkeiten gibt, gibt es auch keinen Zähler für
+  ausgegebene Punkte — der kommt mit ihnen.
+- **Die Stufengrenze wird gezählt, nicht gewurzelt.** `Experience.progress_in_level`
+  läuft in einer Schleife über die Stufenkosten: die Umkehrung der Summenformel trifft
+  den runden Betrag (300 XP = Level 3) nicht zuverlässig, und ein Balken, der bei rundem
+  Stand eine Stufe zurückfällt, ist schlimmer als 140 Additionen bei einer Million XP.
+- **Level und Balken stehen im HUD beim NAMEN**, nicht in einer eigenen Tafel: sie gehören
+  zum Spieler, und die Kopfleiste hat bei 1152 Pixeln keinen Platz für eine fünfte.
+- **`PlayerLevel`-Tests laufen auf einer eigenen Instanz mit `zz-`Profil** und räumen ihre
+  Datei weg — dieselbe Regel wie bei der Geldbörse: `user://` ist projektübergreifend
+  dasselbe Verzeichnis, und die Datei des aktiven Profils ist die echte Erfahrung des
+  Spielers. Aus demselben Grund fährt kein Test eine ganze Welle, um das Verbuchen zu
+  prüfen.
+
 ## Abstände und Schriftgrößen stehen im Theme, nicht in der Szene
 
 `scenes/ui/ui_theme.tres` ist die einzige Quelle für Raum und Typografie. Vorher lagen

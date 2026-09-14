@@ -33,6 +33,8 @@ var _wave_leaked: int = 0          # an der Festung durchgelassene Monster diese
 var _wave_leaked_tasks: Array[Dictionary] = []  # deren Aufgaben (prompt + accepted_answers), für die Auflösung
 var _wave_played_tasks: Array[Dictionary] = []  # ALLE gespielten Aufgaben (richtig + falsch), fürs freie Durchblättern im Reveal
 var _score_at_start: int = 0       # Punktestand zu Wellenbeginn (für "+X" im Screen)
+var _wave_xp: int = 0              # in dieser Welle verdiente Erfahrung (für den Screen)
+var _level_at_start: int = 1       # Spielerlevel zu Wellenbeginn (für "Aufgestiegen!")
 var _last_won: bool = true         # Ausgang der zuletzt beendeten Welle
 # Generation-Zähler: bricht Spawn-Coroutinen einer alten Welle ab, sobald eine neue
 # startet (der _finished-Check allein reicht nicht, da die neue Welle _finished=false setzt).
@@ -451,6 +453,10 @@ func _start_next_wave() -> void:
 	_wave_leaked_tasks.clear()
 	_wave_played_tasks.clear()
 	_score_at_start = GameState.score
+	# Erfahrung und Level sind Profilstände (PlayerLevel) — hier wird nur festgehalten,
+	# wo die Welle angefangen hat, damit der Abschluss ihren Zuwachs zeigen kann.
+	_wave_xp = 0
+	_level_at_start = PlayerLevel.level
 	_end_label.visible = false
 	_stats.hide_stats()
 	_answer_input.visible = true
@@ -563,6 +569,7 @@ func _spawn(entry: Dictionary) -> void:
 	monster.setup(plan["monster_def"], plan["task"], GOAL_Z, plan["speed"])
 	monster.damage = plan["damage"]
 	monster.reward = plan["reward"]
+	monster.xp = plan["xp"]
 	monster.spawned_at_ms = Time.get_ticks_msec()
 	monster.position = Vector3(randf_range(-LANE_HALF_WIDTH, LANE_HALF_WIDTH), 0.0, SPAWN_Z)
 	monster.reached_goal.connect(_on_monster_reached_goal)
@@ -657,6 +664,11 @@ func _defeat(monster: Monster) -> void:
 	Sfx.play(&"monster_kill")
 	# Kleine aufsteigende „+Punkte"-Animation an der Stelle des Monsters.
 	_spawn_score_popup(monster.position + Vector3(0.0, 2.0, 0.0), monster.reward)
+	# Erfahrung SOFORT verbuchen, wie das Gold in der Geldbörse: sie gehört zum Profil
+	# (PlayerLevel), nicht zum Lauf, und ein Absturz mitten in der Welle darf sie nicht
+	# kosten. Der Zähler daneben ist nur für den Wellenabschluss.
+	PlayerLevel.gain(monster.xp)
+	_wave_xp += monster.xp
 	# Reward aus der monster_task_rule an GameState durchreichen (Score).
 	var info := monster.monster_def.duplicate()
 	info["reward"] = monster.reward
@@ -802,6 +814,11 @@ func _finish_wave(won: bool) -> void:
 		"mastered": PlayerProgress.mastered_count(),
 		"fortress_tier": PlayerProgress.fortress_tier(),
 		"chest": ChestReward.for_wave(score_gained, _wave_correct, _wave_leaked),
+		# Erfahrung: der Zuwachs DIESER Welle und die Zahl der Aufstiege darin. Den
+		# Gesamtstand liest der Screen bei PlayerLevel — verbucht ist er längst (siehe
+		# _defeat), hier steht nur, was die Welle daran geändert hat.
+		"xp_gained": _wave_xp,
+		"levels_gained": PlayerLevel.level - _level_at_start,
 	})
 
 

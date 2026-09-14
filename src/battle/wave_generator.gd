@@ -9,12 +9,13 @@ extends RefCounted
 ##   2. Fällige (SpacedRepetition) bevorzugen, dann neue, dann beliebige.
 ##   3. Aufgabe über TaskResolver auflösen (prompt + accepted_answers).
 ##   4. monster_task_rules mappt (task_type, direction) -> monster_type + Basiswerte.
-##   5. Tempo = Schwierigkeit: aus Aufgaben-Grundschwierigkeit + Confidence (+ Wellenfaktor).
+##   5. Tempo, Punkte und Erfahrung = Schwierigkeit: aus Aufgaben-Grundschwierigkeit +
+##      Confidence (+ Wellenfaktor, der die Erfahrung bewusst NICHT anhebt).
 ##
 ## pick(pool) -> {
 ##   "task": Dictionary,          # aufgelöste Laufzeit-Aufgabe
 ##   "monster_def": Dictionary,   # reine Darstellung (monsters-Eintrag)
-##   "speed": float, "damage": int, "reward": int,
+##   "speed": float, "damage": int, "reward": int, "xp": int,
 ## }  oder {} wenn nichts Spielbares gefunden wurde.
 
 var _resolver := TaskResolver.new()
@@ -248,18 +249,33 @@ func _build_plan(candidate: Dictionary) -> Dictionary:
 	task["initial_confidence"] = prior
 	var c := PlayerProgress.confidence(task["learnable_id"], prior)
 
+	# Netto-Schwierigkeit dieses Monsters: t - c, also -1 (sicher beherrscht) bis +1
+	# (harte Aufgabe, unsicherer Spieler). Sie ist die EINE Größe, aus der Tempo, Punkte
+	# und Erfahrung entstehen — jedes weitere Schwierigkeitsmaß daneben liefe auseinander,
+	# sobald eines von beiden justiert wird.
+	var net := t - c
+
 	# Tempo = sichtbare Projektion der Schwierigkeit: schwer -> langsamer (Zeit zum
 	# Abrufen), nur wenn die Confidence die Grundschwierigkeit übersteigt -> schneller.
-	var speed := REFERENCE_SPEED * clampf(1.0 + SPEED_SENSITIVITY * (c - t), 0.7, 1.3) * speed_scale
+	var speed := REFERENCE_SPEED * clampf(1.0 - SPEED_SENSITIVITY * net, 0.7, 1.3) * speed_scale
 
 	# Punkte skalieren mit derselben Schwierigkeit, aber invers zum Tempo: je schwerer
 	# das Monster (hohe Grundschwierigkeit, niedrige Confidence, härtere Welle), desto
 	# mehr Punkte. So lohnt sich das Abrufen unsicherer/harter Aufgaben.
-	var reward := int(round(REFERENCE_REWARD * clampf(1.0 + REWARD_SENSITIVITY * (t - c), 0.4, 1.6) * speed_scale))
+	var reward := int(round(REFERENCE_REWARD * clampf(1.0 + REWARD_SENSITIVITY * net, 0.4, 1.6) * speed_scale))
+
+	# Erfahrung aus derselben Schwierigkeit, aber OHNE `speed_scale`: XP ist
+	# Lernfortschritt und keine Beute — eine härtere Welle macht das einzelne Wort nicht
+	# schwerer, sie bringt nur mehr Monster und mehr Punkte. Eine schon gemeisterte
+	# Aufgabe bringt fast nichts (siehe Experience.MASTERED_XP); geprüft wird das HIER,
+	# beim Spawn, denn nach dem Treffer hat PlayerProgress die Confidence bereits
+	# angehoben — das Monster, das die Meisterung bringt, zählt noch voll.
+	var xp := Experience.for_monster(0.5 + 0.5 * net, c >= PlayerProgress.MASTERY_CONFIDENCE)
 	return {
 		"task": task,
 		"monster_def": monster_def,
 		"speed": speed,
 		"damage": int(rule.get("base_damage", 10)),
 		"reward": reward,
+		"xp": xp,
 	}

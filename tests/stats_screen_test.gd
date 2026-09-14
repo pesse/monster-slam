@@ -129,6 +129,7 @@ func test_scene_builds_and_finds_its_lists() -> void:
 	assert_object(screen.get_node("%ComebackList")).is_not_null()
 	assert_object(screen.get_node("%WordList")).is_not_null()
 	assert_object(screen.get_node("%BackButton")).is_not_null()
-	# Sechs Kennzahlen-Zeilen füllt _refresh_numbers beim Betreten (Gold zuerst).
-	assert_int(screen.get_node("%StatLines").get_child_count()).is_equal(6)
+	# Sieben Kennzahlen-Zeilen füllt _refresh_numbers beim Betreten (Gold zuerst, dann
+	# Level).
+	assert_int(screen.get_node("%StatLines").get_child_count()).is_equal(7)
 	remove_child(screen)

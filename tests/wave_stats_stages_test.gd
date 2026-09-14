@@ -42,9 +42,21 @@ func test_statistics_and_chest_share_the_first_stage() -> void:
 	_stats.show_stats(_wave_data())
 	assert_bool(_visible("ResultPage")).is_true()
 	assert_bool(_visible("NextPage")).is_false()
-	# Zahlen links, Kiste rechts — beides ist das Ergebnis derselben Welle.
-	assert_int((_stats.get_node("%Lines") as VBoxContainer).get_child_count()).is_equal(7)
+	# Zahlen links, Kiste rechts — beides ist das Ergebnis derselben Welle. Acht Zeilen
+	# ohne Aufstieg (der bringt eine neunte, siehe wave_stats.gd).
+	assert_int((_stats.get_node("%Lines") as VBoxContainer).get_child_count()).is_equal(8)
 	assert_bool(_visible("Reward")).is_true()
+
+
+## Der Aufstieg bekommt eine eigene Zeile, aber nur wenn es einen gab: die Zeile ist die
+## Feier, und ohne Aufstieg gibt es nichts zu feiern. Entschieden wird das in show_stats
+## — vor dem Anzeigen, denn ab dann steht die Größe des Screens fest.
+func test_the_level_up_line_appears_only_after_a_level_up() -> void:
+	var lines := _stats.get_node("%Lines") as VBoxContainer
+	_stats.show_stats(_wave_data({"xp_gained": 40, "levels_gained": 0}))
+	var without := lines.get_child_count()
+	_stats.show_stats(_wave_data({"xp_gained": 40, "levels_gained": 1}))
+	assert_int(lines.get_child_count()).is_equal(without + 1)
 
 
 ## Solange die Kiste zu ist, sind Weiter und Menü GESPERRT (nicht ausgeblendet — ein

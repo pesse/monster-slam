@@ -11,6 +11,7 @@ const STATS_SCENE := "res://scenes/ui/stats_screen.tscn"
 const CONTENT_SCENE := "res://scenes/ui/content_manager.tscn"
 
 @onready var _gold_label: Label = %GoldLabel
+@onready var _level_label: Label = %LevelLabel
 @onready var _profile_select: OptionButton = %ProfileSelect
 @onready var _name_input: LineEdit = %NameInput
 @onready var _update_button: Button = %UpdateButton
@@ -31,8 +32,10 @@ func _ready() -> void:
 	UpdateService.changed.connect(_refresh_update_badge)
 	ContentService.changed.connect(_refresh_content_badge)
 	Wallet.changed.connect(func(_gold): _refresh_gold())
+	PlayerLevel.changed.connect(func(_total_xp, _level): _refresh_level())
 	_refresh_profiles()
 	_refresh_gold()
+	_refresh_level()
 	_refresh_update_badge()
 	_refresh_content_badge()
 	_refresh_play_gate()
@@ -57,8 +60,10 @@ func _on_profile_selected(index: int) -> void:
 	var id := str(_profile_select.get_item_metadata(index))
 	UserSettings.set_active_profile(id)
 	PlayerProgress.switch_to(id)
-	# Die Geldbörse schaltet über UserSettings.active_profile_changed selbst um (siehe
-	# Wallet._ready); hier muss nur die Anzeige nachziehen.
+	# Geldbörse und Erfahrung schalten über UserSettings.active_profile_changed selbst um
+	# (siehe Wallet._ready / PlayerLevel._ready); hier muss nur die Anzeige nachziehen.
+	# Die Level-Zeile zieht dabei von selbst nach — PlayerLevel.switch_to meldet den neuen
+	# Stand über `changed`, die Geldbörse tut das beim Wechsel nicht.
 	_refresh_gold()
 
 
@@ -77,6 +82,19 @@ func _on_create_profile() -> void:
 ## Statistik: Gold wird ausgegeben, und der Laden wird von hier aus erreichbar sein.
 func _refresh_gold() -> void:
 	_gold_label.text = "💰 %s" % Wallet.label()
+
+
+## Level, Stand im Level und offene Skillpunkte. Leiser als der Goldstand (Hint), weil es
+## noch nichts zu entscheiden gibt: die Punkte sammeln sich, Fähigkeiten kommen später.
+## Die Punkte stehen trotzdem hier — was man verdient hat, soll man sehen können.
+func _refresh_level() -> void:
+	var progress := PlayerLevel.progress()
+	var text := "⭐ Level %d  ·  %d/%d XP" % [
+		int(progress["level"]), int(progress["xp_in_level"]), int(progress["xp_for_level_up"])]
+	var points := PlayerLevel.skill_points()
+	if points > 0:
+		text += "  ·  %d Skillpunkt%s" % [points, "" if points == 1 else "e"]
+	_level_label.text = text
 
 
 ## Das Abzeichen erscheint nur, wenn es etwas zu tun gibt. Ein Fehlschlag der Prüfung wird

@@ -1,7 +1,13 @@
 extends Control
-## Gestaltete Kopfleiste: Festungs-Lebensbalken, Wellen-Fortschritt und Punkte/Kills.
-## Das Layout liegt in hud.tscn; hier wird nur auf EventBus-Signale reagiert und der
-## Zustand dargestellt (die Werte LIEST das HUD aus GameState — GameState rechnet).
+## Gestaltete Kopfleiste: Spieler mit Level und Erfahrungsbalken, Festungs-Lebensbalken,
+## Wellen-Fortschritt und Punkte/Kills.
+## Das Layout liegt in hud.tscn; hier wird nur auf Signale reagiert und der Zustand
+## dargestellt (die Werte LIEST das HUD aus GameState und PlayerLevel — die rechnen).
+##
+## Level und Erfahrung stehen beim NAMEN und nicht in einer eigenen Tafel: sie gehören
+## zum Spieler und nicht zur Welle, und die Kopfleiste hat bei 1152 Pixeln keinen Platz
+## für eine fünfte Tafel. Anders als HP und Wellenfortschritt hängen sie am Profil, nicht
+## am Lauf — deshalb kommt der Wert von PlayerLevel und nicht aus GameState.
 
 ## Farbschwellen des Lebensbalkens (Anteil 0..1): darüber grün, darüber amber, sonst rot.
 const HP_OK := 0.6
@@ -17,6 +23,9 @@ const COLOR_HP_LOW := Color(1.0, 0.3, 0.3)
 @onready var _kills_label: Label = %Kills
 @onready var _score_label: Label = %Score
 @onready var _player_name: Label = %PlayerName
+@onready var _level_text: Label = %LevelText
+@onready var _xp_bar: ProgressBar = %XpBar
+@onready var _xp_text: Label = %XpText
 ## Fill-StyleBox des HP-Balkens (in hud.tscn definiert); Farbe wird je Anteil gesetzt.
 var _hp_fill: StyleBoxFlat
 
@@ -31,6 +40,10 @@ func _ready() -> void:
 	# Die HP rührt er nicht an, der Stand läuft über die Wellen weiter.
 	EventBus.wave_started.connect(func(_wave_id): _refresh())
 	EventBus.wave_totals.connect(func(_total): _refresh())
+	# Erfahrung meldet sich selbst (Profilstand, kein Lauf-Zustand) — der Balken hängt am
+	# Signal statt an jedem Refresh, weil er sich nur beim Verbuchen ändert.
+	PlayerLevel.changed.connect(func(_total_xp, _level): _refresh_level())
+	_refresh_level()
 	_refresh()
 
 
@@ -59,3 +72,14 @@ func _refresh() -> void:
 	# Punkte + zerstörte Monster.
 	_kills_label.text = "💀 %d" % GameState.monsters_defeated
 	_score_label.text = "💰 %d" % GameState.score
+
+
+## Level und Erfahrungsbalken. Der Balken zeigt den Stand IM Level (0..Kosten des
+## nächsten Aufstiegs) und nicht die Gesamt-Erfahrung: gefragt ist „wie weit noch", und
+## die Gesamtzahl wächst ohne Obergrenze.
+func _refresh_level() -> void:
+	var progress := PlayerLevel.progress()
+	_level_text.text = "⭐ %d" % int(progress["level"])
+	_xp_bar.max_value = maxi(1, int(progress["xp_for_level_up"]))
+	_xp_bar.value = int(progress["xp_in_level"])
+	_xp_text.text = "%d/%d" % [int(progress["xp_in_level"]), int(progress["xp_for_level_up"])]

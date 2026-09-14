@@ -180,6 +180,42 @@ Erspielte.
   Beträgen. Deshalb redet die Leiste von Tagen — zwei Dinge, die „Goldstück" heißen,
   wären eines zu viel.
 
+## Erfahrung und Level (`src/progression/`)
+
+Erfahrung ist die zweite Größe, die über den Lauf hinaus bleibt — neben dem Gold, und mit
+der umgekehrten Absicht: Gold ist Beute, Erfahrung ist Lernfortschritt.
+
+| Baustein | Wo | Aufgabe |
+|---|---|---|
+| `Experience` | `src/progression/experience.gd` | reine Rechnung: XP je Monster, Stufenkosten, Skillpunkte |
+| `PlayerLevel` (Autoload) | `src/progression/player_level.gd` | Gesamt-Erfahrung des Profils, Aufstieg, Persistenz |
+| Anzeige | `hud.tscn` (Level + Balken beim Namen), `wave_stats.gd` (Zuwachs der Welle), `profile_menu.gd` / `stats_screen.gd` (Stand + Skillpunkte) | — |
+
+- **10..15 XP je besiegtem Monster, aus seiner Schwierigkeit** — und zwar aus DERSELBEN,
+  aus der auch Tempo und Punkte entstehen (`WaveGenerator`, das Netto-Maß `t - c` aus
+  Aufgaben-Grundschwierigkeit und Confidence). Ein zweites Schwierigkeitsmaß daneben liefe
+  auseinander, sobald eines von beiden justiert wird.
+- **Eine schon gemeisterte Aufgabe bringt 1 XP** (`Experience.MASTERED_XP`). Erfahrung
+  kommt aus dem Lernen, nicht aus dem Wiederholen des Gekonnten; ganz auf 0 wäre eine
+  Strafe für die Wiederholung, und die wählt der Scheduler, nicht der Spieler. Geprüft
+  wird die Meisterung beim SPAWN — nach dem Treffer hat `PlayerProgress` die Confidence
+  schon angehoben, und das Monster, das die Meisterung bringt, soll noch voll zählen.
+- **Der Wellenfaktor (`speed_scale`) hebt die Punkte, nicht die Erfahrung.** Eine härtere
+  Welle bringt mehr Monster und mehr Beute; das einzelne Wort wird davon nicht schwerer.
+  Ohne diese Trennung wäre die schnellste Welle auch der schnellste Weg zum Levelup.
+- **Aufstieg bei Level × 100 XP** (Level 2 ab 100, Level 3 ab 300, Level 4 ab 600): die
+  Stufenkosten sind linear, die Summe damit quadratisch. **Jeder Aufstieg gibt einen
+  Skillpunkt** (`SKILL_POINTS_PER_LEVEL`); Fähigkeiten, die sie ausgeben, gibt es noch
+  nicht — die Punkte sammeln sich sichtbar an.
+- **Gespeichert wird EINE Zahl: die Gesamt-Erfahrung.** Level, Levelfortschritt und
+  Skillpunkte sind daraus gerechnet (`Experience`). Ein zweiter gespeicherter Zähler
+  daneben könnte abweichen, und dann wäre nicht zu sagen, welcher stimmt — ein von Hand
+  hochgesetztes Level in der Datei wird beim Laden verworfen.
+- **Verbucht wird im `WaveRunner`, nicht im Screen** (`_defeat` → `PlayerLevel.gain`),
+  genau wie beim Gold — und SOFORT: Erfahrung fällt mitten in der Welle an, und ein
+  Absturz auf dem Weg zum Wellenende darf sie nicht kosten. Der Abschluss-Screen bekommt
+  nur den Zuwachs der Welle und liest den Stand bei `PlayerLevel`.
+
 ## Erweiterungspunkte für den KI-Agenten
 
 | Erweiterung | Wie | Bestehender Code betroffen? |
@@ -217,6 +253,10 @@ vorhandenen Handlern. (Noch zu implementieren — siehe `docs/ADDING_CONTENT.md`
   `user://progress/<player>_wallet.json` — Stand, Lebensleistung und Zahl geöffneter
   Kisten. Gesichert wird **sofort** bei jeder Änderung und nicht erst am Laufende:
   verdientes Gold darf ein Absturz nicht kosten.
+- **Erfahrung und Level** (`PlayerLevel`, `src/progression/player_level.gd`): JSON unter
+  `user://progress/<player>_level.json`. Gelesen wird daraus nur `total_xp` — Level und
+  Skillpunkte stehen zum Mitlesen in der Datei, kommen aber aus der Rechnung. Gesichert
+  wird **sofort** bei jeder Änderung, also mitten in der Welle.
 - **Spielerfortschritt** (`player_task_progress`): der Autoload `PlayerProgress`
   (`src/learning/player_progress.gd`) hält je Aufgabe Confidence/Streak/Fälligkeit und
   kapselt den SM-2-Scheduler. Persistenz: JSON unter `user://progress/<player>.json`

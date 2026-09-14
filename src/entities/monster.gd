@@ -14,6 +14,11 @@ var task: Dictionary = {}
 ## Aus der monster_task_rule abgeleitet und vom WaveGenerator gesetzt.
 var damage: int = 10
 var reward: int = 10
+## Erfahrung für dieses Monster, vom WaveGenerator aus seiner Schwierigkeit bestimmt
+## (Experience.for_monster) und beim SPAWN festgelegt: nach dem Treffer ist die
+## Confidence schon angehoben, und dann wäre nicht mehr zu sehen, ob die Aufgabe vorher
+## gemeistert war. Verbucht wird sie im WaveRunner (PlayerLevel).
+var xp: int = Experience.MONSTER_XP_MIN
 
 ## Zeitpunkt des Spawns (ms) für die Antwortzeit-Messung; vom WaveRunner gesetzt.
 var spawned_at_ms: int = 0

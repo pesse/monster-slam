@@ -1,6 +1,13 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://src/ui/hud.gd" id="1_hud"]
+
+[sub_resource type="StyleBoxFlat" id="XpFill"]
+bg_color = Color(1, 0.8, 0.25, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
 
 [sub_resource type="StyleBoxFlat" id="HpFill"]
 bg_color = Color(0.3, 1, 0.45, 1)
@@ -37,6 +44,23 @@ alignment = 1
 [node name="PlayerName" type="Label" parent="Margin/Row/PlayerPanel/PlayerBox"]
 unique_name_in_owner = true
 text = "👤 Spieler"
+vertical_alignment = 1
+
+[node name="LevelText" type="Label" parent="Margin/Row/PlayerPanel/PlayerBox"]
+unique_name_in_owner = true
+text = "⭐ 1"
+vertical_alignment = 1
+
+[node name="XpBar" type="ProgressBar" parent="Margin/Row/PlayerPanel/PlayerBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(90, 14)
+size_flags_vertical = 4
+theme_override_styles/fill = SubResource("XpFill")
+show_percentage = false
+
+[node name="XpText" type="Label" parent="Margin/Row/PlayerPanel/PlayerBox"]
+unique_name_in_owner = true
+text = "0/100"
 vertical_alignment = 1
 
 [node name="Spacer1" type="Control" parent="Margin/Row"]
