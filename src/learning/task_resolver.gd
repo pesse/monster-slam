@@ -15,6 +15,7 @@ extends RefCounted
 ##   "task_type": String,
 ##   "direction": String,
 ##   "difficulty": int,               # kommt aus der Definition
+##   "meaning": String,               # Bedeutung fürs Reveal, leer wenn schon in der Aufgabe
 ## }
 ## `extra` trägt die aufgaben-spezifischen Bausteine:
 ##   opposite/synonym/confusables -> { "target_lexeme_id": String }
@@ -138,7 +139,8 @@ func _resolve_relation(definition: Dictionary, source: Dictionary, extra: Dictio
 		return {}
 	var answers: Array = [str(target.get("lemma_en", ""))]
 	answers.append_array(target.get("lemma_en_alt", []))
-	return _build(definition, source, prompt, answers, extra)
+	# Das gesuchte Wort steht nur auf Englisch da — die Bedeutung kommt im Reveal dazu.
+	return _build(definition, source, prompt, answers, extra, _meaning_of(target))
 
 
 ## „Confusables": typische Verwechslungspaare (borrow/lend, say/tell …). Der Spieler
@@ -171,14 +173,27 @@ func _resolve_conjugation(definition: Dictionary, source: Dictionary, extra: Dic
 	var answers: Array = []
 	for form in forms:
 		answers.append(str(form.get("value", "")))
-	return _build(definition, source, prompt, answers, extra)
+	# „bully → Past Participle" sagt nicht, was bully heißt — im Reveal steht es dabei.
+	return _build(definition, source, prompt, answers, extra, _meaning_of(source))
+
+
+## „bully = schikanieren" — die Bedeutung eines Lexems für die Auflösung, primäre
+## Übersetzung plus Alternativen. Leer, wenn eine der beiden Seiten fehlt.
+func _meaning_of(lex: Dictionary) -> String:
+	var en := str(lex.get("lemma_en", ""))
+	var de: Array = [str(lex.get("lemma_de", ""))]
+	de.append_array(lex.get("lemma_de_alt", []))
+	de = de.filter(func(x): return not str(x).is_empty())
+	if en.is_empty() or de.is_empty():
+		return ""
+	return "%s = %s" % [en, " / ".join(PackedStringArray(de))]
 
 
 func _lexeme(lexeme_id: Variant) -> Dictionary:
 	return ContentRegistry.get_entry("lexemes", str(lexeme_id))
 
 
-func _build(definition: Dictionary, source: Dictionary, prompt: String, answers: Array, extra: Dictionary) -> Dictionary:
+func _build(definition: Dictionary, source: Dictionary, prompt: String, answers: Array, extra: Dictionary, meaning := "") -> Dictionary:
 	var task_type := str(definition.get("task_type", ""))
 	var direction := str(definition.get("direction", ""))
 	var source_id := str(source.get("id", ""))
@@ -191,4 +206,5 @@ func _build(definition: Dictionary, source: Dictionary, prompt: String, answers:
 		"direction": direction,
 		"difficulty": int(definition.get("difficulty", 1)),
 		"lexeme_type": str(source.get("type", "")),   # Wortart fürs Monster-Outline (siehe WordTypePalette)
+		"meaning": meaning,            # Bedeutung fürs Reveal; leer, wo die Aufgabe sie schon zeigt
 	}

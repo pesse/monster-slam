@@ -9,6 +9,7 @@ extends PanelContainer
 @onready var _solution: CanvasItem = %Solution
 @onready var _primary: Label = %Primary
 @onready var _alt: Label = %Alt
+@onready var _meaning: Label = %Meaning
 
 
 ## Der einblendbare Lösungsteil — vom LeakReveal für die Aufdeck-Animation getweent.
@@ -16,7 +17,7 @@ func solution() -> CanvasItem:
 	return _solution
 
 
-## Füllt die Karte aus einem Eintrag { prompt, answers, lexeme_type }. `revealed`=false
+## Füllt die Karte aus einem Eintrag { prompt, answers, lexeme_type, meaning }. `revealed`=false
 ## hält den Lösungsteil zunächst unsichtbar (wird später eingeblendet).
 func setup(item: Dictionary, revealed: bool) -> void:
 	var type_key := String(item.get("lexeme_type", ""))
@@ -32,6 +33,13 @@ func setup(item: Dictionary, revealed: bool) -> void:
 	_alt.visible = answers.size() > 1
 	if _alt.visible:
 		_alt.text = "auch: %s" % ", ".join(_rest_as_strings(answers))
+
+	# Bedeutung, wo die Aufgabe sie nicht schon zeigt („bully → Past Participle").
+	# Sie steht im Lösungsteil: bei Gegenteil/Synonym ist sie die Bedeutung der Antwort
+	# und würde vorab verraten, was gesucht ist.
+	var meaning := String(item.get("meaning", ""))
+	_meaning.visible = not meaning.is_empty()
+	_meaning.text = meaning
 
 	_solution.modulate.a = 1.0 if revealed else 0.0
 

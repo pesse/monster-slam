@@ -648,6 +648,7 @@ func _task_snapshot(monster: Monster, leaked: bool) -> Dictionary:
 		"prompt": String(monster.task.get("prompt", "")),
 		"answers": (monster.task.get("accepted_answers", []) as Array).duplicate(),
 		"lexeme_type": String(monster.task.get("lexeme_type", "")),
+		"meaning": String(monster.task.get("meaning", "")),
 		"source_id": String(monster.task.get("source_id", "")),
 		"learnable_id": String(monster.task.get("learnable_id", "")),
 		"leaked": leaked,
