@@ -14,14 +14,21 @@ extends RefCounted
 ## Optional callable: func(prompt, reference, answer) -> { "quality": float, "feedback": String }
 var sentence_backend: Callable = Callable()
 
-## Wegkürzbare Anlaute: der deutsche Artikel (Ziel ist Englisch lernen, nicht Deutsch)
-## und das englische "to" vor dem Infinitiv — im Lehrbuch steht mal "brainstorm", mal
-## "to brainstorm", und beides ist dasselbe Wort. Wird auf Eingabe UND hinterlegte Antwort
-## angewendet, sodass "das Haus"/"Haus" und "to brainstorm"/"brainstorm" gleichwertig sind
-## (symmetrisch, also ohne Datenmigration).
+## Wegkürzbare Anlaute: der deutsche Artikel (Ziel ist Englisch lernen, nicht Deutsch),
+## das englische "the" und das englische "to" vor dem Infinitiv. Das Lehrbuch schreibt
+## beide mal mit und mal ohne — "the underground" neben "underground", "to brainstorm"
+## neben "brainstorm" —, und abgefragt wird die Vokabel und nicht die Notation des
+## Eintrags. Wird auf Eingabe UND hinterlegte Antwort angewendet, sodass "das Haus"/
+## "Haus", "the underground"/"underground" und "to brainstorm"/"brainstorm" gleichwertig
+## sind (symmetrisch, also ohne Datenmigration).
 ##
-## Nur mit folgendem Leerzeichen, damit die Vokabel "to" selbst nicht verschwindet.
-const _OPTIONAL_PREFIXES := ["der ", "die ", "das ", "eine ", "ein ", "to "]
+## Der englische UNBESTIMMTE Artikel steht bewusst NICHT hier: "a few" ist nicht "few"
+## und "a little" nicht "little" — das ist der Unterschied, den das Buch lehrt, und beide
+## Paare stehen als eigene Vokabeln im Bestand.
+##
+## Nur mit folgendem Leerzeichen, damit die Vokabeln "to" und "the" selbst nicht
+## verschwinden.
+const _OPTIONAL_PREFIXES := ["der ", "die ", "das ", "eine ", "ein ", "the ", "to "]
 
 ## Grammatik-Platzhalter aus dem Lehrbuch ("criticize sb. (for)"). Sie werden auf EIN
 ## Wildcard-Token abgebildet, sodass Schreibweise und Sprache der Notation gleichgültig

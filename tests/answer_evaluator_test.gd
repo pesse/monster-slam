@@ -17,6 +17,31 @@ func test_german_article_is_optional() -> void:
 	assert_bool(_evaluator.evaluate_answers(["das Haus"], "Haus")).is_true()
 
 
+func test_english_definite_article_is_optional() -> void:
+	# "die U-Bahn" steht im Buch als "the underground", einen Eintrag weiter als
+	# "underground" — der Artikel gehört zur Notation des Eintrags, nicht zur Vokabel.
+	assert_bool(_evaluator.evaluate_answers(["the underground"], "underground")).is_true()
+	assert_bool(_evaluator.evaluate_answers(["underground"], "the underground")).is_true()
+	assert_bool(_evaluator.evaluate_answers(["the underground"], "the underground")).is_true()
+	# Und vollständig ist der Treffer auch ohne ihn — kein Hinweis auf Fehlendes.
+	assert_bool(_evaluator.evaluate(["the underground"], "underground")["complete"]).is_true()
+
+
+func test_the_word_the_itself_survives() -> void:
+	# Dieselbe Regel wie bei "to": weggekürzt wird nur MIT folgendem Wort.
+	assert_bool(_evaluator.evaluate_answers(["the"], "the")).is_true()
+	assert_bool(_evaluator.evaluate_answers(["the"], "")).is_false()
+	assert_bool(_evaluator.evaluate_answers(["the"], "underground")).is_false()
+
+
+func test_english_indefinite_article_stays_mandatory() -> void:
+	# "a few" (ein paar) und "few" (wenige) sind zwei Vokabeln, und der Unterschied
+	# zwischen ihnen ist genau der Artikel. Dasselbe bei "a little"/"little".
+	assert_bool(_evaluator.evaluate_answers(["a few"], "few")).is_false()
+	assert_bool(_evaluator.evaluate_answers(["few"], "a few")).is_false()
+	assert_bool(_evaluator.evaluate_answers(["a little"], "little")).is_false()
+
+
 func test_english_infinitive_to_is_optional() -> void:
 	# Im Lehrbuch steht mal "brainstorm", mal "to brainstorm" — für die Abfrage ist das
 	# dasselbe Wort, und zwar in beide Richtungen.
