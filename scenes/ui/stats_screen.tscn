@@ -160,7 +160,7 @@ text = "📚 Nach Unit"
 [node name="UnitHint" type="Label" parent="Margin/Root/Tabs/Fortschritt/Gutter/Progress/UnitSection"]
 theme_type_variation = &"Hint"
 autowrap_mode = 3
-text = "Ein Wort zählt als gemeistert, wenn du es in beide Richtungen sicher übersetzt."
+text = "Ein Wort zählt als gemeistert, wenn du es in beide Richtungen sicher übersetzt. Klick auf eine Zeile zeigt ihre Wörter."
 
 [node name="UnitList" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt/Gutter/Progress/UnitSection"]
 theme_type_variation = &"Tight"

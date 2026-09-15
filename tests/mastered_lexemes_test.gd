@@ -9,6 +9,7 @@ extends GdUnitTestSuite
 const PROGRESS := preload("res://src/learning/player_progress.gd")
 const STATS_SCREEN := preload("res://src/ui/stats_screen.gd")
 const STATS_SCENE := preload("res://scenes/ui/stats_screen.tscn")
+const PROGRESS_ROW_SCENE := preload("res://scenes/ui/progress_row.tscn")
 
 
 ## Buch-Benennung für die Zeilen-Labels; im Spiel liefert sie ContentRegistry.book_label.
@@ -26,7 +27,7 @@ func _record(confidence: float) -> Dictionary:
 
 
 func _lexeme(id: String, book: String, unit: int, tags: Array = []) -> Dictionary:
-	var entry := {"id": id, "tags": tags}
+	var entry := {"id": id, "tags": tags, "lemma_en": id, "lemma_de": id.to_upper()}
 	if not book.is_empty():
 		entry["book"] = book
 		entry["unit"] = unit
@@ -136,3 +137,106 @@ func test_stats_scene_has_the_progress_lists() -> void:
 	assert_object(screen.get_node("%UnitList")).is_not_null()
 	assert_object(screen.get_node("%TagList")).is_not_null()
 	remove_child(screen)
+
+
+# --- Die Wortliste unter einem Balken -------------------------------------------
+
+## Confidence-Nachschlag wie im Spiel (PlayerProgress.confidence mit -1 als Vorgabe):
+## `stands` bildet die learnable_id auf einen Wert ab, alles andere ist ungeübt.
+static func _conf(stands: Dictionary) -> Callable:
+	return func(task_id: String) -> float: return float(stands.get(task_id, -1.0))
+
+
+func test_the_word_row_takes_the_weaker_direction() -> void:
+	var rows := STATS_SCREEN.word_rows([_lexeme("a", "access2", 6)], _conf({
+		"translate:de_to_en:a": 0.9, "translate:en_to_de:a": 0.4,
+	}))
+	assert_float(float(rows[0]["confidence"])).is_equal_approx(0.4, 0.001)
+
+
+## Eine Richtung geübt, die andere nie: das Wort steht mit 0 % da und nicht mit der
+## einen guten Hälfte — gemeistert ist es erst in beiden Richtungen.
+func test_a_missing_direction_pulls_the_stand_to_zero() -> void:
+	var rows := STATS_SCREEN.word_rows([_lexeme("a", "access2", 6)],
+			_conf({"translate:de_to_en:a": 0.9}))
+	assert_float(float(rows[0]["confidence"])).is_equal_approx(0.0, 0.001)
+
+
+## Noch nie geübt ist kein gemessener Stand: -1 statt 0, und in der Anzeige ein Satz
+## statt einer Zahl.
+func test_an_untouched_word_has_no_percentage() -> void:
+	var lines := STATS_SCREEN.word_lines([_lexeme("a", "access2", 6)], _conf({}))
+	assert_str(str(lines[0]["value"])).is_equal("noch nicht geübt")
+	assert_str(str(lines[0]["mark"])).is_empty()
+
+
+func test_the_weakest_word_comes_first_and_untouched_ones_last() -> void:
+	var pool := [
+		_lexeme("stark", "access2", 6), _lexeme("neu", "access2", 6),
+		_lexeme("schwach", "access2", 6),
+	]
+	var rows := STATS_SCREEN.word_rows(pool, _conf({
+		"translate:de_to_en:stark": 0.9, "translate:en_to_de:stark": 0.85,
+		"translate:de_to_en:schwach": 0.5, "translate:en_to_de:schwach": 0.6,
+	}))
+	assert_str(str(rows[0]["label"])).contains("schwach")
+	assert_str(str(rows[1]["label"])).contains("stark")
+	assert_str(str(rows[2]["label"])).contains("neu")
+
+
+## Der Haken steht genau ab der Schwelle, aus der auch die Meisterung kommt — sonst
+## erklärte die Liste den Balken darüber nicht.
+func test_the_mark_follows_the_mastery_threshold() -> void:
+	var lines := STATS_SCREEN.word_lines([_lexeme("a", "access2", 6)], _conf({
+		"translate:de_to_en:a": 0.85, "translate:en_to_de:a": 0.8,
+	}))
+	assert_str(str(lines[0]["value"])).is_equal("80 %")
+	assert_str(str(lines[0]["mark"])).is_equal("✓")
+
+
+## Die Gruppen tragen ihre Lexeme mit — daraus baut die Zeile beim Aufklappen die Liste.
+func test_the_groups_carry_their_lexemes() -> void:
+	var pool := [_lexeme("a", "access2", 6), _lexeme("b", "access2", 6, ["body"])]
+	var unit: Array = STATS_SCREEN.unit_rows(pool, {}, _book_label)[0]["lexemes"]
+	assert_int(unit.size()).is_equal(2)
+	var tag: Array = STATS_SCREEN.tag_rows(pool, {})[0]["lexemes"]
+	assert_int(tag.size()).is_equal(1)
+
+
+## Aufklappen zeigt die Wörter, nochmal klappt sie weg — und gebaut werden sie erst beim
+## ersten Mal (der Fortschritts-Reiter hat eine Zeile je Unit und je Thema).
+func test_the_progress_row_unfolds_its_word_list() -> void:
+	var row: ProgressRow = auto_free(PROGRESS_ROW_SCENE.instantiate())
+	add_child(row)
+	var calls := [0]
+	row.setup("Access 2, Unit 6", 1, 2, func():
+		calls[0] += 1
+		return [{"label": "a — A", "value": "40 %", "mark": ""}])
+	var list := row.get_node("Words/WordList")
+	assert_int(calls[0]).is_equal(0)
+	assert_bool(row.is_expanded()).is_false()
+	assert_int(list.get_child_count()).is_equal(0)
+
+	row.toggle()
+	assert_bool(row.is_expanded()).is_true()
+	assert_int(list.get_child_count()).is_equal(1)
+	assert_int(calls[0]).is_equal(1)
+
+	row.toggle()
+	assert_bool(row.is_expanded()).is_false()
+	row.toggle()
+	# Zweites Aufklappen baut die Liste nicht erneut.
+	assert_int(calls[0]).is_equal(1)
+	assert_int(list.get_child_count()).is_equal(1)
+	remove_child(row)
+
+
+## Ohne Wortliste bleibt die Zeile ein reiner Balken: kein Pfeil, kein Aufklappen.
+func test_a_row_without_words_stays_closed() -> void:
+	var row: ProgressRow = auto_free(PROGRESS_ROW_SCENE.instantiate())
+	add_child(row)
+	row.setup("Access 2, Unit 6", 1, 2)
+	row.toggle()
+	assert_bool(row.is_expanded()).is_false()
+	assert_str((row.get_node("Row/Header") as Button).text).is_equal("Access 2, Unit 6")
+	remove_child(row)

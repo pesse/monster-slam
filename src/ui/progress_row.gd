@@ -1,17 +1,86 @@
 class_name ProgressRow
-extends HBoxContainer
+extends VBoxContainer
 ## Eine Fortschrittszeile der Statistik: Bezeichnung links, Balken in der Mitte, Zählung
-## rechts — „Access 2, Unit 6 | ████████░░ | 18 von 24" (Issue #8).
+## rechts — „Access 2, Unit 6 | ████████░░ | 18 von 24" (Issue #8). Ein Klick auf die
+## Bezeichnung klappt die Wörter der Gruppe darunter auf, jedes mit seinem Prozentstand.
 ##
 ## Das Layout liegt in progress_row.tscn (im Editor gestaltbar), die Listen befüllen es
 ## über setup() — dieselbe Aufteilung wie bei StatRow. Der Balken macht aus der Summe ein
-## Ziel: „18 von 24" liest man anders als „18 gemeistert".
+## Ziel: „18 von 24" liest man anders als „18 gemeistert"; die aufgeklappte Liste sagt
+## dann, WELCHE 6 noch fehlen — die Zahl allein beantwortet das nicht.
+##
+## Die Wortzeilen kommen erst beim ersten Aufklappen (`words` ist ein Callable, kein
+## Array): der Fortschritts-Reiter hat eine Zeile je Unit UND je Thema, und alle Listen
+## im Voraus zu bauen hieße, den halben Katalog als Knoten in den Baum zu hängen.
 
-func setup(name_text: String, done: int, total: int) -> void:
-	($Name as Label).text = name_text
-	var bar := $Bar as ProgressBar
+const ROW_SCENE := preload("res://scenes/ui/stat_row.tscn")
+
+## Liefert beim Aufklappen die Zeilen dieser Gruppe als { label, value, mark }.
+var _words := Callable()
+var _title := ""
+var _filled := false
+
+
+func _ready() -> void:
+	var header := $Row/Header as Button
+	# Kein Fokusrahmen: die Zeile ist ein Aufklapper in einer langen Liste, kein Knopf,
+	# den man ertasten soll.
+	header.focus_mode = Control.FOCUS_NONE
+	header.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	header.pressed.connect(toggle)
+
+
+## `words` ist optional: ohne sie bleibt die Zeile ein reiner Balken (und der Pfeil weg).
+func setup(name_text: String, done: int, total: int, words := Callable()) -> void:
+	_title = name_text
+	_words = words
+	var bar := $Row/Bar as ProgressBar
 	# Ohne Wörter kein Balken-Maximum von 0 — der Balken wäre sonst voll statt leer.
 	bar.max_value = maxi(1, total)
 	bar.value = done
-	($Count as Label).text = "%d von %d" % [done, total]
-	tooltip_text = "%s — %d von %d Wörtern gemeistert" % [name_text, done, total]
+	($Row/Count as Label).text = "%d von %d" % [done, total]
+	_update_header()
+	var hint := "%s — %d von %d Wörtern gemeistert" % [name_text, done, total]
+	if _words.is_valid():
+		hint += "\nKlick zeigt die Wörter."
+	tooltip_text = hint
+	($Row/Header as Button).tooltip_text = hint
+
+
+func is_expanded() -> bool:
+	return ($Words as Control).visible
+
+
+## Klappt die Wortliste auf oder zu. Öffentlich, damit der Test nicht den Knopf drücken
+## muss, um die Liste zu sehen.
+func toggle() -> void:
+	if not _words.is_valid():
+		return
+	var words := $Words as Control
+	words.visible = not words.visible
+	if words.visible and not _filled:
+		_fill()
+	_update_header()
+
+
+func _fill() -> void:
+	_filled = true
+	var list := $Words/WordList as VBoxContainer
+	var rows: Array = _words.call()
+	if rows.is_empty():
+		var label := Label.new()
+		label.text = "Keine Wörter."
+		list.add_child(label)
+		return
+	for row in rows:
+		var entry := ROW_SCENE.instantiate() as StatRow
+		list.add_child(entry)
+		entry.setup(str(row["label"]), str(row["value"]), str(row.get("mark", "")))
+
+
+func _update_header() -> void:
+	var header := $Row/Header as Button
+	if not _words.is_valid():
+		header.text = _title
+		return
+	header.text = ("▾ " if is_expanded() else "▸ ") + _title

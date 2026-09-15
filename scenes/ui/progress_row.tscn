@@ -2,22 +2,37 @@
 
 [ext_resource type="Script" path="res://src/ui/progress_row.gd" id="1_progress_row"]
 
-[node name="ProgressRow" type="HBoxContainer"]
+[node name="ProgressRow" type="VBoxContainer"]
+theme_type_variation = &"Tight"
 script = ExtResource("1_progress_row")
 
-[node name="Name" type="Label" parent="."]
+[node name="Row" type="HBoxContainer" parent="."]
+
+[node name="Header" type="Button" parent="Row"]
+theme_type_variation = &"RowButton"
 custom_minimum_size = Vector2(200, 0)
 text = "Bezeichnung"
+alignment = 0
 clip_text = true
 
-[node name="Bar" type="ProgressBar" parent="."]
+[node name="Bar" type="ProgressBar" parent="Row"]
 custom_minimum_size = Vector2(80, 14)
 size_flags_horizontal = 3
 size_flags_vertical = 4
 max_value = 1.0
 show_percentage = false
 
-[node name="Count" type="Label" parent="."]
+[node name="Count" type="Label" parent="Row"]
 custom_minimum_size = Vector2(90, 0)
 text = "0 von 0"
 horizontal_alignment = 2
+
+[node name="Words" type="HBoxContainer" parent="."]
+visible = false
+
+[node name="Indent" type="Control" parent="Words"]
+custom_minimum_size = Vector2(24, 0)
+
+[node name="WordList" type="VBoxContainer" parent="Words"]
+theme_type_variation = &"Tight"
+size_flags_horizontal = 3

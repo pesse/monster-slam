@@ -13,11 +13,16 @@ extends Control
 ## (Tages-Serie #6, Kennzahlen #5, Lernkurve #7, frisch gemeistert und Comeback #9,
 ## Fahndungsliste #5), „Fortschritt" die Balken pro Unit und Thema (#8) — die wachsen mit
 ## dem Katalog und schöben im Überblick alles andere aus dem Bild —, „Wörter" die
-## vollständige Liste. Was noch fehlt (Kampf-Rekorde), liegt in SessionLog bereit.
+## vollständige Liste. Ein Balken lässt sich aufklappen und zeigt dann die Wörter SEINER
+## Gruppe mit Prozentstand: „18 von 24" sagt nicht, welche sechs fehlen, und im Reiter
+## „Wörter" stehen sie zwischen allen anderen. Was noch fehlt (Kampf-Rekorde), liegt in SessionLog bereit.
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 const ROW_SCENE := preload("res://scenes/ui/stat_row.tscn")
 const PROGRESS_ROW_SCENE := preload("res://scenes/ui/progress_row.tscn")
+## Für die Schwellen und Richtungen der Meisterung in den statischen Funktionen —
+## der Autoload PlayerProgress ist dasselbe Skript, aber nicht statisch erreichbar.
+const PROGRESS := preload("res://src/learning/player_progress.gd")
 
 ## So viele Wörter stehen auf der Fahndungsliste. Kurz halten: eine lange Liste ist
 ## keine Fahndung mehr, sondern die Wortliste im zweiten Reiter.
@@ -282,6 +287,7 @@ static func unit_rows(lexemes: Array, mastered: Dictionary, book_label: Callable
 		rows.append({
 			"label": "%s, Unit %d" % [book_label.call(parts[0]), int(parts[1])],
 			"done": int(group["done"]), "total": int(group["total"]),
+			"lexemes": group["lexemes"],
 		})
 	return rows
 
@@ -300,6 +306,7 @@ static func tag_rows(lexemes: Array, mastered: Dictionary) -> Array:
 		var group: Dictionary = groups[key]
 		rows.append({
 			"label": str(key), "done": int(group["done"]), "total": int(group["total"]),
+			"lexemes": group["lexemes"],
 		})
 	return rows
 
@@ -308,10 +315,81 @@ static func tag_rows(lexemes: Array, mastered: Dictionary) -> Array:
 ## wenn es in der Menge steht (siehe PlayerProgress.mastered_lexemes).
 static func _count_into(groups: Dictionary, key: String, entry: Dictionary, mastered: Dictionary) -> void:
 	if not groups.has(key):
-		groups[key] = {"done": 0, "total": 0}
+		groups[key] = {"done": 0, "total": 0, "lexemes": []}
 	groups[key]["total"] += 1
+	groups[key]["lexemes"].append(entry)
 	if mastered.has(str(entry.get("id", ""))):
 		groups[key]["done"] += 1
+
+
+## Die Wörter einer Gruppe mit ihrem Prozentstand — was hinter „18 von 24" steht.
+##
+## Der Prozentstand ist die SCHWÄCHERE der beiden Übersetzungsrichtungen, also dieselbe
+## Rechnung, aus der die Meisterung kommt (PlayerProgress.mastered_lexemes: beide
+## Richtungen ab MASTERY_CONFIDENCE). Der Durchschnitt wäre freundlicher und läge bei
+## einer sitzenden und einer offenen Richtung bei 60 % — der Haken stünde dann an einer
+## anderen Zahl als der angezeigten, und die Liste erklärte den Balken nicht mehr.
+##
+## Sortiert: das Schwächste zuerst, wie überall in diesem Screen. Noch nie geübte Wörter
+## stehen alphabetisch am Ende — sie sind kein Lernstand, sondern das, was noch aussteht,
+## und oben verdrängten sie genau die Wörter, an denen gerade etwas zu holen ist.
+##
+## `conf` liefert die Confidence einer Aufgabe und -1 für „kein Record" (im Spiel
+## PlayerProgress.confidence mit -1 als Vorgabe). Als Callable übergeben — wie book_label
+## bei unit_rows —, damit die Regel ohne Autoload prüfbar bleibt.
+static func word_rows(lexemes: Array, conf: Callable) -> Array:
+	var rows: Array = []
+	for entry in lexemes:
+		var id := str(entry.get("id", ""))
+		var weakest := 1.0
+		var seen := false
+		for direction in PROGRESS.LEXEME_MASTERY_DIRECTIONS:
+			var value := float(conf.call("translate:%s:%s" % [direction, id]))
+			if value < 0.0:
+				# Keine Aufgabe, kein Stand: die Richtung zieht den Wert auf 0, aber sie
+				# macht das Wort noch nicht zu einem geübten.
+				value = 0.0
+			else:
+				seen = true
+			weakest = minf(weakest, value)
+		rows.append({
+			"label": word_label(entry),
+			"confidence": weakest if seen else -1.0,
+		})
+	rows.sort_custom(func(a, b):
+		var ca := float(a["confidence"])
+		var cb := float(b["confidence"])
+		if (ca < 0.0) != (cb < 0.0):
+			return cb < 0.0
+		if ca < 0.0:
+			return str(a["label"]) < str(b["label"])
+		return ca < cb)
+	return rows
+
+
+## Dieselben Zeilen, fertig für StatRow: { label, value, mark }.
+static func word_lines(lexemes: Array, conf: Callable) -> Array:
+	var lines: Array = []
+	for row in word_rows(lexemes, conf):
+		var value := float(row["confidence"])
+		lines.append({
+			"label": str(row["label"]),
+			# Ein nie geübtes Wort steht nicht mit „0 %" da: 0 % ist ein gemessener Stand,
+			# und gemessen wurde hier nichts.
+			"value": "noch nicht geübt" if value < 0.0 else "%d %%" % int(round(value * 100.0)),
+			"mark": "✓" if value >= PROGRESS.MASTERY_CONFIDENCE else "",
+		})
+	return lines
+
+
+## Ein Wort in beiden Sprachen, „house — Haus". Beide, weil die Liste unter einer Unit
+## zum Nachschlagen da ist und die Meisterung ohnehin beide Richtungen verlangt.
+static func word_label(entry: Dictionary) -> String:
+	var en := str(entry.get("lemma_en", ""))
+	var de := str(entry.get("lemma_de", ""))
+	if en.is_empty() or de.is_empty():
+		return en if de.is_empty() else de
+	return "%s — %s" % [en, de]
 
 
 func _fill_progress(box: VBoxContainer, rows: Array, empty_text: String) -> void:
@@ -322,7 +400,10 @@ func _fill_progress(box: VBoxContainer, rows: Array, empty_text: String) -> void
 	for row in rows:
 		var bar := PROGRESS_ROW_SCENE.instantiate() as ProgressRow
 		box.add_child(bar)
-		bar.setup(str(row["label"]), int(row["done"]), int(row["total"]))
+		var lexemes: Array = row.get("lexemes", [])
+		# Erst beim Aufklappen gerufen: siehe ProgressRow.
+		bar.setup(str(row["label"]), int(row["done"]), int(row["total"]),
+				func(): return word_lines(lexemes, PlayerProgress.confidence.bind(-1.0)))
 
 
 ## Alle geübten Wörter, schwächste Confidence zuerst (die Sortierung liefert
