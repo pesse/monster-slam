@@ -126,7 +126,8 @@ func test_theme_spacing_uses_the_scale() -> void:
 func test_theme_declares_the_role_variations() -> void:
 	var theme: Theme = load(THEME_PATH)
 	for role in ["Display", "Title", "SectionTitle", "Hint", "Caption", "Accent",
-			"SectionButton", "RowButton", "ScreenMargin", "ScrollGutter", "ScreenStack",
+			"SectionButton", "RowButton", "SkillIcon", "ScreenMargin", "ScrollGutter",
+			"ScreenStack",
 			"SectionStack", "Tight", "HudPanel"]:
 		assert_str(theme.get_type_variation_base(role)).override_failure_message(
 				"Variation fehlt im Theme: " + role).is_not_empty()

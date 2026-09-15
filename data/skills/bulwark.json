@@ -4,17 +4,19 @@
 		"kind": "tree",
 		"order": 2,
 		"name": "Bollwerk",
-		"description": "Zu Beginn jeder Welle trägt die Festung Rüstung. Sie geht vor dem Leben auf."
+		"description": "Zu Beginn jeder Welle trägt die Festung Rüstung. Sie geht vor dem Leben auf.",
+		"color": "#7fa8d8"
 	},
 	{
 		"id": "skill.armor.root",
 		"kind": "skill",
 		"tree": "tree.bulwark",
-		"tier": 1,
-		"branch": 0,
 		"name": "Holzpalisade",
+		"icon": "🪵",
 		"description": "10 Rüstung zu Beginn jeder Welle.",
 		"cost": 1,
+		"tier": 1,
+		"branch": 0,
 		"requires": [],
 		"effects": {
 			"fortress_armor": 10
@@ -24,11 +26,12 @@
 		"id": "skill.armor.stone",
 		"kind": "skill",
 		"tree": "tree.bulwark",
-		"tier": 2,
-		"branch": 0,
 		"name": "Steinwall",
+		"icon": "🧱",
 		"description": "15 Rüstung mehr.",
 		"cost": 1,
+		"tier": 2,
+		"branch": 0,
 		"requires": [
 			"skill.armor.root"
 		],
@@ -40,11 +43,12 @@
 		"id": "skill.armor.gate",
 		"kind": "skill",
 		"tree": "tree.bulwark",
-		"tier": 2,
-		"branch": 1,
 		"name": "Eisentor",
+		"icon": "🚪",
 		"description": "15 Rüstung mehr.",
 		"cost": 1,
+		"tier": 2,
+		"branch": 1,
 		"requires": [
 			"skill.armor.root"
 		],
@@ -56,11 +60,12 @@
 		"id": "skill.armor.bastion",
 		"kind": "skill",
 		"tree": "tree.bulwark",
+		"name": "Bastion",
+		"icon": "🏰",
+		"description": "Und nochmal 25 Rüstung.",
+		"cost": 2,
 		"tier": 3,
 		"branch": 0,
-		"name": "Bastion",
-		"description": "25 Rüstung mehr — der Ast der Mauer.",
-		"cost": 2,
 		"requires": [
 			"skill.armor.stone"
 		],
@@ -72,11 +77,12 @@
 		"id": "skill.armor.portcullis",
 		"kind": "skill",
 		"tree": "tree.bulwark",
+		"name": "Fallgitter",
+		"icon": "⛓",
+		"description": "Und nochmal 25 Rüstung.",
+		"cost": 2,
 		"tier": 3,
 		"branch": 1,
-		"name": "Fallgitter",
-		"description": "25 Rüstung mehr — der Ast des Tors.",
-		"cost": 2,
 		"requires": [
 			"skill.armor.gate"
 		],

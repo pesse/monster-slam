@@ -311,10 +311,63 @@ Beim Arbeiten daran zu beachten:
   Breite knapp, in der Höhe nicht (`tests/hud_header_test.gd`, `tests/hud_armor_test.gd`).
   Die Beträge der Bäume stehen in JSON und sollen justierbar bleiben, ohne dass die
   Kopfleiste reißt.
-- **Ein gesperrter Knoten nennt seine Vorstufe beim NAMEN** („🔒 braucht Verband"). Mit
-  zwei Ästen nebeneinander ist ein bloßes „gesperrt" nicht zu deuten. Die vier Zustände
-  einer Karte unterscheiden sich nur in Beschriftung und `disabled`, nie in der
-  Sichtbarkeit — sonst springt der Baum beim Lernen.
+- **Der Screen ist ein gezeichnetes Netz, keine Reihe Karten** (`SkillGraph`, `_draw()`).
+  Jeder Baum hat seinen EIGENEN Anfangspunkt — es gibt keine gemeinsame Mitte, an der
+  alles hängt — und `requires` bleibt vorerst innerhalb eines Baums. Wo ein Knoten liegt,
+  rechnet `SkillTree.layout()` aus `tier` und `branch`; **es stehen keine Positionen in
+  der JSON**, sonst wäre ein vierter Baum ein Umbau der drei vorhandenen statt einer neuen
+  Datei. Dass sich dabei nichts überlappt, ist eine Aussage über Zahlen und wird gerechnet
+  (`tests/skill_graph_layout_test.gd`, bis sechs Bäume), nicht am Bildschirm beurteilt.
+- **Farbe und Zeichen kommen aus den Daten**, nicht aus dem Theme: `color` am Baum-Kopf,
+  `icon` am Knoten. Drei Bäume mal vier Zuständen wären sonst zwölf Theme-Variationen —
+  und ein vierter Baum brauchte vier weitere. Aus dem Theme kommen nur die Schriftgrößen
+  (`SkillIcon`, `SectionTitle`, `Hint`, `Caption`), gelesen in `_draw()` statt als
+  Override gesetzt.
+- **Der Name eines Baums steht AUSSEN**, jenseits seines äußersten Knotens auf der Achse
+  des Fächers (`SkillTree.layout` gibt dem Baum-Kopf dort seinen Platz, `TITLE_GAP`).
+  Nicht am Anfang: dort laufen die Linien zusammen, dort liegen bei mehreren Bäumen auch
+  die Namen der Nachbarn, und ein Name über einem Knoten verdeckt genau das, was er
+  benennen soll. Dass er keinen Knoten berührt, wird gerechnet und nicht angeschaut
+  (`test_a_tree_label_touches_no_node`, bis sechs Bäume).
+- **Der Ausschnitt gehört dem Spieler.** `SkillGraph.setup()` passt nur ein, solange
+  niemand gezoomt oder geschoben hat: wer hineingezoomt hat, um einen Ast zu lesen, soll
+  nach dem Kauf denselben Ast sehen. Zurück kommt man über „Ansicht einpassen".
+- **Der Screen ist NUR das Netz — keine Tafel am Rand.** Was ein Knoten tut, steht am
+  ZEIGER: `SkillTooltip` folgt der Maus, ohne Wartezeit, und trägt Zeichen, Name, Wirkung
+  und Zustandszeile. Der Grund ist nicht Platz, sondern Blickrichtung: wer einen Knoten
+  prüft, sieht ihn an, nicht an den anderen Bildrand.
+- **Die Karte ist KEIN Godot-Tooltip.** Godots eigener erscheint verzögert und bleibt
+  stehen, wo er aufgegangen ist; über einem Netz heißt das eine halbe Sekunde je Knoten.
+  Stattdessen meldet `SkillGraph.hover_changed(id, at)` jede Mausbewegung, und der Screen
+  stellt die Karte neben den Zeiger (`_place_hover`, klappt am Bildrand auf die andere
+  Seite). Sie hängt beim SCREEN und nicht beim Graphen: der beschneidet seine Zeichnung
+  (`clip_contents`), eine Karte am Rand wäre halb weg. Die BREITE wird einmal in `_ready()`
+  gesetzt und danach nie wieder — ein umbrechendes Label meldet sonst die Höhe für einen
+  Pixel Breite (dieselbe Falle wie `RevealCard.set_width()`). Godots Tooltips gibt es
+  daneben weiter für die Zeichen am Rand; `gui/timers/tooltip_delay_sec` steht deshalb
+  auf 0.
+- **Der Stand eines Baums hängt an seinem NAMEN.** Über dem Namen zeigt dieselbe Karte
+  „2/5 gelernt · +2 HP je besiegtem Monster" (`SkillTree.tree_status`) — das ist das, was
+  früher rechts als „Dein Ausbau" stand. Der Name ist damit anklickbar-ähnlich, aber
+  nichts zum Lernen: `_on_node_selected` steigt bei `kind != "skill"` aus.
+- **Ein gesperrter Knoten nennt seine Vorstufe beim NAMEN** („🔒 braucht Verband"). Im
+  Netz hängt an einem Knoten mehr als eine Linie; ein bloßes „gesperrt" sagt nicht, welche
+  zuerst dran ist. Die vier Zustandszeilen rechnet `SkillTree.state_label()` — sie sind
+  eine REGEL und keine Frage der Darstellung, und dieselbe Zeile soll später auch anderswo
+  stehen können.
+- **Ein Klick bucht nicht, er fragt** (`ConfirmDialog`, dasselbe Overlay-Muster wie
+  `update_dialog`, **kein `Window`**). Ein ausgegebener Skillpunkt kommt nur gegen Gold
+  zurück — das ist keine Entscheidung für einen unbeabsichtigten Klick. Der Fokus liegt
+  auf ABBRECHEN, damit die Eingabetaste nichts ausgibt. Gefragt wird nur, wo es etwas zu
+  entscheiden gibt: ein gelernter, gesperrter oder unbezahlbarer Knoten öffnet nichts,
+  denn warum, steht schon im Tooltip. Deshalb meldet `SkillGraph.select()` JEDEN Klick,
+  auch den auf den schon gewählten Knoten — sonst ließe sich ein abgebrochener Antrag
+  nicht neu stellen.
+- **„Ansicht einpassen" und „Umlernen" sind Zeichen am unteren rechten Rand der
+  Zeichenfläche** (⛶ und ↺), nicht beschriftete Knöpfe unter dem Netz: sie gehören zur
+  Fläche, die sie bedienen. Was sie tun und was sie kosten, steht in ihrem `tooltip_text`
+  — ein Zeichen ohne Erklärung ist ein Rätsel. Der Umlern-Knopf bleibt gesperrt statt zu
+  verschwinden und sagt im Tooltip, woran es liegt.
 - **`SkillBook`-Tests laufen auf einer eigenen Instanz mit `zz-`Profil** und schieben ihr
   über eine Unterklasse einen erfundenen Baum unter (`entries()` überschrieben) — sonst
   hängen sie an der Balance der ausgelieferten Bäume. `Wallet` und `PlayerLevel` lassen

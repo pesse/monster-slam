@@ -52,6 +52,12 @@ func before_test() -> void:
 	_gold_before = Wallet.gold
 	_wallet_profile_before = Wallet.player_id
 	PlayerLevel.player_id = TEST_PROFILE
+	# Die WERTE mitzurücksetzen ist nicht nur Hygiene: `available()` geht an das Autoload,
+	# und das trägt beim Testlauf die echte Erfahrung des Entwicklerprofils. Ohne diese
+	# zwei Zeilen fiel „ohne Punkte ist der Knoten zu teuer" um, sobald jemand im Spiel
+	# ein paar Level gesammelt hatte — ein Test, der am Spielstand des Rechners hängt.
+	PlayerLevel.total_xp = 0
+	PlayerLevel.level = 1
 	Wallet.player_id = TEST_PROFILE
 	Wallet.gold = 0
 	_remove_files()

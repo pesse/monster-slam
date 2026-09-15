@@ -237,12 +237,32 @@ Start-Screen (`🌳 Fähigkeiten`), nicht am Kampf: gelernt wird zwischen den L�
 | `SkillTree` | `src/progression/skill_tree.gd` | reine Regeln: Stufen, Äste, Voraussetzungen, Kosten, Summe der Boni |
 | `SkillBook` (Autoload) | `src/progression/skill_book.gd` | das Gelernte des Profils, Kauf, Umlernen, Persistenz |
 | Wirkung | `GameState.apply_skills`, `SlowMotion.apply_skills` | Boni auf die Grundwerte des Laufs |
-| Anzeige | `skill_tree.tscn` + `skill_node.tscn`, `hud.tscn` (Rüstungsleiste) | — |
+| Anzeige | `skill_tree.tscn` + `skill_graph.gd` (gezeichnetes Netz), `skill_tooltip.tscn` (Auskunft am Zeiger), `confirm_dialog.tscn` (Rückfrage), `hud.tscn` (Rüstungsleiste) | — |
 
-- **Ein Knoten hat `tier` (Zeile) und `branch` (Spalte)** — zwei Felder statt einer aus
-  `requires` gerechneten Position. Der Screen zeichnet eine HBox je Stufe, und ein Ast
-  bleibt über alle Stufen in derselben Spalte. Ein dritter Ast ist damit ein Eintrag in
-  der JSON und keine Zeile Code.
+- **Ein Knoten hat `tier` (Abstand) und `branch` (Stelle im Fächer)** — zwei Felder statt
+  einer aus `requires` gerechneten Position, und statt fertiger Koordinaten in den Daten.
+  `SkillTree.layout()` macht daraus das Netz: jeder Baum bekommt seinen eigenen
+  Anfangspunkt in seinem Sektor, `tier` wird zum Radius, `branch` zum Winkel; der NAME
+  des Baums steht außen, jenseits seines äußersten Knotens, wo nichts liegt. Ein dritter
+  Ast ist damit ein Eintrag in der JSON, ein vierter Baum eine Datei — die drei
+  vorhandenen rücken von selbst zusammen (`tests/skill_graph_layout_test.gd` prüft das bis
+  sechs Bäume).
+- **Gezeichnet statt gebaut** (`SkillGraph`, `_draw()`): drei Bäume mal vier Zuständen
+  wären zwölf Theme-Variationen, und die Farbe eines Baums soll aus seiner JSON kommen
+  (`color`) und nicht aus dem Theme. Der Screen zoomt mit dem Mausrad und lässt sich
+  ziehen; ein Kauf verschiebt den Ausschnitt nicht. Einpassen und Umlernen sitzen als
+  Zeichen (⛶, ↺) in der unteren rechten Ecke der Fläche und erklären sich per
+  `tooltip_text`.
+- **Die Auskunft steht am Zeiger, die Entscheidung in einem Dialog.** Der Screen ist nur
+  das Netz; eine Tafel am Bildrand gibt es nicht. `SkillGraph` meldet jede Mausbewegung
+  (`hover_changed`), und der Screen stellt eine `SkillTooltip`-Karte neben den Zeiger —
+  sofort, ohne Godots Tooltip-Verzögerung, und am Bildrand auf die andere Seite geklappt.
+  Über einem Knoten trägt sie Zeichen, Name, Wirkung und Zustandszeile
+  (`SkillTree.state_label`), über dem NAMEN eines Baums dessen Stand
+  (`SkillTree.tree_status`: „2/5 gelernt · +2 HP je besiegtem Monster"). Ein Klick auf
+  einen lernbaren Knoten öffnet `ConfirmDialog`, und erst dessen Bestätigung bucht — ein
+  ausgegebener Punkt kommt nur gegen Gold zurück, das soll ein einzelner Klick nicht
+  entscheiden. Knoten, an denen es nichts zu entscheiden gibt, öffnen keinen Dialog.
 - **`effects` ist ein Dictionary und alle Werte sind ADDITIV** auf den Grundwert. Damit
   gibt es keine Frage „welcher Knoten gewinnt", nur eine Summe — und ein Knoten darf
   später mehreres anheben, ohne dass die Aggregation zur Fallunterscheidung wird. Die

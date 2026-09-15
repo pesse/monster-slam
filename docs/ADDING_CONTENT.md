@@ -202,20 +202,27 @@ Eine Datei je Baum. Der erste Eintrag ist der Baum-Kopf, die übrigen sind seine
 ```json
 [
   { "id": "tree.timeweaver", "kind": "tree", "order": 3, "name": "Zeitwandler",
-    "description": "Solange du tippst, dehnt sich die Zeit." },
+    "description": "Solange du tippst, dehnt sich die Zeit.", "color": "#b38ce6" },
   { "id": "skill.time.root", "kind": "skill", "tree": "tree.timeweaver",
     "tier": 1, "branch": 0,
-    "name": "Atempause", "description": "Die Zeitlupe wirkt 0,3 s länger nach.",
+    "name": "Atempause", "icon": "⏳",
+    "description": "Die Zeitlupe wirkt 0,3 s länger nach.",
     "cost": 1, "requires": [], "effects": { "slow_hold_ms": 300 } },
   { "id": "skill.time.deep", "kind": "skill", "tree": "tree.timeweaver",
     "tier": 2, "branch": 1,
-    "name": "Zähe Zeit", "description": "Die Zeit wird zäher.",
+    "name": "Zähe Zeit", "icon": "🕸", "description": "Die Zeit wird zäher.",
     "cost": 1, "requires": ["skill.time.root"], "effects": { "slow_factor": -0.04 } }
 ]
 ```
-- `tier` ist die Zeile, `branch` die **Spalte**: ein Ast bleibt über alle Stufen hinweg in
-  derselben Spalte, die Wurzel steht allein mittig. Zwei Knoten mit demselben
-  `tree`/`tier`/`branch` lägen übereinander — `tests/skill_data_test.gd` meldet das.
+- `tier` ist der **Abstand vom Anfangspunkt**, `branch` die Stelle im Fächer: der Screen
+  zeichnet ein Netz, in dem jeder Baum von seinem eigenen Punkt nach außen aufgeht. Ein
+  Ast bleibt über alle Stufen auf demselben Strahl, die Wurzel steht allein auf der Achse.
+  **Positionen stehen NICHT in der JSON** — `SkillTree.layout()` rechnet sie aus diesen
+  zwei Feldern, ein vierter Baum verschiebt die vorhandenen von selbst. Zwei Knoten mit
+  demselben `tree`/`tier`/`branch` lägen übereinander — `tests/skill_data_test.gd` meldet das.
+- `color` am Baum-Kopf (`"#b38ce6"`) färbt Knoten und Linien des ganzen Baums, `icon` ist
+  das Zeichen im Kreis. Beides ist optional: ohne `color` wird der Baum grau, ohne `icon`
+  steht ein Stern im Knoten — sichtbar, aber erkennbar unfertig.
 - `requires` zeigt auf Knoten **desselben** Baums und auf eine **niedrigere** Stufe.
 - `cost` sind Skillpunkte; ein großer Knoten kostet mehrere.
 - `effects` ist ein Dictionary und **additiv** auf den Grundwert. Erlaubt sind nur die

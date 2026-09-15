@@ -166,3 +166,24 @@ func test_no_two_skills_share_a_place() -> void:
 				"'%s' sitzt auf einem schon belegten Platz (%s)" % [node.get("id", "?"), place]
 		).is_false()
 		seen.append(place)
+
+
+## Farbe und Zeichen sind im Code optional (grauer Baum, Stern im Knoten) — in den
+## AUSGELIEFERTEN Bäumen sollen sie trotzdem stehen. Die Fallbacks sind für fremde Packs
+## gedacht, nicht als stille Erlaubnis, sie hier wegzulassen.
+func test_every_tree_has_its_own_colour() -> void:
+	var seen: Array[String] = []
+	for tree in SkillTree.trees(_entries):
+		var raw := str((tree as Dictionary).get("color", ""))
+		assert_bool(Color.html_is_valid(raw)).override_failure_message(
+				"Baum '%s' hat die Farbe '%s'" % [tree.get("id", "?"), raw]).is_true()
+		# Zwei Bäume in derselben Farbe wären im Netz nicht auseinanderzuhalten.
+		assert_bool(raw in seen).override_failure_message(
+				"Baum '%s' hat die Farbe eines anderen" % tree.get("id", "?")).is_false()
+		seen.append(raw)
+
+
+func test_every_skill_has_an_icon() -> void:
+	for node in _nodes:
+		assert_str(str(node.get("icon", ""))).override_failure_message(
+				"'%s' hat kein Zeichen" % node.get("id", "?")).is_not_empty()

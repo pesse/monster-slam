@@ -4,17 +4,19 @@
 		"kind": "tree",
 		"order": 3,
 		"name": "Zeitwandler",
-		"description": "Solange du tippst, dehnt sich die Zeit. Ein Ast verlängert sie, der andere vertieft sie."
+		"description": "Solange du tippst, dehnt sich die Zeit.",
+		"color": "#b38ce6"
 	},
 	{
 		"id": "skill.time.root",
 		"kind": "skill",
 		"tree": "tree.timeweaver",
-		"tier": 1,
-		"branch": 0,
 		"name": "Atempause",
+		"icon": "⏳",
 		"description": "Die Zeitlupe wirkt 0,3 s länger nach.",
 		"cost": 1,
+		"tier": 1,
+		"branch": 0,
 		"requires": [],
 		"effects": {
 			"slow_hold_ms": 300
@@ -24,11 +26,12 @@
 		"id": "skill.time.long",
 		"kind": "skill",
 		"tree": "tree.timeweaver",
-		"tier": 2,
-		"branch": 0,
 		"name": "Langer Atem",
+		"icon": "🌬",
 		"description": "Nochmal 0,4 s längere Nachwirkung.",
 		"cost": 1,
+		"tier": 2,
+		"branch": 0,
 		"requires": [
 			"skill.time.root"
 		],
@@ -40,11 +43,12 @@
 		"id": "skill.time.deep",
 		"kind": "skill",
 		"tree": "tree.timeweaver",
-		"tier": 2,
-		"branch": 1,
 		"name": "Zähe Zeit",
+		"icon": "🕸",
 		"description": "Die Monster werden während des Tippens noch langsamer.",
 		"cost": 1,
+		"tier": 2,
+		"branch": 1,
 		"requires": [
 			"skill.time.root"
 		],
@@ -56,11 +60,12 @@
 		"id": "skill.time.still",
 		"kind": "skill",
 		"tree": "tree.timeweaver",
+		"name": "Stillstand",
+		"icon": "⏸",
+		"description": "Und nochmal 0,5 s längere Nachwirkung.",
+		"cost": 2,
 		"tier": 3,
 		"branch": 0,
-		"name": "Stillstand",
-		"description": "Nochmal 0,5 s längere Nachwirkung — der Ast der Dauer.",
-		"cost": 2,
 		"requires": [
 			"skill.time.long"
 		],
@@ -72,11 +77,12 @@
 		"id": "skill.time.rift",
 		"kind": "skill",
 		"tree": "tree.timeweaver",
+		"name": "Zeitriss",
+		"icon": "🌀",
+		"description": "Die Zeit steht beim Tippen fast still.",
+		"cost": 2,
 		"tier": 3,
 		"branch": 1,
-		"name": "Zeitriss",
-		"description": "Die Zeit steht beim Tippen fast still — der Ast der Tiefe.",
-		"cost": 2,
 		"requires": [
 			"skill.time.deep"
 		],

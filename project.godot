@@ -49,6 +49,10 @@ enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")
 [gui]
 
 theme/custom="res://scenes/ui/ui_theme.tres"
+; Tooltips erscheinen sofort. Eine halbe Sekunde Wartezeit ist beim Lesen eines
+; ganzen Netzes eine halbe Sekunde je Knoten — und die Erklärung der Zeichen am
+; Rand des Fähigkeiten-Screens steht ausschließlich im Tooltip.
+timers/tooltip_delay_sec=0.0
 
 [rendering]
 
