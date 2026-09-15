@@ -240,3 +240,81 @@ func test_a_row_without_words_stays_closed() -> void:
 	assert_bool(row.is_expanded()).is_false()
 	assert_str((row.get_node("Row/Header") as Button).text).is_equal("Access 2, Unit 6")
 	remove_child(row)
+
+
+# --- Sternchen: die übrigen Aufgaben zum Wort ------------------------------------
+
+## Auffächerung wie im Spiel (WaveGenerator.learnables_of): `tasks` bildet die Lexem-Id
+## auf ihre learnable_ids ab.
+static func _learnables(tasks: Dictionary) -> Callable:
+	return func(entry: Dictionary) -> Array: return tasks.get(str(entry.get("id", "")), [])
+
+
+## Je weiterer Aufgabe ein Sternchen, ausgefüllt wenn sie sitzt — und die beiden
+## Übersetzungsrichtungen sind KEINE davon, sonst wäre jedes Wort mindestens zweisternig.
+func test_extra_tasks_become_stars() -> void:
+	var lex := _lexeme("a", "access2", 6)
+	var lines := STATS_SCREEN.word_lines([lex], _conf({
+		"translate:de_to_en:a": 0.9, "translate:en_to_de:a": 0.85,
+		"conjugation:a:past_simple": 0.9, "opposite:a:b": 0.4,
+	}), _learnables({"a": [
+		"translate:de_to_en:a", "translate:en_to_de:a",
+		"conjugation:a:past_simple", "opposite:a:b",
+	]}))
+	assert_str(str(lines[0]["mark"])).is_equal("✓★☆")
+
+
+## Ohne Auffächerung bleibt es beim Haken — die Liste ist auch ohne Katalog benutzbar.
+func test_without_learnables_there_are_no_stars() -> void:
+	var lines := STATS_SCREEN.word_lines([_lexeme("a", "access2", 6)], _conf({
+		"translate:de_to_en:a": 0.9, "translate:en_to_de:a": 0.85,
+	}))
+	assert_str(str(lines[0]["mark"])).is_equal("✓")
+
+
+## Ein Wort kann offen sein UND ein Sternchen haben: die Zusatzaufgaben hängen nicht an
+## der Meisterung.
+func test_an_unmastered_word_can_still_carry_a_star() -> void:
+	var lines := STATS_SCREEN.word_lines([_lexeme("a", "access2", 6)], _conf({
+		"translate:de_to_en:a": 0.3, "translate:en_to_de:a": 0.9,
+		"conjugation:a:past_simple": 0.9,
+	}), _learnables({"a": ["translate:de_to_en:a", "translate:en_to_de:a", "conjugation:a:past_simple"]}))
+	assert_str(str(lines[0]["mark"])).is_equal("★")
+	assert_str(str(lines[0]["value"])).is_equal("30 %")
+
+
+## Das Mouseover sagt, was die Zeichen verschweigen: beide Richtungen einzeln und je
+## Sternchen die Aufgabe mit ihrem Stand.
+func test_the_tooltip_spells_out_the_marks() -> void:
+	var lines := STATS_SCREEN.word_lines([_lexeme("a", "access2", 6)], _conf({
+		"translate:de_to_en:a": 0.9, "translate:en_to_de:a": 0.63,
+		"conjugation:a:past_simple": 0.85,
+	}), _learnables({"a": ["translate:de_to_en:a", "translate:en_to_de:a", "conjugation:a:past_simple"]}),
+			func(id: String) -> String: return "Aufgabe " + id)
+	var hint := str(lines[0]["hint"])
+	assert_str(hint).contains("de→en 90 %")
+	assert_str(hint).contains("en→de 63 %")
+	assert_str(hint).contains("★ Aufgabe conjugation:a:past_simple — 85 %")
+
+
+## Eine Richtung ohne Record steht auch im Mouseover als solche da und nicht als 0 %.
+func test_the_tooltip_names_an_unpractised_direction() -> void:
+	var lines := STATS_SCREEN.word_lines([_lexeme("a", "access2", 6)],
+			_conf({"translate:de_to_en:a": 0.9}))
+	assert_str(str(lines[0]["hint"])).contains("en→de noch nicht geübt")
+
+
+## Die Auffächerung selbst: dieselbe, aus der der Wave-Pool spawnt.
+func test_learnables_of_covers_both_directions_and_the_extras() -> void:
+	var gen := WaveGenerator.new()
+	var lexemes: Array = ContentRegistry.lexemes.values()
+	if lexemes.is_empty():
+		return  # Ohne Sprachdaten (CI ohne Submodule) nicht prüfbar.
+	var counts: Array = []
+	for entry in lexemes:
+		counts.append(gen.learnables_of(entry).size())
+	counts.sort()
+	# Jedes Wort hat mindestens die beiden Übersetzungsrichtungen.
+	assert_int(int(counts[0])).is_greater_equal(2)
+	# Und mindestens eines hat mehr — sonst wären die Sternchen tote Zeichen.
+	assert_int(int(counts[counts.size() - 1])).is_greater(2)

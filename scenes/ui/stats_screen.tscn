@@ -150,6 +150,11 @@ size_flags_horizontal = 3
 theme_type_variation = &"SectionStack"
 size_flags_horizontal = 3
 
+[node name="Legend" type="Label" parent="Margin/Root/Tabs/Fortschritt/Gutter/Progress"]
+theme_type_variation = &"Hint"
+autowrap_mode = 3
+text = "Klick auf eine Zeile zeigt ihre Wörter.  ✓ das Wort sitzt in beiden Übersetzungsrichtungen  ·  ★ eine weitere Aufgabe dazu sitzt (Form, Gegenteil, Synonym, Verwechslung)  ·  ☆ die gibt es, sie sitzt noch nicht. Zeigt der Mauszeiger auf ein Wort, stehen die Einzelstände da."
+
 [node name="UnitSection" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt/Gutter/Progress"]
 theme_type_variation = &"Tight"
 
@@ -160,7 +165,7 @@ text = "📚 Nach Unit"
 [node name="UnitHint" type="Label" parent="Margin/Root/Tabs/Fortschritt/Gutter/Progress/UnitSection"]
 theme_type_variation = &"Hint"
 autowrap_mode = 3
-text = "Ein Wort zählt als gemeistert, wenn du es in beide Richtungen sicher übersetzt. Klick auf eine Zeile zeigt ihre Wörter."
+text = "Ein Wort zählt als gemeistert, wenn du es in beide Richtungen sicher übersetzt."
 
 [node name="UnitList" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt/Gutter/Progress/UnitSection"]
 theme_type_variation = &"Tight"
@@ -177,13 +182,22 @@ text = "🏷️ Nach Thema"
 theme_type_variation = &"Tight"
 unique_name_in_owner = true
 
-[node name="Wörter" type="ScrollContainer" parent="Margin/Root/Tabs"]
+[node name="Aufgaben" type="ScrollContainer" parent="Margin/Root/Tabs"]
 
-[node name="Gutter" type="MarginContainer" parent="Margin/Root/Tabs/Wörter"]
+[node name="Gutter" type="MarginContainer" parent="Margin/Root/Tabs/Aufgaben"]
 theme_type_variation = &"ScrollGutter"
 size_flags_horizontal = 3
 
-[node name="WordList" type="VBoxContainer" parent="Margin/Root/Tabs/Wörter/Gutter"]
+[node name="TaskSection" type="VBoxContainer" parent="Margin/Root/Tabs/Aufgaben/Gutter"]
+theme_type_variation = &"Tight"
+size_flags_horizontal = 3
+
+[node name="TaskHint" type="Label" parent="Margin/Root/Tabs/Aufgaben/Gutter/TaskSection"]
+theme_type_variation = &"Hint"
+autowrap_mode = 3
+text = "Eine Zeile je Aufgabe: beide Übersetzungsrichtungen getrennt, dazu Formen, Gegenteile, Synonyme und Verwechslungen. Ein Wort steht hier also mehrfach — als Wort steht es im Reiter „Fortschritt“."
+
+[node name="TaskList" type="VBoxContainer" parent="Margin/Root/Tabs/Aufgaben/Gutter/TaskSection"]
 theme_type_variation = &"Tight"
 unique_name_in_owner = true
 size_flags_horizontal = 3
