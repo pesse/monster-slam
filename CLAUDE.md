@@ -255,8 +255,9 @@ Beim Arbeiten daran zu beachten:
   weg, das die Meisterung gebracht hat.
 - **Gespeichert wird nur `total_xp`.** Level, Levelfortschritt und Skillpunkte rechnet
   `Experience` daraus; das Level in der Datei ist zum Mitlesen da und wird beim Laden
-  verworfen. Solange es keine Fähigkeiten gibt, gibt es auch keinen Zähler für
-  ausgegebene Punkte — der kommt mit ihnen.
+  verworfen. `PlayerLevel.skill_points()` ist der VERDIENTE Stand; was davon ausgegeben
+  ist, weiß nur `SkillBook` — und auch dort nicht als Zähler, sondern gerechnet aus den
+  gelernten Knoten. Die offenen Punkte sind `SkillBook.available()`.
 - **Die Stufengrenze wird gezählt, nicht gewurzelt.** `Experience.progress_in_level`
   läuft in einer Schleife über die Stufenkosten: die Umkehrung der Summenformel trifft
   den runden Betrag (300 XP = Level 3) nicht zuverlässig, und ein Balken, der bei rundem
@@ -271,6 +272,56 @@ Beim Arbeiten daran zu beachten:
   dasselbe Verzeichnis, und die Datei des aktiven Profils ist die echte Erfahrung des
   Spielers. Aus demselben Grund fährt kein Test eine ganze Welle, um das Verbuchen zu
   prüfen.
+
+## Skills: Bäume aus Punkten, Spells sind etwas anderes
+
+Die Skillpunkte aus den Levelups werden in Fähigkeitsbäumen ausgegeben (`data/skills/`,
+`SkillTree`, Autoload `SkillBook`, Screen `skill_tree.tscn` am Start-Screen). Die früheren
+„Skills" — die aktiven Fähigkeiten mit Abklingzeit — heißen jetzt **Spells**
+(`data/spells/`, `ContentRegistry.spells`, `spell_activated`/`spell_ready`). Warum, und
+warum `min_app_version` deshalb auf 0.7.0 stehen musste: `docs/adr/0003-skills-und-spells.md`.
+
+Beim Arbeiten daran zu beachten:
+
+- **Bonus-Werte sind ADDITIV auf den Grundwert**, immer. Es gibt keine Frage „welcher
+  Knoten gewinnt", nur eine Summe (`SkillTree.bonuses`). Ein Faktor oder ein „überschreibt"
+  wäre ein zweites Rechenmodell daneben. Erlaubt sind nur die Schlüssel aus
+  `SkillTree.EFFECT_KEYS`; ein unbekannter wirkt gar nicht, und `tests/skill_data_test.gd`
+  fängt ihn ab, bevor ein bezahlter Knoten still wirkungslos bleibt.
+- **Gespeichert wird nur die Liste der gelernten Knoten.** Ausgegebene Punkte, offene
+  Punkte und die Boni rechnet `SkillTree` daraus — dieselbe Regel wie bei `PlayerLevel`
+  (nur `total_xp`) und aus demselben Grund: ein zweiter gespeicherter Zähler könnte
+  abweichen, und dann wäre nicht zu sagen, welcher stimmt. `spent_points` steht zum
+  Mitlesen in der Datei und wird beim Laden verworfen.
+- **`apply_skills` gehört unmittelbar hinter `GameState.reset()`** (`wave_runner.gd`): der
+  Reset stellt die Grundwerte her, erst danach dürfen die Boni darauf, und der Aufruf zieht
+  `fortress_health`/`min_fortress_health` auf das neue Maximum nach. `GameState` und
+  `SlowMotion` bekommen DASSELBE Dictionary — eine Quelle der Boni, nicht zwei. Beide
+  `apply_skills` nehmen ein einfaches Dictionary und kein Autoload, damit sie ohne
+  `SkillBook` und ohne installierte Inhalte prüfbar sind.
+- **Die Rüstung ist per WELLE, das Leben per Lauf.** `_on_wave_started` füllt sie wieder
+  auf — die eine Ausnahme von „der Wellenstart fasst die Festung nicht an", und der Grund,
+  aus dem das Bollwerk etwas anderes tut als ein höheres Maximum. Ein aufgefangener Treffer
+  zählt trotzdem als durchgelassen (Serie hin, `monsters_leaked` hoch); `min_fortress_health`
+  hängt am Leben und nicht an der Rüstung.
+- **Die Zeitlupe hat eine Untergrenze** (`SkillTree.MIN_SLOW_FACTOR`): `Engine.time_scale`
+  auf 0 wäre ein eingefrorenes Spiel, in dem die Haltedauer nach Wanduhr weiterliefe.
+- **Die Rüstung steht im HUD ÜBER dem Lebensbalken und OHNE Zahl.** Ein „🛡90" am HP-Text
+  brauchte 1153 von 1152 Pixeln, ein dreistelliger Wert 1159 — die Kopfleiste ist in der
+  Breite knapp, in der Höhe nicht (`tests/hud_header_test.gd`, `tests/hud_armor_test.gd`).
+  Die Beträge der Bäume stehen in JSON und sollen justierbar bleiben, ohne dass die
+  Kopfleiste reißt.
+- **Ein gesperrter Knoten nennt seine Vorstufe beim NAMEN** („🔒 braucht Verband"). Mit
+  zwei Ästen nebeneinander ist ein bloßes „gesperrt" nicht zu deuten. Die vier Zustände
+  einer Karte unterscheiden sich nur in Beschriftung und `disabled`, nie in der
+  Sichtbarkeit — sonst springt der Baum beim Lernen.
+- **`SkillBook`-Tests laufen auf einer eigenen Instanz mit `zz-`Profil** und schieben ihr
+  über eine Unterklasse einen erfundenen Baum unter (`entries()` überschrieben) — sonst
+  hängen sie an der Balance der ausgelieferten Bäume. `Wallet` und `PlayerLevel` lassen
+  sich nicht ebenso ersetzen (`respec()`/`available()` gehen an die Autoloads): beide
+  bekommen für die Dauer des Tests ebenfalls ein `zz-`Profil, sonst schreibt ein
+  `Wallet.spend` in die echte Geldbörse des Spielers. Der Screen nimmt dafür ein Feld
+  `book` entgegen, das vor dem Einhängen gesetzt wird.
 
 ## Abstände und Schriftgrößen stehen im Theme, nicht in der Szene
 

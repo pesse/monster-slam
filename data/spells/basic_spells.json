@@ -1,6 +1,6 @@
 [
   {
-	"id": "skill.first_letter",
+	"id": "spell.first_letter",
 	"name": "Erster Buchstabe",
 	"description": "Zeigt den ersten Buchstaben der Lösung an.",
 	"effect": "reveal_first_letter",
@@ -8,7 +8,7 @@
 	"cost": 0
   },
   {
-	"id": "skill.grammar_hint",
+	"id": "spell.grammar_hint",
 	"name": "Grammatikhinweis",
 	"description": "Zeigt Zeitform oder Wortart der geforderten Antwort.",
 	"effect": "show_grammar_hint",
@@ -16,7 +16,7 @@
 	"cost": 0
   },
   {
-	"id": "skill.slow_time",
+	"id": "spell.slow_time",
 	"name": "Zeitlupe",
 	"description": "Verlangsamt alle Monster kurzzeitig.",
 	"effect": "slow_monsters",
@@ -25,7 +25,7 @@
 	"cost": 0
   },
   {
-	"id": "skill.freeze",
+	"id": "spell.freeze",
 	"name": "Einfrieren",
 	"description": "Friert das nächste Monster kurz ein.",
 	"effect": "freeze_nearest",
@@ -34,7 +34,7 @@
 	"cost": 0
   },
   {
-	"id": "skill.retry",
+	"id": "spell.retry",
 	"name": "Zweite Chance",
 	"description": "Erlaubt einen erneuten Versuch nach einer falschen Antwort.",
 	"effect": "retry_answer",

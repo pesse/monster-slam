@@ -8,6 +8,7 @@ extends Control
 const SESSION_SETUP_SCENE := "res://scenes/ui/session_setup.tscn"
 const SETTINGS_SCENE := "res://scenes/ui/settings_menu.tscn"
 const STATS_SCENE := "res://scenes/ui/stats_screen.tscn"
+const SKILL_SCENE := "res://scenes/ui/skill_tree.tscn"
 const CONTENT_SCENE := "res://scenes/ui/content_manager.tscn"
 
 @onready var _gold_label: Label = %GoldLabel
@@ -22,6 +23,7 @@ const CONTENT_SCENE := "res://scenes/ui/content_manager.tscn"
 
 func _ready() -> void:
 	_play_button.pressed.connect(func(): get_tree().change_scene_to_file(SESSION_SETUP_SCENE))
+	(%SkillButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(SKILL_SCENE))
 	(%StatsButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(STATS_SCENE))
 	(%SettingsButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(SETTINGS_SCENE))
 	_profile_select.item_selected.connect(_on_profile_selected)
@@ -33,6 +35,8 @@ func _ready() -> void:
 	ContentService.changed.connect(_refresh_content_badge)
 	Wallet.changed.connect(func(_gold): _refresh_gold())
 	PlayerLevel.changed.connect(func(_total_xp, _level): _refresh_level())
+	# Ausgegebene Punkte verändern dieselbe Zeile wie verdiente.
+	SkillBook.changed.connect(_refresh_level)
 	_refresh_profiles()
 	_refresh_gold()
 	_refresh_level()
@@ -84,16 +88,17 @@ func _refresh_gold() -> void:
 	_gold_label.text = "💰 %s" % Wallet.label()
 
 
-## Level, Stand im Level und offene Skillpunkte. Leiser als der Goldstand (Hint), weil es
-## noch nichts zu entscheiden gibt: die Punkte sammeln sich, Fähigkeiten kommen später.
-## Die Punkte stehen trotzdem hier — was man verdient hat, soll man sehen können.
+## Level, Stand im Level und OFFENE Skillpunkte. Leiser als der Goldstand (Hint): die
+## Entscheidung fällt nicht hier, sondern im Fähigkeiten-Screen. Gezeigt wird der offene
+## Stand (verdient minus ausgegeben, siehe SkillBook.available) und nicht der verdiente —
+## eine Zahl, die nach dem Ausgeben stehen bleibt, wäre eine Aufforderung ins Leere.
 func _refresh_level() -> void:
 	var progress := PlayerLevel.progress()
 	var text := "⭐ Level %d  ·  %d/%d XP" % [
 		int(progress["level"]), int(progress["xp_in_level"]), int(progress["xp_for_level_up"])]
-	var points := PlayerLevel.skill_points()
+	var points := SkillBook.available()
 	if points > 0:
-		text += "  ·  %d Skillpunkt%s" % [points, "" if points == 1 else "e"]
+		text += "  ·  %d Skillpunkt%s offen" % [points, "" if points == 1 else "e"]
 	_level_label.text = text
 
 

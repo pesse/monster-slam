@@ -27,6 +27,7 @@ const CATEGORIES: Array[String] = [
 	"monster_task_rules",
 	"monsters",
 	"bosses",
+	"spells",
 	"skills",
 	"waves",
 ]

@@ -97,14 +97,14 @@ func _refresh_numbers() -> void:
 	_add_line(_stat_lines, "💰 %s  (%d Schatzkiste%s geöffnet)" % [
 		Wallet.label(), Wallet.chests_opened, "" if Wallet.chests_opened == 1 else "n"])
 	# Danach das Level: es sagt, wie lange schon gespielt wird, und führt die Skillpunkte
-	# mit. Der Zusatz „noch nichts zum Ausgeben" steht da, solange es keine Fähigkeiten
-	# gibt — ein Punktestand ohne Laden ist sonst eine offene Frage.
+	# mit. Gezeigt wird der OFFENE Stand (verdient minus ausgegeben) und dazu, wohin man
+	# damit geht — ein Punktestand ohne Weg wäre eine offene Frage.
 	var progress := PlayerLevel.progress()
-	var points := PlayerLevel.skill_points()
+	var points := SkillBook.available()
 	_add_line(_stat_lines, "⭐ Level %d  (%d/%d XP, insgesamt %s)  ·  %d Skillpunkt%s%s" % [
 		int(progress["level"]), int(progress["xp_in_level"]), int(progress["xp_for_level_up"]),
 		PlayerLevel.label(), points, "" if points == 1 else "e",
-		" — noch nichts zum Ausgeben" if points > 0 else ""])
+		" offen — im Start-Screen unter „🌳 Fähigkeiten“" if points > 0 else ""])
 	_add_line(_stat_lines, "Gemeisterte Aufgaben: %d  (Festungsstufe %d)" % [
 		PlayerProgress.mastered_count(), PlayerProgress.fortress_tier()])
 	_add_line(_stat_lines, "Gesamt-Genauigkeit: %d %%" % int(round(PlayerProgress.overall_accuracy() * 100.0)))

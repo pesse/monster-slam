@@ -8,7 +8,7 @@ automatisch. Jedes Objekt braucht eine eindeutige `id`.
 > `sentences`, `sentence_lexemes`) liegen unter `data/language/` — ein separates
 > **privates** Submodule, weil sie aus urheberrechtlich geschütztem
 > Lehrbuchmaterial abgeleitet sind. Spielkonfiguration (Monster, Bosse, Wellen,
-> Skills, Aufgaben-Regeln) liegt direkt unter `data/` im öffentlichen Repo.
+> Zauber, Fähigkeitsbäume, Aufgaben-Regeln) liegt direkt unter `data/` im öffentlichen Repo.
 > Änderungen an Sprachdaten werden im Submodule committet und gepusht.
 >
 > **Achtung:** eine Datei im Repo ist noch nicht beim Spieler — die verteilte EXE
@@ -180,10 +180,12 @@ das Monster über die `monster_task_rules` ab. `task_pool`-Felder (alle optional
 `task_types` (Liste), `direction`, `tags` (Lexem-Tags), `difficulty_max` (0 = kein Limit).
 Eine Boss-Welle nutzt statt `spawns` das Feld `"boss": "<boss-id>"`.
 
-## Fähigkeit hinzufügen → `data/skills/…json`
+## Zauber hinzufügen → `data/spells/…json`
+Zauber sind die **aktiven** Fähigkeiten mit Abklingzeit — nicht zu verwechseln mit den
+Skills des Fähigkeitsbaums weiter unten (`docs/adr/0003-skills-und-spells.md`).
 ```json
 {
-  "id": "skill.highlight_word",
+  "id": "spell.highlight_word",
   "name": "Wort hervorheben",
   "description": "Hebt ein schwieriges Wort hervor.",
   "effect": "highlight_word",
@@ -191,9 +193,39 @@ Eine Boss-Welle nutzt statt `spawns` das Feld `"boss": "<boss-id>"`.
   "cost": 0
 }
 ```
-Nutzt eine Fähigkeit einen **neuen** `effect`, muss zusätzlich ein Effekt-Handler
+Nutzt ein Zauber einen **neuen** `effect`, muss zusätzlich ein Effekt-Handler
 für diesen Schlüssel ergänzt werden (rein additiv, bestehende Handler bleiben
-unberührt). Verwendet sie einen vorhandenen Effekt, genügt die JSON-Datei.
+unberührt). Verwendet er einen vorhandenen Effekt, genügt die JSON-Datei.
+
+## Skill-Knoten hinzufügen → `data/skills/…json`
+Eine Datei je Baum. Der erste Eintrag ist der Baum-Kopf, die übrigen sind seine Knoten:
+```json
+[
+  { "id": "tree.timeweaver", "kind": "tree", "order": 3, "name": "Zeitwandler",
+    "description": "Solange du tippst, dehnt sich die Zeit." },
+  { "id": "skill.time.root", "kind": "skill", "tree": "tree.timeweaver",
+    "tier": 1, "branch": 0,
+    "name": "Atempause", "description": "Die Zeitlupe wirkt 0,3 s länger nach.",
+    "cost": 1, "requires": [], "effects": { "slow_hold_ms": 300 } },
+  { "id": "skill.time.deep", "kind": "skill", "tree": "tree.timeweaver",
+    "tier": 2, "branch": 1,
+    "name": "Zähe Zeit", "description": "Die Zeit wird zäher.",
+    "cost": 1, "requires": ["skill.time.root"], "effects": { "slow_factor": -0.04 } }
+]
+```
+- `tier` ist die Zeile, `branch` die **Spalte**: ein Ast bleibt über alle Stufen hinweg in
+  derselben Spalte, die Wurzel steht allein mittig. Zwei Knoten mit demselben
+  `tree`/`tier`/`branch` lägen übereinander — `tests/skill_data_test.gd` meldet das.
+- `requires` zeigt auf Knoten **desselben** Baums und auf eine **niedrigere** Stufe.
+- `cost` sind Skillpunkte; ein großer Knoten kostet mehrere.
+- `effects` ist ein Dictionary und **additiv** auf den Grundwert. Erlaubt sind nur die
+  Schlüssel aus `SkillTree.EFFECT_KEYS`: `heal_per_correct`, `fortress_armor`,
+  `max_health`, `slow_hold_ms`, `slow_factor` (negativ = tiefere Zeitlupe). Ein neuer
+  Schlüssel braucht einen Eintrag dort **und** ein `apply_skills`, das ihn liest.
+
+Die Beträge sind reine Balance und ohne Code-Änderung justierbar. Was sich nicht ändern
+darf, ohne den Screen anzufassen: dass ein Baum sich verzweigt — `tests/skill_data_test.gd`
+besteht darauf, dass jede Stufe eines Baums irgendwo zwei Äste nebeneinander hat.
 
 ## Neue Mechanik hinzufügen
 Neues System als eigenes Script/Szene anlegen, das relevante `EventBus`-Signale

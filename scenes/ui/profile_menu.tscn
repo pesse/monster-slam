@@ -70,6 +70,10 @@ text = "Noch keine Vokabeln vorhanden — unten über „📚 Inhalte“ einen V
 horizontal_alignment = 1
 autowrap_mode = 3
 
+[node name="SkillButton" type="Button" parent="Margin/Root"]
+unique_name_in_owner = true
+text = "🌳 Fähigkeiten"
+
 [node name="StatsButton" type="Button" parent="Margin/Root"]
 unique_name_in_owner = true
 text = "📊 Statistik"

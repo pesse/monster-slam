@@ -67,6 +67,12 @@ func _ready() -> void:
 	_build_fortress()
 	_cam_base = _camera.position
 	GameState.reset()
+	# Gelernte Skills UNMITTELBAR nach dem reset(): der Reset stellt die Grundwerte her,
+	# erst danach dürfen die Boni darauf. Ein Dictionary für beide Empfänger, damit es
+	# EINE Quelle der Boni gibt und nicht zwei, die auseinanderlaufen können.
+	var skill_bonuses := SkillBook.bonuses()
+	GameState.apply_skills(skill_bonuses)
+	_slow_motion.apply_skills(skill_bonuses)
 	# Der Lauf beginnt hier, nicht mit der ersten Welle: alles, was über die Wellen hinweg
 	# zählt (Sitzungs-Log, GameState-Zähler), hängt an diesem Punkt.
 	EventBus.run_started.emit()

@@ -7,7 +7,7 @@ extends Node
 ## (privates Submodule, siehe LANGUAGE_ROOT) und installierte Content-Packs unter
 ## user://content/<pack-id>/ (siehe USER_CONTENT_ROOT).
 ##
-## To add new content — a monster, a skill, a vocab pack, a boss, a wave —
+## To add new content — a monster, a spell, a vocab pack, a boss, a wave —
 ## drop a JSON file into the matching folder. No code changes required.
 ## Each JSON file may contain a single object OR an array of objects.
 ## Every object MUST have a unique string "id".
@@ -57,6 +57,10 @@ var task_definitions: Dictionary = {}
 var monster_task_rules: Dictionary = {}
 var monsters: Dictionary = {}
 var bosses: Dictionary = {}
+## Zauber: die aktiven Fähigkeiten mit Abklingzeit (data/spells/).
+var spells: Dictionary = {}
+## Skills: die Knoten der Fähigkeitsbäume, gekauft mit Skillpunkten (data/skills/).
+## Zwei Kategorien, weil es zwei Dinge sind — siehe docs/adr/0003-skills-und-spells.md.
 var skills: Dictionary = {}
 var waves: Dictionary = {}
 
@@ -89,6 +93,7 @@ func _ready() -> void:
 		"monster_task_rules": monster_task_rules,
 		"monsters": monsters,
 		"bosses": bosses,
+		"spells": spells,
 		"skills": skills,
 		"waves": waves,
 	}

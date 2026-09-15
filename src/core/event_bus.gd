@@ -29,9 +29,11 @@ signal boss_started(boss_id: String)
 signal boss_sentence_presented(sentence: Dictionary)
 signal boss_answer_evaluated(quality: float, feedback: String)
 
-## --- Skills ---
-signal skill_activated(skill_id: String)
-signal skill_ready(skill_id: String)
+## --- Zauber (aktive Fähigkeiten mit Abklingzeit) ---
+## Nicht zu verwechseln mit den Skills des Fähigkeitsbaums: die sind dauerhaft, werden
+## mit Skillpunkten gekauft und wirken über SkillBook auf den Lauf (kein Signal nötig).
+signal spell_activated(spell_id: String)
+signal spell_ready(spell_id: String)
 
 ## --- Lauf (Sitzung) ---
 ## Ein neuer Lauf beginnt: Kampfszene betreten, GameState zurückgesetzt. Die Welle

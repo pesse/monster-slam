@@ -17,6 +17,7 @@ const COLOR_HP_WARN := Color(1.0, 0.8, 0.25)
 const COLOR_HP_LOW := Color(1.0, 0.3, 0.3)
 
 @onready var _hp_bar: ProgressBar = %HpBar
+@onready var _armor_bar: ProgressBar = %ArmorBar
 @onready var _hp_text: Label = %HpText
 @onready var _wave_bar: ProgressBar = %WaveBar
 @onready var _wave_text: Label = %WaveText
@@ -54,6 +55,20 @@ func _refresh() -> void:
 	var max_hp: float = float(GameState.fortress_max_health)
 	_hp_bar.max_value = max_hp
 	_hp_bar.value = GameState.fortress_health
+	# Rüstung ÜBER dem Lebensbalken statt daneben: die Kopfleiste ist in der Breite knapp
+	# (tests/hud_header_test.gd), in der Höhe nicht. Ohne Bollwerk-Skill ist der Streifen
+	# weg — eine leere Leiste wäre ein Versprechen auf etwas, das es nicht gibt.
+	#
+	# Sie trägt die Rüstung OHNE Zahl daneben: ein „🛡90" am HP-Text brauchte die letzten
+	# freien Pixel der Reihe (1153 von 1152) und wäre bei dreistelliger Rüstung endgültig
+	# aus dem Bild gelaufen — und die Beträge der Bäume stehen in JSON und sollen ohne
+	# Code-Änderung justierbar bleiben. Der Anteil ist hier die Auskunft, die zählt:
+	# „noch etwas Polster" oder „gleich geht es ans Leben".
+	var armor_max: int = GameState.fortress_armor_max
+	_armor_bar.visible = armor_max > 0
+	if armor_max > 0:
+		_armor_bar.max_value = float(armor_max)
+		_armor_bar.value = GameState.fortress_armor
 	_hp_text.text = "%d/%d" % [GameState.fortress_health, GameState.fortress_max_health]
 	var ratio := GameState.fortress_health / max_hp if max_hp > 0.0 else 0.0
 	if ratio > HP_OK:

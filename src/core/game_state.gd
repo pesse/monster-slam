@@ -11,17 +11,25 @@ extends Node
 const FORTRESS_BASE_MAX_HEALTH := 100
 const FORTRESS_BASE_HEAL_PER_CORRECT := 1
 
-## Die effektiven Werte des laufenden Laufs: Grundwert plus Talent-Boni. Alles, was HP
+## Die effektiven Werte des laufenden Laufs: Grundwert plus Skill-Boni. Alles, was HP
 ## anzeigt oder verrechnet, liest DIESE beiden — nie die Konstanten (siehe hud.gd).
-## `reset()` setzt sie auf den Grundwert zurück, ein Talent-System hebt sie danach an.
+## `reset()` setzt sie auf den Grundwert zurück, `apply_skills()` hebt sie danach an.
 ## Ganzzahlig, damit `fortress_health` int bleibt (kein Nachkomma-Akkumulator).
 var fortress_max_health: int = FORTRESS_BASE_MAX_HEALTH
 var fortress_heal_per_correct: int = FORTRESS_BASE_HEAL_PER_CORRECT
 
+## Rüstung aus dem Bollwerk-Baum. `fortress_armor_max` ist der Vorrat je Welle (0 ohne
+## Skill), `fortress_armor` der Rest der laufenden Welle. Sie geht VOR dem Leben auf und
+## wird zu jedem Wellenbeginn neu gefüllt — anders als die HP, die über die Wellen hinweg
+## mitgenommen werden. Das ist der Unterschied, aus dem der Baum seinen Sinn zieht: Leben
+## ist das Polster des Laufs, Rüstung das der einzelnen Welle.
+var fortress_armor_max: int = 0
+var fortress_armor: int = 0
+
 var fortress_health: int = FORTRESS_BASE_MAX_HEALTH
 var score: int = 0
 var current_wave: String = ""
-var active_skills: Array[String] = []
+var active_spells: Array[String] = []
 
 ## Lauf-Statistik (für HUD-Zähler und Statistik-Screen).
 var monsters_defeated: int = 0   # per korrekter Antwort erledigt
@@ -54,14 +62,16 @@ func _ready() -> void:
 
 
 func reset() -> void:
-	# Grundwerte zuerst: ein Talent-System hebt sie NACH dem reset() an, sonst erbte der
+	# Grundwerte zuerst: `apply_skills()` hebt sie NACH dem reset() an, sonst erbte der
 	# neue Lauf die Boni des alten.
 	fortress_max_health = FORTRESS_BASE_MAX_HEALTH
 	fortress_heal_per_correct = FORTRESS_BASE_HEAL_PER_CORRECT
+	fortress_armor_max = 0
+	fortress_armor = 0
 	fortress_health = fortress_max_health
 	score = 0
 	current_wave = ""
-	active_skills.clear()
+	active_spells.clear()
 	monsters_defeated = 0
 	monsters_leaked = 0
 	no_leak_streak = 0
@@ -71,12 +81,37 @@ func reset() -> void:
 	wave_resolved = 0
 
 
+## Legt die Boni der gelernten Skills auf die Grundwerte. Gehört unmittelbar HINTER
+## `reset()` (siehe WaveRunner._ready): der Aufruf zieht den HP-Stand auf das neue
+## Maximum nach, und das ist nur zum Laufbeginn richtig.
+##
+## `bonuses` ist ein einfaches Dictionary (SkillTree.bonuses) und kein Autoload-Zugriff —
+## damit ist diese Rechnung ohne SkillBook und ohne installierte Inhalte prüfbar. Alle
+## Werte sind ADDITIV auf den Grundwert; die Heilung bleibt bei mindestens 1, damit eine
+## verbogene Datei sie nicht abschalten kann.
+func apply_skills(bonuses: Dictionary) -> void:
+	fortress_max_health = maxi(1, FORTRESS_BASE_MAX_HEALTH + int(bonuses.get("max_health", 0)))
+	fortress_heal_per_correct = maxi(1,
+			FORTRESS_BASE_HEAL_PER_CORRECT + int(bonuses.get("heal_per_correct", 0)))
+	fortress_armor_max = maxi(0, int(bonuses.get("fortress_armor", 0)))
+	# Der Lauf beginnt voll: erst hier steht fest, wie hoch „voll" ist.
+	fortress_health = fortress_max_health
+	min_fortress_health = fortress_max_health
+	fortress_armor = fortress_armor_max
+
+
 ## Der Wellenstart rührt die Festungs-HP NICHT an: der Stand wird über die Wellen
 ## hinweg mitgenommen, Schaden bleibt spürbar, und korrekte Antworten reparieren ihn
 ## nach und nach (siehe _on_monster_defeated). Aufgefüllt wird nur beim Start eines
 ## Laufs (reset()) — eine gefallene Festung beendet den Lauf, eine Folgewelle mit 0 HP
 ## gibt es nicht (der Statistik-Screen bietet sie dann nicht an, siehe wave_stats.gd).
+##
+## Die RÜSTUNG dagegen wird hier neu gefüllt — sie ist der Vorrat einer Welle, nicht der
+## des Laufs. Das ist die eine Ausnahme von „der Wellenstart fasst die Festung nicht an",
+## und sie ist der Grund, aus dem der Bollwerk-Baum etwas anderes tut als ein höheres
+## Maximum: er gibt Polster zurück, das die letzte Welle verbraucht hat.
 func _on_wave_started(_wave_id: String) -> void:
+	fortress_armor = fortress_armor_max
 	# Der Zähler gehört zum Wellenstart, nicht zur Gesamtzahl: wave_totals kann sich
 	# mitten in der Welle nochmal ändern (ausgefallener Spawn, WaveRunner._spawn) —
 	# ein Reset dort würde den HUD-Balken grundlos zurückwerfen.
@@ -88,7 +123,12 @@ func _on_wave_totals(total: int) -> void:
 
 
 func _on_fortress_damaged(amount: int) -> void:
-	fortress_health = max(0, fortress_health - amount)
+	# Rüstung zuerst: sie liegt VOR dem Leben. Was sie schluckt, kostet keine HP — das
+	# Monster ist trotzdem durchgekommen, deshalb zählen Serie und Statistik unverändert
+	# weiter. Eine aufgefangene Welle ist keine saubere Welle.
+	var absorbed := mini(fortress_armor, maxi(0, amount))
+	fortress_armor -= absorbed
+	fortress_health = max(0, fortress_health - (amount - absorbed))
 	# Ein Schadensereignis = ein durchgelassenes Monster = ein erledigtes Monster.
 	monsters_leaked += 1
 	no_leak_streak = 0

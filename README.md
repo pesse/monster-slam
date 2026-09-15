@@ -10,7 +10,8 @@ Sprachaufgaben löst. Fokus: motivierendes Gameplay, das evidenzbasiertes Lernen
 - **Normale Monster** tragen einzelne Vokabeln → per Tastatur übersetzen → Zeitdruck fördert schnellen Recall.
 - **Bosse** stellen ganze Sätze → wenig/kein Zeitdruck → Übersetzungsqualität bestimmt den Schaden (semantische Bewertung, optional per LLM).
 - **Lernprinzipien**: neue Inhalte ohne Zeitdruck, bekannte Vokabeln in schnelleren Wellen, Fehler werden per Spaced Repetition wiederholt.
-- **Fähigkeiten** erleichtern das Lernen, ohne die Lösung vorzugeben.
+- **Zauber** erleichtern das Lernen, ohne die Lösung vorzugeben.
+- **Skills** sind ein dauerhafter Fähigkeitsbaum: jedes Levelup gibt einen Skillpunkt, der in Heilung, Rüstung oder eine stärkere Zeitlupe fließt.
 
 ## Technik
 
@@ -38,7 +39,7 @@ Sprachinhalte — eigene Lexeme können nach
 
 ## Content erweitern
 
-Neue Monster, Fähigkeiten, Vokabelpakete, Bosse oder Wellen werden durch das
+Neue Monster, Zauber, Skills, Vokabelpakete, Bosse oder Wellen werden durch das
 **Ablegen einer JSON-Datei** im passenden `data/`- bzw. `data/language/`-Ordner
 ergänzt — ohne bestehenden Code anzufassen. Anleitung: [`docs/ADDING_CONTENT.md`](docs/ADDING_CONTENT.md).
 
@@ -54,11 +55,13 @@ monster-slam/
 │   ├── bosses/            Bossgegner mit Sätzen
 │   ├── task_definitions/  Aufgaben-Regeln
 │   ├── monster_task_rules/ Zuordnung Aufgabe ↔ Monster
-│   ├── skills/            Fähigkeiten
+│   ├── spells/            Zauber (aktiv, mit Abklingzeit)
+│   ├── skills/            Skillbäume (dauerhaft, gekauft mit Skillpunkten)
 │   └── waves/             Wellen- & Level-Definitionen
 ├── src/                   GDScript-Code
 │   ├── core/              Autoloads: EventBus, ContentRegistry, GameState
 │   ├── learning/          Spaced Repetition, Antwort-Bewertung
+│   ├── progression/       Erfahrung, Level, Skillbäume
 │   └── main/              Einstiegspunkt
 ├── scenes/                Godot-Szenen (.tscn)
 ├── assets/                Grafik, Audio, Fonts
