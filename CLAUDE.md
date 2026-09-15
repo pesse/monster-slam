@@ -262,7 +262,10 @@ Beim Arbeiten daran zu beachten:
   den runden Betrag (300 XP = Level 3) nicht zuverlässig, und ein Balken, der bei rundem
   Stand eine Stufe zurückfällt, ist schlimmer als 140 Additionen bei einer Million XP.
 - **Level und Balken stehen im HUD beim NAMEN**, nicht in einer eigenen Tafel: sie gehören
-  zum Spieler, und die Kopfleiste hat bei 1152 Pixeln keinen Platz für eine fünfte.
+  zum Spieler, und die Kopfleiste hat bei 1152 Pixeln keinen Platz für eine fünfte. Die
+  vier Tafeln passen dort nur knapp: `tests/hud_header_test.gd` misst die Mindestbreite
+  der Reihe gegen die Grundauflösung, mit einem späten Spielstand (Level 27,
+  fünfstelliges Gold). Was dazukommt, muss anderswo eingespart werden.
 - **`PlayerLevel`-Tests laufen auf einer eigenen Instanz mit `zz-`Profil** und räumen ihre
   Datei weg — dieselbe Regel wie bei der Geldbörse: `user://` ist projektübergreifend
   dasselbe Verzeichnis, und die Datei des aktiven Profils ist die echte Erfahrung des
@@ -288,6 +291,7 @@ Rollen gibt es als **Type-Variations**, gesetzt über `theme_type_variation`:
 | `Caption` | 12, gedämpft | | |
 | `Accent` | Gold, für Hinweise mit Nachdruck | | |
 | `SectionButton` | 20, für klappbare Abschnitte | `ScrollGutter` | 8 rechts, in jedem ScrollContainer |
+| | | `HudPanel` | Tafel der Kopfleiste, 8/4 statt 16 |
 
 Abstände dürfen nur die Stufen **0 / 4 / 8 / 16 / 24** benutzen. Karten-Innenabstand
 kommt aus `PanelContainer/styles/panel` (16) — **keinen MarginContainer in eine
@@ -319,7 +323,7 @@ Anchors sind Knoten-Eigenschaften und bleiben in der Szene. Layout-Struktur auch
 Titel im Header ist deshalb noch um halbe Knopfbreite außermittig (HBox mit Knopf plus
 gedehntem Label zentriert im Restplatz, nicht im Screen).
 
-## Drei Fallen, die schon zugeschlagen haben
+## Vier Fallen, die schon zugeschlagen haben
 
 **Godot-Läufe schreiben offene Dateien um — dagegen gibt es `tools/godot.sh`.** Welche
 Dateien im Skripteditor offen sind, merkt sich `.godot/editor/script_editor_cache.cfg`;
@@ -341,6 +345,15 @@ ist ASCII, aber Prüfsumme *und* Signatur gehen über genau diese Bytes; auf ein
 Windows-Runner (`core.autocrlf=true`) machte git aus dem LF ein CRLF und fünf Tests fielen
 um. `.gitattributes` nimmt `tests/fixtures/**` deshalb von jeder Umwandlung aus. Neue
 Fixtures dort ablegen, nicht daneben.
+
+**Das Vollbild ist der SCHMALSTE Fall, nicht der breiteste.** `canvas_items`/`expand`
+skaliert mit der knapperen Achse und dehnt die andere — das Bild ist also nie kleiner als
+die Grundauflösung (1152×648), aber im Vollbild auf einem 16:9-Schirm genau so groß. Ein
+maximiertes Fenster gibt dem Spiel dagegen MEHR Breite (Titelleiste kostet Höhe, die
+Skalierung fällt, die Breite wächst auf ~1196). Was am Rand knapp ist, fällt beim
+Entwickeln im Fenster deshalb nicht auf und im Vollbild sofort: die Kopfleiste brauchte
+1215 Pixel und schnitt die Tafel mit Kills und Gold ab. Randlayout gegen 1152 prüfen,
+nicht gegen das eigene Fenster.
 
 **Tests müssen neben echten Packs gelten.** `user://` ist projektübergreifend dasselbe
 Verzeichnis, und Packs werden nach Id sortiert — der letzte gewinnt. Ein Fixture-Pack

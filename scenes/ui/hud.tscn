@@ -32,19 +32,22 @@ theme_override_constants/margin_bottom = 10
 
 [node name="Row" type="HBoxContainer" parent="Margin"]
 mouse_filter = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 0
 
 [node name="PlayerPanel" type="PanelContainer" parent="Margin/Row"]
 mouse_filter = 2
+theme_type_variation = &"HudPanel"
 
 [node name="PlayerBox" type="HBoxContainer" parent="Margin/Row/PlayerPanel"]
-theme_override_constants/separation = 8
 alignment = 1
 
 [node name="PlayerName" type="Label" parent="Margin/Row/PlayerPanel/PlayerBox"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(130, 0)
 text = "👤 Spieler"
 vertical_alignment = 1
+clip_text = true
+text_overrun_behavior = 3
 
 [node name="LevelText" type="Label" parent="Margin/Row/PlayerPanel/PlayerBox"]
 unique_name_in_owner = true
@@ -53,7 +56,7 @@ vertical_alignment = 1
 
 [node name="XpBar" type="ProgressBar" parent="Margin/Row/PlayerPanel/PlayerBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(90, 14)
+custom_minimum_size = Vector2(80, 14)
 size_flags_vertical = 4
 theme_override_styles/fill = SubResource("XpFill")
 show_percentage = false
@@ -64,23 +67,24 @@ text = "0/100"
 vertical_alignment = 1
 
 [node name="Spacer1" type="Control" parent="Margin/Row"]
+custom_minimum_size = Vector2(8, 0)
 size_flags_horizontal = 3
 mouse_filter = 2
 
 [node name="LifePanel" type="PanelContainer" parent="Margin/Row"]
 mouse_filter = 2
+theme_type_variation = &"HudPanel"
 
 [node name="LifeBox" type="HBoxContainer" parent="Margin/Row/LifePanel"]
-theme_override_constants/separation = 8
 alignment = 1
 
 [node name="LifeCaption" type="Label" parent="Margin/Row/LifePanel/LifeBox"]
-text = "🏰 Festung"
+text = "🏰"
 vertical_alignment = 1
 
 [node name="HpBar" type="ProgressBar" parent="Margin/Row/LifePanel/LifeBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(150, 20)
+custom_minimum_size = Vector2(130, 20)
 size_flags_vertical = 4
 theme_override_styles/fill = SubResource("HpFill")
 show_percentage = false
@@ -91,23 +95,24 @@ text = "100/100"
 vertical_alignment = 1
 
 [node name="Spacer2" type="Control" parent="Margin/Row"]
+custom_minimum_size = Vector2(8, 0)
 size_flags_horizontal = 3
 mouse_filter = 2
 
 [node name="WavePanel" type="PanelContainer" parent="Margin/Row"]
 mouse_filter = 2
+theme_type_variation = &"HudPanel"
 
 [node name="WaveBox" type="HBoxContainer" parent="Margin/Row/WavePanel"]
-theme_override_constants/separation = 8
 alignment = 1
 
 [node name="WaveCaption" type="Label" parent="Margin/Row/WavePanel/WaveBox"]
-text = "⚔ Welle"
+text = "⚔"
 vertical_alignment = 1
 
 [node name="WaveBar" type="ProgressBar" parent="Margin/Row/WavePanel/WaveBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(150, 20)
+custom_minimum_size = Vector2(130, 20)
 size_flags_vertical = 4
 show_percentage = false
 
@@ -117,14 +122,15 @@ text = "0/0"
 vertical_alignment = 1
 
 [node name="Spacer3" type="Control" parent="Margin/Row"]
+custom_minimum_size = Vector2(8, 0)
 size_flags_horizontal = 3
 mouse_filter = 2
 
 [node name="StatsPanel" type="PanelContainer" parent="Margin/Row"]
 mouse_filter = 2
+theme_type_variation = &"HudPanel"
 
 [node name="StatsBox" type="HBoxContainer" parent="Margin/Row/StatsPanel"]
-theme_override_constants/separation = 8
 alignment = 1
 
 [node name="Kills" type="Label" parent="Margin/Row/StatsPanel/StatsBox"]
