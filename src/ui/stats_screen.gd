@@ -12,10 +12,14 @@ extends Control
 ## Drei Reiter: „Überblick" trägt die Abschnitte, die zum Weiterspielen motivieren
 ## (Tages-Serie #6, Kennzahlen #5, Lernkurve #7, frisch gemeistert und Comeback #9,
 ## Fahndungsliste #5), „Fortschritt" die Balken pro Unit und Thema (#8) — die wachsen mit
-## dem Katalog und schöben im Überblick alles andere aus dem Bild —, „Wörter" die
-## vollständige Liste. Ein Balken lässt sich aufklappen und zeigt dann die Wörter SEINER
-## Gruppe mit Prozentstand: „18 von 24" sagt nicht, welche sechs fehlen, und im Reiter
-## „Wörter" stehen sie zwischen allen anderen. Was noch fehlt (Kampf-Rekorde), liegt in SessionLog bereit.
+## dem Katalog und schöben im Überblick alles andere aus dem Bild —, „Aufgaben" die
+## vollständige Liste der Learnables. Ein Balken lässt sich aufklappen und zeigt dann die
+## WÖRTER seiner Gruppe mit Prozentstand: „18 von 24" sagt nicht, welche sechs fehlen,
+## und im Reiter „Aufgaben" stehen sie als zwei bis sechs Zeilen zwischen allen anderen.
+##
+## Die beiden Maße auseinanderzuhalten ist der Sinn der Reiter-Namen: „Aufgaben" zählt
+## learnable_ids (Richtung, Form, Relation — das Maß von mastered_count), „Fortschritt"
+## zählt Wörter (beide Übersetzungsrichtungen — das Maß von mastered_lexemes). Was noch fehlt (Kampf-Rekorde), liegt in SessionLog bereit.
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 const ROW_SCENE := preload("res://scenes/ui/stat_row.tscn")
@@ -34,6 +38,8 @@ const LIST_COUNT := 5
 const FRESH_DAYS := 7
 ## Ab so vielen Fehlversuchen ist eine wiedergewonnene Aufgabe ein Comeback.
 const COMEBACK_MISSES := 3
+## Beschriftung der beiden Übersetzungsrichtungen im Mouseover einer Wortzeile.
+const DIRECTION_LABELS := {"de_to_en": "de→en", "en_to_de": "en→de"}
 
 @onready var _streak_label: Label = %StreakLabel
 @onready var _coin_label: Label = %CoinLabel
@@ -44,9 +50,14 @@ const COMEBACK_MISSES := 3
 @onready var _fresh_list: VBoxContainer = %FreshList
 @onready var _comeback_list: VBoxContainer = %ComebackList
 @onready var _wanted_list: VBoxContainer = %WantedList
+## Fächert die Aufgaben eines Wortes auf (learnables_of) und benennt sie — dieser Screen
+## spawnt nichts, er liest nur dieselbe Auffächerung wie der Wave-Pool.
+var _generator := WaveGenerator.new()
+var _resolver := TaskResolver.new()
+
 @onready var _unit_list: VBoxContainer = %UnitList
 @onready var _tag_list: VBoxContainer = %TagList
-@onready var _word_list: VBoxContainer = %WordList
+@onready var _task_list: VBoxContainer = %TaskList
 
 
 func _ready() -> void:
@@ -61,7 +72,7 @@ func _refresh() -> void:
 	_refresh_lists()
 	_refresh_wanted()
 	_refresh_progress()
-	_refresh_words()
+	_refresh_tasks()
 
 
 ## Tages-Serie und Tages-Leiste (Issue #6).
@@ -330,21 +341,30 @@ static func _count_into(groups: Dictionary, key: String, entry: Dictionary, mast
 ## einer sitzenden und einer offenen Richtung bei 60 % — der Haken stünde dann an einer
 ## anderen Zahl als der angezeigten, und die Liste erklärte den Balken nicht mehr.
 ##
+## Die ÜBRIGEN Aufgaben zum Wort (Formen, Gegenteile, Synonyme, Verwechslungen) zählen
+## bewusst NICHT in die Meisterung — sie hängen an Zusatzdaten, die nur ein Teil der
+## Wörter hat, und eine nachgetragene Relation nähme dem Spieler sonst rückwirkend ein
+## gemeistertes Wort weg. Sie fahren als `extras` mit und stehen in der Zeile als
+## Sternchen: ein Wort kann sitzen UND noch etwas zu holen haben.
+##
 ## Sortiert: das Schwächste zuerst, wie überall in diesem Screen. Noch nie geübte Wörter
 ## stehen alphabetisch am Ende — sie sind kein Lernstand, sondern das, was noch aussteht,
 ## und oben verdrängten sie genau die Wörter, an denen gerade etwas zu holen ist.
 ##
 ## `conf` liefert die Confidence einer Aufgabe und -1 für „kein Record" (im Spiel
-## PlayerProgress.confidence mit -1 als Vorgabe). Als Callable übergeben — wie book_label
-## bei unit_rows —, damit die Regel ohne Autoload prüfbar bleibt.
-static func word_rows(lexemes: Array, conf: Callable) -> Array:
+## PlayerProgress.confidence mit -1 als Vorgabe), `learnables` alle learnable_ids zu einem
+## Lexem (WaveGenerator.learnables_of). Als Callables übergeben — wie book_label bei
+## unit_rows —, damit die Regeln ohne Autoload prüfbar bleiben.
+static func word_rows(lexemes: Array, conf: Callable, learnables := Callable()) -> Array:
 	var rows: Array = []
 	for entry in lexemes:
 		var id := str(entry.get("id", ""))
+		var directions: Array = []
 		var weakest := 1.0
 		var seen := false
 		for direction in PROGRESS.LEXEME_MASTERY_DIRECTIONS:
 			var value := float(conf.call("translate:%s:%s" % [direction, id]))
+			directions.append({"direction": direction, "confidence": value})
 			if value < 0.0:
 				# Keine Aufgabe, kein Stand: die Richtung zieht den Wert auf 0, aber sie
 				# macht das Wort noch nicht zu einem geübten.
@@ -355,6 +375,8 @@ static func word_rows(lexemes: Array, conf: Callable) -> Array:
 		rows.append({
 			"label": word_label(entry),
 			"confidence": weakest if seen else -1.0,
+			"directions": directions,
+			"extras": extra_rows(entry, conf, learnables),
 		})
 	rows.sort_custom(func(a, b):
 		var ca := float(a["confidence"])
@@ -367,19 +389,79 @@ static func word_rows(lexemes: Array, conf: Callable) -> Array:
 	return rows
 
 
-## Dieselben Zeilen, fertig für StatRow: { label, value, mark }.
-static func word_lines(lexemes: Array, conf: Callable) -> Array:
+## Die Aufgaben eines Wortes NEBEN den beiden Übersetzungsrichtungen, gemeisterte zuerst:
+## { id, confidence, mastered }. Die Richtungen fallen hier raus, weil sie schon der
+## Prozentstand der Zeile sind — doppelt gezählt wäre jedes Wort mindestens zweisternig.
+static func extra_rows(entry: Dictionary, conf: Callable, learnables: Callable) -> Array:
+	if not learnables.is_valid():
+		return []
+	var out: Array = []
+	for id in learnables.call(entry):
+		if str(id).begins_with("translate:"):
+			continue
+		var value := float(conf.call(id))
+		out.append({
+			"id": str(id), "confidence": value,
+			"mastered": value >= PROGRESS.MASTERY_CONFIDENCE,
+		})
+	out.sort_custom(func(a, b): return float(a["confidence"]) > float(b["confidence"]))
+	return out
+
+
+## Dieselben Zeilen, fertig für StatRow: { label, value, mark, hint }.
+##
+## In der Markierung steht der Haken für das Wort und je ein Sternchen für jede weitere
+## Aufgabe dazu — ausgefüllt, wenn sie sitzt. Was die Zeichen im Einzelnen heißen, steht
+## im Mouseover (`hint`): die Zeile bleibt schmal genug für eine lange Liste, und wer es
+## genau wissen will, hält drauf. `describe` benennt eine Aufgabe (TaskResolver
+## .describe_learnable); ohne sie steht die rohe learnable_id da.
+static func word_lines(lexemes: Array, conf: Callable, learnables := Callable(),
+		describe := Callable()) -> Array:
 	var lines: Array = []
-	for row in word_rows(lexemes, conf):
+	for row in word_rows(lexemes, conf, learnables):
 		var value := float(row["confidence"])
+		var mastered: bool = value >= PROGRESS.MASTERY_CONFIDENCE
+		var extras: Array = row["extras"]
+		var mark := "✓" if mastered else ""
+		for extra in extras:
+			mark += "★" if bool(extra["mastered"]) else "☆"
 		lines.append({
 			"label": str(row["label"]),
 			# Ein nie geübtes Wort steht nicht mit „0 %" da: 0 % ist ein gemessener Stand,
 			# und gemessen wurde hier nichts.
 			"value": "noch nicht geübt" if value < 0.0 else "%d %%" % int(round(value * 100.0)),
-			"mark": "✓" if value >= PROGRESS.MASTERY_CONFIDENCE else "",
+			"mark": mark,
+			"hint": word_hint(row, describe),
 		})
 	return lines
+
+
+## Der Mouseover-Text einer Wortzeile: die beiden Richtungen einzeln und darunter je
+## Sternchen eine Zeile. Er sagt genau das, was die Zeichen verschweigen — welche Aufgabe
+## das Sternchen meint und wie weit sie ist.
+static func word_hint(row: Dictionary, describe := Callable()) -> String:
+	var lines: Array = [str(row["label"])]
+	var parts: Array = []
+	for direction in row.get("directions", []):
+		parts.append("%s %s" % [
+			DIRECTION_LABELS.get(str(direction["direction"]), str(direction["direction"])),
+			percent_label(float(direction["confidence"]))])
+	if not parts.is_empty():
+		lines.append("Übersetzung:  " + "   ·   ".join(parts))
+	for extra in row.get("extras", []):
+		var name_text := str(extra["id"])
+		if describe.is_valid():
+			name_text = str(describe.call(str(extra["id"])))
+		lines.append("%s %s — %s" % ["★" if bool(extra["mastered"]) else "☆", name_text,
+				percent_label(float(extra["confidence"]))])
+	return "\n".join(lines)
+
+
+## Prozent einer Aufgabe, oder „noch nicht geübt" für einen Stand, den es nicht gibt.
+static func percent_label(confidence: float) -> String:
+	if confidence < 0.0:
+		return "noch nicht geübt"
+	return "%d %%" % int(round(confidence * 100.0))
 
 
 ## Ein Wort in beiden Sprachen, „house — Haus". Beide, weil die Liste unter einer Unit
@@ -403,19 +485,25 @@ func _fill_progress(box: VBoxContainer, rows: Array, empty_text: String) -> void
 		var lexemes: Array = row.get("lexemes", [])
 		# Erst beim Aufklappen gerufen: siehe ProgressRow.
 		bar.setup(str(row["label"]), int(row["done"]), int(row["total"]),
-				func(): return word_lines(lexemes, PlayerProgress.confidence.bind(-1.0)))
+				func(): return word_lines(lexemes, PlayerProgress.confidence.bind(-1.0),
+						_generator.learnables_of, _resolver.describe_learnable))
 
 
-## Alle geübten Wörter, schwächste Confidence zuerst (die Sortierung liefert
+## Alle geübten AUFGABEN, schwächste Confidence zuerst (die Sortierung liefert
 ## PlayerProgress). Der Haken markiert die gemeisterten.
-func _refresh_words() -> void:
-	_clear(_word_list)
+##
+## Eine Zeile je learnable_id, nicht je Wort: ein Wort hat beide Übersetzungsrichtungen
+## und dazu seine Formen und Relationen. Deshalb heißt der Reiter „Aufgaben" — als
+## „Wörter" stand dieselbe Vokabel mehrfach mit verschiedenen Ständen darin, und der
+## Haken behauptete etwas anderes als der Haken im Fortschritt (dort: das WORT sitzt).
+func _refresh_tasks() -> void:
+	_clear(_task_list)
 	var rows := PlayerProgress.records_for_display()
 	if rows.is_empty():
-		_add_line(_word_list, "Noch keine Wörter geübt.")
+		_add_line(_task_list, "Noch keine Aufgabe geübt.")
 		return
 	for row in rows:
-		_add_row(_word_list, str(row["label"]), _percent(row),
+		_add_row(_task_list, str(row["label"]), _percent(row),
 				"✓" if bool(row["mastered"]) else "")
 
 

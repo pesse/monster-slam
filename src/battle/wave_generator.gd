@@ -182,25 +182,52 @@ func _candidates(pool: Dictionary, limit: int = 0) -> Array:
 ## Relations-/Formaufgaben expandieren über die tatsächlich vorhandenen Relationen/Formen,
 ## sodass nie eine unauflösbare Instanz entsteht.
 func _expand(definition: Dictionary, lexemes: Array, result: Array, limit: int = 0) -> void:
-	var allowed: Array = definition.get("allowed_types", ["*"])
-	var relation_req := str(definition.get("requires_relation", ""))
-	var form_req := str(definition.get("requires_form", ""))
 	for source in lexemes:
 		if limit > 0 and result.size() >= limit:
 			return
-		if not _type_allowed(source, allowed):
-			continue
-		var source_id := str(source.get("id", ""))
-		if relation_req != "":
-			for rel in ContentRegistry.relations_of(source_id, relation_req):
-				var target_id := str(rel.get("to_lexeme_id", ""))
-				if target_id != "":
-					result.append(_candidate(definition, source, {"target_lexeme_id": target_id}))
-		elif form_req != "":
-			if not ContentRegistry.forms_for(source_id, form_req).is_empty():
-				result.append(_candidate(definition, source, {"form_type": form_req}))
-		else:
-			result.append(_candidate(definition, source, {}))
+		for extra in _instances(definition, source):
+			result.append(_candidate(definition, source, extra))
+
+
+## Die `extra`-Bausteine, mit denen eine Definition auf EIN Lexem passt — eine leere
+## Liste, wenn sie gar nicht passt. Relations-/Formaufgaben fächern über die tatsächlich
+## vorhandenen Relationen/Formen auf, sodass nie eine unauflösbare Instanz entsteht.
+##
+## Die eine Stelle, die sagt, welche Aufgaben es zu einem Wort gibt: der Wave-Pool
+## (_expand) und die Statistik (learnables_of) fragen dieselbe.
+func _instances(definition: Dictionary, source: Dictionary) -> Array:
+	if not _type_allowed(source, definition.get("allowed_types", ["*"])):
+		return []
+	var source_id := str(source.get("id", ""))
+	var relation_req := str(definition.get("requires_relation", ""))
+	if relation_req != "":
+		var out: Array = []
+		for rel in ContentRegistry.relations_of(source_id, relation_req):
+			var target_id := str(rel.get("to_lexeme_id", ""))
+			if target_id != "":
+				out.append({"target_lexeme_id": target_id})
+		return out
+	var form_req := str(definition.get("requires_form", ""))
+	if form_req != "":
+		return [{"form_type": form_req}] if not ContentRegistry.forms_for(source_id, form_req).is_empty() else []
+	return [{}]
+
+
+## Alle learnable_ids, die es zu einem Lexem überhaupt gibt — Definitionen × vorhandene
+## Formen/Relationen, also das, was der Wave-Pool daraus auch spawnen würde.
+##
+## Für die Statistik: dort steht neben einem Wort, wie viele Aufgaben es dazu gibt und
+## wie viele davon sitzen. Aus dem Katalog gerechnet und nicht aus dem Lernstand, sonst
+## wäre eine noch nie gespawnte Aufgabe für die Anzeige nicht vorhanden.
+func learnables_of(lexeme: Dictionary) -> Array:
+	var ids: Array = []
+	for definition in ContentRegistry.task_definitions.values():
+		for extra in _instances(definition, lexeme):
+			ids.append(_resolver.learnable_id(
+					str(definition.get("task_type", "")),
+					str(definition.get("direction", "")),
+					str(lexeme.get("id", "")), extra))
+	return ids
 
 
 ## Normalisiert die Aufgaben-Grundschwierigkeit (task_definition.difficulty,

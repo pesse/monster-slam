@@ -15,6 +15,11 @@ extends VBoxContainer
 
 const ROW_SCENE := preload("res://scenes/ui/stat_row.tscn")
 
+## Breite der Markierungsspalte in der Wortliste: „✓" plus ein Sternchen je weiterer
+## Aufgabe zum Wort. Sechs Zeichen sind das Maximum, das der Katalog hergibt (ein
+## Adjektiv mit Gegenteil, zwei Synonymen und einer Verwechslung).
+const MARK_WIDTH := 78
+
 ## Liefert beim Aufklappen die Zeilen dieser Gruppe als { label, value, mark }.
 var _words := Callable()
 var _title := ""
@@ -75,7 +80,11 @@ func _fill() -> void:
 	for row in rows:
 		var entry := ROW_SCENE.instantiate() as StatRow
 		list.add_child(entry)
-		entry.setup(str(row["label"]), str(row["value"]), str(row.get("mark", "")))
+		# Haken plus bis zu vier Sternchen passen nicht in die Markierungsspalte einer
+		# gewöhnlichen Zeile (siehe MARK_WIDTH).
+		entry.set_mark_width(MARK_WIDTH)
+		entry.setup(str(row["label"]), str(row["value"]), str(row.get("mark", "")),
+				str(row.get("hint", "")))
 
 
 func _update_header() -> void:
