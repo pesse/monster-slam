@@ -9,5 +9,6 @@ func _ready() -> void:
 	print("  Vokabeln:    %d" % ContentRegistry.vocabulary.size())
 	print("  Monster:     %d" % ContentRegistry.monsters.size())
 	print("  Bosse:       %d" % ContentRegistry.bosses.size())
-	print("  Fähigkeiten: %d" % ContentRegistry.skills.size())
+	print("  Zauber:      %d" % ContentRegistry.spells.size())
+	print("  Skills:      %d" % ContentRegistry.skills.size())
 	print("  Wellen:      %d" % ContentRegistry.waves.size())

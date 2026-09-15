@@ -1,0 +1,93 @@
+[
+	{
+		"id": "tree.healing",
+		"kind": "tree",
+		"order": 1,
+		"name": "Genesung",
+		"description": "Jedes besiegte Monster flickt die Festung ein Stück.",
+		"color": "#5fd08a"
+	},
+	{
+		"id": "skill.heal.root",
+		"kind": "skill",
+		"tree": "tree.healing",
+		"name": "Verband",
+		"icon": "🩹",
+		"description": "Ein besiegtes Monster heilt die Festung um 1 HP mehr.",
+		"cost": 1,
+		"tier": 1,
+		"branch": 0,
+		"requires": [],
+		"effects": {
+			"heal_per_correct": 1
+		}
+	},
+	{
+		"id": "skill.heal.care",
+		"kind": "skill",
+		"tree": "tree.healing",
+		"name": "Feldscher",
+		"icon": "⚕",
+		"description": "Nochmal 1 HP mehr je besiegtem Monster.",
+		"cost": 1,
+		"tier": 2,
+		"branch": 0,
+		"requires": [
+			"skill.heal.root"
+		],
+		"effects": {
+			"heal_per_correct": 1
+		}
+	},
+	{
+		"id": "skill.heal.rite",
+		"kind": "skill",
+		"tree": "tree.healing",
+		"name": "Heilritual",
+		"icon": "✨",
+		"description": "Nochmal 1 HP mehr je besiegtem Monster.",
+		"cost": 1,
+		"tier": 2,
+		"branch": 1,
+		"requires": [
+			"skill.heal.root"
+		],
+		"effects": {
+			"heal_per_correct": 1
+		}
+	},
+	{
+		"id": "skill.heal.ward",
+		"kind": "skill",
+		"tree": "tree.healing",
+		"name": "Lazarett",
+		"icon": "🏥",
+		"description": "Und nochmal 1 HP mehr je besiegtem Monster.",
+		"cost": 2,
+		"tier": 3,
+		"branch": 0,
+		"requires": [
+			"skill.heal.care"
+		],
+		"effects": {
+			"heal_per_correct": 1
+		}
+	},
+	{
+		"id": "skill.heal.bless",
+		"kind": "skill",
+		"tree": "tree.healing",
+		"name": "Segen der Ahnen",
+		"icon": "🕊",
+		"description": "Und nochmal 1 HP mehr je besiegtem Monster.",
+		"cost": 2,
+		"tier": 3,
+		"branch": 1,
+		"requires": [
+			"skill.heal.rite"
+		],
+		"effects": {
+			"heal_per_correct": 1
+		}
+	}
+]

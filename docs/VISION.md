@@ -32,7 +32,10 @@ Bossgegner verwenden vollständige Sätze statt einzelner Wörter.
 
 ## Fähigkeiten
 
-Fähigkeiten erleichtern das Lernen, ersetzen es aber nicht. Beispiele:
+Sie sind zweierlei geworden (`docs/adr/0003-skills-und-spells.md`):
+
+**Zauber** werden im Kampf ausgelöst und haben eine Abklingzeit. Sie erleichtern das
+Lernen, ersetzen es aber nicht. Beispiele:
 
 - Ersten Buchstaben anzeigen
 - Zeitform oder Grammatikhinweis anzeigen
@@ -40,11 +43,22 @@ Fähigkeiten erleichtern das Lernen, ersetzen es aber nicht. Beispiele:
 - Monster kurz verlangsamen oder einfrieren
 - Einen Satz nach einer falschen Antwort erneut versuchen
 
+**Skills** werden zwischen den Läufen mit Skillpunkten aus den Levelups gekauft und wirken
+dauerhaft. Sie stehen in Bäumen, die sich verzweigen — man baut einen Ast aus und lässt
+den anderen liegen. Bisher drei:
+
+- **Genesung** — besiegte Monster heilen die Festung stärker
+- **Bollwerk** — die Festung bekommt zu Wellenbeginn Rüstung, die vor dem Leben aufgeht
+- **Zeitwandler** — die Tipp-Zeitlupe hält länger (Ast *Dauer*) oder wird tiefer (Ast *Tiefe*)
+
+Ein Skill soll später auch einen Zauber freischalten können — das ist der Grund, aus dem
+beides nebeneinander existiert und nicht eines das andere ersetzt.
+
 ## Technische Ziele
 
 - Offline-first
 - Godot 4.7 als Engine (Vision nannte ursprünglich 4.6; auf die aktuelle Version angehoben)
 - Datengetriebene Inhalte (JSON/SQLite)
 - Modulare Architektur
-- KI-Agent (Claude Code) soll eigenständig neue Monster, Fähigkeiten, Vokabelpakete
+- KI-Agent (Claude Code) soll eigenständig neue Monster, Zauber, Skill-Äste, Vokabelpakete
   und Spielmechaniken erweitern können, ohne bestehende Systeme anzupassen.

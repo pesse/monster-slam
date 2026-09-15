@@ -45,10 +45,11 @@ func test_reset_restores_base_values() -> void:
 	assert_int(GameState.fortress_health).is_equal(GameState.FORTRESS_BASE_MAX_HEALTH)
 
 
-## Talent-Vorbereitung, Teil 1: ein angehobenes Maximum verschiebt den Deckel der
-## Heilung mit. Würde irgendwo noch die Konstante gelesen, bliebe hier bei 100 Schluss.
+## Ein angehobenes Maximum verschiebt den Deckel der Heilung mit. Würde irgendwo noch die
+## Konstante gelesen, bliebe hier bei 100 Schluss.
 func test_raised_max_health_lifts_heal_cap() -> void:
-	GameState.fortress_max_health = 120
+	GameState.apply_skills({"max_health": 20})
+	assert_int(GameState.fortress_max_health).is_equal(120)
 	GameState.fortress_health = 119
 	_defeat(true)
 	assert_int(GameState.fortress_health).is_equal(120)
@@ -56,14 +57,34 @@ func test_raised_max_health_lifts_heal_cap() -> void:
 	assert_int(GameState.fortress_health).is_equal(120)
 
 
-## Talent-Vorbereitung, Teil 2: ein angehobener Heilwert heilt mehr pro Antwort — ohne
-## dass das Maximum sich ändert. Beide Werte sind unabhängig verstellbar.
+## Ein angehobener Heilwert heilt mehr pro Antwort — ohne dass das Maximum sich ändert.
+## Beide Werte sind unabhängig verstellbar, deshalb ist die Heilung kein Anteil des
+## Maximums (siehe game_state.gd:8-12).
 func test_raised_heal_value_is_independent_of_max() -> void:
-	GameState.fortress_heal_per_correct = 10
+	GameState.apply_skills({"heal_per_correct": 9})
+	assert_int(GameState.fortress_heal_per_correct).is_equal(10)
 	_damage(50)
 	_defeat(true)
 	assert_int(GameState.fortress_health).is_equal(60)
 	assert_int(GameState.fortress_max_health).is_equal(GameState.FORTRESS_BASE_MAX_HEALTH)
+
+
+## Ohne gelernte Skills ändert `apply_skills` nichts — ein leeres Dictionary ist der
+## Normalfall (neues Profil), nicht ein Sonderfall.
+func test_apply_skills_without_bonuses_keeps_the_base_values() -> void:
+	GameState.apply_skills({})
+	assert_int(GameState.fortress_max_health).is_equal(GameState.FORTRESS_BASE_MAX_HEALTH)
+	assert_int(GameState.fortress_heal_per_correct).is_equal(
+			GameState.FORTRESS_BASE_HEAL_PER_CORRECT)
+	assert_int(GameState.fortress_health).is_equal(GameState.FORTRESS_BASE_MAX_HEALTH)
+
+
+## Eine verbogene Datei darf die Heilung nicht abschalten und das Maximum nicht auf 0
+## ziehen: unter 1 geht keiner der beiden Werte.
+func test_negative_bonuses_cannot_break_the_fortress() -> void:
+	GameState.apply_skills({"max_health": -999, "heal_per_correct": -999})
+	assert_int(GameState.fortress_max_health).is_equal(1)
+	assert_int(GameState.fortress_heal_per_correct).is_equal(1)
 
 
 func test_wave_start_keeps_damage() -> void:

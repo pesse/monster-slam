@@ -12,9 +12,11 @@ extends Node
 ## GENAU EINE Zahl, und alles andere ist daraus gerechnet (Experience): Level,
 ## Levelfortschritt und Skillpunkte. Ein zweiter gespeicherter Zähler daneben könnte von
 ## der Erfahrung abweichen — und dann wäre nicht mehr zu sagen, welcher stimmt.
-## Ausgegebene Skillpunkte gibt es noch nicht: es gibt noch keine Fähigkeiten. Wenn sie
-## kommen, bringen sie ihren eigenen Zähler mit (verdient minus ausgegeben) — bis dahin
-## sind alle verdienten Punkte offen, und das ist keine Annahme, sondern der Zustand.
+##
+## `skill_points()` ist der VERDIENTE Stand. Was davon ausgegeben ist, weiß dieses
+## Autoload nicht und soll es nicht wissen: es steht in SkillBook, und zwar auch dort
+## nicht als Zähler, sondern gerechnet aus den gelernten Knoten (SkillTree.spent) —
+## dieselbe Regel, eine Ebene höher. Die offenen Punkte sind `SkillBook.available()`.
 ##
 ## Persistenz: JSON unter user://progress/<player_id>_level.json — dieselbe Ablage wie
 ## Fortschritt, Sitzungen und Geldbörse. Gesichert wird SOFORT bei jeder Änderung, also
@@ -66,8 +68,8 @@ func gain(amount: int) -> void:
 		leveled_up.emit(level, skill_points())
 
 
-## Verdiente und noch offene Skillpunkte. Solange es keine Fähigkeiten gibt, ist das
-## dasselbe (siehe Kopf). Eine Funktion und kein Feld, damit nichts von der Erfahrung
+## Die insgesamt VERDIENTEN Skillpunkte — nicht die offenen (siehe Kopf; die rechnet
+## SkillBook.available aus). Eine Funktion und kein Feld, damit nichts von der Erfahrung
 ## abweichen kann.
 func skill_points() -> int:
 	return Experience.skill_points_for(level)

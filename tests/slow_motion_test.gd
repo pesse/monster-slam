@@ -26,12 +26,12 @@ func _pump(ms: int) -> void:
 func test_typing_slows_time_down() -> void:
 	EventBus.typing_activity.emit()
 	await _pump(250)
-	assert_float(Engine.time_scale).is_equal_approx(SlowMotion.FACTOR, 0.01)
+	assert_float(Engine.time_scale).is_equal_approx(SlowMotion.BASE_FACTOR, 0.01)
 
 
 func test_slow_motion_ends_after_hold() -> void:
 	EventBus.typing_activity.emit()
-	await _pump(SlowMotion.HOLD_MS + 400)
+	await _pump(SlowMotion.BASE_HOLD_MS + 400)
 	assert_float(Engine.time_scale).is_equal(1.0)
 
 
@@ -41,7 +41,7 @@ func test_further_typing_renews_hold() -> void:
 	EventBus.typing_activity.emit()
 	# 700 + 700 ms liegen über der Haltedauer — durch das zweite Zeichen läuft sie weiter.
 	await _pump(700)
-	assert_float(Engine.time_scale).is_equal_approx(SlowMotion.FACTOR, 0.01)
+	assert_float(Engine.time_scale).is_equal_approx(SlowMotion.BASE_FACTOR, 0.01)
 
 
 func test_submit_ends_slow_motion_immediately() -> void:
@@ -72,3 +72,31 @@ func test_intensity_is_reported_for_the_vignette() -> void:
 		assert_float(v).is_between(0.0, 1.0)
 	EventBus.typing_stopped.emit()
 	assert_float(seen[-1]).is_equal(0.0)
+
+
+## Der Zeitwandler-Baum verzweigt sich in Dauer und Tiefe — beide Äste landen hier.
+## Geprüft wird mit einem einfachen Dictionary, also ohne SkillBook und ohne Inhalte:
+## genau dafür nimmt apply_skills keine Autoload-Referenz.
+func test_skills_deepen_the_factor_and_lengthen_the_hold() -> void:
+	_sm.apply_skills({"slow_factor": -0.05, "slow_hold_ms": 700})
+	assert_float(_sm.factor).is_equal_approx(SlowMotion.BASE_FACTOR - 0.05, 0.001)
+	assert_int(_sm.hold_ms).is_equal(SlowMotion.BASE_HOLD_MS + 700)
+	EventBus.typing_activity.emit()
+	await _pump(250)
+	assert_float(Engine.time_scale).is_equal_approx(_sm.factor, 0.01)
+
+
+## Ein Baum darf beliebig tief gehen, nur nicht bis zum Stillstand: time_scale 0 wäre ein
+## eingefrorenes Spiel, in dem die Haltedauer trotzdem weiterliefe — der Lauf käme nie
+## zum Ende.
+func test_the_factor_never_reaches_a_standstill() -> void:
+	_sm.apply_skills({"slow_factor": -99.0})
+	assert_float(_sm.factor).is_equal_approx(SkillTree.MIN_SLOW_FACTOR, 0.001)
+
+
+## Ohne gelernte Skills bleibt alles beim Grundwert — ein leeres Dictionary ist der
+## Normalfall, nicht ein Sonderfall.
+func test_without_skills_the_base_values_stand() -> void:
+	_sm.apply_skills({})
+	assert_float(_sm.factor).is_equal_approx(SlowMotion.BASE_FACTOR, 0.001)
+	assert_int(_sm.hold_ms).is_equal(SlowMotion.BASE_HOLD_MS)

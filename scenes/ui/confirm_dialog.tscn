@@ -1,0 +1,57 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/ui/confirm_dialog.gd" id="1_confirm"]
+
+[node name="ConfirmDialog" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_confirm")
+
+[node name="Dim" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.65)
+
+[node name="Center" type="CenterContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="Center"]
+custom_minimum_size = Vector2(460, 0)
+
+[node name="Root" type="VBoxContainer" parent="Center/Panel"]
+theme_type_variation = &"ScreenStack"
+
+[node name="Title" type="Label" parent="Center/Panel/Root"]
+theme_type_variation = &"SectionTitle"
+unique_name_in_owner = true
+custom_minimum_size = Vector2(428, 0)
+text = "Wirklich?"
+autowrap_mode = 3
+
+[node name="Body" type="Label" parent="Center/Panel/Root"]
+theme_type_variation = &"Hint"
+unique_name_in_owner = true
+custom_minimum_size = Vector2(428, 0)
+text = "."
+autowrap_mode = 3
+
+[node name="Buttons" type="HBoxContainer" parent="Center/Panel/Root"]
+alignment = 2
+
+[node name="CancelButton" type="Button" parent="Center/Panel/Root/Buttons"]
+unique_name_in_owner = true
+text = "Abbrechen"
+
+[node name="ActionButton" type="Button" parent="Center/Panel/Root/Buttons"]
+unique_name_in_owner = true
+text = "Ja"

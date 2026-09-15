@@ -9,13 +9,17 @@ und Mechaniken sollen sich ergänzen lassen, ohne bestehende Systeme zu ändern.
 Datengetriebener Katalog. Scannt beim Start rekursiv `<root>/<kategorie>/`
 und lädt jede `.json`-Datei. Kategorien: `lexemes`, `lexeme_forms`,
 `lexeme_relations`, `sentences`, `sentence_lexemes`, `task_definitions`,
-`monster_task_rules`, `monsters`, `bosses`, `skills`, `waves`.
+`monster_task_rules`, `monsters`, `bosses`, `spells`, `skills`, `waves`.
+
+`spells` und `skills` sind **zwei Dinge**: Spells sind die aktiven Fähigkeiten mit
+Abklingzeit, Skills die Knoten der Fähigkeitsbäume. Warum sie so heißen und was das für
+`min_app_version` bedeutet, steht in `docs/adr/0003-skills-und-spells.md`.
 
 **Drei Roots, in Vorrangfolge** (`_roots()`): bei gleicher `id` gewinnt der spätere.
 
 | # | Root | Inhalt | im Export? |
 |---|---|---|---|
-| 1 | `res://data/` | Spielkonfiguration (Monster, Wellen, Skills, Aufgaben-Regeln) | ja |
+| 1 | `res://data/` | Spielkonfiguration (Monster, Wellen, Zauber, Fähigkeitsbäume, Aufgaben-Regeln) | ja |
 | 2 | `res://data/language/` | Sprachdaten — privates Submodule, nur in der Entwicklung | **nein** |
 | 3 | `user://content/<pack-id>/` | installierte Content-Packs | — |
 
@@ -195,7 +199,7 @@ der umgekehrten Absicht: Gold ist Beute, Erfahrung ist Lernfortschritt.
 |---|---|---|
 | `Experience` | `src/progression/experience.gd` | reine Rechnung: XP je Monster, Stufenkosten, Skillpunkte |
 | `PlayerLevel` (Autoload) | `src/progression/player_level.gd` | Gesamt-Erfahrung des Profils, Aufstieg, Persistenz |
-| Anzeige | `hud.tscn` (Level + Balken beim Namen), `wave_stats.gd` (Zuwachs der Welle), `profile_menu.gd` / `stats_screen.gd` (Stand + Skillpunkte) | — |
+| Anzeige | `hud.tscn` (Level + Balken beim Namen), `wave_stats.gd` (Zuwachs der Welle), `profile_menu.gd` / `stats_screen.gd` (Stand + offene Skillpunkte) | — |
 
 - **10..15 XP je besiegtem Monster, aus seiner Schwierigkeit** — und zwar aus DERSELBEN,
   aus der auch Tempo und Punkte entstehen (`WaveGenerator`, das Netto-Maß `t - c` aus
@@ -211,8 +215,8 @@ der umgekehrten Absicht: Gold ist Beute, Erfahrung ist Lernfortschritt.
   Ohne diese Trennung wäre die schnellste Welle auch der schnellste Weg zum Levelup.
 - **Aufstieg bei Level × 100 XP** (Level 2 ab 100, Level 3 ab 300, Level 4 ab 600): die
   Stufenkosten sind linear, die Summe damit quadratisch. **Jeder Aufstieg gibt einen
-  Skillpunkt** (`SKILL_POINTS_PER_LEVEL`); Fähigkeiten, die sie ausgeben, gibt es noch
-  nicht — die Punkte sammeln sich sichtbar an.
+  Skillpunkt** (`SKILL_POINTS_PER_LEVEL`), ausgegeben wird er im Fähigkeitsbaum (siehe
+  unten).
 - **Gespeichert wird EINE Zahl: die Gesamt-Erfahrung.** Level, Levelfortschritt und
   Skillpunkte sind daraus gerechnet (`Experience`). Ein zweiter gespeicherter Zähler
   daneben könnte abweichen, und dann wäre nicht zu sagen, welcher stimmt — ein von Hand
@@ -221,6 +225,65 @@ der umgekehrten Absicht: Gold ist Beute, Erfahrung ist Lernfortschritt.
   genau wie beim Gold — und SOFORT: Erfahrung fällt mitten in der Welle an, und ein
   Absturz auf dem Weg zum Wellenende darf sie nicht kosten. Der Abschluss-Screen bekommt
   nur den Zuwachs der Welle und liest den Stand bei `PlayerLevel`.
+
+## Fähigkeitsbäume: wofür die Punkte da sind
+
+Die Skillpunkte aus den Levelups werden in Bäumen ausgegeben. Der Screen hängt am
+Start-Screen (`🌳 Fähigkeiten`), nicht am Kampf: gelernt wird zwischen den Läufen.
+
+| Baustein | Wo | Aufgabe |
+|---|---|---|
+| Daten | `data/skills/{healing,bulwark,timeweaver}.json` | Baum-Köpfe (`kind: "tree"`) und Knoten (`kind: "skill"`) |
+| `SkillTree` | `src/progression/skill_tree.gd` | reine Regeln: Stufen, Äste, Voraussetzungen, Kosten, Summe der Boni |
+| `SkillBook` (Autoload) | `src/progression/skill_book.gd` | das Gelernte des Profils, Kauf, Umlernen, Persistenz |
+| Wirkung | `GameState.apply_skills`, `SlowMotion.apply_skills` | Boni auf die Grundwerte des Laufs |
+| Anzeige | `skill_tree.tscn` + `skill_graph.gd` (gezeichnetes Netz), `skill_tooltip.tscn` (Auskunft am Zeiger), `confirm_dialog.tscn` (Rückfrage), `hud.tscn` (Rüstungsleiste) | — |
+
+- **Ein Knoten hat `tier` (Abstand) und `branch` (Stelle im Fächer)** — zwei Felder statt
+  einer aus `requires` gerechneten Position, und statt fertiger Koordinaten in den Daten.
+  `SkillTree.layout()` macht daraus das Netz: jeder Baum bekommt seinen eigenen
+  Anfangspunkt in seinem Sektor, `tier` wird zum Radius, `branch` zum Winkel; der NAME
+  des Baums steht außen, jenseits seines äußersten Knotens, wo nichts liegt. Ein dritter
+  Ast ist damit ein Eintrag in der JSON, ein vierter Baum eine Datei — die drei
+  vorhandenen rücken von selbst zusammen (`tests/skill_graph_layout_test.gd` prüft das bis
+  sechs Bäume).
+- **Gezeichnet statt gebaut** (`SkillGraph`, `_draw()`): drei Bäume mal vier Zuständen
+  wären zwölf Theme-Variationen, und die Farbe eines Baums soll aus seiner JSON kommen
+  (`color`) und nicht aus dem Theme. Der Screen zoomt mit dem Mausrad und lässt sich
+  ziehen; ein Kauf verschiebt den Ausschnitt nicht. Einpassen und Umlernen sitzen als
+  Zeichen (⛶, ↺) in der unteren rechten Ecke der Fläche und erklären sich per
+  `tooltip_text`.
+- **Die Auskunft steht am Zeiger, die Entscheidung in einem Dialog.** Der Screen ist nur
+  das Netz; eine Tafel am Bildrand gibt es nicht. `SkillGraph` meldet jede Mausbewegung
+  (`hover_changed`), und der Screen stellt eine `SkillTooltip`-Karte neben den Zeiger —
+  sofort, ohne Godots Tooltip-Verzögerung, und am Bildrand auf die andere Seite geklappt.
+  Über einem Knoten trägt sie Zeichen, Name, Wirkung und Zustandszeile
+  (`SkillTree.state_label`), über dem NAMEN eines Baums dessen Stand
+  (`SkillTree.tree_status`: „2/5 gelernt · +2 HP je besiegtem Monster"). Ein Klick auf
+  einen lernbaren Knoten öffnet `ConfirmDialog`, und erst dessen Bestätigung bucht — ein
+  ausgegebener Punkt kommt nur gegen Gold zurück, das soll ein einzelner Klick nicht
+  entscheiden. Knoten, an denen es nichts zu entscheiden gibt, öffnen keinen Dialog.
+- **`effects` ist ein Dictionary und alle Werte sind ADDITIV** auf den Grundwert. Damit
+  gibt es keine Frage „welcher Knoten gewinnt", nur eine Summe — und ein Knoten darf
+  später mehreres anheben, ohne dass die Aggregation zur Fallunterscheidung wird. Die
+  bekannten Schlüssel stehen in `SkillTree.EFFECT_KEYS`; ein unbekannter wirkt nicht
+  (`tests/skill_data_test.gd` fängt den Tippfehler ab, bevor er im Spiel auffällt).
+- **Gespeichert wird NUR die Liste der gelernten Knoten.** Ausgegebene Punkte, offene
+  Punkte und die Boni sind daraus gerechnet (`SkillTree.spent`/`bonuses`) — dieselbe
+  Regel, nach der `PlayerLevel` nur `total_xp` sichert. Eine Id, die die Registry nicht
+  (mehr) kennt, zählt weder als Ausgabe noch als Bonus.
+- **`apply_skills` gehört unmittelbar hinter `GameState.reset()`** (`wave_runner.gd`):
+  der Reset stellt die Grundwerte her, erst danach dürfen die Boni darauf, und der Aufruf
+  zieht den HP-Stand auf das neue Maximum nach. Beide Empfänger bekommen DASSELBE
+  Dictionary — eine Quelle der Boni, nicht zwei, die auseinanderlaufen können.
+- **Rüstung ist per Welle, Leben per Lauf.** `fortress_armor` wird zu jedem Wellenstart
+  auf `fortress_armor_max` gefüllt und liegt vor dem Leben; das ist die eine Ausnahme von
+  „der Wellenstart fasst die Festung nicht an" und der Grund, aus dem das Bollwerk etwas
+  anderes tut als ein höheres Maximum. Ein aufgefangener Treffer zählt trotzdem als
+  durchgelassen — eine aufgefangene Welle ist keine saubere.
+- **Umlernen kostet Gold und ist alles oder nichts** (`SkillTree.RESPEC_GOLD_PER_POINT`).
+  Einzelne Knoten zurückzunehmen müsste entscheiden, was mit den Ästen darüber geschieht,
+  und die Antwort wäre in jedem Fall eine Überraschung.
 
 ## Erweiterungspunkte für den KI-Agenten
 
@@ -231,12 +294,15 @@ der umgekehrten Absicht: Gold ist Beute, Erfahrung ist Lernfortschritt.
 | Neues Monster | JSON in `data/monsters/` | nein |
 | Neuer Boss | JSON in `data/bosses/` | nein |
 | Neue Welle | JSON in `data/waves/` | nein |
-| Neue Fähigkeit (Daten) | JSON in `data/skills/` | nein |
-| Neuer Fähigkeits-*Effekt* (Verhalten) | Effect-Handler ergänzen (siehe unten) | nur additiv |
+| Neuer Zauber (Daten) | JSON in `data/spells/` | nein |
+| Neuer Zauber-*Effekt* (Verhalten) | Effect-Handler ergänzen (siehe unten) | nur additiv |
+| Neuer Skill-Knoten oder ganzer Ast | JSON in `data/skills/` (`tier`/`branch`/`requires`/`effects`) | nein |
+| Neuer Baum | JSON in `data/skills/` (ein `kind: "tree"`-Kopf plus Knoten) | nein |
+| Neuer Skill-*Effekt-Schlüssel* | `SkillTree.EFFECT_KEYS` + ein `apply_skills`, das ihn liest | nur additiv |
 | Neue Mechanik | Neues System, das EventBus-Signale abonniert | nein |
 
-### Fähigkeits-Effekte
-Eine Fähigkeit trägt in den Daten ein `effect`-Feld (z. B. `slow_monsters`).
+### Zauber-Effekte
+Ein Zauber trägt in den Daten ein `effect`-Feld (z. B. `slow_monsters`).
 Die reine Definition ist datengetrieben; Verhalten, das Code braucht, wird über
 ein Effekt-Handler-Muster ergänzt: jeder Effekt registriert sich selbst unter
 seinem `effect`-Schlüssel. Ein neuer Effekt = neuer Handler, keine Änderung an
@@ -369,6 +435,7 @@ Das Projekt ist bewusst in **GDScript** geschrieben. Ein Wechsel auf C# ist
 
 ## Konventionen
 
-- IDs: `kategorie.name`, z. B. `monster.slime`, `vocab.en.house`, `skill.freeze`.
+- IDs: `kategorie.name`, z. B. `monster.slime`, `vocab.en.house`, `spell.freeze`,
+  `skill.heal.root`, `tree.healing`.
 - GDScript mit statischen Typen und `##`-Doc-Kommentaren.
 - UI-Texte und Feedback auf Deutsch (Zielgruppe DE→EN-Lernende).

@@ -12,7 +12,7 @@
 #   * in Spieldaten-JSON ändern sich zehn Zeilen ohne inhaltlichen Grund,
 #   * und betroffen ist auch data/language/README.md — also das private Submodule.
 #
-# Offen sind hier u.a. README.md, docs/*.md, data/skills/*.json, data/waves/*.json und
+# Offen sind hier u.a. README.md, docs/*.md, data/spells/*.json, data/waves/*.json und
 # data/bosses/*.json. Das ist keine hypothetische Liste: genau diese Dateien tauchten
 # nach Godot-Läufen mehrfach unbestellt in `git status` auf.
 #

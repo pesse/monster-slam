@@ -1,0 +1,105 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://src/ui/skill_tree.gd" id="1_skills"]
+[ext_resource type="Script" path="res://src/ui/skill_graph.gd" id="2_graph"]
+[ext_resource type="PackedScene" path="res://scenes/ui/confirm_dialog.tscn" id="3_confirm"]
+[ext_resource type="PackedScene" path="res://scenes/ui/skill_tooltip.tscn" id="4_hover"]
+
+[node name="SkillTreeScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_skills")
+
+[node name="Margin" type="MarginContainer" parent="."]
+theme_type_variation = &"ScreenMargin"
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Root" type="VBoxContainer" parent="Margin"]
+theme_type_variation = &"ScreenStack"
+
+[node name="Header" type="HBoxContainer" parent="Margin/Root"]
+
+[node name="BackButton" type="Button" parent="Margin/Root/Header"]
+unique_name_in_owner = true
+text = "← Zurück"
+
+[node name="Title" type="Label" parent="Margin/Root/Header"]
+theme_type_variation = &"Title"
+size_flags_horizontal = 3
+text = "Fähigkeiten"
+horizontal_alignment = 1
+
+[node name="PointsLabel" type="Label" parent="Margin/Root/Header"]
+theme_type_variation = &"Accent"
+unique_name_in_owner = true
+text = "Keine offenen Skillpunkte"
+vertical_alignment = 1
+
+[node name="GraphPanel" type="PanelContainer" parent="Margin/Root"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="GraphArea" type="Control" parent="Margin/Root/GraphPanel"]
+custom_minimum_size = Vector2(360, 260)
+
+[node name="Graph" type="Control" parent="Margin/Root/GraphPanel/GraphArea"]
+unique_name_in_owner = true
+clip_contents = true
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_graph")
+
+[node name="EmptyHint" type="Label" parent="Margin/Root/GraphPanel/GraphArea"]
+theme_type_variation = &"Hint"
+unique_name_in_owner = true
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "Noch keine Fähigkeitsbäume vorhanden — im Start-Screen unter „📚 Inhalte“ einen Pack installieren."
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Tools" type="HBoxContainer" parent="Margin/Root/GraphPanel/GraphArea"]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -104.0
+offset_top = -48.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="FitButton" type="Button" parent="Margin/Root/GraphPanel/GraphArea/Tools"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 44)
+tooltip_text = "Ansicht einpassen — Mausrad zoomt, Ziehen verschiebt"
+text = "⛶"
+
+[node name="RespecButton" type="Button" parent="Margin/Root/GraphPanel/GraphArea/Tools"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 44)
+disabled = true
+tooltip_text = "Umlernen"
+text = "↺"
+
+[node name="Hover" parent="." instance=ExtResource("4_hover")]
+unique_name_in_owner = true
+visible = false
+mouse_filter = 2
+
+[node name="Confirm" parent="." instance=ExtResource("3_confirm")]
+unique_name_in_owner = true
+visible = false

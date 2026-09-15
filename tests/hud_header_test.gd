@@ -15,6 +15,11 @@ const HUD_SCENE := preload("res://scenes/ui/hud.tscn")
 
 ## Ein später Spielstand: Level 27, fünfstelliges Gold, dreistellige Kills. Die Zahlen
 ## sind das, was in der Kopfleiste wächst — der Rest steht fest.
+##
+## Die Rüstung des Bollwerk-Baums steht hier NICHT als Text: sie hat keinen, und dieser
+## Test ist der Grund. Ein „🛡90" am HP-Text kostete die Reihe 1153 Pixel, ein dreistelliger
+## Wert 1159 — die Rüstungsleiste liegt deshalb ÜBER dem Lebensbalken und trägt die
+## Auskunft allein (siehe tests/hud_armor_test.gd).
 const LATE_GAME := {
 	"⭐ 27": "%LevelText", "2340/2700": "%XpText", "100/100": "%HpText",
 	"48/48": "%WaveText", "💀 999": "%Kills", "💰 123456": "%Score",
