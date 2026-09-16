@@ -1,0 +1,252 @@
+{
+  "_zweck": "Antwortbogen für die Messung der Satzbewertung — siehe src/dev/measure_sentences.gd und docs/SATZBEWERTUNG_MODELLE.md. Die Sätze sind ERFUNDEN: nichts hier stammt aus einem Lehrbuch, und der Bogen läuft ohne das private Submodule. Jede must_contain-Forderung nennt ihre `forms` selbst, damit SentenceCard.forms_of() nie die ContentRegistry fragt.",
+  "_erwartung": "`expect` ist das Urteil einer Lehrkraft, nicht das erwartete Verhalten des Codes. Der Bogen ist der Maßstab; was die Stufen daraus machen, ist das Messergebnis.",
+  "_arten": "muster = die Musterlösung · variante = eine hinterlegte Alternative · frei = richtig, aber NICHT hinterlegt (der Fall, um dessentwillen es Stufe 1 gibt) · falle = ein vorweggenommener Fehler · fehler = falsch, aber nicht vorweggenommen · leer = nichts getippt",
+  "pass_quality": 0.6,
+  "sentences": [
+    {
+      "id": "sen.probe.reef",
+      "source_text": "Gestern haben wir das Riff gesehen.",
+      "reference_translation": "Yesterday we saw the reef.",
+      "accepted": ["We saw the reef yesterday."],
+      "must_contain": [{"lexeme_id": "lex.probe.reef", "forms": ["reef", "reefs"]}],
+      "pitfalls": [
+        {"contains": ["have seen", "yesterday"],
+         "feedback": "Mit „yesterday“ steht das Simple Past: „saw“."}
+      ],
+      "grammar_tags": ["past_simple"],
+      "difficulty": 2,
+      "answers": [
+        {"text": "Yesterday we saw the reef.", "expect": "richtig", "kind": "muster"},
+        {"text": "We saw the reef yesterday.", "expect": "richtig", "kind": "variante"},
+        {"text": "Yesterday, we saw the reef.", "expect": "richtig", "kind": "frei",
+         "note": "Nur ein Komma mehr als die Musterlösung — die Normalisierung behält Kommata."},
+        {"text": "The reef was what we saw yesterday.", "expect": "richtig", "kind": "frei"},
+        {"text": "Yesterday we have seen the reef.", "expect": "falsch", "kind": "falle"},
+        {"text": "Yesterday we saw the sea.", "expect": "falsch", "kind": "fehler"},
+        {"text": "Yesterday we seen the reef.", "expect": "falsch", "kind": "fehler",
+         "note": "Falsch, aber Wort für Wort dicht an der Lösung."},
+        {"text": "", "expect": "falsch", "kind": "leer"}
+      ]
+    },
+    {
+      "id": "sen.probe.school",
+      "source_text": "Sie geht immer zu Fuß zur Schule.",
+      "reference_translation": "She always walks to school.",
+      "accepted": ["She always goes to school on foot."],
+      "must_contain": [{"lexeme_id": "lex.probe.school", "forms": ["school", "schools"]}],
+      "pitfalls": [
+        {"contains": ["she walks always"],
+         "feedback": "Häufigkeitsadverbien stehen VOR dem Vollverb: „she always walks“."}
+      ],
+      "grammar_tags": ["adverb_position"],
+      "difficulty": 2,
+      "answers": [
+        {"text": "She always walks to school.", "expect": "richtig", "kind": "muster"},
+        {"text": "She always goes to school on foot.", "expect": "richtig", "kind": "variante"},
+        {"text": "She always goes on foot to school.", "expect": "richtig", "kind": "frei"},
+        {"text": "She walks always to school.", "expect": "falsch", "kind": "falle"},
+        {"text": "Always she walks to school.", "expect": "falsch", "kind": "fehler",
+         "note": "Dieselben Wörter wie die Musterlösung, nur in falscher Ordnung."},
+        {"text": "She always walks to the bus.", "expect": "falsch", "kind": "fehler"}
+      ]
+    },
+    {
+      "id": "sen.probe.boat",
+      "source_text": "Wir haben vor, morgen ein Boot zu mieten.",
+      "reference_translation": "We are going to rent a boat tomorrow.",
+      "accepted": [
+        "Tomorrow we are going to rent a boat.",
+        "We're going to rent a boat tomorrow."
+      ],
+      "must_contain": [{"lexeme_id": "lex.probe.boat", "forms": ["boat", "boats"]}],
+      "pitfalls": [
+        {"contains": ["we will rent"],
+         "feedback": "Ein fester Plan steht mit „be going to“, nicht mit „will“."}
+      ],
+      "grammar_tags": ["going_to_future"],
+      "difficulty": 2,
+      "answers": [
+        {"text": "We are going to rent a boat tomorrow.", "expect": "richtig", "kind": "muster"},
+        {"text": "Tomorrow we are going to rent a boat.", "expect": "richtig", "kind": "variante"},
+        {"text": "We're going to rent a boat tomorrow.", "expect": "richtig", "kind": "variante"},
+        {"text": "We are going to hire a boat tomorrow.", "expect": "richtig", "kind": "frei",
+         "note": "„hire“ ist britisches Englisch für „mieten“."},
+        {"text": "We will rent a boat tomorrow.", "expect": "falsch", "kind": "falle"},
+        {"text": "We are going to rent a car tomorrow.", "expect": "falsch", "kind": "fehler"}
+      ]
+    },
+    {
+      "id": "sen.probe.bristol",
+      "source_text": "Ich wohne seit drei Jahren in Bristol.",
+      "reference_translation": "I have lived in Bristol for three years.",
+      "accepted": [
+        "I've lived in Bristol for three years.",
+        "I have been living in Bristol for three years."
+      ],
+      "must_contain": [{"lexeme_id": "lex.probe.live", "forms": ["live", "lived", "living"]}],
+      "pitfalls": [
+        {"contains": ["since", "three years"],
+         "feedback": "Eine Zeitspanne steht mit „for“: „for three years“. „since“ nennt den Anfangspunkt."}
+      ],
+      "grammar_tags": ["present_perfect"],
+      "difficulty": 3,
+      "answers": [
+        {"text": "I have lived in Bristol for three years.", "expect": "richtig", "kind": "muster"},
+        {"text": "I've lived in Bristol for three years.", "expect": "richtig", "kind": "variante"},
+        {"text": "I have been living in Bristol for three years.", "expect": "richtig", "kind": "variante"},
+        {"text": "I have lived for three years in Bristol.", "expect": "richtig", "kind": "frei"},
+        {"text": "I have lived in Bristol since three years.", "expect": "falsch", "kind": "falle"},
+        {"text": "I have lived in Bristol for three months.", "expect": "falsch", "kind": "fehler",
+         "note": "Ein einziges falsches Wort — und es ist genau das, worum es geht."}
+      ]
+    },
+    {
+      "id": "sen.probe.book",
+      "source_text": "Dieses Buch ist interessanter als das andere.",
+      "reference_translation": "This book is more interesting than the other one.",
+      "accepted": ["This book is more interesting than the other."],
+      "must_contain": [{"lexeme_id": "lex.probe.interesting", "forms": ["interesting"]}],
+      "pitfalls": [
+        {"contains": ["interestinger"],
+         "feedback": "Lange Adjektive steigert man mit „more“: „more interesting“."},
+        {"contains": ["more interesting as"],
+         "feedback": "Der Vergleich steht mit „than“, nicht mit „as“."}
+      ],
+      "grammar_tags": ["comparative"],
+      "difficulty": 2,
+      "answers": [
+        {"text": "This book is more interesting than the other one.", "expect": "richtig", "kind": "muster"},
+        {"text": "This book is more interesting than the other.", "expect": "richtig", "kind": "variante"},
+        {"text": "This book is more interesting than that one.", "expect": "richtig", "kind": "frei"},
+        {"text": "This book is interestinger than the other one.", "expect": "falsch", "kind": "falle"},
+        {"text": "This book is more interesting as the other one.", "expect": "falsch", "kind": "falle"},
+        {"text": "This book is more boring than the other one.", "expect": "falsch", "kind": "fehler"}
+      ]
+    },
+    {
+      "id": "sen.probe.museum",
+      "source_text": "Das Museum wurde 1890 gebaut.",
+      "reference_translation": "The museum was built in 1890.",
+      "accepted": ["In 1890 the museum was built."],
+      "must_contain": [{"lexeme_id": "lex.probe.museum", "forms": ["museum", "museums"]}],
+      "pitfalls": [
+        {"contains": ["they built the museum"],
+         "feedback": "Hier ist das Passiv gefragt: „was built“."}
+      ],
+      "grammar_tags": ["passive"],
+      "difficulty": 3,
+      "answers": [
+        {"text": "The museum was built in 1890.", "expect": "richtig", "kind": "muster"},
+        {"text": "In 1890 the museum was built.", "expect": "richtig", "kind": "variante"},
+        {"text": "The museum was built in the year 1890.", "expect": "richtig", "kind": "frei"},
+        {"text": "They built the museum in 1890.", "expect": "falsch", "kind": "falle",
+         "note": "Inhaltlich richtig, aber die Aufgabe übt das Passiv — eine Stolperstelle, über die man streiten kann."},
+        {"text": "The museum has been built in 1890.", "expect": "falsch", "kind": "fehler"},
+        {"text": "The library was built in 1890.", "expect": "falsch", "kind": "fehler"}
+      ]
+    },
+    {
+      "id": "sen.probe.rain",
+      "source_text": "Wenn es morgen regnet, bleiben wir zu Hause.",
+      "reference_translation": "If it rains tomorrow, we will stay at home.",
+      "accepted": [
+        "If it rains tomorrow we will stay at home.",
+        "We will stay at home if it rains tomorrow.",
+        "If it rains tomorrow, we'll stay at home."
+      ],
+      "must_contain": [{"lexeme_id": "lex.probe.rain", "forms": ["rain", "rains", "raining"]}],
+      "pitfalls": [
+        {"contains": ["if it will rain"],
+         "feedback": "Nach „if“ steht kein „will“: „if it rains“."}
+      ],
+      "grammar_tags": ["conditional_1"],
+      "difficulty": 3,
+      "answers": [
+        {"text": "If it rains tomorrow, we will stay at home.", "expect": "richtig", "kind": "muster"},
+        {"text": "We will stay at home if it rains tomorrow.", "expect": "richtig", "kind": "variante"},
+        {"text": "If it rains tomorrow, we'll stay at home.", "expect": "richtig", "kind": "variante"},
+        {"text": "If it rains tomorrow, we are going to stay at home.", "expect": "richtig", "kind": "frei"},
+        {"text": "If it will rain tomorrow, we will stay at home.", "expect": "falsch", "kind": "falle"},
+        {"text": "If it snows tomorrow, we will stay at home.", "expect": "falsch", "kind": "fehler"}
+      ]
+    },
+    {
+      "id": "sen.probe.bike",
+      "source_text": "Wann hast du das Fahrrad gekauft?",
+      "reference_translation": "When did you buy the bike?",
+      "accepted": ["When did you buy the bicycle?"],
+      "must_contain": [
+        {"lexeme_id": "lex.probe.bike", "forms": ["bike", "bikes", "bicycle", "bicycles"]}
+      ],
+      "pitfalls": [
+        {"contains": ["did you bought"],
+         "feedback": "Nach „did“ steht der Infinitiv: „did you buy“."},
+        {"contains": ["when have you bought"],
+         "feedback": "Die Frage nach dem WANN steht im Simple Past: „When did you buy …?“"}
+      ],
+      "grammar_tags": ["past_simple", "question"],
+      "difficulty": 2,
+      "answers": [
+        {"text": "When did you buy the bike?", "expect": "richtig", "kind": "muster"},
+        {"text": "When did you buy the bicycle?", "expect": "richtig", "kind": "variante"},
+        {"text": "When did you buy your bike?", "expect": "richtig", "kind": "frei"},
+        {"text": "When did you bought the bike?", "expect": "falsch", "kind": "falle"},
+        {"text": "When have you bought the bike?", "expect": "falsch", "kind": "falle"},
+        {"text": "When did you buy the car?", "expect": "falsch", "kind": "fehler"}
+      ]
+    },
+    {
+      "id": "sen.probe.grandparents",
+      "source_text": "Sie freut sich darauf, ihre Großeltern zu besuchen.",
+      "reference_translation": "She is looking forward to visiting her grandparents.",
+      "accepted": [
+        "She's looking forward to visiting her grandparents.",
+        "She is looking forward to seeing her grandparents."
+      ],
+      "must_contain": [
+        {"lexeme_id": "lex.probe.grandparents", "forms": ["grandparents", "grandparent"]}
+      ],
+      "pitfalls": [
+        {"contains": ["looking forward to visit"],
+         "feedback": "Nach „looking forward to“ steht die -ing-Form: „to visiting“."}
+      ],
+      "grammar_tags": ["gerund"],
+      "difficulty": 3,
+      "answers": [
+        {"text": "She is looking forward to visiting her grandparents.", "expect": "richtig", "kind": "muster"},
+        {"text": "She's looking forward to visiting her grandparents.", "expect": "richtig", "kind": "variante"},
+        {"text": "She is looking forward to seeing her grandparents.", "expect": "richtig", "kind": "variante"},
+        {"text": "She is really looking forward to visiting her grandparents.", "expect": "richtig", "kind": "frei"},
+        {"text": "She is looking forward to visiting her grandma and grandpa.", "expect": "richtig", "kind": "frei",
+         "note": "Richtig übersetzt, aber ohne das geforderte Wort — must_contain weist es ab, und das ist so gewollt. Der Fall gehört in die Messung, damit man den Preis dieser Regel sieht."},
+        {"text": "She is looking forward to visit her grandparents.", "expect": "falsch", "kind": "falle"},
+        {"text": "She is looking forward to visiting her parents.", "expect": "falsch", "kind": "fehler"}
+      ]
+    },
+    {
+      "id": "sen.probe.hurry",
+      "source_text": "Du musst dich nicht beeilen.",
+      "reference_translation": "You don't have to hurry.",
+      "accepted": ["You do not have to hurry.", "You don't need to hurry."],
+      "must_contain": [{"lexeme_id": "lex.probe.hurry", "forms": ["hurry", "hurries", "hurrying"]}],
+      "pitfalls": [
+        {"contains": ["mustn't hurry"],
+         "feedback": "„mustn’t“ heißt „du darfst nicht“. Gemeint ist „du brauchst nicht“: „don’t have to“."},
+        {"contains": ["must not hurry"],
+         "feedback": "„must not“ heißt „du darfst nicht“. Gemeint ist „du brauchst nicht“: „don’t have to“."}
+      ],
+      "grammar_tags": ["modals"],
+      "difficulty": 3,
+      "answers": [
+        {"text": "You don't have to hurry.", "expect": "richtig", "kind": "muster"},
+        {"text": "You do not have to hurry.", "expect": "richtig", "kind": "variante"},
+        {"text": "You don't need to hurry.", "expect": "richtig", "kind": "variante"},
+        {"text": "You needn't hurry.", "expect": "richtig", "kind": "frei",
+         "note": "Kurz und richtig — und dem Wortlaut nach so weit weg, dass eine Überschneidung sie nicht rettet."},
+        {"text": "You mustn't hurry.", "expect": "falsch", "kind": "falle"},
+        {"text": "You don't have to wait.", "expect": "falsch", "kind": "fehler"}
+      ]
+    }
+  ]
+}
