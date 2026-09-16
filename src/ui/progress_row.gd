@@ -45,11 +45,12 @@ func setup(name_text: String, done: int, total: int, words := Callable()) -> voi
 	bar.value = done
 	($Row/Count as Label).text = "%d von %d" % [done, total]
 	_update_header()
-	var hint := "%s — %d von %d Wörtern gemeistert" % [name_text, done, total]
-	if _words.is_valid():
-		hint += "\nKlick zeigt die Wörter."
-	tooltip_text = hint
-	($Row/Header as Button).tooltip_text = hint
+	# EIN Hinweis, an der Zeile. Vorher stand er zweimal da — einmal hier und einmal am
+	# Kopf-Knopf —, weil Godots Tooltip-Suche am ersten Kind mit `MOUSE_FILTER_STOP`
+	# abbricht und deshalb nie bei der Zeile ankam. `Hints` sucht ohne diesen Abbruch nach
+	# oben weiter, und damit spricht die Zeile auch für ihren Knopf und ihren Balken.
+	Hints.attach(self, name_text, "%d von %d Wörtern gemeistert" % [done, total],
+			"Klick zeigt die Wörter." if _words.is_valid() else "")
 
 
 func is_expanded() -> bool:

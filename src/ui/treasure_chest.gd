@@ -279,7 +279,8 @@ func present(tier: int, gold: int, coins := -1) -> void:
 	_mouse_held = false
 	_build_model()
 	_apply_wobble()
-	tooltip_text = "%s — zum Öffnen 2 Sekunden gedrückt halten" % ChestReward.TIER_NAMES[_tier]
+	Hints.attach(self, str(ChestReward.TIER_NAMES[_tier]),
+			"zum Öffnen 2 Sekunden gedrückt halten")
 	set_process(true)
 	queue_redraw()
 
@@ -573,7 +574,7 @@ func _fly_coins_2d(count: int) -> void:
 	for i in count:
 		var coin := COIN_SCENE.instantiate() as DayCoin
 		_coin_layer.add_child(coin)
-		coin.setup(DayCoin.State.EARNED, false, "")
+		coin.setup(DayCoin.State.EARNED, false)
 		coin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var coin_size := coin.custom_minimum_size
 		coin.position = center - coin_size * 0.5

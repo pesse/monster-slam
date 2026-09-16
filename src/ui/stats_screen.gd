@@ -436,11 +436,14 @@ static func word_lines(lexemes: Array, conf: Callable, learnables := Callable(),
 	return lines
 
 
-## Der Mouseover-Text einer Wortzeile: die beiden Richtungen einzeln und darunter je
-## Sternchen eine Zeile. Er sagt genau das, was die Zeichen verschweigen — welche Aufgabe
-## das Sternchen meint und wie weit sie ist.
+## Der Text der Karte am Zeiger für eine Wortzeile: die beiden Richtungen einzeln und
+## darunter je Sternchen eine Zeile. Er sagt genau das, was die Zeichen verschweigen —
+## welche Aufgabe das Sternchen meint und wie weit sie ist.
+##
+## Das WORT steht nicht darin: es ist die Überschrift der Karte (`StatRow.setup`), und
+## zweimal dasselbe zu lesen ist keine Auskunft.
 static func word_hint(row: Dictionary, describe := Callable()) -> String:
-	var lines: Array = [str(row["label"])]
+	var lines: Array = []
 	var parts: Array = []
 	for direction in row.get("directions", []):
 		parts.append("%s %s" % [

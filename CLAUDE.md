@@ -333,19 +333,15 @@ Beim Arbeiten daran zu beachten:
   niemand gezoomt oder geschoben hat: wer hineingezoomt hat, um einen Ast zu lesen, soll
   nach dem Kauf denselben Ast sehen. Zurück kommt man über „Ansicht einpassen".
 - **Der Screen ist NUR das Netz — keine Tafel am Rand.** Was ein Knoten tut, steht am
-  ZEIGER: `SkillTooltip` folgt der Maus, ohne Wartezeit, und trägt Zeichen, Name, Wirkung
-  und Zustandszeile. Der Grund ist nicht Platz, sondern Blickrichtung: wer einen Knoten
-  prüft, sieht ihn an, nicht an den anderen Bildrand.
-- **Die Karte ist KEIN Godot-Tooltip.** Godots eigener erscheint verzögert und bleibt
-  stehen, wo er aufgegangen ist; über einem Netz heißt das eine halbe Sekunde je Knoten.
-  Stattdessen meldet `SkillGraph.hover_changed(id, at)` jede Mausbewegung, und der Screen
-  stellt die Karte neben den Zeiger (`_place_hover`, klappt am Bildrand auf die andere
-  Seite). Sie hängt beim SCREEN und nicht beim Graphen: der beschneidet seine Zeichnung
-  (`clip_contents`), eine Karte am Rand wäre halb weg. Die BREITE wird einmal in `_ready()`
-  gesetzt und danach nie wieder — ein umbrechendes Label meldet sonst die Höhe für einen
-  Pixel Breite (dieselbe Falle wie `RevealCard.set_width()`). Godots Tooltips gibt es
-  daneben weiter für die Zeichen am Rand; `gui/timers/tooltip_delay_sec` steht deshalb
-  auf 0.
+  ZEIGER, in derselben Karte, die im ganzen Spiel erklärt (siehe „Auskunft am Zeiger").
+  Der Grund ist nicht Platz, sondern Blickrichtung: wer einen Knoten prüft, sieht ihn an,
+  nicht an den anderen Bildrand.
+- **Die Fläche antwortet, statt zu melden.** Der Graph sucht seine Treffer selbst, also
+  hängt er bei `Hints` als *lebende* Auskunft (`attach_live(_graph, _hint_at)`):
+  `SkillTree._hint_at(local)` liefert für einen Punkt Zeichen+Name, Wirkung und
+  Zustandszeile — oder nichts, beim Ziehen und über einer offenen Rückfrage. Die Regeln
+  bleiben in `SkillTree` (`state_label`, `tree_status`), die Karte kennt nur
+  Zeichenketten.
 - **Der Stand eines Baums hängt an seinem NAMEN.** Über dem Namen zeigt dieselbe Karte
   „2/5 gelernt · +2 HP je besiegtem Monster" (`SkillTree.tree_status`) — das ist das, was
   früher rechts als „Dein Ausbau" stand. Der Name ist damit anklickbar-ähnlich, aber
@@ -360,14 +356,16 @@ Beim Arbeiten daran zu beachten:
   zurück — das ist keine Entscheidung für einen unbeabsichtigten Klick. Der Fokus liegt
   auf ABBRECHEN, damit die Eingabetaste nichts ausgibt. Gefragt wird nur, wo es etwas zu
   entscheiden gibt: ein gelernter, gesperrter oder unbezahlbarer Knoten öffnet nichts,
-  denn warum, steht schon im Tooltip. Deshalb meldet `SkillGraph.select()` JEDEN Klick,
+  denn warum, steht schon in der Karte. Deshalb meldet `SkillGraph.select()` JEDEN Klick,
   auch den auf den schon gewählten Knoten — sonst ließe sich ein abgebrochener Antrag
   nicht neu stellen.
 - **„Ansicht einpassen" und „Umlernen" sind Zeichen am unteren rechten Rand der
   Zeichenfläche** (⛶ und ↺), nicht beschriftete Knöpfe unter dem Netz: sie gehören zur
-  Fläche, die sie bedienen. Was sie tun und was sie kosten, steht in ihrem `tooltip_text`
-  — ein Zeichen ohne Erklärung ist ein Rätsel. Der Umlern-Knopf bleibt gesperrt statt zu
-  verschwinden und sagt im Tooltip, woran es liegt.
+  Fläche, die sie bedienen. Was sie tun und was sie kosten, steht in ihrer Karte am Zeiger
+  (`Hints.attach`) — ein Zeichen ohne Erklärung ist ein Rätsel. Der Umlern-Knopf bleibt
+  gesperrt statt zu verschwinden und sagt in seiner Karte, woran es liegt; dass ein
+  gesperrter Knopf überhaupt sprechen darf, hängt daran, dass `disabled` die
+  Trefferprüfung nicht anfasst.
 - **`SkillBook`-Tests laufen auf einer eigenen Instanz mit `zz-`Profil** und schieben ihr
   über eine Unterklasse einen erfundenen Baum unter (`entries()` überschrieben) — sonst
   hängen sie an der Balance der ausgelieferten Bäume. `Wallet` und `PlayerLevel` lassen
@@ -375,6 +373,55 @@ Beim Arbeiten daran zu beachten:
   bekommen für die Dauer des Tests ebenfalls ein `zz-`Profil, sonst schreibt ein
   `Wallet.spend` in die echte Geldbörse des Spielers. Der Screen nimmt dafür ein Feld
   `book` entgegen, das vor dem Einhängen gesetzt wird.
+
+## Auskunft am Zeiger: eine Karte für das ganze Spiel
+
+Erklärt wird über das Autoload `Hints` (`src/ui/hints.gd`, `scenes/ui/hints.tscn`) und die
+eine `HintCard` darin. **Godots eigener Tooltip wird nirgends mehr benutzt** — er erscheint
+verzögert, bleibt stehen, wo er aufgegangen ist, und bringt die Typografie der Engine mit;
+über einem Netz hieß das eine halbe Sekunde je Knoten. `tests/hint_discipline_test.gd`
+meldet jedes `tooltip_text` in `scenes/**.tscn` und `src/**.gd`, und
+`gui/timers/tooltip_delay_sec` ist damit ersatzlos aus `project.godot` verschwunden.
+
+Beim Arbeiten daran zu beachten:
+
+- **Angemeldet wird am kleinsten Ding, das der Text meint**: `Hints.attach(control, titel,
+  text, nachsatz)`. Ein durchweg leerer Hinweis IST das Abmelden — deshalb bleibt eine
+  Statistikzeile ohne Hinweis einzeilig und die fliegenden Münzen der Kiste stumm.
+  Gespeichert wird als Metadatum AM Knoten, nicht in einer Liste im Autoload: ein Meta
+  stirbt mit seinem Knoten, eine Liste könnte ihn überleben.
+- **Gefragt wird der Zeiger, nicht das Control.** `_process` liest jeden Frame
+  `Viewport.gui_get_hovered_control()` und geht von dort nach OBEN, bis ein Knoten eine
+  Auskunft trägt. Keine `mouse_entered`/`mouse_exited`-Verbindungen: jede bräuchte ihr
+  Gegenstück, und jede deckte nur einen Weg ab, auf dem eine Auskunft ungültig wird —
+  weggescrollt, zugeklappt, freigegeben, Szene gewechselt.
+- **Die Suche nach oben ist der Grund, aus dem ein Hinweis einmal statt zweimal dasteht.**
+  Godot bricht am ersten Kind mit `MOUSE_FILTER_STOP` ab; genau deshalb musste
+  `ProgressRow` seinen Text an der Zeile UND am Kopf-Knopf setzen. Jetzt spricht die Zeile
+  auch für ihren Knopf und ihren Balken. Umgekehrt heißt das: **nie an eine Screen-Wurzel
+  anhängen**, sonst erklärt sich das ganze Bild.
+- **Eine Fläche mit eigener Trefferprüfung hängt als `attach_live(control, callable)`**
+  und liefert für einen Punkt IN ihr eine Karte oder `{}`. Leer heißt wirklich nichts —
+  es wird dann nicht beim Elternknoten weitergefragt, die Fläche hat ja geantwortet.
+- **Die Karte liegt in einer eigenen `CanvasLayer` auf 128.** Ein `ScrollContainer`
+  beschneidet seine Kinder, ein `CanvasLayer` ist kein `CanvasItem` — damit endet jede
+  Beschneidung an seiner Grenze, und die Karte liegt zugleich über der UI-Schicht des
+  Kampfes (`battle.tscn`, layer 1), in der der Wellenabschluss samt Schatzkiste hängt.
+  Die Karte MUSS `MOUSE_FILTER_IGNORE` bleiben: sonst läge sie selbst unter dem Zeiger,
+  versteckte sich, käme wieder — sechzigmal in der Sekunde.
+- **Die Breite ist eine Regel, keine Zahl in der Szene**: so breit wie ihr Text, zwischen
+  `MIN_WIDTH` und `MAX_WIDTH`. Gemessen wird mit **abgeschaltetem** Umbruch, danach wird
+  die Breite in die Labels gedrückt und ERST DANN die Höhe gelesen — ein umbrechendes
+  Label meldet sonst die Höhe für einen Pixel Breite (dieselbe Falle wie
+  `RevealCard.set_width()`). Und die Label-Mindestbreite wird vor jedem Messen auf 0
+  gesetzt, sonst bliebe jede Karte so breit wie die breiteste, die je zu sehen war
+  (`test_the_width_does_not_stick_from_the_last_card`).
+- **Godot befördert kopflos keine Mausereignisse**, `gui_get_hovered_control()` ist im Test
+  also immer leer. Dafür gibt es `Hints.probe(control, at)` — die Naht, an der die Tests
+  hängen. Ungeprüft bleibt damit genau eine Sache: dass die Trefferprüfung der Engine auch
+  einen `disabled` Button meldet. Sie tut es (der Umlern-Knopf lebte bis hierher von
+  Godots Tooltip), und `probe` zeigt die Karte nur bis zum nächsten Frame — Tests dazu
+  stehen deshalb ohne `await`.
 
 ## Abstände und Schriftgrößen stehen im Theme, nicht in der Szene
 

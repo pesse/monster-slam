@@ -1,0 +1,29 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/ui/hint_card.gd" id="1_hint_card"]
+
+[node name="HintCard" type="PanelContainer"]
+mouse_filter = 2
+script = ExtResource("1_hint_card")
+
+[node name="Root" type="VBoxContainer" parent="."]
+theme_type_variation = &"Tight"
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="Root"]
+theme_type_variation = &"SectionTitle"
+unique_name_in_owner = true
+text = "Name"
+autowrap_mode = 3
+
+[node name="Body" type="Label" parent="Root"]
+theme_type_variation = &"Hint"
+unique_name_in_owner = true
+text = "Wirkung"
+autowrap_mode = 3
+
+[node name="Note" type="Label" parent="Root"]
+theme_type_variation = &"Accent"
+unique_name_in_owner = true
+text = "Zustand"
+autowrap_mode = 3

@@ -33,10 +33,13 @@ var state: State = State.MISSED
 var is_today := false
 
 
-func setup(new_state: State, today: bool, hover_text: String) -> void:
+## `title`/`note` werden zur Karte am Zeiger — das Datum als Überschrift, der Stand
+## darunter. Leer heißt keine Karte: die Münzen, die aus der Schatzkiste fliegen, sind
+## dieselbe Zeichnung, haben aber nichts zu sagen.
+func setup(new_state: State, today: bool, title := "", note := "") -> void:
 	state = new_state
 	is_today = today
-	tooltip_text = hover_text
+	Hints.attach(self, title, note)
 	queue_redraw()
 
 

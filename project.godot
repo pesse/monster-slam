@@ -36,6 +36,7 @@ SkillBook="*res://src/progression/skill_book.gd"
 UpdateService="*res://src/update/update_service.gd"
 ContentService="*res://src/content/content_service.gd"
 ReportService="*res://src/report/report_service.gd"
+Hints="*res://scenes/ui/hints.tscn"
 
 [display]
 
@@ -49,10 +50,6 @@ enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")
 [gui]
 
 theme/custom="res://scenes/ui/ui_theme.tres"
-; Tooltips erscheinen sofort. Eine halbe Sekunde Wartezeit ist beim Lesen eines
-; ganzen Netzes eine halbe Sekunde je Knoten — und die Erklärung der Zeichen am
-; Rand des Fähigkeiten-Screens steht ausschließlich im Tooltip.
-timers/tooltip_delay_sec=0.0
 
 [rendering]
 

@@ -1,9 +1,8 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://src/ui/skill_tree.gd" id="1_skills"]
 [ext_resource type="Script" path="res://src/ui/skill_graph.gd" id="2_graph"]
 [ext_resource type="PackedScene" path="res://scenes/ui/confirm_dialog.tscn" id="3_confirm"]
-[ext_resource type="PackedScene" path="res://scenes/ui/skill_tooltip.tscn" id="4_hover"]
 
 [node name="SkillTreeScreen" type="Control"]
 layout_mode = 3
@@ -85,20 +84,13 @@ grow_vertical = 0
 [node name="FitButton" type="Button" parent="Margin/Root/GraphPanel/GraphArea/Tools"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(44, 44)
-tooltip_text = "Ansicht einpassen — Mausrad zoomt, Ziehen verschiebt"
 text = "⛶"
 
 [node name="RespecButton" type="Button" parent="Margin/Root/GraphPanel/GraphArea/Tools"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(44, 44)
 disabled = true
-tooltip_text = "Umlernen"
 text = "↺"
-
-[node name="Hover" parent="." instance=ExtResource("4_hover")]
-unique_name_in_owner = true
-visible = false
-mouse_filter = 2
 
 [node name="Confirm" parent="." instance=ExtResource("3_confirm")]
 unique_name_in_owner = true

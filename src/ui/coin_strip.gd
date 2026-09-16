@@ -53,7 +53,8 @@ func refresh() -> int:
 			earned += 1
 		var coin := COIN_SCENE.instantiate() as DayCoin
 		_coins.add_child(coin)
-		coin.setup(day_state, day_index == today_index, _hover_text(day_index, day_state))
+		coin.setup(day_state, day_index == today_index, date_label(day_index),
+				_state_text(day_state))
 
 	_caption.text = "%s · %d von %d Tagen" % [MONTH_NAMES[month - 1], earned, day_count]
 	return earned
@@ -97,14 +98,15 @@ static func date_label(day_index: int) -> String:
 	return "%s, %d.%d." % [WEEKDAYS[int(d["weekday"])], int(d["day"]), int(d["month"])]
 
 
-static func _hover_text(day_index: int, day_state: DayCoin.State) -> String:
-	var date := date_label(day_index)
+## Der Stand eines Tages in Worten. Das DATUM steht nicht darin: es ist die Überschrift der
+## Karte am Zeiger (`DayCoin.setup`).
+static func _state_text(day_state: DayCoin.State) -> String:
 	match day_state:
 		DayCoin.State.EARNED:
-			return "%s — geübt" % date
+			return "geübt"
 		DayCoin.State.OPEN:
-			return "%s — heute wartet noch einer" % date
+			return "heute wartet noch einer"
 		DayCoin.State.FUTURE:
-			return "%s — noch nicht dran" % date
+			return "noch nicht dran"
 		_:
-			return "%s — nicht geübt" % date
+			return "nicht geübt"
