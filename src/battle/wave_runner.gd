@@ -8,6 +8,8 @@ const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 const GOAL_Z := 6.5           # Festungsfront (Monster-Ziel)
 const SPAWN_Z := -24.0        # Spawn am hinteren Ende der Bahn (längerer Anmarsch)
 const LANE_HALF_WIDTH := 7.0
+## Bildmitte auf der Bahn (z). Der Boden richtet sich danach, nicht umgekehrt.
+const VIEW_CENTER_Z := -5.5
 
 const SHAKE_DURATION := 0.35
 const SHAKE_MAGNITUDE := 0.35 # in 3D-Einheiten
@@ -96,55 +98,132 @@ func _ready() -> void:
 ## Prozedurales Low-Poly-Terrain: flaches Innenfeld (Spielfläche/Props/Festung),
 ## sanfte facettierte Hügel am Rand, dezente Grün-Variation je Facette. Flat-Shading
 ## über manuell gesetzte Face-Normalen — passt zum Stil von Burg/Skeletten.
-const TERRAIN_HALF_X := 13.0
-const TERRAIN_Z_BACK := -28.0   # hinter dem Spawn (Hügel)
-const TERRAIN_Z_FRONT := 17.0   # nur knapp hinter die Festung, sonst leere Fläche
+##
+## Der Boden reicht bis an den BILDRAND und nicht nur bis an das Spielfeld: eine grüne
+## Insel vor der Hintergrundfarbe sieht aus, als schwebte sie. Wie weit das ist, wird
+## aus der Kamera gerechnet (`visible_ground_area`) und steht nicht als zweite
+## Konstante daneben — sonst hinkt das Terrain jeder Änderung an Zoom oder Blickwinkel
+## hinterher. Gespielt wird davon nichts: die Bahn bleibt SPAWN_Z..GOAL_Z bei
+## ±LANE_HALF_WIDTH, und das Innenfeld bleibt flach (siehe terrain_height).
 const TERRAIN_STEP := 3.0
+## Abstand vom Innenfeld, ab dem die Hügel nicht weiter wachsen, und ihr Höhenfaktor.
+## Bis zu einem `edge` von 4 ist das die alte Kurve am Spielfeldrand; darüber liegt nur
+## noch Kulisse, die kräftiger rollen darf, weil dort nichts steht und nichts läuft.
+const TERRAIN_EDGE_MAX := 8.0
+const TERRAIN_HEIGHT_SCALE := 0.6
+const TERRAIN_HEIGHT_MAX := TERRAIN_EDGE_MAX * TERRAIN_HEIGHT_SCALE
+## Breitestes Seitenverhältnis, für das der Boden reicht. Die Orthogonal-Kamera hält
+## ihre HÖHE (`keep_aspect`), die Breite wächst mit dem Fenster — ein 21:9-Schirm sieht
+## am weitesten nach außen, das Vollbild auf 16:9 am wenigsten (siehe CLAUDE.md).
+const VIEW_MAX_ASPECT := 2.4
+## Zugabe in Bildeinheiten beim Aussortieren unsichtbarer Kacheln — gerechnet, nicht
+## geschätzt: aussortiert wird auf der Ebene y=0, ein Hügel HEBT die Kachel im Bild
+## (die Höhe geht voll in die Bildhöhe ein, in die Bildbreite gar nicht), und das
+## Kamera-Wackeln schiebt den Ausschnitt um bis zu SHAKE_MAGNITUDE. Zu knapp bemessen
+## heißt: am unteren Bildrand fehlt genau die Kachel, deren Hügel hereinragt.
+const VIEW_MARGIN := TERRAIN_HEIGHT_MAX + SHAKE_MAGNITUDE
 
 var _terrain_noise: FastNoiseLite
 
 func _setup_ground() -> void:
-	var noise := FastNoiseLite.new()
-	noise.seed = _rng.randi()
-	noise.frequency = 0.06
-	_terrain_noise = noise
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var x := -TERRAIN_HALF_X
-	while x < TERRAIN_HALF_X - 0.001:
-		var z := TERRAIN_Z_BACK
-		while z < TERRAIN_Z_FRONT - 0.001:
-			var a := _terrain_point(x, z, noise)
-			var b := _terrain_point(x, z + TERRAIN_STEP, noise)
-			var c := _terrain_point(x + TERRAIN_STEP, z + TERRAIN_STEP, noise)
-			var d := _terrain_point(x + TERRAIN_STEP, z, noise)
-			_add_terrain_tri(st, noise, a, b, c)
-			_add_terrain_tri(st, noise, a, c, d)
-			z += TERRAIN_STEP
-		x += TERRAIN_STEP
+	_terrain_noise = terrain_noise(_rng.randi())
 	var mat := StandardMaterial3D.new()
 	mat.vertex_color_use_as_albedo = true
 	mat.roughness = 1.0
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	var ground := $Ground as MeshInstance3D
-	ground.mesh = st.commit()
+	ground.mesh = build_terrain(_camera, _terrain_noise)
 	ground.material_override = mat
 
 
-func _terrain_point(x: float, z: float, noise: FastNoiseLite) -> Vector3:
-	return Vector3(x, _terrain_height(x, z, noise), z)
+## Das Rauschen des Terrains — EINE Stelle, damit Boden und Streudeko dieselben Hügel
+## sehen und ein Test dieselben bauen kann wie das Spiel.
+static func terrain_noise(seed_value: int) -> FastNoiseLite:
+	var noise := FastNoiseLite.new()
+	noise.seed = seed_value
+	noise.frequency = 0.06
+	return noise
 
 
-func _terrain_height(x: float, z: float, noise: FastNoiseLite) -> float:
+## Baut den sichtbaren Boden für DIESE Kamera. Statisch und ohne Szene, damit
+## `tests/battle_ground_test.gd` genau das Mesh prüfen kann, das im Spiel steht.
+static func build_terrain(camera: Camera3D, noise: FastNoiseLite) -> ArrayMesh:
+	var area := visible_ground_area(camera)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var x := area.position.x
+	while x < area.end.x - 0.001:
+		var z := area.position.y
+		while z < area.end.y - 0.001:
+			# Das Sichtfeld ist eine Raute im x/z-Raster (45° Gierwinkel): über die Hälfte
+			# des umschließenden Rechtecks liegt außerhalb und wird gar nicht erst gebaut.
+			if tile_on_screen(camera, x, z):
+				var a := _terrain_point(x, z, noise)
+				var b := _terrain_point(x, z + TERRAIN_STEP, noise)
+				var c := _terrain_point(x + TERRAIN_STEP, z + TERRAIN_STEP, noise)
+				var d := _terrain_point(x + TERRAIN_STEP, z, noise)
+				_add_terrain_tri(st, noise, a, b, c)
+				_add_terrain_tri(st, noise, a, c, d)
+			z += TERRAIN_STEP
+		x += TERRAIN_STEP
+	return st.commit()
+
+
+## x/z-Bereich, in dem der Boden überhaupt im Bild liegen kann: die vier Ecken des
+## Bildrechtecks als Strahlen auf die Ebene y=0 geschnitten, nach außen auf das
+## Kachelraster gerundet. Setzt eine eingerichtete Kamera voraus (`setup_view`).
+static func visible_ground_area(camera: Camera3D) -> Rect2:
+	var basis := camera.global_transform.basis
+	var origin := camera.global_position
+	var forward := -basis.z
+	var half_h := camera.size * 0.5 + VIEW_MARGIN
+	var half_w := half_h * VIEW_MAX_ASPECT
+	var lo := Vector2.INF
+	var hi := -Vector2.INF
+	for su: float in [-1.0, 1.0]:
+		for sv: float in [-1.0, 1.0]:
+			var corner := origin + basis.x * (su * half_w) + basis.y * (sv * half_h)
+			# Die Kamera blickt nach unten (forward.y < 0), also trifft jede Ecke die Ebene.
+			var hit := corner + forward * (corner.y / -forward.y)
+			lo = lo.min(Vector2(hit.x, hit.z))
+			hi = hi.max(Vector2(hit.x, hit.z))
+	lo = (lo / TERRAIN_STEP).floor() * TERRAIN_STEP
+	hi = (hi / TERRAIN_STEP).ceil() * TERRAIN_STEP
+	return Rect2(lo, hi - lo)
+
+
+## Liegt die Kachel mit der Ecke (x,z) im Bild? Gerechnet in Bildkoordinaten der
+## Kamera (u nach rechts, v nach oben) statt über `unproject_position`, das die
+## Fenstergröße einrechnet — der Boden soll für JEDES Fenster reichen.
+static func tile_on_screen(camera: Camera3D, x: float, z: float) -> bool:
+	var basis := camera.global_transform.basis
+	var origin := camera.global_position
+	var half_h := camera.size * 0.5 + VIEW_MARGIN
+	var half_w := half_h * VIEW_MAX_ASPECT
+	var lo := Vector2.INF
+	var hi := -Vector2.INF
+	for cx: float in [x, x + TERRAIN_STEP]:
+		for cz: float in [z, z + TERRAIN_STEP]:
+			var r := Vector3(cx, 0.0, cz) - origin
+			lo = lo.min(Vector2(r.dot(basis.x), r.dot(basis.y)))
+			hi = hi.max(Vector2(r.dot(basis.x), r.dot(basis.y)))
+	return hi.x >= -half_w and lo.x <= half_w and hi.y >= -half_h and lo.y <= half_h
+
+
+static func _terrain_point(x: float, z: float, noise: FastNoiseLite) -> Vector3:
+	return Vector3(x, terrain_height(x, z, noise), z)
+
+
+static func terrain_height(x: float, z: float, noise: FastNoiseLite) -> float:
 	# Innenfeld flach halten (bis knapp hinter den Spawn); nur außerhalb sanfte Hügel.
 	var edge := maxf(absf(x) - 9.0, -z + SPAWN_Z)
 	if edge <= 0.0:
 		return 0.0
 	var n := noise.get_noise_2d(x, z) * 0.5 + 0.5
-	return clampf(edge, 0.0, 4.0) * (0.3 + 0.7 * n) * 0.6
+	return clampf(edge, 0.0, TERRAIN_EDGE_MAX) * (0.3 + 0.7 * n) * TERRAIN_HEIGHT_SCALE
 
 
-func _add_terrain_tri(st: SurfaceTool, noise: FastNoiseLite, a: Vector3, b: Vector3, c: Vector3) -> void:
+static func _add_terrain_tri(st: SurfaceTool, noise: FastNoiseLite, a: Vector3, b: Vector3, c: Vector3) -> void:
 	var n := (b - a).cross(c - a).normalized()
 	if n.y < 0.0:
 		n = -n
@@ -156,7 +235,7 @@ func _add_terrain_tri(st: SurfaceTool, noise: FastNoiseLite, a: Vector3, b: Vect
 		st.add_vertex(v)
 
 
-func _terrain_color(center: Vector3, noise: FastNoiseLite) -> Color:
+static func _terrain_color(center: Vector3, noise: FastNoiseLite) -> Color:
 	var t := noise.get_noise_2d(center.x * 2.3 + 100.0, center.z * 2.3) * 0.5 + 0.5
 	var col := Color(0.22, 0.34, 0.15).lerp(Color(0.42, 0.56, 0.28), t)
 	if center.y > 0.4:
@@ -166,7 +245,7 @@ func _terrain_color(center: Vector3, noise: FastNoiseLite) -> Color:
 
 ## Bodenhöhe des Terrains an (x,z) — damit Streudeko auf den Hügeln aufsitzt.
 func _ground_y(x: float, z: float) -> float:
-	return _terrain_height(x, z, _terrain_noise) if _terrain_noise != null else 0.0
+	return terrain_height(x, z, _terrain_noise) if _terrain_noise != null else 0.0
 
 
 ## Platziert ein Modell (filename inkl. Endung) auf Terrain-Höhe mit zufälliger
@@ -212,6 +291,90 @@ func _decorate() -> void:
 		var gy := _ground_y(px, pz)
 		_place_model(d, "pillar.gltf", Vector3(px, gy, pz), 0.0, Vector3.ONE)
 		_place_model(d, "torch_lit.gltf", Vector3(px, gy + 4.0, pz), 0.0, Vector3.ONE)
+
+	_decorate_outskirts(d)
+
+
+## Das Innenfeld: Bahn plus Festung im Vollausbau (Kirche und Nebengebäude liegen am
+## weitesten hinten). Hier steht keine Streudeko — es ist die Fläche, auf der gespielt
+## wird, und der Boden darunter ist flach (siehe terrain_height).
+const FIELD_HALF_X := 11.0
+const FIELD_Z_BACK := SPAWN_Z - 3.0
+const FIELD_Z_FRONT := GOAL_Z + 11.0
+## Zugabe in Bildeinheiten um den Bildstreifen des Innenfelds: die Modelle sind breiter
+## und höher als der Punkt, an dem sie stehen.
+const FIELD_CLEARANCE := 4.0
+
+
+## Das Umland: Bäume und Felsen über den Teil des Bodens, der seit der Erweiterung bis
+## an den Bildrand reicht. Ohne sie wäre die zusätzliche Fläche eine grüne Leere — mit
+## ihnen liest sie sich als Landschaft, in der das Spielfeld liegt. Gras kommt hier
+## nicht vor: ein Büschel ist auf die Entfernung ein Pixel und kostet trotzdem einen
+## Knoten.
+func _decorate_outskirts(d: Node3D) -> void:
+	var area := visible_ground_area(_camera)
+	var field := _field_span()
+	for i in _rng.randi_range(55, 80):
+		var p := _outskirts_point(area, field)
+		if p != Vector2.INF:
+			_scatter(d, "tree.glb", p.x, p.y, _rng.randf_range(0.8, 1.4))
+	for i in _rng.randi_range(18, 30):
+		var p := _outskirts_point(area, field)
+		if p != Vector2.INF:
+			_scatter(d, "rock.glb", p.x, p.y, _rng.randf_range(1.8, 3.2))
+
+
+## Zufälliger Punkt im Umland, oder Vector2.INF wenn keiner gefunden wurde. Verworfen
+## wird statt gerechnet: das Umland ist ein Rechteck mit einem Loch, und ein paar
+## Fehlversuche sind billiger als eine Formel, die bei jeder Änderung am Loch nachzieht.
+func _outskirts_point(area: Rect2, field: Dictionary) -> Vector2:
+	for attempt in 16:
+		var x := _rng.randf_range(area.position.x, area.end.x)
+		var z := _rng.randf_range(area.position.y, area.end.y)
+		if _blocks_field(x, z, field) or not tile_on_screen(_camera, x, z):
+			continue
+		return Vector2(x, z)
+	return Vector2.INF
+
+
+## Bildstreifen (`u_min`/`u_max`) und kleinste Tiefe (`depth`) des Innenfelds. Beides
+## aus den vier Ecken gerechnet — bei 45° Gierwinkel liegt das Feld im Bild schräg, ein
+## x/z-Rechteck sagt darüber nichts.
+func _field_span() -> Dictionary:
+	var u_min := INF
+	var u_max := -INF
+	var depth := INF
+	for x: float in [-FIELD_HALF_X, FIELD_HALF_X]:
+		for z: float in [FIELD_Z_BACK, FIELD_Z_FRONT]:
+			u_min = minf(u_min, _screen_u(x, z))
+			u_max = maxf(u_max, _screen_u(x, z))
+			depth = minf(depth, _view_depth(x, z))
+	return {"u_min": u_min, "u_max": u_max, "depth": depth}
+
+
+## Waagerechte Bildkoordinate eines Bodenpunkts. Die Höhe geht nicht ein: die
+## Bildachse `basis.x` der Iso-Kamera liegt waagerecht in der Welt.
+func _screen_u(x: float, z: float) -> float:
+	return (Vector3(x, 0.0, z) - _camera.global_position).dot(_camera.global_transform.basis.x)
+
+
+## Abstand eines Bodenpunkts längs der Blickrichtung. Kleiner heißt näher an der Kamera.
+func _view_depth(x: float, z: float) -> float:
+	return (Vector3(x, 0.0, z) - _camera.global_position).dot(-_camera.global_transform.basis.z)
+
+
+## Würde etwas bei (x,z) das Innenfeld verstellen? Drei Fälle, und nur der mittlere ist
+## nicht offensichtlich: auf dem Feld selbst geht nichts; seitlich neben dem Bildstreifen
+## des Feldes geht alles, auch ganz vorn; und im Streifen geht nur, was HINTER dem Feld
+## liegt. Ein Baum davor verdeckt sonst genau die Festung, die er einrahmen soll — und
+## das fällt erst im Vollausbau auf, wenn die Burg hoch genug dafür ist.
+func _blocks_field(x: float, z: float, field: Dictionary) -> bool:
+	if absf(x) <= FIELD_HALF_X and z >= FIELD_Z_BACK and z <= FIELD_Z_FRONT:
+		return true
+	var u := _screen_u(x, z)
+	if u < field["u_min"] - FIELD_CLEARANCE or u > field["u_max"] + FIELD_CLEARANCE:
+		return false
+	return _view_depth(x, z) < field["depth"] + FIELD_CLEARANCE
 
 
 ## Festung = modular aus dem KayKit Medieval Hexagon Pack (CC0, Kay Lousberg)
@@ -384,18 +547,22 @@ func _place_model(parent: Node3D, filename: String, pos: Vector3, yaw_deg: float
 	return inst
 
 
-## Orthografische Iso-Kamera + Sonne. Per Code, damit die .tscn keine
-## Transform-Basis-Mathematik enthalten muss.
 func _setup_view() -> void:
-	var pivot := $CameraPivot as Node3D
+	setup_view($CameraPivot as Node3D, _camera, $Sun as DirectionalLight3D)
+
+
+## Orthografische Iso-Kamera + Sonne. Per Code, damit die .tscn keine
+## Transform-Basis-Mathematik enthalten muss — und statisch, damit ein Test dieselbe
+## Kamera aufbauen kann, gegen die der Boden gerechnet wird.
+static func setup_view(pivot: Node3D, camera: Camera3D, sun: DirectionalLight3D) -> void:
 	pivot.rotation_degrees = Vector3(-30.0, 45.0, 0.0)
-	# Auf die Mitte des Terrains zentrieren, damit der längere Anmarsch komplett
-	# im Bild bleibt, ohne leere Fläche hinter der Festung.
-	pivot.position = Vector3(0.0, 0.0, (TERRAIN_Z_BACK + TERRAIN_Z_FRONT) * 0.5)
-	_camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	_camera.size = 32.0
-	_camera.position = Vector3(0.0, 0.0, 32.0)
-	($Sun as DirectionalLight3D).rotation_degrees = Vector3(-55.0, -35.0, 0.0)
+	# Auf die Bahn zentrieren, damit der längere Anmarsch komplett im Bild bleibt und
+	# die Festung mit ihren Nebengebäuden trotzdem ganz darauf steht.
+	pivot.position = Vector3(0.0, 0.0, VIEW_CENTER_Z)
+	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
+	camera.size = 32.0
+	camera.position = Vector3(0.0, 0.0, 32.0)
+	sun.rotation_degrees = Vector3(-55.0, -35.0, 0.0)
 
 
 func _process(delta: float) -> void:
