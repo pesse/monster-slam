@@ -4,10 +4,15 @@ extends Node
 ## dorthin gestellt hat (docs/adr/0004-satzbewertung-ohne-modell.md, Entscheidung 3).
 ##
 ## Ollama, llama.cpp-Server und LM Studio sprechen alle HTTP auf 127.0.0.1 und alle die
-## OpenAI-Form `/v1/chat/completions`. Deshalb braucht es dafür kein GDExtension, keine
-## Modellgewichte in der EXE und keinen Pack mit Gewichten: die Auslieferung enthält diese
-## Klasse, aber nichts, was sie bedient. Läuft kein Dienst, schlägt die Anfrage fehl und
-## das Ergebnis bleibt das der Prüfkarte.
+## OpenAI-Form `/v1/chat/completions`. Deshalb braucht es dafür kein GDExtension und keine
+## Modellgewichte in der EXE: die Auslieferung enthält diese Klasse, aber nichts, was sie
+## bedient. Läuft kein Dienst, schlägt die Anfrage fehl und das Ergebnis bleibt das der
+## Prüfkarte.
+##
+## **Wer den Dienst hinstellt, ist dieser Klasse einerlei.** Entweder hat ihn jemand selbst
+## installiert, oder `LocalModelServer` startet ihn aus `user://model/` — beides endet in
+## einer `url` auf 127.0.0.1. Der Unterschied ist eine Zeichenkette, und genau deshalb war
+## der Weg zu „für Benutzer installierbar" keine Änderung an der Bewertung.
 ##
 ## **Es gibt keine Stufe 2 in der Cloud.** Eine frei getippte Schülerantwort geht nicht ins
 ## Netz — der Unterschied zum Melde-Rückkanal (ADR 0002), der nur Ids kennt und keine
@@ -36,6 +41,17 @@ const BUSY_NOTE := "Vorige Anfrage läuft noch — diese wurde nicht gestellt."
 var url := URL
 var model := MODEL
 
+## Wie lange auf den Dienst gewartet wird, bevor die Verbindung abgebrochen wird. Im Spiel
+## bleibt es bei HTTP_TIMEOUT — der Boss holt vier Sekunden lang aus, eine Antwort nach
+## dreißig ist wertlos.
+##
+## Verstellbar, weil eine MESSUNG etwas anderes fragt als der Kampf: dort geht es darum, ob
+## ein Modell die Aufgabe kann, und nicht darum, ob es das rechtzeitig tut. Ohne diese Naht
+## lief jede Anfrage an ein 3-B-Modell auf der CPU in den Abbruch und die Messung meldete
+## „kein Dienst erreichbar", während der Dienst einwandfrei rechnete. Gelesen wird der Wert
+## in _ready(), also VOR dem Einhängen setzen.
+var http_timeout := HTTP_TIMEOUT
+
 ## Woran es beim letzten Mal lag, im Klartext — leer, solange alles in Ordnung war.
 ##
 ## `parse_reply()` gibt {} zurück, wenn KEIN Dienst antwortet, und ebenso, wenn ein Modell
@@ -51,7 +67,7 @@ var _on_done: Callable
 
 func _ready() -> void:
 	_http = HTTPRequest.new()
-	_http.timeout = HTTP_TIMEOUT
+	_http.timeout = http_timeout
 	add_child(_http)
 	_http.request_completed.connect(_on_completed)
 

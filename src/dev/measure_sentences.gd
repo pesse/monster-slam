@@ -3,9 +3,14 @@ extends Node
 ## beantwortet, die docs/SATZBEWERTUNG_MODELLE.md unter „Was zu messen wäre" offen lässt.
 ##
 ##     tools/godot.sh res://scenes/dev/measure_sentences.tscn
+##     tools/godot.sh res://scenes/dev/measure_sentences.tscn -- --serve --timeout=60
 ##     tools/godot.sh res://scenes/dev/measure_sentences.tscn -- --model
 ##     tools/godot.sh res://scenes/dev/measure_sentences.tscn -- --model \
 ##         --url=http://127.0.0.1:1234/v1/chat/completions --name=qwen2.5:3b-instruct
+##
+## `--serve` startet den Dienst SELBST (LocalModelServer, Programm und Gewichte aus
+## user://model/) — das ist der Durchstich für „Stufe 1 muss installierbar sein". `--model`
+## setzt dagegen einen voraus, den jemand anders gestartet hat (Ollama, LM Studio).
 ##
 ## Eine Szene und kein `-s`-Skript, obwohl es nichts zeichnet: mit `--script` registriert
 ## Godot die Autoloads nicht, und schon SentenceCard bezieht sich auf die ContentRegistry
@@ -43,6 +48,10 @@ const RULE := "─────────────────────�
 var _sheet_path := SHEET
 var _pass := DEFAULT_PASS
 var _use_model := false
+## Den Dienst selbst starten, statt einen vorzufinden.
+var _serve := false
+var _model_dir := LocalModelServer.DEFAULT_DIR
+var _port := LocalModelServer.DEFAULT_PORT
 var _url := LocalModelBackend.URL
 var _model := LocalModelBackend.MODEL
 var _timeout := SentenceJudge.DEFAULT_TIMEOUT
@@ -50,6 +59,7 @@ var _verbose := true
 
 var _judge: SentenceJudge
 var _backend: LocalModelBackend
+var _server: LocalModelServer
 ## Gefüllt vom `refined`-Signal, geleert vor jeder Frage — der Unterschied zwischen
 ## „Stufe 1 hat angehoben" und „Stufe 1 hatte nichts beizutragen".
 var _lift: Dictionary = {}
@@ -98,6 +108,17 @@ func _parse_args() -> void:
 			_use_model = true
 		elif arg.begins_with("--timeout="):
 			_timeout = float(arg.substr(10))
+		elif arg == "--serve":
+			_serve = true
+			_use_model = true
+		elif arg.begins_with("--model-dir="):
+			_model_dir = arg.substr(12)
+			_serve = true
+			_use_model = true
+		elif arg.begins_with("--port="):
+			_port = int(arg.substr(7))
+			_serve = true
+			_use_model = true
 
 
 ## Eine Zeile je Antwort: der Satz OHNE seine Antworten (die Bewertung soll genau das
@@ -293,17 +314,24 @@ func _percent(part: int, whole: int) -> float:
 ## Anfrage nach der anderen: das Backend lässt bewusst nur eine zur Zeit zu, und gemessen
 ## wird hier ohnehin nicht der Durchsatz.
 func _run_model(rows: Array) -> void:
+	print("\n%s\nStufe 1 · lokales Modell\n%s" % [RULE, RULE])
+	if _serve and not await _start_server():
+		return
+
 	_judge = SentenceJudge.new()
 	_judge.timeout = _timeout
 	add_child(_judge)
 	_backend = LocalModelBackend.new()
 	_backend.url = _url
 	_backend.model = _model
+	# Die HTTP-Seite muss länger warten dürfen als der Kampf. Ein 3-B-Modell auf der CPU
+	# ist nach 3,5 s nicht fertig, und ohne das lief jede Anfrage in den Abbruch — gemeldet
+	# als „kein Dienst erreichbar", während der Dienst einwandfrei rechnete.
+	_backend.http_timeout = maxf(_timeout, LocalModelBackend.HTTP_TIMEOUT)
 	add_child(_backend)
 	_judge.model_backend = _backend.judge
 	_judge.refined.connect(func(result: Dictionary): _lift = result)
 
-	print("\n%s\nStufe 1 · lokales Modell\n%s" % [RULE, RULE])
 	print("  URL     %s" % _url)
 	print("  Modell  %s  (Zeitlimit %.1f s)" % [_model, _timeout])
 
@@ -351,4 +379,30 @@ func _run_model(rows: Array) -> void:
 	for note in notes:
 		if not str(note).is_empty():
 			print("    %dx %s" % [notes[note], note])
+	if _server != null:
+		_server.stop()
 	_report("Stufe 0 + 1 · nach dem Modell", rows, "final")
+
+
+## Startet den Dienst aus user://model/ und richtet die Messung auf ihn. Fehlt etwas, sagt
+## das Skript WO es gesucht hat und hört auf — eine Messung gegen einen Dienst, der nicht
+## läuft, ist die teuerste Art, nichts zu erfahren (einmal passiert, 25 Anfragen, 0 Antworten).
+func _start_server() -> bool:
+	_server = LocalModelServer.new()
+	_server.dir = _model_dir
+	_server.port = _port
+	add_child(_server)
+	print("  Starte  %s" % ProjectSettings.globalize_path(_server.exe_path()))
+	var started := Time.get_ticks_msec()
+	if not await _server.start():
+		print("  ✗ %s" % _server.last_note)
+		print("\n  Für den Durchstich gehören zwei Dateien nach %s:"
+				% ProjectSettings.globalize_path(_model_dir))
+		print("    %s   aus einem llama.cpp-Release (ggml-org/llama.cpp)"
+				% LocalModelServer.EXE_NAME)
+		print("    %s         eine GGUF-Datei, z. B. ein 1–3-B-Instruct-Modell in Q4"
+				% LocalModelServer.WEIGHTS_NAME)
+		return false
+	print("  ✓ bereit nach %.1f s" % (float(Time.get_ticks_msec() - started) / 1000.0))
+	_url = _server.url()
+	return true

@@ -193,11 +193,36 @@ nicht durchwinken; anzuheben hat es nur die 12 richtigen.
 Damit hat der Modellversuch ein Erfolgskriterium, das er vorher nicht hatte: **0
 Falsch-Positive halten und die 12 Falsch-Negativen Richtung 2 drücken.**
 
+### Und wer stellt den Dienst hin?
+
+Die ursprüngliche Antwort — „wer will, installiert sich Ollama" — trägt nicht mehr,
+sobald Stufe 1 für Bosskämpfe tragend ist: sie hieße, dass die halbe Aufgabenart nur auf
+Rechnern richtig funktioniert, auf denen jemand einen Modell-Dienst betreibt. Der
+Familien-Laptop ist das nicht.
+
+Seit 2026-09-16 bringt das Spiel ihn deshalb selbst mit: `llama-server.exe` aus llama.cpp
+(MIT, keine Abhängigkeiten, dieselbe OpenAI-Form) plus eine GGUF-Datei, gestartet von
+`LocalModelServer` aus `user://model/`, später als optionaler Pack. Begründung, Abgrenzung
+gegen die fertigen Anwendungen (Ollama, LM Studio, Jan, GPT4All, Foundry Local) und die
+offenen Punkte stehen im Nachtrag „Stufe 1 auf eigenen Beinen" in
+[ADR 0004](adr/0004-satzbewertung-ohne-modell.md).
+
+Gemessen wird damit wie vorher, nur ohne Fremd-App:
+
+```bash
+tools/godot.sh res://scenes/dev/measure_sentences.tscn -- --serve --timeout=60
+```
+
 ### Noch offen
 
 - Spitzenspeicher und Latenz von xCOMET-lite int8 auf einem Rechner der Zielklasse.
 - **Echte Schülerantworten.** Der Bogen ist von Hand geschrieben und damit ein Maßstab,
   kein Stichprobenbefund; er kennt die Fehler, die jemand erwartet hat.
+- **Welches Modell.** EuroLLM-1.7B-Instruct ist die Empfehlung aus der Modellkarte,
+  nicht aus einer Messung. Bis die Zahl am Bogen steht, ist auch nicht entschieden, ob der
+  Pack überhaupt gebaut wird — ein Gigabyte für zwei Antworten wäre keine gute Abwägung.
+- **SmartScreen** auf einer heruntergeladenen, nicht von uns signierten `.exe`. Das
+  größte offene Risiko der Pack-Route, und vor dem Pack zu klären.
 - **Derselbe Bogen gegen die ausgelieferten Sätze.** Von 1522 Sätzen tragen 12 einen
   Schlüssel; die Quote „unsicher" dürfte dort deutlich höher liegen als die gemessenen
   39,7 %, weil ohne `accepted` jede Umformulierung unsicher ist.

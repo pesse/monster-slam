@@ -7,6 +7,10 @@ Status: **angenommen** · Datum: 2026-09-16 · Baut auf: ADR 0001 (Pack-Kanal,
 kein Urteil mehr ab.** Entscheidung 3 ist damit in einem Punkt verschärft, und Stufe 1 ist
 für Bosskämpfe keine Kür mehr.
 
+**Zweiter Nachtrag vom 2026-09-16: Stufe 1 steht nicht mehr nur herum, sie wird
+mitgeliefert.** Entscheidung 3 ist damit in ihrem zweiten Absatz überholt — „kein Pack mit
+Gewichten" gilt nicht mehr.
+
 Umgesetzt am 2026-09-16, ohne den Kampf: `SentenceCard`, `SentenceJudge`,
 `LocalModelBackend` und `SentenceSelector` stehen samt Tests und der Werkbank
 `scenes/dev/boss_lab.tscn`, die ausgelieferten Sätze tragen den Schlüssel, und der Golem
@@ -106,6 +110,12 @@ Modell-Dienst läuft (Ollama, llama.cpp-Server, LM Studio — alle sprechen HTTP
 `127.0.0.1`), benutzt das Spiel ihn; wenn nicht, existiert er für das Spiel nicht. Kein
 GDExtension, keine Modellgewichte in der EXE, kein Pack mit Gewichten. Wer den Zusatz
 will, installiert ihn; wer den schwachen Rechner hat, zahlt nichts dafür.
+
+> **Überholt durch den zweiten Nachtrag unten:** „kein Pack mit Gewichten" hieß in der
+> Praxis „nur für Leute, die ohnehin Ollama betreiben" — und das ist nicht der
+> Familien-Laptop, für den dieses Spiel gebaut wird. Das Spiel bringt den Dienst jetzt
+> selbst mit, optional und auf Nachfrage. Was bleibt: **kein** Modell in der EXE, und wer
+> es nicht holt, zahlt nichts dafür.
 
 **Es gibt keine Stufe 2 in der Cloud.** Kindertexte gehen nicht ins Netz. Das ist der
 Unterschied zu ADR 0002: dort steht ein eigener Server, aber er bekommt nur Ids und kennt
@@ -271,3 +281,116 @@ Gehalten von `tests/sentence_card_test.gd`
 `test_the_same_words_in_the_wrong_order_are_not_a_hit`) und nachgerechnet von
 `tools/godot.sh res://scenes/dev/measure_sentences.tscn`, das die beiden Lesarten
 gegeneinander prüft und anschlägt, sobald wieder eine Güte ohne Urteil auftaucht.
+
+---
+
+## Nachtrag 2026-09-16: Stufe 1 auf eigenen Beinen
+
+**Anlass.** Der erste Nachtrag macht Stufe 1 für Bosskämpfe tragend: sie ist das Einzige,
+was aus einem Zweifel einen Treffer macht. Damit wird die Formulierung aus Entscheidung 3
+— „wenn auf dem Rechner ein lokaler Modell-Dienst läuft, benutzt das Spiel ihn" — zur
+Aussage, dass Bosskämpfe nur für Leute richtig funktionieren, die Ollama betreiben. Das
+ist nicht die Zielgruppe. Die Zielgruppe ist der Familien-Laptop einer Neuntklässlerin,
+und dort heißt „installier dir vorher Ollama und lade ein Modell" schlicht: findet nicht
+statt.
+
+**Was daran wirklich falsch war.** Entscheidung 3 hat zwei Dinge in einen Satz gepackt,
+die nichts miteinander zu tun haben:
+
+1. *In der EXE liegt kein Modell.* Das steht und ist der Kern dieses ADR — die Größe des
+   Downloads, der Speicherbedarf und die Frage, ob das Spiel auf einem schwachen Gerät
+   startet, hängen daran. Auch: **jeder** Spieler bezahlte es, auch der, dessen Antwort
+   Stufe 0 längst erkannt hat.
+2. *Den Dienst stellt jemand anders hin.* Das war keine Entscheidung, sondern eine
+   Bequemlichkeit. Sie kostet nichts, solange Stufe 1 Kür ist, und sie kostet die halbe
+   Aufgabenart, sobald sie es nicht mehr ist.
+
+Der zweite Punkt fällt. Der erste bleibt — und er bleibt gerade dadurch, dass der Zusatz
+**optional und auf Nachfrage** kommt: wer ihn nicht holt, lädt nichts, belegt nichts und
+spielt dieselbe Stufe 0 wie vorher.
+
+### Entscheidung: llama-server statt einer Fremd-App
+
+Bedient wird `llama-server.exe` aus [llama.cpp](https://github.com/ggml-org/llama.cpp) —
+ein Programm ohne Abhängigkeiten, MIT-Lizenz, das dieselbe OpenAI-Form spricht wie Ollama
+und LM Studio. Das Spiel startet es als Kindprozess und beendet es wieder.
+
+Gegen die Alternative — den Nutzer eine der fertigen Anwendungen installieren lassen
+(Ollama, LM Studio, Jan, GPT4All, Foundry Local) — sprechen drei Dinge, und keines davon
+ist technisch:
+
+- Es ist **eine zweite Anwendung** mit eigenem Updatezyklus, eigenem Autostart und einem
+  Serverschalter, der an sein muss. Wer ihn vergisst, sieht kein Modell und weiß nicht,
+  warum.
+- Der **Modell-Download passiert dort**, in einer fremden Oberfläche, in einer Größe und
+  Auswahl, über die wir nichts sagen. Welches Modell geladen ist, entscheidet dann die
+  Qualität unserer Bewertung, und wir haben es nicht gemessen.
+- Die **Unterstützungslast landet trotzdem bei uns** („das Spiel sagt, es findet kein
+  Modell"), während die Ursache in Software liegt, die wir nicht ausgeliefert haben.
+
+`llama-server` dreht das um: eine Datei, ein Aufruf, ein Port, ein Modell, das wir
+ausgesucht und gegen den Antwortbogen gemessen haben.
+
+**Ausgeliefert wird das als optionaler Pack** — dieselbe Mechanik wie bei den Inhalten
+(ADR 0001), dieselbe Signatur, dasselbe Ziel `user://`. „Für Benutzer installierbar" heißt
+damit: ein Knopf im Einstellungs-Screen, kein Kommandozeilenaufruf.
+
+**`--host 127.0.0.1` steht ausdrücklich in der Argumentliste**, obwohl llama-server ohnehin
+so vorbelegt ist. Eine Voreinstellung kann sich ändern; die Entscheidung, dass Kindertexte
+diesen Rechner nicht verlassen, soll man in den Argumenten lesen können. **Es gibt weiter
+keine Stufe 2 in der Cloud.**
+
+### Was jetzt gebaut ist: der Durchstich
+
+Bewusst der dünnste Pfad, der end-to-end trägt — Feintuning kommt danach, sonst optimiert
+man an einem Weg, der noch gar nicht steht.
+
+- **`LocalModelServer`** (`src/learning/local_model_server.gd`) startet
+  `user://model/llama-server.exe` mit `user://model/model.gguf`, wartet auf `/health` und
+  beendet den Prozess wieder — auch in `_exit_tree()`, sonst bleibt nach einem Messlauf
+  ein Dienst stehen und der nächste findet den Port belegt.
+- **An der Bewertung ändert sich nichts.** `LocalModelBackend` bekommt eine andere `url`,
+  mehr nicht. Das ist der Beleg dafür, dass der Vertrag aus Entscheidung 4 die richtige
+  Naht hatte: wer den Dienst hinstellt, geht die Bewertung nichts an.
+- **`LocalModelBackend.http_timeout`** ist jetzt verstellbar (Vorgabe bleibt
+  `HTTP_TIMEOUT`, 3,5 s). Ein 3-B-Modell auf der CPU ist danach nicht fertig; ohne diese
+  Naht lief jede Anfrage einer Messung in den Abbruch und wurde als „kein Dienst
+  erreichbar" gemeldet, während der Dienst einwandfrei rechnete. Im Kampf bleibt es bei
+  3,5 s — der Boss holt vier Sekunden lang aus.
+- **Gemessen wird damit**, nicht ausprobiert:
+  `tools/godot.sh res://scenes/dev/measure_sentences.tscn -- --serve --timeout=60` startet
+  den Dienst selbst und rechnet denselben Antwortbogen wie zuvor. Fehlt etwas, sagt das
+  Skript, **wo** es gesucht hat.
+
+Fehlt Programm oder Gewichte, ist das kein Fehler, sondern der Normalfall: `start()` gibt
+`false` zurück, der Grund steht in `last_note`, und das Spiel bleibt bei Stufe 0. Genau
+wie ein nicht laufender Ollama vorher.
+
+### Noch nicht gebaut
+
+Das Folgende gehört zur Entscheidung, aber nicht zum Durchstich — es steht hier, damit
+niemand es für vergessen hält:
+
+- **Der Pack selbst**: Bauen, Signieren, `min_app_version`, Eintrag in `packs.yaml`, der
+  Knopf im Einstellungs-Screen. Bis dahin legt man die zwei Dateien von Hand nach
+  `user://model/`.
+- **SmartScreen.** Eine heruntergeladene, nicht von uns signierte `.exe` bekommt unter
+  Windows eine Warnung. Das ist das größte offene Risiko dieser Route und vor dem Pack zu
+  klären, nicht danach.
+- **Welches Modell.** `docs/SATZBEWERTUNG_MODELLE.md` empfiehlt EuroLLM-1.7B-Instruct
+  (Apache 2.0, für genau diese Sprachrichtung gebaut). Entschieden wird das am
+  Antwortbogen und nicht an der Modellkarte: **0 Falsch-Positive halten und die 12
+  Falsch-Negativen Richtung 2 drücken.** Solange diese Zahl nicht gemessen ist, ist auch
+  nicht entschieden, ob der Pack überhaupt gebaut wird — ein Gigabyte für zwei Antworten
+  wäre keine gute Abwägung.
+- **Der Lebenszyklus im Spiel**: wann der Dienst startet (beim Spielstart? vor dem
+  Bosskampf?), was bei einem Absturz passiert, und ob ein zweites laufendes Spiel den Port
+  streitig macht. Der Durchstich startet ihn einmal für einen Messlauf.
+- **Der Schlüssel zuerst.** Die 12 Falsch-Negativen sind richtige Antworten, die bloß
+  nicht in `accepted` stehen. Jede Zeile dort kostet zur Autorenzeit nichts und wirkt bei
+  jedem Spieler sofort — ohne Download. Was der Schlüssel schafft, muss kein Modell
+  schaffen.
+
+Gehalten von `tests/local_model_server_test.gd`. Kein Test startet einen Prozess und
+keiner spricht mit 127.0.0.1: Programm und Gewichte liegen in keinem Repo, und ein Test,
+der sie bräuchte, wäre auf jedem anderen Rechner rot.
