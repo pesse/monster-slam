@@ -34,7 +34,7 @@ func test_the_lab_builds_with_all_its_controls() -> void:
 	for unique_name in ["BossSelect", "SentenceSelect", "OnlyKeyed", "UseProfile", "PoolInfo",
 			"RollButton", "SourceText", "SentenceInfo", "KeyEdit", "KeyStatus",
 			"AnswerEdit", "JudgeButton", "CardResult", "ModelResult", "ModelToggle",
-			"ModelUrl", "BackButton"]:
+			"ModelUrl", "ServeButton", "ServeStatus", "BackButton"]:
 		assert_object(_lab.get_node("%" + unique_name)).override_failure_message(
 				"Werkbank findet '%s' nicht" % unique_name).is_not_null()
 
@@ -115,3 +115,33 @@ func test_the_roll_respects_the_filter() -> void:
 func test_the_origin_is_on_the_label() -> void:
 	assert_str((_lab.get_node("%SentenceInfo") as Label).text).contains("Submodule")
 	assert_str(_lab.call("origin_label", "sen.test.reef") as String).is_not_empty()
+
+
+## Der Knopf startet den Dienst, den das URL-Feld MEINT. Vorher stand dort Ollamas 11434,
+## während LocalModelServer auf 11435 kommt — wer den Umschalter anwarf, bekam „kein Dienst
+## erreichbar", obwohl gerade einer lief. Gestartet wird hier nichts: ein Test, der einen
+## Prozess anwirft, wäre auf einem Rechner ohne Modell rot und auf einem mit Modell teuer.
+func test_the_url_points_at_the_service_the_button_starts() -> void:
+	assert_str((_lab.get_node("%ModelUrl") as LineEdit).text) \
+			.contains(str(LocalModelServer.DEFAULT_PORT))
+	assert_str((_lab.get_node("%ServeButton") as Button).text).contains("starten")
+
+
+## „Kein Modell" ist keine Auskunft, solange nicht dabeisteht, wo gesucht wurde — und die
+## Werkbank sucht woanders als der Entwickler vermutet (`user://`, nicht im Projekt).
+func test_the_serve_status_says_where_it_looks() -> void:
+	assert_str((_lab.get_node("%ServeStatus") as Label).text).contains("model")
+
+
+## Die Zeitlimits des KAMPFES sind hier falsch. Der Boss holt vier Sekunden aus; ein
+## 1,7-B-Modell auf der CPU ist danach nicht fertig, und die Werkbank meldete dann „kein
+## Dienst erreichbar", während der Dienst einwandfrei rechnete. Beurteilt wird hier, ob ein
+## Modell die Aufgabe KANN — ob es das rechtzeitig tut, ist eine Frage für den Kampf.
+func test_the_lab_waits_longer_than_the_fight_would() -> void:
+	var backend: LocalModelBackend = _lab.get("_backend")
+	var judge: SentenceJudge = _lab.get("_judge")
+	assert_float(backend.http_timeout).is_greater(LocalModelBackend.HTTP_TIMEOUT)
+	assert_float(judge.timeout).is_greater(SentenceJudge.DEFAULT_TIMEOUT)
+	# Und der Richter muss LÄNGER warten als das Backend: gäbe er früher auf, stünde die
+	# Anfrage noch und jede weitere fiele in die Sperre (BUSY_NOTE).
+	assert_float(judge.timeout).is_greater(backend.http_timeout)

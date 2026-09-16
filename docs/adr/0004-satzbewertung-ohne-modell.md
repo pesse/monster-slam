@@ -455,7 +455,9 @@ niemand es für vergessen hält:
   hochgeladen neben `index.json` in das Release `packs`.
 - **Der Lebenszyklus im Spiel**: wann der Dienst startet (beim Spielstart? vor dem
   Bosskampf?), was bei einem Absturz passiert, und ob ein zweites laufendes Spiel den Port
-  streitig macht. Der Durchstich startet ihn einmal für einen Messlauf.
+  streitig macht. Gestartet wird er bisher an zwei Stellen, und beide sind Werkzeug und
+  nicht Spiel: der Messlauf (`--serve`, startet und beendet ihn selbst) und der Knopf
+  „Dienst starten" in der Satz-Werkbank. Im Spielfluss hängt er nirgends.
 - **Der Schlüssel zuerst.** Die 12 Falsch-Negativen sind richtige Antworten, die bloß
   nicht in `accepted` stehen. Jede Zeile dort kostet zur Autorenzeit nichts und wirkt bei
   jedem Spieler sofort — ohne Download. Was der Schlüssel schafft, muss kein Modell

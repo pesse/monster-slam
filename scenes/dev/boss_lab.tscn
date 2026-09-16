@@ -147,6 +147,16 @@ text = "—"
 theme_type_variation = &"Hint"
 text = "Stufe 1 — lokaler Dienst (optional)"
 
+[node name="ServeButton" type="Button" parent="Margin/Root/Columns/Verdict"]
+unique_name_in_owner = true
+text = "Dienst starten"
+
+[node name="ServeStatus" type="Label" parent="Margin/Root/Columns/Verdict"]
+theme_type_variation = &"Hint"
+unique_name_in_owner = true
+custom_minimum_size = Vector2(280, 0)
+autowrap_mode = 3
+
 [node name="ModelToggle" type="CheckButton" parent="Margin/Root/Columns/Verdict"]
 unique_name_in_owner = true
 text = "Stufe 1 benutzen"
