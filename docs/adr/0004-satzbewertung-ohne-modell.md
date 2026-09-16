@@ -3,6 +3,10 @@
 Status: **angenommen** · Datum: 2026-09-16 · Baut auf: ADR 0001 (Pack-Kanal,
 `min_app_version`) · Grenzt ab gegen: ADR 0002 (Rückkanal)
 
+**Nachtrag vom 2026-09-16 am Ende dieses Dokuments: Stufe 0 gibt ohne Schlüsseltreffer
+kein Urteil mehr ab.** Entscheidung 3 ist damit in einem Punkt verschärft, und Stufe 1 ist
+für Bosskämpfe keine Kür mehr.
+
 Umgesetzt am 2026-09-16, ohne den Kampf: `SentenceCard`, `SentenceJudge`,
 `LocalModelBackend` und `SentenceSelector` stehen samt Tests und der Werkbank
 `scenes/dev/boss_lab.tscn`, die ausgelieferten Sätze tragen den Schlüssel, und der Golem
@@ -92,6 +96,11 @@ Platzhalter, Klammergruppen) —, prüft `must_contain` gegen die Formen und suc
 `pitfalls`. Ergebnis ist eine Güte von 0 bis 1 und ein Rückmeldetext. Deterministisch, mit
 gdUnit prüfbar, unter einer Millisekunde, ohne nennenswerten Speicherbedarf.
 
+> **Verschärft durch den Nachtrag unten:** findet die Karte weder eine Lösung noch einen
+> bekannten Fehler, gibt sie **gar keine** Güte aus (0 bei `sure == false`) statt einer
+> geschätzten. Die Schätzung war eine Überschneidung von Wortmengen, und die winkte im
+> Bosskampf genau das durch, was er übt.
+
 **Stufe 1 ist nicht Teil der Auslieferung.** Wenn auf dem Rechner ein lokaler
 Modell-Dienst läuft (Ollama, llama.cpp-Server, LM Studio — alle sprechen HTTP auf
 `127.0.0.1`), benutzt das Spiel ihn; wenn nicht, existiert er für das Spiel nicht. Kein
@@ -116,10 +125,11 @@ Wartezeit ist Inszenierung, nicht Blockade.
 
 ## Folgen
 
-**`min_app_version` muss steigen** (0.7.0 → 0.8.0, App steht auf 0.7.2). Ein Client vor
-dieser Änderung liest `accepted`, `must_contain` und `pitfalls` nicht; er würde einen Satz
-mit reichem Schlüssel gegen die eine `reference_translation` prüfen und dabei still
-schlechter bewerten, als die Daten hergeben. Genau dafür gibt es das Feld aus ADR 0001.
+**`min_app_version` muss steigen** (0.7.0 → 0.8.0; die App ist mit dieser Änderung auf
+0.8.0 gegangen). Ein Client vor dieser Änderung liest `accepted`, `must_contain` und
+`pitfalls` nicht; er würde einen Satz mit reichem Schlüssel gegen die eine
+`reference_translation` prüfen und dabei still schlechter bewerten, als die Daten
+hergeben. Genau dafür gibt es das Feld aus ADR 0001.
 
 **Die Kategorienliste bleibt unberührt.** `sentences` und `sentence_lexemes` stehen bereits
 in `_by_category` (`src/core/content_registry.gd:86`), in `CATEGORIES`
@@ -195,3 +205,69 @@ Festlegung, die sich später teuer korrigieren ließe, weil Daten, Pack-Version 
 ausgelieferte Binärgröße daran hängen. Die Szene lässt sich jederzeit anders bauen — sie
 konsumiert `SentenceJudge` und `SentenceSelector` und hat keinen eigenen Zugriff auf die
 Bewertung.
+
+---
+
+## Nachtrag 2026-09-16: ohne Urteil kein Treffer
+
+**Anlass.** Der Antwortbogen aus `docs/SATZBEWERTUNG_MODELLE.md` (63 getippte Antworten zu
+10 Sätzen mit vollem Schlüssel) wurde gegen Stufe 0 gerechnet. Ergebnis in der ersten
+Fassung: 2 Falsch-Negative, aber **4 Falsch-Positive — und alle sechs Fehlurteile stammten
+aus demselben Zweig**, dem Fall ohne Schlüsseltreffer. Die 38 Antworten, bei denen die
+Karte `sure` meldete, waren ausnahmslos richtig eingeordnet.
+
+**Der Fehler war die Schätzung.** Fand die Karte nichts, gab sie `SentenceCard.overlap()`
+als Güte aus: ein F1 über Wort*mengen*. „Always she walks to school." enthält exakt
+dieselben Wörter wie „She always walks to school." und bekam damit **1,00** — nicht knapp
+über einer Schwelle, sondern die volle Punktzahl. Reihenfolge und Beugung sind für dieses
+Maß bauartbedingt unsichtbar. Über alle Schwellen von 0,40 bis 0,80 blieb der Befund
+gleich; es war nie eine Frage der Einstellung.
+
+Damit fiel eine Annahme dieses ADR: die Abwägung „ein zu Unrecht getadelter Satz ist der
+teuerste Fehler" ist für die **Vokabel**seite formuliert, wo der Schlüssel den Antwortraum
+wirklich abdeckt. Ein Bosskampf prüft Satzbau und Konjugation. Dort ist die durchgewinkte
+falsche Antwort genauso teuer: sie bestätigt die falsche Form als richtig, und zwar genau
+an der Stelle, um derentwillen die Aufgabe gestellt wird.
+
+**Entscheidung.** Ohne Schlüsseltreffer gibt die Prüfkarte kein Urteil ab:
+
+- `quality` ist dort `SentenceCard.NO_VERDICT` (0). Eine Antwort ohne Urteil ist **kein
+  Treffer**, bei welcher Schwelle auch immer.
+- Die Nähe am Wortlaut bleibt als eigenes Feld `overlap` erhalten. Sie wählt die
+  Rückmeldung („nah dran" gegen „ein anderer Satz") und **urteilt nicht**.
+- `sure` ist damit der einzige Weg zu einem Treffer: entweder die Karte hat einen Grund,
+  oder Stufe 1 hebt an.
+
+**Folge: Stufe 1 wird tragend.** Sie ist jetzt das Einzige, was aus einem Zweifel einen
+Treffer machen kann. Zugleich trägt die Regel „nur heben, nie senken" erst dadurch
+richtig: die falschen Antworten im Topf ohne Urteil sind bereits abgewiesen, ein Modell
+kann sie gar nicht mehr durchwinken — anzuheben hat es nur, was richtig und bloß nicht
+hinterlegt ist. Was vorher eine Einschränkung war, ist damit die passende Regel.
+
+Am Bogen gemessen (Schwelle 0,60):
+
+| | vorher | nachher |
+|---|---|---|
+| Falsch-Positive | 4 von 26 (15,4 %) | **0 von 26** |
+| Falsch-Negative | 2 von 37 (5,4 %) | 12 von 37 (32,4 %) |
+| ohne Urteil | 25 von 63 | 25 von 63 — davon 12 richtig, 13 falsch |
+
+Die 12 Falsch-Negativen sind exakt die richtigen Antworten im Topf ohne Urteil. Sie sind
+damit **der Auftrag an Stufe 1** und ihr Erfolgskriterium: 0 Falsch-Positive halten und
+diese Zahl Richtung 2 drücken. Vorher hätte ein Modellversuch keinen Maßstab gehabt.
+
+**Was das für den Kampf heißt** (der weiter unentschieden ist, siehe „Nicht entschieden"):
+„ohne Urteil" ist ein dritter Ausgang neben richtig und falsch und sollte auch so
+aussehen — Musterlösung zeigen, kein Schaden, keine Gutschrift —, statt als Treffer oder
+als Tadel verbucht zu werden. Wer den Kampf baut, entscheidet das; der Vertrag hält die
+Unterscheidung in `sure` bereit.
+
+**Nicht geändert.** Die Rückmeldungen, die Stolperstellen, `must_contain`, die
+Normalisierung und `min_app_version`. Es ist eine Änderung an der Bewertung, nicht an den
+Daten — ein Pack von gestern verhält sich mit dieser App genauso wie einer von morgen.
+
+Gehalten von `tests/sentence_card_test.gd`
+(`test_without_a_verdict_nothing_scores`,
+`test_the_same_words_in_the_wrong_order_are_not_a_hit`) und nachgerechnet von
+`tools/godot.sh res://scenes/dev/measure_sentences.tscn`, das die beiden Lesarten
+gegeneinander prüft und anschlägt, sobald wieder eine Güte ohne Urteil auftaucht.

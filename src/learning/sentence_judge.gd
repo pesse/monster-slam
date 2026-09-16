@@ -13,12 +13,17 @@ extends Node
 ## nach; meldet sie sich nicht, schlägt der Boss trotzdem zu. Kein Zustand des Kampfes
 ## hängt an einem Modell, die Wartezeit ist Inszenierung und keine Blockade.
 ##
-## **Stufe 1 darf nur heben, nie senken.** Sie wird ja nur gefragt, wo die Karte NICHTS
-## Belastendes gefunden hat: keine bekannte Lösung, aber auch keinen bekannten Fehler. Was
-## ein kleines Sprachmodell dort beiträgt, ist „das geht auch so" — sein Tadel dagegen wäre
-## genau der Fehler, um dessentwillen das ADR kein Modell ausliefert (es lehnt richtige
-## Antworten ab). Es bleibt deshalb auch die Rückmeldung der Karte stehen, wo das Modell
-## nicht anhebt.
+## **Stufe 1 darf nur heben, nie senken — und sie ist das EINZIGE, was aus einem Zweifel
+## einen Treffer machen kann.** Gefragt wird sie nur, wo die Karte nichts gefunden hat:
+## keine bekannte Lösung, aber auch keinen bekannten Fehler. Dort steht die Güte der Karte
+## seit der Messung am Antwortbogen auf 0 (SentenceCard.NO_VERDICT) — sie hat kein Urteil,
+## und ohne Stufe 1 bleibt die Antwort kein Treffer.
+##
+## Beides zusammen ist der Grund, aus dem die Regel trägt: die falschen Antworten in diesem
+## Topf sind schon abgewiesen, ein Modell kann sie also gar nicht durchwinken; anzuheben
+## hat es nur, was richtig und bloß nicht hinterlegt ist. Sein Tadel wäre dagegen genau der
+## Fehler, um dessentwillen das ADR kein Modell ausliefert — es lehnt richtige Antworten ab.
+## Deshalb bleibt auch die Rückmeldung der Karte stehen, wo das Modell nicht anhebt.
 ##
 ## Stufe 1 ist NICHT Teil der Auslieferung: ohne `model_backend` existiert sie für das
 ## Spiel nicht. Wer sie will, startet einen lokalen Dienst (siehe LocalModelBackend).

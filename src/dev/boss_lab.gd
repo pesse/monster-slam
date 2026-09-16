@@ -257,7 +257,14 @@ static func describe(result: Dictionary) -> String:
 	var missing: Array = result.get("missing", [])
 	if not missing.is_empty():
 		lines.append("Fehlt: %s" % ", ".join(PackedStringArray(missing.map(str))))
-	lines.append("sicher" if bool(result.get("sure", true)) else "unsicher (Stufe 1 darf ran)")
+	if bool(result.get("sure", true)):
+		lines.append("sicher")
+	else:
+		# Ohne Urteil ist die Güte 0 — was die Karte trotzdem weiß, ist die Nähe am
+		# Wortlaut. Sie steht hier, damit in der Werkbank nicht bloß „0 %" dasteht, wo die
+		# Karte in Wahrheit nichts sagt.
+		lines.append("kein Urteil (Nähe %d %%) — Stufe 1 darf ran"
+				% roundi(float(result.get("overlap", 0.0)) * 100.0))
 	return "\n".join(lines)
 
 

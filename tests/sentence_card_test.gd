@@ -78,10 +78,10 @@ func test_a_hit_beats_a_pitfall() -> void:
 
 ## Der Satz wird um seiner Lexeme willen gestellt. Fehlt das Wort, ist er nicht gelöst —
 ## wie ähnlich der Rest auch klingt.
-func test_a_missing_word_caps_the_quality() -> void:
+func test_a_missing_word_is_named_and_is_no_hit() -> void:
 	var result := SentenceCard.evaluate(SENTENCE, "Yesterday we saw the coral.")
 	assert_array(result["missing"] as Array).contains(["reef"])
-	assert_float(float(result["quality"])).is_less_equal(SentenceCard.MISSING_CAP)
+	assert_float(float(result["quality"])).is_equal(SentenceCard.NO_VERDICT)
 	assert_str(str(result["feedback"])).contains("reef")
 
 
@@ -100,12 +100,44 @@ func test_a_word_is_a_word_and_not_a_substring() -> void:
 			evaluator.tokens("we saw the reef yesterday"), "saw the reef", evaluator)).is_true()
 
 
-## Weder Lösung noch bekannter Fehler: genau der Fall, für den es Stufe 1 gibt.
+## Weder Lösung noch bekannter Fehler: genau der Fall, für den es Stufe 1 gibt. Die Karte
+## hat hier KEIN Urteil — die Nähe am Wortlaut steht daneben und wählt nur die Worte.
 func test_an_unknown_rephrasing_stays_unsure() -> void:
 	var result := SentenceCard.evaluate(SENTENCE, "The reef was what we saw yesterday.")
 	assert_bool(bool(result["sure"])).is_false()
 	assert_str(str(result["matched"])).is_empty()
-	assert_float(float(result["quality"])).is_greater(0.0)
+	assert_float(float(result["quality"])).is_equal(SentenceCard.NO_VERDICT)
+	assert_float(float(result["overlap"])).is_greater(0.0)
+
+
+## Die Regel, um derentwillen die Messung am Antwortbogen gelaufen ist: **ohne Urteil kein
+## Treffer.** Vorher gab die Karte hier die Wort-Überschneidung als Güte aus, und ein
+## Aufrufer mit einer Schwelle nahm sie für ein Urteil. Keine dieser Antworten darf eine
+## Güte tragen, so nah sie dem Wortlaut auch kommt.
+func test_without_a_verdict_nothing_scores() -> void:
+	for answer in [
+		"The reef was what we saw yesterday.",   # richtig, nur nicht hinterlegt
+		"Yesterday we seen the reef.",           # falsch gebeugt
+		"Yesterday we saw the coral.",           # falsches Wort
+		"My bicycle is green.",                  # ganz anderer Satz
+	]:
+		var result := SentenceCard.evaluate(SENTENCE, str(answer))
+		assert_bool(bool(result["sure"])).override_failure_message(
+				"„%s“ sollte die Karte nicht sicher machen" % answer).is_false()
+		assert_float(float(result["quality"])).override_failure_message(
+				"„%s“ trägt eine Güte, obwohl die Karte kein Urteil hat" % answer
+		).is_equal(SentenceCard.NO_VERDICT)
+
+
+## Der Fall, an dem es aufgefallen ist. Dieselben Wörter in falscher Reihenfolge sind für
+## eine Wortmengen-Überschneidung nicht von der Lösung zu unterscheiden — sie bekommt die
+## volle Nähe. Genau deshalb darf sie nicht die Güte sein: im Bosskampf geht es um Satzbau,
+## und eine durchgewinkte Wortsalat-Antwort lehrt die falsche Form als richtig.
+func test_the_same_words_in_the_wrong_order_are_not_a_hit() -> void:
+	var result := SentenceCard.evaluate(SENTENCE, "Yesterday the reef we saw.")
+	assert_float(float(result["overlap"])).is_equal(1.0)
+	assert_float(float(result["quality"])).is_equal(SentenceCard.NO_VERDICT)
+	assert_bool(bool(result["sure"])).is_false()
 
 
 func test_an_empty_answer_is_zero_and_needs_no_model() -> void:
@@ -115,11 +147,15 @@ func test_an_empty_answer_is_zero_and_needs_no_model() -> void:
 	assert_str(str(result["feedback"])).is_equal(SentenceCard.EMPTY_FEEDBACK)
 
 
-## Ein ganz anderer Satz ist auch ohne Schlüssel als solcher zu erkennen.
-func test_a_different_sentence_scores_low() -> void:
-	var result := SentenceCard.evaluate(BARE, "My bicycle is green.")
-	assert_float(float(result["quality"])).is_less(SentenceCard.NEAR_QUALITY)
-	assert_str(str(result["feedback"])).is_equal(SentenceCard.FAR_FEEDBACK)
+## Ein ganz anderer Satz ist auch ohne Schlüssel als solcher zu erkennen — an der NÄHE,
+## die dafür da ist, die Rückmeldung zu wählen, und für nichts sonst.
+func test_a_different_sentence_is_told_from_a_near_miss() -> void:
+	var far := SentenceCard.evaluate(BARE, "My bicycle is green.")
+	assert_float(float(far["overlap"])).is_less(SentenceCard.NEAR_QUALITY)
+	assert_str(str(far["feedback"])).is_equal(SentenceCard.FAR_FEEDBACK)
+	var near := SentenceCard.evaluate(BARE, "The dragon is not asleep.")
+	assert_float(float(near["overlap"])).is_greater_equal(SentenceCard.NEAR_QUALITY)
+	assert_str(str(near["feedback"])).is_equal(SentenceCard.NEAR_FEEDBACK)
 
 
 ## Steht ein gefordertes Wort im Schlüssel, geht dessen Rückmeldung vor: sie sagt, was zu

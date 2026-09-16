@@ -157,8 +157,9 @@ func _report(title: String, rows: Array, field: String) -> void:
 ## Eine Antwortzeile. Das Zeichen vorn ist das Urteil ÜBER das Urteil:
 ##   ·  richtig eingeordnet
 ##   ✗  Falsch-Negativ — eine richtige Antwort abgewiesen. Der teuerste Fehler.
-##   !  Falsch-Positiv — eine falsche Antwort durchgewinkt. Stufe 1 kann den NICHT mehr
-##      heilen, sie darf ja nur heben.
+##   !  Falsch-Positiv — eine falsche Antwort durchgewinkt. Seit die Prüfkarte ohne Urteil
+##      keine Güte mehr ausgibt, kann das nur noch aus dem SCHLÜSSEL kommen: eine falsche
+##      Lösung in `accepted` oder eine Stolperstelle, die zu spät greift.
 func _line(row: Dictionary, field: String) -> String:
 	var result: Dictionary = row.get(field, {})
 	var quality := float(result.get("quality", 0.0))
@@ -186,32 +187,45 @@ func _verdict_mark(quality: float, expect: String) -> String:
 
 ## Die Vierfeldertafel und die beiden Quoten, um die es geht.
 func _matrix(rows: Array, threshold: float, field: String) -> Dictionary:
-	var lenient := _tally(rows, threshold, field, false)
-	var strict := _tally(rows, threshold, field, true)
-	print("\n  Vierfeldertafel bei Schwelle %.2f — die GÜTE entscheidet" % threshold)
+	var tally := _tally(rows, threshold, field, false)
+	print("\n  Vierfeldertafel bei Schwelle %.2f" % threshold)
 	print("                        angenommen   abgelehnt")
-	print("    erwartet richtig       %5d       %5d" % [lenient["tp"], lenient["fn"]])
-	print("    erwartet falsch        %5d       %5d" % [lenient["fp"], lenient["tn"]])
+	print("    erwartet richtig       %5d       %5d" % [tally["tp"], tally["fn"]])
+	print("    erwartet falsch        %5d       %5d" % [tally["fp"], tally["tn"]])
 	print("    Falsch-Negative %d von %d (%.1f %%)    Falsch-Positive %d von %d (%.1f %%)"
-			% [lenient["fn"], lenient["pos"], _percent(lenient["fn"], lenient["pos"]),
-			lenient["fp"], lenient["neg"], _percent(lenient["fp"], lenient["neg"])])
+			% [tally["fn"], tally["pos"], _percent(tally["fn"], tally["pos"]),
+			tally["fp"], tally["neg"], _percent(tally["fp"], tally["neg"])])
 
-	# Dieselben Antworten, nur nach dem VERTRAG gelesen statt nach der Zahl: `sure` ist die
-	# Aussage der Prüfkarte darüber, ob sie überhaupt ein Urteil hat. Verneint sie das, ist
-	# ihre `quality` eine Überschneidung von Wortmengen — die sieht weder Reihenfolge noch
-	# Beugung, also genau das, was ein Bosskampf übt.
-	print("\n  Dasselbe, wenn nur ein SICHERES Urteil zählt (unsicher = kein Treffer)")
-	print("    erwartet richtig       %5d       %5d" % [strict["tp"], strict["fn"]])
-	print("    erwartet falsch        %5d       %5d" % [strict["fp"], strict["tn"]])
-	print("    Falsch-Negative %d von %d (%.1f %%)    Falsch-Positive %d von %d (%.1f %%)"
-			% [strict["fn"], strict["pos"], _percent(strict["fn"], strict["pos"]),
-			strict["fp"], strict["neg"], _percent(strict["fp"], strict["neg"])])
+	# Der Topf ohne Urteil ist das, was Stufe 1 auflösen muss, und die Aufteilung darin ist
+	# ihr Auftrag: die richtigen anheben, die falschen liegen lassen. Weil sie nur heben
+	# darf, kann sie an den falschen gar nichts verderben.
+	var split := _unsure_split(rows)
+	print("\n    Ohne Urteil     %d von %d (%.1f %%)" % [
+			tally["unsure"], rows.size(), _percent(tally["unsure"], rows.size())])
+	print("                    davon %d richtig — die muss Stufe 1 anheben" % split["richtig"])
+	print("                    davon %d falsch  — die darf sie NICHT anheben" % split["falsch"])
+	print("    Fehlurteile     %d, davon %d aus dem Pfad ohne Urteil"
+			% [tally["fn"] + tally["fp"], _misjudged_unsure(rows, threshold, field)])
 
-	print("\n    Unsicher        %d von %d (%.1f %%)  ← ohne Schlüsseltreffer und ohne bekannten Fehler"
-			% [lenient["unsure"], rows.size(), _percent(lenient["unsure"], rows.size())])
-	print("    Fehlurteile     %d, davon %d aus dem unsicheren Pfad"
-			% [lenient["fn"] + lenient["fp"], _misjudged_unsure(rows, threshold, field)])
-	return lenient
+	# Die Zusicherung aus SentenceCard: wo eine Stufe kein Urteil hat, trägt sie auch keine
+	# Güte. Beide Lesarten müssen deshalb dasselbe ergeben — täten sie es nicht, wäre die
+	# Schwelle wieder der Hebel, und der Wortsalat käme durch.
+	var strict := _tally(rows, threshold, field, true)
+	if strict["fn"] != tally["fn"] or strict["fp"] != tally["fp"]:
+		print("    ACHTUNG: eine Stufe meldet eine Güte über der Schwelle, ohne sich sicher "
+				+ "zu sein (%d/%d gegen %d/%d)"
+				% [tally["fn"], tally["fp"], strict["fn"], strict["fp"]])
+	return tally
+
+
+## Wie sich der Topf ohne Urteil auf richtig und falsch verteilt.
+func _unsure_split(rows: Array) -> Dictionary:
+	var out := {"richtig": 0, "falsch": 0}
+	for row in rows:
+		if bool(row["card"].get("sure", true)):
+			continue
+		out["richtig" if str(row["expect"]) == "richtig" else "falsch"] += 1
+	return out
 
 
 ## Wie viele der Fehlurteile aus dem RATENDEN Teil stammen. Steht diese Zahl auf der Summe
@@ -251,22 +265,21 @@ func _tally(rows: Array, threshold: float, field: String, require_sure := false)
 
 
 ## Dieselbe Messung über eine Reihe von Schwellen. Sie kostet nichts und beantwortet die
-## Frage, die sonst als Erstes kommt: „liegt es an der Schwelle?"
+## Frage, die sonst als Erstes kommt: „liegt es an der Schwelle?" — die Antwort lautet
+## inzwischen fast überall nein, und das ist der Sinn der Änderung: eine Antwort ohne
+## Urteil ist kein Treffer, bei welcher Schwelle auch immer.
 func _report_sweep(rows: Array) -> void:
 	var head := "\n  Schwelle     "
 	var fn := "    Falsch-Neg.  "
 	var fp := "    Falsch-Pos.  "
-	var sure_fn := "    nur sicher:  "
 	for threshold in SWEEP:
 		var tally := _tally(rows, float(threshold), "card")
 		head += "%6.2f" % threshold
 		fn += "%6d" % tally["fn"]
 		fp += "%6d" % tally["fp"]
-		sure_fn += "%6d" % _tally(rows, float(threshold), "card", true)["fn"]
 	print(head)
 	print(fn)
 	print(fp)
-	print(sure_fn + "   Falsch-Negative, wenn unsicher nicht zählt")
 
 
 func _percent(part: int, whole: int) -> float:

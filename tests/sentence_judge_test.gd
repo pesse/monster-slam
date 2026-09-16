@@ -84,13 +84,19 @@ func test_stage_one_may_lift() -> void:
 ## Und das ist die Grenze: ein kleines Modell lehnt richtige Antworten ab. Sein Tadel
 ## bleibt draußen — auch seine Rückmeldung, sonst stünde die Begründung eines verworfenen
 ## Urteils neben einer Güte, die es nicht gesprochen hat.
+##
+## Gefragt wird Stufe 1 nur, wo die Karte KEIN Urteil hat (Güte 0, SentenceCard.NO_VERDICT).
+## Damit ist „senken" dort gar nicht mehr möglich, und die Regel wird zu ihrer schärferen
+## Fassung: ohne eine Anhebung bleibt die Antwort kein Treffer — der Zweifel ist die
+## Vorgabe und nicht das Ergebnis einer Wortmengen-Überschneidung.
 func test_stage_one_may_never_lower() -> void:
 	_judge.model_backend = _backend
 	var card := _judge.judge(SENTENCE, "The reef was what we saw yesterday.")
+	assert_float(float(card["quality"])).is_equal(SentenceCard.NO_VERDICT)
+	assert_bool(bool(card["sure"])).is_false()
 	_reply_to.call({"quality": 0.0, "feedback": "Falsch."})
 	assert_array(_refined).is_empty()
 	assert_int(_gave_up).is_equal(1)
-	assert_float(float(card["quality"])).is_greater(0.0)
 
 
 ## „Nichts beizutragen" ist der Normalfall — kein Dienst, kein JSON, kein Urteil.

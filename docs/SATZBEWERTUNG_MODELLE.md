@@ -150,42 +150,48 @@ Bogen in sich stimmt (keine Stolperstelle auf einer richtigen Lösung, kein `var
 nicht im Schlüssel steht), hält `tests/answer_sheet_test.gd` — ein schiefer Maßstab
 erzeugte Falsch-Negative, die im Bogen stehen und nicht im Code.
 
-### Erster Stand (Stufe 0 allein, Schwelle 0,60)
+### Was die erste Messung ergab — und was daraus folgte
+
+Die erste Fassung der Prüfkarte gab dort, wo sie nichts im Schlüssel fand, eine geschätzte
+Güte aus (die Wort-Überschneidung). Gemessen: 2 Falsch-Negative, **4 Falsch-Positive**, und
+**alle sechs Fehlurteile stammten aus genau diesem Zweig** — die 38 Antworten mit einem
+echten Befund waren ausnahmslos richtig eingeordnet.
+
+Der Befund war nicht justierbar: „Always she walks to school." enthält dieselben Wörter wie
+die Musterlösung und bekam **1,00**. Eine Überschneidung von Wortmengen sieht weder
+Reihenfolge noch Beugung — also genau das nicht, was ein Bosskampf übt. Über alle Schwellen
+von 0,40 bis 0,80 blieb es dabei.
+
+Daraus wurde die Änderung, die im Nachtrag zu ADR 0004 steht: **ohne Schlüsseltreffer kein
+Urteil.** Die Nähe bleibt als `overlap` erhalten und wählt nur noch die Rückmeldung.
+
+### Stand (Stufe 0 allein, Schwelle 0,60)
 
 | | angenommen | abgelehnt |
 |---|---|---|
-| erwartet richtig | 35 | **2** |
-| erwartet falsch | 4 | 22 |
+| erwartet richtig | 25 | **12** |
+| erwartet falsch | 0 | 26 |
 
-- **Falsch-Negative 2 von 37 (5,4 %)** — der teure Fehler. Beide Male ist die Antwort so
-  kurz und anders formuliert, dass die Wort-Überschneidung sie nicht rettet („You needn't
-  hurry." gegen „You don't have to hurry.") oder das geforderte Lexem umschrieben wurde
-  („grandma and grandpa" statt „grandparents", eine gewollte Abweisung).
-- **Falsch-Positive 4 von 26 (15,4 %)** — durchgewinkte falsche Antworten, alle vom selben
-  Typ: dieselben Wörter, falsch gebeugt oder falsch geordnet („Always she walks to
-  school.", „Yesterday we seen the reef.", „for three months" statt „three years"). Die
-  Überschneidung kann das nicht sehen.
-- **Unsicher in 39,7 % der Fälle** — so oft dürfte Stufe 1 überhaupt ran. Das ist die
-  Antwort auf die zweite offene Frage oben, und sie fällt hoch aus: ein Modell zahlte sich
-  nicht nur für „wenige Prozent" der Antworten.
+- **Falsch-Positive 0** — und zwar bei jeder Schwelle von 0,40 bis 0,80. Eine falsche
+  Antwort kann jetzt nur noch über den Schlüssel durchkommen, also über eine falsche
+  Lösung in `accepted`; dagegen steht `tests/sentence_data_test.gd`.
+- **Falsch-Negative 12 von 37 (32,4 %)** — das sind exakt die richtigen Antworten im Topf
+  ohne Urteil. Sie sind kein Tadel: die Karte sagt „ich weiß es nicht", nicht „falsch".
+  Wie ein Kampf das anzeigt, ist offen (ADR 0004, „Nicht entschieden").
+- **Ohne Urteil 25 von 63 (39,7 %)**, davon 12 richtig und 13 falsch.
 
-Die Schwelle ist dabei keine entschiedene Spielregel (ADR 0004 spricht von einer
-„Güteschwelle", ohne sie festzulegen), und die Zahlen hängen vollständig an ihr:
-
-| Schwelle | 0,40 | 0,50 | 0,60 | 0,70 | 0,80 |
-|---|---|---|---|---|---|
-| Falsch-Negative | 0 | 0 | 2 | 2 | 3 |
-| Falsch-Positive | 13 | 13 | 4 | 4 | 3 |
-
-0,60 ist der Knick: darunter rutscht alles durch, was `MISSING_CAP` auf 0,5 gedeckelt hat.
+Die Schwellenreihe ist damit flach — die Schwelle ist nicht mehr der Hebel, und das ist der
+Sinn der Änderung.
 
 ### Was das für eine zweite Stufe heißt
 
-**Stufe 1 kann nur die linke Spalte verbessern.** Sie darf nur heben, nie senken (das ist
-die Regel, mit der ADR 0004 den Tadel für eine richtige Antwort ausschließt) — also sind
-die 4 Falsch-Positiven von jedem Modell unerreichbar, egal wie gut es ist. Zu holen sind
-2 Antworten von 63. Ob dafür ein Dienst läuft, ist genau die Rechnung, die dieses Werkzeug
-aufmachen soll.
+Stufe 1 ist jetzt **das Einzige, was aus einem Zweifel einen Treffer machen kann** — für
+Bosskämpfe also keine Kür mehr. Zugleich trägt die Regel „nur heben, nie senken" erst
+dadurch: die 13 falschen Antworten im Topf sind bereits abgewiesen, ein Modell kann sie gar
+nicht durchwinken; anzuheben hat es nur die 12 richtigen.
+
+Damit hat der Modellversuch ein Erfolgskriterium, das er vorher nicht hatte: **0
+Falsch-Positive halten und die 12 Falsch-Negativen Richtung 2 drücken.**
 
 ### Noch offen
 

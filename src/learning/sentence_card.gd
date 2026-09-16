@@ -20,13 +20,24 @@ extends RefCounted
 ## Dieselbe Regel steht als Datentest daneben (tests/sentence_data_test.gd: keine
 ## Stolperstelle darf auf eine akzeptierte Lösung passen).
 ##
+## **Ohne Schlüsseltreffer gibt es KEIN Urteil, und kein Urteil heißt 0.** Das war einmal
+## anders: die Karte gab dort die Wort-Überschneidung als Güte aus. Gemessen an einem
+## Antwortbogen (src/dev/answer_sheet.json) stammten daraufhin ALLE Fehlurteile aus genau
+## diesem Zweig — und die teuersten waren Falsch-Positive: „Always she walks to school."
+## enthält dieselben Wörter wie die Musterlösung und bekam 1,00. Eine Überschneidung von
+## Wortmengen sieht weder Reihenfolge noch Beugung, also genau das nicht, was ein
+## Bosskampf übt; keine Schwelle heilt das. Die Zahl steht jetzt als `overlap` daneben und
+## wählt nur noch die Rückmeldung — urteilen darf sie nicht.
+##
 ## Rückgabe (der Vertrag aus dem ADR, plus was die Werkbank und die zweite Stufe brauchen):
-##   "quality":   0..1
+##   "quality":   0..1 — und 0, solange `sure` falsch ist
 ##   "feedback":  Rückmeldung an den Spieler
 ##   "matched":   die getroffene Lösung in Originalschreibweise, "" ohne Treffer
 ##   "stage":     welche Stufe geantwortet hat
 ##   "sure":      Karte weiß Bescheid (Treffer oder bekannter Fehler) — sonst darf
-##                Stufe 1 nachbessern
+##                Stufe 1 nachbessern, und nur sie kann daraus einen Treffer machen
+##   "overlap":   wie nah die Antwort am Wortlaut der Lösungen liegt (0..1). NUR für die
+##                Wortwahl der Rückmeldung und für die Werkbank; 0, wo es ein Urteil gibt
 ##   "missing":   geforderte Wörter, die in der Antwort fehlen (Anzeige-Form)
 ##   "reference": die hinterlegte Musterlösung
 
@@ -42,10 +53,12 @@ const PARTIAL_QUALITY := 0.7
 ## Ein vorweggenommener Fehler. Nicht 0: der Satz steht ja im Wesentlichen da, es hakt an
 ## einer Stelle — und genau die benennt die Rückmeldung.
 const PITFALL_QUALITY := 0.35
-## Deckel, wenn ein gefordertes Lexem fehlt. Der Satz wird um dieses Wortes willen
-## gestellt; ohne das Wort ist er nicht gelöst, egal wie ähnlich der Rest klingt.
-const MISSING_CAP := 0.5
-## Ab hier heißt die Rückmeldung „nah dran" statt „anderer Satz".
+## Die Karte hat kein Urteil. Ein eigener Name, weil dieselbe 0 zweierlei heißen kann —
+## „nichts getippt" (sicher) und „ich weiß es nicht" (unsicher). Der Unterschied steht in
+## `sure`, und nur der zweite Fall ist etwas für Stufe 1.
+const NO_VERDICT := 0.0
+## Ab dieser NÄHE heißt die Rückmeldung „nah dran" statt „anderer Satz". Eine Schwelle auf
+## `overlap`, nicht auf der Güte: sie wählt Worte, sie urteilt nicht.
 const NEAR_QUALITY := 0.6
 
 const EMPTY_FEEDBACK := "Da steht noch nichts."
@@ -65,6 +78,7 @@ static func evaluate(sentence: Dictionary, answer: String) -> Dictionary:
 		"matched": "",
 		"stage": STAGE,
 		"sure": true,
+		"overlap": 0.0,
 		"missing": [],
 		"reference": str(sentence.get("reference_translation", "")),
 	}
@@ -87,16 +101,20 @@ static func evaluate(sentence: Dictionary, answer: String) -> Dictionary:
 		result["quality"] = PITFALL_QUALITY
 		return result
 
-	# Weder bekannte Lösung noch bekannter Fehler: die Karte schätzt — und sagt, dass sie
-	# schätzt. Genau hier darf eine zweite Stufe nachbessern (siehe SentenceJudge).
+	# Weder bekannte Lösung noch bekannter Fehler: die Karte hat KEIN Urteil, und sie sagt
+	# das, statt eine Zahl zu erfinden. Aus einem solchen Fall kann nur Stufe 1 einen
+	# Treffer machen (siehe SentenceJudge) — bleibt sie aus, ist die Antwort kein Treffer.
+	#
+	# Die Nähe wird trotzdem gerechnet: sie entscheidet, ob die Rückmeldung „nah dran" oder
+	# „ein anderer Satz" sagt. Das ist eine Frage der Worte und keine Bewertung.
 	result["sure"] = false
-	result["quality"] = overlap(tokens, keys, evaluator)
+	result["quality"] = NO_VERDICT
+	result["overlap"] = overlap(tokens, keys, evaluator)
 	result["missing"] = missing_words(sentence, tokens, evaluator)
 	var missing: Array = result["missing"]
 	if not missing.is_empty():
-		result["quality"] = minf(float(result["quality"]), MISSING_CAP)
 		result["feedback"] = MISSING_FEEDBACK % str(missing[0])
-	elif float(result["quality"]) >= NEAR_QUALITY:
+	elif float(result["overlap"]) >= NEAR_QUALITY:
 		result["feedback"] = NEAR_FEEDBACK
 	else:
 		result["feedback"] = FAR_FEEDBACK
@@ -207,8 +225,12 @@ static func contains_phrase(
 
 
 ## Die beste Wort-Übereinstimmung mit einer der Lösungen (F1 über die Wortmengen, 0..1).
-## Nur für den unsicheren Fall — als Urteil taugt eine Überschneidung nicht, als Schätzung
-## für „nah dran" gegen „ganz anderer Satz" reicht sie.
+##
+## **Das ist keine Bewertung und darf nie eine werden.** Sie vergleicht Wortmengen: eine
+## umgestellte oder falsch gebeugte Antwort bekommt dieselbe Zahl wie die richtige („Always
+## she walks to school." gegen „She always walks to school." — beide 1,00). Sie taugt für
+## die Unterscheidung „nah dran" gegen „ganz anderer Satz" und für sonst nichts; wer sie
+## als Güte ausgibt, winkt genau die Fehler durch, um derentwillen ein Bosskampf stattfindet.
 static func overlap(
 	tokens: PackedStringArray, keys: Array, evaluator: AnswerEvaluator
 ) -> float:
