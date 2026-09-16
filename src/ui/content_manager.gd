@@ -15,6 +15,10 @@ const PROFILE_SCENE := "res://scenes/ui/profile_menu.tscn"
 @onready var _install: Button = %InstallButton
 @onready var _adopt: Button = %AdoptButton
 @onready var _refresh: Button = %RefreshButton
+@onready var _model_button: Button = %ModelButton
+@onready var _model_remove: Button = %ModelRemoveButton
+@onready var _model_hint: Label = %ModelHint
+@onready var _model_progress: ProgressBar = %ModelProgress
 
 ## Auswahl je Pack, damit sie einen Neuaufbau der Liste übersteht.
 var _selected: Dictionary = {}
@@ -29,10 +33,16 @@ func _ready() -> void:
 	_refresh.pressed.connect(func(): ContentService.refresh())
 	_install.pressed.connect(_on_install)
 	_adopt.pressed.connect(func(): ContentService.install_many(ContentService.needs_adopt, true))
+	_model_button.pressed.connect(func(): ModelService.install())
+	_model_remove.pressed.connect(func(): ModelService.remove())
 	ContentService.changed.connect(_render)
+	ModelService.changed.connect(_render_model)
 	_render()
+	_render_model()
 	if ContentService.packs.is_empty():
 		ContentService.refresh()
+	if ModelService.parts().is_empty():
+		ModelService.refresh()
 
 
 func _on_install() -> void:
@@ -93,3 +103,42 @@ func _status_text() -> String:
 			return "%s Installierte Inhalte bleiben nutzbar." % ContentService.error
 		_:
 			return ContentService.message
+
+
+## Der Zusatz für Bosskämpfe. Er steht bewusst ÜBER der Pack-Liste und nicht darin: die
+## Packs sind Inhalte, das hier ist ein Programm — und es ist das Einzige auf diesem
+## Bildschirm, bei dem ein Klick ein Gigabyte kostet. Das gehört vor den Klick, nicht
+## dahinter (siehe ADR 0004, Nachtrag „Stufe 1 auf eigenen Beinen").
+func _render_model() -> void:
+	var busy := ModelService.busy()
+	var installed := ModelService.installed()
+	var size := ModelService.humanized(ModelService.total_bytes())
+
+	_model_progress.visible = busy
+	_model_progress.value = ModelService.progress
+	_model_button.visible = not installed
+	_model_button.disabled = busy or ModelService.parts().is_empty()
+	_model_remove.visible = installed and not busy
+
+	if busy:
+		_model_hint.text = "%s  (%d %%)" % [ModelService.activity, int(ModelService.progress * 100.0)]
+	elif installed:
+		_model_hint.text = "Einsatzbereit. Bei Sätzen, die der Schlüssel nicht kennt, " \
+				+ "fragt das Spiel jetzt ein Modell auf DIESEM Rechner — nichts geht ins Netz."
+	elif not ModelService.error.is_empty():
+		_model_hint.text = ModelService.error
+	elif ModelService.parts().is_empty():
+		_model_hint.text = "Wird gesucht …"
+	else:
+		_model_hint.text = "Optional. Erkennt bei Bosskämpfen auch richtige Sätze, die " \
+				+ "so nicht hinterlegt sind. Läuft danach nur auf diesem Rechner, ohne " \
+				+ "Netz. Einmalig %s." % size
+	_model_hint.visible = not _model_hint.text.is_empty()
+
+	Hints.attach(_model_button, ModelService.display_name(),
+			"Lädt Programm und Sprachmodell hierher — einmalig %s." % size,
+			"Ohne den Zusatz zeigt das Spiel bei unbekannten Formulierungen die "
+			+ "Musterlösung, statt sie als falsch zu werten.")
+	Hints.attach(_model_remove, "Sprachmodell entfernen",
+			"Gibt %s wieder frei." % size,
+			"Bosskämpfe laufen weiter — nur ohne die zweite Meinung.")

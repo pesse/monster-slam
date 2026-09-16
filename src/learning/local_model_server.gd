@@ -89,10 +89,15 @@ func health_url() -> String:
 
 ## Was von den beiden Dateien fehlt. Leer heißt: es ist etwas installiert.
 func missing_files() -> PackedStringArray:
+	return missing_in(dir)
+
+
+## Dasselbe ohne Instanz — `ModelService` fragt danach, bevor es überhaupt einen Dienst gibt.
+static func missing_in(dir: String) -> PackedStringArray:
 	var missing := PackedStringArray()
-	if not FileAccess.file_exists(exe_path()):
+	if not FileAccess.file_exists(dir.path_join(EXE_NAME)):
 		missing.append(EXE_NAME)
-	if not FileAccess.file_exists(weights_path()):
+	if not FileAccess.file_exists(dir.path_join(WEIGHTS_NAME)):
 		missing.append(WEIGHTS_NAME)
 	return missing
 

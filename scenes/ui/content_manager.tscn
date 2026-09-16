@@ -43,6 +43,39 @@ text = "↺ Neu suchen"
 unique_name_in_owner = true
 autowrap_mode = 3
 
+[node name="Model" type="PanelContainer" parent="Margin/Root"]
+unique_name_in_owner = true
+
+[node name="Box" type="VBoxContainer" parent="Margin/Root/Model"]
+
+[node name="Head" type="HBoxContainer" parent="Margin/Root/Model/Box"]
+
+[node name="ModelTitle" type="Label" parent="Margin/Root/Model/Box/Head"]
+theme_type_variation = &"SectionTitle"
+size_flags_horizontal = 3
+text = "Sprachmodell für Bosskämpfe"
+
+[node name="ModelButton" type="Button" parent="Margin/Root/Model/Box/Head"]
+unique_name_in_owner = true
+text = "Herunterladen"
+
+[node name="ModelRemoveButton" type="Button" parent="Margin/Root/Model/Box/Head"]
+unique_name_in_owner = true
+visible = false
+text = "Entfernen"
+
+[node name="ModelHint" type="Label" parent="Margin/Root/Model/Box"]
+unique_name_in_owner = true
+theme_type_variation = &"Hint"
+autowrap_mode = 3
+
+[node name="ModelProgress" type="ProgressBar" parent="Margin/Root/Model/Box"]
+unique_name_in_owner = true
+visible = false
+max_value = 1.0
+step = 0.001
+show_percentage = false
+
 [node name="Scroll" type="ScrollContainer" parent="Margin/Root"]
 size_flags_vertical = 3
 horizontal_scroll_mode = 0

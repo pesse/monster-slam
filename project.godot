@@ -32,6 +32,7 @@ PlayerLevel="*res://src/progression/player_level.gd"
 SkillBook="*res://src/progression/skill_book.gd"
 UpdateService="*res://src/update/update_service.gd"
 ContentService="*res://src/content/content_service.gd"
+ModelService="*res://src/content/model_service.gd"
 ReportService="*res://src/report/report_service.gd"
 Hints="*res://scenes/ui/hints.tscn"
 

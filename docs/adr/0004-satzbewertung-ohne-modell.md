@@ -366,23 +366,74 @@ Fehlt Programm oder Gewichte, ist das kein Fehler, sondern der Normalfall: `star
 `false` zurück, der Grund steht in `last_note`, und das Spiel bleibt bei Stufe 0. Genau
 wie ein nicht laufender Ollama vorher.
 
+### Und der Weg dorthin: ein Knopf, keine Anleitung
+
+Der Durchstich verlangte, zwei Dateien von Hand nach `user://model/` zu legen. Das ist als
+Nachweis in Ordnung und als Auslieferung nichts: **Eltern legen keine Dateien in ein
+AppData-Verzeichnis.** Ein Zusatz, den man sich zusammensuchen muss, ist eine Anleitung,
+und eine Anleitung erreicht die Zielgruppe dieses Spiels nicht.
+
+`ModelService` (Autoload, `src/content/model_service.gd`) holt beides hinter einem Knopf in
+der Inhalte-Verwaltung. Was dabei entschieden ist:
+
+**Wir spiegeln nichts.** llama.cpp und die Gewichte liegen dauerhaft im Netz; ein eigener
+Spiegel köstete Speicherplatz und Pflege, ohne etwas zu gewinnen. Was wir liefern müssen,
+ist nicht die Datei, sondern die Zusicherung, **welche** Datei gemeint ist — und das ist
+die Prüfsumme.
+
+**Damit hängt die Sicherheit dieses Weges an `sha256` und an nichts sonst.** Das Manifest
+nennt für jeden Teil URL, Prüfsumme und Größe; was nicht passt, wird verworfen und nicht
+installiert. `tools/model/make_manifest.py` rechnet die Prüfsummen selbst aus, statt sie
+von einer Webseite abzuschreiben — eine abgeschriebene Prüfsumme sichert nur zu, dass der
+Download zu der Webseite passt.
+
+**Das Manifest liegt im Release-Kanal**, neben dem Pack-Verzeichnis (`model.json` neben
+`index.json`). Ein anderes Modell ist damit eine Datei und kein App-Release. Es ist wie
+`index.json` unsigniert — dieselbe Haltung wie in ADR 0001, und die Prüfsumme darin ist
+das, was zählt:
+
+```json
+{
+  "name": "Sprachmodell für Bosskämpfe",
+  "min_app_version": "0.8.0",
+  "parts": [
+    {"file": "llama-server.exe", "url": "https://…/llama-bXXXX-bin-win-cpu-x64.zip",
+     "sha256": "…", "bytes": 21000000, "unzip": true},
+    {"file": "model.gguf", "url": "https://huggingface.co/…/resolve/<commit>/….gguf",
+     "sha256": "…", "bytes": 1100000000}
+  ]
+}
+```
+
+**Aus einem Archiv kommt nur, was das Programm zum Laufen braucht** (`.exe`, `.dll` — ohne
+seine DLLs startet llama-server nicht). Übernommen wird dabei **nur der Dateiname, nie der
+Pfad im Archiv**: ein Eintrag wie `../../autostart.exe` landet damit im Zielverzeichnis
+statt im Autostart, und zugleich ist es egal, ob ein llama.cpp-Release seine Dateien in der
+Wurzel oder unter `build/bin` führt.
+
+**Entfernen gehört dazu.** Ein Gigabyte, das man nicht mehr braucht, muss man auch wieder
+loswerden können — sonst ist der Knopf eine Einbahnstraße.
+
+**Die Größe steht vor dem Klick**, nicht danach. „Einmalig 1,1 GB" ist die Angabe, nach der
+die Entscheidung fällt.
+
 ### Noch nicht gebaut
 
 Das Folgende gehört zur Entscheidung, aber nicht zum Durchstich — es steht hier, damit
 niemand es für vergessen hält:
 
-- **Der Pack selbst**: Bauen, Signieren, `min_app_version`, Eintrag in `packs.yaml`, der
-  Knopf im Einstellungs-Screen. Bis dahin legt man die zwei Dateien von Hand nach
-  `user://model/`.
 - **SmartScreen.** Eine heruntergeladene, nicht von uns signierte `.exe` bekommt unter
-  Windows eine Warnung. Das ist das größte offene Risiko dieser Route und vor dem Pack zu
-  klären, nicht danach.
+  Windows eine Warnung, sobald jemand sie doppelklickt. Das Spiel startet sie als
+  Kindprozess, was diesen Weg wahrscheinlich umgeht — *wahrscheinlich* ist hier aber nicht
+  gemessen, und es ist das größte offene Risiko der Route.
 - **Welches Modell.** `docs/SATZBEWERTUNG_MODELLE.md` empfiehlt EuroLLM-1.7B-Instruct
   (Apache 2.0, für genau diese Sprachrichtung gebaut). Entschieden wird das am
   Antwortbogen und nicht an der Modellkarte: **0 Falsch-Positive halten und die 12
   Falsch-Negativen Richtung 2 drücken.** Solange diese Zahl nicht gemessen ist, ist auch
-  nicht entschieden, ob der Pack überhaupt gebaut wird — ein Gigabyte für zwei Antworten
-  wäre keine gute Abwägung.
+  nicht entschieden, ob der Zusatz überhaupt ausgeliefert wird — ein Gigabyte für zwei
+  Antworten wäre keine gute Abwägung. **Das `model.json` steht deshalb noch nicht im
+  Release-Kanal**: der Knopf ist gebaut, das Ziel ist gewählt, das Modell nicht.
+  `tools/model/make_manifest.py` erzeugt es, sobald es so weit ist.
 - **Der Lebenszyklus im Spiel**: wann der Dienst startet (beim Spielstart? vor dem
   Bosskampf?), was bei einem Absturz passiert, und ob ein zweites laufendes Spiel den Port
   streitig macht. Der Durchstich startet ihn einmal für einen Messlauf.
@@ -391,6 +442,8 @@ niemand es für vergessen hält:
   jedem Spieler sofort — ohne Download. Was der Schlüssel schafft, muss kein Modell
   schaffen.
 
-Gehalten von `tests/local_model_server_test.gd`. Kein Test startet einen Prozess und
-keiner spricht mit 127.0.0.1: Programm und Gewichte liegen in keinem Repo, und ein Test,
-der sie bräuchte, wäre auf jedem anderen Rechner rot.
+Gehalten von `tests/local_model_server_test.gd` und `tests/model_service_test.gd`. Kein
+Test startet einen Prozess, keiner lädt etwas herunter und keiner spricht mit 127.0.0.1:
+Programm und Gewichte liegen in keinem Repo, und ein Test, der sie bräuchte, wäre auf
+jedem anderen Rechner rot. Geschrieben wird in ein `zz-`Verzeichnis — unter `user://model`
+liegt auf einem Entwicklungsrechner das echte Modell.
