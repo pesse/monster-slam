@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/ui/hints.gd" id="1_hints"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hint_card.tscn" id="2_card"]
+
+[node name="Hints" type="CanvasLayer"]
+layer = 128
+script = ExtResource("1_hints")
+
+[node name="Card" parent="." instance=ExtResource("2_card")]
+unique_name_in_owner = true
+visible = false

@@ -21,12 +21,6 @@ extends Control
 ## Screen — dieses Control lernt nichts.
 signal node_selected(id: String)
 
-## Der Zeiger steht über `id` (leer: über nichts), und zwar an `at` in Bildschirm-
-## Koordinaten. Die Auskunftskarte hängt NICHT hier, sondern beim Screen: dieses
-## Control beschneidet seine Zeichnung (`clip_contents`), eine Karte am Rand wäre
-## also halb weg.
-signal hover_changed(id: String, at: Vector2)
-
 const MIN_ZOOM := 0.35
 const MAX_ZOOM := 2.0
 
@@ -80,7 +74,7 @@ func _ready() -> void:
 	resized.connect(func() -> void:
 		if not _touched:
 			fit())
-	mouse_exited.connect(func() -> void: _set_hovered("", Vector2.ZERO))
+	mouse_exited.connect(func() -> void: _set_hovered(""))
 
 
 ## Setzt den Inhalt: Knoten, Gelerntes und die offenen Punkte. Der Ausschnitt bleibt, wo
@@ -148,11 +142,9 @@ func _gui_input(event: InputEvent) -> void:
 			and _press_at.distance_to(motion.position) > DRAG_SLOP:
 		_dragging = true
 	if not _dragging:
-		_set_hovered(id_at(motion.position), motion.global_position)
+		_set_hovered(id_at(motion.position))
 		return
-	# Beim Ziehen wandert das ganze Netz unter dem Zeiger durch. Eine Karte, die dabei
-	# mitliefe und bei jedem Pixel ihren Inhalt wechselte, wäre nur Flackern.
-	_set_hovered("", Vector2.ZERO)
+	_set_hovered("")
 	_touched = true
 	_origin += motion.relative
 	queue_redraw()
@@ -164,12 +156,12 @@ func _on_button(button: InputEventMouseButton) -> void:
 		MOUSE_BUTTON_WHEEL_UP:
 			if button.pressed:
 				_zoom_at(button.position, ZOOM_STEP)
-				_set_hovered(id_at(button.position), button.global_position)
+				_set_hovered(id_at(button.position))
 				accept_event()
 		MOUSE_BUTTON_WHEEL_DOWN:
 			if button.pressed:
 				_zoom_at(button.position, 1.0 / ZOOM_STEP)
-				_set_hovered(id_at(button.position), button.global_position)
+				_set_hovered(id_at(button.position))
 				accept_event()
 		MOUSE_BUTTON_LEFT, MOUSE_BUTTON_MIDDLE:
 			if button.pressed:
@@ -186,13 +178,25 @@ func _on_button(button: InputEventMouseButton) -> void:
 			accept_event()
 
 
-## Gezeichnet wird nur neu, wenn sich der Knoten ÄNDERT — gemeldet wird jede
-## Bewegung: die Karte folgt dem Zeiger und braucht dafür jede neue Position.
-func _set_hovered(id: String, at: Vector2) -> void:
-	if _hovered != id:
-		_hovered = id
-		queue_redraw()
-	hover_changed.emit(_hovered, at)
+## Der helle Ring um den Knoten unter dem Zeiger. Gezeichnet wird nur neu, wenn sich der
+## Knoten ÄNDERT.
+##
+## Die Auskunftskarte hängt nicht mehr daran: `Hints` fragt jeden Frame, was unter dem
+## Zeiger liegt, und der Screen antwortet für diese Fläche (`SkillTree._hint_at`). Dieses
+## Control beschneidet seine Zeichnung (`clip_contents`), eine Karte darin wäre am Rand
+## ohnehin halb weg.
+func _set_hovered(id: String) -> void:
+	if _hovered == id:
+		return
+	_hovered = id
+	queue_redraw()
+
+
+## Ob gerade geschoben wird. Öffentlich, weil die Auskunft am Zeiger es wissen muss und
+## der Graph sie nicht selbst stellt: beim Ziehen wandert das ganze Netz unter dem Zeiger
+## durch, und eine Karte, die dabei bei jedem Pixel ihren Inhalt wechselt, ist Flackern.
+func is_panning() -> bool:
+	return _dragging
 
 
 ## Zoomt um einen Punkt der Fläche herum: was unter dem Mauszeiger liegt, bleibt dort.

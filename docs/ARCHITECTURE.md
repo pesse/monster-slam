@@ -237,7 +237,7 @@ Start-Screen (`🌳 Fähigkeiten`), nicht am Kampf: gelernt wird zwischen den L�
 | `SkillTree` | `src/progression/skill_tree.gd` | reine Regeln: Stufen, Äste, Voraussetzungen, Kosten, Summe der Boni |
 | `SkillBook` (Autoload) | `src/progression/skill_book.gd` | das Gelernte des Profils, Kauf, Umlernen, Persistenz |
 | Wirkung | `GameState.apply_skills`, `SlowMotion.apply_skills` | Boni auf die Grundwerte des Laufs |
-| Anzeige | `skill_tree.tscn` + `skill_graph.gd` (gezeichnetes Netz), `skill_tooltip.tscn` (Auskunft am Zeiger), `confirm_dialog.tscn` (Rückfrage), `hud.tscn` (Rüstungsleiste) | — |
+| Anzeige | `skill_tree.tscn` + `skill_graph.gd` (gezeichnetes Netz), `Hints` (Auskunft am Zeiger, spielweit), `confirm_dialog.tscn` (Rückfrage), `hud.tscn` (Rüstungsleiste) | — |
 
 - **Ein Knoten hat `tier` (Abstand) und `branch` (Stelle im Fächer)** — zwei Felder statt
   einer aus `requires` gerechneten Position, und statt fertiger Koordinaten in den Daten.
@@ -251,12 +251,14 @@ Start-Screen (`🌳 Fähigkeiten`), nicht am Kampf: gelernt wird zwischen den L�
   wären zwölf Theme-Variationen, und die Farbe eines Baums soll aus seiner JSON kommen
   (`color`) und nicht aus dem Theme. Der Screen zoomt mit dem Mausrad und lässt sich
   ziehen; ein Kauf verschiebt den Ausschnitt nicht. Einpassen und Umlernen sitzen als
-  Zeichen (⛶, ↺) in der unteren rechten Ecke der Fläche und erklären sich per
-  `tooltip_text`.
+  Zeichen (⛶, ↺) in der unteren rechten Ecke der Fläche und erklären sich über ihre Karte
+  am Zeiger (`Hints.attach`).
 - **Die Auskunft steht am Zeiger, die Entscheidung in einem Dialog.** Der Screen ist nur
-  das Netz; eine Tafel am Bildrand gibt es nicht. `SkillGraph` meldet jede Mausbewegung
-  (`hover_changed`), und der Screen stellt eine `SkillTooltip`-Karte neben den Zeiger —
-  sofort, ohne Godots Tooltip-Verzögerung, und am Bildrand auf die andere Seite geklappt.
+  das Netz; eine Tafel am Bildrand gibt es nicht. Erklärt wird über `Hints` — dieselbe
+  Karte wie im ganzen Spiel, sofort und am Bildrand auf die andere Seite geklappt. Weil
+  der Graph seine Treffer selbst sucht, hängt er dort als *lebende* Auskunft
+  (`attach_live`) und antwortet über `SkillTree._hint_at(local)`, statt jede Mausbewegung
+  zu melden.
   Über einem Knoten trägt sie Zeichen, Name, Wirkung und Zustandszeile
   (`SkillTree.state_label`), über dem NAMEN eines Baums dessen Stand
   (`SkillTree.tree_status`: „2/5 gelernt · +2 HP je besiegtem Monster"). Ein Klick auf
@@ -414,6 +416,31 @@ Das HMAC-Geheimnis liegt **ausschließlich** auf dem Server (`server/melden/READ
 Endpunkt-URL ist dagegen eine Konstante im öffentlichen Repo (`ReportService.ENDPOINT`) —
 kein Geheimnis, und genau deshalb muss der Endpunkt seine Grenzen selbst setzen. Ist sie
 leer, ist der Kanal aus.
+
+## Auskunft am Zeiger (`Hints`, `src/ui/hints.gd`)
+
+| | |
+|---|---|
+| Autoload | `Hints` — eine `CanvasLayer` (layer 128) mit genau einer `HintCard` |
+| Anmelden | `Hints.attach(control, titel, text, nachsatz)`; leer = abmelden |
+| Eigene Trefferprüfung | `Hints.attach_live(control, callable)` → Karte oder `{}` je Punkt |
+| Wächter | `tests/hint_discipline_test.gd` (kein `tooltip_text` mehr im Projekt) |
+
+Godots eigener Tooltip ist im ganzen Spiel abgelöst: er erscheint verzögert, bleibt stehen,
+wo er aufgegangen ist, und bringt die Typografie der Engine mit. Die Karte hängt am
+Mauszeiger, kommt aus dem Theme und trägt drei Zeilen — Überschrift, Text, Nachsatz —, von
+denen leere nicht erscheinen.
+
+Gefragt wird jeden Frame `Viewport.gui_get_hovered_control()`, und von dort geht die Suche
+nach OBEN, bis ein Knoten eine Auskunft trägt. Das ist der Unterschied zu Godot, das am
+ersten Kind mit `MOUSE_FILTER_STOP` abbricht: eine Auskunft an einer Zeile gilt damit auch
+für deren Knöpfe und Balken (`ProgressRow` setzte sie vorher zweimal). Gespeichert wird als
+Metadatum am Knoten — es gibt keine Liste, die ihre Knoten überleben könnte.
+
+Die eigene Zeichenschicht ist kein Luxus: ein `ScrollContainer` beschneidet seine Kinder,
+und die Statistikzeilen liegen in einem. Ein `CanvasLayer` ist kein `CanvasItem`, damit
+endet die Beschneidung an seiner Grenze — und auf 128 liegt die Karte zugleich über der
+UI-Schicht des Kampfes, in der der Wellenabschluss samt Schatzkiste hängt.
 
 ## Sprachwahl: GDScript (C# nur bei Bedarf punktuell)
 

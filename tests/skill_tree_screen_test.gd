@@ -91,8 +91,8 @@ func _graph(screen: Control) -> SkillGraph:
 	return screen.get_node("%Graph") as SkillGraph
 
 
-func _card(screen: Control) -> SkillTooltip:
-	return screen.get_node("%Hover") as SkillTooltip
+func _card(_screen: Control) -> HintCard:
+	return Hints.card()
 
 
 func _dialog(screen: Control) -> ConfirmDialog:
@@ -136,17 +136,22 @@ func _learn(screen: Control, id: String) -> void:
 	_say_yes(screen)
 
 
-## Fährt mit der Maus über einen Punkt der Zeichenfläche. `global_position` ist das, woran
-## der Screen die Karte ausrichtet — im Spiel liegt die Fläche nicht im Nullpunkt.
+## Fährt mit der Maus über einen Punkt der Zeichenfläche.
+##
+## Zwei Wege in einem: das Ereignis geht an den Graphen (der davon seinen hellen Ring und
+## sein Ziehen ableitet), und `Hints.probe` fragt die Auskunft an genau diesem Punkt ab.
+## Getrennt sind sie, weil Godot kopflos keine Mausereignisse befördert — im Spiel fragt
+## `Hints` von selbst, hier muss man es sagen (siehe tests/hints_test.gd).
 func _move(screen: Control, at: Vector2) -> void:
 	var graph := _graph(screen)
 	var event := InputEventMouseMotion.new()
 	event.position = at
 	event.global_position = graph.global_position + at
 	graph._gui_input(event)
+	Hints.probe(graph, graph.global_position + at)
 
 
-func _move_to(screen: Control, id: String) -> SkillTooltip:
+func _move_to(screen: Control, id: String) -> HintCard:
 	_move(screen, _graph(screen).screen_position(id))
 	return _card(screen)
 
@@ -164,7 +169,6 @@ func test_the_screen_finds_its_unique_names() -> void:
 	assert_object(screen.get_node("%Graph")).is_not_null()
 	assert_object(screen.get_node("%FitButton")).is_not_null()
 	assert_object(screen.get_node("%RespecButton")).is_not_null()
-	assert_object(screen.get_node("%Hover")).is_not_null()
 	assert_object(screen.get_node("%Confirm")).is_not_null()
 
 
@@ -202,9 +206,9 @@ func test_the_card_appears_without_delay() -> void:
 	await get_tree().process_frame
 	var card := _move_to(screen, "s.root")
 	assert_bool(card.visible).is_true()
-	assert_str((card.get_node("%Name") as Label).text).contains("Wurzel").contains("🌱")
-	assert_str((card.get_node("%Description") as Label).text).contains("Fängt an")
-	assert_str((card.get_node("%Status") as Label).text).contains("Lernen")
+	assert_str((card.get_node("%Title") as Label).text).contains("Wurzel").contains("🌱")
+	assert_str((card.get_node("%Body") as Label).text).contains("Fängt an")
+	assert_str((card.get_node("%Note") as Label).text).contains("Lernen")
 
 
 ## Und sie folgt dem Zeiger, statt an einer festen Stelle zu kleben.
@@ -222,23 +226,27 @@ func test_the_card_follows_the_pointer() -> void:
 			graph.global_position + at + Vector2(12, 9))).is_less(120.0)
 
 
-## Am Rand klappt sie auf die andere Seite des Zeigers: eine halb abgeschnittene Auskunft
-## ist keine.
+## Über keinem Knoten des Netzes ragt sie aus dem Bild. Gemessen wird gegen das BILD und
+## nicht gegen den Screen: die Karte hängt in einer eigenen Schicht und kennt keinen.
+##
+## Das Umklappen am Rand selbst steht in tests/hints_test.gd — dort lässt sich der Zeiger
+## in jede Ecke setzen, hier hängt die Karte an einem Knoten und die liegen alle mitten im
+## Netz.
 func test_the_card_stays_inside_the_screen() -> void:
 	_give_points(1)
 	var screen := _screen()
 	await get_tree().process_frame
-	assert_float(screen.size.x).is_greater(0.0)
 	var graph := _graph(screen)
-	# Den Knoten erst überfahren, dann den Zeiger in die Ecke ziehen: die Karte hängt am
-	# zuletzt gemeldeten Knoten, ihre Lage am zuletzt gemeldeten Punkt.
-	_move(screen, graph.screen_position("s.root"))
-	_graph(screen)._set_hovered("s.root", screen.size - Vector2(2, 2))
-	var card := _card(screen)
-	assert_float(card.global_position.x).is_greater_equal(0.0)
-	assert_float(card.global_position.y).is_greater_equal(0.0)
-	assert_float(card.global_position.x + card.size.x).is_less_equal(screen.size.x)
-	assert_float(card.global_position.y + card.size.y).is_less_equal(screen.size.y)
+	var room := screen.get_viewport_rect().size
+	assert_float(room.x).is_greater(0.0)
+	for id: String in ["s.root", "s.left", "s.right", "tree.t"]:
+		var card := _move_to(screen, id)
+		assert_bool(card.visible).override_failure_message(
+				"über '%s' steht keine Karte" % id).is_true()
+		assert_float(card.position.x).is_greater_equal(0.0)
+		assert_float(card.position.y).is_greater_equal(0.0)
+		assert_float(card.position.x + card.size.x).is_less_equal(room.x)
+		assert_float(card.position.y + card.size.y).is_less_equal(room.y)
 
 
 ## Neben dem Netz gibt es nichts zu erklären — und beim Ziehen wandert alles unter dem
@@ -266,7 +274,7 @@ func test_the_card_goes_away_beside_the_net_and_while_dragging() -> void:
 func test_without_points_the_card_names_the_price() -> void:
 	var screen := _screen()
 	await get_tree().process_frame
-	assert_str(_card_text(screen, "s.root", "Status")).contains("1 Skillpunkt")
+	assert_str(_card_text(screen, "s.root", "Note")).contains("1 Skillpunkt")
 
 
 ## Ein gesperrter Knoten nennt seine Vorstufe BEIM NAMEN. Im Netz hängt an einem Knoten
@@ -275,7 +283,7 @@ func test_a_locked_node_names_its_requirement() -> void:
 	_give_points(5)
 	var screen := _screen()
 	await get_tree().process_frame
-	assert_str(_card_text(screen, "s.left", "Status")).contains("🔒").contains("Wurzel")
+	assert_str(_card_text(screen, "s.left", "Note")).contains("🔒").contains("Wurzel")
 
 
 func test_a_learned_node_says_so() -> void:
@@ -283,8 +291,8 @@ func test_a_learned_node_says_so() -> void:
 	var screen := _screen()
 	await get_tree().process_frame
 	_learn(screen, "s.root")
-	assert_str(_card_text(screen, "s.root", "Status")).contains("Gelernt")
-	assert_str(_card_text(screen, "s.left", "Status")).contains("Lernen")
+	assert_str(_card_text(screen, "s.root", "Note")).contains("Gelernt")
+	assert_str(_card_text(screen, "s.left", "Note")).contains("Lernen")
 
 
 ## Über dem NAMEN eines Baums steht sein Stand — das, was früher am rechten Bildrand
@@ -293,10 +301,10 @@ func test_the_card_of_a_tree_name_shows_its_progress() -> void:
 	_give_points(2)
 	var screen := _screen()
 	await get_tree().process_frame
-	assert_str(_card_text(screen, "tree.t", "Name")).contains("Prüfbaum")
-	assert_str(_card_text(screen, "tree.t", "Status")).contains("0/3")
+	assert_str(_card_text(screen, "tree.t", "Title")).contains("Prüfbaum")
+	assert_str(_card_text(screen, "tree.t", "Note")).contains("0/3")
 	_learn(screen, "s.root")
-	assert_str(_card_text(screen, "tree.t", "Status")).contains("1/3").contains("HP")
+	assert_str(_card_text(screen, "tree.t", "Note")).contains("1/3").contains("HP")
 
 
 # --- Klick und Rückfrage ------------------------------------------------------
@@ -395,21 +403,20 @@ func test_the_counter_follows_the_purchase() -> void:
 
 ## Zwei Zeichen statt zweier Beschriftungen — und beide erklären sich beim Überfahren.
 ## Ein Knopf, auf dem nur „⛶" steht und der nichts dazu sagt, ist ein Rätsel.
+##
+## Geprüft wird die Karte und nicht der Hinweis am Knopf: es geht darum, dass beim
+## Überfahren etwas dasteht, und zwar ohne Wartezeit — deshalb steht hier kein `await`.
 func test_the_tools_explain_themselves() -> void:
 	var screen := _screen()
-	var fit := screen.get_node("%FitButton") as Button
-	var respec := screen.get_node("%RespecButton") as Button
-	assert_str(fit.text).is_not_empty()
-	assert_str(fit.tooltip_text).contains("einpassen")
-	assert_str(respec.text).is_not_empty()
-	assert_str(respec.tooltip_text).contains("Umlernen")
-
-
-## Und sie erscheinen ohne Wartezeit: dieselbe Zusage wie bei der Karte am Knoten, nur
-## dass Godots eigene Tooltips dafür eine Projekteinstellung brauchen.
-func test_tooltips_appear_without_delay() -> void:
-	assert_float(float(ProjectSettings.get_setting(
-			"gui/timers/tooltip_delay_sec", 0.5))).is_equal(0.0)
+	for name_and_word: Array in [["%FitButton", "einpassen"], ["%RespecButton", "Umlernen"]]:
+		var button := screen.get_node(str(name_and_word[0])) as Button
+		assert_str(button.text).is_not_empty()
+		Hints.probe(button)
+		var card := _card(screen)
+		assert_bool(card.visible).override_failure_message(
+				"%s erklärt sich nicht" % name_and_word[0]).is_true()
+		assert_str((card.get_node("%Title") as Label).text
+				+ (card.get_node("%Body") as Label).text).contains(str(name_and_word[1]))
 
 
 # --- Zoom und Ausschnitt ------------------------------------------------------
@@ -535,7 +542,7 @@ func test_respec_without_skills_is_disabled_but_speaks() -> void:
 	var screen := _screen()
 	var respec := screen.get_node("%RespecButton") as Button
 	assert_bool(respec.disabled).is_true()
-	assert_str(respec.tooltip_text).contains("nichts gelernt")
+	assert_str(str(Hints.hint_of(respec)["body"])).contains("nichts gelernt")
 
 
 ## Reicht das Gold nicht, steht der Preis trotzdem da: der Knopf ist kein Rätsel.
@@ -547,7 +554,8 @@ func test_respec_without_gold_names_the_price() -> void:
 	_learn(screen, "s.root")
 	var respec := screen.get_node("%RespecButton") as Button
 	assert_bool(respec.disabled).is_true()
-	assert_str(respec.tooltip_text).contains(str(SkillTree.RESPEC_GOLD_PER_POINT))
+	assert_str(str(Hints.hint_of(respec)["body"])).contains(
+			str(SkillTree.RESPEC_GOLD_PER_POINT))
 
 
 # --- Maß ----------------------------------------------------------------------
