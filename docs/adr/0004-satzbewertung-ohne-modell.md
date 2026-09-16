@@ -405,11 +405,16 @@ das, was zählt:
 }
 ```
 
-**Aus einem Archiv kommt nur, was das Programm zum Laufen braucht** (`.exe`, `.dll` — ohne
-seine DLLs startet llama-server nicht). Übernommen wird dabei **nur der Dateiname, nie der
-Pfad im Archiv**: ein Eintrag wie `../../autostart.exe` landet damit im Zielverzeichnis
-statt im Autostart, und zugleich ist es egal, ob ein llama.cpp-Release seine Dateien in der
-Wurzel oder unter `build/bin` führt.
+**Aus einem Archiv kommt nur, was das Programm zum Laufen braucht**: `llama-server.exe`
+selbst, die DLLs (ohne sie startet er nicht, und welche der `ggml-cpu-*.dll` gebraucht wird,
+entscheidet er beim Start nach der CPU) und die Lizenztexte. Draußen bleiben die rund zehn
+weiteren Programme, die ein llama.cpp-Release mitbringt — `llama-cli`, `llama-bench` und die
+übrigen. Wir brauchen keines davon, und ein Kinderrechner braucht keine zehn zusätzlichen
+ausführbaren Dateien. Übernommen wird dabei **nur der Dateiname, nie der Pfad im Archiv**:
+ein Eintrag wie `../../autostart.exe` landet damit im Zielverzeichnis statt im Autostart,
+und zugleich ist es egal, ob ein llama.cpp-Release seine Dateien in der Wurzel oder unter
+`build/bin` führt. Fehlt am Ende der Server, wird das Archiv verworfen — gefragt ist er und
+nicht „irgendetwas ausgepackt".
 
 **Entfernen gehört dazu.** Ein Gigabyte, das man nicht mehr braucht, muss man auch wieder
 loswerden können — sonst ist der Knopf eine Einbahnstraße.
@@ -433,14 +438,21 @@ niemand es für vergessen hält:
   Windows eine Warnung, sobald jemand sie doppelklickt. Das Spiel startet sie als
   Kindprozess, was diesen Weg wahrscheinlich umgeht — *wahrscheinlich* ist hier aber nicht
   gemessen, und es ist das größte offene Risiko der Route.
-- **Welches Modell.** `docs/SATZBEWERTUNG_MODELLE.md` empfiehlt EuroLLM-1.7B-Instruct
-  (Apache 2.0, für genau diese Sprachrichtung gebaut). Entschieden wird das am
-  Antwortbogen und nicht an der Modellkarte: **0 Falsch-Positive halten und die 12
-  Falsch-Negativen Richtung 2 drücken.** Solange diese Zahl nicht gemessen ist, ist auch
-  nicht entschieden, ob der Zusatz überhaupt ausgeliefert wird — ein Gigabyte für zwei
-  Antworten wäre keine gute Abwägung. **Das `model.json` steht deshalb noch nicht im
-  Release-Kanal**: der Knopf ist gebaut, das Ziel ist gewählt, das Modell nicht.
-  `tools/model/make_manifest.py` erzeugt es, sobald es so weit ist.
+- **Welches Modell.** Ein erstes Manifest liegt gebaut in `tools/model/model.json`:
+  llama.cpp `b11002` (CPU, Windows x64, 18 MB) und EuroLLM-1.7B-Instruct als `Q4_K_M`
+  (997 MB, Apache 2.0, für genau diese Sprachrichtung gebaut), zusammen 1,0 GB. Beide
+  Adressen sind festgenagelt — die Gewichte auf einen Hugging-Face-**Commit** und nicht auf
+  `main`, sonst wäre die Prüfsumme über Nacht falsch. Beide Prüfsummen sind selbst
+  gerechnet; die des GGUF stimmt mit der LFS-oid des Repos überein, was sie unabhängig
+  bestätigt.
+
+  **Es steht trotzdem noch nicht im Release-Kanal.** Das Manifest ist ein Kandidat, keine
+  Entscheidung — entschieden wird am Antwortbogen und nicht an der Modellkarte: **0
+  Falsch-Positive halten und die 12 Falsch-Negativen Richtung 2 drücken.** Solange diese
+  Zahl nicht gemessen ist (`measure_sentences.tscn -- --serve`), ist auch nicht entschieden,
+  ob der Zusatz überhaupt ausgeliefert wird: ein Gigabyte für zwei Antworten wäre keine
+  gute Abwägung. Veröffentlicht wird die Datei erst, wenn die Messung für sie spricht —
+  hochgeladen neben `index.json` in das Release `packs`.
 - **Der Lebenszyklus im Spiel**: wann der Dienst startet (beim Spielstart? vor dem
   Bosskampf?), was bei einem Absturz passiert, und ob ein zweites laufendes Spiel den Port
   streitig macht. Der Durchstich startet ihn einmal für einen Messlauf.

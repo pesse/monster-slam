@@ -221,6 +221,9 @@ tools/godot.sh res://scenes/dev/measure_sentences.tscn -- --serve --timeout=60
 - **Welches Modell.** EuroLLM-1.7B-Instruct ist die Empfehlung aus der Modellkarte,
   nicht aus einer Messung. Bis die Zahl am Bogen steht, ist auch nicht entschieden, ob der
   Pack überhaupt gebaut wird — ein Gigabyte für zwei Antworten wäre keine gute Abwägung.
+  Ein erstes Manifest liegt als **Kandidat** in `tools/model/model.json` (llama.cpp `b11002`
+  CPU/win-x64 plus `EuroLLM-1.7B-Instruct.Q4_K_M.gguf`, zusammen 1,0 GB) — damit ist die
+  Messung nur noch ein Lauf und keine Beschaffung mehr. Veröffentlicht ist es nicht.
 - **SmartScreen** auf einer heruntergeladenen, nicht von uns signierten `.exe`. Das
   größte offene Risiko der Pack-Route, und vor dem Pack zu klären.
 - **Derselbe Bogen gegen die ausgelieferten Sätze.** Von 1522 Sätzen tragen 12 einen

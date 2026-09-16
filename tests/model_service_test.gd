@@ -50,19 +50,26 @@ func test_the_manifest_tells_name_and_total_size() -> void:
 	assert_int(_service.total_bytes()).is_equal((20 + 1100) * 1024 * 1024)
 
 
-## Aus einem llama.cpp-Archiv kommen das Programm UND seine DLLs — ohne die startet es
-## nicht. Alles andere bleibt draußen: was nicht ausgepackt wird, kann nichts anrichten.
-func test_only_the_program_and_its_libraries_are_unpacked() -> void:
+## Aus einem llama.cpp-Archiv kommen der Server, seine DLLs und die Lizenztexte — sonst
+## nichts. Besonders NICHT die zehn weiteren Programme des Pakets: wir brauchen keines,
+## und ein Kinderrechner braucht keine zehn zusätzlichen ausführbaren Dateien.
+func test_only_the_server_its_libraries_and_the_licences_are_unpacked() -> void:
 	var zip := "%s/bin.zip" % DIR
 	_zip(zip, {
 		"llama-server.exe": "PROGRAMM",
-		"ggml.dll": "BIBLIOTHEK",
+		"ggml-cpu-haswell.dll": "BIBLIOTHEK",
+		"LICENSE-LLVM-OpenMP": "Lizenz",
+		"llama-cli.exe": "brauchen wir nicht",
+		"llama-bench.exe": "brauchen wir auch nicht",
 		"README.md": "Anleitung",
 		"include/llama.h": "Kopfdatei",
 	})
 	assert_str(_service._place(zip, "llama-server.exe", true)).is_empty()
 	assert_bool(FileAccess.file_exists("%s/llama-server.exe" % DIR)).is_true()
-	assert_bool(FileAccess.file_exists("%s/ggml.dll" % DIR)).is_true()
+	assert_bool(FileAccess.file_exists("%s/ggml-cpu-haswell.dll" % DIR)).is_true()
+	assert_bool(FileAccess.file_exists("%s/LICENSE-LLVM-OpenMP" % DIR)).is_true()
+	assert_bool(FileAccess.file_exists("%s/llama-cli.exe" % DIR)).is_false()
+	assert_bool(FileAccess.file_exists("%s/llama-bench.exe" % DIR)).is_false()
 	assert_bool(FileAccess.file_exists("%s/README.md" % DIR)).is_false()
 	assert_bool(FileAccess.file_exists("%s/llama.h" % DIR)).is_false()
 
@@ -71,18 +78,24 @@ func test_only_the_program_and_its_libraries_are_unpacked() -> void:
 ## Zielverzeichnis hinausführen will, landet damit trotzdem darin — und nicht im Autostart.
 func test_a_path_inside_the_archive_cannot_escape() -> void:
 	var zip := "%s/böse.zip" % DIR
-	_zip(zip, {"../../../autostart.exe": "BÖSE", "llama-server.exe": "PROGRAMM"})
+	_zip(zip, {"../../../böse.dll": "BÖSE", "llama-server.exe": "PROGRAMM"})
 	assert_str(_service._place(zip, "llama-server.exe", true)).is_empty()
-	assert_bool(FileAccess.file_exists("%s/autostart.exe" % DIR)).is_true()
-	assert_bool(FileAccess.file_exists("%s/../../../autostart.exe" % DIR)).is_false()
+	assert_bool(FileAccess.file_exists("%s/böse.dll" % DIR)).is_true()
+	assert_bool(FileAccess.file_exists("%s/../../../böse.dll" % DIR)).is_false()
 
 
-## Ein Archiv ohne Programm ist kein Zustand, in dem man weitermacht — sonst stünde
-## hinterher ein halb eingerichtetes Verzeichnis da, das niemand erklären kann.
-func test_an_archive_without_a_program_is_refused() -> void:
+## Ein Archiv ohne Server ist kein Zustand, in dem man weitermacht — sonst stünde
+## hinterher ein halb eingerichtetes Verzeichnis da, das niemand erklären kann. Gefragt
+## wird dabei nach dem SERVER und nicht danach, ob überhaupt etwas ausgepackt wurde: ein
+## Archiv voller DLLs ohne ihn ist genauso unbrauchbar wie ein leeres.
+func test_an_archive_without_the_server_is_refused() -> void:
 	var zip := "%s/leer.zip" % DIR
 	_zip(zip, {"README.md": "nichts drin"})
 	assert_str(_service._place(zip, "llama-server.exe", true)).is_not_empty()
+
+	var only_libs := "%s/nur-dlls.zip" % DIR
+	_zip(only_libs, {"ggml.dll": "BIBLIOTHEK"})
+	assert_str(_service._place(only_libs, "llama-server.exe", true)).is_not_empty()
 
 
 ## Die Gewichte sind kein Archiv: sie werden unter ihrem Namen abgelegt.

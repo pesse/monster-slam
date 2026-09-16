@@ -1,0 +1,20 @@
+{
+  "name": "Sprachmodell für Bosskämpfe",
+  "min_app_version": "0.8.0",
+  "parts": [
+    {
+      "file": "llama-server.exe",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11002/llama-b11002-bin-win-cpu-x64.zip",
+      "sha256": "8417b7b8c97cca12e08e6f67eec8d945947953e9e06adb51c54bd737ed7b88d4",
+      "bytes": 18434892,
+      "unzip": true
+    },
+    {
+      "file": "model.gguf",
+      "url": "https://huggingface.co/QuantFactory/EuroLLM-1.7B-Instruct-GGUF/resolve/4126f034ddfe7fd39ca3378ae58d3b1d74065315/EuroLLM-1.7B-Instruct.Q4_K_M.gguf",
+      "sha256": "f22ab4b628f6e3cd12ec2e5aa6d1e460be2fa83f25cb6a8f5dd6d4d77b285b66",
+      "bytes": 1045156992
+    }
+  ],
+  "note": "EuroLLM 1.7B Instruct (Q4_K_M) mit llama.cpp b11002, CPU-Build für Windows x64."
+}

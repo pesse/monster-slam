@@ -33,11 +33,6 @@ const TMP_DIR := "user://tmp"
 ## bevor sie als Manifest durchläuft.
 const MAX_MANIFEST_BYTES := 64 * 1024
 
-## Was aus einem ZIP übernommen wird. Ein llama.cpp-Release bringt das Programm und seine
-## DLLs mit — ohne die startet es nicht. Alles andere (Kopfdateien, Beispiele) bleibt
-## draußen: was nicht ausgepackt wird, kann auch nichts anrichten.
-const ALLOWED_SUFFIXES := [".exe", ".dll"]
-
 ## Wohin installiert wird. Vorgabe ist genau das Verzeichnis, in dem LocalModelServer
 ## sucht; verstellbar, damit ein Test nicht in das echte Modell des Spielers schreibt —
 ## dieselbe Regel wie beim `zz-`Profil von Wallet und PlayerLevel.
@@ -257,7 +252,7 @@ func _place(raw: String, name: String, unzip: bool) -> String:
 	var reader := ZIPReader.new()
 	if reader.open(raw) != OK:
 		return "kein gültiges ZIP."
-	var written := 0
+	var has_server := false
 	for entry in reader.get_files():
 		var rel := str(entry)
 		if rel.ends_with("/"):
@@ -271,18 +266,30 @@ func _place(raw: String, name: String, unzip: bool) -> String:
 			return "%s nicht schreibbar." % file_name
 		out.store_buffer(reader.read_file(rel))
 		out.close()
-		written += 1
+		has_server = has_server or file_name == LocalModelServer.EXE_NAME
 	reader.close()
-	if written == 0:
-		return "ZIP enthält kein Programm."
+	if not has_server:
+		# Gefragt wird nach dem Server, nicht nach „irgendetwas ausgepackt": ein Archiv
+		# voller DLLs ohne ihn ist genauso unbrauchbar wie ein leeres.
+		return "ZIP enthält %s nicht." % LocalModelServer.EXE_NAME
 	return ""
 
 
+## Was aus einem Archiv übernommen wird.
+##
+## Die **Bibliotheken** — ohne sie startet llama-server nicht, und welche der
+## `ggml-cpu-*.dll` gebraucht wird, entscheidet es beim Start nach der CPU. Der **Server**
+## selbst. Und die **Lizenztexte**: ein fremdes Programm legt man nicht ohne sie auf eine
+## Platte.
+##
+## Draußen bleiben die übrigen Programme des Pakets (`llama-cli`, `llama-bench`, `llama-run`
+## … — ein llama.cpp-Release bringt rund zehn davon mit). Wir brauchen keines, und ein
+## Kinderrechner braucht keine zehn zusätzlichen ausführbaren Dateien.
 static func _is_wanted(file_name: String) -> bool:
-	for suffix in ALLOWED_SUFFIXES:
-		if file_name.to_lower().ends_with(suffix):
-			return true
-	return false
+	var lower := file_name.to_lower()
+	if lower.ends_with(".dll") or lower.begins_with("license"):
+		return true
+	return file_name == LocalModelServer.EXE_NAME
 
 
 ## Ein Download mit Fortschritt. Anders als ContentService._fetch wird hier nicht auf das
