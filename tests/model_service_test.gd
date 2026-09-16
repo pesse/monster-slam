@@ -119,8 +119,18 @@ func test_what_was_installed_can_be_removed_again() -> void:
 	assert_bool(_service.installed()).is_false()
 
 
-## Ohne Manifest wird nichts geladen — und es steht auch dran, statt dass ein Knopf ins
-## Leere greift.
+## Kein Manifest heißt: dieser Kanal bietet gerade keinen Zusatz an. Das ist ein Zustand
+## und kein Fehler — solange noch kein Modell veröffentlicht ist, antwortet der Kanal mit
+## HTTP 404, und ein rotes „Server antwortet mit HTTP 404" an einem Zusatz, den niemand
+## bestellt hat, ist eine Fehlermeldung für nichts. Der Grund geht ins Log.
+func test_nothing_on_offer_is_a_state_and_not_an_error() -> void:
+	_service._no_offer("Server antwortet mit HTTP 404.")
+	assert_bool(_service.available()).is_false()
+	assert_str(_service.error).is_empty()
+	assert_int(_service.state).is_equal(_service.State.READY)
+
+
+## Umgekehrt: wer selbst auf „Herunterladen" gedrückt hat, hat eine Antwort verdient.
 func test_without_a_manifest_nothing_is_downloaded() -> void:
 	_service.manifest = {}
 	await _service.install()

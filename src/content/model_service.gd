@@ -93,8 +93,23 @@ func display_name() -> String:
 	return str(manifest.get("name", "Sprachmodell für Bosskämpfe"))
 
 
-## Holt das Manifest. Ohne Netz bleibt es beim bisherigen Stand — offline ist ein Zustand
-## und kein Fehler, genau wie im Content-Kanal.
+## Wird gerade ein Zusatz angeboten? Ohne Manifest gibt es nichts zu holen — und dann hat
+## die Oberfläche auch nichts anzuzeigen.
+func available() -> bool:
+	return not parts().is_empty()
+
+
+## Holt das Manifest.
+##
+## **Kein Manifest ist KEIN Fehler.** Es heißt: dieser Kanal bietet gerade keinen Zusatz an
+## — weil noch keiner veröffentlicht ist (HTTP 404), weil kein Netz da ist, oder weil die
+## Datei unbrauchbar ist. Für den Spieler ist das dreimal dasselbe: es gibt nichts zu
+## holen. Ein rotes „Server antwortet mit HTTP 404" an einem Zusatz, den niemand bestellt
+## hat, ist eine Fehlermeldung für einen Zustand, der keiner ist.
+##
+## Gemeldet wird trotzdem — als Warnung ins Log, damit ein kaputtes Manifest beim
+## Entwickeln nicht unsichtbar bleibt. Ein Fehler, den der Nutzer sieht, entsteht erst,
+## wenn er selbst auf „Herunterladen" gedrückt hat: dann hat er eine Antwort verdient.
 func refresh() -> void:
 	if _busy:
 		return
@@ -106,17 +121,24 @@ func refresh() -> void:
 	var response := await _fetch(url)
 	_busy = false
 	if not str(response["error"]).is_empty():
-		_fail(str(response["error"]))
+		_no_offer(str(response["error"]))
 		return
 	var body: PackedByteArray = response["body"]
 	if body.size() > MAX_MANIFEST_BYTES:
-		_fail("Modell-Manifest unplausibel groß — verworfen.")
+		_no_offer("Modell-Manifest unplausibel groß — verworfen.")
 		return
 	var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
 	if not (parsed is Dictionary) or not (parsed as Dictionary).has("parts"):
-		_fail("Modell-Manifest unlesbar.")
+		_no_offer("Modell-Manifest unlesbar.")
 		return
 	manifest = parsed
+	_set_state(State.READY)
+
+
+## Es gibt nichts anzubieten. Der Grund geht ins Log, nicht auf den Bildschirm.
+func _no_offer(reason: String) -> void:
+	manifest = {}
+	push_warning("ModelService: kein Zusatz verfügbar — %s" % reason)
 	_set_state(State.READY)
 
 

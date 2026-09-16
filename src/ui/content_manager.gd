@@ -15,6 +15,7 @@ const PROFILE_SCENE := "res://scenes/ui/profile_menu.tscn"
 @onready var _install: Button = %InstallButton
 @onready var _adopt: Button = %AdoptButton
 @onready var _refresh: Button = %RefreshButton
+@onready var _model_panel: PanelContainer = %Model
 @onready var _model_button: Button = %ModelButton
 @onready var _model_remove: Button = %ModelRemoveButton
 @onready var _model_hint: Label = %ModelHint
@@ -41,7 +42,7 @@ func _ready() -> void:
 	_render_model()
 	if ContentService.packs.is_empty():
 		ContentService.refresh()
-	if ModelService.parts().is_empty():
+	if not ModelService.available():
 		ModelService.refresh()
 
 
@@ -114,10 +115,18 @@ func _render_model() -> void:
 	var installed := ModelService.installed()
 	var size := ModelService.humanized(ModelService.total_bytes())
 
+	# Gibt es nichts anzubieten und liegt nichts da, ist der ganze Abschnitt weg. Ein Kasten
+	# mit einem gesperrten Knopf ist keine Auskunft, sondern eine Frage, die niemand
+	# gestellt hat — und „noch kein Zusatz veröffentlicht" geht den Spieler nichts an.
+	_model_panel.visible = busy or installed or ModelService.available() \
+			or not ModelService.error.is_empty()
+	if not _model_panel.visible:
+		return
+
 	_model_progress.visible = busy
 	_model_progress.value = ModelService.progress
 	_model_button.visible = not installed
-	_model_button.disabled = busy or ModelService.parts().is_empty()
+	_model_button.disabled = busy or not ModelService.available()
 	_model_remove.visible = installed and not busy
 
 	if busy:
@@ -127,8 +136,6 @@ func _render_model() -> void:
 				+ "fragt das Spiel jetzt ein Modell auf DIESEM Rechner — nichts geht ins Netz."
 	elif not ModelService.error.is_empty():
 		_model_hint.text = ModelService.error
-	elif ModelService.parts().is_empty():
-		_model_hint.text = "Wird gesucht …"
 	else:
 		_model_hint.text = "Optional. Erkennt bei Bosskämpfen auch richtige Sätze, die " \
 				+ "so nicht hinterlegt sind. Läuft danach nur auf diesem Rechner, ohne " \

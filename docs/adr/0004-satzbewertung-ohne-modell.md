@@ -417,6 +417,13 @@ loswerden können — sonst ist der Knopf eine Einbahnstraße.
 **Die Größe steht vor dem Klick**, nicht danach. „Einmalig 1,1 GB" ist die Angabe, nach der
 die Entscheidung fällt.
 
+**Kein Manifest ist kein Fehler.** Solange keines veröffentlicht ist, antwortet der Kanal
+mit HTTP 404 — und auch ohne Netz oder mit einer unbrauchbaren Datei ist die Lage für den
+Spieler dieselbe: es gibt nichts zu holen. Der ganze Abschnitt bleibt dann **unsichtbar**,
+statt einen gesperrten Knopf neben einer roten Meldung zu zeigen; der Grund geht als
+Warnung ins Log. Eine Fehlermeldung bekommt nur, wer selbst auf „Herunterladen" gedrückt
+hat — der hat eine Antwort verdient.
+
 ### Noch nicht gebaut
 
 Das Folgende gehört zur Entscheidung, aber nicht zum Durchstich — es steht hier, damit
