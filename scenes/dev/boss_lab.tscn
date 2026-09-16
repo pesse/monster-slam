@@ -1,0 +1,165 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/dev/boss_lab.gd" id="1_lab"]
+
+[node name="BossLab" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_lab")
+
+[node name="Margin" type="MarginContainer" parent="."]
+theme_type_variation = &"ScreenMargin"
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Root" type="VBoxContainer" parent="Margin"]
+theme_type_variation = &"ScreenStack"
+
+[node name="Title" type="Label" parent="Margin/Root"]
+theme_type_variation = &"Display"
+text = "Satz-Werkbank"
+
+[node name="Hint" type="Label" parent="Margin/Root"]
+theme_type_variation = &"Hint"
+text = "Sätze bewerten, ohne ein Modell auszuliefern (ADR 0004). Hier wird nichts gespeichert und nichts gelernt."
+
+[node name="Columns" type="HBoxContainer" parent="Margin/Root"]
+theme_type_variation = &"SectionStack"
+size_flags_vertical = 3
+
+[node name="Choice" type="VBoxContainer" parent="Margin/Root/Columns"]
+custom_minimum_size = Vector2(300, 0)
+size_flags_vertical = 3
+
+[node name="ChoiceTitle" type="Label" parent="Margin/Root/Columns/Choice"]
+theme_type_variation = &"SectionTitle"
+text = "Auswahl"
+
+[node name="BossCaption" type="Label" parent="Margin/Root/Columns/Choice"]
+theme_type_variation = &"Hint"
+text = "Auswahlregel eines Bosses"
+
+[node name="BossSelect" type="OptionButton" parent="Margin/Root/Columns/Choice"]
+unique_name_in_owner = true
+
+[node name="UseProfile" type="CheckButton" parent="Margin/Root/Columns/Choice"]
+unique_name_in_owner = true
+text = "Auswahl des Profils beachten"
+
+[node name="OnlyKeyed" type="CheckButton" parent="Margin/Root/Columns/Choice"]
+unique_name_in_owner = true
+button_pressed = true
+text = "Nur Sätze mit Schlüssel"
+
+[node name="PoolInfo" type="Label" parent="Margin/Root/Columns/Choice"]
+theme_type_variation = &"Hint"
+unique_name_in_owner = true
+autowrap_mode = 3
+text = "—"
+
+[node name="SentenceCaption" type="Label" parent="Margin/Root/Columns/Choice"]
+theme_type_variation = &"Hint"
+text = "Satz (schwerster zuerst)"
+
+[node name="SentenceSelect" type="OptionButton" parent="Margin/Root/Columns/Choice"]
+unique_name_in_owner = true
+clip_text = true
+
+[node name="RollButton" type="Button" parent="Margin/Root/Columns/Choice"]
+unique_name_in_owner = true
+text = "Satz ziehen wie im Spiel"
+
+[node name="Task" type="VBoxContainer" parent="Margin/Root/Columns"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TaskTitle" type="Label" parent="Margin/Root/Columns/Task"]
+theme_type_variation = &"SectionTitle"
+text = "Aufgabe"
+
+[node name="SourceText" type="Label" parent="Margin/Root/Columns/Task"]
+theme_type_variation = &"Title"
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 0)
+autowrap_mode = 3
+text = "—"
+
+[node name="SentenceInfo" type="Label" parent="Margin/Root/Columns/Task"]
+theme_type_variation = &"Hint"
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 0)
+autowrap_mode = 3
+text = "—"
+
+[node name="KeyCaption" type="Label" parent="Margin/Root/Columns/Task"]
+theme_type_variation = &"Hint"
+text = "Lösungsschlüssel — hier änderbar, nicht gespeichert"
+
+[node name="KeyEdit" type="TextEdit" parent="Margin/Root/Columns/Task"]
+unique_name_in_owner = true
+size_flags_vertical = 3
+custom_minimum_size = Vector2(320, 160)
+
+[node name="KeyStatus" type="Label" parent="Margin/Root/Columns/Task"]
+theme_type_variation = &"Caption"
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 0)
+autowrap_mode = 3
+
+[node name="AnswerCaption" type="Label" parent="Margin/Root/Columns/Task"]
+theme_type_variation = &"Hint"
+text = "Antwort der Spielerin"
+
+[node name="AnswerEdit" type="LineEdit" parent="Margin/Root/Columns/Task"]
+unique_name_in_owner = true
+placeholder_text = "Übersetzung tippen und Enter"
+
+[node name="JudgeButton" type="Button" parent="Margin/Root/Columns/Task"]
+unique_name_in_owner = true
+text = "Bewerten"
+
+[node name="Verdict" type="VBoxContainer" parent="Margin/Root/Columns"]
+custom_minimum_size = Vector2(300, 0)
+size_flags_vertical = 3
+
+[node name="VerdictTitle" type="Label" parent="Margin/Root/Columns/Verdict"]
+theme_type_variation = &"SectionTitle"
+text = "Urteil"
+
+[node name="CardCaption" type="Label" parent="Margin/Root/Columns/Verdict"]
+theme_type_variation = &"Hint"
+text = "Stufe 0 — Prüfkarte (immer da)"
+
+[node name="CardResult" type="Label" parent="Margin/Root/Columns/Verdict"]
+theme_type_variation = &"Accent"
+unique_name_in_owner = true
+custom_minimum_size = Vector2(280, 0)
+autowrap_mode = 3
+text = "—"
+
+[node name="ModelCaption" type="Label" parent="Margin/Root/Columns/Verdict"]
+theme_type_variation = &"Hint"
+text = "Stufe 1 — lokaler Dienst (optional)"
+
+[node name="ModelToggle" type="CheckButton" parent="Margin/Root/Columns/Verdict"]
+unique_name_in_owner = true
+text = "Stufe 1 benutzen"
+
+[node name="ModelUrl" type="LineEdit" parent="Margin/Root/Columns/Verdict"]
+unique_name_in_owner = true
+
+[node name="ModelResult" type="Label" parent="Margin/Root/Columns/Verdict"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(280, 0)
+autowrap_mode = 3
+text = "—"
+
+[node name="BackButton" type="Button" parent="Margin/Root"]
+unique_name_in_owner = true
+text = "⟵ Zurück zum Menü"

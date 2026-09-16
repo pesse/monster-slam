@@ -81,8 +81,11 @@ Darstellung unabhängig wachsen können (siehe `docs/ADDING_CONTENT.md`):
 - **player_progress** — *Wie gut* der Spieler eine konkrete Aufgabe kann, adressiert über
   einen kanonischen **`learnable_id`** (Task-Typ + Richtung + Lexeme/Form/Relation; Schema
   in `TaskResolver.learnable_id()`). Nicht im Content, sondern beschreibbar in `user://`.
-- **sentences / sentence_lexemes** — für Boss-/Satzübungen; Schema vorhanden, Feature
-  (task_type `sentence`/`fill_gap`, Boss-Runner) noch zurückgestellt.
+- **sentences / sentence_lexemes** — für Boss-/Satzübungen. Ein Satz trägt neben der
+  `reference_translation` seinen Lösungsschlüssel (`accepted`, `must_contain`,
+  `pitfalls`); bewertet und ausgewählt wird damit offline (siehe „Sätze bewerten" unten
+  und `docs/adr/0004-satzbewertung-ohne-modell.md`). Der Boss-Kampf selbst — Szene,
+  Schaden, Ablauf — ist noch nicht gebaut.
 
 Die Auflösung Definition × Lexeme → spielbare Aufgabe `{prompt, accepted_answers, …}`
 macht `src/learning/task_resolver.gd`; die Enumeration der Kandidaten (Definition × Lexeme)
@@ -130,11 +133,27 @@ Score, aktive Welle) und reagiert selbst nur über EventBus-Signale.
 
 - **`spaced_repetition.gd`** — SM-2-artiger Scheduler. Bestimmt, wann ein Item
   wieder fällig ist. Persistierbar via `to_dict()`/`from_dict()`.
-- **`answer_evaluator.gd`** — zwei Modi:
-  - `evaluate_vocab()`: normalisierter Exakt-/Alternativabgleich für schnellen Recall (offline).
-  - `evaluate_sentence()`: semantische Qualität für Boss-Sätze. Standard ist eine
-	Offline-Heuristik; ein lokales LLM lässt sich über `sentence_backend`
-	(Callable) einstecken — **ohne** Aufrufer zu ändern.
+- **`answer_evaluator.gd`** — normalisierter Exakt-/Alternativabgleich für schnellen
+  Recall (offline, deterministisch). Hier wohnt die Normalisierung (Artikel,
+  Platzhalter, Klammergruppen, Typografie); die Satzbewertung nimmt sie über `tokens()`.
+
+### Sätze bewerten (`docs/adr/0004-satzbewertung-ohne-modell.md`)
+
+Ausgeliefert wird **kein** Sprachmodell. Der Lösungsschlüssel entsteht zur Autorenzeit und
+steht in den Daten (`accepted`, `must_contain`, `pitfalls` am Satz); bewertet wird in
+Stufen, und Stufe 0 trägt das Spiel allein.
+
+| Baustein | Aufgabe |
+|---|---|
+| `sentence_card.gd` | Stufe 0, die „Prüfkarte": Abgleich gegen `accepted`, `must_contain`, `pitfalls`. Reine Rechnung, deterministisch, ohne Netz. Ein Treffer schlägt jede Stolperstelle. |
+| `sentence_judge.gd` | Der Vertrag `{quality, feedback, matched}` für ALLE Stufen. `judge()` gibt Stufe 0 sofort zurück; Stufe 1 kommt als `refined` nach — oder gar nicht. Sie darf nur **heben**, nie senken. |
+| `local_model_backend.gd` | Stufe 1: HTTP an einen Dienst auf `127.0.0.1` (Ollama, llama.cpp, LM Studio). Nicht Teil der Auslieferung; ohne Dienst existiert sie für das Spiel nicht. Keine Stufe 2 in der Cloud. |
+| `sentence_selector.gd` | Welcher Satz drankommt: `sentence_lexemes` → Lexem → Scope, gewichtet nach dem Netto-Maß `t - c` — demselben, das Tempo, Punkte und XP tragen. |
+
+Ein Boss trägt deshalb **keine Sätze mehr selbst**, sondern eine `sentence_rule`
+(`data/bosses/grammar_golem.json`). Ausprobieren lässt sich das Ganze in der Werkbank
+`scenes/dev/boss_lab.tscn`; in den Spielfluss eingehängt ist es noch nicht (es gibt keinen
+Boss-Kampf — siehe „Nicht entschieden" im ADR).
 
 ### Meisterung: ein Wort braucht beide Richtungen
 

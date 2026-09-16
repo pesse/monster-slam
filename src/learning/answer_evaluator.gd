@@ -1,18 +1,14 @@
 class_name AnswerEvaluator
 extends RefCounted
-## Evaluates player answers.
+## Wertet Vokabel-Antworten aus: toleranter Abgleich gegen die hinterlegten Lösungen,
+## offline und deterministisch.
 ##
-## Two modes, matching the game design:
-##  - evaluate_answers(): tolerant match for Vokabel-Antworten (offline, deterministisch).
-##  - evaluate_sentence(): semantic quality score for boss sentences.
-##
-## The sentence evaluator is deliberately behind a pluggable interface. The
-## default implementation is a simple offline heuristic (token overlap). A
-## local LLM backend can be plugged in later by replacing `sentence_backend`
-## WITHOUT changing any caller — see docs/ARCHITECTURE.md.
-
-## Optional callable: func(prompt, reference, answer) -> { "quality": float, "feedback": String }
-var sentence_backend: Callable = Callable()
+## GANZE SÄTZE bewertet diese Klasse nicht mehr. Das war einmal eine Token-Überschneidung
+## (`evaluate_sentence`), deren Ergebnis niemand sehen sollte; seit
+## docs/adr/0004-satzbewertung-ohne-modell.md liegt die Satzbewertung in SentenceCard
+## (Stufe 0, Lösungsschlüssel aus den Daten) und SentenceJudge (Vertrag und optionale
+## Stufe 1). Die Normalisierung teilen sich beide — sie ist hier zu Hause und steht
+## dafür über `tokens()` offen.
 
 ## Wegkürzbare Anlaute: der deutsche Artikel (Ziel ist Englisch lernen, nicht Deutsch),
 ## das englische "the" und das englische "to" vor dem Infinitiv. Das Lehrbuch schreibt
@@ -100,27 +96,11 @@ func evaluate_vocab(entry: Dictionary, answer: String) -> bool:
 	return evaluate_answers(entry.get("answers", []), answer)
 
 
-## Returns { "quality": 0.0..1.0, "feedback": String }.
-func evaluate_sentence(prompt: String, reference: String, answer: String) -> Dictionary:
-	if sentence_backend.is_valid():
-		return sentence_backend.call(prompt, reference, answer)
-	return _heuristic_sentence(reference, answer)
-
-
-func _heuristic_sentence(reference: String, answer: String) -> Dictionary:
-	var ref_tokens := _tokens(reference)
-	var ans_tokens := _tokens(answer)
-	if ref_tokens.is_empty():
-		return {"quality": 0.0, "feedback": "Keine Referenz hinterlegt."}
-	var hits := 0
-	for t in ref_tokens:
-		if t in ans_tokens:
-			hits += 1
-	var quality := float(hits) / float(ref_tokens.size())
-	var feedback := "Gut getroffen!" if quality >= 0.8 else "Fast — achte auf die fehlenden Wörter."
-	if quality < 0.4:
-		feedback = "Versuch es nochmal, viele Kernbegriffe fehlen."
-	return {"quality": quality, "feedback": feedback}
+## Die Vergleichs-Token eines Strings: normalisiert, ohne Satzzeichen, ohne Leerstellen.
+## Öffentlich, weil die Satzbewertung dieselbe Zerlegung braucht (SentenceCard) — zwei
+## Normalisierungen nebeneinander liefen irgendwann auseinander.
+func tokens(s: String) -> PackedStringArray:
+	return _tokens(s)
 
 
 ## Alle Schreibweisen, unter denen ein String akzeptiert wird: Variante -> „vollständig".
