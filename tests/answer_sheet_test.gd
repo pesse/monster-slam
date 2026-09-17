@@ -12,7 +12,7 @@ extends GdUnitTestSuite
 ## das Messergebnis, und es darf sich ändern, ohne dass ein Test rot wird.
 
 const SHEET := "res://src/dev/answer_sheet.json"
-const KINDS := ["muster", "variante", "frei", "falle", "fehler", "leer"]
+const KINDS := ["muster", "variante", "frei", "falle", "fehler", "koeder", "leer"]
 
 var _sheet: Dictionary = {}
 var _sentences: Array = []

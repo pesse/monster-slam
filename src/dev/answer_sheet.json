@@ -1,7 +1,7 @@
 {
   "_zweck": "Antwortbogen für die Messung der Satzbewertung — siehe src/dev/measure_sentences.gd und docs/SATZBEWERTUNG_MODELLE.md. Die Sätze sind ERFUNDEN: nichts hier stammt aus einem Lehrbuch, und der Bogen läuft ohne das private Submodule. Jede must_contain-Forderung nennt ihre `forms` selbst, damit SentenceCard.forms_of() nie die ContentRegistry fragt.",
   "_erwartung": "`expect` ist das Urteil einer Lehrkraft, nicht das erwartete Verhalten des Codes. Der Bogen ist der Maßstab; was die Stufen daraus machen, ist das Messergebnis.",
-  "_arten": "muster = die Musterlösung · variante = eine hinterlegte Alternative · frei = richtig, aber NICHT hinterlegt (der Fall, um dessentwillen es Stufe 1 gibt) · falle = ein vorweggenommener Fehler · fehler = falsch, aber nicht vorweggenommen · leer = nichts getippt",
+  "_arten": "muster = die Musterlösung · variante = eine hinterlegte Alternative · frei = richtig, aber NICHT hinterlegt (der Fall, um dessentwillen es Stufe 1 gibt) · falle = ein vorweggenommener Fehler · fehler = falsch, aber nicht vorweggenommen · koeder = falsch UND der Lösung täuschend ähnlich (hohe Wortüberschneidung, Rollentausch, ein Buchstabe daneben) — die Probe auf Falsch-Positive, denn nur diese Klasse kann Stufe 1 fälschlich anheben · leer = nichts getippt",
   "pass_quality": 0.6,
   "sentences": [
     {
@@ -26,7 +26,13 @@
         {"text": "Yesterday we saw the sea.", "expect": "falsch", "kind": "fehler"},
         {"text": "Yesterday we seen the reef.", "expect": "falsch", "kind": "fehler",
          "note": "Falsch, aber Wort für Wort dicht an der Lösung."},
-        {"text": "", "expect": "falsch", "kind": "leer"}
+        {"text": "", "expect": "falsch", "kind": "leer"},
+        {"text": "Yesterday we see the reef.", "expect": "falsch", "kind": "koeder",
+         "note": "Dieselben Wörter, falsche Zeitform — „yesterday“ verlangt das Simple Past."},
+        {"text": "Yesterday the reef saw us.", "expect": "falsch", "kind": "koeder",
+         "note": "Wortgleich mit der Musterlösung, Rollen vertauscht. Eine Überschneidung sieht das nie."},
+        {"text": "It was yesterday that we saw the reef.", "expect": "richtig", "kind": "frei",
+         "note": "Herausstellung — richtig gebaut und nicht hinterlegt."}
       ]
     },
     {
@@ -37,7 +43,11 @@
       "must_contain": [{"lexeme_id": "lex.probe.school", "forms": ["school", "schools"]}],
       "pitfalls": [
         {"contains": ["she walks always"],
-         "feedback": "Häufigkeitsadverbien stehen VOR dem Vollverb: „she always walks“."}
+         "feedback": "Häufigkeitsadverbien stehen VOR dem Vollverb: „she always walks“."},
+        {"contains": ["goes always"],
+         "feedback": "Häufigkeitsadverbien stehen VOR dem Vollverb: „she always goes“."},
+        {"contains": ["always she"],
+         "feedback": "„Always“ gehört nicht an den Satzanfang, sondern vor das Vollverb: „she always walks“."}
       ],
       "grammar_tags": ["adverb_position"],
       "difficulty": 2,
@@ -48,7 +58,11 @@
         {"text": "She walks always to school.", "expect": "falsch", "kind": "falle"},
         {"text": "Always she walks to school.", "expect": "falsch", "kind": "fehler",
          "note": "Dieselben Wörter wie die Musterlösung, nur in falscher Ordnung."},
-        {"text": "She always walks to the bus.", "expect": "falsch", "kind": "fehler"}
+        {"text": "She always walks to the bus.", "expect": "falsch", "kind": "fehler"},
+        {"text": "She goes always to school on foot.", "expect": "falsch", "kind": "koeder",
+         "note": "Dieselbe Stellungsfehler wie die Stolperstelle, aber mit „goes“ — die greift nicht."},
+        {"text": "She always walk to school.", "expect": "falsch", "kind": "koeder",
+         "note": "Ein fehlendes s. Bedeutung tadellos, Grammatik nicht."}
       ]
     },
     {
@@ -73,7 +87,13 @@
         {"text": "We are going to hire a boat tomorrow.", "expect": "richtig", "kind": "frei",
          "note": "„hire“ ist britisches Englisch für „mieten“."},
         {"text": "We will rent a boat tomorrow.", "expect": "falsch", "kind": "falle"},
-        {"text": "We are going to rent a car tomorrow.", "expect": "falsch", "kind": "fehler"}
+        {"text": "We are going to rent a car tomorrow.", "expect": "falsch", "kind": "fehler"},
+        {"text": "Tomorrow we rent a boat.", "expect": "falsch", "kind": "koeder",
+         "note": "Präsens statt „be going to“ — die Aufgabe übt genau das."},
+        {"text": "We are going to rent a boat yesterday.", "expect": "falsch", "kind": "koeder",
+         "note": "Bis auf das letzte Wort die Musterlösung, und das letzte Wort widerspricht ihr."},
+        {"text": "We plan to rent a boat tomorrow.", "expect": "richtig", "kind": "frei",
+         "note": "„haben vor“ wörtlich genommen — richtig und nicht hinterlegt."}
       ]
     },
     {
@@ -98,7 +118,13 @@
         {"text": "I have lived for three years in Bristol.", "expect": "richtig", "kind": "frei"},
         {"text": "I have lived in Bristol since three years.", "expect": "falsch", "kind": "falle"},
         {"text": "I have lived in Bristol for three months.", "expect": "falsch", "kind": "fehler",
-         "note": "Ein einziges falsches Wort — und es ist genau das, worum es geht."}
+         "note": "Ein einziges falsches Wort — und es ist genau das, worum es geht."},
+        {"text": "I live in Bristol for three years.", "expect": "falsch", "kind": "koeder",
+         "note": "Der klassische Fehler: Präsens statt Present Perfect. „since“ steht nicht da, die Stolperstelle greift nicht."},
+        {"text": "I have lived in Bristol three years ago.", "expect": "falsch", "kind": "koeder",
+         "note": "„ago“ passt nicht zum Present Perfect."},
+        {"text": "I have been living in Bristol for the last three years.", "expect": "richtig", "kind": "frei",
+         "note": "Richtig und nicht hinterlegt."}
       ]
     },
     {
@@ -121,7 +147,11 @@
         {"text": "This book is more interesting than that one.", "expect": "richtig", "kind": "frei"},
         {"text": "This book is interestinger than the other one.", "expect": "falsch", "kind": "falle"},
         {"text": "This book is more interesting as the other one.", "expect": "falsch", "kind": "falle"},
-        {"text": "This book is more boring than the other one.", "expect": "falsch", "kind": "fehler"}
+        {"text": "This book is more boring than the other one.", "expect": "falsch", "kind": "fehler"},
+        {"text": "The other book is more interesting than this one.", "expect": "falsch", "kind": "koeder",
+         "note": "Wortgleich, Vergleich umgedreht — die Aussage ist die Gegenteilige."},
+        {"text": "This book is interesting than the other one.", "expect": "falsch", "kind": "koeder",
+         "note": "Ohne „more“ kein Komparativ; „interestinger“ steht nicht da, die Stolperstelle greift nicht."}
       ]
     },
     {
@@ -143,7 +173,13 @@
         {"text": "They built the museum in 1890.", "expect": "falsch", "kind": "falle",
          "note": "Inhaltlich richtig, aber die Aufgabe übt das Passiv — eine Stolperstelle, über die man streiten kann."},
         {"text": "The museum has been built in 1890.", "expect": "falsch", "kind": "fehler"},
-        {"text": "The library was built in 1890.", "expect": "falsch", "kind": "fehler"}
+        {"text": "The library was built in 1890.", "expect": "falsch", "kind": "fehler"},
+        {"text": "The museum was build in 1890.", "expect": "falsch", "kind": "koeder",
+         "note": "Ein Buchstabe: „build“ statt „built“. Das Passiv braucht das Partizip."},
+        {"text": "The museum built in 1890.", "expect": "falsch", "kind": "koeder",
+         "note": "Ohne Hilfsverb liest es sich aktiv: das Museum hat gebaut."},
+        {"text": "The museum was constructed in 1890.", "expect": "richtig", "kind": "frei",
+         "note": "Anderes Verb, richtiges Passiv — nicht hinterlegt."}
       ]
     },
     {
@@ -168,7 +204,13 @@
         {"text": "If it rains tomorrow, we'll stay at home.", "expect": "richtig", "kind": "variante"},
         {"text": "If it rains tomorrow, we are going to stay at home.", "expect": "richtig", "kind": "frei"},
         {"text": "If it will rain tomorrow, we will stay at home.", "expect": "falsch", "kind": "falle"},
-        {"text": "If it snows tomorrow, we will stay at home.", "expect": "falsch", "kind": "fehler"}
+        {"text": "If it snows tomorrow, we will stay at home.", "expect": "falsch", "kind": "fehler"},
+        {"text": "If it rains tomorrow, we stayed at home.", "expect": "falsch", "kind": "koeder",
+         "note": "Hauptsatz im Past — die Bedingung liegt in der Zukunft."},
+        {"text": "If it rains tomorrow, we would stay at home.", "expect": "falsch", "kind": "koeder",
+         "note": "Bedingungssatz Typ 2 statt Typ 1. Sinngemäß fast dasselbe, grammatisch ein anderer Fall."},
+        {"text": "If it rains tomorrow, we are staying at home.", "expect": "richtig", "kind": "frei",
+         "note": "Present Progressive für eine feste Absicht — richtig und nicht hinterlegt."}
       ]
     },
     {
@@ -193,7 +235,13 @@
         {"text": "When did you buy your bike?", "expect": "richtig", "kind": "frei"},
         {"text": "When did you bought the bike?", "expect": "falsch", "kind": "falle"},
         {"text": "When have you bought the bike?", "expect": "falsch", "kind": "falle"},
-        {"text": "When did you buy the car?", "expect": "falsch", "kind": "fehler"}
+        {"text": "When did you buy the car?", "expect": "falsch", "kind": "fehler"},
+        {"text": "When bought you the bike?", "expect": "falsch", "kind": "koeder",
+         "note": "Deutsche Wortstellung in der englischen Frage."},
+        {"text": "When you did buy the bike?", "expect": "falsch", "kind": "koeder",
+         "note": "Alle Wörter richtig, die Frage nicht gebaut. „did you bought“ steht nicht da."},
+        {"text": "When do you buy the bike?", "expect": "falsch", "kind": "koeder",
+         "note": "Präsens statt Vergangenheit."}
       ]
     },
     {
@@ -221,7 +269,13 @@
         {"text": "She is looking forward to visiting her grandma and grandpa.", "expect": "richtig", "kind": "frei",
          "note": "Richtig übersetzt, aber ohne das geforderte Wort — must_contain weist es ab, und das ist so gewollt. Der Fall gehört in die Messung, damit man den Preis dieser Regel sieht."},
         {"text": "She is looking forward to visit her grandparents.", "expect": "falsch", "kind": "falle"},
-        {"text": "She is looking forward to visiting her parents.", "expect": "falsch", "kind": "fehler"}
+        {"text": "She is looking forward to visiting her parents.", "expect": "falsch", "kind": "fehler"},
+        {"text": "Her grandparents are looking forward to visiting her.", "expect": "falsch", "kind": "koeder",
+         "note": "Wortgleich, Rollen vertauscht — wer freut sich auf wen."},
+        {"text": "She is looking forward for visiting her grandparents.", "expect": "falsch", "kind": "koeder",
+         "note": "Falsche Präposition; „looking forward to visit“ steht nicht da, die Stolperstelle greift nicht."},
+        {"text": "She can't wait to visit her grandparents.", "expect": "richtig", "kind": "frei",
+         "note": "Idiomatisch und richtig — der Fall, für den es Stufe 1 gibt."}
       ]
     },
     {
@@ -245,7 +299,13 @@
         {"text": "You needn't hurry.", "expect": "richtig", "kind": "frei",
          "note": "Kurz und richtig — und dem Wortlaut nach so weit weg, dass eine Überschneidung sie nicht rettet."},
         {"text": "You mustn't hurry.", "expect": "falsch", "kind": "falle"},
-        {"text": "You don't have to wait.", "expect": "falsch", "kind": "fehler"}
+        {"text": "You don't have to wait.", "expect": "falsch", "kind": "fehler"},
+        {"text": "You have not to hurry.", "expect": "falsch", "kind": "koeder",
+         "note": "Deutsche Verneinung. „mustn’t“ steht nicht da, die Stolperstelle greift nicht."},
+        {"text": "You shouldn't hurry.", "expect": "falsch", "kind": "koeder",
+         "note": "„du solltest nicht“ statt „du musst nicht“ — eine andere Aussage."},
+        {"text": "There is no need to hurry.", "expect": "richtig", "kind": "frei",
+         "note": "Andere Konstruktion, gleiche Aussage — nicht hinterlegt."}
       ]
     }
   ]
