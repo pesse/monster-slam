@@ -45,6 +45,7 @@ autowrap_mode = 3
 
 [node name="Model" type="PanelContainer" parent="Margin/Root"]
 unique_name_in_owner = true
+visible = false
 
 [node name="Box" type="VBoxContainer" parent="Margin/Root/Model"]
 
