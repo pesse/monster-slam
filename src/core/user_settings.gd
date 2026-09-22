@@ -16,6 +16,7 @@ const DEFAULT_BASE_SPEED := 1.0
 const MIN_BASE_SPEED := 0.5
 const MAX_BASE_SPEED := 1.5
 const DEFAULT_VOLUME := 1.0
+const DEFAULT_TRACE_ENABLED := true
 
 ## Das aktive Profil hat gewechselt (id = neuer player_id). Erlaubt Live-Refresh im UI.
 signal active_profile_changed(id: String)
@@ -130,6 +131,19 @@ func sfx_volume() -> float:
 
 func set_sfx_volume(value: float) -> void:
 	_config.set_value("general", "sfx_volume", clampf(value, 0.0, 1.0))
+	_save()
+
+
+## Schreibt das Ereignis-Protokoll mit (TraceLog)? Bewusst in [general] und damit
+## geräteweit statt pro Profil: ob protokolliert wird, ist eine Frage an den Rechner und
+## nicht an das Kind, das gerade spielt. Vorgabe an — ein Protokoll, das man erst
+## einschalten muss, ist beim Fehler von gestern leer.
+func trace_enabled() -> bool:
+	return bool(_config.get_value("general", "trace_log", DEFAULT_TRACE_ENABLED))
+
+
+func set_trace_enabled(value: bool) -> void:
+	_config.set_value("general", "trace_log", value)
 	_save()
 
 

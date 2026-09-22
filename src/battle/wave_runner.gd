@@ -749,7 +749,7 @@ func _spawn(entry: Dictionary) -> void:
 	_monsters.add_child(monster)
 	_active.append(monster)
 	_spawned += 1
-	EventBus.monster_spawned.emit(plan["monster_def"])
+	EventBus.monster_spawned.emit(plan["monster_def"], plan["task"])
 
 
 func _on_answer_submitted(text: String) -> void:
@@ -766,33 +766,57 @@ func _on_answer_submitted(text: String) -> void:
 		if not bool(verdict["matched"]):
 			continue
 		if bool(verdict["complete"]):
-			_score_hit(monster)
+			_score_hit(monster, text)
 			return
 		if partial == null:
 			partial = monster
 			partial_form = str(verdict["canonical"])
 	if partial != null:
 		# Richtig, aber etwas Optionales fehlte — die Vollform wird eingeblendet.
-		_score_hit(partial, partial_form)
+		_score_hit(partial, text, partial_form)
 		return
 	# Kein Treffer -> Falscheingabe: rotes Flash + Kamera-Wackeln.
 	# Bewusst KEIN Fortschritts-Eintrag: eine Falscheingabe lässt sich keiner
 	# konkreten Aufgabe zuordnen (mehrere Monster gleichzeitig). Ein echtes
 	# Scheitern wird beim Erreichen der Festung verbucht (_on_monster_reached_goal).
+	# PROTOKOLLIERT wird sie trotzdem, mit leerer learnable_id und den Aufgaben, die
+	# gerade auf dem Feld standen: genau daran liest man später ab, warum eine Antwort
+	# nicht genommen wurde (TraceLog).
+	EventBus.answer_judged.emit(text, {
+		"matched": false, "complete": false, "learnable_id": "", "source_id": "",
+		"response_time_ms": 0, "canonical": "", "candidates": _active_learnable_ids(),
+	})
 	_flash_feedback(FLASH_WRONG)
 	_shake()
 	Sfx.play(&"wrong_answer")
+
+
+## Die learnable_ids der Aufgaben, die gerade auf dem Feld stehen — der Zusammenhang, in
+## dem eine Eingabe beurteilt wurde. Nur fürs Protokoll; die Auswertung selbst läuft über
+## die Monster-Liste.
+func _active_learnable_ids() -> Array:
+	var ids: Array = []
+	for monster in _active:
+		ids.append(str(monster.task.get("learnable_id", "")))
+	return ids
 
 
 ## Treffer verbuchen. `full_form` != "" heißt: die Antwort war richtig, ließ aber einen
 ## optionalen Bestandteil weg ("criticize" statt "criticize sb. (for)"). Das kostet
 ## nichts — die vollständige Form wird nur zusätzlich eingeblendet, damit das Muster
 ## trotzdem einmal zu sehen war.
-func _score_hit(monster: Monster, full_form: String = "") -> void:
+func _score_hit(monster: Monster, text: String = "", full_form: String = "") -> void:
 	var rt := Time.get_ticks_msec() - monster.spawned_at_ms
 	var task_id := str(monster.task.get("learnable_id", ""))
 	PlayerProgress.record(task_id, true, rt, float(monster.task.get("initial_confidence", -1.0)))
 	EventBus.item_reviewed.emit(task_id, true, rt)
+	# Nach record(), damit ein Mithörer die Confidence DANACH liest — die davor steht in
+	# der Spawn-Zeile des Protokolls.
+	EventBus.answer_judged.emit(text, {
+		"matched": true, "complete": full_form.is_empty(), "learnable_id": task_id,
+		"source_id": str(monster.task.get("source_id", "")), "response_time_ms": rt,
+		"canonical": full_form, "candidates": _active_learnable_ids(),
+	})
 	var pos := monster.position
 	_defeat(monster)
 	_flash_feedback(FLASH_CORRECT)

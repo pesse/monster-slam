@@ -5,6 +5,11 @@ extends Control
 ## Statistik und Wortliste sind hier ausgezogen und liegen im eigenen Statistik-Screen
 ## (stats_screen, Issue #5) — sie hingen zwischen Profilauswahl, Reset und Melde-Token.
 ##
+## Der Reiter „Protokoll" ist der Zugang zum Ereignis-Protokoll (TraceLog): an, aus, Pfad,
+## Ordner öffnen, leeren. Der Screen SCHREIBT nichts davon — er stellt den Schalter in
+## UserSettings und liest den Stand beim Autoload, so wie der Wellenabschluss den Gold-Stand
+## bei Wallet liest.
+##
 ## Der Reiter „Melden" ist die einzige Stelle, an der ein Melde-Token eingetragen wird
 ## (siehe ReportService, docs/adr/0002-melde-rueckkanal.md). Er bleibt deshalb immer
 ## sichtbar; die Liste der Meldungen darunter erscheint erst mit hinterlegtem Token —
@@ -28,6 +33,11 @@ const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 @onready var _token_button: Button = %TokenButton
 @onready var _token_forget: Button = %TokenForget
 @onready var _token_status: Label = %TokenStatus
+@onready var _trace_toggle: CheckBox = %TraceToggle
+@onready var _trace_path: Label = %TracePath
+@onready var _trace_status: Label = %TraceStatus
+@onready var _trace_open: Button = %TraceOpen
+@onready var _trace_clear: Button = %TraceClear
 
 
 func _ready() -> void:
@@ -46,6 +56,15 @@ func _ready() -> void:
 	_token_forget.pressed.connect(_on_token_forget)
 	# Der Dienst meldet jeden Zustandswechsel; die Anzeige hängt daran statt zu pollen.
 	ReportService.changed.connect(_refresh_report)
+	_trace_toggle.toggled.connect(_on_trace_toggled)
+	_trace_open.pressed.connect(_on_trace_open)
+	_trace_clear.pressed.connect(_on_trace_clear)
+	Hints.attach(_trace_toggle, "Ereignis-Protokoll",
+			"Schreibt jede erschienene Aufgabe und jede Eingabe mit — die Grundlage, "
+			+ "auf der sich hinterher sagen lässt, was passiert ist.",
+			"bleibt auf diesem Rechner")
+	Hints.attach(_trace_open, "Ordner öffnen", "zeigt die Protokolldatei im Dateimanager")
+	Hints.attach(_trace_clear, "Protokoll leeren", "löscht beide Dateien; das laufende Spiel schreibt danach neu")
 	_refresh()
 
 
@@ -55,6 +74,7 @@ func _refresh() -> void:
 	_refresh_difficulty()
 	_refresh_speed()
 	_refresh_report()
+	_refresh_trace()
 
 
 func _refresh_profiles() -> void:
@@ -195,3 +215,37 @@ func _on_reset_confirmed() -> void:
 	PlayerProgress.reset()
 	PlayerProgress.save_progress()
 	_refresh()
+
+
+# --- Reiter „Protokoll" -------------------------------------------------------
+
+func _refresh_trace() -> void:
+	# Ohne Signal: _refresh_trace() läuft auch AUS dem toggled-Handler heraus, und ein
+	# Setzer, der dort erneut feuert, schriebe die Einstellung ein zweites Mal.
+	_trace_toggle.set_pressed_no_signal(UserSettings.trace_enabled())
+	_trace_path.text = ProjectSettings.globalize_path(TraceLog.path())
+	var bytes := TraceLog.size_bytes()
+	_trace_clear.disabled = bytes == 0
+	if bytes == 0:
+		# Kein „0 KB": leer heißt entweder „noch nichts gespielt" oder „gerade geleert",
+		# und beides ist dieselbe Auskunft — es ist nichts da.
+		_trace_status.text = "noch nichts aufgezeichnet"
+		return
+	_trace_status.text = "aufgezeichnet: %s" % String.humanize_size(bytes)
+
+
+func _on_trace_toggled(pressed: bool) -> void:
+	UserSettings.set_trace_enabled(pressed)
+	TraceLog.set_enabled(pressed)
+	_refresh_trace()
+
+
+func _on_trace_open() -> void:
+	# Der Ordner und nicht die Datei: eine .jsonl öffnet je nach Rechner irgendetwas oder
+	# nichts, der Ordner immer den Dateimanager.
+	OS.shell_open(ProjectSettings.globalize_path(TraceLog.LOG_DIR))
+
+
+func _on_trace_clear() -> void:
+	TraceLog.clear()
+	_refresh_trace()

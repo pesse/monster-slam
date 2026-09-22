@@ -10,11 +10,22 @@ extends Node
 signal wave_started(wave_id: String)
 signal wave_totals(total: int)
 signal wave_cleared(wave_id: String)
-signal monster_spawned(monster: Dictionary)
-signal monster_reached_fortress(monster: Dictionary)
+## `task` ist die aufgelöste Aufgabe (TaskResolver), damit ein Mithörer weiß, WELCHES
+## Lexem gerade erscheint — `monster` ist nur die Darstellung.
+signal monster_spawned(monster: Dictionary, task: Dictionary)
+## Ein Monster hat die Festung erreicht. `task` wie oben, `damage` der angerichtete Schaden.
+signal monster_reached_fortress(monster: Dictionary, task: Dictionary, damage: int)
 
 ## --- Player input & combat ---
 signal answer_submitted(text: String)
+## Eine abgeschickte Antwort ist beurteilt — RICHTIG WIE FALSCH, und auch die, die keiner
+## Aufgabe zuzuordnen war. Das unterscheidet es von `item_reviewed`: das ist eine
+## Lernstands-Buchung und feuert auch ohne Eingabe (durchgelassenes Monster), dieses hier
+## feuert genau dann, wenn jemand Enter gedrückt hat.
+## `verdict` trägt {matched, complete, learnable_id, source_id, response_time_ms,
+## canonical, candidates}. Ein Dictionary, damit Felder dazukommen können, ohne die
+## Signatur zu brechen.
+signal answer_judged(text: String, verdict: Dictionary)
 ## Jede Zeichenänderung in der Antwort-Eingabe (treibt die Tipp-Slow-Motion).
 signal typing_activity()
 ## Eingabe abgeschickt/beendet — eine laufende Slow-Motion endet sofort.

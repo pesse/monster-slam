@@ -331,11 +331,52 @@ vorhandenen Handlern. (Noch zu implementieren — siehe `docs/ADDING_CONTENT.md`
   `user://progress/<player>_level.json`. Gelesen wird daraus nur `total_xp` — Level und
   Skillpunkte stehen zum Mitlesen in der Datei, kommen aber aus der Rechnung. Gesichert
   wird **sofort** bei jeder Änderung, also mitten in der Welle.
+- **Ereignis-Protokoll** (`TraceLog`, `src/learning/trace_log.gd`): JSON Lines unter
+  `user://logs/<player>_trace.jsonl`, eine Zeile je Ereignis. Siehe „Die Spur eines Laufs"
+  unten.
 - **Spielerfortschritt** (`player_task_progress`): der Autoload `PlayerProgress`
   (`src/learning/player_progress.gd`) hält je Aufgabe Confidence/Streak/Fälligkeit und
   kapselt den SM-2-Scheduler. Persistenz: JSON unter `user://progress/<player>.json`
   (schreibintensiv, wächst → bewusst nicht in `data/`). SQLite ist die vorgesehene
   Ausbaustufe für größere Historien.
+
+## Die Spur eines Laufs: wofür das Protokoll da ist
+
+Vier Ebenen halten fest, was der Spieler tut, und jede beantwortet eine andere Frage:
+
+| Ebene | Wo | Frage |
+|---|---|---|
+| `GameState` | nur im Speicher | wie steht es GERADE? |
+| `PlayerProgress` | `user://progress/<player>.json` | wie gut kann er diese Aufgabe? |
+| `SessionLog` | `user://progress/<player>_sessions.json` | wie lief dieser Lauf im Ganzen? |
+| `TraceLog` | `user://logs/<player>_trace.jsonl` | **was ist konkret passiert?** |
+
+Die ersten drei sind Summen und Stände — sie beantworten keine Frage, die vorher niemand
+gestellt hat. Genau die stellt man aber bei der Fehlersuche („warum wurde *coral* nicht
+genommen?", „wie oft kam dieses Wort?"). `TraceLog` schreibt deshalb Rohdaten: je
+erschienenem Lexem, je Eingabe, je durchgelassenem Monster und je Wellen-/Lauf-Grenze eine
+Zeile JSON.
+
+- **Es hängt ausschließlich am EventBus und wirkt nie zurück.** `monster_spawned` trägt
+  seit dieser Änderung die aufgelöste Aufgabe mit, `monster_reached_fortress` zusätzlich
+  Aufgabe und Schaden, und `answer_judged` ist neu: es meldet JEDE abgeschickte Antwort
+  samt Urteil — auch die, die auf kein Monster passte. Genau die wurde vorher restlos
+  verworfen (der `WaveRunner` verbucht sie bewusst nicht, weil sie bei mehreren Monstern
+  auf dem Feld keiner Aufgabe zuzuordnen ist); die Zeile nennt sie deshalb mit leerer
+  `learnable_id` und dazu die Aufgaben, die im Moment der Abweisung dastanden.
+- **Vorher/Nachher steht in zwei Zeilen**, nicht in einem mitgeführten Feld: die
+  `spawn`-Zeile trägt die Confidence vor der Antwort, die `answer`-Zeile die danach
+  (`PlayerProgress.record()` läuft vor dem Signal). Eine zweite Buchführung daneben liefe
+  auseinander.
+- **Zwei Generationen à 2 MB je Profil**, mehr nicht: ein Protokoll, das den Rechner
+  vollschreibt, schaltet man ab, und dann hilft es niemandem. Geschrieben wird sofort und
+  mit `flush()` — der Absturz, den die Spur erklären soll, kündigt sich nicht an.
+- **Abschaltbar, Vorgabe an** (`UserSettings.trace_enabled`, geräteweit wie die Lautstärke).
+  Der Zugang ist der Reiter „Protokoll" im Einstellungs-Screen: Pfad, Ordner öffnen, leeren.
+  Eine Aufzeichnung, die man erst einschalten muss, ist beim Fehler von gestern leer.
+- **Die Spur bleibt auf dem Rechner.** Sie enthält getippte Kindertexte und Lemmata aus
+  geschütztem Material — anders als der Melde-Rückkanal, der nur Ids kennt. Das ist der
+  Unterschied und keine Nachlässigkeit.
 
 ## Ausliefern: zwei getrennte Update-Kanäle
 

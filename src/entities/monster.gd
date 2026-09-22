@@ -136,6 +136,6 @@ func _physics_process(delta: float) -> void:
 	position.z += _speed * delta
 	if position.z >= _target_z:
 		_done = true
-		EventBus.monster_reached_fortress.emit(monster_def)
+		EventBus.monster_reached_fortress.emit(monster_def, task, damage)
 		reached_goal.emit(self)
 		queue_free()

@@ -374,6 +374,47 @@ Beim Arbeiten daran zu beachten:
   `Wallet.spend` in die echte Geldbörse des Spielers. Der Screen nimmt dafür ein Feld
   `book` entgegen, das vor dem Einhängen gesetzt wird.
 
+## Die Spur: was passiert ist, nicht was zusammengezählt wurde
+
+`TraceLog` (Autoload, `src/learning/trace_log.gd`) schreibt je Ereignis eine Zeile JSON
+nach `user://logs/<profil>_trace.jsonl`: jedes erschienene Lexem, jede Eingabe mit ihrem
+Urteil, jedes durchgelassene Monster, jede Wellen- und Lauf-Grenze. Die vierte Ebene neben
+`PlayerProgress` (Stand je Aufgabe), `SessionLog` (eine Zeile je Lauf) und `GameState`
+(jetzt) — die drei sind Summen und beantworten keine Frage, die vorher niemand gestellt
+hat. Bedient wird es im Reiter „Protokoll" des Einstellungs-Screens.
+
+Beim Arbeiten daran zu beachten:
+
+- **Es hängt NUR am EventBus und wirkt nie zurück.** Es liest, es schreibt, es entscheidet
+  nichts; ein Fehler darin darf kein Spiel kosten (deshalb `push_warning` und Stille, kein
+  `push_error`). Wer eine Zeile braucht, die es noch nicht gibt, gibt dem EventBus ein
+  Signal — er ruft das Protokoll nicht aus dem Spielcode.
+- **`answer_judged` ist der Grund, aus dem es das überhaupt gibt.** Eine Eingabe, die auf
+  kein Monster passte, wurde vorher restlos verworfen — der `WaveRunner` verbucht sie
+  bewusst nicht, weil sie bei mehreren Monstern keiner Aufgabe zuzuordnen ist. Das gilt
+  weiter; protokolliert wird sie trotzdem, mit leerer `learnable_id` und den
+  `candidates` des Feldes. „Warum wurde meine richtige Antwort nicht genommen" ist ohne
+  diese Zeile nicht zu beantworten.
+- **Felder kommen dazu, sie werden nicht umbenannt.** Dieselbe Regel wie bei den Packs und
+  aus demselben Grund: eine Zeile von gestern muss lesbar bleiben. Aus demselben Grund
+  steht `sort_keys=false` bei `JSON.stringify` — mit der Voreinstellung `true` steht in
+  jeder Zeile `answers` vor `e`, und eine Spur wird gelesen.
+- **Vorher/Nachher steht in ZWEI Zeilen.** Die `spawn`-Zeile trägt die Confidence vor der
+  Antwort, die `answer`-Zeile die danach (`PlayerProgress.record()` läuft vor dem Signal).
+  Ein mitgeführtes Feld wäre eine zweite Buchführung.
+- **Zwei Generationen à 2 MB je Profil.** `max_bytes` ist ein `var` und keine Konstante,
+  damit ein Test das Rollen prüfen kann, ohne 2 MB zu schreiben. Geschrieben wird sofort
+  und mit `flush()`: der Absturz, den die Spur erklären soll, kündigt sich nicht an.
+- **Unter gdUnit schweigt das Autoload** (`_under_test()`). Andere Suiten feuern
+  EventBus-Signale und schrieben damit erfundene Wellen und Monster in die ECHTE Spur des
+  Spielers — dasselbe Problem wie beim `zz-`Profil von Wallet und PlayerLevel, nur dass
+  hier das Autoload schreibt und nicht der Test. Geprüft wird auf einer eigenen Instanz
+  mit `zz-`Profil (`tests/trace_log_test.gd`), die nie in den Baum kommt.
+- **Die Spur bleibt auf dem Rechner.** Sie enthält getippte Kindertexte und Lemmata aus
+  geschütztem Material. Der Melde-Rückkanal kennt Ids, die Spur kennt Wörter — sie geht
+  deshalb nicht durch ihn und in kein Repo. `user://logs/` teilt sich das Verzeichnis
+  übrigens mit Godots eigenem `godot.log`; `clear()` fasst nur die eigenen beiden Dateien an.
+
 ## Auskunft am Zeiger: eine Karte für das ganze Spiel
 
 Erklärt wird über das Autoload `Hints` (`src/ui/hints.gd`, `scenes/ui/hints.tscn`) und die
