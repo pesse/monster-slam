@@ -405,4 +405,10 @@ func _start_server() -> bool:
 		return false
 	print("  ✓ bereit nach %.1f s" % (float(Time.get_ticks_msec() - started) / 1000.0))
 	_url = _server.url()
+	# Und der Name im Protokoll ist die Datei, die wirklich antwortet. llama-server ist das
+	# Feld gleichgültig, das Protokoll nicht: es stand sonst „qwen2.5:3b-instruct" über
+	# einer Messung, die EuroLLM gemessen hat — die Vorgabe aus LocalModelBackend.MODEL,
+	# die für einen fremden Ollama-Dienst gilt und hier niemanden meint. Ein --name= sticht.
+	if _model == LocalModelBackend.MODEL:
+		_model = ProjectSettings.globalize_path(_server.weights_path()).get_file()
 	return true

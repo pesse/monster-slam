@@ -69,9 +69,15 @@ var _backend: LocalModelBackend
 var _server: LocalModelServer
 ## Die Sätze der aktuellen Auswahl, in der Reihenfolge der Liste.
 var _choices: Array = []
+## Das Fenster, dessen Größe die Werkbank geliehen hat.
+var _room: Window
 
 
 func _ready() -> void:
+	# Eine Werkbank bekommt mehr Platz als das Spiel — drei Spalten nebeneinander passen
+	# nicht in 1152×648, und am Fensterrand zu ziehen hilft dagegen nicht (LabRoom).
+	_room = get_window()
+	LabRoom.enlarge(_room)
 	_judge = SentenceJudge.new()
 	_judge.timeout = LAB_JUDGE_TIMEOUT
 	add_child(_judge)
@@ -84,6 +90,10 @@ func _ready() -> void:
 	# Angelegt, nicht gestartet. Der Knoten kostet nichts, und mit ihm steht die Adresse
 	# fest, die der Knopf gleich bedient — das URL-Feld muss niemand von Hand richten.
 	_server = LocalModelServer.new()
+	# In der Werkbank will man llama-servers EIGENES Log sehen — warum er die Gewichte
+	# ablehnt, steht dort und sonst nirgends. Im Spiel wäre dieses Fenster ein zweites,
+	# das niemand bestellt hat.
+	_server.show_console = true
 	add_child(_server)
 
 	_boss_select.add_item("— alle Sätze —", 0)
@@ -104,6 +114,12 @@ func _ready() -> void:
 
 	_render_serve()
 	_refill()
+
+
+## Das Fenster gehört dem Spiel; die Werkbank gibt es zurück. Hier und nicht an den beiden
+## Ausgängen: es gibt Knopf, Escape und das Beenden, und drei Stellen wären zwei zu viel.
+func _exit_tree() -> void:
+	LabRoom.restore(_room)
 
 
 func _input(event: InputEvent) -> void:
@@ -150,7 +166,31 @@ func _refill() -> void:
 		return SentenceSelector.net_difficulty(a) > SentenceSelector.net_difficulty(b))
 	_pool_info.text = "%d Sätze im Pool, davon %d mit Schlüssel — höchstens %d zur Wahl." % [
 		all.size(), all.filter(func(s): return has_key(s)).size(), MAX_CHOICES]
+	if found.is_empty():
+		_pool_info.text += "\n" + empty_note(all)
 	show_sentences(found.slice(0, MAX_CHOICES))
+
+
+## Warum nichts zur Wahl steht. Der häufigste Grund ist kein leerer Bestand, sondern ein
+## liegengebliebener Pack: er gewinnt bei gleicher Id gegen das Submodule, und ein Pack von
+## vor den Schlüsselfeldern macht aus tausend Sätzen tausend OHNE Schlüssel. Ohne diesen
+## Satz tut „Satz ziehen wie im Spiel" dann schlicht nichts — es gibt nichts zu ziehen, und
+## warum, steht nirgends: die Herkunft steht sonst AM Satz, und einen Satz gibt es ja nicht.
+static func empty_note(pool_sentences: Array) -> String:
+	if pool_sentences.is_empty():
+		return "Nichts zur Wahl: kein Satz passt zu dieser Auswahlregel."
+	var packs := {}
+	for sentence in pool_sentences:
+		var pack := ContentRegistry.pack_of(
+				"sentences", str((sentence as Dictionary).get("id", "")))
+		if not pack.is_empty():
+			packs[pack] = true
+	if packs.is_empty():
+		return "Nichts zur Wahl: kein Satz im Pool trägt einen Schlüssel."
+	return ("Nichts zur Wahl: kein Satz im Pool trägt einen Schlüssel — sie kommen aus "
+			+ "Pack „%s“, und ein Pack verdeckt das Submodule. " % ", ".join(
+					PackedStringArray(packs.keys().map(str)))
+			+ "Aufräumen unter user://content.")
 
 
 ## Stellt eine Liste von Sätzen zur Wahl und zeigt den ersten. Die Naht, an der die Tests

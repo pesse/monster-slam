@@ -145,3 +145,15 @@ func test_the_lab_waits_longer_than_the_fight_would() -> void:
 	# Und der Richter muss LÄNGER warten als das Backend: gäbe er früher auf, stünde die
 	# Anfrage noch und jede weitere fiele in die Sperre (BUSY_NOTE).
 	assert_float(judge.timeout).is_greater(backend.http_timeout)
+
+
+## Ein leerer Auswahlkasten muss sagen, WARUM er leer ist. Der häufigste Grund ist ein
+## liegengebliebener Pack: er gewinnt bei gleicher Id gegen das Submodule, und einer von vor
+## den Schlüsselfeldern macht aus 1522 Sätzen 1522 ohne Schlüssel. Dann steht bei angehaktem
+## „Nur Sätze mit Schlüssel" nichts zur Wahl, und „Satz ziehen wie im Spiel" tut schlicht
+## nichts — die Herkunft steht sonst AM Satz, und einen Satz gibt es ja gerade nicht.
+func test_an_empty_choice_box_says_why_it_is_empty() -> void:
+	assert_str(_lab.call("empty_note", []) as String).contains("Auswahlregel")
+	var note := _lab.call("empty_note", [SENTENCE]) as String
+	assert_str(note).contains("Schlüssel")
+	assert_str(note).is_not_empty()

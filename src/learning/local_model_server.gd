@@ -48,6 +48,12 @@ var port := DEFAULT_PORT
 var context_size := DEFAULT_CONTEXT
 var ready_timeout := READY_TIMEOUT
 
+## Ob llama-server sein eigenes Fenster bekommt. Er schreibt SEIN Log dorthin und nirgends
+## sonst — ohne Konsole verschwindet es, und „passen die Gewichte?" bleibt eine Vermutung,
+## die nirgends nachzulesen ist. In einer Werkbank will man dieses Fenster; im Spiel wäre
+## es ein zweites, das der Spieler nicht bestellt hat. Deshalb aus, und die Werkbank setzt es.
+var show_console := false
+
 ## Woran es beim letzten Mal lag, im Klartext — leer, solange alles in Ordnung war.
 var last_note := ""
 
@@ -125,16 +131,17 @@ func start() -> bool:
 	last_note = ""
 	var missing := missing_files()
 	if not missing.is_empty():
-		last_note = "Kein Modell in %s — es fehlt: %s" % [
-				ProjectSettings.globalize_path(dir), ", ".join(missing)]
-		return false
+		return _note("Kein Modell in %s — es fehlt: %s" % [
+				ProjectSettings.globalize_path(dir), ", ".join(missing)])
 	var exe := ProjectSettings.globalize_path(exe_path())
 	var args := arguments(ProjectSettings.globalize_path(weights_path()), port, context_size)
-	_pid = OS.create_process(exe, args)
+	# Der ganze Aufruf in die Ausgabe: er ist das, was man beim Suchen von Hand nachspielt.
+	print("LocalModelServer: starte %s %s" % [exe, " ".join(args)])
+	_pid = OS.create_process(exe, args, show_console)
 	if _pid <= 0:
-		last_note = "%s ließ sich nicht starten" % exe
 		_pid = -1
-		return false
+		return _note("%s ließ sich nicht starten" % exe)
+	print("LocalModelServer: pid %d, warte auf %s" % [_pid, health_url()])
 	return await _wait_until_ready()
 
 
@@ -143,6 +150,7 @@ func stop() -> void:
 	if _pid <= 0:
 		return
 	if OS.is_process_running(_pid):
+		print("LocalModelServer: beende pid %d" % _pid)
 		OS.kill(_pid)
 	_pid = -1
 
@@ -152,15 +160,26 @@ func _wait_until_ready() -> bool:
 	while Time.get_ticks_msec() < deadline:
 		if not OS.is_process_running(_pid):
 			# Gestartet und gleich wieder weg: fast immer die Gewichte, die nicht zu
-			# diesem Programm passen. Das steht in seiner Ausgabe, nicht bei uns.
-			last_note = "llama-server hat sich sofort beendet — passen die Gewichte?"
+			# diesem Programm passen. Warum genau, steht in SEINER Ausgabe — die gibt es
+			# nur mit `show_console`, und deshalb steht der Hinweis darauf hier.
 			_pid = -1
-			return false
+			return _note("llama-server hat sich sofort beendet — passen die Gewichte?"
+					+ " (sein eigenes Log gibt es mit show_console = true)")
 		if await _healthy():
+			print("LocalModelServer: bereit auf %s" % url())
 			return true
 		await get_tree().create_timer(POLL_INTERVAL).timeout
-	last_note = "llama-server war nach %.0f s noch nicht bereit" % ready_timeout
 	stop()
+	return _note("llama-server war nach %.0f s noch nicht bereit" % ready_timeout)
+
+
+## Setzt den Grund UND schreibt ihn in die Ausgabe — und gibt false zurück, weil jeder
+## Aufrufer das gerade tun will. Beides ist nötig: `last_note` steht in der Werkbank am
+## Bildrand, aber wer hinterher im Log nachsieht, fand dort bisher gar nichts. Kein
+## `push_warning`: ein fehlendes Modell ist hier der Normalfall und kein Fehler.
+func _note(text: String) -> bool:
+	last_note = text
+	print("LocalModelServer: %s" % text)
 	return false
 
 

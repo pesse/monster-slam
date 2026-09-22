@@ -167,17 +167,30 @@ func _on_completed(result: int, code: int, _headers: PackedStringArray, body: Pa
 	last_note = ""
 	if result != HTTPRequest.RESULT_SUCCESS:
 		last_note = "Kein Dienst auf %s erreichbar (Ergebnis %d)" % [url, result]
+		_report(last_note, "")
 		_finish({})
 		return
 	var text := body.get_string_from_utf8()
 	if code != 200:
 		last_note = "HTTP %d von %s: %s" % [code, url, _excerpt(text)]
+		_report("HTTP %d von %s" % [code, url], text)
 		_finish({})
 		return
 	var reply := parse_reply(text)
 	if reply.is_empty():
 		last_note = "Antwort ohne verwertbares Urteil: %s" % _excerpt(text)
+		_report("Antwort ohne verwertbares Urteil von %s" % url, text)
 	_finish(reply)
+
+
+## In die Ausgabe, nicht nur auf den Bildschirm. `last_note` muss in eine Karte am Bildrand
+## passen und ist deshalb gekürzt — beim Suchen will man aber genau das sehen, was gekürzt
+## wurde: WELCHE Form das Modell statt der verabredeten geliefert hat. Gemeldet wird nur,
+## was schiefging; eine geglückte Anfrage ist keine Nachricht.
+static func _report(what: String, body: String) -> void:
+	var full := body.strip_edges()
+	print("LocalModelBackend: %s" % what if full.is_empty()
+			else "LocalModelBackend: %s\n%s" % [what, full])
 
 
 ## Genug zum Wiedererkennen, wenig genug für eine Zeile.

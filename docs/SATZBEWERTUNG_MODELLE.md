@@ -1,6 +1,6 @@
 # Modelle für die Satzbewertung — Recherchestand
 
-Stand: 2026-09-16 · Gehört zu: [`adr/0004-satzbewertung-ohne-modell.md`](adr/0004-satzbewertung-ohne-modell.md)
+Stand: 2026-09-17 · Gehört zu: [`adr/0004-satzbewertung-ohne-modell.md`](adr/0004-satzbewertung-ohne-modell.md)
 
 Diese Notiz hält fest, **was es an kleinen Modellen für Englisch↔Deutsch gibt** und warum
 die Entscheidung trotzdem gegen ein ausgeliefertes Modell fiel. Sie ist Material für das
@@ -11,6 +11,11 @@ einen festen Antwortbogen — sie stehen am Ende, zusammen mit dem, was noch off
 
 Die Zielhardware ist der Familien- oder Schullaptop: keine zugesicherte GPU, 8 GB RAM oder
 weniger, Windows, eine self-contained EXE (ADR 0001).
+
+> **Das Wichtigste zuerst, Stand 2026-09-17:** Die Empfehlung aus den Modellkarten
+> (EuroLLM-1.7B) ist an eigenen Zahlen gescheitert, **Qwen3-4B-Instruct-2507** trifft 90–92 %
+> des Antwortbogens. Beides steht unter „Zweite Messung". Die Abschnitte davor sind der
+> Rechercheteil und bleiben als das stehen, was sie waren: Herstellerangaben.
 
 ## Die Leitfrage ist nicht „welches Modell", sondern „welche Aufgabe"
 
@@ -117,8 +122,13 @@ als Kür.
 
 ## Empfehlungen, falls die Entscheidung später aufgemacht wird
 
-- **Stufe 1 über einen lokalen Dienst (Ollama o. Ä.):** EuroLLM-1.7B-Instruct statt eines
-  generischen Modells gleicher Größe — gebaut für genau diese Sprachrichtung, Apache 2.0.
+- ~~**Stufe 1 über einen lokalen Dienst:** EuroLLM-1.7B-Instruct statt eines generischen
+  Modells gleicher Größe — gebaut für genau diese Sprachrichtung, Apache 2.0.~~
+  **Gemessen widerlegt** (2026-09-17, siehe unten): EuroLLM-1.7B bleibt auf der
+  Basislinie „sagt zu allem ja". Es gilt jetzt **Qwen3-4B-Instruct-2507 Q4_K_M**
+  (Apache-2.0, 2,5 GB) — ein generisches Modell der doppelten Größe, das die Aufgabe kann.
+  Das ist der Fall, für den dieser Abschnitt geschrieben war: eine Empfehlung aus
+  Modellkarten hält, bis jemand misst.
 - **Stufe 1b in der EXE, falls je gewünscht:** xCOMET-lite quantisiert (~100 MB).
   **Nicht** ein Übersetzungsmodell und **nicht** ein kleines Allzweck-LLM.
 - **Finger weg von CC-BY-NC** (NLLB), solange das Spiel öffentlich verteilt wird.
@@ -213,17 +223,121 @@ Gemessen wird damit wie vorher, nur ohne Fremd-App:
 tools/godot.sh res://scenes/dev/measure_sentences.tscn -- --serve --timeout=60
 ```
 
+### Erste Messung MIT Modell (2026-09-17): der Kandidat trägt nichts bei
+
+Gemessen wurde der Kandidat aus `tools/model/model.json` — `EuroLLM-1.7B-Instruct.Q4_K_M`
+auf llama.cpp `b11002`, CPU, über `--serve`:
+
+```
+25 unsichere Antworten gefragt, 0 angehoben, 25 ohne Beitrag — 29,7 s (1,2 s je Frage)
+```
+
+Die Vierfeldertafel ist danach **Zeichen für Zeichen dieselbe** wie ohne Modell: 12
+Falsch-Negative, 0 Falsch-Positive. Das Erfolgskriterium von oben — die 12 Richtung 2
+drücken — ist um die volle Strecke verfehlt.
+
+**Am Tempo liegt es nicht.** 1,2 s je Frage liegen deutlich unter den 3,5 s, die der Kampf
+hergibt; kein einziger Abbruch. Es liegt daran, dass **keine einzige** der 25 Antworten in
+der verabredeten Form kam. Zwei Muster, beide gut erkennbar:
+
+```
+"Antwort: She always goes on foot to school."      ← gibt die Schülerantwort zurück
+"Antwort: 0.0 bis 1.0"                             ← schreibt den Schema-Text ab
+```
+
+Damit ist der Befund **noch kein Urteil über EuroLLM**, denn beide Muster zeigen auf den
+Prompt (`LocalModelBackend.prompt_for`), und zwar auf zwei Stellen:
+
+- Die Schülerantwort steht dort unter der Beschriftung `Antwort: …` — und die
+  wahrscheinlichste Fortsetzung einer Zeile `Antwort: X` ist eine weitere Zeile
+  `Antwort: …`. Ein kleines Modell setzt das Muster fort, statt die Frage zu beantworten.
+- Die geforderte Form ist als `{"quality": 0.0 bis 1.0, "feedback": "…"}` angegeben. Das
+  ist **kein JSON**, sondern eine Schema-Beschreibung in JSON-Klammern; „0.0 bis 1.0"
+  wörtlich abgeschrieben zu bekommen ist die naheliegende Reaktion darauf.
+
+Vor einem „das Modell kann es nicht" stehen deshalb zwei billigere Versuche: die
+Beschriftung im Prompt entzerren, und die Form erzwingen statt sie zu erbitten —
+llama-server kann `response_format`/GBNF und liefert dann nur noch gültiges JSON. Beides
+ist ungeprüft. Erst danach ist die Frage „welches Modell" wieder eine Frage über Modelle.
+
+Der Messlauf hat nebenbei die Ausgabe der beiden Klassen geschärft: `LocalModelBackend`
+legt jetzt die VOLLE Antwort ins Log (auf dem Bildschirm steht weiter nur ein Auszug) —
+ohne das wären die beiden Muster oben gar nicht zu sehen gewesen.
+
+### Zweite Messung (2026-09-17): der Prompt war es — und das Modell auch
+
+Die beiden billigeren Versuche von oben sind gemacht: **Beschriftung entzerrt** (ein
+Prompt, der die Schülerantwort nicht als `Antwort: …` einführt und als Urteil `correct`
+oder `incorrect` verlangt statt einer Zahl) und **Form erzwungen** (`response_format`
+mit `json_schema`, von llama-server als GBNF umgesetzt). Gemessen wurde in einer eigenen
+Werkstatt (`C:\dev\prompt-eval`, promptfoo + ChainForge) gegen **denselben Antwortbogen**,
+alle 63 Antworten, zwei Promptvarianten mal zwei Ausgabeformen.
+
+Die Bezugsgröße ist nicht 0, sondern **37 von 63 = 58,7 %** — so gut ist ein Modell, das
+stur „correct" sagt. Alles darunter ist schlechter als Schweigen.
+
+| Modell | blind | mit Schlüssel | Form kaputt | Ø Dauer |
+|---|---|---|---|---|
+| EuroLLM-1.7B-Instruct | auf Basislinie | auf Basislinie | ja, im freien Modus | 1–2 s |
+| **Qwen3-4B-Instruct-2507** | **57/63 (90 %)** | **58/63 (92 %)** | **nein, 252/252 gültig** | ~6 s |
+
+Damit ist der Befund von oben zu Ende geführt, und zwar in beide Richtungen:
+
+- **Der Prompt war wirklich ein Teil des Problems.** Mit entzerrter Beschriftung und
+  erzwungener Form kommt aus beiden Modellen gültiges JSON statt zurückgegebener
+  Schülerantworten. Das war die richtige Reihenfolge.
+- **Es war aber nicht nur der Prompt.** EuroLLM-1.7B bleibt auch mit dem besseren Prompt
+  auf der Basislinie: es sagt zu fast allem „correct". Das ist jetzt ein Urteil über das
+  Modell, kein Verdacht mehr.
+- **Die erzwungene Form repariert die FORM, nicht das URTEIL.** Bei Qwen ändert sie an der
+  Trefferquote nichts (57 gegen 57, 58 gegen 58) — es schreibt das verabredete JSON schon
+  von sich aus. Wer die Struktur erzwingt, hat damit die Struktur und sonst nichts
+  gewonnen; sie bleibt trotzdem drin, weil sie nichts kostet.
+
+**Rund 6 Sekunden pro Urteil sind in Ordnung** und ausdrücklich entschieden. (Die Zahl ist
+ein Mittel bei vier parallelen Anfragen; einzeln und warm lag ein Aufruf bei etwa 2 s.)
+Die 3,5 s aus `LocalModelBackend.HTTP_TIMEOUT` sind damit für den Bosskampf zu knapp
+bemessen und nachzuziehen — sie stammen aus einer Zeit, in der Stufe 1 Kür war.
+
+**Was Qwen3-4B falsch beurteilt**, sind acht Antworten in drei Mustern — und die sind
+lehrreicher als die Quote:
+
+1. **Satzbau wird nicht geprüft** (Falsch-Positive): „She walks always to school.",
+   „We will rent a boat tomorrow." für *Wir haben vor…*, „They built the museum in 1890."
+   für *Das Museum wurde 1890 gebaut.* Das Modell liest auf Bedeutung und winkt durch, was
+   sinngemäß stimmt — genau das, was ein Bosskampf prüfen soll.
+2. **Der Schlüssel wird beantwortet statt der Satz** (nur mit Schlüssel): die **leere
+   Antwort** wird zweimal als richtig durchgewinkt, mit der Begründung, sie benutze das
+   Pflichtwort „reef". Da steht nichts. Eine leere Eingabe gehört deshalb gar nicht erst
+   an ein Modell — das ist ein Zustand und kein Urteil, und `SentenceCard` weiß es schon.
+3. **Blind zu streng bei freien Umformulierungen** (Falsch-Negative): Passiv-Umbau,
+   `going to` statt Präsens, „grandma and grandpa" für Großeltern. Zwei der drei
+   verschwinden, sobald der Schlüssel danebenliegt — dafür ist er da.
+
+Der Lösungsschlüssel wirkt also in beide Richtungen: er drückt die Falsch-Negativen auf
+**0** (das Erfolgskriterium von oben, übererfüllt) und hebt die Falsch-Positiven von 3 auf
+5. Für Vokabeln ist das der richtige Tausch, für einen Bosskampf ist es einer, über den
+man reden muss.
+
+Aufbau, Zahlen im Einzelnen und die nächsten Schritte stehen in `STAND.md` der Werkstatt
+`C:\dev\prompt-eval` — ein eigenes Verzeichnis, nicht Teil dieses Repos.
+
 ### Noch offen
 
 - Spitzenspeicher und Latenz von xCOMET-lite int8 auf einem Rechner der Zielklasse.
 - **Echte Schülerantworten.** Der Bogen ist von Hand geschrieben und damit ein Maßstab,
   kein Stichprobenbefund; er kennt die Fehler, die jemand erwartet hat.
-- **Welches Modell.** EuroLLM-1.7B-Instruct ist die Empfehlung aus der Modellkarte,
-  nicht aus einer Messung. Bis die Zahl am Bogen steht, ist auch nicht entschieden, ob der
-  Pack überhaupt gebaut wird — ein Gigabyte für zwei Antworten wäre keine gute Abwägung.
-  Ein erstes Manifest liegt als **Kandidat** in `tools/model/model.json` (llama.cpp `b11002`
-  CPU/win-x64 plus `EuroLLM-1.7B-Instruct.Q4_K_M.gguf`, zusammen 1,0 GB) — damit ist die
-  Messung nur noch ein Lauf und keine Beschaffung mehr. Veröffentlicht ist es nicht.
+- **Welches Modell: entschieden, aber noch nicht eingetragen.** Die Messung spricht für
+  **Qwen3-4B-Instruct-2507 Q4_K_M** (Apache-2.0, 2,5 GB); EuroLLM-1.7B ist damit erledigt.
+  `tools/model/model.json` nennt weiterhin EuroLLM, weil der Tausch nicht nur eine Zeile
+  ist: das Manifest zeigt auf den **Windows**-Build von llama.cpp, geprüft ist bisher nur
+  der Linux-Build in WSL. Dass `b11002` unter Windows dieselbe GGUF lädt, ist plausibel
+  und ungeprüft. Die Werte liegen bereit in `C:\dev\prompt-eval\tools\models.json`.
+- **Ob der Pack gebaut wird.** Aus 1,0 GB sind 2,5 GB geworden. Dafür trägt Stufe 1 jetzt
+  wirklich etwas bei, und sie ist für Bosskämpfe ohnehin tragend („nur heben, nie senken"
+  wirkt erst, seit die Prüfkarte ohne Schlüsseltreffer kein Urteil mehr gibt). Die
+  Abwägung ist damit eine andere als bei „ein Gigabyte für zwei Antworten", aber nicht
+  von selbst entschieden.
 - **SmartScreen** auf einer heruntergeladenen, nicht von uns signierten `.exe`. Das
   größte offene Risiko der Pack-Route, und vor dem Pack zu klären.
 - **Derselbe Bogen gegen die ausgelieferten Sätze.** Von 1522 Sätzen tragen 12 einen

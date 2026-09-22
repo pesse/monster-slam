@@ -468,3 +468,72 @@ Test startet einen Prozess, keiner lädt etwas herunter und keiner spricht mit 1
 Programm und Gewichte liegen in keinem Repo, und ein Test, der sie bräuchte, wäre auf
 jedem anderen Rechner rot. Geschrieben wird in ein `zz-`Verzeichnis — unter `user://model`
 liegt auf einem Entwicklungsrechner das echte Modell.
+
+## Nachtrag 2026-09-17: Stufe 1 bekommt ein Modell, das die Aufgabe kann
+
+Die Messung vom Vortag ließ offen, ob der Kandidat nichts taugt oder der Prompt. Beide
+billigeren Versuche sind jetzt gemacht — Beschriftung entzerrt, Form über
+`response_format` erzwungen — und dazu ein zweites Modell danebengestellt. Gemessen in
+einer eigenen Werkstatt (`prompt-eval`, promptfoo + ChainForge) gegen **denselben
+Antwortbogen**, 63 Antworten, zwei Promptvarianten mal zwei Ausgabeformen.
+
+| Modell | blind | mit Lösungsschlüssel | Ausgabeform | Ø Dauer |
+|---|---|---|---|---|
+| EuroLLM-1.7B-Instruct | auf der Basislinie | auf der Basislinie | im freien Modus kaputt | 1–2 s |
+| **Qwen3-4B-Instruct-2507 Q4_K_M** | **57/63 (90 %)** | **58/63 (92 %)** | 252/252 gültig | ~6 s |
+
+Die Basislinie ist 37/63 = 58,7 % — so gut ist ein Modell, das stur „richtig" sagt.
+
+### Entscheidung: Qwen3-4B-Instruct-2507 statt EuroLLM-1.7B
+
+Apache-2.0, Q4_K_M, 2,5 GB statt 1,0 GB. Die Empfehlung für EuroLLM stammte aus der
+Modellkarte („gebaut für genau diese Sprachrichtung"), die für Qwen aus 63 Antworten mit
+dem Urteil einer Lehrkraft. Das ist der Unterschied, für den es den Antwortbogen gibt.
+
+**Rund 6 Sekunden pro Urteil sind entschieden in Ordnung.** Damit ist
+`LocalModelBackend.HTTP_TIMEOUT` mit 3,5 s zu knapp bemessen — der Wert stammt aus der
+Zeit, in der Stufe 1 Kür war und ein Zeitablauf nichts kostete. Er gehört hochgezogen,
+und der Bosskampf bekommt seine vier Sekunden nicht mehr geschenkt.
+
+### Drei Befunde, die nichts mit der Modellwahl zu tun haben
+
+**Die erzwungene Form repariert die Form, nicht das Urteil.** Bei Qwen ändert
+`response_format` an der Trefferquote nichts (57 gegen 57, 58 gegen 58): es schreibt das
+verabredete JSON schon von sich aus. Sie bleibt trotzdem, weil sie nichts kostet — aber
+wer sie einbaut und ein besseres Urteil erwartet, wird enttäuscht.
+
+**Eine leere Antwort darf gar nicht erst an ein Modell.** Mit Lösungsschlüssel im Prompt
+winkt Qwen die leere Eingabe zweimal als richtig durch — begründet damit, sie benutze das
+Pflichtwort. Da steht nichts. Eine leere Eingabe ist ein Zustand und kein Urteil;
+`SentenceCard` behandelt sie deterministisch, und dabei bleibt es.
+
+**Der Lösungsschlüssel wirkt in beide Richtungen.** Er drückt die Falsch-Negativen auf 0
+— das Erfolgskriterium von oben, übererfüllt — und hebt die Falsch-Positiven von 3 auf 5.
+Für Vokabeln ist das der richtige Tausch. Für Stufe 1 ist es der falsche Ort, sich
+irrezumachen: Stufe 1 wird nur gefragt, wo die Prüfkarte **kein Urteil** hat, und das
+Einzige, was sie tut, ist aus einem Zweifel einen Treffer machen. Ihre Falsch-Positiven
+sind damit genau die Fehler, die beim Spieler ankommen. Die drei, die Qwen durchwinkt,
+sind alle Satzbau — „She walks always to school.", „We will rent a boat tomorrow." für
+*Wir haben vor…*, „They built the museum in 1890." für *Das Museum wurde 1890 gebaut.* —
+also das, was ein Bosskampf prüfen soll.
+
+### Was daraus zu bauen ist (nicht gebaut)
+
+- **`LocalModelBackend.prompt_for` auf die gemessene Fassung umstellen**: binäres Urteil
+  statt einer Güte zwischen 0 und 1, die Schülerantwort nicht unter der Beschriftung
+  `Antwort:` (die wahrscheinlichste Fortsetzung von `Antwort: X` ist `Antwort: …`), und
+  `response_format` mitschicken. Die geprüften Fassungen liegen in
+  `C:\dev\prompt-eval\prompts\judge-*.json`.
+- **`HTTP_TIMEOUT` hochziehen** und die Haltedauer des Bosses daran anpassen.
+- **`tools/model/model.json`** auf Qwen umstellen. Das ist nicht nur eine Zeile: das
+  Manifest zeigt auf den **Windows**-Build von llama.cpp, geprüft ist bisher nur der
+  Linux-Build. Dass `b11002` unter Windows dieselbe GGUF lädt, ist plausibel und
+  ungeprüft.
+- **Die Abwägung „lohnt der Pack" neu stellen.** Aus 1,0 GB sind 2,5 GB geworden; dafür
+  trägt Stufe 1 jetzt wirklich etwas bei. Beides hat sich geändert, die Frage ist damit
+  offen und nicht beantwortet.
+
+Die Zahlen im Einzelnen, die acht falsch beurteilten Antworten und die nächsten Hebel am
+Prompt stehen in `STAND.md` der Werkstatt `C:\dev\prompt-eval` (eigenes Verzeichnis,
+nicht Teil dieses Repos); der Rechercheteil in
+[`../SATZBEWERTUNG_MODELLE.md`](../SATZBEWERTUNG_MODELLE.md).
