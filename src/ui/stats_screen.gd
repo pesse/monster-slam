@@ -269,7 +269,8 @@ func _refresh_wanted() -> void:
 ## stünde bei „Unit 6: 8 von 12" nur der ausgewählte Teil der Unit, und die Zahl wäre
 ## nicht die, nach der ein Elternteil oder eine Lehrkraft fragt.
 func _refresh_progress() -> void:
-	var pool := ContentRegistry.lexemes_scoped(UserSettings.selected_scope(), [])
+	var pool := ContentRegistry.lexemes_scoped(UserSettings.selected_scope(), []) \
+			.filter(PROGRESS.masterable)
 	var mastered := PlayerProgress.mastered_lexemes()
 	_fill_progress(_unit_list, unit_rows(pool, mastered, ContentRegistry.book_label),
 			"Keine Units im gewählten Bereich.")

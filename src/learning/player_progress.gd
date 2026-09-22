@@ -305,6 +305,19 @@ static func mastered_lexemes_in(records: Dictionary, threshold := MASTERY_CONFID
 	return out
 
 
+## Kann dieses Lexem überhaupt gemeistert werden — gibt es zu ihm Übersetzungsaufgaben?
+##
+## Der Nenner des Fortschrittsbalkens ist die Zahl der Wörter einer Unit, der Zähler die
+## der gemeisterten; ein Wort ohne `translate`-Aufgabe (`excluded_task_types` am Lexem,
+## siehe WaveGenerator._instances) erreicht die Meisterung nie und hielte den Balken
+## dauerhaft bei „N-1 von N" — genau der stehende Balken, gegen den es die Regel gibt.
+## Es gehört deshalb in keinen der beiden Werte.
+##
+## Statisch und ohne Autoload, aus demselben Grund wie mastered_lexemes_in().
+static func masterable(lexeme: Dictionary) -> bool:
+	return not ("translate" in lexeme.get("excluded_task_types", []))
+
+
 ## Sortierte Liste für die Wort-Tabelle im Menü (schwächste Confidence zuerst).
 ## Rückgabe: Array von { id, label, confidence, mastered, attempts, correct, mastered_at }.
 ##

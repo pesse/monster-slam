@@ -62,7 +62,8 @@ Beim Arbeiten daran zu beachten:
 - **Jede Datei unter `data/` braucht eine Zuordnung** in `data/language/packs.yaml`.
   Der Pack-Build ist fail-closed: keine oder mehrere Zuordnungen brechen ab. Nach dem
   Anlegen einer neuen Datei prüfen mit
-  `python3 tools/packs/build_packs.py --config data/language/packs.yaml --dry-run`.
+  `python3 tools/packs/build_packs.py --config data/language/packs.yaml --source
+  language=data/language --source game=data --dry-run`.
 - **Nie ein Glob, das `data/**` unter `data/language/` mitnimmt.** Das Submodule liegt
   *innerhalb* von `data/`; ein `**/*.json` im offenen `game`-Pack hat genau deshalb
   einmal die geschützten Lexeme eingesammelt. Kategorien einzeln angeben.
@@ -272,6 +273,66 @@ Beim Arbeiten daran zu beachten:
   dasselbe Verzeichnis, und die Datei des aktiven Profils ist die echte Erfahrung des
   Spielers. Aus demselben Grund fährt kein Test eine ganze Welle, um das Verbuchen zu
   prüfen.
+
+## Meisterung: ein Wort braucht BEIDE Richtungen
+
+Der Fortschrittsbalken pro Unit und Thema (Statistik, Reiter „Fortschritt") zählt WÖRTER,
+nicht Aufgaben: `PlayerProgress.mastered_lexemes` nimmt ein Lexem erst auf, wenn
+`translate:de_to_en:<id>` UND `translate:en_to_de:<id>` über der Schwelle liegen
+(`LEXEME_MASTERY_DIRECTIONS`). Der Reiter „Aufgaben" daneben zählt learnable_ids — zwei
+Maße, zwei Reiter, mit Absicht.
+
+Diese Kopplung macht den Balken **empfindlich gegen alles, was EINE Richtung stört**: fällt
+en→de aus, steht die Unit dauerhaft auf „0 von N", während „Gemeisterte Aufgaben" im
+Überblick weitersteigt. Das sieht aus wie ein Rechenfehler der Statistik und war noch nie
+einer — die Rechnung ist in `tests/mastered_lexemes_test.gd` festgenagelt. Gesucht wird
+deshalb immer davor, im Weg der Richtung in den Pool:
+
+- **Der Schwierigkeitsriegel darf keine Lernrichtung wegnehmen.** `difficulty_max` (die
+  gewählte Wellenschwierigkeit) filtert die task_definitions über ihre Grundschwierigkeit;
+  `def.translate.en_de` hat difficulty 2 und fiel damit auf Stufe 1 komplett heraus. Seither
+  steht `translate` in `WaveGenerator.CORE_TASK_TYPES` und ist vom Riegel ausgenommen — der
+  staffelt die ZUSATZaufgaben (Formen, Relationen). Die difficulty selbst bleibt bei 2: sie
+  ist das `t` im Netto-Maß `t - c` und trägt Tempo, Punkte und Erfahrung, en→de IST schwerer.
+  Der Filter sitzt in `WaveGenerator.definition_allowed()` — statisch und ohne Autoload, aus
+  demselben Grund wie `mastered_lexemes_in` und `StatsScreen.unit_rows`.
+- **Ein deutsches Lemma muss innerhalb seiner Unit eindeutig sein.** Der de→en-Prompt zeigt
+  nur `lemma_de`, akzeptiert aber ausschließlich das englische Wort seines Lexems; zwei
+  Wörter einer Unit mit demselben Prompt sind eine Ratefrage, die de→en systematisch
+  zurückhält. Aufgelöst wird das im Regelfall mit einer Glosse in Klammern am spezielleren
+  der beiden, NICHT mit `lemma_en_alt` oder einer Synonym-Relation: die Unit gibt eine
+  Übersetzung vor, und die soll sie auch verlangen (`docs/ADDING_CONTENT.md`). Die Glosse
+  ist die des Buchs und darf die Antwort nicht verraten: eine Glosse, die das englische
+  Wort bloß eindeutscht, macht aus der Aufgabe eine Lesehilfe. Gehalten von
+  `test_no_two_lexemes_of_a_unit_share_a_german_prompt`, und der misst am Schnitt der
+  VOLLSTÄNDIGEN Varianten von `AnswerEvaluator.variants()` — eine weggelassene Klammergruppe
+  zählt nicht, sonst höbe jede Glosse die Unterscheidung wieder auf, die sie einführt.
+  Über Unit-Grenzen hinweg wird nicht geprüft; dort ist eine abweichende Übersetzung das
+  gute Recht des Buchs.
+- **Die zwei Ausnahmen kommen aus dem BUCH, nicht aus der Verlegenheit.** Setzt das Buch die
+  beiden gleich (ein „= …" im Eintrag, ein „kurz auch: …"), ist der geteilte Prompt eine
+  Aufgabe mit
+  zwei richtigen Antworten: `lemma_en_alt` in beide Richtungen, dazu eine Synonym-Relation
+  je Richtung (`relations_of` sieht nur `from_lexeme_id`). Hat das Wort im Buch dagegen gar
+  keinen eigenen Eintrag — es steht nur im Wortfamilien-Kasten eines anderen, und das Buch
+  unterscheidet die Übersetzungen nicht —, wäre jede Glosse erfunden: dann nimmt
+  `"excluded_task_types": ["translate"]` ihm die Aufgabe, und ein `notes` nennt die
+  Buchstelle. Deshalb misst `_prompt_collisions` am Schnitt der akzeptierten ANTWORTEN
+  (`lemma_en` + `lemma_en_alt`) und nicht am primären Lemma, und überspringt, was keinen
+  Prompt mehr zeigt.
+- **`excluded_task_types` wirkt an EINER Stelle und muss den Nenner mitnehmen.** Es greift
+  in `WaveGenerator._instances` — dem Nadelöhr, durch das Wave-Pool UND Statistik gehen —,
+  verschwindet damit auch aus der Aufgabenzahl. Der Fortschrittsbalken zählt aber WÖRTER,
+  und sein Nenner ist jedes Lexem im Scope: ohne `PlayerProgress.masterable()` im Filter
+  stünde die Unit dauerhaft auf „N-1 von N" — genau der stehende Balken, gegen den es
+  diesen ganzen Abschnitt gibt. Und weil ein älterer Client das Feld nicht kennt und die
+  Ratefrage weiter spawnte, hebt ein Pack, der ein solches Lexem ausliefert, sein
+  `min_app_version` (`data/language/packs.yaml`).
+- **Dubletten sind dasselbe Problem mit anderem Gesicht.** Dasselbe Wort unter zwei
+  Lexem-Ids hat zwei Fortschrittsstände; die vier nötigen Treffer (2 Richtungen × 2 Ids)
+  verteilen sich, und keine Id erreicht die Meisterung. Unter den buchgebundenen Lexemen ist
+  das ein Einzelfall, im ungebundenen Grundwortschatz die Regel — wer den Balken einer Unit
+  beurteilt, prüft erst, ob der Scope gesetzt ist.
 
 ## Skills: Bäume aus Punkten, Spells sind etwas anderes
 

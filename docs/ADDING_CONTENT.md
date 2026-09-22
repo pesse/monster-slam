@@ -80,6 +80,46 @@ Zwei Dinge prüft `tests/lexeme_data_test.gd`: Klammern müssen balanciert sein,
 Weglassen aller optionalen Teile muss ein Kern übrig bleiben (ein Lemma, das nur aus
 Notation besteht, wäre unauswertbar).
 
+**Ein deutsches Lemma muss innerhalb seiner Unit eindeutig sein.** Der de→en-Prompt zeigt
+nur `lemma_de`, akzeptiert aber ausschließlich das englische Wort *seines* Lexems — teilen
+sich zwei Wörter einer Unit denselben Prompt, ist die Aufgabe geraten. Und weil ein Wort
+erst als gemeistert gilt, wenn **beide** Übersetzungsrichtungen sitzen, bleibt dann auch
+der Fortschrittsbalken der Unit stehen, obwohl der Spieler das Wort kann.
+
+Aufgelöst wird das mit einer **Glosse in Klammern**, nicht mit einem zusätzlichen
+`lemma_en_alt`: die Unit gibt eine Übersetzung vor, und die soll sie auch verlangen.
+```json
+{ "id": "lex.en.a2.neck",   "lemma_de": "der Hals",          "lemma_en": "neck" }
+{ "id": "lex.en.a2.throat", "lemma_de": "der Hals (Kehle)",  "lemma_en": "throat" }
+```
+Es genügt, das speziellere der beiden Wörter zu glossieren. Die Glosse darf das gesuchte
+englische Wort **nicht** verraten. Für die Auswertung kostet sie nichts: Klammerinhalte
+sind optional, `Hals` bleibt also eine gültige en→de-Antwort und blendet nur die
+vollständige Form ein. `tests/lexeme_data_test.gd` hält die Regel und nennt die Fälle.
+
+Über Unit-Grenzen hinweg wird nicht geprüft — dort kollidieren zwei Prompts nur, wenn
+beide Units zugleich im Scope stehen, und eine spätere Unit darf für dasselbe deutsche
+Wort eine andere Übersetzung vorgeben.
+
+Zwei Ausnahmen gibt es, und beide hängen daran, was im **Buch** steht:
+
+- **Das Buch setzt die beiden gleich** (ein „= …" im Eintrag, ein „kurz auch: …"). Dann ist der
+  geteilte Prompt keine Ratefrage, sondern eine Aufgabe mit zwei richtigen Antworten:
+  beide Lexeme bekommen den Partner in `lemma_en_alt` (und, wo es die Wortart hergibt,
+  eine Synonym-Relation in beide Richtungen — `relations_of` sieht nur
+  `from_lexeme_id`). Das weicht die Unit-Vorgabe nicht auf, es gibt sie wieder.
+- **Das Wort hat im Buch keinen eigenen Eintrag** — es steht nur im Wortfamilien-Kasten
+  eines anderen, und das Buch unterscheidet die beiden Übersetzungen nicht. Eine Glosse
+  wäre dann erfunden. Solch ein Lexem bekommt
+  `"excluded_task_types": ["translate"]` und dazu ein `notes`, das die Buchstelle nennt:
+  es bleibt im Bestand (en→de-Lesen der Nachbaraufgaben, Relationen), stellt aber keine
+  Übersetzungsaufgabe mehr. Das Feld wirkt an **einer** Stelle
+  (`WaveGenerator._instances`), durch die Wave-Pool und Statistik beide gehen, und
+  `PlayerProgress.masterable()` nimmt das Wort aus dem **Nenner** des
+  Fortschrittsbalkens — sonst stünde die Unit dauerhaft auf „N-1 von N".
+  Ein älterer Client kennt das Feld nicht und spawnte die Aufgabe weiter: der Pack, der
+  ein solches Lexem ausliefert, braucht in `packs.yaml` ein passendes `min_app_version`.
+
 ### 2. Form (nur für Konjugation/Zeitformen) → `data/language/lexeme_forms/…json`
 ```json
 { "id": "form.eat.past", "lexeme_id": "lex.en.eat", "language": "en", "form_type": "past_simple", "value": "ate" }
@@ -202,16 +242,16 @@ Eine Datei je Baum. Der erste Eintrag ist der Baum-Kopf, die übrigen sind seine
 ```json
 [
   { "id": "tree.timeweaver", "kind": "tree", "order": 3, "name": "Zeitwandler",
-    "description": "Solange du tippst, dehnt sich die Zeit.", "color": "#b38ce6" },
+	"description": "Solange du tippst, dehnt sich die Zeit.", "color": "#b38ce6" },
   { "id": "skill.time.root", "kind": "skill", "tree": "tree.timeweaver",
-    "tier": 1, "branch": 0,
-    "name": "Atempause", "icon": "⏳",
-    "description": "Die Zeitlupe wirkt 0,3 s länger nach.",
-    "cost": 1, "requires": [], "effects": { "slow_hold_ms": 300 } },
+	"tier": 1, "branch": 0,
+	"name": "Atempause", "icon": "⏳",
+	"description": "Die Zeitlupe wirkt 0,3 s länger nach.",
+	"cost": 1, "requires": [], "effects": { "slow_hold_ms": 300 } },
   { "id": "skill.time.deep", "kind": "skill", "tree": "tree.timeweaver",
-    "tier": 2, "branch": 1,
-    "name": "Zähe Zeit", "icon": "🕸", "description": "Die Zeit wird zäher.",
-    "cost": 1, "requires": ["skill.time.root"], "effects": { "slow_factor": -0.04 } }
+	"tier": 2, "branch": 1,
+	"name": "Zähe Zeit", "icon": "🕸", "description": "Die Zeit wird zäher.",
+	"cost": 1, "requires": ["skill.time.root"], "effects": { "slow_factor": -0.04 } }
 ]
 ```
 - `tier` ist der **Abstand vom Anfangspunkt**, `branch` die Stelle im Fächer: der Screen
@@ -259,7 +299,9 @@ Der Weg einer neuen Datei:
 3. **Bauen** — der Workflow im Content-Repo baut die Packs und hängt sie an das Release
    mit dem festen Tag `packs` im Transport-Repo. Eine Änderung unter `data/` im Hauptrepo
    stößt denselben Workflow per `repository_dispatch` an; lokal prüfen:
-   `python3 tools/packs/build_packs.py --config data/language/packs.yaml --dry-run`.
+   `python3 tools/packs/build_packs.py --config data/language/packs.yaml \
+   --source language=data/language --source game=data --dry-run` (die beiden
+   `--source` sind die `roots` der Konfiguration; ohne sie bricht der Lauf ab).
 4. **Holen** — der Spieler sieht den Pack unter „📚 Inhalte" mit Version und Größe,
    geschützte Packs erst nach Eingabe des Zugangscodes.
 
@@ -283,5 +325,5 @@ Was das für Autoren heißt:
 - [ ] Gültiges JSON (die Registry loggt Fehler in die Godot-Konsole).
 - [ ] Spielstart zeigt die neuen Zahlen in der Content-Übersicht.
 - [ ] Von genau einem Pack in `packs.yaml` beansprucht (`build_packs.py --dry-run` läuft
-      grün) — sonst kommt die Datei beim Spieler nie an.
+	  grün) — sonst kommt die Datei beim Spieler nie an.
 - [ ] Braucht die Datei neuen Code? Dann `min_app_version` in `packs.yaml` hochziehen.

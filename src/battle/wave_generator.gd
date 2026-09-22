@@ -31,6 +31,16 @@ const SPEED_SENSITIVITY := 0.3
 ## Obergrenze der difficulty-Skala für die Normalisierung auf 0..1.
 const DIFFICULTY_MAX := 5
 
+## Aufgabenarten, die der Schwierigkeitsriegel (`difficulty_max`) NIE aus dem Pool nimmt.
+## Die Übersetzung ist das Fundament des Lernstands — ein WORT gilt erst als gemeistert,
+## wenn beide Richtungen sitzen (PlayerProgress.LEXEME_MASTERY_DIRECTIONS). Auf Stufe 1
+## fiel `def.translate.en_de` (difficulty 2) heraus; damit war kein Wort je zu meistern,
+## jeder Fortschrittsbalken stand dauerhaft auf „0 von N" und jedes Wort auf „0 %",
+## während „Gemeisterte Aufgaben" im Überblick weiterstieg — ein Widerspruch, der wie ein
+## Rechenfehler der Statistik aussieht und keiner war. Der Riegel staffelt die
+## ZUSATZaufgaben (Formen, Relationen), nicht die Lernrichtung.
+const CORE_TASK_TYPES := ["translate"]
+
 ## Referenz-Punktzahl bei neutraler Schwierigkeit (Netto-Können e = 0). Wie beim Tempo
 ## ist die Schwierigkeit die einzige Quelle — es gibt keine per-Regel-Punkte mehr.
 const REFERENCE_REWARD := 12
@@ -165,17 +175,30 @@ func _candidates(pool: Dictionary, limit: int = 0) -> Array:
 		lexemes = lexemes.filter(func(lx): return str(lx.get("type", "")) in lexeme_types)
 	var result: Array = []
 	for definition in ContentRegistry.task_definitions.values():
-		var task_type := str(definition.get("task_type", ""))
-		if not task_types.is_empty() and not (task_type in task_types):
-			continue
-		if direction != "" and str(definition.get("direction", "")) != direction:
-			continue
-		if difficulty_max > 0 and int(definition.get("difficulty", 1)) > difficulty_max:
+		if not definition_allowed(definition, task_types, direction, difficulty_max):
 			continue
 		_expand(definition, lexemes, result, limit)
 		if limit > 0 and result.size() >= limit:
 			break
 	return result
+
+
+## Passt eine task_definition zu den Filtern des Pools? Statisch und ohne Autoload, damit
+## die Regel für sich prüfbar bleibt — dieselbe Begründung wie bei
+## PlayerProgress.mastered_lexemes_in und StatsScreen.unit_rows.
+##
+## Leere `task_types` und leere `direction` heißen „keine Einschränkung", `difficulty_max`
+## 0 heißt „kein Limit". Der Schwierigkeitsriegel lässt CORE_TASK_TYPES unberührt.
+static func definition_allowed(definition: Dictionary, task_types: Array,
+		direction: String, difficulty_max: int) -> bool:
+	var task_type := str(definition.get("task_type", ""))
+	if not task_types.is_empty() and not (task_type in task_types):
+		return false
+	if direction != "" and str(definition.get("direction", "")) != direction:
+		return false
+	if task_type in CORE_TASK_TYPES:
+		return true
+	return difficulty_max <= 0 or int(definition.get("difficulty", 1)) <= difficulty_max
 
 
 ## Verbindet eine Definition mit allen kompatiblen Lexemen und hängt die Kandidaten an.
@@ -195,7 +218,17 @@ func _expand(definition: Dictionary, lexemes: Array, result: Array, limit: int =
 ##
 ## Die eine Stelle, die sagt, welche Aufgaben es zu einem Wort gibt: der Wave-Pool
 ## (_expand) und die Statistik (learnables_of) fragen dieselbe.
+##
+## `excluded_task_types` am Lexem nimmt einzelne Aufgabenarten heraus — für ein Wort, das
+## im Buch keinen eigenen Eintrag hat und dessen deutschen Prompt sich ein Nachbar teilt,
+## ohne dass das Buch eine Unterscheidung anbietet. Es bleibt im Bestand (en→de-Lesen,
+## Relationen), stellt aber keine Ratefrage. Weil beide Seiten durch dieses Nadelöhr gehen,
+## verschwindet es damit auch aus der Aufgabenzahl der Statistik — und
+## `PlayerProgress.masterable()` nimmt es aus dem NENNER des Fortschrittsbalkens, sonst
+## stünde die Unit dauerhaft bei „N-1 von N".
 func _instances(definition: Dictionary, source: Dictionary) -> Array:
+	if str(definition.get("task_type", "")) in source.get("excluded_task_types", []):
+		return []
 	if not _type_allowed(source, definition.get("allowed_types", ["*"])):
 		return []
 	var source_id := str(source.get("id", ""))

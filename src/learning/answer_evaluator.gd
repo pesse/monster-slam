@@ -64,12 +64,12 @@ static var _placeholder_re: RegEx = RegEx.create_from_string(PLACEHOLDER_PATTERN
 ##                unvollständigem Treffer die Form, die der Spieler noch sehen soll.
 func evaluate(accepted: Array, answer: String) -> Dictionary:
 	var result := {"matched": false, "complete": false, "canonical": ""}
-	var input := _variants(answer)
+	var input := variants(answer)
 	if input.is_empty():
 		return result
 	for a in accepted:
 		var candidate := str(a)
-		var forms := _variants(candidate)
+		var forms := variants(candidate)
 		var hit := false
 		var complete := false
 		for key in forms:
@@ -127,7 +127,11 @@ func _heuristic_sentence(reference: String, answer: String) -> Dictionary:
 ## Vollständig heißt: bei der Erzeugung wurde nichts weggelassen. Ein Vergleich zweier
 ## Strings ist damit der Schnitt ihrer Variantenmengen — symmetrisch, sodass es keine
 ## Rolle spielt, ob Klammern und Platzhalter in den Daten oder in der Eingabe stehen.
-func _variants(s: String) -> Dictionary:
+##
+## Öffentlich, weil die Datenvalidierung dieselbe Frage stellt wie die Auswertung: ob sich
+## zwei Lemmata unterscheiden lassen, entscheidet der Schnitt ihrer VOLLSTÄNDIGEN Varianten
+## (tests/lexeme_data_test.gd). Eine zweite Normalisierung daneben liefe davon weg.
+func variants(s: String) -> Dictionary:
 	var base := _normalize(s)
 	if base.is_empty():
 		return {}

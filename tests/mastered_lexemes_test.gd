@@ -312,7 +312,10 @@ func test_learnables_of_covers_both_directions_and_the_extras() -> void:
 		return  # Ohne Sprachdaten (CI ohne Submodule) nicht prüfbar.
 	var counts: Array = []
 	for entry in lexemes:
-		counts.append(gen.learnables_of(entry).size())
+		# Ein Wort ohne Übersetzungsaufgabe (excluded_task_types, siehe
+		# tests/excluded_task_types_test.gd) hat die beiden Richtungen bewusst nicht.
+		if PROGRESS.masterable(entry):
+			counts.append(gen.learnables_of(entry).size())
 	counts.sort()
 	# Jedes Wort hat mindestens die beiden Übersetzungsrichtungen.
 	assert_int(int(counts[0])).is_greater_equal(2)
