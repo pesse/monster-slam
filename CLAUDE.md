@@ -471,6 +471,11 @@ Beim Arbeiten daran zu beachten:
   Spielers — dasselbe Problem wie beim `zz-`Profil von Wallet und PlayerLevel, nur dass
   hier das Autoload schreibt und nicht der Test. Geprüft wird auf einer eigenen Instanz
   mit `zz-`Profil (`tests/trace_log_test.gd`), die nie in den Baum kommt.
+- **Die Ansicht im Reiter ist ein Leser, keine Auswertung.** `TraceLog.recent()` liest nur
+  das ENDE beider Generationen (nicht die ganzen 2 MB), `TraceView.rows()` übersetzt Zeile
+  für Zeile. Verknüpft wird nur die learnable_id einer `answer`-Zeile mit dem Prompt aus
+  der `spawn`-Zeile desselben Ausschnitts. Eine unbekannte Ereignisart erscheint mit ihrem
+  Namen, statt still zu verschwinden.
 - **Die Spur bleibt auf dem Rechner.** Sie enthält getippte Kindertexte und Lemmata aus
   geschütztem Material. Der Melde-Rückkanal kennt Ids, die Spur kennt Wörter — sie geht
   deshalb nicht durch ihn und in kein Repo. `user://logs/` teilt sich das Verzeichnis

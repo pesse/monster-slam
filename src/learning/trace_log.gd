@@ -194,6 +194,47 @@ func size_bytes() -> int:
 	return total
 
 
+## Die letzten `limit` Zeilen dieses Profils, älteste zuerst — für die Ansicht im Reiter
+## „Protokoll". Gelesen wird nur das ENDE jeder Datei (`tail_bytes`), nicht die ganzen
+## 2 MB: wer nachsieht, will wissen, was eben passiert ist. Reicht die laufende Generation
+## nicht, kommt das Ende der vorigen davor. Eine Zeile, die sich nicht lesen lässt, fällt
+## still heraus — die Ansicht ist ein Leser, und ein Leser bricht an einer Zeile nicht ab.
+func recent(limit: int = 200, tail_bytes: int = 96 * 1024) -> Array:
+	if _file != null:
+		_file.flush()
+	var lines := _tail_lines(path(), tail_bytes)
+	if lines.size() < limit:
+		lines = _tail_lines(previous_path(), tail_bytes) + lines
+	if lines.size() > limit:
+		lines = lines.slice(lines.size() - limit)
+	return lines
+
+
+func _tail_lines(p: String, tail_bytes: int) -> Array:
+	var out: Array = []
+	if not FileAccess.file_exists(p):
+		return out
+	var f := FileAccess.open(p, FileAccess.READ)
+	if f == null:
+		return out
+	var length := int(f.get_length())
+	var start := maxi(0, length - tail_bytes)
+	f.seek(start)
+	var bytes := f.get_buffer(length - start)
+	f.close()
+	# Mitten in der Datei begonnen: die erste Zeile ist abgeschnitten und fällt weg — schon
+	# als BYTES, denn der Schnitt kann in einem Umlaut liegen, und ein halbes UTF-8-Zeichen
+	# meldet der Decoder als Fehler.
+	if start > 0:
+		var newline := bytes.find(10)
+		bytes = PackedByteArray() if newline < 0 else bytes.slice(newline + 1)
+	for part in bytes.get_string_from_utf8().split("\n", false):
+		var parsed: Variant = JSON.parse_string(part)
+		if parsed is Dictionary:
+			out.append(parsed)
+	return out
+
+
 ## Löscht beide Generationen. Die offene Datei wird vorher geschlossen, sonst schriebe der
 ## nächste Eintrag in eine Datei, die es nicht mehr gibt.
 func clear() -> void:

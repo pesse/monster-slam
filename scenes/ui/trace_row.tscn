@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/ui/trace_row.gd" id="1_row"]
+
+[node name="TraceRow" type="HBoxContainer"]
+script = ExtResource("1_row")
+
+[node name="Time" type="Label" parent="."]
+theme_type_variation = &"Caption"
+custom_minimum_size = Vector2(72, 0)
+text = "00:00:00"
+
+[node name="Text" type="Label" parent="."]
+custom_minimum_size = Vector2(160, 0)
+size_flags_horizontal = 3
+text = "Ereignis"
+autowrap_mode = 3

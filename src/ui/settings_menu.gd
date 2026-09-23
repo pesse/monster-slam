@@ -6,7 +6,8 @@ extends Control
 ## (stats_screen, Issue #5) — sie hingen zwischen Profilauswahl, Reset und Melde-Token.
 ##
 ## Der Reiter „Protokoll" ist der Zugang zum Ereignis-Protokoll (TraceLog): an, aus, Pfad,
-## Ordner öffnen, leeren. Der Screen SCHREIBT nichts davon — er stellt den Schalter in
+## Ordner öffnen, leeren — und darunter die letzten Einträge zum Lesen, neueste oben (was
+## darin steht, rechnet TraceView). Der Screen SCHREIBT nichts davon — er stellt den Schalter in
 ## UserSettings und liest den Stand beim Autoload, so wie der Wellenabschluss den Gold-Stand
 ## bei Wallet liest.
 ##
@@ -20,6 +21,10 @@ extends Control
 ## UserSettings, der Fortschritt (Reset) in PlayerProgress.
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
+const TRACE_ROW_SCENE := preload("res://scenes/ui/trace_row.tscn")
+## So viele Ereignisse zeigt der Reiter. Mehr liest niemand am Bildschirm; wer mehr will,
+## öffnet die Datei.
+const TRACE_SHOWN := 200
 
 @onready var _profile_select: OptionButton = %ProfileSelect
 @onready var _rename_input: LineEdit = %RenameInput
@@ -38,6 +43,7 @@ const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 @onready var _trace_status: Label = %TraceStatus
 @onready var _trace_open: Button = %TraceOpen
 @onready var _trace_clear: Button = %TraceClear
+@onready var _trace_list: VBoxContainer = %TraceList
 
 
 func _ready() -> void:
@@ -226,12 +232,25 @@ func _refresh_trace() -> void:
 	_trace_path.text = ProjectSettings.globalize_path(TraceLog.path())
 	var bytes := TraceLog.size_bytes()
 	_trace_clear.disabled = bytes == 0
+	_refresh_trace_list()
 	if bytes == 0:
 		# Kein „0 KB": leer heißt entweder „noch nichts gespielt" oder „gerade geleert",
 		# und beides ist dieselbe Auskunft — es ist nichts da.
 		_trace_status.text = "noch nichts aufgezeichnet"
 		return
 	_trace_status.text = "aufgezeichnet: %s" % String.humanize_size(bytes)
+
+
+## Die letzten Einträge, neueste oben. Neu gelesen bei jedem _refresh_trace(): im
+## Einstellungs-Screen läuft kein Spiel, die Datei ändert sich also nur durch „leeren".
+func _refresh_trace_list() -> void:
+	for child in _trace_list.get_children():
+		child.queue_free()
+	var bias := int(Time.get_time_zone_from_system().get("bias", 0))
+	for entry in TraceView.rows(TraceLog.recent(TRACE_SHOWN), bias):
+		var row: TraceRow = TRACE_ROW_SCENE.instantiate()
+		_trace_list.add_child(row)
+		row.setup(entry)
 
 
 func _on_trace_toggled(pressed: bool) -> void:

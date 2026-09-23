@@ -197,6 +197,42 @@ func test_writing_continues_after_clear() -> void:
 	assert_int(_lines().size()).is_equal(1)
 
 
+# --- Lesen für die Ansicht ----------------------------------------------------
+
+## recent() liefert die letzten Zeilen, älteste zuerst, und schneidet vorne ab.
+func test_recent_returns_the_last_lines_oldest_first() -> void:
+	for i in 5:
+		_log.note_wave_start("procedural_%d" % i)
+	var lines: Array = _log.recent(3)
+	assert_array(lines.map(func(l): return l["wave"])) \
+			.is_equal(["procedural_2", "procedural_3", "procedural_4"])
+
+
+## Reicht die laufende Generation nicht, kommt das Ende der vorigen davor — gleich nach
+## dem Rollen wäre die Ansicht sonst leer.
+func test_recent_reaches_into_the_previous_generation() -> void:
+	_log.max_bytes = 400
+	for i in 8:
+		_log.note_wave_start("procedural_%d" % i)
+	assert_bool(FileAccess.file_exists(_log.previous_path())).is_true()
+	var waves: Array = _log.recent(100).map(func(l): return l["wave"])
+	assert_str(str(waves.back())).is_equal("procedural_7")
+	assert_str(str(waves.front())).is_equal("procedural_0")
+
+
+## Gelesen wird nur das Dateiende. Die angeschnittene erste Zeile fällt weg, auch wenn der
+## Schnitt mitten in einem Umlaut liegt, und keine Zeile kommt kaputt heraus.
+func test_recent_reads_only_the_tail_and_drops_the_cut_line() -> void:
+	for i in 20:
+		_log.note_answer("Übung-%d" % i, _verdict(false, "", []))
+	var lines: Array = _log.recent(100, 300)
+	assert_bool(lines.is_empty()).is_false()
+	assert_int(lines.size()).is_less(20)
+	assert_str(str(lines.back()["text"])).is_equal("Übung-19")
+	for line in lines:
+		assert_str(str(line["text"])).starts_with("Übung-")
+
+
 # --- Die Nahtstellen am EventBus ----------------------------------------------
 
 ## Das Protokoll hängt nur am EventBus. Ändert jemand dort eine Signatur, hört es still

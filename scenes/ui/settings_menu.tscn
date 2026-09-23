@@ -134,42 +134,57 @@ theme_type_variation = &"Tight"
 unique_name_in_owner = true
 size_flags_horizontal = 3
 
-[node name="Protokoll" type="VBoxContainer" parent="Margin/Root/Tabs"]
+[node name="Protokoll" type="HBoxContainer" parent="Margin/Root/Tabs"]
+theme_type_variation = &"SectionStack"
 
-[node name="TraceTitle" type="Label" parent="Margin/Root/Tabs/Protokoll"]
+[node name="Controls" type="VBoxContainer" parent="Margin/Root/Tabs/Protokoll"]
+custom_minimum_size = Vector2(360, 0)
+
+[node name="TraceTitle" type="Label" parent="Margin/Root/Tabs/Protokoll/Controls"]
 theme_type_variation = &"SectionTitle"
 text = "Ereignis-Protokoll"
 
-[node name="TraceHint" type="Label" parent="Margin/Root/Tabs/Protokoll"]
+[node name="TraceHint" type="Label" parent="Margin/Root/Tabs/Protokoll/Controls"]
 theme_type_variation = &"Hint"
 autowrap_mode = 3
 text = "Für die Fehlersuche: welches Wort wann erschienen ist, was getippt wurde und wie es bewertet wurde. Die Datei bleibt auf diesem Rechner — sie wird nirgendwohin übertragen."
 
-[node name="TraceToggle" type="CheckBox" parent="Margin/Root/Tabs/Protokoll"]
+[node name="TraceToggle" type="CheckBox" parent="Margin/Root/Tabs/Protokoll/Controls"]
 unique_name_in_owner = true
 text = "Aufgaben und Eingaben protokollieren"
 
-[node name="TracePath" type="Label" parent="Margin/Root/Tabs/Protokoll"]
+[node name="TracePath" type="Label" parent="Margin/Root/Tabs/Protokoll/Controls"]
 theme_type_variation = &"Caption"
 unique_name_in_owner = true
 autowrap_mode = 3
 
-[node name="TraceStatus" type="Label" parent="Margin/Root/Tabs/Protokoll"]
+[node name="TraceStatus" type="Label" parent="Margin/Root/Tabs/Protokoll/Controls"]
 unique_name_in_owner = true
 autowrap_mode = 3
 
-[node name="TraceRow" type="HBoxContainer" parent="Margin/Root/Tabs/Protokoll"]
+[node name="TraceRow" type="HBoxContainer" parent="Margin/Root/Tabs/Protokoll/Controls"]
 
-[node name="TraceOpen" type="Button" parent="Margin/Root/Tabs/Protokoll/TraceRow"]
+[node name="TraceOpen" type="Button" parent="Margin/Root/Tabs/Protokoll/Controls/TraceRow"]
 unique_name_in_owner = true
 text = "Ordner öffnen"
 
-[node name="TraceClear" type="Button" parent="Margin/Root/Tabs/Protokoll/TraceRow"]
+[node name="TraceClear" type="Button" parent="Margin/Root/Tabs/Protokoll/Controls/TraceRow"]
 unique_name_in_owner = true
 text = "Protokoll leeren"
 
-[node name="TraceFill" type="Control" parent="Margin/Root/Tabs/Protokoll"]
-size_flags_vertical = 3
+[node name="TraceScroll" type="ScrollContainer" parent="Margin/Root/Tabs/Protokoll"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+horizontal_scroll_mode = 0
+
+[node name="Gutter" type="MarginContainer" parent="Margin/Root/Tabs/Protokoll/TraceScroll"]
+theme_type_variation = &"ScrollGutter"
+size_flags_horizontal = 3
+
+[node name="TraceList" type="VBoxContainer" parent="Margin/Root/Tabs/Protokoll/TraceScroll/Gutter"]
+theme_type_variation = &"Tight"
+unique_name_in_owner = true
+size_flags_horizontal = 3
 
 [node name="ResetDialog" type="ConfirmationDialog" parent="."]
 unique_name_in_owner = true
