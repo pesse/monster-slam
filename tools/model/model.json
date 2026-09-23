@@ -1,6 +1,6 @@
 {
   "name": "Sprachmodell für Bosskämpfe",
-  "min_app_version": "0.8.0",
+  "min_app_version": "0.9.0",
   "parts": [
     {
       "file": "llama-server.exe",

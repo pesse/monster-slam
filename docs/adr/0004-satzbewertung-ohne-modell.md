@@ -135,9 +135,10 @@ Wartezeit ist Inszenierung, nicht Blockade.
 
 ## Folgen
 
-**`min_app_version` muss steigen** (0.7.0 → 0.8.0; die App ist mit dieser Änderung auf
-0.8.0 gegangen). Ein Client vor dieser Änderung liest `accepted`, `must_contain` und
-`pitfalls` nicht; er würde einen Satz mit reichem Schlüssel gegen die eine
+**`min_app_version` muss steigen** — am Pack `language-basic`, in dem die Sätze liegen,
+auf 0.9.0. Nicht auf 0.8.0: diese Fassung ist ohne die Satzbewertung erschienen (Spur,
+Fortschrittsbalken, eindeutige Prompts), die Bewertung kommt mit dem Bosskampf.
+Ein Client vor dieser Änderung liest `accepted`, `must_contain` und `pitfalls` nicht; er würde einen Satz mit reichem Schlüssel gegen die eine
 `reference_translation` prüfen und dabei still schlechter bewerten, als die Daten
 hergeben. Genau dafür gibt es das Feld aus ADR 0001.
 
@@ -395,7 +396,7 @@ das, was zählt:
 ```json
 {
   "name": "Sprachmodell für Bosskämpfe",
-  "min_app_version": "0.8.0",
+  "min_app_version": "0.9.0",
   "parts": [
     {"file": "llama-server.exe", "url": "https://…/llama-bXXXX-bin-win-cpu-x64.zip",
      "sha256": "…", "bytes": 21000000, "unzip": true},
