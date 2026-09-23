@@ -18,6 +18,10 @@ extends Node
 const SAVE_DIR := "user://progress"
 ## Bis zu dieser Antwortzeit gilt eine Antwort als „Blitzantwort".
 const FAST_ANSWER_MS := 2000
+## Unter so vielen Antworten ist die Genauigkeit einer Sitzung kein Wert, sondern Rauschen.
+const MIN_ACCURACY_ANSWERS := 5
+## Der Vergleichswert der Sitzungs-Genauigkeit mittelt über so viele Tage davor.
+const ACCURACY_WINDOW_DAYS := 7
 
 ## Abgeschlossene Sitzungen, älteste zuerst. Felder eines Eintrags:
 ##   started_at, ended_at, last_activity_at: int (unix)
@@ -247,6 +251,67 @@ func records() -> Dictionary:
 			out["min_fortress_health"] = low if int(out["min_fortress_health"]) < 0 \
 					else mini(int(out["min_fortress_health"]), low)
 			out["best_fortress_floor"] = maxi(int(out["best_fortress_floor"]), low)
+	return out
+
+
+## Genauigkeit der jüngsten Sitzung und ihr Vergleichswert (Issue #13). Siehe
+## accuracy_trend() — hier nur mit dem echten Verlauf, laufende Sitzung eingeschlossen.
+func session_accuracy() -> Dictionary:
+	return accuracy_trend(_all_entries())
+
+
+## Genauigkeit der jüngsten Sitzung mit Antworten und ein Vergleichswert dazu.
+##
+## Die Lebenszeit-Genauigkeit taugt nicht als Kopfzahl: sie sinkt, sobald schwere Wörter
+## geübt werden, und bewegt sich nach ein paar hundert Antworten kaum noch. Die Sitzung
+## dagegen sagt, wie es HEUTE lief, und der Vergleich, ob das besser war als zuletzt.
+##
+## Vergleichswert ist das Mittel der Sitzungen aus den `window_days` Tagen VOR der
+## jüngsten — gerechnet ab deren Beginn, nicht ab jetzt, damit eine Woche Pause den
+## Vergleich nicht leert. Gibt es dort keine, ist es die Sitzung direkt davor, wie alt sie
+## auch sei. Gemittelt wird über die Antworten (Summe richtig / Summe Antworten), nicht
+## über die Sitzungen: ein Lauf mit drei Antworten wöge sonst so viel wie einer mit achtzig.
+##
+## Unter `min_answers` Antworten ist ein Anteil Rauschen (zwei von drei = 67 %). Dann ist
+## `accuracy` -1, und ebenso `baseline`, wenn der Vergleich so dünn ist — „kein Wert" und
+## nicht 0 %, siehe die Anzeige. Felder: answers, correct, accuracy, baseline,
+## baseline_kind ("week" | "previous" | ""), live (die jüngste läuft noch).
+##
+## Statisch und über die Einträge statt über den Zustand: so ist die Regel mit erfundenen
+## Sitzungen prüfbar, ohne ein Log zu füllen (dieselbe Aufteilung wie StatsScreen.record_rows).
+static func accuracy_trend(entries: Array, min_answers := MIN_ACCURACY_ANSWERS,
+		window_days := ACCURACY_WINDOW_DAYS) -> Dictionary:
+	var out := {"answers": 0, "correct": 0, "accuracy": -1.0, "baseline": -1.0,
+			"baseline_kind": "", "live": false}
+	# Einträge ohne Antwort (nur geräumte Wellen) haben keine Genauigkeit.
+	var answered: Array = entries.filter(func(e): return int(e.get("answers", 0)) > 0)
+	if answered.is_empty():
+		return out
+	answered.sort_custom(func(a, b): return int(a.get("started_at", 0)) < int(b.get("started_at", 0)))
+	var latest: Dictionary = answered.pop_back()
+	out["answers"] = int(latest["answers"])
+	out["correct"] = int(latest.get("correct", 0))
+	out["live"] = int(latest.get("ended_at", 0)) == 0
+	if int(out["answers"]) >= min_answers:
+		out["accuracy"] = float(out["correct"]) / float(out["answers"])
+
+	if answered.is_empty():
+		return out
+	var since := int(latest.get("started_at", 0)) - window_days * 86400
+	var window: Array = answered.filter(func(e): return int(e.get("started_at", 0)) >= since)
+	out["baseline_kind"] = "week"
+	if window.is_empty():
+		window = [answered.back()]
+		out["baseline_kind"] = "previous"
+	var answers := 0
+	var correct := 0
+	for entry in window:
+		answers += int(entry["answers"])
+		correct += int(entry.get("correct", 0))
+	if answers >= min_answers:
+		out["baseline"] = float(correct) / float(answers)
+	else:
+		out["baseline_kind"] = ""
 	return out
 
 

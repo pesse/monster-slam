@@ -280,6 +280,84 @@ func test_a_running_session_claims_no_fortress_record() -> void:
 	assert_int(int(_log.records()["best_fortress_floor"])).is_equal(55)
 
 
+# --- Sitzungs-Genauigkeit (Issue #13) ------------------------------------------
+
+func _answered(day_offset: int, answers: int, correct: int) -> Dictionary:
+	return _fake_session(day_offset, {"answers": answers, "correct": correct, "ended_at": 1})
+
+
+func test_accuracy_trend_is_empty_without_sessions() -> void:
+	var t := SESSION_LOG.accuracy_trend([])
+	assert_int(int(t["answers"])).is_equal(0)
+	assert_float(float(t["accuracy"])).is_equal(-1.0)
+	assert_float(float(t["baseline"])).is_equal(-1.0)
+
+
+## Die jüngste Sitzung ist die Kopfzahl, egal in welcher Reihenfolge die Einträge kommen.
+func test_accuracy_trend_takes_the_latest_session() -> void:
+	var t := SESSION_LOG.accuracy_trend([_answered(-1, 10, 9), _answered(-3, 10, 5)])
+	assert_float(float(t["accuracy"])).is_equal_approx(0.9, 0.001)
+	assert_float(float(t["baseline"])).is_equal_approx(0.5, 0.001)
+	assert_str(str(t["baseline_kind"])).is_equal("week")
+
+
+## Ohne Vorsitzung gibt es keinen Vergleich — die Anzeige lässt dann den Pfeil weg.
+func test_a_single_session_has_no_baseline() -> void:
+	var t := SESSION_LOG.accuracy_trend([_answered(0, 10, 8)])
+	assert_float(float(t["accuracy"])).is_equal_approx(0.8, 0.001)
+	assert_float(float(t["baseline"])).is_equal(-1.0)
+	assert_str(str(t["baseline_kind"])).is_empty()
+
+
+## Gemittelt über die ANTWORTEN: ein kurzer Lauf wiegt wenig.
+func test_the_weekly_baseline_is_weighted_by_answers() -> void:
+	var t := SESSION_LOG.accuracy_trend([
+		_answered(-4, 90, 90), _answered(-2, 10, 0), _answered(0, 10, 5)])
+	assert_float(float(t["baseline"])).is_equal_approx(0.9, 0.001)
+
+
+## Liegt die Woche davor leer, vergleicht die Sitzung mit der Sitzung davor.
+func test_an_old_previous_session_becomes_the_baseline() -> void:
+	var t := SESSION_LOG.accuracy_trend([_answered(-30, 10, 6), _answered(-20, 10, 4), _answered(0, 10, 8)])
+	assert_float(float(t["baseline"])).is_equal_approx(0.4, 0.001)
+	assert_str(str(t["baseline_kind"])).is_equal("previous")
+
+
+## Sitzungen außerhalb des Fensters fallen aus dem Wochenmittel.
+func test_sessions_before_the_window_stay_out_of_the_week() -> void:
+	var t := SESSION_LOG.accuracy_trend([_answered(-10, 10, 0), _answered(-2, 10, 7), _answered(0, 10, 8)])
+	assert_float(float(t["baseline"])).is_equal_approx(0.7, 0.001)
+
+
+## Unter der Mindestzahl steht kein Anteil — weder für die Sitzung noch für den Vergleich.
+func test_too_few_answers_yield_no_accuracy() -> void:
+	var few := SESSION_LOG.MIN_ACCURACY_ANSWERS - 1
+	var t := SESSION_LOG.accuracy_trend([_answered(-1, few, few), _answered(0, few, 1)])
+	assert_int(int(t["answers"])).is_equal(few)
+	assert_float(float(t["accuracy"])).is_equal(-1.0)
+	assert_float(float(t["baseline"])).is_equal(-1.0)
+	assert_str(str(t["baseline_kind"])).is_empty()
+
+
+## Eine Sitzung ohne Antwort (nur Wellen) ist nicht „die letzte Sitzung" der Genauigkeit.
+func test_sessions_without_answers_are_skipped() -> void:
+	var t := SESSION_LOG.accuracy_trend([_answered(-1, 10, 7),
+			_fake_session(0, {"answers": 0, "ended_at": 1})])
+	assert_float(float(t["accuracy"])).is_equal_approx(0.7, 0.001)
+
+
+## Mitten im Lauf ist die laufende Sitzung die jüngste und als `live` markiert.
+func test_the_running_session_is_the_live_one() -> void:
+	_log._sessions = [_answered(-1, 10, 5)]
+	_log.begin()
+	for i in 6:
+		_log.note_answer(true, 900)
+	var t: Dictionary = _log.session_accuracy()
+	assert_bool(bool(t["live"])).is_true()
+	assert_float(float(t["accuracy"])).is_equal_approx(1.0, 0.001)
+	assert_float(float(t["baseline"])).is_equal_approx(0.5, 0.001)
+
+
 # --- Persistenz ---------------------------------------------------------------
 
 func test_sessions_survive_a_reload() -> void:

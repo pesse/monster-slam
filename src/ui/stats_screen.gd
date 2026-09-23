@@ -10,8 +10,9 @@ extends Control
 ## Zeichen-Control der Kurve in stats_chart.gd; hier wird nur befüllt.
 ##
 ## Drei Reiter: „Überblick" trägt die Abschnitte, die zum Weiterspielen motivieren
-## (Tages-Serie #6, Kennzahlen #5, Kampf-Rekorde #11, Lernkurve #7, frisch gemeistert und
-## Comeback #9, Fahndungsliste #5), „Fortschritt" die Balken pro Unit und Thema (#8) — die
+## (Tages-Serie #6, Sitzungs-Genauigkeit #13, Kennzahlen #5, Kampf-Rekorde #11, Lernkurve
+## #7, frisch gemeistert und Comeback #9, Fahndungsliste #5, Lebenszeitwerte unter
+## „Insgesamt" #13), „Fortschritt" die Balken pro Unit und Thema (#8) — die
 ## wachsen mit dem Katalog und schöben im Überblick alles andere aus dem Bild —, „Aufgaben" die
 ## vollständige Liste der Learnables. Ein Balken lässt sich aufklappen und zeigt dann die
 ## WÖRTER seiner Gruppe mit Prozentstand: „18 von 24" sagt nicht, welche sechs fehlen,
@@ -44,11 +45,17 @@ const DIRECTION_LABELS := {"de_to_en": "de→en", "en_to_de": "en→de"}
 ## und kein Anteil des Maximums: wer sein Maximum über die Fähigkeiten angehoben hat, hat
 ## sich das Polster verdient — und die Sitzungen schreiben ihr Maximum nicht mit.
 const SPOTLESS_FORTRESS_HP := 90
+## Weicht die Sitzung um weniger Prozentpunkte vom Vergleich ab, steht der Pfeil waagrecht:
+## zwei Punkte sind bei dreißig Antworten eine einzige.
+const TREND_STEADY_POINTS := 3
 
 @onready var _streak_label: Label = %StreakLabel
 @onready var _coin_label: Label = %CoinLabel
 @onready var _coin_strip: CoinStrip = %CoinStrip
+@onready var _accuracy_label: Label = %AccuracyLabel
+@onready var _accuracy_trend: Label = %AccuracyTrend
 @onready var _stat_lines: VBoxContainer = %StatLines
+@onready var _total_lines: VBoxContainer = %TotalLines
 @onready var _record_list: VBoxContainer = %RecordList
 @onready var _curve: StatsChart = %Curve
 @onready var _curve_caption: Label = %CurveCaption
@@ -72,7 +79,9 @@ func _ready() -> void:
 
 func _refresh() -> void:
 	_refresh_streak()
+	_refresh_accuracy()
 	_refresh_numbers()
+	_refresh_totals()
 	_refresh_records()
 	_refresh_curve()
 	_refresh_lists()
@@ -124,11 +133,63 @@ func _refresh_numbers() -> void:
 		" offen — im Start-Screen unter „🌳 Fähigkeiten“" if points > 0 else ""])
 	_add_line(_stat_lines, "Gemeisterte Aufgaben: %d  (Festungsstufe %d)" % [
 		PlayerProgress.mastered_count(), PlayerProgress.fortress_tier()])
-	_add_line(_stat_lines, "Gesamt-Genauigkeit: %d %%" % int(round(PlayerProgress.overall_accuracy() * 100.0)))
-	_add_line(_stat_lines, "Gesehene Wörter: %d    Versuche: %d" % [
-		PlayerProgress.seen_count(), PlayerProgress.total_attempts()])
-	_add_line(_stat_lines, "Beste Serie: %d" % PlayerProgress.best_streak_overall())
 	_add_line(_stat_lines, "Heute fällig: %d" % PlayerProgress.due_count())
+
+
+## Genauigkeit der letzten Sitzung mit Trendpfeil (Issue #13) — die Kopfzahl.
+func _refresh_accuracy() -> void:
+	var lines := accuracy_lines(SessionLog.session_accuracy())
+	_accuracy_label.text = str(lines["title"])
+	_accuracy_trend.text = str(lines["detail"])
+
+
+## Die Lebenszeitwerte, unten im Block „Insgesamt" (Issue #13).
+##
+## Die Gesamt-Genauigkeit stand früher als zweite Kennzahl oben. Als Kopfzahl bestraft sie
+## genau das Erwünschte: wer schwere Wörter übt, drückt sie, und nach einigen hundert
+## Antworten bewegt sie sich ohnehin kaum noch. Sie bleibt — als Bilanz, nicht als Urteil.
+func _refresh_totals() -> void:
+	_clear(_total_lines)
+	_add_line(_total_lines, "Gesamt-Genauigkeit: %d %%" % int(round(PlayerProgress.overall_accuracy() * 100.0)))
+	_add_line(_total_lines, "Gesehene Wörter: %d    Versuche: %d" % [
+		PlayerProgress.seen_count(), PlayerProgress.total_attempts()])
+	_add_line(_total_lines, "Beste Serie: %d" % PlayerProgress.best_streak_overall())
+
+
+## Überschrift und Trendzeile aus SessionLog.accuracy_trend(): { title, detail }.
+##
+## Der Pfeil steht nur, wo es zwei Werte gibt. Ohne Vorsitzung fehlt er, statt einen
+## Vergleich gegen „0 %" zu behaupten; unter der Mindestzahl an Antworten steht die Sitzung
+## als „3 von 4 richtig" da — ein Prozentwert aus vier Antworten täte genauer, als er ist.
+## Statisch und über das Dictionary, dieselbe Aufteilung wie record_rows().
+static func accuracy_lines(summary: Dictionary) -> Dictionary:
+	var answers := int(summary.get("answers", 0))
+	if answers == 0:
+		return {
+			"title": "✅ Genauigkeit: noch keine Sitzung",
+			"detail": "Nach dem ersten Lauf steht hier, wie viele deiner Antworten gesessen haben.",
+		}
+	var which := "Diese Sitzung" if bool(summary.get("live", false)) else "Letzte Sitzung"
+	var accuracy := float(summary.get("accuracy", -1.0))
+	if accuracy < 0.0:
+		return {
+			"title": "✅ %s: %d von %d richtig" % [which, int(summary.get("correct", 0)), answers],
+			"detail": "Zu wenige Antworten für eine Quote — ab %d gibt es eine." % SessionLog.MIN_ACCURACY_ANSWERS,
+		}
+	var title := "✅ %s: %d %% richtig" % [which, int(round(accuracy * 100.0))]
+	var baseline := float(summary.get("baseline", -1.0))
+	if baseline < 0.0:
+		return {"title": title, "detail": "Noch kein Vergleich — der kommt mit der nächsten Sitzung."}
+	var against := "den %d Tagen davor" % SessionLog.ACCURACY_WINDOW_DAYS \
+			if str(summary.get("baseline_kind", "")) == "week" else "der Sitzung davor"
+	var base_text := "%d %%" % int(round(baseline * 100.0))
+	# Auf die ANGEZEIGTEN Prozente gerechnet, damit „84 % gegen 80 %" nicht „3 Punkte" heißt.
+	var delta := int(round(accuracy * 100.0)) - int(round(baseline * 100.0))
+	if absi(delta) < TREND_STEADY_POINTS:
+		return {"title": title + "  →", "detail": "So gut wie in %s (%s)." % [against, base_text]}
+	if delta > 0:
+		return {"title": title + "  ↑", "detail": "%d Punkte über %s (%s)." % [delta, against, base_text]}
+	return {"title": title + "  ↓", "detail": "%d Punkte unter %s (%s) — schwere Wörter drücken die Quote, das ist kein Rückschritt." % [-delta, against, base_text]}
 
 
 ## Kampf-Rekorde über alle Sitzungen (Issue #11).

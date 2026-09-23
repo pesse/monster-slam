@@ -168,6 +168,52 @@ func test_an_unknown_fortress_low_drops_its_row() -> void:
 	assert_int(rows.size()).is_equal(3)
 
 
+# --- Sitzungs-Genauigkeit (Issue #13) ------------------------------------------
+
+func _accuracy(extra := {}) -> Dictionary:
+	var out := {"answers": 20, "correct": 17, "accuracy": 0.85, "baseline": 0.75,
+			"baseline_kind": "week", "live": false}
+	out.merge(extra, true)
+	return out
+
+
+func test_without_a_session_the_accuracy_shows_no_number() -> void:
+	var lines := STATS_SCREEN.accuracy_lines(_accuracy({"answers": 0, "accuracy": -1.0}))
+	assert_str(str(lines["title"])).not_contains("%")
+
+
+## Unter der Mindestzahl an Antworten steht die Sitzung als Bruch da, ohne Prozent und
+## ohne Pfeil — auch wenn es einen Vergleichswert gäbe.
+func test_too_few_answers_show_a_count_instead_of_a_percentage() -> void:
+	var lines := STATS_SCREEN.accuracy_lines(_accuracy({"answers": 3, "correct": 2, "accuracy": -1.0}))
+	assert_str(str(lines["title"])).contains("2 von 3")
+	assert_str(str(lines["title"])).not_contains("%")
+	for arrow in ["↑", "↓", "→"]:
+		assert_str(str(lines["title"])).not_contains(arrow)
+
+
+## Ohne Vorsitzung kein Pfeil — kein Vergleich gegen „0 %".
+func test_without_a_baseline_there_is_no_arrow() -> void:
+	var lines := STATS_SCREEN.accuracy_lines(_accuracy({"baseline": -1.0, "baseline_kind": ""}))
+	assert_str(str(lines["title"])).contains("85 %")
+	for arrow in ["↑", "↓", "→"]:
+		assert_str(str(lines["title"])).not_contains(arrow)
+	assert_str(str(lines["detail"])).not_contains("0 %")
+
+
+func test_the_arrow_follows_the_difference_to_the_baseline() -> void:
+	assert_str(str(STATS_SCREEN.accuracy_lines(_accuracy())["title"])).ends_with("↑")
+	assert_str(str(STATS_SCREEN.accuracy_lines(_accuracy({"baseline": 0.95}))["title"])).ends_with("↓")
+	assert_str(str(STATS_SCREEN.accuracy_lines(_accuracy({"baseline": 0.84}))["title"])).ends_with("→")
+	assert_str(str(STATS_SCREEN.accuracy_lines(_accuracy())["detail"])).contains("10 Punkte")
+
+
+func test_the_detail_names_what_it_compares_against() -> void:
+	assert_str(str(STATS_SCREEN.accuracy_lines(_accuracy())["detail"])).contains("7 Tagen")
+	assert_str(str(STATS_SCREEN.accuracy_lines(
+			_accuracy({"baseline_kind": "previous"}))["detail"])).contains("Sitzung davor")
+
+
 ## Die Szene muss sich bauen lassen und ihre drei Listen über die eindeutigen Namen
 ## finden — genau das geht in einer handgeschriebenen .tscn leicht schief.
 func test_scene_builds_and_finds_its_lists() -> void:
@@ -180,7 +226,10 @@ func test_scene_builds_and_finds_its_lists() -> void:
 	assert_object(screen.get_node("%TaskList")).is_not_null()
 	assert_object(screen.get_node("%RecordList")).is_not_null()
 	assert_object(screen.get_node("%BackButton")).is_not_null()
-	# Sieben Kennzahlen-Zeilen füllt _refresh_numbers beim Betreten (Gold zuerst, dann
-	# Level).
-	assert_int(screen.get_node("%StatLines").get_child_count()).is_equal(7)
+	# Vier Kennzahlen-Zeilen füllt _refresh_numbers beim Betreten (Gold zuerst, dann
+	# Level), drei Lebenszeitwerte _refresh_totals — die Gesamt-Genauigkeit steht dort
+	# und nicht mehr oben (Issue #13).
+	assert_int(screen.get_node("%StatLines").get_child_count()).is_equal(4)
+	assert_int(screen.get_node("%TotalLines").get_child_count()).is_equal(3)
+	assert_str((screen.get_node("%AccuracyLabel") as Label).text).is_not_empty()
 	remove_child(screen)

@@ -27,14 +27,14 @@ Ein ZIP gleichen Aufbaus, verschlüsselt mit AES-256-CBC und mit HMAC-SHA256 ges
 
 ```
 Offset  Größe  Feld
-     0      6  Magic "MSPACK"
-     6      1  Formatversion (= 1)
-     7      1  KDF-Kennung (= 1 für PBKDF2-HMAC-SHA256)
-     8      4  Iterationen (uint32, big endian)
-    12     16  Salt
-    28     32  Verifier
-    60     16  IV
-    76     32  HMAC-SHA256 über Bytes 0…76 ‖ Ciphertext
+	 0      6  Magic "MSPACK"
+	 6      1  Formatversion (= 1)
+	 7      1  KDF-Kennung (= 1 für PBKDF2-HMAC-SHA256)
+	 8      4  Iterationen (uint32, big endian)
+	12     16  Salt
+	28     32  Verifier
+	60     16  IV
+	76     32  HMAC-SHA256 über Bytes 0…76 ‖ Ciphertext
    108    ...  Ciphertext (PKCS#7-gefüllt)
 ```
 
