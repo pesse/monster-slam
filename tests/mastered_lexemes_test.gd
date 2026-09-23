@@ -291,17 +291,19 @@ func test_the_tooltip_spells_out_the_marks() -> void:
 		"conjugation:a:past_simple": 0.85,
 	}), _learnables({"a": ["translate:de_to_en:a", "translate:en_to_de:a", "conjugation:a:past_simple"]}),
 			func(id: String) -> String: return "Aufgabe " + id)
-	var hint := str(lines[0]["hint"])
-	assert_str(hint).contains("de→en 90 %")
-	assert_str(hint).contains("en→de 63 %")
-	assert_str(hint).contains("★ Aufgabe conjugation:a:past_simple — 85 %")
+	# Eine echte Liste: je Aufgabe eine Zeile, Zeichen und Stand in eigenen Spalten.
+	var hint: Array = lines[0]["hint_list"]
+	assert_array(hint).contains([["✓", "Übersetzung de→en", "90 %"]])
+	assert_array(hint).contains([["", "Übersetzung en→de", "63 %"]])
+	assert_array(hint).contains([["★", "Aufgabe conjugation:a:past_simple", "85 %"]])
 
 
 ## Eine Richtung ohne Record steht auch im Mouseover als solche da und nicht als 0 %.
 func test_the_tooltip_names_an_unpractised_direction() -> void:
 	var lines := STATS_SCREEN.word_lines([_lexeme("a", "access2", 6)],
 			_conf({"translate:de_to_en:a": 0.9}))
-	assert_str(str(lines[0]["hint"])).contains("en→de noch nicht geübt")
+	assert_array(lines[0]["hint_list"]).contains(
+			[["", "Übersetzung en→de", "noch nicht geübt"]])
 
 
 ## Die Auffächerung selbst: dieselbe, aus der der Wave-Pool spawnt.

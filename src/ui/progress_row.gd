@@ -85,7 +85,7 @@ func _fill() -> void:
 		# gewöhnlichen Zeile (siehe MARK_WIDTH).
 		entry.set_mark_width(MARK_WIDTH)
 		entry.setup(str(row["label"]), str(row["value"]), str(row.get("mark", "")),
-				str(row.get("hint", "")))
+				str(row.get("hint", "")), row.get("hint_list", []))
 
 
 func _update_header() -> void:

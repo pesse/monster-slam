@@ -223,6 +223,50 @@ func test_the_height_does_not_lag_behind_the_last_card() -> void:
 	assert_float(first.y).is_greater(flat.y)
 
 
+## Eine Aufzählung steht als Tabelle da: je Zeile eine Reihe, die Werte rechtsbündig in
+## EINER Flucht. Vorher klebten die Richtungen mit „·" in einer Zeile zusammen.
+func test_a_list_is_set_as_a_table() -> void:
+	var button := _button("A")
+	Hints.attach(button, "Titel", "", "", [
+		["✓", "Übersetzung de→en", "90 %"],
+		["", "Übersetzung en→de", "noch nicht geübt"],
+		["★", "Vergangenheit", "85 %"],
+	])
+	var card := _over(button)
+	var list := card.get_node("%List") as GridContainer
+	# Drei Spalten, also je Eintrag eine Reihe. Die Lage selbst sortiert der Container
+	# erst im nächsten Frame; hier zählt, dass die Zellen in dieser Ordnung dastehen.
+	assert_int(list.columns).is_equal(3)
+	var cells := list.get_children()
+	assert_int(cells.size()).is_equal(9)
+	assert_str((cells[3] as Label).text).is_equal("")
+	assert_str((cells[4] as Label).text).is_equal("Übersetzung en→de")
+	assert_str((cells[5] as Label).text).is_equal("noch nicht geübt")
+	for i in [2, 5, 8]:
+		assert_int((cells[i] as Label).horizontal_alignment).is_equal(HORIZONTAL_ALIGNMENT_RIGHT)
+
+
+## Eine lange Bezeichnung bricht in ihrer Spalte um, statt die Karte breiter zu machen —
+## und die Karte ist hoch genug für den Umbruch.
+func test_a_long_list_entry_wraps_inside_the_card() -> void:
+	var button := _button("A")
+	Hints.attach(button, "Titel", "", "", [["☆", " ".join(_many_words()), "85 %"]])
+	var card := _over(button)
+	assert_float(card.size.x).is_equal(HintCard.MAX_WIDTH)
+	var list := card.get_node("%List") as Control
+	assert_float(list.get_combined_minimum_size().x).is_less_equal(HintCard.MAX_WIDTH)
+	assert_float(card.size.y).is_greater_equal(list.get_combined_minimum_size().y)
+
+
+## Ohne Liste steht auch keine leere Tabelle in der Karte.
+func test_no_list_no_table() -> void:
+	var button := _button("A")
+	Hints.attach(button, "Titel", "Text", "", [["✓", "x", "1 %"]])
+	_over(button)
+	Hints.attach(button, "Titel", "Text")
+	assert_bool((_over(button).get_node("%List") as Control).visible).is_false()
+
+
 func _many_words() -> PackedStringArray:
 	var words := PackedStringArray()
 	for i in 40:

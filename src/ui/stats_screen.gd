@@ -476,11 +476,11 @@ static func extra_rows(entry: Dictionary, conf: Callable, learnables: Callable) 
 	return out
 
 
-## Dieselben Zeilen, fertig für StatRow: { label, value, mark, hint }.
+## Dieselben Zeilen, fertig für StatRow: { label, value, mark, hint_list }.
 ##
 ## In der Markierung steht der Haken für das Wort und je ein Sternchen für jede weitere
 ## Aufgabe dazu — ausgefüllt, wenn sie sitzt. Was die Zeichen im Einzelnen heißen, steht
-## im Mouseover (`hint`): die Zeile bleibt schmal genug für eine lange Liste, und wer es
+## im Mouseover (`hint_list`): die Zeile bleibt schmal genug für eine lange Liste, und wer es
 ## genau wissen will, hält drauf. `describe` benennt eine Aufgabe (TaskResolver
 ## .describe_learnable); ohne sie steht die rohe learnable_id da.
 static func word_lines(lexemes: Array, conf: Callable, learnables := Callable(),
@@ -499,33 +499,33 @@ static func word_lines(lexemes: Array, conf: Callable, learnables := Callable(),
 			# und gemessen wurde hier nichts.
 			"value": "noch nicht geübt" if value < 0.0 else "%d %%" % int(round(value * 100.0)),
 			"mark": mark,
-			"hint": word_hint(row, describe),
+			"hint_list": word_hint(row, describe),
 		})
 	return lines
 
 
-## Der Text der Karte am Zeiger für eine Wortzeile: die beiden Richtungen einzeln und
-## darunter je Sternchen eine Zeile. Er sagt genau das, was die Zeichen verschweigen —
-## welche Aufgabe das Sternchen meint und wie weit sie ist.
+## Die Liste der Karte am Zeiger für eine Wortzeile: je Richtung eine Zeile und darunter
+## je Sternchen eine. Sie sagt genau das, was die Zeichen verschweigen — welche Aufgabe das
+## Sternchen meint und wie weit sie ist. Zeilen `[zeichen, bezeichnung, wert]`, damit die
+## Karte sie als Tabelle setzt und die Prozente untereinander stehen (`HintCard`).
 ##
 ## Das WORT steht nicht darin: es ist die Überschrift der Karte (`StatRow.setup`), und
 ## zweimal dasselbe zu lesen ist keine Auskunft.
-static func word_hint(row: Dictionary, describe := Callable()) -> String:
+static func word_hint(row: Dictionary, describe := Callable()) -> Array:
 	var lines: Array = []
-	var parts: Array = []
 	for direction in row.get("directions", []):
-		parts.append("%s %s" % [
-			DIRECTION_LABELS.get(str(direction["direction"]), str(direction["direction"])),
-			percent_label(float(direction["confidence"]))])
-	if not parts.is_empty():
-		lines.append("Übersetzung:  " + "   ·   ".join(parts))
+		var value := float(direction["confidence"])
+		lines.append(["✓" if value >= PROGRESS.MASTERY_CONFIDENCE else "",
+				"Übersetzung " + str(DIRECTION_LABELS.get(str(direction["direction"]),
+						str(direction["direction"]))),
+				percent_label(value)])
 	for extra in row.get("extras", []):
 		var name_text := str(extra["id"])
 		if describe.is_valid():
 			name_text = str(describe.call(str(extra["id"])))
-		lines.append("%s %s — %s" % ["★" if bool(extra["mastered"]) else "☆", name_text,
+		lines.append(["★" if bool(extra["mastered"]) else "☆", name_text,
 				percent_label(float(extra["confidence"]))])
-	return "\n".join(lines)
+	return lines
 
 
 ## Prozent einer Aufgabe, oder „noch nicht geübt" für einen Stand, den es nicht gibt.

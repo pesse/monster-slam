@@ -22,6 +22,11 @@ unique_name_in_owner = true
 text = "Wirkung"
 autowrap_mode = 3
 
+[node name="List" type="GridContainer" parent="Root"]
+unique_name_in_owner = true
+mouse_filter = 2
+columns = 3
+
 [node name="Note" type="Label" parent="Root"]
 theme_type_variation = &"Accent"
 unique_name_in_owner = true

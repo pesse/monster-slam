@@ -469,8 +469,11 @@ leer, ist der Kanal aus.
 
 Godots eigener Tooltip ist im ganzen Spiel abgelöst: er erscheint verzögert, bleibt stehen,
 wo er aufgegangen ist, und bringt die Typografie der Engine mit. Die Karte hängt am
-Mauszeiger, kommt aus dem Theme und trägt drei Zeilen — Überschrift, Text, Nachsatz —, von
-denen leere nicht erscheinen.
+Mauszeiger, kommt aus dem Theme und trägt vier Teile — Überschrift, Text, Liste, Nachsatz —,
+von denen leere nicht erscheinen. Die Liste ist eine Tabelle (Zeichen | Bezeichnung | Wert),
+kein Text mit „·" dazwischen: eine Aufzählung liest man Zeile für Zeile, und die Werte stehen
+rechtsbündig untereinander (die Wortzeilen der Statistik: je Richtung und je Zusatzaufgabe
+eine Reihe). Umbrechen darf nur die Bezeichnung.
 
 Gefragt wird jeden Frame `Viewport.gui_get_hovered_control()`, und von dort geht die Suche
 nach OBEN, bis ein Knoten eine Auskunft trägt. Das ist der Unterschied zu Godot, das am

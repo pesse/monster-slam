@@ -72,12 +72,14 @@ func refresh() -> void:
 ## Angehängt wird an das KLEINSTE, was der Text meint. Die Suche geht von dort nach oben,
 ## eine Auskunft an einer Zeile gilt also auch für deren Knöpfe und Balken — eine an einer
 ## Screen-Wurzel dagegen für das ganze Bild, und das will niemand.
-func attach(target: Control, title: String, body := "", note := "") -> void:
-	if title.is_empty() and body.is_empty() and note.is_empty():
+##
+## `list` sind Zeilen `[zeichen, bezeichnung, wert]` für eine Aufzählung (siehe `HintCard`).
+func attach(target: Control, title: String, body := "", note := "", list := []) -> void:
+	if title.is_empty() and body.is_empty() and note.is_empty() and list.is_empty():
 		if target.has_meta(META):
 			target.remove_meta(META)
 		return
-	target.set_meta(META, {"title": title, "body": body, "note": note})
+	target.set_meta(META, {"title": title, "body": body, "note": note, "list": list})
 
 
 ## Eine Fläche, die ihre Treffer selbst sucht (`SkillGraph`): statt fester Zeilen hängt hier
@@ -135,7 +137,7 @@ func _show(found: Dictionary, at: Vector2) -> void:
 		_card.hide()
 		return
 	_card.fill(str(found.get("title", "")), str(found.get("body", "")),
-			str(found.get("note", "")))
+			str(found.get("note", "")), found.get("list", []))
 	_place(at)
 	_card.show()
 
