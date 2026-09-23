@@ -156,6 +156,13 @@ Beim Arbeiten daran zu beachten:
   statt 340 Pixel hoch und trug ihren Inhalt aus der abschneidenden Bühne heraus.
   `RevealCard.set_width()` gibt den umbrechenden Labels ihre Breite, BEVOR die Größe
   gesetzt wird (`tests/leak_reveal_layout_test.gd`).
+- **Stufe 2 trägt die Sitzungsbilanz** (`RunBalance.build`, Issue #12) — nach einem Sieg
+  über der Wahl, nach einer Niederlage als Abschluss des Laufs; Escape zeigt keine. Gebaut
+  wird sie in `_finish_wave`, weil `SessionLog.end()` die laufende Sitzung leert, und mit
+  den Regeln des Statistik-Screens (`fresh_rows`, `comeback_rows`) statt einer eigenen.
+  Weil sie über den `PageStack` auch Stufe 1 größer macht, ist jede Zeile einzeilig mit
+  fester Breite und Auslassung (`BalanceLineTemplate`) und die Wortliste auf
+  `BALANCE_WORDS` Zeilen gedeckelt, der Überhang wird zu „und N weitere".
 - **Aus der Kiste fliegt eine Münze je Goldstück** (`TreasureChest.coin_count`), nicht
   eine gedeckelte Handvoll: der Haufen in der Luft ist der Fund, und eine Deckelung würde
   lügen, sobald die Wellen größer werden. Gedeckelt ist nur der zeitliche *Versatz*

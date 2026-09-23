@@ -139,3 +139,62 @@ func test_the_screen_keeps_its_size_across_stages() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	assert_vector(_stats.size).is_equal(before)
+
+
+# --- Sitzungsbilanz (Issue #12) -------------------------------------------------
+
+func _balance(words := 0, comebacks := 0) -> Dictionary:
+	var list: Array = []
+	for i in words:
+		list.append({"label": "wort-%02d" % i, "misses": 4 if i < comebacks else 0,
+				"comeback": i < comebacks})
+	return {"waves_cleared": 3, "wave_reached": 4, "answers": 63, "correct": 51,
+			"mastered": words, "comeback": comebacks, "words": list}
+
+
+func _balance_texts() -> Array:
+	return (_stats.get_node("%BalanceLines") as VBoxContainer).get_children() \
+			.map(func(l): return (l as Label).text)
+
+
+## Die Bilanz steht auf Stufe 2 — nach einem Sieg über der Wahl, damit sie auch beim
+## Rückweg ins Menü schon zu sehen war.
+func test_the_balance_sits_on_the_second_stage() -> void:
+	_stats.show_stats(_wave_data({"chest": {}, "session": _balance(2)}))
+	_button("ResultContinue").pressed.emit()
+	assert_bool(_visible("Balance")).is_true()
+	assert_bool(_visible("StartButton")).is_true()
+
+
+## Ohne Sitzung (Tests, Werkbank) keine Bilanz — und keine leere Überschrift.
+func test_without_a_session_there_is_no_balance() -> void:
+	_stats.show_stats(_wave_data({"chest": {}}))
+	assert_bool(_visible("Balance")).is_false()
+
+
+func test_the_balance_names_counts_and_comebacks() -> void:
+	_stats.show_stats(_wave_data({"session": _balance(2, 1)}))
+	var texts := _balance_texts()
+	assert_str(str(texts[0])).contains("3").contains("Welle 4")
+	assert_str(str(texts[1])).contains("63").contains("51")
+	assert_str(str(texts[2])).contains("2").contains("1 zurückerobert")
+	assert_str(str(texts[3])).contains("wort-00").contains("4×")
+	assert_str(str(texts[4])).contains("wort-01")
+
+
+## Höchstens BALANCE_WORDS Zeilen für Wörter: der Überhang wird zur Zahl und nimmt die
+## letzte Zeile, statt eine anzuhängen — der Screen scrollt nicht.
+func test_a_long_word_list_is_capped() -> void:
+	_stats.show_stats(_wave_data({"session": _balance(12)}))
+	var texts := _balance_texts()
+	var cap: int = _stats.BALANCE_WORDS
+	# Drei Zählzeilen, dann die Wörter.
+	assert_int(texts.size()).is_equal(3 + cap)
+	assert_str(str(texts.back())).contains("%d weitere" % (12 - cap + 1))
+
+
+## Genau BALANCE_WORDS Wörter passen ohne „weitere".
+func test_a_full_list_needs_no_overflow_line() -> void:
+	_stats.show_stats(_wave_data({"session": _balance(4)}))
+	assert_int(_balance_texts().size()).is_equal(3 + 4)
+	assert_str(str(_balance_texts().back())).not_contains("weitere")

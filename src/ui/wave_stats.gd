@@ -28,6 +28,16 @@ extends PanelContainer
 ## des Bildes — die Niederlage war eine Sackgasse
 ## (`test_the_defeat_screen_fits_into_the_base_resolution`).
 ##
+## **Stufe 2 trägt die Sitzungsbilanz** (Issue #12, `_show_balance`): was der Lauf bis
+## hier gebracht hat — Wellen, Antworten, neu gemeisterte und zurückeroberte Aufgaben mit
+## Wortlaut. Nach einer Niederlage ist das der Abschluss des Laufs; nach einem Sieg steht
+## sie über der Schwierigkeitswahl, damit sie auch beim Rückweg ins Menü zu sehen war.
+## Kein dritter Screen: die Seite war nach einer Niederlage fast leer, und ein
+## Zwischenschritt vor dem Menü hätte den Ausgang verzögert. Die Wortliste ist gedeckelt
+## (`BALANCE_WORDS` plus „und N weitere"), und jede Zeile ist einzeilig mit fester Breite
+## und Auslassung (Vorlage `BalanceLineTemplate`) — sonst wüchse die unsichtbare Seite mit
+## einem langen Wort und schöbe über den PageStack auch Stufe 1 aus dem Bild.
+##
 ## Das Layout liegt in wave_stats.tscn; hier nur die Befüllung (show_stats), der
 ## Stufenwechsel und die Auswahl-Logik. Interaktive Controls haben focus_mode=FOCUS_NONE
 ## (in der Szene gesetzt), sonst reißt die Antwort-LineEdit (die sich per _process den
@@ -47,6 +57,9 @@ signal reward_collected(gold: int)
 
 ## Deltas der Schwierigkeitswahl, in Reihenfolge der Buttons in ChoiceRow (wave_stats.tscn).
 const CHOICE_DELTAS := [-2, -1, 0, 1, 2]
+## So viele Aufgaben nennt die Sitzungsbilanz beim Namen; der Rest steht als Zahl da.
+## Gedeckelt, weil der Screen nicht scrollt (siehe Kopf).
+const BALANCE_WORDS := 4
 ## Index der Standardauswahl ("Gleich").
 const DEFAULT_CHOICE := 2
 ## Aufforderung an der Kiste, solange sie zu ist.
@@ -68,6 +81,9 @@ enum Stage {
 @onready var _reward_line: Label = %RewardLine
 @onready var _gold_label: Label = %GoldLabel
 @onready var _result_continue: Button = %ResultContinue
+@onready var _balance: VBoxContainer = %Balance
+@onready var _balance_lines: VBoxContainer = %BalanceLines
+@onready var _balance_template: Label = %BalanceLineTemplate
 @onready var _defeat_label: Label = %DefeatLabel
 @onready var _diff_label: Label = %DiffLabel
 @onready var _choice_row: HBoxContainer = %ChoiceRow
@@ -98,8 +114,9 @@ func _ready() -> void:
 ## Befüllt den Screen mit den Statistiken einer Welle und zeigt ihn an (Stufe 1).
 ## Erwartete Felder in `data`: won, wave_number, difficulty, correct, leaked, total,
 ## accuracy, score_gained, score_total, fortress_health, mastered, fortress_tier,
-## xp_gained, levels_gained und optional chest = { tier, gold, name } (siehe
-## ChestReward.for_wave).
+## xp_gained, levels_gained, optional chest = { tier, gold, name } (siehe
+## ChestReward.for_wave) und optional session = Sitzungsbilanz (siehe RunBalance.build;
+## leer oder fehlend = keine Bilanz).
 func show_stats(data: Dictionary) -> void:
 	_won = bool(data.get("won", true))
 	_wave_number = int(data.get("wave_number", 0))
@@ -150,6 +167,10 @@ func show_stats(data: Dictionary) -> void:
 	_choice_row.visible = _won
 	_start_button.visible = _won
 	_defeat_label.visible = not _won
+	# Die Bilanz ist die dritte Inhalts-Entscheidung, und auch sie fällt hier: sie liegt
+	# auf der noch unsichtbaren Stufe 2, zählt über den PageStack aber schon jetzt zur
+	# Größe des Screens.
+	_show_balance(data.get("session", {}))
 
 	# Auswahl startet jedesmal bei "Gleich" – die Wahl ist relativ zur eben gespielten Welle.
 	_selected_choice = DEFAULT_CHOICE
@@ -196,6 +217,55 @@ func _add_line(text: String) -> void:
 	var label := Label.new()
 	label.text = text
 	_lines.add_child(label)
+
+
+# --- Sitzungsbilanz -----------------------------------------------------------
+
+func _show_balance(balance: Dictionary) -> void:
+	for child in _balance_lines.get_children():
+		_balance_lines.remove_child(child)
+		child.queue_free()
+	_balance.visible = not balance.is_empty()
+	if balance.is_empty():
+		return
+	var cleared := int(balance.get("waves_cleared", 0))
+	# Die erreichte Welle nur, wenn sie über die geräumten hinausgeht — nach einer
+	# Niederlage; nach einem Sieg wäre „3 geräumt (Welle 3)" dieselbe Zahl zweimal.
+	var reached := int(balance.get("wave_reached", cleared))
+	_add_balance_line("Wellen geräumt: %d%s" % [cleared,
+			"  (Welle %d erreicht)" % reached if reached > cleared else ""])
+	_add_balance_line("Antworten: %d, davon %d richtig" % [
+		int(balance.get("answers", 0)), int(balance.get("correct", 0))])
+	var mastered := int(balance.get("mastered", 0))
+	var comeback := int(balance.get("comeback", 0))
+	if mastered == 0:
+		_add_balance_line("Neu gemeistert: noch keine — die nächste sitzt bald.")
+		return
+	_add_balance_line("Neu gemeistert: %d%s" % [mastered,
+			"  (davon %d zurückerobert)" % comeback if comeback > 0 else ""])
+	var words: Array = balance.get("words", [])
+	# Genau BALANCE_WORDS Zeilen für Wörter, nie eine mehr: bei einem Überhang nimmt
+	# „und N weitere" die letzte Zeile, statt eine fünfte anzuhängen.
+	var shown := words.size() if words.size() <= BALANCE_WORDS else BALANCE_WORDS - 1
+	for i in shown:
+		var word: Dictionary = words[i]
+		if bool(word.get("comeback", false)):
+			_add_balance_line("  ↺ %s  (%d× entwischt)" % [str(word["label"]), int(word.get("misses", 0))])
+		else:
+			_add_balance_line("  ✓ %s" % str(word["label"]))
+	if words.size() > shown:
+		_add_balance_line("  … und %d weitere" % (words.size() - shown))
+
+
+## Jede Zeile aus der Vorlage in der Szene: feste Breite, einzeilig, mit Auslassung.
+func _add_balance_line(text: String) -> void:
+	var label := _balance_template.duplicate() as Label
+	# Der eindeutige Name gehört der Vorlage; eine Kopie mit demselben Namen wäre ein
+	# zweiter %BalanceLineTemplate.
+	label.unique_name_in_owner = false
+	label.text = text
+	label.visible = true
+	_balance_lines.add_child(label)
 
 
 # --- Belohnung ----------------------------------------------------------------

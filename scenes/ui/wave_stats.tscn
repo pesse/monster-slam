@@ -73,10 +73,34 @@ focus_mode = 0
 text = "Weiter ▸"
 
 [node name="NextPage" type="VBoxContainer" parent="Root/Pages"]
+theme_type_variation = &"SectionStack"
 unique_name_in_owner = true
 visible = false
 
-[node name="DefeatLabel" type="Label" parent="Root/Pages/NextPage"]
+[node name="Balance" type="VBoxContainer" parent="Root/Pages/NextPage"]
+theme_type_variation = &"Tight"
+unique_name_in_owner = true
+visible = false
+
+[node name="BalanceTitle" type="Label" parent="Root/Pages/NextPage/Balance"]
+theme_type_variation = &"SectionTitle"
+unique_name_in_owner = true
+horizontal_alignment = 1
+text = "Dieser Lauf"
+
+[node name="BalanceLines" type="VBoxContainer" parent="Root/Pages/NextPage/Balance"]
+theme_type_variation = &"Tight"
+unique_name_in_owner = true
+
+[node name="BalanceLineTemplate" type="Label" parent="Root/Pages/NextPage/Balance"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(600, 0)
+text_overrun_behavior = 3
+
+[node name="Decision" type="VBoxContainer" parent="Root/Pages/NextPage"]
+
+[node name="DefeatLabel" type="Label" parent="Root/Pages/NextPage/Decision"]
 theme_type_variation = &"Accent"
 unique_name_in_owner = true
 visible = false
@@ -85,35 +109,35 @@ horizontal_alignment = 1
 autowrap_mode = 3
 text = "Die Festung ist gefallen — dieser Lauf ist zu Ende. Das Gold bleibt dir."
 
-[node name="DiffLabel" type="Label" parent="Root/Pages/NextPage"]
+[node name="DiffLabel" type="Label" parent="Root/Pages/NextPage/Decision"]
 unique_name_in_owner = true
 horizontal_alignment = 1
 text = "Schwierigkeit der nächsten Welle"
 
-[node name="ChoiceRow" type="HBoxContainer" parent="Root/Pages/NextPage"]
+[node name="ChoiceRow" type="HBoxContainer" parent="Root/Pages/NextPage/Decision"]
 unique_name_in_owner = true
 
-[node name="Choice0" type="Button" parent="Root/Pages/NextPage/ChoiceRow"]
+[node name="Choice0" type="Button" parent="Root/Pages/NextPage/Decision/ChoiceRow"]
 focus_mode = 0
 text = "Viel leichter"
 
-[node name="Choice1" type="Button" parent="Root/Pages/NextPage/ChoiceRow"]
+[node name="Choice1" type="Button" parent="Root/Pages/NextPage/Decision/ChoiceRow"]
 focus_mode = 0
 text = "Leichter"
 
-[node name="Choice2" type="Button" parent="Root/Pages/NextPage/ChoiceRow"]
+[node name="Choice2" type="Button" parent="Root/Pages/NextPage/Decision/ChoiceRow"]
 focus_mode = 0
 text = "Gleich"
 
-[node name="Choice3" type="Button" parent="Root/Pages/NextPage/ChoiceRow"]
+[node name="Choice3" type="Button" parent="Root/Pages/NextPage/Decision/ChoiceRow"]
 focus_mode = 0
 text = "Schwieriger"
 
-[node name="Choice4" type="Button" parent="Root/Pages/NextPage/ChoiceRow"]
+[node name="Choice4" type="Button" parent="Root/Pages/NextPage/Decision/ChoiceRow"]
 focus_mode = 0
 text = "Viel schwieriger"
 
-[node name="StartButton" type="Button" parent="Root/Pages/NextPage"]
+[node name="StartButton" type="Button" parent="Root/Pages/NextPage/Decision"]
 unique_name_in_owner = true
 focus_mode = 0
 text = "▶ Nächste Welle rufen"

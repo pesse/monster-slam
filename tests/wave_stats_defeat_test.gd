@@ -74,7 +74,10 @@ func test_the_defeat_screen_fits_into_the_base_resolution() -> void:
 	stats.show_stats({"won": false, "wave_number": 3, "difficulty": 3, "correct": 4,
 			"leaked": 2, "total": 6, "accuracy": 66.0, "score_gained": 40,
 			"score_total": 120, "fortress_health": 0, "mastered": 3, "fortress_tier": 0,
-			"chest": ChestReward.for_wave(40, 4, 2)})
+			"chest": ChestReward.for_wave(40, 4, 2),
+			# Die Sitzungsbilanz mit einer langen Liste überlanger Einträge: die Bilanz
+			# liegt auf Stufe 2 und zählt über den PageStack auch für Stufe 1 (Issue #12).
+			"session": _long_balance()})
 	for i in 5:
 		await get_tree().process_frame
 	var base := Vector2(
@@ -85,3 +88,13 @@ func test_the_defeat_screen_fits_into_the_base_resolution() -> void:
 	var min_size := stats.get_combined_minimum_size()
 	assert_float(min_size.x).is_less_equal(base.x)
 	assert_float(min_size.y).is_less_equal(base.y)
+
+
+func _long_balance() -> Dictionary:
+	var words: Array = []
+	for i in 30:
+		words.append({"label": "wort-%02d mit einem ausgesprochen langen Etikett, " % i
+				+ "das weit über die Breite jeder Zeile hinausreicht und nirgends umbricht",
+				"misses": 12, "comeback": i % 2 == 0})
+	return {"waves_cleared": 99, "wave_reached": 100, "answers": 9999, "correct": 9998,
+			"mastered": 30, "comeback": 15, "words": words}

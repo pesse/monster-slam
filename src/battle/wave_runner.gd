@@ -601,6 +601,10 @@ func _input(event: InputEvent) -> void:
 ## gespeichert; PlayerProgress schreibt erst bei wave_cleared bzw. beim Verlassen über den
 ## Statistik-Screen (_on_back_to_menu). Was schon beantwortet wurde, verfällt damit — das
 ## ist der Preis des Abbruchs und besser, als eine halbe Welle als Lernstand zu buchen.
+##
+## Auch keine Sitzungsbilanz (Issue #12): Escape heißt „sofort raus", und eine Bilanz
+## dazwischen wäre ein Screen, der den Ausgang verzögert. Die Bilanz steht auf Stufe 2
+## des Wellenabschlusses — wer sie sehen will, sieht sie dort nach jeder Welle.
 func _abort_battle() -> void:
 	_finished = true
 	_report_run_ended()
@@ -1017,6 +1021,11 @@ func _finish_wave(won: bool) -> void:
 		# _defeat), hier steht nur, was die Welle daran geändert hat.
 		"xp_gained": _wave_xp,
 		"levels_gained": PlayerLevel.level - _level_at_start,
+		# Sitzungsbilanz für Stufe 2 (Issue #12). Gebaut JETZT und nicht beim Rückweg ins
+		# Menü: SessionLog.end() leert die laufende Sitzung, und die Bilanz soll schon
+		# dastehen, bevor jemand auf den Menü-Knopf drückt.
+		"session": RunBalance.build(SessionLog.current(),
+				PlayerProgress.records_for_display(), _wave_number),
 	})
 
 
