@@ -231,5 +231,11 @@ func test_scene_builds_and_finds_its_lists() -> void:
 	# und nicht mehr oben (Issue #13).
 	assert_int(screen.get_node("%StatLines").get_child_count()).is_equal(4)
 	assert_int(screen.get_node("%TotalLines").get_child_count()).is_equal(3)
+	# Die Wort-Serie erklärt sich zusätzlich am Zeiger — ohne Karte verwechselt man sie mit der
+	# Tages-Serie und der Serie ohne Durchlass. Ohne MOUSE_FILTER_PASS käme die Karte nie.
+	var streak := screen.get_node("%TotalLines").get_child(2) as Label
+	assert_str(streak.text).starts_with("Längste Wort-Serie")
+	assert_str(str(Hints.hint_of(streak).get("body", ""))).contains("einzelne Aufgabe")
+	assert_int(streak.mouse_filter).is_equal(Control.MOUSE_FILTER_PASS)
 	assert_str((screen.get_node("%AccuracyLabel") as Label).text).is_not_empty()
 	remove_child(screen)

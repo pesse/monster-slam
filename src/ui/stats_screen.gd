@@ -153,7 +153,15 @@ func _refresh_totals() -> void:
 	_add_line(_total_lines, "Gesamt-Genauigkeit: %d %%" % int(round(PlayerProgress.overall_accuracy() * 100.0)))
 	_add_line(_total_lines, "Gesehene Wörter: %d    Versuche: %d" % [
 		PlayerProgress.seen_count(), PlayerProgress.total_attempts()])
-	_add_line(_total_lines, "Beste Serie: %d" % PlayerProgress.best_streak_overall())
+	var streak := _add_line(_total_lines, "Längste Wort-Serie: %d" % PlayerProgress.best_streak_overall())
+	# „Wort-Serie", weil es drei Serien gibt: die Tages-Serie oben, die „Längste Serie
+	# ohne Durchlass" bei den Rekorden — und diese hier, die an EINER Aufgabe hängt
+	# (PlayerProgress.best_streak_overall), über Sitzungen und Tage hinweg.
+	_attach_hint(streak, "Längste Wort-Serie",
+			"So oft hast du eine einzelne Aufgabe hintereinander richtig beantwortet — "
+			+ "am besten Wort gemessen, über alle Sitzungen und Tage hinweg. Ein Fehler "
+			+ "bei genau diesem Wort setzt seine Serie auf 0.",
+			"Nicht die Tages-Serie oben und nicht die Serie ohne Durchlass bei den Rekorden.")
 
 
 ## Überschrift und Trendzeile aus SessionLog.accuracy_trend(): { title, detail }.
@@ -653,10 +661,18 @@ func _clear(box: VBoxContainer) -> void:
 		child.queue_free()
 
 
-func _add_line(box: VBoxContainer, text: String) -> void:
+func _add_line(box: VBoxContainer, text: String) -> Label:
 	var label := Label.new()
 	label.text = text
 	box.add_child(label)
+	return label
+
+
+## Karte am Zeiger für eine schlichte Zeile. Ein Label ignoriert die Maus von Haus aus —
+## dann läge nicht die Zeile unter dem Zeiger, sondern ihre Liste, und die Karte käme nie.
+func _attach_hint(label: Label, title: String, body: String, note := "") -> void:
+	label.mouse_filter = Control.MOUSE_FILTER_PASS
+	Hints.attach(label, title, body, note)
 
 
 func _add_row(box: VBoxContainer, name_text: String, value_text: String, mark_text := "",
