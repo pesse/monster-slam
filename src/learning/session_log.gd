@@ -29,7 +29,9 @@ const FAST_ANSWER_MS := 2000
 ##   newly_mastered: int         — in dieser Sitzung erstmals gemeisterte Aufgaben
 ##   response_time_sum_ms, timed_answers, fast_answers: int
 ##   monsters_defeated, monsters_leaked, best_no_leak_streak: int
-##   min_fortress_health: int    — tiefster HP-Stand des Laufs
+##   min_fortress_health: int    — tiefster HP-Stand des Laufs; -1 heißt „unbekannt"
+##                                 (der Wert wird erst in end() von GameState abgelesen,
+##                                 eine laufende oder abgebrochene Sitzung hat ihn nicht)
 ##   aborted: bool               — nur bei hart beendeten Läufen (siehe load_sessions)
 var _sessions: Array = []
 ## Die laufende Sitzung; leer = gerade kein Lauf.
@@ -67,7 +69,10 @@ func begin() -> void:
 		"answers": 0, "correct": 0, "newly_mastered": 0,
 		"response_time_sum_ms": 0, "timed_answers": 0, "fast_answers": 0,
 		"monsters_defeated": 0, "monsters_leaked": 0, "best_no_leak_streak": 0,
-		"min_fortress_health": GameState.fortress_max_health,
+		# -1 und nicht der volle Stand: solange der Lauf läuft, ist der tiefste HP-Stand
+		# UNBEKANNT — end() liest ihn von GameState ab. Stünde hier das Maximum, trüge
+		# jede abgebrochene Sitzung (load_sessions) einen makellosen Lauf in die Rekorde.
+		"min_fortress_health": -1,
 	}
 
 
@@ -218,12 +223,18 @@ func played_day_count() -> int:
 	return days.size()
 
 
-## Bestwerte über alle Sitzungen — die Grundlage der Kampf-Rekorde.
-## `min_fortress_health` ist -1, solange es keine Sitzung gibt („unbekannt", nicht 0 HP).
+## Bestwerte über alle Sitzungen — die Grundlage der Kampf-Rekorde (Issue #11).
+##
+## Zwei Größen über DENSELBEN Wert, und sie sagen Verschiedenes: `min_fortress_health`
+## ist der tiefste Stand, den die Festung je hatte (über alle Läufe hinweg), während
+## `best_fortress_floor` der HÖCHSTE der lauf-eigenen Tiefstände ist — der schonendste
+## Lauf, also das, was als Auszeichnung taugt. Beide sind -1, solange keine Sitzung einen
+## Stand mitgebracht hat („unbekannt", nicht 0 HP).
 func records() -> Dictionary:
 	var out := {
 		"sessions": 0, "highest_wave_cleared": 0, "best_no_leak_streak": 0,
 		"monsters_defeated": 0, "monsters_leaked": 0, "min_fortress_health": -1,
+		"best_fortress_floor": -1,
 	}
 	for entry in _all_entries():
 		out["sessions"] = int(out["sessions"]) + 1
@@ -235,6 +246,7 @@ func records() -> Dictionary:
 		if low >= 0:
 			out["min_fortress_health"] = low if int(out["min_fortress_health"]) < 0 \
 					else mini(int(out["min_fortress_health"]), low)
+			out["best_fortress_floor"] = maxi(int(out["best_fortress_floor"]), low)
 	return out
 
 

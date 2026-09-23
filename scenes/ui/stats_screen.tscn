@@ -69,6 +69,22 @@ unique_name_in_owner = true
 theme_type_variation = &"Tight"
 unique_name_in_owner = true
 
+[node name="RecordSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter/Overview"]
+theme_type_variation = &"Tight"
+
+[node name="RecordTitle" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/RecordSection"]
+theme_type_variation = &"SectionTitle"
+text = "🏆 Rekorde"
+
+[node name="RecordHint" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/RecordSection"]
+theme_type_variation = &"Hint"
+autowrap_mode = 3
+text = "Bestwerte über alle Läufe — kein Lernziel, nur zum Angeben."
+
+[node name="RecordList" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/RecordSection"]
+theme_type_variation = &"Tight"
+unique_name_in_owner = true
+
 [node name="CurveSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter/Overview"]
 theme_type_variation = &"Tight"
 

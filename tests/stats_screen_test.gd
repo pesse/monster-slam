@@ -1,5 +1,5 @@
 extends GdUnitTestSuite
-## Statistik-Screen: Auswahlregeln der Listen und Aufbau der Szene (Issue #5, #9).
+## Statistik-Screen: Auswahlregeln der Listen und Rekorde, Aufbau der Szene (Issue #5, #9, #11).
 ##
 ## Die Auswahl wird an der statischen wanted_rows() geprüft — mit erfundenen Zeilen im
 ## Format von PlayerProgress.records_for_display(), also ohne den echten Lernstand des
@@ -118,6 +118,56 @@ func test_comeback_list_is_sorted_by_misses_then_recency() -> void:
 	assert_str(str(comeback[1]["label"])).is_equal("dreimal neu")
 
 
+# --- Kampf-Rekorde (Issue #11) -------------------------------------------------
+
+func _records(extra := {}) -> Dictionary:
+	var out := {
+		"sessions": 3, "highest_wave_cleared": 7, "best_no_leak_streak": 12,
+		"monsters_defeated": 140, "monsters_leaked": 9, "min_fortress_health": 30,
+		"best_fortress_floor": 80,
+	}
+	out.merge(extra, true)
+	return out
+
+
+## Ohne Sitzung gibt es keine Rekord-Zeilen — „0 Monster besiegt" ist kein leerer Block,
+## sondern ein falscher.
+func test_without_a_session_there_are_no_record_rows() -> void:
+	assert_array(STATS_SCREEN.record_rows(_records({"sessions": 0}))).is_empty()
+
+
+func test_the_records_read_their_values_from_the_session_log() -> void:
+	var rows := STATS_SCREEN.record_rows(_records())
+	assert_int(rows.size()).is_equal(4)
+	assert_str(str(rows[0]["value"])).is_equal("7")
+	assert_str(str(rows[1]["value"])).is_equal("12 Monster")
+	assert_str(str(rows[2]["value"])).is_equal("140")
+
+
+## Der schonendste Lauf ist der höchste der lauf-eigenen Tiefstände — NICHT der tiefste
+## Stand überhaupt, der daneben im selben Dictionary steht.
+func test_the_gentlest_run_is_shown_not_the_lowest_health_ever() -> void:
+	var rows := STATS_SCREEN.record_rows(_records())
+	assert_str(str(rows[3]["value"])).is_equal("nie unter 80 HP")
+
+
+## Die Auszeichnung hängt an der Schwelle und sonst an nichts.
+func test_the_shield_comes_with_the_threshold() -> void:
+	var under := STATS_SCREEN.record_rows(
+			_records({"best_fortress_floor": STATS_SCREEN.SPOTLESS_FORTRESS_HP - 1}))
+	assert_str(str(under[3]["mark"])).is_empty()
+	var at := STATS_SCREEN.record_rows(
+			_records({"best_fortress_floor": STATS_SCREEN.SPOTLESS_FORTRESS_HP}))
+	assert_str(str(at[3]["mark"])).is_not_empty()
+
+
+## Gespielt, aber kein Lauf ordentlich beendet: die drei gezählten Bestwerte stehen da,
+## die Zeile über die Festung bleibt weg statt einen erfundenen Stand zu behaupten.
+func test_an_unknown_fortress_low_drops_its_row() -> void:
+	var rows := STATS_SCREEN.record_rows(_records({"best_fortress_floor": -1}))
+	assert_int(rows.size()).is_equal(3)
+
+
 ## Die Szene muss sich bauen lassen und ihre drei Listen über die eindeutigen Namen
 ## finden — genau das geht in einer handgeschriebenen .tscn leicht schief.
 func test_scene_builds_and_finds_its_lists() -> void:
@@ -128,6 +178,7 @@ func test_scene_builds_and_finds_its_lists() -> void:
 	assert_object(screen.get_node("%FreshList")).is_not_null()
 	assert_object(screen.get_node("%ComebackList")).is_not_null()
 	assert_object(screen.get_node("%TaskList")).is_not_null()
+	assert_object(screen.get_node("%RecordList")).is_not_null()
 	assert_object(screen.get_node("%BackButton")).is_not_null()
 	# Sieben Kennzahlen-Zeilen füllt _refresh_numbers beim Betreten (Gold zuerst, dann
 	# Level).

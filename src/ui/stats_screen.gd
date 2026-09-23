@@ -10,16 +10,16 @@ extends Control
 ## Zeichen-Control der Kurve in stats_chart.gd; hier wird nur befüllt.
 ##
 ## Drei Reiter: „Überblick" trägt die Abschnitte, die zum Weiterspielen motivieren
-## (Tages-Serie #6, Kennzahlen #5, Lernkurve #7, frisch gemeistert und Comeback #9,
-## Fahndungsliste #5), „Fortschritt" die Balken pro Unit und Thema (#8) — die wachsen mit
-## dem Katalog und schöben im Überblick alles andere aus dem Bild —, „Aufgaben" die
+## (Tages-Serie #6, Kennzahlen #5, Kampf-Rekorde #11, Lernkurve #7, frisch gemeistert und
+## Comeback #9, Fahndungsliste #5), „Fortschritt" die Balken pro Unit und Thema (#8) — die
+## wachsen mit dem Katalog und schöben im Überblick alles andere aus dem Bild —, „Aufgaben" die
 ## vollständige Liste der Learnables. Ein Balken lässt sich aufklappen und zeigt dann die
 ## WÖRTER seiner Gruppe mit Prozentstand: „18 von 24" sagt nicht, welche sechs fehlen,
 ## und im Reiter „Aufgaben" stehen sie als zwei bis sechs Zeilen zwischen allen anderen.
 ##
 ## Die beiden Maße auseinanderzuhalten ist der Sinn der Reiter-Namen: „Aufgaben" zählt
 ## learnable_ids (Richtung, Form, Relation — das Maß von mastered_count), „Fortschritt"
-## zählt Wörter (beide Übersetzungsrichtungen — das Maß von mastered_lexemes). Was noch fehlt (Kampf-Rekorde), liegt in SessionLog bereit.
+## zählt Wörter (beide Übersetzungsrichtungen — das Maß von mastered_lexemes).
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 const ROW_SCENE := preload("res://scenes/ui/stat_row.tscn")
@@ -40,11 +40,16 @@ const FRESH_DAYS := 7
 const COMEBACK_MISSES := 3
 ## Beschriftung der beiden Übersetzungsrichtungen im Mouseover einer Wortzeile.
 const DIRECTION_LABELS := {"de_to_en": "de→en", "en_to_de": "en→de"}
+## Ab diesem HP-Stand trägt der schonendste Lauf seine Auszeichnung. Ein fester Betrag
+## und kein Anteil des Maximums: wer sein Maximum über die Fähigkeiten angehoben hat, hat
+## sich das Polster verdient — und die Sitzungen schreiben ihr Maximum nicht mit.
+const SPOTLESS_FORTRESS_HP := 90
 
 @onready var _streak_label: Label = %StreakLabel
 @onready var _coin_label: Label = %CoinLabel
 @onready var _coin_strip: CoinStrip = %CoinStrip
 @onready var _stat_lines: VBoxContainer = %StatLines
+@onready var _record_list: VBoxContainer = %RecordList
 @onready var _curve: StatsChart = %Curve
 @onready var _curve_caption: Label = %CurveCaption
 @onready var _fresh_list: VBoxContainer = %FreshList
@@ -68,6 +73,7 @@ func _ready() -> void:
 func _refresh() -> void:
 	_refresh_streak()
 	_refresh_numbers()
+	_refresh_records()
 	_refresh_curve()
 	_refresh_lists()
 	_refresh_wanted()
@@ -123,6 +129,67 @@ func _refresh_numbers() -> void:
 		PlayerProgress.seen_count(), PlayerProgress.total_attempts()])
 	_add_line(_stat_lines, "Beste Serie: %d" % PlayerProgress.best_streak_overall())
 	_add_line(_stat_lines, "Heute fällig: %d" % PlayerProgress.due_count())
+
+
+## Kampf-Rekorde über alle Sitzungen (Issue #11).
+##
+## Der Angeber-Anteil: Bestwerte, die kein Lernziel sind. Sie stehen bei den Kennzahlen
+## und nicht zwischen den Wortlisten — dort geht es um Wörter, hier um Zahlen.
+func _refresh_records() -> void:
+	_clear(_record_list)
+	var rows := record_rows(SessionLog.records())
+	if rows.is_empty():
+		_add_line(_record_list, "Noch kein Lauf gespielt — die Bestwerte kommen mit der ersten Welle.")
+		return
+	for row in rows:
+		_add_row(_record_list, str(row["label"]), str(row["value"]),
+				str(row["mark"]), str(row["hint"]))
+
+
+## Die Kampf-Rekorde als fertige Zeilen (Bezeichnung, Wert, Zeichen, Hinweis) aus den
+## Bestwerten von SessionLog.records().
+##
+## Statisch und über das Dictionary statt über das Autoload — dieselbe Aufteilung wie bei
+## wanted_rows(): so ist die Auswahl mit erfundenen Bestwerten prüfbar, ohne den echten
+## Verlauf des Spielers anzufassen.
+##
+## Ohne Sitzung gibt es keine Zeilen: „0 Monster besiegt, nie unter 0 HP" wäre kein
+## leerer Block, sondern ein falscher.
+static func record_rows(records: Dictionary) -> Array:
+	if int(records.get("sessions", 0)) == 0:
+		return []
+	var rows: Array = [
+		{
+			"label": "Höchste geräumte Welle",
+			"value": "%d" % int(records.get("highest_wave_cleared", 0)),
+			"mark": "",
+			"hint": "Wellen laufen strikt in Folge — zugleich die Wellenzahl deines besten Laufs",
+		},
+		{
+			"label": "Längste Serie ohne Durchlass",
+			"value": "%d Monster" % int(records.get("best_no_leak_streak", 0)),
+			"mark": "",
+			"hint": "erledigte Monster am Stück; ein aufgefangener Treffer bricht sie trotzdem",
+		},
+		{
+			"label": "Monster besiegt",
+			"value": "%d" % int(records.get("monsters_defeated", 0)),
+			"mark": "",
+			"hint": "über alle Läufe zusammen",
+		},
+	]
+	# Der schonendste Lauf ist der HÖCHSTE der lauf-eigenen Tiefstände, nicht der tiefste
+	# Stand überhaupt. Fehlt er (abgebrochene Läufe schreiben ihn nicht mit), bleibt die
+	# Zeile weg, statt einen erfundenen Stand zu behaupten.
+	var floor_hp := int(records.get("best_fortress_floor", -1))
+	if floor_hp >= 0:
+		rows.append({
+			"label": "Schonendster Lauf",
+			"value": "nie unter %d HP" % floor_hp,
+			"mark": "🛡️" if floor_hp >= SPOTLESS_FORTRESS_HP else "",
+			"hint": "tiefster HP-Stand deines saubersten Laufs; das Schild gibt es ab %d HP" % SPOTLESS_FORTRESS_HP,
+		})
+	return rows
 
 
 ## Lernkurve „gemeisterte Aufgaben" (Issue #7).
@@ -531,7 +598,8 @@ func _add_line(box: VBoxContainer, text: String) -> void:
 	box.add_child(label)
 
 
-func _add_row(box: VBoxContainer, name_text: String, value_text: String, mark_text := "") -> void:
+func _add_row(box: VBoxContainer, name_text: String, value_text: String, mark_text := "",
+		hint := "") -> void:
 	var row := ROW_SCENE.instantiate() as StatRow
 	box.add_child(row)
-	row.setup(name_text, value_text, mark_text)
+	row.setup(name_text, value_text, mark_text, hint)

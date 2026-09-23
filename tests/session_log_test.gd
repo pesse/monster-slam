@@ -242,6 +242,42 @@ func test_records_take_maximum_and_sum_over_sessions() -> void:
 ## darf nicht aus einer leeren Datei entstehen.
 func test_records_report_unknown_fortress_low_without_sessions() -> void:
 	assert_int(int(_log.records()["min_fortress_health"])).is_equal(-1)
+	assert_int(int(_log.records()["best_fortress_floor"])).is_equal(-1)
+
+
+## Der schonendste Lauf ist der HÖCHSTE der lauf-eigenen Tiefstände — der tiefste Stand
+## überhaupt steht daneben und ist etwas anderes. Beide aus denselben Sitzungen.
+func test_the_gentlest_run_is_the_highest_of_the_per_run_lows() -> void:
+	_log._sessions = [
+		_fake_session(-3, {"min_fortress_health": 40}),
+		_fake_session(-2, {"min_fortress_health": 95}),
+		_fake_session(-1, {"min_fortress_health": 70}),
+	]
+	var r: Dictionary = _log.records()
+	assert_int(int(r["best_fortress_floor"])).is_equal(95)
+	assert_int(int(r["min_fortress_health"])).is_equal(40)
+
+
+## Eine Sitzung ohne mitgeschriebenen Stand (-1) zählt für keinen der beiden Werte.
+func test_a_session_without_a_fortress_low_counts_for_neither() -> void:
+	_log._sessions = [_fake_session(-2, {"min_fortress_health": -1}),
+			_fake_session(-1, {"min_fortress_health": 60})]
+	var r: Dictionary = _log.records()
+	assert_int(int(r["best_fortress_floor"])).is_equal(60)
+	assert_int(int(r["min_fortress_health"])).is_equal(60)
+
+
+## Die laufende Sitzung darf keinen makellosen Lauf behaupten: ihren Tiefstand liest erst
+## end() von GameState ab. Bis dahin ist er unbekannt — sonst trüge jeder Absturz mitten
+## im Lauf (load_sessions schreibt die offene Sitzung als `aborted` fest) die volle
+## Festung in die Rekorde.
+func test_a_running_session_claims_no_fortress_record() -> void:
+	_log.begin()
+	_log.note_answer(true, 900)
+	assert_int(int(_log.records()["best_fortress_floor"])).is_equal(-1)
+	GameState.min_fortress_health = 55
+	_log.end()
+	assert_int(int(_log.records()["best_fortress_floor"])).is_equal(55)
 
 
 # --- Persistenz ---------------------------------------------------------------
