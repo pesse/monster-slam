@@ -367,11 +367,14 @@ Beim Arbeiten daran zu beachten:
   `SlowMotion` bekommen DASSELBE Dictionary — eine Quelle der Boni, nicht zwei. Beide
   `apply_skills` nehmen ein einfaches Dictionary und kein Autoload, damit sie ohne
   `SkillBook` und ohne installierte Inhalte prüfbar sind.
-- **Die Rüstung ist per WELLE, das Leben per Lauf.** `_on_wave_started` füllt sie wieder
-  auf — die eine Ausnahme von „der Wellenstart fasst die Festung nicht an", und der Grund,
-  aus dem das Bollwerk etwas anderes tut als ein höheres Maximum. Ein aufgefangener Treffer
-  zählt trotzdem als durchgelassen (Serie hin, `monsters_leaked` hoch); `min_fortress_health`
-  hängt am Leben und nicht an der Rüstung.
+- **Die Rüstung ist ein Vorrat des Laufs, zurück kommt nur die Instandsetzung.** Ast 0
+  des Bollwerks vergrößert den Vorrat (`fortress_armor`), Ast 1 gibt je Wellenstart einen
+  Betrag zurück (`armor_regen`), gedeckelt am Vorrat — die eine Ausnahme von „der
+  Wellenstart fasst die Festung nicht an". Früher füllte jede Welle die Rüstung GANZ auf;
+  voll ausgebaut fing das neun Monster je Welle ab, und ein Lauf endete nicht mehr. Wer an
+  den Beträgen dreht, vergleicht mit der Genesung, die nur an BESIEGTEN Monstern heilt.
+  Ein aufgefangener Treffer zählt trotzdem als durchgelassen (Serie hin, `monsters_leaked`
+  hoch); `min_fortress_health` hängt am Leben und nicht an der Rüstung.
 - **Die Zeitlupe hat eine Untergrenze** (`SkillTree.MIN_SLOW_FACTOR`): `Engine.time_scale`
   auf 0 wäre ein eingefrorenes Spiel, in dem die Haltedauer nach Wanduhr weiterliefe.
 - **Die Rüstung steht im HUD ÜBER dem Lebensbalken und OHNE Zahl.** Ein „🛡90" am HP-Text

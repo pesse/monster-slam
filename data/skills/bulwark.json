@@ -4,7 +4,7 @@
 		"kind": "tree",
 		"order": 2,
 		"name": "Bollwerk",
-		"description": "Zu Beginn jeder Welle trägt die Festung Rüstung. Sie geht vor dem Leben auf.",
+		"description": "Rüstung geht vor dem Leben auf. Der eine Ast vergrößert den Vorrat, der andere setzt ihn zu jeder Welle ein Stück instand.",
 		"color": "#7fa8d8"
 	},
 	{
@@ -13,7 +13,7 @@
 		"tree": "tree.bulwark",
 		"name": "Holzpalisade",
 		"icon": "🪵",
-		"description": "10 Rüstung zu Beginn jeder Welle.",
+		"description": "Die Festung beginnt den Lauf mit 10 Rüstung.",
 		"cost": 1,
 		"tier": 1,
 		"branch": 0,
@@ -28,7 +28,7 @@
 		"tree": "tree.bulwark",
 		"name": "Steinwall",
 		"icon": "🧱",
-		"description": "15 Rüstung mehr.",
+		"description": "15 Rüstung mehr im Vorrat.",
 		"cost": 1,
 		"tier": 2,
 		"branch": 0,
@@ -45,7 +45,7 @@
 		"tree": "tree.bulwark",
 		"name": "Eisentor",
 		"icon": "🚪",
-		"description": "15 Rüstung mehr.",
+		"description": "5 Rüstung kommen zu jeder Welle zurück.",
 		"cost": 1,
 		"tier": 2,
 		"branch": 1,
@@ -53,7 +53,7 @@
 			"skill.armor.root"
 		],
 		"effects": {
-			"fortress_armor": 15
+			"armor_regen": 5
 		}
 	},
 	{
@@ -62,7 +62,7 @@
 		"tree": "tree.bulwark",
 		"name": "Bastion",
 		"icon": "🏰",
-		"description": "Und nochmal 25 Rüstung.",
+		"description": "Und nochmal 25 Rüstung im Vorrat.",
 		"cost": 2,
 		"tier": 3,
 		"branch": 0,
@@ -79,7 +79,7 @@
 		"tree": "tree.bulwark",
 		"name": "Fallgitter",
 		"icon": "⛓",
-		"description": "Und nochmal 25 Rüstung.",
+		"description": "Nochmal 10 Rüstung mehr zurück je Welle.",
 		"cost": 2,
 		"tier": 3,
 		"branch": 1,
@@ -87,7 +87,7 @@
 			"skill.armor.gate"
 		],
 		"effects": {
-			"fortress_armor": 25
+			"armor_regen": 10
 		}
 	}
 ]

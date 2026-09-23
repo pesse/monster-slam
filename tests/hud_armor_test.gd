@@ -68,14 +68,14 @@ func test_the_bar_empties_with_the_armor() -> void:
 	assert_float(bar.value).is_equal(0.0)
 
 
-## Die Welle füllt sie wieder auf — und das HUD zeigt es sofort, ohne dass jemand es
-## anstößt (der Wellenstart hängt am selben Signal wie der Fortschrittsbalken).
+## Die Instandsetzung am Wellenstart hebt sie wieder an — und das HUD zeigt es sofort, ohne
+## dass jemand es anstößt (der Wellenstart hängt am selben Signal wie der Fortschrittsbalken).
 func test_a_new_wave_refills_the_bar() -> void:
-	GameState.apply_skills({"fortress_armor": 40})
+	GameState.apply_skills({"fortress_armor": 40, "armor_regen": 15})
 	var bar := _armor_bar(_hud())
 	EventBus.fortress_damaged.emit(40)
 	EventBus.wave_started.emit("procedural_2")
-	assert_float(bar.value).is_equal(40.0)
+	assert_float(bar.value).is_equal(15.0)
 
 
 ## DER Grund für die gestapelte Anordnung: die Rüstung kostet Höhe, nicht Breite. Ginge

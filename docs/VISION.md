@@ -48,7 +48,8 @@ dauerhaft. Sie stehen in Bäumen, die sich verzweigen — man baut einen Ast aus
 den anderen liegen. Bisher drei:
 
 - **Genesung** — besiegte Monster heilen die Festung stärker
-- **Bollwerk** — die Festung bekommt zu Wellenbeginn Rüstung, die vor dem Leben aufgeht
+- **Bollwerk** — die Festung bekommt Rüstung, die vor dem Leben aufgeht: ein größerer
+  Vorrat (Ast *Wall*) oder Instandsetzung zu jedem Wellenbeginn (Ast *Tor*)
 - **Zeitwandler** — die Tipp-Zeitlupe hält länger (Ast *Dauer*) oder wird tiefer (Ast *Tiefe*)
 
 Ein Skill soll später auch einen Zauber freischalten können — das ist der Grund, aus dem

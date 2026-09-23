@@ -278,11 +278,12 @@ Start-Screen (`🌳 Fähigkeiten`), nicht am Kampf: gelernt wird zwischen den L�
   der Reset stellt die Grundwerte her, erst danach dürfen die Boni darauf, und der Aufruf
   zieht den HP-Stand auf das neue Maximum nach. Beide Empfänger bekommen DASSELBE
   Dictionary — eine Quelle der Boni, nicht zwei, die auseinanderlaufen können.
-- **Rüstung ist per Welle, Leben per Lauf.** `fortress_armor` wird zu jedem Wellenstart
-  auf `fortress_armor_max` gefüllt und liegt vor dem Leben; das ist die eine Ausnahme von
-  „der Wellenstart fasst die Festung nicht an" und der Grund, aus dem das Bollwerk etwas
-  anderes tut als ein höheres Maximum. Ein aufgefangener Treffer zählt trotzdem als
-  durchgelassen — eine aufgefangene Welle ist keine saubere.
+- **Rüstung ist ein Vorrat des Laufs, die Instandsetzung kommt je Welle.** `fortress_armor`
+  liegt vor dem Leben und wird wie die HP mitgenommen; zu jedem Wellenstart kommt
+  `fortress_armor_regen` dazu, gedeckelt an `fortress_armor_max` — die eine Ausnahme von
+  „der Wellenstart fasst die Festung nicht an". Eine Vollfüllung je Welle machte den Lauf
+  endlos. Ein aufgefangener Treffer zählt trotzdem als durchgelassen — eine aufgefangene
+  Welle ist keine saubere.
 - **Umlernen kostet Gold und ist alles oder nichts** (`SkillTree.RESPEC_GOLD_PER_POINT`).
   Einzelne Knoten zurückzunehmen müsste entscheiden, was mit den Ästen darüber geschieht,
   und die Antwort wäre in jedem Fall eine Überraschung.

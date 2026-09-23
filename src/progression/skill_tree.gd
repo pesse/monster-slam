@@ -90,6 +90,7 @@ const TITLE_GAP := 56.0
 const EFFECT_KEYS: Array[String] = [
 	"heal_per_correct",
 	"fortress_armor",
+	"armor_regen",
 	"max_health",
 	"slow_hold_ms",
 	"slow_factor",
@@ -374,7 +375,9 @@ static func effect_label(key: String, value: float) -> String:
 		"heal_per_correct":
 			return "+%d HP je besiegtem Monster" % int(round(value))
 		"fortress_armor":
-			return "+%d Rüstung je Welle" % int(round(value))
+			return "+%d Rüstung" % int(round(value))
+		"armor_regen":
+			return "+%d Rüstung zurück je Welle" % int(round(value))
 		"max_health":
 			return "+%d maximales Leben" % int(round(value))
 		"slow_hold_ms":

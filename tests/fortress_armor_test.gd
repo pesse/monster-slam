@@ -1,8 +1,9 @@
 extends GdUnitTestSuite
-## Die Rüstung des Bollwerk-Baums: Polster VOR dem Leben, neu gefüllt zu jeder Welle.
+## Die Rüstung des Bollwerk-Baums: ein Vorrat VOR dem Leben, der über die Wellen
+## mitgenommen wird. Zurück kommt je Welle nur die Instandsetzung, gedeckelt am Vorrat.
 ##
 ## Das ist die eine Stelle, an der der Wellenstart die Festung doch anfasst (siehe
-## game_state.gd:103-112) — und die Stelle, an der ein Schadensereignis zwei Dinge tut:
+## GameState._on_wave_started) — und die Stelle, an der ein Schadensereignis zwei Dinge tut:
 ## Rüstung abtragen UND als durchgelassenes Monster zählen. Beides steht hier auf dem
 ## Prüfstand, weil beides beim nächsten Umbau leicht zusammenfällt.
 ##
@@ -26,9 +27,9 @@ func _damage(amount: int) -> void:
 
 ## Ein Lauf mit gelerntem Bollwerk-Baum: reset(), dann die Boni, dann die erste Welle —
 ## genau die Reihenfolge aus WaveRunner._ready().
-func _run_with_armor(armor: int) -> void:
+func _run_with_armor(armor: int, regen: int = 0) -> void:
 	GameState.reset()
-	GameState.apply_skills({"fortress_armor": armor})
+	GameState.apply_skills({"fortress_armor": armor, "armor_regen": regen})
 	EventBus.wave_started.emit("procedural_1")
 
 
@@ -63,16 +64,45 @@ func test_the_run_starts_with_full_armor() -> void:
 	assert_int(GameState.fortress_armor).is_equal(25)
 
 
-## DER Grund für den Baum: die Rüstung kommt jede Welle zurück, das Leben nicht. Ohne das
-## wäre das Bollwerk nur ein umständlicheres höheres Maximum.
-func test_every_wave_refills_the_armor_but_not_the_health() -> void:
+## Ohne Instandsetzung gibt es den Vorrat einmal je Lauf. Früher füllte jede Welle ihn
+## ganz auf — und ein voll ausgebauter Baum fing neun Monster je Welle ab, ohne Ende.
+func test_without_repair_the_armor_does_not_come_back() -> void:
 	_run_with_armor(40)
 	_damage(60)
 	assert_int(GameState.fortress_armor).is_equal(0)
+	EventBus.wave_started.emit("procedural_2")
+	assert_int(GameState.fortress_armor).is_equal(0)
 	assert_int(GameState.fortress_health).is_equal(GameState.fortress_max_health - 20)
+
+
+## Die Instandsetzung gibt je Wellenstart ihren Betrag zurück, nicht den ganzen Vorrat —
+## und das Leben bleibt dabei, wo es war.
+func test_repair_restores_part_of_the_armor_each_wave() -> void:
+	_run_with_armor(40, 10)
+	_damage(60)
+	EventBus.wave_started.emit("procedural_2")
+	assert_int(GameState.fortress_armor).is_equal(10)
+	EventBus.wave_started.emit("procedural_3")
+	assert_int(GameState.fortress_armor).is_equal(20)
+	assert_int(GameState.fortress_health).is_equal(GameState.fortress_max_health - 20)
+
+
+## Mehr als der Vorrat kommt nicht zurück — auch nicht in der ersten Welle, die schon voll
+## beginnt.
+func test_repair_stops_at_the_maximum() -> void:
+	_run_with_armor(40, 15)
+	assert_int(GameState.fortress_armor).is_equal(40)
+	_damage(10)
 	EventBus.wave_started.emit("procedural_2")
 	assert_int(GameState.fortress_armor).is_equal(40)
-	assert_int(GameState.fortress_health).is_equal(GameState.fortress_max_health - 20)
+
+
+## Eine verbogene Datei darf keine Rüstung wegnehmen, indem sie sie „instandsetzt".
+func test_a_negative_repair_takes_no_armor() -> void:
+	_run_with_armor(40, -30)
+	assert_int(GameState.fortress_armor_regen).is_equal(0)
+	EventBus.wave_started.emit("procedural_2")
+	assert_int(GameState.fortress_armor).is_equal(40)
 
 
 ## Eine verbogene Datei darf keine negative Rüstung erzeugen — die würde beim ersten

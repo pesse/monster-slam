@@ -18,13 +18,14 @@ const FORTRESS_BASE_HEAL_PER_CORRECT := 1
 var fortress_max_health: int = FORTRESS_BASE_MAX_HEALTH
 var fortress_heal_per_correct: int = FORTRESS_BASE_HEAL_PER_CORRECT
 
-## Rüstung aus dem Bollwerk-Baum. `fortress_armor_max` ist der Vorrat je Welle (0 ohne
-## Skill), `fortress_armor` der Rest der laufenden Welle. Sie geht VOR dem Leben auf und
-## wird zu jedem Wellenbeginn neu gefüllt — anders als die HP, die über die Wellen hinweg
-## mitgenommen werden. Das ist der Unterschied, aus dem der Baum seinen Sinn zieht: Leben
-## ist das Polster des Laufs, Rüstung das der einzelnen Welle.
+## Rüstung aus dem Bollwerk-Baum. `fortress_armor_max` ist der Vorrat (0 ohne Skill),
+## `fortress_armor` der Rest davon. Sie geht VOR dem Leben auf und wird wie die HP über die
+## Wellen hinweg mitgenommen. Zurück kommt nur `fortress_armor_regen` je Wellenstart,
+## gedeckelt am Vorrat — früher füllte jede Welle die Rüstung ganz auf, und ein voll
+## ausgebauter Baum fing damit neun Monster je Welle ab: ein Lauf ohne Ende.
 var fortress_armor_max: int = 0
 var fortress_armor: int = 0
+var fortress_armor_regen: int = 0
 
 var fortress_health: int = FORTRESS_BASE_MAX_HEALTH
 var score: int = 0
@@ -68,6 +69,7 @@ func reset() -> void:
 	fortress_heal_per_correct = FORTRESS_BASE_HEAL_PER_CORRECT
 	fortress_armor_max = 0
 	fortress_armor = 0
+	fortress_armor_regen = 0
 	fortress_health = fortress_max_health
 	score = 0
 	current_wave = ""
@@ -94,6 +96,7 @@ func apply_skills(bonuses: Dictionary) -> void:
 	fortress_heal_per_correct = maxi(1,
 			FORTRESS_BASE_HEAL_PER_CORRECT + int(bonuses.get("heal_per_correct", 0)))
 	fortress_armor_max = maxi(0, int(bonuses.get("fortress_armor", 0)))
+	fortress_armor_regen = maxi(0, int(bonuses.get("armor_regen", 0)))
 	# Der Lauf beginnt voll: erst hier steht fest, wie hoch „voll" ist.
 	fortress_health = fortress_max_health
 	min_fortress_health = fortress_max_health
@@ -106,12 +109,12 @@ func apply_skills(bonuses: Dictionary) -> void:
 ## Laufs (reset()) — eine gefallene Festung beendet den Lauf, eine Folgewelle mit 0 HP
 ## gibt es nicht (der Statistik-Screen bietet sie dann nicht an, siehe wave_stats.gd).
 ##
-## Die RÜSTUNG dagegen wird hier neu gefüllt — sie ist der Vorrat einer Welle, nicht der
-## des Laufs. Das ist die eine Ausnahme von „der Wellenstart fasst die Festung nicht an",
-## und sie ist der Grund, aus dem der Bollwerk-Baum etwas anderes tut als ein höheres
-## Maximum: er gibt Polster zurück, das die letzte Welle verbraucht hat.
+## Die RÜSTUNG wird hier um die Instandsetzung ergänzt, gedeckelt am Vorrat — die eine
+## Ausnahme von „der Wellenstart fasst die Festung nicht an". Ohne den Instandsetzungs-Ast
+## gibt es den Vorrat einmal je Lauf. Die erste Welle beginnt trotzdem voll: das hat
+## `apply_skills` schon erledigt, der Zuschlag hier bleibt am Maximum hängen.
 func _on_wave_started(_wave_id: String) -> void:
-	fortress_armor = fortress_armor_max
+	fortress_armor = mini(fortress_armor_max, fortress_armor + fortress_armor_regen)
 	# Der Zähler gehört zum Wellenstart, nicht zur Gesamtzahl: wave_totals kann sich
 	# mitten in der Welle nochmal ändern (ausgefallener Spawn, WaveRunner._spawn) —
 	# ein Reset dort würde den HUD-Balken grundlos zurückwerfen.
