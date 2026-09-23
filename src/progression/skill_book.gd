@@ -1,9 +1,10 @@
 extends Node
 ## Die gelernten Skills des Profils (Autoload `SkillBook`).
 ##
-## Gekauft werden sie mit Skillpunkten, die aus Levelups kommen (PlayerLevel), umgelernt
-## wird gegen Gold (Wallet). Wie Gold und Erfahrung gehört das Gelernte zum PROFIL und
-## nicht zum Lauf: eine gefallene Festung kostet den Lauf, nicht das Gelernte.
+## Gekauft werden sie mit Skillpunkten, die aus Levelups kommen (PlayerLevel), zurück-
+## genommen — alles oder ein einzelner Knoten — gegen Gold (Wallet). Wie Gold und Erfahrung
+## gehört das Gelernte zum PROFIL und nicht zum Lauf: eine gefallene Festung kostet den
+## Lauf, nicht das Gelernte.
 ##
 ## Die Ebenen daneben: PlayerProgress hält den Lernstand pro Aufgabe, SessionLog den
 ## Verlauf je Lauf, GameState den Zustand des laufenden Laufs, Wallet das Gold,
@@ -21,7 +22,7 @@ extends Node
 
 const SAVE_DIR := "user://progress"
 
-## Die gelernten Skills haben sich geändert (Kauf, Umlernen, Profilwechsel). Die Anzeigen
+## Die gelernten Skills haben sich geändert (Kauf, Verlernen, Umlernen, Profilwechsel). Die Anzeigen
 ## hängen daran, statt nachzufragen.
 signal changed()
 
@@ -71,9 +72,37 @@ func unlock(id: String) -> bool:
 	return true
 
 
-## Gibt alle Punkte zurück und kostet dafür Gold. Alles oder nichts: ein Umlernen
-## einzelner Knoten müsste entscheiden, was mit den Ästen darüber geschieht — und die
-## Antwort darauf wäre in jedem Fall eine Überraschung.
+## Verlernt EINEN Knoten gegen Gold, und mit ihm jeden gelernten Knoten, der über ihn
+## hängt (`SkillTree.forget_set`) — eine Vorstufe ohne ihren Ast darüber gibt es nicht.
+## Reicht das Gold nicht oder ist der Knoten nicht gelernt, bleibt alles unberührt.
+func forget(id: String) -> bool:
+	var list := entries()
+	var gone := SkillTree.forget_set(list, id, unlocked)
+	if gone.is_empty():
+		return false
+	var price := SkillTree.forget_cost(list, id, unlocked)
+	# Ein Knoten für 0 Punkte kostet auch 0 Gold — `Wallet.spend(0)` lehnt ab, also nur
+	# zahlen, wenn es etwas zu zahlen gibt.
+	if price > 0 and not Wallet.spend(price):
+		return false
+	var kept := PackedStringArray()
+	for other in unlocked:
+		if other not in gone:
+			kept.append(other)
+	unlocked = kept
+	_save()
+	changed.emit()
+	return true
+
+
+## Was das Verlernen von `id` gerade kostet (für Karte und Rückfrage).
+func forget_cost(id: String) -> int:
+	return SkillTree.forget_cost(entries(), id, unlocked)
+
+
+## Gibt alle Punkte zurück und kostet dafür Gold, je Punkt (`RESPEC_GOLD_PER_POINT`). Im
+## Ergebnis dasselbe wie `forget` an jeder Wurzel, aber teurer: wer alles umwirft, zahlt
+## für jeden ausgegebenen Punkt, wer einzeln verlernt, nur je Knoten.
 func respec() -> bool:
 	var spent := SkillTree.spent(entries(), unlocked)
 	if spent <= 0:

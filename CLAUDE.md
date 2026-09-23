@@ -426,10 +426,19 @@ Beim Arbeiten daran zu beachten:
   `update_dialog`, **kein `Window`**). Ein ausgegebener Skillpunkt kommt nur gegen Gold
   zurück — das ist keine Entscheidung für einen unbeabsichtigten Klick. Der Fokus liegt
   auf ABBRECHEN, damit die Eingabetaste nichts ausgibt. Gefragt wird nur, wo es etwas zu
-  entscheiden gibt: ein gelernter, gesperrter oder unbezahlbarer Knoten öffnet nichts,
-  denn warum, steht schon in der Karte. Deshalb meldet `SkillGraph.select()` JEDEN Klick,
-  auch den auf den schon gewählten Knoten — sonst ließe sich ein abgebrochener Antrag
-  nicht neu stellen.
+  entscheiden gibt: ein gesperrter oder unbezahlbarer Knoten öffnet nichts, denn warum,
+  steht schon in der Karte. Deshalb meldet `SkillGraph.select()` JEDEN Klick, auch den
+  auf den schon gewählten Knoten — sonst ließe sich ein abgebrochener Antrag nicht neu
+  stellen.
+- **Ein gelernter Knoten lässt sich einzeln verlernen** (Issue #20, `SkillBook.forget`),
+  und mit ihm fällt jeder gelernte Knoten, der über ihn hängt (`SkillTree.forget_set`) —
+  ein Knoten ohne seine Vorstufe ist ein Zustand, den das Lernen nie herstellen kann. Die
+  Rückfrage nennt jeden mitfallenden Knoten beim Namen; das ist die eine Stelle, an der
+  das Verlernen überraschen könnte. Bezahlt wird je fallendem KNOTEN
+  (`FORGET_GOLD_PER_NODE`), nicht je Punkt wie beim Umlernen (`RESPEC_GOLD_PER_POINT`):
+  der Preis wächst mit den Kindeskindern, nicht mit dem, was der Knoten gekostet hat. Der
+  Satz liegt unter dem des Umlernens, einzeln ist also immer günstiger als alles. Reicht
+  das Gold nicht, öffnet der Klick nichts, und die Karte sagt warum.
 - **„Ansicht einpassen" und „Umlernen" sind Zeichen am unteren rechten Rand der
   Zeichenfläche** (⛶ und ↺), nicht beschriftete Knöpfe unter dem Netz: sie gehören zur
   Fläche, die sie bedienen. Was sie tun und was sie kosten, steht in ihrer Karte am Zeiger

@@ -180,3 +180,51 @@ func test_respec_is_priced_per_point() -> void:
 func test_respec_without_spent_points_is_free() -> void:
 	assert_int(SkillTree.respec_cost(0)).is_equal(0)
 	assert_int(SkillTree.respec_cost(-3)).is_equal(0)
+
+
+# --- Verlernen ---------------------------------------------------------------
+
+## Ein Blatt fällt allein — nichts hängt darüber.
+func test_forgetting_a_leaf_takes_only_the_leaf() -> void:
+	var learned := PackedStringArray(["skill.test.root", "skill.test.left", "skill.test.right"])
+	assert_array(Array(SkillTree.forget_set(_entries, "skill.test.left", learned))
+			).is_equal(["skill.test.left"])
+
+
+## Die Äste darüber fallen mit, auch über Zwischenstufen — ein gelernter Knoten ohne seine
+## Vorstufe ist ein Zustand, den das Lernen nie herstellen kann.
+func test_forgetting_a_root_takes_everything_above_it() -> void:
+	var learned := PackedStringArray(["skill.test.root", "skill.test.left",
+			"skill.test.left2", "skill.test.right"])
+	assert_array(Array(SkillTree.forget_set(_entries, "skill.test.root", learned))
+			).is_equal(Array(learned))
+	assert_array(Array(SkillTree.forget_set(_entries, "skill.test.left", learned))
+			).is_equal(["skill.test.left", "skill.test.left2"])
+
+
+## Was nicht gelernt ist, lässt sich nicht verlernen — und kostet nichts.
+func test_an_unlearned_node_has_nothing_to_forget() -> void:
+	var learned := PackedStringArray(["skill.test.root"])
+	assert_array(Array(SkillTree.forget_set(_entries, "skill.test.left", learned))).is_empty()
+	assert_int(SkillTree.forget_cost(_entries, "skill.test.left", learned)).is_equal(0)
+
+
+## Gezahlt wird je Knoten, der fällt — nicht je Punkt: ein Blatt für 3 Punkte kostet so
+## viel wie eins für einen.
+func test_forgetting_is_priced_per_falling_node() -> void:
+	var learned := PackedStringArray(["skill.test.root", "skill.test.left",
+			"skill.test.left2", "skill.test.right", "skill.test.right2"])
+	assert_int(SkillTree.forget_cost(_entries, "skill.test.right2", learned)
+			).is_equal(SkillTree.FORGET_GOLD_PER_NODE)
+	assert_int(SkillTree.forget_cost(_entries, "skill.test.left", learned)
+			).is_equal(2 * SkillTree.FORGET_GOLD_PER_NODE)
+	assert_int(SkillTree.forget_cost(_entries, "skill.test.root", learned)
+			).is_equal(5 * SkillTree.FORGET_GOLD_PER_NODE)
+
+
+## Einzeln ist günstiger als alles — auch dann, wenn einzeln alles mitfällt.
+func test_forgetting_is_cheaper_than_respec() -> void:
+	var learned := PackedStringArray(["skill.test.root", "skill.test.left",
+			"skill.test.left2", "skill.test.right", "skill.test.right2"])
+	assert_int(SkillTree.forget_cost(_entries, "skill.test.root", learned)).is_less(
+			SkillTree.respec_cost(SkillTree.spent(_entries, learned)))

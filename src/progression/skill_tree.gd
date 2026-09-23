@@ -31,6 +31,13 @@ enum State {
 ## zu sein.
 const RESPEC_GOLD_PER_POINT := 25
 
+## Gold je verlerntem KNOTEN beim einzelnen Verlernen. Gezählt werden Knoten, nicht Punkte:
+## der Preis wächst mit dem, was mitfällt (der Knoten und seine Kindeskinder), nicht mit
+## dem, was er einmal gekostet hat — ein teures Blatt kostet so viel wie ein billiges.
+## Unter RESPEC_GOLD_PER_POINT, und jeder Knoten kostet mindestens einen Punkt: einzeln
+## ist damit immer günstiger als alles, weil man auch nur einen Teil zurücknimmt.
+const FORGET_GOLD_PER_NODE := 15
+
 ## Untergrenze des Zeitlupen-Faktors. `Engine.time_scale` auf 0 wäre ein eingefrorenes
 ## Spiel: die Monster stünden still, aber auch die Haltedauer liefe weiter — der Lauf
 ## käme nie zum Ende. Der Baum darf also beliebig tief gehen, nur nicht bis zum Stillstand.
@@ -249,6 +256,48 @@ static func bonuses(entries: Array, unlocked: PackedStringArray) -> Dictionary:
 ## nichts zurückzunehmen und der Preis ist 0 — der Knopf sperrt dann ohnehin.
 static func respec_cost(spent_points: int) -> int:
 	return maxi(0, spent_points) * RESPEC_GOLD_PER_POINT
+
+
+## Was mit einem Knoten verlernt wird: er selbst und jeder gelernte Knoten, der über ihn
+## hängt — auch über Zwischenstufen. In der Reihenfolge von `unlocked`, damit Dialog und
+## Buchung dieselbe Liste sehen.
+##
+## Die Äste darüber fallen MIT, statt stehen zu bleiben: ein gelernter Knoten ohne seine
+## Vorstufe wäre ein Zustand, den das Lernen nie herstellen kann. Und sie fallen nicht
+## still — der Screen nennt jeden beim Namen, bevor gefragt wird.
+##
+## Leer, wenn der Knoten gar nicht gelernt ist: dann gibt es nichts zurückzunehmen.
+static func forget_set(entries: Array, id: String,
+		unlocked: PackedStringArray) -> PackedStringArray:
+	if id not in unlocked:
+		return PackedStringArray()
+	var gone := PackedStringArray([id])
+	# Bis nichts mehr dazukommt: `requires` zeigt nach UNTEN, gesucht wird nach oben, und
+	# die Liste ist nicht nach Stufen sortiert.
+	var grew := true
+	while grew:
+		grew = false
+		for other in unlocked:
+			if other in gone:
+				continue
+			var node := node_by_id(entries, other)
+			for required in node.get("requires", []):
+				if str(required) in gone:
+					gone.append(other)
+					grew = true
+					break
+	var out := PackedStringArray()
+	for other in unlocked:
+		if other in gone:
+			out.append(other)
+	return out
+
+
+## Was das Verlernen eines Knotens kostet: FORGET_GOLD_PER_NODE je Knoten, der fällt —
+## er selbst und jeder gelernte Nachfahre. Ein Blatt ist das Billigste, eine Wurzel mit
+## ausgebautem Ast kostet entsprechend mehr.
+static func forget_cost(entries: Array, id: String, unlocked: PackedStringArray) -> int:
+	return forget_set(entries, id, unlocked).size() * FORGET_GOLD_PER_NODE
 
 
 # --- Das Netz -----------------------------------------------------------------

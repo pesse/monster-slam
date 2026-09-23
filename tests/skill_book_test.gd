@@ -236,3 +236,65 @@ func test_respec_without_skills_costs_nothing() -> void:
 	Wallet.gold = 500
 	assert_bool(_book.respec()).is_false()
 	assert_int(Wallet.gold).is_equal(500)
+
+
+# --- Verlernen ---------------------------------------------------------------
+
+## Ein einzelner Knoten gibt seine Punkte zurück und kostet Gold; der Rest bleibt.
+func test_forgetting_a_leaf_keeps_the_rest() -> void:
+	_give_points(5)
+	_book.unlock("s.root")
+	_book.unlock("s.left")
+	_book.unlock("s.right")
+	Wallet.gold = 1_000
+	var price := _book.forget_cost("s.right")
+	assert_int(price).is_equal(SkillTree.FORGET_GOLD_PER_NODE)
+	assert_bool(_book.forget("s.right")).is_true()
+	assert_array(Array(_book.unlocked)).is_equal(["s.root", "s.left"])
+	assert_int(_book.available()).is_equal(3)
+	assert_int(Wallet.gold).is_equal(1_000 - price)
+
+
+## Die Wurzel nimmt ihre Äste mit — und die sind im Preis enthalten.
+func test_forgetting_the_root_takes_its_branches() -> void:
+	_give_points(5)
+	_book.unlock("s.root")
+	_book.unlock("s.left")
+	Wallet.gold = 1_000
+	assert_bool(_book.forget("s.root")).is_true()
+	assert_array(Array(_book.unlocked)).is_empty()
+	assert_int(Wallet.gold).is_equal(1_000 - 2 * SkillTree.FORGET_GOLD_PER_NODE)
+
+
+## Reicht das Gold nicht, bleibt alles, wie es war — und es wird nichts gemeldet.
+func test_forgetting_without_gold_changes_nothing() -> void:
+	_give_points(3)
+	_book.unlock("s.root")
+	Wallet.gold = 0
+	var seen := [0]
+	_book.changed.connect(func() -> void: seen[0] += 1)
+	assert_bool(_book.forget("s.root")).is_false()
+	assert_array(Array(_book.unlocked)).is_equal(["s.root"])
+	assert_int(seen[0]).is_equal(0)
+
+
+## Was nicht gelernt ist, lässt sich nicht verlernen — und kein Gold wird genommen.
+func test_forgetting_an_unlearned_node_costs_nothing() -> void:
+	_give_points(3)
+	_book.unlock("s.root")
+	Wallet.gold = 500
+	assert_bool(_book.forget("s.left")).is_false()
+	assert_int(Wallet.gold).is_equal(500)
+
+
+## Verlernt ist verlernt, auch nach einem Neustart.
+func test_forgetting_survives_a_reload() -> void:
+	_give_points(3)
+	_book.unlock("s.root")
+	_book.unlock("s.left")
+	Wallet.gold = 1_000
+	_book.forget("s.left")
+	var reloaded: FixedBook = auto_free(FixedBook.new())
+	reloaded.player_id = TEST_PROFILE
+	reloaded.load_skills()
+	assert_array(Array(reloaded.unlocked)).is_equal(["s.root"])

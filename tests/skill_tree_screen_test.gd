@@ -365,7 +365,7 @@ func test_a_node_one_cannot_learn_opens_nothing() -> void:
 	# Gesperrt: die Wurzel fehlt.
 	_click_node(screen, "s.left")
 	assert_bool(_dialog(screen).visible).is_false()
-	# Gelernt: es gibt nichts mehr zu kaufen.
+	# Gelernt, aber ohne Gold fürs Verlernen: auch da gibt es nichts zu entscheiden.
 	_learn(screen, "s.root")
 	_click_node(screen, "s.root")
 	assert_bool(_dialog(screen).visible).is_false()
@@ -590,3 +590,61 @@ func test_the_dialog_fits_the_base_resolution() -> void:
 	var needed := panel.get_combined_minimum_size()
 	assert_float(needed.x).is_less_equal(1152.0)
 	assert_float(needed.y).is_less_equal(648.0)
+
+
+# --- Verlernen ---------------------------------------------------------------
+
+## Die Karte eines gelernten Knotens nennt den Preis fürs Verlernen — oder, ohne Gold,
+## warum es nicht geht.
+func test_a_learned_node_names_the_price_of_forgetting() -> void:
+	_give_points(2)
+	var screen := _screen()
+	await get_tree().process_frame
+	_learn(screen, "s.root")
+	assert_str(_card_text(screen, "s.root", "Note")).contains("Verlernen kostet")
+	Wallet.gold = 1_000
+	assert_str(_card_text(screen, "s.root", "Note")).contains("Klicken zum Verlernen") \
+			.contains(Wallet.label(SkillTree.FORGET_GOLD_PER_NODE))
+
+
+## Ein Klick auf einen gelernten Knoten fragt — und nennt die Äste, die mitfallen.
+func test_forgetting_asks_and_names_what_falls_along() -> void:
+	_give_points(2)
+	var screen := _screen()
+	await get_tree().process_frame
+	_learn(screen, "s.root")
+	_learn(screen, "s.left")
+	Wallet.gold = 1_000
+	_click_node(screen, "s.root")
+	assert_bool(_dialog(screen).visible).is_true()
+	assert_str(_dialog_title(screen)).contains("Wurzel").contains("verlernen")
+	assert_str(_dialog_body(screen)).contains("Links").contains("2 Skillpunkte")
+	_say_yes(screen)
+	assert_array(Array(_book.unlocked)).is_empty()
+	assert_int(Wallet.gold).is_equal(1_000 - 2 * SkillTree.FORGET_GOLD_PER_NODE)
+
+
+## Ein Blatt fällt allein, und der Dialog redet dann auch von keinem anderen.
+func test_forgetting_a_leaf_keeps_its_root() -> void:
+	_give_points(2)
+	var screen := _screen()
+	await get_tree().process_frame
+	_learn(screen, "s.root")
+	_learn(screen, "s.left")
+	Wallet.gold = 1_000
+	_click_node(screen, "s.left")
+	assert_str(_dialog_body(screen)).not_contains("Wurzel").contains("1 Skillpunkt")
+	_say_yes(screen)
+	assert_array(Array(_book.unlocked)).is_equal(["s.root"])
+
+
+func test_cancelling_the_forget_leaves_everything_alone() -> void:
+	_give_points(2)
+	var screen := _screen()
+	await get_tree().process_frame
+	_learn(screen, "s.root")
+	Wallet.gold = 1_000
+	_click_node(screen, "s.root")
+	_say_no(screen)
+	assert_array(Array(_book.unlocked)).is_equal(["s.root"])
+	assert_int(Wallet.gold).is_equal(1_000)

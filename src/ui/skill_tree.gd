@@ -34,8 +34,8 @@ const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 ## (tests/skill_tree_screen_test.gd). Gesetzt wird es VOR dem Einhängen in den Baum.
 var book: Node = null
 
-## Worauf die offene Rückfrage hinausläuft: `{"kind": "learn", "id": …}` oder
-## `{"kind": "respec"}`. Der Dialog kennt seinen Inhalt nicht — er fragt und meldet, und
+## Worauf die offene Rückfrage hinausläuft: `{"kind": "learn", "id": …}`,
+## `{"kind": "forget", "id": …}` oder `{"kind": "respec"}`. Der Dialog kennt seinen Inhalt nicht — er fragt und meldet, und
 ## was dann geschieht, steht hier. Leer heißt: es ist keine Frage offen.
 var _pending: Dictionary = {}
 
@@ -57,7 +57,9 @@ func _ready() -> void:
 	# Beide Stände hängen am Signal, statt nachzufragen: das Gelernte ändert sich hier,
 	# das Gold beim Umlernen — und der Umlern-Knopf trägt beides in seinem Tooltip.
 	book.changed.connect(_rebuild)
-	Wallet.changed.connect(func(_gold: int) -> void: _refresh_respec())
+	Wallet.changed.connect(func(_gold: int) -> void:
+			_refresh_respec()
+			Hints.refresh())
 	_rebuild()
 
 
@@ -110,6 +112,8 @@ func _hint_at(local: Vector2) -> Dictionary:
 	var note := SkillTree.tree_status(entries, book.unlocked, id) \
 			if str(node.get("kind", "")) == "tree" \
 			else SkillTree.state_label(entries, node, book.unlocked, book.available())
+	if book.is_unlocked(id):
+		note += " · " + _forget_note(id)
 	return {
 		"title": "%s %s" % [SkillTree.icon_of(node), str(node.get("name", ""))],
 		"body": str(node.get("description", "")),
@@ -117,12 +121,23 @@ func _hint_at(local: Vector2) -> Dictionary:
 	}
 
 
+## Die zweite Hälfte der Zeile an einem gelernten Knoten: was das Verlernen kostet, oder
+## warum es gerade nicht geht. Der Preis steht hier und nicht in `state_label`, weil er am
+## Gold hängt, und das kennen die Regeln nicht.
+func _forget_note(id: String) -> String:
+	var cost: int = book.forget_cost(id)
+	if Wallet.can_afford(cost):
+		return "Klicken zum Verlernen · %s" % Wallet.label(cost)
+	return "Verlernen kostet %s — du hast %s" % [Wallet.label(cost), Wallet.label()]
+
+
 # --- Klick und Rückfrage ------------------------------------------------------
 
 ## Ein Klick ins Netz. Gefragt wird nur, wo es etwas zu entscheiden gibt: der Name eines
-## Baums ist nichts zum Lernen, und ein gelernter, gesperrter oder unbezahlbarer Knoten
-## führt zu keinem Dialog — warum, steht schon in der Karte, und ein Dialog, der nur
-## „geht nicht“ sagt, ist ein Klick zum Wegklicken.
+## Baums ist nichts zum Lernen, und ein gesperrter oder unbezahlbarer Knoten führt zu
+## keinem Dialog — warum, steht schon in der Karte, und ein Dialog, der nur „geht nicht“
+## sagt, ist ein Klick zum Wegklicken. Ein GELERNTER Knoten fragt, ob er verlernt werden
+## soll — sofern das Gold dafür reicht; sonst gilt dasselbe wie beim unbezahlbaren.
 func _on_node_selected(id: String) -> void:
 	if id.is_empty():
 		return
@@ -131,7 +146,11 @@ func _on_node_selected(id: String) -> void:
 	if node.is_empty() or str(node.get("kind", "")) != "skill":
 		return
 	var points: int = book.available()
-	if SkillTree.state_of(node, book.unlocked, points) != SkillTree.State.AVAILABLE:
+	var state := SkillTree.state_of(node, book.unlocked, points)
+	if state == SkillTree.State.LEARNED:
+		_ask_forget(node)
+		return
+	if state != SkillTree.State.AVAILABLE:
 		return
 	var cost := SkillTree.cost(node)
 	var left := points - cost
@@ -144,6 +163,41 @@ func _on_node_selected(id: String) -> void:
 				"ist" if left == 1 else "sind", left]
 			+ "sich ein ausgegebener Punkt nur gegen Gold.",
 			"Lernen · %d P." % cost)
+
+
+## Die Rückfrage vor dem Verlernen nennt JEDEN Knoten, der mitfällt, beim Namen: dass die
+## Äste darüber mitgehen, ist die eine Stelle, an der das Verlernen überraschen könnte.
+func _ask_forget(node: Dictionary) -> void:
+	var id := str(node.get("id", ""))
+	var cost: int = book.forget_cost(id)
+	if not Wallet.can_afford(cost):
+		return
+	var entries: Array = book.entries()
+	var gone := SkillTree.forget_set(entries, id, book.unlocked)
+	var spent := SkillTree.spent(entries, gone)
+	var others: Array[String] = []
+	for other in gone:
+		if other != id:
+			others.append("„%s“" % str(SkillTree.node_by_id(entries, other).get("name", other)))
+	var along := ""
+	if not others.is_empty():
+		along = "Mit ihm %s auch %s — %s baut darauf auf.\n\n" % [
+			"fällt" if others.size() == 1 else "fallen",
+			_join_names(others),
+			"das" if others.size() == 1 else "die"]
+	_pending = {"kind": "forget", "id": id}
+	Hints.refresh()
+	_confirm.ask("„%s“ verlernen?" % str(node.get("name", id)),
+			along + "Du bekommst %d Skillpunkt%s zurück und zahlst %s." % [
+				spent, "" if spent == 1 else "e", Wallet.label(cost)],
+			"Verlernen")
+
+
+## „A“, „A und B“, „A, B und C“.
+static func _join_names(names: Array[String]) -> String:
+	if names.size() <= 1:
+		return "".join(names)
+	return ", ".join(names.slice(0, names.size() - 1)) + " und " + names[-1]
 
 
 func _on_respec_pressed() -> void:
@@ -170,6 +224,8 @@ func _on_confirmed() -> void:
 	match str(_pending.get("kind", "")):
 		"learn":
 			book.unlock(str(_pending.get("id", "")))
+		"forget":
+			book.forget(str(_pending.get("id", "")))
 		"respec":
 			book.respec()
 	_pending = {}
