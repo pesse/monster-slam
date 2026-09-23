@@ -864,8 +864,10 @@ func _defeat(monster: Monster) -> void:
 	# Hier und nicht in _spawn_explosion(): denselben Effekt nutzen auch der Festungsausbau
 	# und der Aufschlag eines durchgelassenen Monsters — die klingen nicht gleich.
 	Sfx.play(&"monster_kill")
-	# Kleine aufsteigende „+Punkte"-Animation an der Stelle des Monsters.
-	_spawn_score_popup(monster.position + Vector3(0.0, 2.0, 0.0), monster.reward)
+	# Aufsteigende „+XP"-Animation an der Stelle des Monsters. Erfahrung und nicht die
+	# Punkte: sie ist der Lernfortschritt, und sie steht im HUD als Balken beim Namen —
+	# die Zahl fliegt dorthin, wo sie sich sichtbar auswirkt. Gleiche Farbe wie der Balken.
+	_spawn_xp_popup(monster.position + Vector3(0.0, 2.0, 0.0), monster.xp)
 	# Erfahrung SOFORT verbuchen, wie das Gold in der Geldbörse: sie gehört zum Profil
 	# (PlayerLevel), nicht zum Lauf, und ein Absturz mitten in der Welle darf sie nicht
 	# kosten. Der Zähler daneben ist nur für den Wellenabschluss.
@@ -879,11 +881,11 @@ func _defeat(monster: Monster) -> void:
 	_check_end()
 
 
-## Deutlich sichtbarer 3D-Text (+Punkte), der an der Trefferstelle aufpoppt, aufsteigt
+## Deutlich sichtbarer 3D-Text (+XP), der an der Trefferstelle aufpoppt, aufsteigt
 ## und ausblendet. Als Label3D (Billboard) im Stil der vorhandenen Monster-Beschriftungen.
-func _spawn_score_popup(pos: Vector3, amount: int) -> void:
+func _spawn_xp_popup(pos: Vector3, amount: int) -> void:
 	var label := Label3D.new()
-	label.text = "+%d" % amount
+	label.text = "+%d XP" % amount
 	label.font_size = 200
 	label.pixel_size = 0.02
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -906,7 +908,7 @@ func _spawn_score_popup(pos: Vector3, amount: int) -> void:
 
 
 ## Die vollständige Form nach einem nur im Kern richtigen Treffer. Bewusst ruhiger als
-## das "+Punkte"-Popup (kein Pop, längere Standzeit): es ist ein Hinweis, kein Tadel.
+## das "+XP"-Popup (kein Pop, längere Standzeit): es ist ein Hinweis, kein Tadel.
 func _spawn_form_hint(pos: Vector3, form: String) -> void:
 	var label := Label3D.new()
 	label.text = form
