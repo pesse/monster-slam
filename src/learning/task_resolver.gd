@@ -110,13 +110,18 @@ func _resolve_translate(definition: Dictionary, source: Dictionary, extra: Dicti
 	var direction := str(definition.get("direction", "de_to_en"))
 	var prompt: String
 	var answers: Array = []
+	# Die Alternativen der Aufgabenseite zeigt das Reveal neben der Aufgabe — „go,
+	# auch: walk" —, damit dort beide Seiten vollständig stehen.
+	var prompt_alt: Array = []
 	if direction == "en_to_de":
 		prompt = str(source.get("lemma_en", ""))
+		prompt_alt.append_array(source.get("lemma_en_alt", []))
 		# Primäre + alternative deutsche Übersetzungen (z. B. go -> gehen/laufen).
 		answers.append(str(source.get("lemma_de", "")))
 		answers.append_array(source.get("lemma_de_alt", []))
 	else: # de_to_en (Standard)
 		prompt = str(source.get("lemma_de", ""))
+		prompt_alt.append_array(source.get("lemma_de_alt", []))
 		# Primäre + alternative englische Übersetzungen (z. B. gehen -> go/walk).
 		answers.append(str(source.get("lemma_en", "")))
 		answers.append_array(source.get("lemma_en_alt", []))
@@ -125,7 +130,7 @@ func _resolve_translate(definition: Dictionary, source: Dictionary, extra: Dicti
 			var syn := _lexeme(rel.get("to_lexeme_id", ""))
 			if not syn.is_empty():
 				answers.append(str(syn.get("lemma_en", "")))
-	return _build(definition, source, prompt, answers, extra)
+	return _build(definition, source, prompt, answers, extra, "", prompt_alt)
 
 
 func _resolve_relation(definition: Dictionary, source: Dictionary, extra: Dictionary) -> Dictionary:
@@ -193,7 +198,7 @@ func _lexeme(lexeme_id: Variant) -> Dictionary:
 	return ContentRegistry.get_entry("lexemes", str(lexeme_id))
 
 
-func _build(definition: Dictionary, source: Dictionary, prompt: String, answers: Array, extra: Dictionary, meaning := "") -> Dictionary:
+func _build(definition: Dictionary, source: Dictionary, prompt: String, answers: Array, extra: Dictionary, meaning := "", prompt_alt: Array = []) -> Dictionary:
 	var task_type := str(definition.get("task_type", ""))
 	var direction := str(definition.get("direction", ""))
 	var source_id := str(source.get("id", ""))
@@ -207,4 +212,5 @@ func _build(definition: Dictionary, source: Dictionary, prompt: String, answers:
 		"difficulty": int(definition.get("difficulty", 1)),
 		"lexeme_type": str(source.get("type", "")),   # Wortart fürs Monster-Outline (siehe WordTypePalette)
 		"meaning": meaning,            # Bedeutung fürs Reveal; leer, wo die Aufgabe sie schon zeigt
+		"prompt_alt": prompt_alt,      # Alternativen zur Aufgabe fürs Reveal (nur Übersetzung)
 	}

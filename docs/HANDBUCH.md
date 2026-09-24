@@ -243,9 +243,10 @@ ausgebaut!“). Mehr dazu in Kapitel 10.
 ### Die Vokabel-Auflösung
 
 Die Karte „Durchgelassen — die richtigen Antworten“ zeigt jedes Wort, das dir entwischt
-ist: erst die Aufgabe, einen Moment später die richtige Antwort, dazu die Wortart und,
-wenn vorhanden, weitere richtige Antworten („auch: …“) und die Bedeutung. Die Karten laufen von selbst
-durch, etwa drei Sekunden je Karte.
+ist: erst die Aufgabe, einen Moment später die richtige Antwort, dazu die Wortart und die
+Bedeutung. Hat ein Wort mehrere Übersetzungen, stehen sie auf beiden Seiten als „auch: …“
+dabei — unter der Aufgabe und unter der Antwort. Die Karten laufen von selbst durch, etwa
+drei Sekunden je Karte.
 
 Danach kannst du mit „◀“ und „▶“ blättern. „Alle anzeigen“ nimmt auch die Wörter dazu,
 die du richtig hattest. Das geht schon während des Durchlaufs: die richtigen kommen dann

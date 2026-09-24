@@ -8,8 +8,9 @@ extends GdUnitTestSuite
 ##
 ## Geprüft wird deshalb mit dem längsten Inhalt, den die Daten hergeben (gemessen über
 ## alle Lexeme: Aufgabenzeile bis ~110 Zeichen bei Verwechslungsaufgaben, „auch:"-Zeile
-## bis ~60, Bedeutung bis ~100), gegen die ECHTE Bühne aus der Szene — nicht gegen eine
-## hier hingeschriebene Zahl.
+## bis ~60 auf beiden Seiten, Bedeutung bis ~100), gegen die ECHTE Bühne aus der Szene —
+## nicht gegen eine hier hingeschriebene Zahl. Alles zugleich kommt in keiner Aufgabe
+## vor; die Karte muss es trotzdem tragen.
 
 const REVEAL_SCENE := preload("res://scenes/ui/leak_reveal.tscn")
 
@@ -37,7 +38,8 @@ func _show_card(item: Dictionary) -> Array:
 
 func _worst_case_item() -> Dictionary:
 	return {
-		"prompt": LONG_PROMPT, "answers": LONG_ANSWERS, "lexeme_type": "verb",
+		"prompt": LONG_PROMPT, "prompt_alt": LONG_ANSWERS, "answers": LONG_ANSWERS,
+		"lexeme_type": "verb",
 		"meaning": LONG_MEANING, "source_id": "zz-test", "learnable_id": "zz-test",
 		"leaked": false,
 	}
