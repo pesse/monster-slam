@@ -6,10 +6,12 @@ Testdateien liegen in `tests/` und enden auf `_test.gd` (`extends GdUnitTestSuit
 ## Ausführen (headless)
 
 ```bash
-GODOT="/mnt/c/dev/_tools/godot/Godot_v4.7-stable_win64_console.exe"
-"$GODOT" --headless --path "C:/dev/privat/monster-slam" \
-    -s res://addons/gdUnit4/bin/GdUnitCmdTool.gd --ignoreHeadlessMode -a res://tests
+tools/godot.sh -s res://addons/gdUnit4/bin/GdUnitCmdTool.gd --ignoreHeadlessMode -a res://tests
 ```
+
+Immer über den Wrapper, nie Godot direkt: er setzt `--headless` und den Projektpfad und
+setzt hinterher Dateien zurück, deren Einrückung der Editor-Cache umgeschrieben hat. Neue
+`class_name`-Dateien brauchen vorher `tools/godot.sh --import`.
 
 Exit-Code 0 = grün, ≠0 = Fehler (CI-tauglich). Report unter `reports/` (git-ignoriert).
 `--ignoreHeadlessMode` ist nötig, weil gdUnit4 sonst wegen fehlender Input-Events abbricht —
@@ -66,6 +68,43 @@ func before(do_skip := LanguageData.missing(), skip_reason := LanguageData.REASO
 
 Lokal mit ausgechecktem Submodule laufen alle 117 Fälle; ohne 99, der Rest als `skipped`.
 Nachstellen lässt sich der CI-Zustand mit einem Clone ohne `git submodule update --init`.
+
+## Hygiene: `user://` ist geteilt
+
+`user://` ist projektübergreifend dasselbe Verzeichnis wie im echten Spiel, und die Dateien
+des aktiven Profils sind das echte Gold, die echte Erfahrung und die echte Spur des Spielers.
+
+- **Autoloads mit Profildateien werden auf einer eigenen Instanz mit `zz-`Profil geprüft**,
+  und der Test räumt seine Datei weg: `Wallet` (`tests/wallet_test.gd`), `PlayerLevel`,
+  `SkillBook`, `TraceLog`. `SkillBook` bekommt dazu über eine Unterklasse einen erfundenen
+  Baum (`entries()` überschrieben), sonst hinge der Test an der Balance der ausgelieferten
+  Bäume. Weil `respec()`/`available()` an die Autoloads `Wallet` und `PlayerLevel` gehen,
+  bekommen auch die für die Dauer des Tests ein `zz-`Profil. Ein Screen, der ein Autoload
+  benutzt, nimmt dafür ein Feld entgegen, das vor dem Einhängen gesetzt wird (`book`).
+- **Ein `-s`-Skript, das die Geldbörse umbiegt**, muss wissen: `Wallet._ready()` setzt
+  `player_id` aus `UserSettings` und läuft NACH `_initialize()` — eine früher gesetzte
+  Test-Id ist danach wieder weg.
+- **`TraceLog` schweigt unter gdUnit** (`_under_test()`): andere Suiten feuern
+  EventBus-Signale und schrieben sonst erfundene Wellen in die echte Spur.
+- **Kein Test fährt eine ganze Welle**, um das Verbuchen von Gold oder Erfahrung zu prüfen —
+  geprüft werden die Regeln (`ChestReward`, `Experience`) und die Instanzen.
+- **Fixture-Packs brauchen eine Id, die zuletzt sortiert** (`zz-…`): Packs werden nach Id
+  sortiert, der letzte gewinnt, und auf einem Rechner mit installierten Inhalten gewönne
+  sonst `game` oder `language-*`.
+- **Nach einem Test, der Packs installiert, `user://content` aufräumen** — ein liegen
+  gebliebener Pack überschreibt im Entwicklungslauf das Submodule.
+- **Fixtures liegen unter `tests/fixtures/`**, das `.gitattributes` von jeder
+  Zeilenenden-Umwandlung ausnimmt: Prüfsummen und Signaturen gehen über die exakten Bytes.
+
+## Kopflose Grenzen
+
+- **Godot befördert headless keine Mausereignisse**, `gui_get_hovered_control()` ist im
+  Test immer leer. Die Naht ist `Hints.probe(control, at)`; sie zeigt die Karte nur bis zum
+  nächsten Frame, Tests dazu stehen deshalb ohne `await`.
+- **Vektoren achsenweise vergleichen.** `assert_vector(...).is_less_equal(...)` vergleicht
+  lexikografisch — eine zu hohe Seite rutscht über eine passende Breite durch.
+- **Randlayout gegen die Grundauflösung 1152×648 prüfen**, nicht gegen das eigene Fenster:
+  das Vollbild auf 16:9 ist der schmalste Fall (`tests/hud_header_test.gd`).
 
 ## Neuen Test hinzufügen
 

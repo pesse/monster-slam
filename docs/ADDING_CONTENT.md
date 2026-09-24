@@ -54,6 +54,10 @@ Lernstand (`PlayerProgress.confidence`); Aufgaben-Schwierigkeit steht auf der `t
 - Unregelmäßige Verben mit dem Tag `"irregular"` markieren (kein eigenes Feld) — so lässt sich
   später eine „unregelmäßige Verben"-Welle über den Tag-Filter ziehen.
 
+**Keine Dubletten.** Dasselbe Wort unter zwei Lexem-Ids hat zwei Fortschrittsstände; die
+Treffer verteilen sich, und keine der beiden Ids wird je gemeistert. Vor dem Anlegen
+prüfen, ob das Wort schon existiert (auch im ungebundenen Grundwortschatz).
+
 **Mehrfachübersetzungen** über optionale Arrays `lemma_en_alt` / `lemma_de_alt` — alle
 gelten bei `translate` als richtig (Prompt zeigt weiter das primäre Lemma):
 ```json
@@ -95,7 +99,10 @@ Aufgelöst wird das mit einer **Glosse in Klammern**, nicht mit einem zusätzlic
 Es genügt, das speziellere der beiden Wörter zu glossieren. Die Glosse darf das gesuchte
 englische Wort **nicht** verraten. Für die Auswertung kostet sie nichts: Klammerinhalte
 sind optional, `Hals` bleibt also eine gültige en→de-Antwort und blendet nur die
-vollständige Form ein. `tests/lexeme_data_test.gd` hält die Regel und nennt die Fälle.
+vollständige Form ein. `tests/lexeme_data_test.gd` hält die Regel und nennt die Fälle;
+gemessen wird am Schnitt der **vollständigen** Varianten von `AnswerEvaluator.variants()`
+und der akzeptierten Antworten (`lemma_en` + `lemma_en_alt`), Lexeme ohne Prompt
+(`excluded_task_types`) übersprungen.
 
 Über Unit-Grenzen hinweg wird nicht geprüft — dort kollidieren zwei Prompts nur, wenn
 beide Units zugleich im Scope stehen, und eine spätere Unit darf für dasselbe deutsche
@@ -159,7 +166,10 @@ unmögliche Kombinationen (z. B. Adjektiv konjugieren).
 die die Relation/Form besitzen, werden zu Kandidaten; die Enumeration expandiert über die
 tatsächlich vorhandenen Relationen/Formen.
 `difficulty`: Basis-Schwierigkeit der Aufgaben-*Art*; der Wave-`difficulty_max` schaltet damit
-Aufgabentypen frei/aus. (\*`fill_gap`/`sentence` sind vorerst zurückgestellt.)
+Aufgabentypen frei/aus — **außer `translate`** (`WaveGenerator.CORE_TASK_TYPES`): ein Wort gilt
+erst mit beiden Richtungen als gemeistert, der Riegel darf also keine davon wegnehmen. Die
+`difficulty` von en→de bleibt trotzdem 2: sie ist das `t` im Netto-Maß `t - c` und trägt
+Tempo, Punkte und Erfahrung. (\*`fill_gap`/`sentence` sind vorerst zurückgestellt.)
 
 Der Fortschritt wird pro **`learnable_id`** geführt (Task-Typ + Richtung + Lexeme/Form/Relation,
 z. B. `translate:de_to_en:lex.en.cat`, `opposite:lex.en.big:lex.en.small`,
@@ -266,8 +276,8 @@ Eine Datei je Baum. Der erste Eintrag ist der Baum-Kopf, die übrigen sind seine
 - `requires` zeigt auf Knoten **desselben** Baums und auf eine **niedrigere** Stufe.
 - `cost` sind Skillpunkte; ein großer Knoten kostet mehrere.
 - `effects` ist ein Dictionary und **additiv** auf den Grundwert. Erlaubt sind nur die
-  Schlüssel aus `SkillTree.EFFECT_KEYS`: `heal_per_correct`, `fortress_armor`,
-  `max_health`, `slow_hold_ms`, `slow_factor` (negativ = tiefere Zeitlupe). Ein neuer
+  Schlüssel aus `SkillTree.EFFECT_KEYS`: `heal_per_correct`, `fortress_armor` (Vorrat),
+  `armor_regen` (Instandsetzung je Wellenstart), `max_health`, `slow_hold_ms`, `slow_factor` (negativ = tiefere Zeitlupe). Ein neuer
   Schlüssel braucht einen Eintrag dort **und** ein `apply_skills`, das ihn liest.
 
 Die Beträge sind reine Balance und ohne Code-Änderung justierbar. Was sich nicht ändern

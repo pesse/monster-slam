@@ -136,6 +136,31 @@ Score, aktive Welle) und reagiert selbst nur über EventBus-Signale.
 	Offline-Heuristik; ein lokales LLM lässt sich über `sentence_backend`
 	(Callable) einstecken — **ohne** Aufrufer zu ändern.
 
+### Meisterung: ein Wort braucht beide Richtungen
+
+Der Fortschrittsbalken je Unit und Thema (Statistik, Reiter „Fortschritt") zählt WÖRTER:
+`PlayerProgress.mastered_lexemes` nimmt ein Lexem erst auf, wenn `translate:de_to_en:<id>`
+UND `translate:en_to_de:<id>` über der Schwelle liegen (`LEXEME_MASTERY_DIRECTIONS`). Der
+Reiter „Aufgaben" daneben zählt learnable_ids — zwei Maße, zwei Reiter, mit Absicht.
+
+Die Kopplung macht den Balken **empfindlich gegen alles, was EINE Richtung stört**: fällt
+en→de aus, steht die Unit dauerhaft auf „0 von N", während „Gemeisterte Aufgaben" weiter
+steigt. Das sieht aus wie ein Rechenfehler der Statistik und war noch nie einer (die
+Rechnung hält `tests/mastered_lexemes_test.gd`). Gesucht wird deshalb im Weg der Richtung
+in den Pool:
+
+- **Der Schwierigkeitsriegel** (`difficulty_max`) darf keine Lernrichtung wegnehmen —
+  `translate` steht in `WaveGenerator.CORE_TASK_TYPES` und ist ausgenommen
+  (`definition_allowed()`); der Riegel staffelt nur die Zusatzaufgaben.
+- **Geteilte deutsche Prompts** in einer Unit machen de→en zur Ratefrage
+  (Regel und Ausnahmen: `docs/ADDING_CONTENT.md`).
+- **`excluded_task_types`** muss den Nenner mitnehmen (`PlayerProgress.masterable()`),
+  sonst steht der Balken auf „N-1 von N".
+- **Dubletten**: dasselbe Wort unter zwei Ids hat zwei Fortschrittsstände, die vier nötigen
+  Treffer verteilen sich, und keine Id wird gemeistert. Unter den buchgebundenen Lexemen
+  ein Einzelfall, im ungebundenen Grundwortschatz die Regel — wer den Balken einer Unit
+  beurteilt, prüft erst, ob der Scope gesetzt ist.
+
 ## Wirtschaft: Gold und Schatzkisten (`src/economy/`)
 
 Gold ist die erste Währung. Verdient wird es als **Schatzkiste am Wellenende**, gehalten
@@ -162,7 +187,22 @@ Erspielte.
 - **Verbucht wird im `WaveRunner`, nicht im Screen** (`_on_reward_collected` →
   `Wallet.earn`). Die Kiste meldet per `opened` nur, dass sie offen ist; so ist dieselbe
   Kiste später auch am Tagesziel oder nach einem Boss zu haben, ohne dass sie weiß, wem
-  sie etwas gutschreibt.
+  sie etwas gutschreibt. Einen Gesamtstand zeigt der Abschluss bewusst nicht.
+- **Justiert wird an zwei Konstanten** in `chest_reward.gd`: `GOLD_PER_SCORE` (Menge) und
+  `TIER_FACTOR` (Zuschlag der Güte). Kein eigenes Schwierigkeitsmaß daneben bauen.
+- **Die Kiste gibt es auch nach einer Niederlage** — verdient ist verdient. Ohne besiegtes
+  Monster gibt es keine Kiste, sondern Trostgold (`ChestReward.CONSOLATION_GOLD`), das ohne
+  Öffnen über ein eigenes Signal (`consolation_collected`) verbucht wird: `Wallet` zählt
+  geöffnete Kisten mit, und dies ist keine.
+- **An einer ungeöffneten Kiste führt kein Weg vorbei**: Weiter und Menü sind `disabled`,
+  bis sie offen ist (nicht ausgeblendet, siehe feste Größe unten). Zwei Sekunden Drücken
+  sind kein Hindernis, ein weggeklickter Fund ist einer.
+- **Stufe 2 trägt die Sitzungsbilanz** (`RunBalance.build`) — nach einem Sieg über der
+  Wahl, nach einer Niederlage als Abschluss; Escape zeigt keine. Gebaut wird sie beim
+  Wellenende, weil `SessionLog.end()` die laufende Sitzung leert, und mit den Regeln des
+  Statistik-Screens (`fresh_rows`, `comeback_rows`). Weil sie über den `PageStack` auch
+  Stufe 1 größer macht, sind ihre Zeilen einzeilig mit fester Breite und die Wortliste auf
+  `BALANCE_WORDS` gedeckelt („und N weitere").
 - **Die Kiste ist ein 3D-Modell in einem eigenen SubViewport**, keine Zeichnung
   (`chest.gltf` aus dem KayKit-Dungeon-Satz, Nachweis in `assets/models/CREDITS.md`).
   Eigene Welt und durchsichtiger Hintergrund halten sie vom Kampf getrennt, über dem der
@@ -180,7 +220,10 @@ Erspielte.
   ist nur der zeitliche Versatz zwischen den Münzen, damit 200 Gold nicht tröpfeln. Weil
   die Münzen mehr Platz brauchen als die Kiste, ist der gerenderte Ausschnitt größer als
   das Widget (`STAGE_PAD`) — die Kiste selbst bleibt in ihrem Platz im Layout, geprüft
-  gegen das Widget-Rechteck.
+  gegen das Widget-Rechteck. Verblasst wird keine Münze: `GeometryInstance3D.transparency`
+  gibt es im `gl_compatibility`-Renderer nicht, deshalb fallen sie unter die Bildkante.
+  Die Einzelheiten zu Atlas, Mesh-Kopie, Kamera und Polster stehen im Kopf von
+  `treasure_chest.gd`.
 - **Die Größe des Abschluss-Screens steht fest**, solange er sichtbar ist: er hängt in
   der Bildmitte, und eine Größenänderung beim Weiterblättern verschiebt die Knöpfe unter
   dem Zeiger. Dafür der `PageStack` plus die Regel, innerhalb einer Seite nur zu sperren
@@ -225,6 +268,11 @@ der umgekehrten Absicht: Gold ist Beute, Erfahrung ist Lernfortschritt.
   genau wie beim Gold — und SOFORT: Erfahrung fällt mitten in der Welle an, und ein
   Absturz auf dem Weg zum Wellenende darf sie nicht kosten. Der Abschluss-Screen bekommt
   nur den Zuwachs der Welle und liest den Stand bei `PlayerLevel`.
+- **`PlayerLevel.skill_points()` ist der VERDIENTE Stand**, die offenen Punkte rechnet
+  `SkillBook.available()` aus den gelernten Knoten — auch dort kein zweiter Zähler.
+- **Level und Balken stehen im HUD beim Namen**, nicht in einer fünften Tafel: die
+  Kopfleiste passt bei 1152 Pixeln nur knapp (`tests/hud_header_test.gd` misst mit einem
+  späten Spielstand). Was dort dazukommt, muss anderswo eingespart werden.
 
 ## Fähigkeitsbäume: wofür die Punkte da sind
 
@@ -283,10 +331,26 @@ Start-Screen (`🌳 Fähigkeiten`), nicht am Kampf: gelernt wird zwischen den L�
   `fortress_armor_regen` dazu, gedeckelt an `fortress_armor_max` — die eine Ausnahme von
   „der Wellenstart fasst die Festung nicht an". Eine Vollfüllung je Welle machte den Lauf
   endlos. Ein aufgefangener Treffer zählt trotzdem als durchgelassen — eine aufgefangene
-  Welle ist keine saubere.
-- **Umlernen kostet Gold und ist alles oder nichts** (`SkillTree.RESPEC_GOLD_PER_POINT`).
-  Einzelne Knoten zurückzunehmen müsste entscheiden, was mit den Ästen darüber geschieht,
-  und die Antwort wäre in jedem Fall eine Überraschung.
+  Welle ist keine saubere; `min_fortress_health` hängt am Leben, nicht an der Rüstung.
+  Wer an den Beträgen dreht, vergleicht mit der Genesung, die nur an besiegten Monstern
+  heilt. Im HUD steht die Rüstung als Leiste über dem Lebensbalken und **ohne Zahl** — eine
+  Zahl am HP-Text sprengte die Kopfleiste (`tests/hud_armor_test.gd`), und die Beträge
+  sollen in der JSON justierbar bleiben.
+- **Die Zeitlupe hat eine Untergrenze** (`SkillTree.MIN_SLOW_FACTOR`), sonst fröre ein
+  tiefer Baum das Spiel ein.
+- **Verlernen geht einzeln** (`SkillBook.forget`): mit dem Knoten fällt jeder gelernte
+  Knoten, der über ihn hängt (`SkillTree.forget_set`) — ein Knoten ohne Vorstufe ist ein
+  Zustand, den das Lernen nie herstellt. Die Rückfrage nennt jeden mitfallenden Knoten beim
+  Namen. Bezahlt wird je fallendem KNOTEN (`FORGET_GOLD_PER_NODE`), nicht je Punkt wie beim
+  Umlernen des Ganzen (`RESPEC_GOLD_PER_POINT`); der Satz liegt darunter, einzeln ist also
+  immer günstiger als alles.
+- **Kleinere Regeln des Screens**: der Ausschnitt gehört dem Spieler (`setup()` passt nur
+  ein, solange niemand gezoomt oder geschoben hat; zurück über ⛶); ein gesperrter Knoten
+  nennt seine Vorstufe beim Namen (`state_label`), weil an einem Knoten mehrere Linien
+  hängen; der Dialog fokussiert ABBRECHEN; `SkillGraph.select()` meldet jeden Klick, auch
+  auf den gewählten Knoten, damit ein abgebrochener Antrag neu gestellt werden kann.
+  Schriftgrößen liest `_draw()` aus dem Theme (`SkillIcon`, `SectionTitle`, `Hint`,
+  `Caption`), Farbe und Zeichen kommen aus den Daten.
 
 ## Erweiterungspunkte für den KI-Agenten
 
@@ -377,7 +441,19 @@ Zeile JSON.
   Eine Aufzeichnung, die man erst einschalten muss, ist beim Fehler von gestern leer.
 - **Die Spur bleibt auf dem Rechner.** Sie enthält getippte Kindertexte und Lemmata aus
   geschütztem Material — anders als der Melde-Rückkanal, der nur Ids kennt. Das ist der
-  Unterschied und keine Nachlässigkeit.
+  Unterschied und keine Nachlässigkeit. Sie geht deshalb in kein Repo.
+- **Felder kommen dazu, sie werden nicht umbenannt** — eine Zeile von gestern muss lesbar
+  bleiben (dieselbe Regel wie bei den Packs). `JSON.stringify` läuft mit
+  `sort_keys = false`, damit Zeit und Art vorn stehen: eine Spur wird gelesen.
+- **Wer eine Zeile braucht, die es nicht gibt, gibt dem EventBus ein Signal** — das Spiel
+  ruft das Protokoll nie direkt. Ein Fehler darin darf kein Spiel kosten
+  (`push_warning` und Stille, kein `push_error`).
+- **Die Ansicht im Reiter ist ein Leser, keine Auswertung.** `TraceLog.recent()` liest nur
+  das Ende beider Generationen, `TraceView.rows()` übersetzt Zeile für Zeile; verknüpft wird
+  nur die learnable_id einer `answer`-Zeile mit dem Prompt der `spawn`-Zeile. Eine
+  unbekannte Ereignisart erscheint mit ihrem Namen, statt still zu verschwinden.
+- **`clear()` fasst nur die eigenen beiden Dateien an** — `user://logs/` teilt sich das
+  Verzeichnis mit Godots `godot.log`.
 
 ## Ausliefern: zwei getrennte Update-Kanäle
 
@@ -485,7 +561,66 @@ Metadatum am Knoten — es gibt keine Liste, die ihre Knoten überleben könnte.
 Die eigene Zeichenschicht ist kein Luxus: ein `ScrollContainer` beschneidet seine Kinder,
 und die Statistikzeilen liegen in einem. Ein `CanvasLayer` ist kein `CanvasItem`, damit
 endet die Beschneidung an seiner Grenze — und auf 128 liegt die Karte zugleich über der
-UI-Schicht des Kampfes, in der der Wellenabschluss samt Schatzkiste hängt.
+UI-Schicht des Kampfes, in der der Wellenabschluss samt Schatzkiste hängt. Die Karte muss
+`MOUSE_FILTER_IGNORE` bleiben: sonst läge sie selbst unter dem Zeiger, versteckte sich und
+käme wieder, jeden Frame.
+
+Beim Anmelden gilt: **am kleinsten Ding anhängen, das der Text meint, nie an eine
+Screen-Wurzel** — die Suche nach oben erklärte sonst das ganze Bild. Eine `attach_live`-
+Fläche, die `{}` liefert, hat geantwortet; dann wird nicht beim Elternknoten weitergefragt.
+Die Breite ist eine Regel (so breit wie der Text, zwischen `MIN_WIDTH` und `MAX_WIDTH`),
+gemessen in der Reihenfolge, die im Kopf von `HintCard._fit()` steht — dieselbe
+Label-Falle wie unter „Oberfläche" unten.
+
+## Oberfläche: Theme und Layout
+
+`scenes/ui/ui_theme.tres` ist die einzige Quelle für Raum und Typografie. Vorher lagen
+beide als `theme_override_…` in den Szenen und hatten sich zu Wildwuchs summiert. Rollen
+sind **Type-Variations**, gesetzt über `theme_type_variation`:
+
+| Text | Größe | Container | Abstand |
+|---|---|---|---|
+| `Display` | 40 | `ScreenMargin` | Screen-Rand 24 |
+| `Title` | 28 | `ScreenStack` | 16 |
+| `SectionTitle` | 20 | `SectionStack` | 24, zwischen Abschnitten |
+| — (Grundgröße) | 18 | `Tight` | 4, Listenzeilen |
+| `Hint` | 14, gedämpft | (Klassenvorgabe) | 8 |
+| `Caption` | 12, gedämpft | `ScrollGutter` | 8 rechts, in jedem ScrollContainer |
+| `Accent` | Gold, Nachdruck | `HudPanel` | Tafel der Kopfleiste, 8/4 statt 16 |
+| `SectionButton` | 20, klappbare Abschnitte | | |
+
+- **Abstände nur in den Stufen 0 / 4 / 8 / 16 / 24.** Der Karten-Innenabstand kommt aus
+  `PanelContainer/styles/panel` (16) — **keinen MarginContainer in eine PanelContainer**,
+  das addiert sich.
+- **In jeden ScrollContainer gehört ein `Gutter`** (MarginContainer mit `ScrollGutter`)
+  zwischen Balken und Inhalt. Godot legt den Balken an die Innenkante und gibt dem Kind
+  exakt den Rest; ein Rand am ScrollContainer selbst verschiebt Balken und Inhalt gemeinsam.
+- **`CheckBox`/`CheckButton` haben eigene Styles** (`StyleBoxEmpty`). Ohne sie fällt die
+  Theme-Suche auf `Button/styles/*` zurück, und ein angehaktes Kästchen sah aus wie ein
+  gedrückter, rahmenloser Knopf.
+- **Der Wächter** `tests/theme_discipline_test.gd` meldet `theme_override_…` in
+  `scenes/**.tscn` und `add_theme_*_override` in `src/**.gd`, prüft die Skala und fängt
+  Tippfehler in Variationen ab (die Godot still verschluckt). Die Kampf- und
+  Effekt-Oberflächen stehen mit Begründung in seiner Liste `ALLOWED` — eigene, lautere
+  Typografie, noch nicht umgestellt.
+- **Was das Theme nicht kann**: `size_flags_*`, `custom_minimum_size`, `autowrap_mode`,
+  Anchors und die Layout-Struktur bleiben Knoten-Eigenschaften in der Szene.
+
+**Ein umbrechendes Label braucht eine Mindestbreite, bevor jemand seine Höhe liest.** Ein
+`Label` mit `autowrap_mode` meldet als Mindestbreite 1 Pixel und dazu die Höhe, die der
+Text bei EINEM Pixel braucht; das korrigiert sich erst mit einer echten zugeteilten Breite.
+Zwei Fälle, in denen die nie kommt: eine unsichtbare Seite im `PageStack` (der sie trotzdem
+mitrechnet — ohne `custom_minimum_size.x` wurde der Wellenabschluss höher als das Bild,
+und Kiste und Menü-Knopf lagen außerhalb), und jede Karte, deren Größe von Hand gesetzt
+wird (`Control.size` wird an der Mindestgröße geklemmt; `RevealCard.set_width()` gibt den
+Labels deshalb ihre Breite, BEVOR die Größe gesetzt wird). Gehalten von
+`test_the_defeat_screen_fits_into_the_base_resolution` und
+`tests/leak_reveal_layout_test.gd`.
+
+**Innerhalb einer sichtbaren, zentrierten Seite wird nichts ein- oder ausgeblendet**,
+sondern gesperrt und umbeschriftet — jede Größenänderung verschiebt den Knopf unter dem
+Zeiger. Was sich doch ändern muss, wird entschieden, bevor die Seite erscheint
+(`WaveStats.show_stats`).
 
 ## Sprachwahl: GDScript (C# nur bei Bedarf punktuell)
 
