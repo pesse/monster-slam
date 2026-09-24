@@ -1,0 +1,8 @@
+[
+  {
+    "id": "rel.zz.a.big.small",
+    "from_lexeme_id": "lex.zz.a.big",
+    "to_lexeme_id": "lex.zz.a.small",
+    "relation_type": "opposite"
+  }
+]

@@ -1,0 +1,27 @@
+# Fixture fuer tests/tools/pack_references_test.py: drei Packs, die jeder fuer sich
+# referenz-abgeschlossen sind. Die Tests kopieren den Baum und brechen ihn gezielt auf.
+# Ids mit `zz-`, damit sie hinter jedem echten Pack sortieren (CLAUDE.md).
+roots:
+  language: [lexemes, lexeme_forms, lexeme_relations, sentences, sentence_lexemes]
+  game: [monsters, bosses, waves, monster_task_rules]
+min_app_version: "0.0.1"
+open_licenses: [own]
+packs:
+  zz-refs-game:
+    name: "Fixture Spiel"
+    root: game
+    distribution: open
+    license: own
+    include: ["monsters/*.json", "bosses/*.json", "waves/*.json", "monster_task_rules/*.json"]
+  zz-refs-a:
+    name: "Fixture A"
+    root: language
+    distribution: open
+    license: own
+    include: ["**/zz_refs_a.json"]
+  zz-refs-b:
+    name: "Fixture B"
+    root: language
+    distribution: open
+    license: own
+    include: ["**/zz_refs_b.json"]

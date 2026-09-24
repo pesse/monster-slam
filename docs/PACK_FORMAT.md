@@ -21,6 +21,29 @@ Bauen (`check_paths`) und noch einmal beim Auspacken
 Das ZIP ist deterministisch: sortierte Namen, fester Zeitstempel. Damit hängt die
 Pack-Version allein am Inhalt und nicht an der Uhrzeit des Builds.
 
+## Ein Pack ist referenz-abgeschlossen
+
+Jede Id, auf die ein Objekt zeigt, liegt **im selben Pack**. Wer nur „Access 2" installiert,
+hat den Grundwortschatz nicht; eine Relation von einem Access-Wort auf ein Lexem von dort
+wäre beim Spieler unauflösbar. Die Registry lädt tolerant, der Fehler zeigt sich also nicht,
+sondern kostet still eine Aufgabe. Deshalb prüft der Build (`check_references`), fail-closed
+und für alle Packs in einem Lauf:
+
+| Objekt | Feld | zeigt auf |
+|---|---|---|
+| `lexeme_forms` | `lexeme_id` | `lexemes` |
+| `lexeme_relations` | `from_lexeme_id`, `to_lexeme_id` | `lexemes` |
+| `sentence_lexemes` | `sentence_id` / `lexeme_id` | `sentences` / `lexemes` |
+| `waves` | `boss` (optional) | `bosses` |
+| `monster_task_rules` | `monster_type` | `monsters` |
+
+Die Tabelle steht als `REFERENCES` im Build; eine neue Kante ist eine Zeile dort und ein
+Fall in der Fixture (`tests/tools/pack_references_test.py` prüft, dass beide übereinstimmen).
+Eine Referenz über Pack-Grenzen gibt es **nicht, auch nicht als Ausnahme**. Braucht es sie
+einmal (etwa `game` → Sprach-Pack), dann als eigenes Konzept mit Abhängigkeit im
+`index.json`, nicht als Loch im Gate. Ein Befund ist ein Datenfehler und wird im
+Content-Repo repariert.
+
 ## Geschützte Packs (`.enc`)
 
 Ein ZIP gleichen Aufbaus, verschlüsselt mit AES-256-CBC und mit HMAC-SHA256 gesichert.
@@ -94,6 +117,9 @@ python3 tools/packs/verify_pack.py dist/language-access2.enc --code GEHEIM
 
 # Fixtures für die GDScript-Tests neu bauen
 python3 tests/fixtures/packs/make_fixtures.py
+
+# Gates des Builds gegen die Fixture (auch in CI: .github/workflows/packs.yml)
+python3 tests/tools/pack_references_test.py
 ```
 
 `tests/pack_crypto_test.gd` prüft die GDScript-Seite gegen eine mit `build_packs.py`

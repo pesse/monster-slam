@@ -1,0 +1,16 @@
+[
+  {
+    "id": "lex.zz.b.fast",
+    "type": "adjective",
+    "lemma_de": "schnell",
+    "lemma_en": "fast",
+    "tags": []
+  },
+  {
+    "id": "lex.zz.b.slow",
+    "type": "adjective",
+    "lemma_de": "langsam",
+    "lemma_en": "slow",
+    "tags": []
+  }
+]

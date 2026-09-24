@@ -1,0 +1,16 @@
+[
+  {
+    "id": "lex.zz.a.big",
+    "type": "adjective",
+    "lemma_de": "groß",
+    "lemma_en": "big",
+    "tags": []
+  },
+  {
+    "id": "lex.zz.a.small",
+    "type": "adjective",
+    "lemma_de": "klein",
+    "lemma_en": "small",
+    "tags": []
+  }
+]

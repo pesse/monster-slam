@@ -9,6 +9,9 @@ Der Zuschnitt ist fail-closed: jede JSON-Datei unter den deklarierten Roots muss
 GENAU einen Pack passen. Passt eine Datei auf keinen oder auf mehrere, bricht der Build ab,
 statt Material mit ungeklaerter Herkunft in einen offen verteilten Pack zu lassen.
 
+Ebenso fail-closed ist die Abgeschlossenheit: jede Id, auf die ein Objekt zeigt, muss im
+selben Pack liegen (`check_references`).
+
 Nutzung:
     build_packs.py --config packs.yaml --source language=. --source game=../monster-slam/data --out dist
     build_packs.py --config packs.yaml --source ... --dry-run    # nur pruefen, ohne Secrets
@@ -239,6 +242,81 @@ def check_no_protected_books(cfg: dict, base: Path, pack_id: str, files: list[st
                 )
 
 
+# Kanten zwischen Objekten: (Kategorie, Feld, Zielkategorie, Pflichtfeld). Ein Pack muss
+# fuer sich allein aufgehen — wer nur ihn installiert, hat die anderen nicht. Die Registry
+# laedt tolerant, eine unaufloesbare Id faellt dort also nicht auf, sondern kostet still
+# eine Aufgabe (eine Relation ohne Ziel-Lexem erzeugt einfach keine). Deshalb hier.
+#
+# Pack-uebergreifende Kanten gibt es bewusst NICHT, auch nicht als Ausnahme: braucht es sie
+# einmal (z.B. `game` -> Sprach-Pack), dann als eigenes Konzept mit Abhaengigkeit im
+# index.json, nicht als Loch in diesem Gate.
+REFERENCES = [
+    ("lexeme_forms", "lexeme_id", "lexemes", True),
+    ("lexeme_relations", "from_lexeme_id", "lexemes", True),
+    ("lexeme_relations", "to_lexeme_id", "lexemes", True),
+    ("sentence_lexemes", "sentence_id", "sentences", True),
+    ("sentence_lexemes", "lexeme_id", "lexemes", True),
+    ("waves", "boss", "bosses", False),
+    ("monster_task_rules", "monster_type", "monsters", True),
+]
+
+
+def load_entries(base: Path, rel: str) -> list:
+    """Eine Datei traegt eine Liste von Eintraegen oder einen einzelnen (z.B. ein Boss)."""
+    data = json.loads((base / rel).read_text(encoding="utf-8"))
+    return data if isinstance(data, list) else [data]
+
+
+def reference_problems(pack_id: str, base: Path, files: list[str]) -> list[str]:
+    """Jede Referenz eines Packs muss auf ein Objekt IM SELBEN Pack zeigen.
+
+    Gibt die Befunde zurueck statt abzubrechen, damit ein Lauf ALLE Packs meldet — die
+    Reparatur liegt im Content-Repo, und dort will man die Liste einmal, nicht Pack fuer Pack.
+    """
+    ids: dict[str, set[str]] = {}
+    by_category: dict[str, list[tuple[str, list]]] = {}
+    for rel in files:
+        category = rel.split("/")[0]
+        entries = load_entries(base, rel)
+        by_category.setdefault(category, []).append((rel, entries))
+        ids.setdefault(category, set()).update(
+            str(e["id"]) for e in entries if isinstance(e, dict) and "id" in e
+        )
+
+    problems: list[str] = []
+    for category, field, target, required in REFERENCES:
+        known = ids.get(target, set())
+        for rel, entries in by_category.get(category, []):
+            for entry in entries:
+                if not isinstance(entry, dict):
+                    continue
+                value = entry.get(field)
+                if value in (None, ""):
+                    if required:
+                        problems.append(
+                            f"  {pack_id}: {rel}: '{entry.get('id', '?')}' — {field} fehlt"
+                        )
+                    continue
+                if str(value) not in known:
+                    problems.append(
+                        f"  {pack_id}: {rel}: '{entry.get('id', '?')}' — {field} '{value}' "
+                        f"nicht in {target}/ dieses Packs"
+                    )
+    return problems
+
+
+def check_references(cfg: dict, sources: dict[str, Path], per_pack: dict[str, list[str]]) -> None:
+    """Abgeschlossenheit aller Packs, fail-closed: ein Befund bricht den Build ab."""
+    problems: list[str] = []
+    for pack_id, pack in cfg["packs"].items():
+        problems += reference_problems(pack_id, sources[pack["root"]], per_pack[pack_id])
+    if problems:
+        raise BuildError(
+            "Referenz ins Leere — ein Pack muss fuer sich allein aufgehen (fail-closed):\n"
+            + "\n".join(problems)
+        )
+
+
 # --- Packen ----------------------------------------------------------------------------
 
 
@@ -337,6 +415,7 @@ def main() -> int:
 
         check_categories_match_installer()
         per_pack = assign(cfg, sources)
+        check_references(cfg, sources, per_pack)
         index = {"schemaVersion": INDEX_SCHEMA_VERSION, "packs": []}
 
         for pack_id, pack in cfg["packs"].items():

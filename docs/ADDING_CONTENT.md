@@ -326,4 +326,7 @@ Was das für Autoren heißt:
 - [ ] Spielstart zeigt die neuen Zahlen in der Content-Übersicht.
 - [ ] Von genau einem Pack in `packs.yaml` beansprucht (`build_packs.py --dry-run` läuft
 	  grün) — sonst kommt die Datei beim Spieler nie an.
+- [ ] Jede Referenz zeigt in den eigenen Pack (Form/Relation/Satz → Lexem, Welle → Boss,
+	  Regel → Monster). Der `--dry-run` prüft das mit; eine Relation eines Buch-Worts auf
+	  den Grundwortschatz ist ein Datenfehler, keine Ausnahme (`docs/PACK_FORMAT.md`).
 - [ ] Braucht die Datei neuen Code? Dann `min_app_version` in `packs.yaml` hochziehen.

@@ -1,0 +1,8 @@
+[
+  {
+    "id": "rel.zz.b.fast.slow",
+    "from_lexeme_id": "lex.zz.b.fast",
+    "to_lexeme_id": "lex.zz.b.slow",
+    "relation_type": "opposite"
+  }
+]

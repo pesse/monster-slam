@@ -1,0 +1,32 @@
+name: Pack-Werkzeuge
+
+# Die Gates in tools/packs/build_packs.py laufen scharf erst im Content-Repo, gegen die
+# privaten Sprachdaten — ein Fehler im Gate selbst fiele dort als roter Build ohne Befund
+# auf, oder schlimmer: als gruener Build, der nichts prueft. Hier laufen sie gegen die
+# Fixture unter tests/fixtures/packs/references/, ohne Submodule und ohne Secrets.
+
+on:
+  push:
+    paths:
+      - "tools/packs/**"
+      - "tests/tools/**"
+      - "tests/fixtures/packs/**"
+      - ".github/workflows/packs.yml"
+  pull_request:
+    paths:
+      - "tools/packs/**"
+      - "tests/tools/**"
+      - "tests/fixtures/packs/**"
+  workflow_dispatch:
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Abhaengigkeiten
+        run: python3 -m pip install --quiet pyyaml
+
+      - name: Abgeschlossenheit der Packs
+        run: python3 tests/tools/pack_references_test.py -v

@@ -1,0 +1,9 @@
+[
+  {
+    "id": "sen.zz.a.1",
+    "source_language": "en",
+    "target_language": "de",
+    "source_text": "The dog is big.",
+    "reference_translation": "Der Hund ist groß."
+  }
+]

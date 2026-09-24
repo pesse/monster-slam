@@ -1,0 +1,12 @@
+[
+  {
+    "id": "wave.zz_refs.plain",
+    "name": "Ohne Boss",
+    "spawns": []
+  },
+  {
+    "id": "wave.zz_refs.boss",
+    "name": "Mit Boss",
+    "boss": "boss.zz_refs"
+  }
+]

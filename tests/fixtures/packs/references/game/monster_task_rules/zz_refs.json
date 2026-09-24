@@ -1,0 +1,10 @@
+[
+  {
+    "id": "rule.zz_refs",
+    "task_type": "translate",
+    "direction": "de_to_en",
+    "monster_type": "monster.zz_refs",
+    "base_damage": 1,
+    "weight": 1
+  }
+]
