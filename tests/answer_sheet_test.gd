@@ -150,3 +150,21 @@ func test_both_verdicts_are_represented() -> void:
 	assert_int(counted["falsch"]).override_failure_message(
 			"Keine falschen Antworten im Bogen — Falsch-Positive wären nicht messbar."
 	).is_greater(0)
+
+
+## Jede falsche Antwort nennt ihren Grund (`why`), eine richtige nie. `why` ist der
+## Maßstab, an dem eine Begründung von Stufe 1 gemessen wird (Werkstatt prompt-eval,
+## `make grade`): ohne ihn lässt sich nur prüfen, ob eine Begründung gut KLINGT.
+func test_every_wrong_answer_names_its_reason() -> void:
+	for sentence in _sentences:
+		for answer in Array((sentence as Dictionary).get("answers", [])):
+			var a := answer as Dictionary
+			var why := str(a.get("why", "")).strip_edges()
+			if str(a.get("expect", "")) == "falsch":
+				assert_str(why).override_failure_message(
+						"'%s': „%s“ ist falsch, nennt aber keinen Grund (why)"
+						% [sentence.get("id", "?"), a.get("text", "")]).is_not_empty()
+			else:
+				assert_bool(a.has("why")).override_failure_message(
+						"'%s': „%s“ ist richtig und trägt trotzdem ein why"
+						% [sentence.get("id", "?"), a.get("text", "")]).is_false()
