@@ -21,7 +21,7 @@ const HUD_SCENE := preload("res://scenes/ui/hud.tscn")
 ## Wert 1159 — die Rüstungsleiste liegt deshalb ÜBER dem Lebensbalken und trägt die
 ## Auskunft allein (siehe tests/hud_armor_test.gd).
 const LATE_GAME := {
-	"⭐ 27": "%LevelText", "2340/2700": "%XpText", "100/100": "%HpText",
+	"⭐ 27": "%LevelText", "2340/2700": "%XpText", "288/288": "%HpText",
 	"48/48": "%WaveText", "💀 999": "%Kills", "🏅 999": "%Mastered",
 }
 

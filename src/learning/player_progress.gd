@@ -17,9 +17,6 @@ const MASTERY_CONFIDENCE := 0.8
 ## CEFR/Frequenz des Lexems abgeleiteter Prior (WaveGenerator) kann diesen Wert beim
 ## ersten Kontakt ersetzen — schwerere/seltenere Wörter starten dann unsicherer.
 const DEFAULT_CONFIDENCE := 0.3
-## Festungsstufen-Schwellen: ab so vielen gemeisterten Aufgaben steigt die Stufe
-## um 1 (0 → 1 → 2 → 3 → 4). Bewusst als Konstante, damit leicht justierbar.
-const FORTRESS_TIER_THRESHOLDS := [1, 3, 6, 10]
 ## Die Richtungen, in denen die Übersetzungsaufgabe eines Lexems sitzen muss, damit das
 ## WORT als gemeistert gilt (siehe mastered_lexemes).
 const LEXEME_MASTERY_DIRECTIONS := ["de_to_en", "en_to_de"]
@@ -129,24 +126,14 @@ func has_seen(task_id: String) -> bool:
 	return _records.has(task_id)
 
 
-## Anzahl Aufgaben, deren Confidence die Meisterungs-Schwelle erreicht — Grundlage
-## der Festungsstufe (mehr gemeistert = größere Festung).
+## Anzahl Aufgaben, deren Confidence die Meisterungs-Schwelle erreicht. Die Festungsstufe
+## hängt NICHT mehr daran, sondern an den Wörtern je Unit (FortressTier).
 func mastered_count(threshold := MASTERY_CONFIDENCE) -> int:
 	var n := 0
 	for rec in _records.values():
 		if float(rec.get("confidence", 0.0)) >= threshold:
 			n += 1
 	return n
-
-
-## Festungsstufe 0..4 aus der Zahl gemeisterter Aufgaben (siehe FORTRESS_TIER_THRESHOLDS).
-func fortress_tier() -> int:
-	var m := mastered_count()
-	var tier := 0
-	for t in FORTRESS_TIER_THRESHOLDS:
-		if m >= int(t):
-			tier += 1
-	return tier
 
 
 func reset() -> void:

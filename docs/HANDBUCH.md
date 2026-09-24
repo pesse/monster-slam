@@ -40,6 +40,8 @@ Zeile.
 Die Knöpfe:
 
 - **„▶ Spielen“** – weiter zur Auswahl, was geübt wird, und dann in den Kampf.
+- **„🗺 Landkarte“** – alle Units mit ihrer Festungsstufe; ein Klick spielt eine Unit
+  (Kapitel 10).
 - **„🌳 Fähigkeiten“** – Skillpunkte ausgeben (Kapitel 11).
 - **„📊 Statistik“** – dein Lernstand (Kapitel 12).
 - **„⚙ Einstellungen“** – Profil, Tempo, Protokoll, Melden (Kapitel 13).
@@ -336,13 +338,40 @@ Level 4 ab 600 XP und so weiter (jeder Aufstieg kostet 100 XP mehr als der vorig
 
 ## 10. Die Festung wächst mit
 
-Deine Festung zeigt, wie viel du schon kannst. Sie beginnt als Baustelle und wird mit den
-gemeisterten Aufgaben größer: erst ein Turm, dann Mauern mit Tor, dann eine Burg, am Ende
-mit Nebengebäuden und Fahnen. Es gibt vier Ausbaustufen. Die erste kommt mit der ersten
-gemeisterten Aufgabe, die letzte mit der zehnten.
+Deine Festung zeigt, wie gut du die Units kannst, die du gerade spielst. **Jede Unit hat
+ihre eigene Festungsstufe.** Sie hängt daran, wie viele Wörter der Unit du gemeistert hast
+(in beide Richtungen, wie im Reiter „Fortschritt“ der Statistik):
+
+| Stufe | ab so viel gemeisterten Wörtern der Unit | Festung |
+|---|---|---|
+| 0 | weniger als 10 % | Baustelle |
+| 1 | 10 % | ein Turm |
+| 2 | 35 % | Mauern mit Tor |
+| 3 | 60 % | eine Burg |
+| 4 | 85 % | Burg mit Nebengebäuden und Fahnen |
+
+**Jede Stufe gibt der Festung 25 HP mehr.** Auf Stufe 4 hat sie also 100 HP mehr als auf
+der Baustelle.
+
+- **Im Kampf zählt die schwächste Unit**, die in deiner Auswahl vorkommt. Wer eine starke
+  und eine neue Unit zusammen spielt, kämpft mit der Festung der neuen.
+- **Die Unit zählt immer ganz.** Spielst du nur einen Teil einer Unit oder nur ein Thema
+  daraus, zählen für die Stufe trotzdem alle Wörter der Unit.
+- **Wörter ohne Unit** (Grundwortschatz) haben keine Festungsstufe. Spielst du nur solche
+  Wörter, steht die Festung auf Stufe 0.
 
 Ausgebaut wird nur nach einer **gewonnenen** Welle, nicht mitten im Kampf. Dann fährt die
-Kamera kurz an die Festung heran, und ein Banner zeigt die neue Stufe.
+Kamera kurz an die Festung heran, und ein Banner zeigt die neue Stufe und die dazu
+gewonnenen HP („Stufe 2 · +25 HP“). Die HP sind sofort da: das Maximum und der
+aktuelle Stand steigen um denselben Betrag.
+
+### Die Landkarte
+
+„🗺 Landkarte“ auf dem Start-Screen zeigt je Buch einen Pfad aus Units. Jeder Kreis ist
+eine Unit: die Farbe zeigt die Stufe, der Ring außen, wie viele Wörter schon sitzen.
+Zeigt die Maus auf eine Unit, steht dort zum Beispiel „14 von 40 Wörtern gemeistert“ und
+„Noch 10 Wörter bis Stufe 3 (+25 HP)“. Ein Klick wählt diese Unit aus und öffnet „Runde
+vorbereiten“.
 
 ## 11. Fähigkeiten
 
@@ -406,7 +435,7 @@ verloren ist er aber nie: mit Gold lässt er sich zurückholen.
 - **„✅ Genauigkeit“** – wie viele Antworten gesessen haben, verglichen mit den Tagen
   davor.
 - Gold und Zahl der geöffneten Schatzkisten, Level und Skillpunkte, gemeisterte Aufgaben
-  mit der Festungsstufe, und wie viele Aufgaben heute zur Wiederholung fällig sind.
+  und wie viele Aufgaben heute zur Wiederholung fällig sind.
 - **„🏆 Rekorde“** – Bestwerte über alle Läufe, „kein Lernziel, nur zum Angeben“.
 - **„📈 Lernkurve“** – die gemeisterten Aufgaben über die letzten Wochen. Diese Linie
   geht nicht zurück.
@@ -418,8 +447,9 @@ verloren ist er aber nie: mit Gold lässt er sich zurückholen.
 
 ### Reiter „Fortschritt“: gezählt werden Wörter
 
-Hier steht je Unit und je Thema ein Balken: „… von … Wörtern gemeistert“. Ein Klick auf
-eine Zeile zeigt ihre Wörter.
+Hier steht je Unit und je Thema ein Balken: „… von … Wörtern gemeistert“. Hinter dem Namen
+einer Unit steht ihre Festungsstufe („🏰 Stufe 2“, Kapitel 10). Ein Klick auf eine Zeile
+zeigt ihre Wörter.
 
 **Ein Wort gilt erst als gemeistert, wenn es in BEIDE Richtungen sitzt**: Deutsch→Englisch
 und Englisch→Deutsch. Warum: wer ein Wort nur erkennt, aber nicht selbst hinschreiben

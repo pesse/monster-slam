@@ -80,6 +80,15 @@ urheberrechtlich geschütztem Lehrbuchmaterial und liegen im privaten Submodule
   `server/melden/token.php`): jede Änderung an beiden, beide `--self-test` müssen passen.
 - Marker in den von `tools/report/to_issues.py` angelegten Issues nicht löschen.
 
+**Festung: eine Stufe je Unit** (Issue #21, `src/progression/fortress_tier.gd`):
+- Die Stufe misst den Anteil gemeisterter **Wörter** einer Unit (beide Richtungen,
+  `PlayerProgress.masterable` im Nenner), Schwellen 10/35/60/85 %, +25 HP je Stufe.
+- Im Kampf gilt die schwächste Unit des Scopes; ein Teil-Scope oder Tag-Filter wertet die
+  **ganze** Unit. Gezählt wird nur in `FortressTier.unit_tiers` — `StatsScreen.unit_rows`
+  baut darauf auf, keine zweite Zählregel.
+- Der HP-Bonus geht in dasselbe `max_health` wie `SkillBook.bonuses()`; ein Anstieg mitten im
+  Lauf über `GameState.grow_fortress`. Das Debug-Panel baut nur das Bild um.
+
 **Oberfläche:**
 - Statische UI als `.tscn` im Editor-Format, nicht im Code.
 - Raum und Typografie nur aus `scenes/ui/ui_theme.tres` über `theme_type_variation` —

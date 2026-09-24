@@ -1,0 +1,15 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/ui/unit_path.gd" id="1_path"]
+
+[node name="UnitBook" type="VBoxContainer"]
+theme_type_variation = &"Tight"
+size_flags_horizontal = 3
+
+[node name="Title" type="Label" parent="."]
+theme_type_variation = &"SectionTitle"
+text = "Buch"
+
+[node name="Path" type="Control" parent="."]
+size_flags_horizontal = 3
+script = ExtResource("1_path")

@@ -135,3 +135,43 @@ func test_reset_refills() -> void:
 	_damage(40)
 	GameState.reset()
 	assert_int(GameState.fortress_health).is_equal(GameState.fortress_max_health)
+
+
+# --- Festungsstufe (Issue #21) ------------------------------------------------
+
+## Die Stufe kommt in dasselbe Bonus-Dictionary wie die Skills und wird mit ihnen addiert
+## — eine Summe aus einer Quelle (WaveRunner._ready).
+func test_fortress_bonus_adds_to_the_skill_bonus() -> void:
+	GameState.apply_skills({"max_health": 20 + FortressTier.health_bonus(2)})
+	assert_int(GameState.fortress_max_health).is_equal(
+			GameState.FORTRESS_BASE_MAX_HEALTH + 20 + 2 * FortressTier.HP_PER_TIER)
+	assert_int(GameState.fortress_health).is_equal(GameState.fortress_max_health)
+
+
+## Ein Stufenanstieg mitten im Lauf hebt Maximum UND Stand, den tiefsten Stand nicht.
+func test_grow_fortress_lifts_max_and_current() -> void:
+	GameState.apply_skills({})
+	_damage(40)
+	GameState.grow_fortress(FortressTier.HP_PER_TIER)
+	assert_int(GameState.fortress_max_health).is_equal(
+			GameState.FORTRESS_BASE_MAX_HEALTH + FortressTier.HP_PER_TIER)
+	assert_int(GameState.fortress_health).is_equal(60 + FortressTier.HP_PER_TIER)
+	assert_int(GameState.min_fortress_health).is_equal(60)
+
+
+## Das neue Maximum ist auch der neue Deckel der Heilung.
+func test_grow_fortress_moves_the_heal_cap() -> void:
+	GameState.apply_skills({})
+	GameState.grow_fortress(50)
+	_damage(1)
+	_defeat(true)
+	_defeat(true)
+	assert_int(GameState.fortress_health).is_equal(GameState.FORTRESS_BASE_MAX_HEALTH + 50)
+
+
+func test_grow_fortress_ignores_non_positive_amounts() -> void:
+	GameState.apply_skills({})
+	GameState.grow_fortress(0)
+	GameState.grow_fortress(-10)
+	assert_int(GameState.fortress_max_health).is_equal(GameState.FORTRESS_BASE_MAX_HEALTH)
+	assert_int(GameState.fortress_health).is_equal(GameState.FORTRESS_BASE_MAX_HEALTH)

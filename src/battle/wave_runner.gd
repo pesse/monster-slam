@@ -50,6 +50,8 @@ var _shake_mag: float = SHAKE_MAGNITUDE
 var _rng := RandomNumberGenerator.new()
 
 var _fortress: Node3D = null
+## Festungsstufe DES LAUFS: die schwächste Unit im gespielten Bereich (FortressTier.run_tier).
+## Das Debug-Panel baut nur das Bild um und fasst diesen Wert nicht an.
 var _fortress_tier: int = -1
 var _cutscene: bool = false   # läuft gerade die Ausbau-Cutscene? (unterdrückt Kamera-Wackeln)
 
@@ -76,7 +78,11 @@ func _ready() -> void:
 	# Gelernte Skills UNMITTELBAR nach dem reset(): der Reset stellt die Grundwerte her,
 	# erst danach dürfen die Boni darauf. Ein Dictionary für beide Empfänger, damit es
 	# EINE Quelle der Boni gibt und nicht zwei, die auseinanderlaufen können.
-	var skill_bonuses := SkillBook.bonuses()
+	# Die Festungsstufe kommt in DASSELBE Dictionary: auch sie hebt nur das Maximum, und
+	# eine additive Summe aus einer Quelle kann nicht auseinanderlaufen.
+	var skill_bonuses := SkillBook.bonuses().duplicate()
+	skill_bonuses["max_health"] = int(skill_bonuses.get("max_health", 0)) \
+			+ FortressTier.health_bonus(_fortress_tier)
 	GameState.apply_skills(skill_bonuses)
 	_slow_motion.apply_skills(skill_bonuses)
 	# Der Lauf beginnt hier, nicht mit der ersten Welle: alles, was über die Wellen hinweg
@@ -84,7 +90,7 @@ func _ready() -> void:
 	EventBus.run_started.emit()
 	EventBus.answer_submitted.connect(_on_answer_submitted)
 	# Die Festung wächst mit dem Lernfortschritt, aber erst NACH einer gewonnenen Welle
-	# (siehe _finish_wave) – nicht mehr mitten im Kampf.
+	# (siehe _finish_wave) – nicht mitten im Kampf.
 	var debug_panel := $UI/DebugPanel
 	if debug_panel.has_signal("fortress_tier_selected"):
 		debug_panel.fortress_tier_selected.connect(_on_debug_tier_selected)
@@ -396,8 +402,19 @@ const HEX_DIR := "hexagon"
 const FORTRESS_SCALE := 3.0
 
 func _build_fortress() -> void:
-	_fortress_tier = PlayerProgress.fortress_tier()
+	_fortress_tier = _current_fortress_tier()
 	_spawn_fortress(_fortress_tier)
+
+
+## Die Festungsstufe für den gewählten Bereich: die Units kommen aus Scope und Themen des
+## Session-Setups (dieselben Achsen wie WaveGenerator.pool_from_settings), gewertet wird
+## jede Unit als Ganzes über den ganzen Katalog (siehe FortressTier.run_tier).
+func _current_fortress_tier() -> int:
+	var scoped := ContentRegistry.lexemes_scoped(
+			UserSettings.selected_scope(), UserSettings.selected_tags())
+	var units := FortressTier.unit_tiers(
+			ContentRegistry.lexemes.values(), PlayerProgress.mastered_lexemes())
+	return FortressTier.run_tier(scoped, units)
 
 
 ## Baut die Festung passend zur Stufe (0..4) neu auf. Additiv: höhere Stufen zeigen
@@ -412,7 +429,7 @@ func _spawn_fortress(tier: int) -> void:
 	var fz := GOAL_Z              # Mauerfront = Ziel-Linie der Monster
 	var seg := 2.0 * FORTRESS_SCALE   # Weltbreite eines Mauersegments
 
-	print("[FORTRESS] Stufe %d (%d Aufgaben gemeistert)" % [tier, PlayerProgress.mastered_count()])
+	print("[FORTRESS] Stufe %d (+%d HP)" % [tier, FortressTier.health_bonus(tier)])
 
 	if tier <= 0:
 		# Baustelle: Turmstumpf + Baugerüst. Kleine Stufe an den hinteren Rand
@@ -461,9 +478,9 @@ func _hex(parent: Node3D, model: String, x: float, z: float, yaw := 0.0, extra :
 	return _place_model(parent, "%s.gltf" % model, Vector3(x, _ground_y(x, z), z), yaw, Vector3.ONE * FORTRESS_SCALE * extra, HEX_DIR)
 
 
-## Baut die Festung bei einem Stufenanstieg neu auf, mit kurzem Bau-Effekt als Feedback.
+## Baut die Festung neu auf, mit kurzem Bau-Effekt als Feedback. Nur das Bild — die
+## Stufe des Laufs setzt _finish_wave.
 func _rebuild_fortress(tier: int) -> void:
-	_fortress_tier = tier
 	if is_instance_valid(_fortress):
 		_fortress.queue_free()
 	_spawn_fortress(tier)
@@ -473,7 +490,7 @@ func _rebuild_fortress(tier: int) -> void:
 ## „Cutscene" beim Festungsausbau (nach gewonnener Welle, vor der Statistik): die
 ## Kamera zoomt kräftig auf die neu gebaute Festung, ein festlicher Blitz + Banner
 ## feiern die neue Stufe, danach fährt die Kamera zurück. Unterdrückt das Kamera-Wackeln.
-func _play_upgrade_cutscene(tier: int) -> void:
+func _play_upgrade_cutscene(tier: int, bonus: int) -> void:
 	_rebuild_fortress(tier)
 	# Überlappende Cutscenes vermeiden: nur die erste inszeniert, weitere bauen still um.
 	if _cutscene:
@@ -489,7 +506,7 @@ func _play_upgrade_cutscene(tier: int) -> void:
 
 	# Festlicher goldener Blitz an der Festung + Banner.
 	_spawn_explosion(Vector3(0.0, 2.0, GOAL_Z + 2.0), Color(1.0, 0.85, 0.3), 3.0)
-	_show_upgrade_banner(tier)
+	_show_upgrade_banner(tier, bonus)
 
 	# Heranfahren + kräftig hineinzoomen.
 	var tw_in := create_tween()
@@ -510,7 +527,7 @@ func _play_upgrade_cutscene(tier: int) -> void:
 
 
 ## Blendet für die Ausbau-Cutscene ein gerahmtes Banner ein (steigt auf + blendet aus).
-func _show_upgrade_banner(tier: int) -> void:
+func _show_upgrade_banner(tier: int, bonus: int) -> void:
 	var panel := PanelContainer.new()
 	panel.anchor_left = 0.5
 	panel.anchor_right = 0.5
@@ -524,7 +541,7 @@ func _show_upgrade_banner(tier: int) -> void:
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.add_theme_font_size_override("font_size", 40)
 	label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.35))
-	label.text = "🏰 Festung ausgebaut!\nStufe %d" % tier
+	label.text = "🏰 Festung ausgebaut!\nStufe %d · +%d HP" % [tier, bonus]
 	panel.add_child(label)
 
 	panel.modulate = Color(1, 1, 1, 0)
@@ -1040,10 +1057,15 @@ func _finish_wave(won: bool) -> void:
 	# dieser hier die Stimmung.
 	Sfx.play(&"wave_cleared" if won else &"fortress_destroyed")
 	# Festungsausbau erst jetzt (nach gewonnener Welle), als Cutscene VOR der Statistik.
+	# Die HP wachsen VOR der Cutscene mit: das Banner nennt sie, und die Statistik danach
+	# soll den neuen Stand zeigen. Der HUD-Balken zieht mit dem nächsten Wellenstart nach.
 	if won:
-		var new_tier := PlayerProgress.fortress_tier()
+		var new_tier := _current_fortress_tier()
 		if new_tier > _fortress_tier:
-			await _play_upgrade_cutscene(new_tier)
+			var bonus := FortressTier.health_bonus(new_tier - _fortress_tier)
+			_fortress_tier = new_tier
+			GameState.grow_fortress(bonus)
+			await _play_upgrade_cutscene(new_tier, bonus)
 	# Vokabeln mit korrekter Übersetzung auflösen (Sieg wie Niederlage), als
 	# Zwischenschritt VOR der Statistik. Übergeben wird die volle Liste; das Reveal
 	# animiert die durchgelassenen zuerst und lässt danach alle durchblättern.
@@ -1067,7 +1089,7 @@ func _finish_wave(won: bool) -> void:
 		"score_gained": score_gained,
 		"fortress_health": GameState.fortress_health,
 		"mastered": PlayerProgress.mastered_count(),
-		"fortress_tier": PlayerProgress.fortress_tier(),
+		"fortress_tier": _fortress_tier,
 		"chest": ChestReward.for_wave(score_gained, _wave_correct, _wave_leaked),
 		# Erfahrung: der Zuwachs DIESER Welle und die Zahl der Aufstiege darin. Den
 		# Gesamtstand liest der Screen bei PlayerLevel — verbucht ist er längst (siehe

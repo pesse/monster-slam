@@ -70,12 +70,21 @@ text = "Noch keine Vokabeln vorhanden — unten über „📚 Inhalte“ einen V
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="SkillButton" type="Button" parent="Margin/Root"]
+[node name="NavRow" type="HBoxContainer" parent="Margin/Root"]
+
+[node name="MapButton" type="Button" parent="Margin/Root/NavRow"]
 unique_name_in_owner = true
+size_flags_horizontal = 3
+text = "🗺 Landkarte"
+
+[node name="SkillButton" type="Button" parent="Margin/Root/NavRow"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
 text = "🌳 Fähigkeiten"
 
-[node name="StatsButton" type="Button" parent="Margin/Root"]
+[node name="StatsButton" type="Button" parent="Margin/Root/NavRow"]
 unique_name_in_owner = true
+size_flags_horizontal = 3
 text = "📊 Statistik"
 
 [node name="SettingsButton" type="Button" parent="Margin/Root"]

@@ -131,8 +131,9 @@ func _refresh_numbers() -> void:
 		int(progress["level"]), int(progress["xp_in_level"]), int(progress["xp_for_level_up"]),
 		PlayerLevel.label(), points, "" if points == 1 else "e",
 		" offen — im Start-Screen unter „🌳 Fähigkeiten“" if points > 0 else ""])
-	_add_line(_stat_lines, "Gemeisterte Aufgaben: %d  (Festungsstufe %d)" % [
-		PlayerProgress.mastered_count(), PlayerProgress.fortress_tier()])
+	# Keine Festungsstufe mehr daneben: sie hängt an der Unit, nicht am Profil, und steht
+	# im Reiter „Fortschritt" an jeder Unit-Zeile und auf der Landkarte.
+	_add_line(_stat_lines, "Gemeisterte Aufgaben: %d" % PlayerProgress.mastered_count())
 	_add_line(_stat_lines, "Heute fällig: %d" % PlayerProgress.due_count())
 
 
@@ -408,32 +409,40 @@ func _refresh_progress() -> void:
 	var pool := ContentRegistry.lexemes_scoped(UserSettings.selected_scope(), []) \
 			.filter(PROGRESS.masterable)
 	var mastered := PlayerProgress.mastered_lexemes()
-	_fill_progress(_unit_list, unit_rows(pool, mastered, ContentRegistry.book_label),
-			"Keine Units im gewählten Bereich.")
+	# Die Festungsstufe wertet die GANZE Unit, auch wenn der Bereich nur ein Viertel davon
+	# zeigt (FortressTier.run_tier) — deshalb über den Katalog und nicht über `pool`.
+	var tiers := FortressTier.unit_tiers(ContentRegistry.lexemes.values(), mastered)
+	var units := unit_rows(pool, mastered, ContentRegistry.book_label)
+	for row in units:
+		var tier := int((tiers.get(str(row["key"]), {}) as Dictionary).get("tier", 0))
+		row["label"] = "%s  · 🏰 Stufe %d" % [row["label"], tier]
+	_fill_progress(_unit_list, units, "Keine Units im gewählten Bereich.")
 	_fill_progress(_tag_list, tag_rows(pool, mastered), "Noch keine Themen im gewählten Bereich.")
 
 
-## Fortschrittszeilen je Unit: { label, done, total }, nach Buch und Unit sortiert.
-## Lexeme ohne Buch/Unit (Grundwortschatz) haben keine Unit und bleiben außen vor.
-## `book_label` benennt das Buch für die Anzeige (ContentRegistry.book_label).
+## Fortschrittszeilen je Unit: { key, label, done, total, lexemes }, nach Buch und Unit
+## sortiert. Lexeme ohne Buch/Unit (Grundwortschatz) haben keine Unit und bleiben außen
+## vor. `book_label` benennt das Buch für die Anzeige (ContentRegistry.book_label).
 ##
-## Statisch und ohne Autoload, damit die Zählung für sich prüfbar bleibt
+## Gezählt wird in FortressTier.unit_tiers — dieselbe Zählung, aus der die Festungsstufe
+## kommt. Statisch und ohne Autoload, damit sie für sich prüfbar bleibt
 ## (siehe tests/mastered_lexemes_test.gd).
 static func unit_rows(lexemes: Array, mastered: Dictionary, book_label: Callable) -> Array:
-	var groups := {}
-	for entry in lexemes:
-		var book := str(entry.get("book", ""))
-		if book.is_empty() or not entry.has("unit"):
-			continue
-		_count_into(groups, "%s/%04d" % [book, int(entry["unit"])], entry, mastered)
+	var groups := FortressTier.unit_tiers(lexemes, mastered)
 	var keys: Array = groups.keys()
-	keys.sort()
+	# Numerisch nach Unit, nicht als Text — sonst stünde Unit 10 vor Unit 2.
+	keys.sort_custom(func(a, b):
+		var ga: Dictionary = groups[a]
+		var gb: Dictionary = groups[b]
+		if ga["book"] != gb["book"]:
+			return str(ga["book"]) < str(gb["book"])
+		return int(ga["unit"]) < int(gb["unit"]))
 	var rows: Array = []
 	for key in keys:
-		var parts := str(key).split("/")
 		var group: Dictionary = groups[key]
 		rows.append({
-			"label": "%s, Unit %d" % [book_label.call(parts[0]), int(parts[1])],
+			"key": key,
+			"label": "%s, Unit %d" % [book_label.call(group["book"]), int(group["unit"])],
 			"done": int(group["done"]), "total": int(group["total"]),
 			"lexemes": group["lexemes"],
 		})
@@ -446,7 +455,7 @@ static func tag_rows(lexemes: Array, mastered: Dictionary) -> Array:
 	var groups := {}
 	for entry in lexemes:
 		for tag in entry.get("tags", []):
-			_count_into(groups, str(tag), entry, mastered)
+			FortressTier.count_into(groups, str(tag), entry, mastered)
 	var keys: Array = groups.keys()
 	keys.sort()
 	var rows: Array = []
@@ -457,17 +466,6 @@ static func tag_rows(lexemes: Array, mastered: Dictionary) -> Array:
 			"lexemes": group["lexemes"],
 		})
 	return rows
-
-
-## Zählt ein Lexem in die Gruppe `key`: eines mehr insgesamt, und eines mehr gemeistert,
-## wenn es in der Menge steht (siehe PlayerProgress.mastered_lexemes).
-static func _count_into(groups: Dictionary, key: String, entry: Dictionary, mastered: Dictionary) -> void:
-	if not groups.has(key):
-		groups[key] = {"done": 0, "total": 0, "lexemes": []}
-	groups[key]["total"] += 1
-	groups[key]["lexemes"].append(entry)
-	if mastered.has(str(entry.get("id", ""))):
-		groups[key]["done"] += 1
 
 
 ## Die Wörter einer Gruppe mit ihrem Prozentstand — was hinter „18 von 24" steht.

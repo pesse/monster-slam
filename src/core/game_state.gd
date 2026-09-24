@@ -103,6 +103,17 @@ func apply_skills(bonuses: Dictionary) -> void:
 	fortress_armor = fortress_armor_max
 
 
+## Die Festung wächst mitten im Lauf um `extra` HP: eine Unit hat nach einer gewonnenen
+## Welle eine Festungsstufe dazugewonnen (WaveRunner._finish_wave, FortressTier). Maximum
+## UND Stand steigen um denselben Betrag — der Ausbau soll sofort etwas taugen, nicht erst
+## nach dreißig Heilungen. `min_fortress_health` bleibt: der tiefste Stand war, was er war.
+func grow_fortress(extra: int) -> void:
+	if extra <= 0:
+		return
+	fortress_max_health += extra
+	fortress_health = mini(fortress_max_health, fortress_health + extra)
+
+
 ## Der Wellenstart rührt die Festungs-HP NICHT an: der Stand wird über die Wellen
 ## hinweg mitgenommen, Schaden bleibt spürbar, und korrekte Antworten reparieren ihn
 ## nach und nach (siehe _on_monster_defeated). Aufgefüllt wird nur beim Start eines

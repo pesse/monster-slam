@@ -1,0 +1,55 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/ui/unit_map.gd" id="1_map"]
+
+[node name="UnitMap" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_map")
+
+[node name="Margin" type="MarginContainer" parent="."]
+theme_type_variation = &"ScreenMargin"
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Root" type="VBoxContainer" parent="Margin"]
+theme_type_variation = &"ScreenStack"
+
+[node name="Header" type="HBoxContainer" parent="Margin/Root"]
+
+[node name="BackButton" type="Button" parent="Margin/Root/Header"]
+unique_name_in_owner = true
+text = "← Zurück"
+
+[node name="Title" type="Label" parent="Margin/Root/Header"]
+theme_type_variation = &"Title"
+size_flags_horizontal = 3
+text = "Landkarte"
+horizontal_alignment = 1
+
+[node name="EmptyHint" type="Label" parent="Margin/Root"]
+theme_type_variation = &"Hint"
+unique_name_in_owner = true
+visible = false
+text = "Noch keine Units vorhanden — im Start-Screen unter „📚 Inhalte“ einen Vokabel-Pack installieren."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Scroll" type="ScrollContainer" parent="Margin/Root"]
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Gutter" type="MarginContainer" parent="Margin/Root/Scroll"]
+theme_type_variation = &"ScrollGutter"
+size_flags_horizontal = 3
+
+[node name="Books" type="VBoxContainer" parent="Margin/Root/Scroll/Gutter"]
+theme_type_variation = &"SectionStack"
+unique_name_in_owner = true
+size_flags_horizontal = 3
