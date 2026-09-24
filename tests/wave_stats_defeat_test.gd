@@ -90,6 +90,27 @@ func test_the_defeat_screen_fits_into_the_base_resolution() -> void:
 	assert_float(min_size.y).is_less_equal(base.y)
 
 
+## Dasselbe mit dem Trostwort statt der Kiste: der zweizeilige Titel darf die Seite nicht
+## über die Grundauflösung schieben.
+func test_the_consolation_screen_fits_into_the_base_resolution() -> void:
+	var layer: CanvasLayer = auto_free(CanvasLayer.new())
+	add_child(layer)
+	var stats := auto_free(STATS_SCENE.instantiate()) as PanelContainer
+	layer.add_child(stats)
+	stats.show_stats({"won": false, "wave_number": 3, "difficulty": 3, "correct": 0,
+			"leaked": 6, "total": 6, "accuracy": 0.0, "score_gained": 0,
+			"score_total": 120, "fortress_health": 0, "mastered": 3, "fortress_tier": 0,
+			"chest": ChestReward.for_wave(0, 0, 6), "session": _long_balance()})
+	for i in 5:
+		await get_tree().process_frame
+	var base := Vector2(
+			float(ProjectSettings.get_setting("display/window/size/viewport_width", 1152)),
+			float(ProjectSettings.get_setting("display/window/size/viewport_height", 648)))
+	var min_size := stats.get_combined_minimum_size()
+	assert_float(min_size.x).is_less_equal(base.x)
+	assert_float(min_size.y).is_less_equal(base.y)
+
+
 func _long_balance() -> Dictionary:
 	var words: Array = []
 	for i in 30:

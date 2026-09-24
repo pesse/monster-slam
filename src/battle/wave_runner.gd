@@ -94,6 +94,8 @@ func _ready() -> void:
 		_stats.back_to_menu_requested.connect(_on_back_to_menu)
 	if _stats.has_signal("reward_collected"):
 		_stats.reward_collected.connect(_on_reward_collected)
+	if _stats.has_signal("consolation_collected"):
+		_stats.consolation_collected.connect(func(gold: int) -> void: Wallet.earn(gold))
 	_fast_resolve_button.pressed.connect(_on_fast_resolve_pressed)
 	_fast_resolve_confirm.confirmed.connect(_fast_resolve_wave)
 	_fast_resolve_confirm.cancelled.connect(_on_fast_resolve_cancelled)

@@ -58,6 +58,12 @@ func test_without_score_there_is_no_chest() -> void:
 	assert_int(REWARD.for_wave(0, 0, 3)["gold"]).is_equal(0)
 
 
+func test_only_a_wave_without_gold_brings_consolation() -> void:
+	assert_int(REWARD.for_wave(0, 0, 3)["consolation"]).is_equal(REWARD.CONSOLATION_GOLD)
+	assert_int(REWARD.for_wave(0, 0, 3)["gold"]).is_equal(0)
+	assert_int(REWARD.for_wave(60, 6, 0)["consolation"]).is_equal(0)
+
+
 func test_for_wave_carries_tier_gold_and_name() -> void:
 	var reward := REWARD.for_wave(60, 6, 0)
 	assert_int(reward["tier"]).is_equal(REWARD.Tier.GOLD)

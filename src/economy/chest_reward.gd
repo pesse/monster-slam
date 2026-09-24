@@ -35,6 +35,11 @@ const TIER_FACTOR := [0.8, 1.0, 1.2, 1.5]
 ## Wer ein Monster besiegt hat, geht nie mit leeren Händen — eine Kiste mit 0 Gold wäre
 ## ein Versprechen, das der Deckel nicht hält.
 const MIN_GOLD := 1
+## Wer KEIN Monster besiegt hat, bekommt keine Kiste, aber ein Goldstück zum Trost — eine
+## Welle, aus der man mit gar nichts geht, frustriert, gerade wenn man sie schnell
+## aufgelöst hat, weil die Wörter noch neu sind. Bewusst keine Holzkiste: die Kiste ist
+## der Fund, und ein Fund für eine verpasste Welle wäre eine Belohnung fürs Nichtwissen.
+const CONSOLATION_GOLD := 1
 
 ## Genauigkeits-Schwellen der Güte (0..1). Ohne Durchgelassenes ist die Welle perfekt und
 ## die Kiste golden — das ist die Bedingung, die man beim Spielen im Kopf haben kann.
@@ -66,13 +71,15 @@ static func gold_for(score_gained: int, tier: Tier) -> int:
 	return maxi(MIN_GOLD, int(round(base)))
 
 
-## Die vollständige Belohnung einer Welle: { "tier": Tier, "gold": int, "name": String }.
-## `gold` 0 heißt „keine Kiste" — der Aufrufer überspringt die Belohnung dann (siehe
-## WaveStats.show_stats).
+## Die vollständige Belohnung einer Welle:
+## { "tier": Tier, "gold": int, "name": String, "consolation": int }.
+## `gold` 0 heißt „keine Kiste" — dann steht in `consolation` das Trostgold, das der
+## Screen statt der Kiste zeigt (siehe WaveStats.show_stats). Mit Kiste ist es 0.
 static func for_wave(score_gained: int, correct: int, leaked: int) -> Dictionary:
 	var tier := tier_for(correct, leaked)
 	return {
 		"tier": tier,
 		"gold": gold_for(score_gained, tier),
 		"name": TIER_NAMES[int(tier)],
+		"consolation": CONSOLATION_GOLD if gold_for(score_gained, tier) <= 0 else 0,
 	}

@@ -10,8 +10,9 @@ extends PanelContainer
 ## zusammen — beides ist das Ergebnis derselben Welle, links die Zahlen, rechts der Lohn.
 ##
 ## Die Kiste fällt aus, wenn die Welle nichts eingebracht hat (kein besiegtes Monster,
-## also kein Gold): eine leere Kiste ist keine Belohnung. Nach einer Niederlage gibt es
-## sie trotzdem — verdient ist verdient, der Lauf endet danach in Stufe 2 ohne Wahl.
+## also kein Gold): eine leere Kiste ist keine Belohnung. An ihrem Platz steht dann ein
+## Trostwort mit einem Goldstück (ChestReward.CONSOLATION_GOLD), das ohne Zutun verbucht
+## wird — es gibt nichts zu öffnen. Nach einer Niederlage gibt es die Kiste trotzdem — verdient ist verdient, der Lauf endet danach in Stufe 2 ohne Wahl.
 ##
 ## **Die Größe des Screens steht fest**, solange er sichtbar ist: die Seiten liegen in
 ## einem PageStack (Mindestgröße = größte Seite, auch unsichtbar), und innerhalb der
@@ -51,9 +52,12 @@ signal next_wave_requested(difficulty_delta: int)
 signal back_to_menu_requested
 
 ## Die Schatzkiste ist offen: `gold` ist verdient und will verbucht werden. Der Screen
-## bucht nicht selbst — er zeigt nur, was der Empfänger (WaveRunner -> Wallet) daraus
-## macht, und liest den neuen Stand über Wallet.changed zurück.
+## bucht nicht selbst, der Empfänger (WaveRunner -> Wallet) tut es. Den Gesamtstand
+## zeigt er bewusst nicht: „Insgesamt 3 Gold" nach einer mageren Welle frustriert nur.
 signal reward_collected(gold: int)
+## Das Trostgold einer Welle ohne Kiste (siehe CONSOLATION_TITLE). Ein eigenes Signal,
+## weil es keine geöffnete Kiste ist — Wallet zählt die Kisten mit.
+signal consolation_collected(gold: int)
 
 ## Deltas der Schwierigkeitswahl, in Reihenfolge der Buttons in ChoiceRow (wave_stats.tscn).
 const CHOICE_DELTAS := [-2, -1, 0, 1, 2]
@@ -64,6 +68,9 @@ const BALANCE_WORDS := 4
 const DEFAULT_CHOICE := 2
 ## Aufforderung an der Kiste, solange sie zu ist.
 const CHEST_HINT := "2 Sekunden auf die Kiste drücken\n(oder Leertaste halten)"
+## Steht statt des Kistennamens, wenn kein Monster besiegt wurde. Zweizeilig, weil der
+## Titel nicht umbricht und die Spalte sonst den Screen verbreitern würde.
+const CONSOLATION_TITLE := "Kein Monster besiegt –\naller Anfang ist schwer"
 
 enum Stage {
 	RESULT,  ## Ergebnis der Welle: Zahlen und Schatzkiste.
@@ -77,9 +84,9 @@ enum Stage {
 @onready var _next_page: VBoxContainer = %NextPage
 @onready var _reward: VBoxContainer = %Reward
 @onready var _chest: TreasureChest = %Chest
+@onready var _chest_row: Control = %ChestRow
 @onready var _chest_name: Label = %ChestName
 @onready var _reward_line: Label = %RewardLine
-@onready var _gold_label: Label = %GoldLabel
 @onready var _result_continue: Button = %ResultContinue
 @onready var _balance: VBoxContainer = %Balance
 @onready var _balance_lines: VBoxContainer = %BalanceLines
@@ -105,9 +112,6 @@ func _ready() -> void:
 	_menu_button.pressed.connect(func(): back_to_menu_requested.emit())
 	_result_continue.pressed.connect(func(): _goto_stage(Stage.NEXT))
 	_chest.opened.connect(_on_chest_opened)
-	# Der Goldstand kommt aus der Geldbörse und nicht aus dem, was die Kiste gerade
-	# hergegeben hat: sie ist die eine Quelle, und sie meldet sich, wenn sich was ändert.
-	Wallet.changed.connect(_on_wallet_changed)
 	_update_choice_highlight()
 
 
@@ -153,12 +157,19 @@ func show_stats(data: Dictionary) -> void:
 	# die Seite in ihrer Größe stehen.
 	var chest: Dictionary = data.get("chest", {})
 	_chest_gold = int(chest.get("gold", 0))
-	_reward.visible = _chest_gold > 0
-	_chest_name.text = str(chest.get("name", ChestReward.TIER_NAMES[0]))
-	_reward_line.text = CHEST_HINT
+	var consolation := int(chest.get("consolation", 0)) if _chest_gold <= 0 else 0
+	_reward.visible = _chest_gold > 0 or consolation > 0
+	_chest_row.visible = _chest_gold > 0
+	if consolation > 0:
+		_chest_name.text = CONSOLATION_TITLE
+		_reward_line.text = "+%s" % Wallet.label(consolation)
+	else:
+		_chest_name.text = str(chest.get("name", ChestReward.TIER_NAMES[0]))
+		_reward_line.text = CHEST_HINT
 	_chest.present(int(chest.get("tier", ChestReward.Tier.WOOD)), _chest_gold)
-	_on_wallet_changed(Wallet.gold)
 	_update_reward_gate()
+	if consolation > 0:
+		consolation_collected.emit(consolation)
 
 	# Gefallene Festung = Ende des Laufs. Es gibt keine nächste Welle, also auch keine
 	# Schwierigkeitswahl und keinen Startknopf — nur den Weg ins Menü. Damit muss der
@@ -283,13 +294,8 @@ func _update_reward_gate() -> void:
 func _on_chest_opened(gold: int) -> void:
 	_reward_line.text = "+%s" % Wallet.label(gold)
 	_update_reward_gate()
-	# Erst melden, dann steht die Zahl in der Geldbörse: der neue Stand kommt über
-	# Wallet.changed zurück (siehe _on_wallet_changed).
+	# Verbucht wird im WaveRunner, nicht hier: der Screen meldet nur.
 	reward_collected.emit(gold)
-
-
-func _on_wallet_changed(gold: int) -> void:
-	_gold_label.text = "Insgesamt %s" % Wallet.label(gold)
 
 
 # --- Schwierigkeitswahl -------------------------------------------------------

@@ -84,16 +84,33 @@ func test_opening_the_chest_reports_the_gold_and_unlocks_the_way_on() -> void:
 	assert_bool(_visible("NextPage")).is_true()
 
 
-## Ohne besiegtes Monster gibt es nichts zu holen: die Kiste bleibt weg, und der Weg
-## weiter ist offen.
-func test_a_wave_without_gold_has_no_chest() -> void:
+## Ohne besiegtes Monster gibt es keine Kiste, aber an ihrem Platz ein Trostwort mit einem
+## Goldstück — ohne etwas zu öffnen, der Weg weiter ist also offen.
+func test_a_wave_without_gold_has_a_consolation_instead_of_a_chest() -> void:
+	var collected: Array[int] = []
+	_stats.consolation_collected.connect(func(gold: int) -> void: collected.append(gold))
 	_stats.show_stats(_wave_data({
 		"correct": 0, "leaked": 3, "score_gained": 0,
 		"chest": ChestReward.for_wave(0, 0, 3),
 	}))
-	assert_bool(_visible("Reward")).is_false()
+	assert_bool(_visible("Reward")).is_true()
+	assert_bool(_visible("ChestRow")).is_false()
+	assert_str((_stats.get_node("%ChestName") as Label).text).contains("aller Anfang ist schwer")
+	assert_str((_stats.get_node("%RewardLine") as Label).text).is_equal("+1 Gold")
+	assert_array(collected).is_equal([ChestReward.CONSOLATION_GOLD])
 	assert_bool(_button("ResultContinue").disabled).is_false()
 	assert_bool(_button("MenuButton").disabled).is_false()
+
+
+## Mit Kiste kein Trostgold dazu, und die Kiste steht wieder da.
+func test_a_chest_brings_no_consolation() -> void:
+	var collected: Array[int] = []
+	_stats.consolation_collected.connect(func(gold: int) -> void: collected.append(gold))
+	_stats.show_stats(_wave_data({"chest": ChestReward.for_wave(0, 0, 3)}))
+	_stats.show_stats(_wave_data())
+	assert_bool(_visible("ChestRow")).is_true()
+	assert_str((_stats.get_node("%ChestName") as Label).text).is_equal("Goldkiste")
+	assert_array(collected).is_equal([ChestReward.CONSOLATION_GOLD])
 
 
 ## Auch eine verlorene Welle bringt die Kiste: verdient ist verdient.

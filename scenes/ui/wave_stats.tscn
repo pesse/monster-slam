@@ -50,6 +50,7 @@ horizontal_alignment = 1
 text = "Holzkiste"
 
 [node name="ChestRow" type="CenterContainer" parent="Root/Pages/ResultPage/Columns/Reward"]
+unique_name_in_owner = true
 
 [node name="Chest" parent="Root/Pages/ResultPage/Columns/Reward/ChestRow" instance=ExtResource("2_chest")]
 unique_name_in_owner = true
@@ -61,11 +62,6 @@ custom_minimum_size = Vector2(240, 0)
 horizontal_alignment = 1
 autowrap_mode = 3
 text = "2 Sekunden auf die Kiste drücken"
-
-[node name="GoldLabel" type="Label" parent="Root/Pages/ResultPage"]
-theme_type_variation = &"Caption"
-unique_name_in_owner = true
-horizontal_alignment = 1
 
 [node name="ResultContinue" type="Button" parent="Root/Pages/ResultPage"]
 unique_name_in_owner = true
