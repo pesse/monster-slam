@@ -43,3 +43,21 @@ func test_card_without_meaning_hides_the_meaning_label() -> void:
 	# Übersetzungsaufgaben zeigen die Bedeutung schon als Antwort — keine zweite Zeile.
 	var card := _make_card({"prompt": "die Katze", "answers": ["cat"], "lexeme_type": "noun"}, true)
 	assert_bool((card.get_node("%Meaning") as Label).visible).is_false()
+
+
+## Der Hintergrund sagt je Karte, wie es ausging — nicht nur der Titel der Auflösung.
+func test_a_leaked_card_is_red_and_a_correct_one_green() -> void:
+	var leaked := _make_card({"prompt": "x", "answers": ["y"], "leaked": true}, true)
+	var correct := _make_card({"prompt": "x", "answers": ["y"], "leaked": false}, true)
+	var red := (leaked.get_theme_stylebox("panel") as StyleBoxFlat).bg_color
+	var green := (correct.get_theme_stylebox("panel") as StyleBoxFlat).bg_color
+	assert_float(red.r).is_greater(red.g)
+	assert_float(green.g).is_greater(green.r)
+
+
+## Gefärbt wird eine Kopie: der Panel-Stylebox des Themes ist geteilt.
+func test_the_tint_leaves_the_theme_panel_alone() -> void:
+	var card := _make_card({"prompt": "x", "answers": ["y"], "leaked": true}, true)
+	var theme_panel := load("res://scenes/ui/ui_theme.tres").get_stylebox("panel", "PanelContainer") as StyleBoxFlat
+	assert_object(card.get_theme_stylebox("panel")).is_not_same(theme_panel)
+	assert_bool(theme_panel.bg_color.is_equal_approx(Color(0.12, 0.14, 0.22, 0.92))).is_true()
