@@ -1,6 +1,6 @@
 extends Control
 ## Gestaltete Kopfleiste: Spieler mit Level und Erfahrungsbalken, Festungs-Lebensbalken,
-## Wellen-Fortschritt und Punkte/Kills.
+## Wellen-Fortschritt, Kills und die in dieser Sitzung gemeisterten Aufgaben.
 ## Das Layout liegt in hud.tscn; hier wird nur auf Signale reagiert und der Zustand
 ## dargestellt (die Werte LIEST das HUD aus GameState und PlayerLevel — die rechnen).
 ##
@@ -22,7 +22,7 @@ const COLOR_HP_LOW := Color(1.0, 0.3, 0.3)
 @onready var _wave_bar: ProgressBar = %WaveBar
 @onready var _wave_text: Label = %WaveText
 @onready var _kills_label: Label = %Kills
-@onready var _score_label: Label = %Score
+@onready var _mastered_label: Label = %Mastered
 @onready var _player_name: Label = %PlayerName
 @onready var _level_text: Label = %LevelText
 @onready var _xp_bar: ProgressBar = %XpBar
@@ -37,6 +37,8 @@ func _ready() -> void:
 	_player_name.text = "👤 %s" % UserSettings.display_name()
 	EventBus.fortress_damaged.connect(func(_amount): _refresh())
 	EventBus.monster_defeated.connect(func(_monster, _correct): _refresh())
+	# Gemeistert wird in PlayerProgress.record(), und das läuft VOR diesem Signal.
+	EventBus.item_reviewed.connect(func(_id, _correct, _rt): _refresh())
 	# Wellenstart setzt wave_total/wave_resolved zurück -> sofort auffrischen.
 	# Die HP rührt er nicht an, der Stand läuft über die Wellen weiter.
 	EventBus.wave_started.connect(func(_wave_id): _refresh())
@@ -84,9 +86,17 @@ func _refresh() -> void:
 	_wave_bar.value = GameState.wave_resolved
 	_wave_text.text = "%d/%d" % [GameState.wave_resolved, total]
 
-	# Punkte + zerstörte Monster.
 	_kills_label.text = "💀 %d" % GameState.monsters_defeated
-	_score_label.text = "💰 %d" % GameState.score
+	# Keine Punkte: sie sind ein interner Wert (aus ihnen wird das Gold der Kiste), und
+	# eine Zahl, mit der der Spieler nichts anfangen kann, lenkt nur ab. Stattdessen, was
+	# er in dieser Sitzung gelernt hat — und erst, wenn es etwas gibt: eine „🏅 0" wäre
+	# eine Mahnung. Dieselbe Regel wie die Sitzungsbilanz (RunBalance, fresh_rows).
+	var session := SessionLog.current()
+	var mastered := 0
+	if not session.is_empty():
+		mastered = PlayerProgress.mastered_since(int(session.get("started_at", 0))).size()
+	_mastered_label.visible = mastered > 0
+	_mastered_label.text = "🏅 %d" % mastered
 
 
 ## Level und Erfahrungsbalken. Der Balken zeigt den Stand IM Level (0..Kosten des

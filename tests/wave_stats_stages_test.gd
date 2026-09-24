@@ -42,9 +42,9 @@ func test_statistics_and_chest_share_the_first_stage() -> void:
 	_stats.show_stats(_wave_data())
 	assert_bool(_visible("ResultPage")).is_true()
 	assert_bool(_visible("NextPage")).is_false()
-	# Zahlen links, Kiste rechts — beides ist das Ergebnis derselben Welle. Acht Zeilen
-	# ohne Aufstieg (der bringt eine neunte, siehe wave_stats.gd).
-	assert_int((_stats.get_node("%Lines") as VBoxContainer).get_child_count()).is_equal(8)
+	# Zahlen links, Kiste rechts — beides ist das Ergebnis derselben Welle. Sieben Zeilen
+	# ohne Aufstieg und ohne Meisterung in der Sitzung (die bringen je eine weitere).
+	assert_int((_stats.get_node("%Lines") as VBoxContainer).get_child_count()).is_equal(7)
 	assert_bool(_visible("Reward")).is_true()
 
 
@@ -61,6 +61,20 @@ func test_the_level_up_line_appears_only_after_a_level_up() -> void:
 
 ## Solange die Kiste zu ist, sind Weiter und Menü GESPERRT (nicht ausgeblendet — ein
 ## verschwindender Knopf würde den Screen springen lassen).
+## Punkte sind ein interner Wert (aus ihnen rechnet die Kiste) und stehen nirgends. Was
+## der Spieler sehen soll, ist, was er gelernt hat — und nur, wenn es etwas gibt.
+func test_the_result_shows_session_masteries_instead_of_points() -> void:
+	var lines := _stats.get_node("%Lines") as VBoxContainer
+	_stats.show_stats(_wave_data({"session": _balance(0)}))
+	var without := lines.get_child_count()
+	for line in lines.get_children():
+		assert_str((line as Label).text).not_contains("Punkte").not_contains("gemeistert:")
+	_stats.show_stats(_wave_data({"session": _balance(2)}))
+	assert_int(lines.get_child_count()).is_equal(without + 1)
+	var texts := lines.get_children().map(func(l): return (l as Label).text)
+	assert_array(texts.filter(func(t): return str(t).contains("In dieser Sitzung gemeistert: 2"))).has_size(1)
+
+
 func test_a_closed_chest_locks_the_way_on() -> void:
 	_stats.show_stats(_wave_data())
 	assert_bool(_button("ResultContinue").disabled).is_true()

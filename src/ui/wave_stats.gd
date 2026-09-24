@@ -117,7 +117,7 @@ func _ready() -> void:
 
 ## Befüllt den Screen mit den Statistiken einer Welle und zeigt ihn an (Stufe 1).
 ## Erwartete Felder in `data`: won, wave_number, difficulty, correct, leaked, total,
-## accuracy, score_gained, score_total, fortress_health, mastered, fortress_tier,
+## accuracy, fortress_health, mastered, fortress_tier,
 ## xp_gained, levels_gained, optional chest = { tier, gold, name } (siehe
 ## ChestReward.for_wave) und optional session = Sitzungsbilanz (siehe RunBalance.build;
 ## leer oder fehlend = keine Bilanz).
@@ -131,7 +131,12 @@ func show_stats(data: Dictionary) -> void:
 	_add_line("Richtig besiegt: %d von %d" % [int(data.get("correct", 0)), int(data.get("total", 0))])
 	_add_line("Durchgelassen: %d" % int(data.get("leaked", 0)))
 	_add_line("Genauigkeit: %d %%" % int(round(float(data.get("accuracy", 0.0)))))
-	_add_line("Punkte: %d  (+%d)" % [int(data.get("score_total", 0)), int(data.get("score_gained", 0))])
+	# Keine Punkte (ein interner Wert, aus dem die Kiste rechnet) — dafür, was in dieser
+	# Sitzung gemeistert wurde, und nur wenn es etwas gibt. Die Zahl kommt aus der
+	# Sitzungsbilanz, damit Stufe 1 und Stufe 2 nicht zweierlei zählen.
+	var session_mastered := int((data.get("session", {}) as Dictionary).get("mastered", 0))
+	if session_mastered > 0:
+		_add_line("🏅 In dieser Sitzung gemeistert: %d" % session_mastered)
 	_add_line("Festung: %d HP" % int(data.get("fortress_health", 0)))
 	_add_line("Gemeisterte Aufgaben: %d  (Festungsstufe %d)" % [
 		int(data.get("mastered", 0)), int(data.get("fortress_tier", 0))])

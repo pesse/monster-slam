@@ -134,8 +134,8 @@ langsam tippen.
   - Hast du Rüstung (Kapitel 11), liegt ein zweiter Streifen über dem Lebensbalken.
   - „⚔“ mit dem Fortschritt der Welle: wie viele Monster erledigt sind, von wie vielen.
   - „💀“ – besiegte Monster in diesem Lauf.
-  - „💰“ – die **Punkte** dieses Laufs. Das ist nicht dein Gold; aus den Punkten wird am
-    Ende der Welle Gold (Kapitel 8).
+  - „🏅“ – wie viele Aufgaben du **in dieser Sitzung gemeistert** hast. Das Zeichen
+    erscheint erst, wenn es die erste gibt.
 
 ### Was du tust
 
@@ -195,7 +195,8 @@ längste Serie steht als Rekord in der Statistik („Längste Serie ohne Durchla
 Nicht jedes Monster ist gleich viel wert. **Ein schweres Monster ist langsamer und bringt
 mehr Punkte**: schwere Aufgaben (zum Beispiel Englisch→Deutsch oder Zusatzaufgaben) und
 Wörter, die du noch nicht sicher kannst. Ein Wort, das du schon gut kannst, kommt
-schneller und bringt weniger. So lohnt es sich, gerade die unsicheren Wörter zu erwischen,
+schneller und bringt weniger. Die Punkte siehst du nirgends – sie zählen im Hintergrund
+und bestimmen, wie viel Gold in der Schatzkiste liegt. So lohnt es sich, gerade die unsicheren Wörter zu erwischen,
 und die sicheren Wörter werden zum Tempo-Training.
 
 ## 6. „Schnell auflösen“
@@ -251,8 +252,9 @@ Ist dort ein Wort falsch, kannst du es mit „⚑ Melden“ melden (Kapitel 14).
 ### Stufe 1: Ergebnis und Schatzkiste
 
 Links stehen die Zahlen der Welle: „Richtig besiegt“, „Durchgelassen“, „Genauigkeit“,
-„Punkte“, „Festung“, „Gemeisterte Aufgaben“, „Schwierigkeit“ und „Erfahrung“. Bist du
-aufgestiegen, steht auch das da („⭐ Level … erreicht“).
+„Festung“, „Gemeisterte Aufgaben“, „Schwierigkeit“ und „Erfahrung“. Hast du in dieser
+Sitzung Aufgaben gemeistert, steht auch das da („🏅 In dieser Sitzung gemeistert: …“),
+ebenso ein Aufstieg („⭐ Level … erreicht“).
 
 Rechts steht die **Schatzkiste**.
 

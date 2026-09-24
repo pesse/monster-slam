@@ -155,7 +155,8 @@ unique_name_in_owner = true
 text = "💀 0"
 vertical_alignment = 1
 
-[node name="Score" type="Label" parent="Margin/Row/StatsPanel/StatsBox"]
+[node name="Mastered" type="Label" parent="Margin/Row/StatsPanel/StatsBox"]
 unique_name_in_owner = true
-text = "💰 0"
+visible = false
+text = "🏅 0"
 vertical_alignment = 1

@@ -1065,7 +1065,6 @@ func _finish_wave(won: bool) -> void:
 		"total": total,
 		"accuracy": accuracy,
 		"score_gained": score_gained,
-		"score_total": GameState.score,
 		"fortress_health": GameState.fortress_health,
 		"mastered": PlayerProgress.mastered_count(),
 		"fortress_tier": PlayerProgress.fortress_tier(),
