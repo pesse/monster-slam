@@ -72,7 +72,8 @@ Klammern wie in `criticize sb. (for)` / `jn. kritisieren (wegen)`. Der `AnswerEv
 behandelt sie beim Vergleich als optional, auf der Eingabe- *und* der Datenseite:
 
 - Platzhalter sind untereinander gleichwertig. `criticize sb for`, `criticize sb. (for)`
-  und `criticize somebody for` gelten alle als vollständig richtig.
+  und `criticize somebody for` gelten alle als vollständig richtig. Getippt werden dürfen
+  auch Kurzformen, die nicht im Buch stehen: `jmd.`, `jmdn.`, `jmdm.`.
 - Klammerinhalte darf man tippen, mit oder ohne Klammern, oder weglassen. Das gilt auch
   für reine Erklärungen (`tragen (Kleidung)`, `die Süßigkeiten (Pl.)`).
 - Wer nur den Kern tippt (`criticize`), bekommt den Treffer trotzdem; eingeblendet wird

@@ -32,12 +32,13 @@ const _OPTIONAL_PREFIXES := ["der ", "die ", "das ", "eine ", "ein ", "the ", "t
 
 ## Grammatik-Platzhalter aus dem Lehrbuch ("criticize sb. (for)"). Sie werden auf EIN
 ## Wildcard-Token abgebildet, sodass Schreibweise und Sprache der Notation gleichgültig
-## sind: "sb." = "sb" = "somebody" = "jn." = "jemanden". Zusätzlich darf jeder Platzhalter
-## ganz entfallen. Längere Alternativen zuerst, damit die Alternation nicht kürzer greift.
+## sind: "sb." = "sb" = "somebody" = "jn." = "jmd." = "jemanden". Zusätzlich darf jeder
+## Platzhalter ganz entfallen. Längere Alternativen zuerst, damit die Alternation nicht
+## kürzer greift. "jmd."/"jmdn."/"jmdm." stehen nicht im Buch, aber so kürzen Kinder ab.
 const WILDCARD := "•"
 const PLACEHOLDER_PATTERN := \
 	"(?<!\\p{L})(?:somebody|someone|something|jemandem|jemanden|jemand|etwas|etw\\.?" \
-	+ "|sth\\.?|sb\\.?|jdn\\.?|jm\\.?|jn\\.?|jd\\.?|…|\\.\\.\\.)(?!\\p{L})"
+	+ "|sth\\.?|sb\\.?|jmdn\\.?|jmdm\\.?|jmd\\.?|jdn\\.?|jm\\.?|jn\\.?|jd\\.?|…|\\.\\.\\.)(?!\\p{L})"
 
 ## Klammergruppen sind optional: "(for)", "(wegen)", aber auch Glossen wie "(Kleidung)"
 ## oder "(Pl.)". Für die Auswertung ist beides dasselbe — was in Klammern steht, darf

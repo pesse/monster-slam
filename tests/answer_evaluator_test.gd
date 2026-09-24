@@ -110,6 +110,16 @@ func test_german_placeholders_are_equivalent() -> void:
 	assert_bool(core["complete"]).is_false()
 
 
+## "jmd." ist die geläufigste Kurzform und steht nicht im Buch. Als Wort gelesen, passte
+## mit ihr die ganze Antwort nicht mehr.
+func test_jmd_abbreviations_are_placeholders() -> void:
+	var accepted := ["jn. kritisieren (wegen)"]
+	for answer in ["jmd kritisieren wegen", "jmd. kritisieren (wegen)", "jmdn kritisieren wegen",
+			"jmdn. kritisieren wegen", "jmdm kritisieren wegen", "JMD. KRITISIEREN WEGEN"]:
+		assert_bool(_evaluator.evaluate(accepted, answer)["complete"]).override_failure_message(
+			'"%s" sollte vollständig sein' % answer).is_true()
+
+
 func test_placeholder_in_the_middle() -> void:
 	var accepted := ["write sth. down"]
 	assert_bool(_evaluator.evaluate(accepted, "write something down")["complete"]).is_true()

@@ -150,6 +150,8 @@ auswählen: das Spiel sucht selbst das Monster, zu dem deine Antwort passt.
 - **Richtig, aber unvollständig:** Hast du etwas weggelassen, das nur in Klammern steht
   oder ein Platzhalter wie „sb.“ ist, zählt die Antwort trotzdem. Die vollständige Form
   wird dann kurz über dem Monster eingeblendet, damit du sie einmal gesehen hast.
+  Platzhalter darfst du schreiben, wie du willst: „sb“, „somebody“, „jn.“, „jmd.“ und
+  „jemanden“ gelten gleich.
 - **Falsch:** Es blitzt rot und das Bild wackelt. Sonst passiert nichts. Eine falsche
   Eingabe wird keinem Wort als Fehler angerechnet, weil nicht klar ist, welches Monster
   gemeint war. Als Fehler zählt erst ein Monster, das die Festung erreicht.
