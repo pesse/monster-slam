@@ -5,7 +5,8 @@ extends PanelContainer
 ## Animation über die DURCHGELASSENEN (falschen) Vokabeln (Karte einwischen ->
 ## Lösung aufdecken -> 3 s halten -> zur nächsten wischen); danach kann der Spieler
 ## mit Pfeilen frei blättern, per "Alle anzeigen" auch die richtig beantworteten
-## dazunehmen, einzelne Vokabeln per "⚑ Melden" mit Kommentar flaggen und mit
+## dazunehmen (schon während des Durchlaufs: sie werden dann hinten angehängt, der
+## Durchlauf selbst bleibt bei den durchgelassenen und lässt sich nicht abbrechen), einzelne Vokabeln per "⚑ Melden" mit Kommentar flaggen und mit
 ## "Weiter" zum Statistik-Screen gehen.
 ##
 ## "⚑ Melden" erscheint nur, wenn dieser Rechner einen Rückkanal hat (Melde-Token
@@ -31,6 +32,7 @@ var _items: Array = []          # aktuell durchblätterbare Menge (erst nur fals
 var _leaked: Array = []         # durchgelassene (falsche) Vokabeln — Reihenfolge fürs Autoplay
 var _all_ordered: Array = []    # alle: falsche zuerst, dann richtige
 var _showing_all: bool = false
+var _autoplaying: bool = false  # läuft der Auto-Durchlauf über die durchgelassenen?
 var _index: int = 0
 
 @onready var _stage: Control = %Stage
@@ -70,12 +72,13 @@ func play(played: Array) -> void:
 	_reset_flag_ui()
 	_apply_report_gate()
 	visible = true
-	# Während des Auto-Durchlaufs alle Interaktion sperren.
+	# Während des Auto-Durchlaufs alle Interaktion sperren — bis auf „Alle anzeigen": das
+	# hängt nur die richtigen hinten an und unterbricht den Durchlauf nicht.
 	_prev_btn.disabled = true
 	_next_btn.disabled = true
 	_continue_btn.disabled = true
-	_show_all_btn.disabled = true
 	_flag_btn.disabled = true
+	_update_show_all()
 	# Ein Frame, damit die Bühne ihre echte Größe hat (für die Wisch-Distanz).
 	await get_tree().process_frame
 
@@ -87,7 +90,9 @@ func play(played: Array) -> void:
 		_place_card(0, true, false)
 	else:
 		_items = _leaked
+		_autoplaying = true
 		await _autoplay()
+		_autoplaying = false
 
 	_continue_btn.disabled = false
 	_flag_btn.disabled = false
@@ -104,9 +109,11 @@ func hide_reveal() -> void:
 		_current_card = null
 
 
-## Spielt alle Karten der aktuellen Menge einmal automatisch durch.
+## Spielt die durchgelassenen Karten einmal automatisch durch. Gezählt wird an `_leaked`
+## und nicht an `_items`: „Alle anzeigen" kann die Menge währenddessen verlängern, und
+## die angehängten richtigen gehören nicht in den Durchlauf.
 func _autoplay() -> void:
-	for i in _items.size():
+	for i in _leaked.size():
 		_index = i
 		_update_progress()
 		_place_card(i, false, true)         # Frage sichtbar, Lösung verdeckt, off-screen rechts
@@ -114,7 +121,7 @@ func _autoplay() -> void:
 		await get_tree().create_timer(READ_QUESTION_TIME).timeout
 		await _reveal_solution()
 		await get_tree().create_timer(HOLD_TIME).timeout
-		if i < _items.size() - 1:
+		if i < _leaked.size() - 1:
 			await _swipe_out()
 
 
@@ -167,12 +174,16 @@ func _goto(index: int) -> void:
 
 
 ## "Alle anzeigen": erweitert die Blätter-Menge auf alle gespielten (falsche zuerst,
-## dann richtige) und blendet sich danach aus.
+## dann richtige) und blendet sich danach aus. Während des Auto-Durchlaufs bleiben die
+## Pfeile gesperrt — nur der Zähler zeigt schon die neue Gesamtzahl.
 func _on_show_all() -> void:
 	_showing_all = true
 	_items = _all_ordered
-	_reset_flag_ui()
-	_update_nav()
+	if _autoplaying:
+		_update_progress()
+	else:
+		_reset_flag_ui()
+		_update_nav()
 	_update_show_all()
 
 
@@ -180,6 +191,9 @@ func _update_show_all() -> void:
 	# Nur anbieten, wenn es zusätzliche (richtige) Vokabeln gibt und noch nicht alle
 	# gezeigt werden.
 	_show_all_btn.visible = _all_ordered.size() > _leaked.size() and not _showing_all
+	# Nie gesperrt: früher sperrte play() ihn für den Durchlauf und gab ihn nicht wieder
+	# frei — nach jeder Welle mit Durchgelassenen stand er grau da.
+	_show_all_btn.disabled = false
 
 
 func _update_nav() -> void:

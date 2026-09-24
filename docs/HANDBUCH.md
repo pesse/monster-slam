@@ -246,7 +246,8 @@ wenn vorhanden, weitere richtige Antworten („auch: …“) und die Bedeutung. 
 durch, etwa drei Sekunden je Karte.
 
 Danach kannst du mit „◀“ und „▶“ blättern. „Alle anzeigen“ nimmt auch die Wörter dazu,
-die du richtig hattest. Mit „✔ Weiter“ geht es zur Statistik. Hast du nichts
+die du richtig hattest. Das geht schon während des Durchlaufs: die richtigen kommen dann
+hinten dran, der Durchlauf zeigt aber erst alle durchgelassenen zu Ende. Mit „✔ Weiter“ geht es zur Statistik. Hast du nichts
 durchgelassen, siehst du gleich alle Karten zum Durchblättern.
 
 Ist dort ein Wort falsch, kannst du es mit „⚑ Melden“ melden (Kapitel 14).
