@@ -89,6 +89,16 @@ urheberrechtlich geschütztem Lehrbuchmaterial und liegen im privaten Submodule
 - Der HP-Bonus geht in dasselbe `max_health` wie `SkillBook.bonuses()`; ein Anstieg mitten im
   Lauf über `GameState.grow_fortress`. Das Debug-Panel baut nur das Bild um.
 
+**Satzbewertung und Boss** (ADR 0004, `docs/ARCHITECTURE.md` „Sätze bewerten"):
+- Ein Treffer in `accepted` schlägt jede Stolperstelle; ohne Schlüsseltreffer gibt die
+  Prüfkarte **kein** Urteil, und die Nähe (`overlap`) ist nie eine Güte.
+- Stufe 1 darf nur heben, nie senken, und spricht nur mit `127.0.0.1`.
+- Ein Boss trägt keine Sätze, sondern eine `sentence_rule` — Sätze liegen im Submodule.
+- Die Normalisierung gibt es einmal (`AnswerEvaluator.tokens()`), das Auswahlmaß ist `t - c`.
+- Neue Felder am Satz heben `min_app_version` **am Pack `language-basic`** (derzeit
+  0.10.0), nicht global. Erst die App veröffentlichen, dann im Content-Repo nach `main`.
+- Kein Test startet `llama-server` oder spricht mit einem Dienst.
+
 **Oberfläche:**
 - Statische UI als `.tscn` im Editor-Format, nicht im Code.
 - Raum und Typografie nur aus `scenes/ui/ui_theme.tres` über `theme_type_variation` —

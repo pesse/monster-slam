@@ -155,6 +155,91 @@ Ein Boss trägt deshalb **keine Sätze mehr selbst**, sondern eine `sentence_rul
 `scenes/dev/boss_lab.tscn`; in den Spielfluss eingehängt ist es noch nicht (es gibt keinen
 Boss-Kampf — siehe „Nicht entschieden" im ADR).
 
+**Die Wörter, die hier gelten.** Die meisten Begriffe sind für dieses Projekt erfunden und
+stehen so im Code, in den ADRs und in den Commit-Texten:
+
+| Wort | Was es meint | Wo es steht |
+|---|---|---|
+| **Prüfkarte** | Stufe 0: der deterministische Abgleich gegen den Schlüssel, ohne Modell | `SentenceCard` |
+| **Schlüssel** (Lösungsschlüssel) | die Bewertungsgrundlage AM Satz: `accepted`, `must_contain`, `pitfalls` | im Satz-JSON |
+| **Stolperstelle** | ein vorweggenommener Fehler samt eigener Rückmeldung; passt nur, wenn ALLE Bestandteile dastehen | `pitfalls` |
+| **ohne Urteil** | die Karte hat weder Lösung noch bekannten Fehler gefunden — ein DRITTER Ausgang, nicht „falsch" | `SentenceCard.NO_VERDICT`, `sure == false` |
+| **Nähe** | Überschneidung der Wortmengen, 0 bis 1. Wählt nur die Rückmeldung und ist NIE ein Urteil | `SentenceCard.overlap()` |
+| **Antwortbogen** | 10 erfundene Sätze mit 63 getippten Antworten, jede mit dem Urteil einer Lehrkraft — der Maßstab, gegen den gemessen wird | `src/dev/answer_sheet.json` |
+| **Falsch-Negativ / -Positiv** | richtige Antwort abgewiesen / falsche durchgewinkt. Im Bosskampf beide teuer, weil er Satzbau prüft | Messung |
+| **Stufe 0 / Stufe 1** | Prüfkarte (immer da) / lokales Modell über HTTP (darf nur heben) | `SentenceJudge` |
+| **Modellkarte** | die Selbstauskunft eines Modells auf Hugging Face — eine Behauptung, kein Befund über UNSERE Aufgabe | `docs/SATZBEWERTUNG_MODELLE.md` |
+
+**Die Prüfkarte.**
+- **Ein Treffer schlägt jede Stolperstelle.** Der teuerste Fehler ist der Tadel für eine
+  richtige Antwort. Die Karte prüft erst `accepted`, dann `pitfalls`; ein Datentest hält,
+  dass keine Stolperstelle auf eine akzeptierte Lösung passt (`tests/sentence_data_test.gd`).
+- **Eine Stolperstelle ist eine Liste von Bestandteilen, kein regulärer Ausdruck.**
+  Verglichen wird wortweise (`contains_phrase`), nicht als Teilzeichenkette.
+- **Ohne Schlüsseltreffer gibt die Karte KEIN Urteil**, und ohne Urteil ist eine Antwort
+  kein Treffer. Vorher stand die Wort-Überschneidung als Güte da — sie sieht weder
+  Reihenfolge noch Beugung, und am Antwortbogen stammten ALLE Fehlurteile aus diesem Zweig.
+  Die Nähe wählt seitdem nur noch die Rückmeldung („nah dran" gegen „anderer Satz").
+  Der Kampf sollte „ohne Urteil" als eigenen Ausgang zeigen (Musterlösung, kein Schaden,
+  keine Gutschrift).
+- **`must_contain`-Formen müssen im Bestand stehen** (Lemma, `lemma_en_alt`,
+  `lexeme_forms`); eine fehlende Form gehört in `lexeme_forms`, nicht als Sonderfall in den
+  Satz. Jede akzeptierte Lösung muss die geforderten Wörter enthalten.
+- Der Lernstand eines Satzes ist das Mittel über seine Lexeme in der Richtung, die er übt.
+
+**Stufe 1.**
+- **Sie darf nur heben, nie senken**, und gefragt wird sie nur, wo die Karte nichts
+  Belastendes gefunden hat. Seit „ohne Urteil kein Treffer" ist sie für Bosskämpfe
+  **tragend**: nur sie macht aus einem Zweifel einen Treffer.
+- **Nur `127.0.0.1`** — keine Einstellung, sondern die Entscheidung: Kindertexte gehen
+  nicht ins Netz.
+- **Den Dienst stellt das Spiel selbst hin** (`LocalModelServer`, Nachtrag „Stufe 1 auf
+  eigenen Beinen"): `llama-server.exe` plus GGUF aus `user://model/`, gestartet mit
+  ausdrücklichem `--host 127.0.0.1`, auf `/health` gewartet, beendet auch in
+  `_exit_tree()`. An der Bewertung ändert das nichts, `LocalModelBackend` bekommt nur eine
+  andere `url`. Offen sind SmartScreen, Modellauswahl und Lebenszyklus im Spiel.
+- **Geholt wird das Modell über `ModelService`** (Autoload, Knopf in der
+  Inhalte-Verwaltung). Wir spiegeln nichts; geliefert wird die Zusicherung, WELCHE Datei
+  gemeint ist — alles hängt an `sha256`, und `tools/model/make_manifest.py` rechnet die
+  Prüfsummen selbst aus. Aus einem Archiv kommt nur der Dateiname mit (`get_file()`), und
+  nur `llama-server.exe`, die `.dll` und die Lizenztexte; ohne Server wird das Archiv
+  verworfen.
+- **Das Manifest liegt im Release-Kanal** (`model.json` neben `index.json`): ein anderes
+  Modell ist eine Datei, kein Release. `tools/model/model.json` ist der **Kandidat**, nicht
+  das Veröffentlichte. Gewichts-URLs immer auf einen HF-Commit festnageln
+  (`/resolve/<commit>/`), nie auf `main`.
+- **Gemessen gilt Qwen3-4B-Instruct-2507 Q4_K_M** (90–92 % am Antwortbogen); EuroLLM-1.7B
+  blieb auf der Basislinie. `model.json` nennt noch EuroLLM, weil nur der Linux-Build des
+  Tauschkandidaten geprüft ist (Nachtrag vom 2026-09-17 im ADR).
+- **Eine Anfrage zur Zeit, und das sagt sie auch** (`busy()`, `last_note`, `BUSY_NOTE`).
+  `last_note` unterscheidet „kein Dienst" von „Modell hält sich nicht an die Form".
+- **`LocalModelBackend.http_timeout`** ist verstellbar, `HTTP_TIMEOUT` (3,5 s) die Vorgabe
+  aus der Zeit, als Stufe 1 Kür war. Ein 4-B-Modell braucht rund 6 s je Urteil; der Wert
+  gehört für den Kampf hochgezogen und die Haltedauer des Bosses daran angepasst. Gelesen
+  wird er in `_ready()`, also vor dem Einhängen setzen.
+
+**Messen und ausprobieren.**
+- **Beurteilt wird in der Werkbank, ENTSCHIEDEN am Antwortbogen**:
+  `tools/godot.sh res://scenes/dev/measure_sentences.tscn [-- --model | --serve --timeout=60]`.
+  Die Sätze darin sind erfunden und nennen ihre `must_contain`-Formen selbst, damit die
+  Messung nicht am Submodule hängt; `tests/answer_sheet_test.gd` hält den Bogen in sich
+  stimmig. **Die Bezugsgröße ist 37/63**, nicht 0 — so gut ist ein Modell, das stur
+  „richtig" sagt.
+- Prompt-Varianten werden nebenan gemessen (`C:\dev\prompt-eval`). Unabhängig vom Modell
+  gilt: `response_format` repariert die Form, nicht das Urteil, und eine leere Antwort geht
+  gar nicht erst an ein Modell.
+- **Die Werkbank** startet den Dienst selbst (Port `LocalModelServer.DEFAULT_PORT`, 11435,
+  nicht Ollamas 11434), hat eigene Zeitlimits (`LAB_HTTP_TIMEOUT`, 60 s; `http_timeout`
+  vor `add_child`), ändert den Schlüssel, ohne ihn zu speichern, und sagt an jedem Satz, ob
+  er aus einem Pack oder dem Submodule kommt — ein Pack verdeckt das Submodule auch in der
+  Entwicklung. `LocalModelServer` und `LocalModelBackend._report` schreiben Aufruf, Pid,
+  Gründe und die volle Modellantwort ins Log; die Konsole von llama-server gibt es nur über
+  `show_console`.
+- **Kein Test braucht einen laufenden Dienst oder drückt den Startknopf.** Stufe 1 spielt
+  im Test ein erfundenes Backend (`tests/sentence_judge_test.gd`). Der Datentest liest die
+  Dateien (`LanguageData.entries`), nicht die Registry, und behauptet am Ende, dass
+  überhaupt etwas geprüft wurde (`test_the_stock_carries_keyed_sentences`).
+
 ### Meisterung: ein Wort braucht beide Richtungen
 
 Der Fortschrittsbalken je Unit und Thema (Statistik, Reiter „Fortschritt") zählt WÖRTER:
@@ -499,6 +584,19 @@ Zugangscode hebt das auf), und der App-Kanal wird zum Update gedrängt. Umgekehr
 veralteter Pack (`UPDATE`, vorausgewählt), blockiert aber nichts. In Debug-Builds gibt es
 kein Tor, damit die Entwicklung nicht an ihren eigenen Versionsnummern hängt.
 
+**`min_app_version` steht am Pack, der das neue Feld trägt**, nicht global über der
+`packs.yaml`. Global gesetzt träfe die harte Schranke auch `game` und die Access-Bände, die
+von dem Feld nichts wissen, und eine Korrektur dort erreichte den Spieler nicht mehr. Die
+Sätze tragen seit ADR 0004 `accepted`/`must_contain`/`pitfalls`, also steht bei
+`language-basic` die 0.10.0 — die Version, mit der die Bewertung erscheint. Die Reihenfolge
+ist deshalb: erst die App-Version veröffentlichen, dann im Content-Repo nach `main`
+(gebaut wird beim Merge, nicht beim Push).
+
+**Es gibt keine alten Pack-Fassungen, und das ist entschieden.** Je Id genau eine Datei am
+Release-Tag `packs`, bei jedem Build überschrieben. Felder kommen deshalb dazu, sie werden
+nicht umbenannt, entfernt oder umgedeutet. Wäre es doch einmal nötig, ist die Pack-**Id**
+der einzige versionierte Griff (alte einfrieren, neue daneben).
+
 **Geschützte Packs.** Ein Pack aus Lehrbuchmaterial wird verschlüsselt ausgeliefert und
 braucht einen Zugangscode (`AccessCodes`, `PackCrypto`). Der Code steht in
 `user://codes.cfg` und ist ausdrücklich **kein** Geheimnisspeicher — er hält den Inhalt
@@ -640,6 +738,12 @@ Labels deshalb ihre Breite, BEVOR die Größe gesetzt wird). Gehalten von
 sondern gesperrt und umbeschriftet — jede Größenänderung verschiebt den Knopf unter dem
 Zeiger. Was sich doch ändern muss, wird entschieden, bevor die Seite erscheint
 (`WaveStats.show_stats`).
+
+**Werkbänke haben mehr Platz als das Spiel.** Ein Fenster lässt sich wegen `canvas_items`
+nicht am Rand größer ziehen, das Bild skaliert bloß mit. `LabRoom` (`src/dev/lab_room.gd`)
+hebt deshalb Fenster und `content_scale_size` auf 1600×900 und stellt in `_exit_tree()`
+wieder her, was dem Spiel gehört. Werkbänke sind die eine Stelle, an der 1152 nicht gilt;
+`tests/lab_room_test.gd` rechnet, dass jede in ihren Platz passt.
 
 ## Sprachwahl: GDScript (C# nur bei Bedarf punktuell)
 

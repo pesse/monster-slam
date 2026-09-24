@@ -67,7 +67,7 @@ def main() -> int:
     parser.add_argument("--weights", required=True, help="GGUF-Datei, auf einen Commit festgenagelt")
     parser.add_argument("--name", default="Sprachmodell für Bosskämpfe")
     parser.add_argument("--note", default="")
-    parser.add_argument("--min-app-version", default="0.9.0")
+    parser.add_argument("--min-app-version", default="0.10.0")
     parser.add_argument("--out", default="model.json")
     args = parser.parse_args()
 
