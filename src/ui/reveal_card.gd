@@ -8,6 +8,17 @@ extends PanelContainer
 ## mehreren Alternativantworten passt sonst nicht in die Breite und die Bühne schneidet
 ## sie ab. Umbrechende Labels wollen dafür VOR dem ersten Layout-Durchgang ihre Breite
 ## wissen, siehe set_width().
+##
+## Der Hintergrund sagt je Karte, wie es ausging: rötlich durchgelassen, grünlich
+## richtig. Der Titel der Auflösung kann das nicht — nach „Alle anzeigen" stehen beide
+## im selben Karussell.
+
+# Aus dem Panel des Themes (bg 0.12/0.14/0.22, Rahmen 0.5/0.56/0.7) heraus verschoben —
+# dezent, damit Wortart-Farbe und grüne Antwort lesbar bleiben.
+const LEAKED_BG := Color(0.28, 0.11, 0.13, 0.92)
+const LEAKED_BORDER := Color(0.85, 0.38, 0.38)
+const CORRECT_BG := Color(0.10, 0.24, 0.15, 0.92)
+const CORRECT_BORDER := Color(0.38, 0.8, 0.48)
 
 @onready var _type: Label = %Type
 @onready var _prompt: Label = %Prompt
@@ -48,6 +59,8 @@ func setup(item: Dictionary, revealed: bool) -> void:
 		_type.text = String(WordTypePalette.LABELS.get(type_key, type_key))
 		_type.add_theme_color_override("font_color", WordTypePalette.color_for(type_key))
 
+	_apply_outcome(bool(item.get("leaked", false)))
+
 	_prompt.text = String(item.get("prompt", ""))
 
 	var answers: Array = item.get("answers", [])
@@ -64,6 +77,18 @@ func setup(item: Dictionary, revealed: bool) -> void:
 	_meaning.text = meaning
 
 	_solution.modulate.a = 1.0 if revealed else 0.0
+
+
+## Färbt die Karte nach dem Ausgang. Auf einer KOPIE des Theme-Panels: der Stylebox aus
+## dem Theme ist geteilt, eine Änderung daran träfe jede Tafel im Spiel. Die Ränder der
+## Kopie sind dieselben, set_width() rechnet also unverändert.
+func _apply_outcome(leaked: bool) -> void:
+	var panel := get_theme_stylebox("panel").duplicate() as StyleBoxFlat
+	if panel == null:
+		return
+	panel.bg_color = LEAKED_BG if leaked else CORRECT_BG
+	panel.border_color = LEAKED_BORDER if leaked else CORRECT_BORDER
+	add_theme_stylebox_override("panel", panel)
 
 
 ## answers[1..] als String-Array (join braucht String-Elemente).
