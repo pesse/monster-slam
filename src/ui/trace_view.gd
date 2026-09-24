@@ -63,6 +63,11 @@ static func describe(line: Dictionary, tasks: Dictionary = {}) -> Dictionary:
 			return _entry(text)
 		"wave_clear":
 			return _entry("✔ %s geschafft · ❤ %d" % [_wave(line), int(line.get("hp", 0))])
+		"fast_resolve":
+			return _entry("⏩ schnell aufgelöst · %d unterwegs, %d noch nicht erschienen" % [
+					int(line.get("on_field", 0)), int(line.get("unspawned", 0))], "Hint",
+					{"title": "Schnell aufgelöst",
+					"body": "Der Rest von %s lief im Zeitraffer durch." % _wave(line)})
 		"spawn":
 			return _entry("Aufgabe: %s" % str(line.get("prompt", "")), "Hint", _task_hint(line))
 		"answer":

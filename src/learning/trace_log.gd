@@ -49,6 +49,7 @@ func _ready() -> void:
 	EventBus.run_ended.connect(note_run_end)
 	EventBus.wave_started.connect(func(wave_id): note_wave_start(wave_id))
 	EventBus.wave_cleared.connect(func(wave_id): note_wave_clear(wave_id))
+	EventBus.wave_fast_resolved.connect(note_fast_resolve)
 	EventBus.monster_spawned.connect(func(_monster, task): note_spawn(task))
 	EventBus.answer_judged.connect(note_answer)
 	EventBus.monster_reached_fortress.connect(func(_monster, task, damage): note_leak(task, damage))
@@ -85,6 +86,15 @@ func note_wave_start(wave_id: String) -> void:
 
 func note_wave_clear(wave_id: String) -> void:
 	_write({"e": "wave_clear", "wave": wave_id, "hp": GameState.fortress_health})
+
+
+## Der Rest der Welle wird vorgespult. Die leak-Zeilen danach bleiben, wie sie sind —
+## vorgespult sind sie daran zu erkennen, dass sie hinter dieser Zeile stehen.
+func note_fast_resolve(unspawned: int, on_field: int) -> void:
+	_write({
+		"e": "fast_resolve", "wave": GameState.current_wave,
+		"unspawned": unspawned, "on_field": on_field,
+	})
 
 
 ## Ein Lexem erscheint. Die Confidence wird hier GELESEN und nicht durchgereicht: zum

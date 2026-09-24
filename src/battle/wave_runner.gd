@@ -41,6 +41,8 @@ var _last_won: bool = true         # Ausgang der zuletzt beendeten Welle
 # Generation-Zähler: bricht Spawn-Coroutinen einer alten Welle ab, sobald eine neue
 # startet (der _finished-Check allein reicht nicht, da die neue Welle _finished=false setzt).
 var _wave_gen: int = 0
+## Läuft der Rest der Welle gerade im Zeitraffer (siehe _fast_resolve_wave)?
+var _fast_resolving: bool = false
 
 var _cam_base: Vector3
 var _shake_left: float = 0.0
@@ -59,6 +61,8 @@ var _cutscene: bool = false   # läuft gerade die Ausbau-Cutscene? (unterdrückt
 @onready var _leak_reveal: Control = $UI/LeakReveal
 @onready var _answer_input: LineEdit = $UI/AnswerInput
 @onready var _slow_motion: SlowMotion = $SlowMotion
+@onready var _fast_resolve_button: Button = $UI/FastResolveButton
+@onready var _fast_resolve_confirm: ConfirmDialog = $UI/FastResolveConfirm
 
 
 func _ready() -> void:
@@ -90,6 +94,12 @@ func _ready() -> void:
 		_stats.back_to_menu_requested.connect(_on_back_to_menu)
 	if _stats.has_signal("reward_collected"):
 		_stats.reward_collected.connect(_on_reward_collected)
+	_fast_resolve_button.pressed.connect(_on_fast_resolve_pressed)
+	_fast_resolve_confirm.confirmed.connect(_fast_resolve_wave)
+	_fast_resolve_confirm.cancelled.connect(_on_fast_resolve_cancelled)
+	Hints.attach(_fast_resolve_button, "Schnell auflösen",
+			"Spult den Rest der Welle vor, wenn du die Wörter gerade nicht weißt.",
+			"Die Monster treffen die Festung trotzdem, danach werden ihre Wörter aufgelöst.")
 	# Startschwierigkeit aus den persistenten Einstellungen des aktiven Profils.
 	_difficulty = UserSettings.default_difficulty()
 	_start_next_wave()
@@ -613,6 +623,39 @@ func _abort_battle() -> void:
 	get_tree().change_scene_to_file(MENU_SCENE)
 
 
+## „Schnell auflösen" fragt erst nach. Solange die Frage steht, ist die Eingabe weg: sie
+## holt sich sonst jeden Frame den Fokus zurück, und Enter ginge an sie statt an „Abbrechen".
+## Das Spiel läuft dabei weiter — ein Pausieren hielten die Spawn-Timer ohnehin nicht an.
+func _on_fast_resolve_pressed() -> void:
+	if _finished or _fast_resolving:
+		return
+	_answer_input.visible = false
+	_fast_resolve_confirm.ask("Schnell auflösen?",
+			"Die übrigen Monster laufen im Zeitraffer durch und treffen die Festung wie sonst "
+			+ "auch. Ihre Wörter zählen als nicht gewusst und werden danach aufgelöst.",
+			"Auflösen")
+
+
+func _on_fast_resolve_cancelled() -> void:
+	if not _finished and not _fast_resolving:
+		_answer_input.visible = true
+
+
+## Spult den Rest der Welle vor — und tut sonst NICHTS. Jedes Monster kommt über den
+## gewohnten Weg an (_on_monster_reached_goal: Lernstand, Schaden, Auflösung), die Welle
+## endet über _check_end bzw. an der gefallenen Festung. Voller Schaden mit Absicht: das
+## Ergebnis ist das, was ohne Vorspulen auch passiert wäre, kein Ausweg aus einer
+## verlorenen Welle. Zurückgesetzt wird das Tempo von _finish_wave (_slow_motion.stop()).
+func _fast_resolve_wave() -> void:
+	if _finished or _fast_resolving:
+		return
+	_fast_resolving = true
+	_answer_input.visible = false
+	_fast_resolve_button.disabled = true
+	EventBus.wave_fast_resolved.emit(maxi(0, _total - _spawned), _active.size())
+	_slow_motion.fast_forward()
+
+
 ## Startet die nächste (prozedural erzeugte) Welle mit der aktuell gewählten Schwierigkeit.
 ## Ersetzt das frühere content-basierte start_wave(): Wellen sind nicht mehr vordefiniert,
 ## sondern werden aus Schwierigkeit + Wellennummer generiert.
@@ -637,6 +680,9 @@ func _start_next_wave() -> void:
 	_end_label.visible = false
 	_stats.hide_stats()
 	_answer_input.visible = true
+	_fast_resolving = false
+	_fast_resolve_button.visible = true
+	_fast_resolve_button.disabled = false
 
 	GameState.current_wave = "procedural_%d" % _wave_number
 	# Tempo = Schwierigkeit × profilweite Grund-Geschwindigkeit (Barrierefreiheit / Grundtempo).
@@ -696,6 +742,7 @@ func _show_no_content() -> void:
 	_no_content = true
 	_finished = true
 	_answer_input.visible = false
+	_fast_resolve_button.visible = false
 	_stats.hide_stats()
 	_end_label.text = "Keine spielbaren Aufgaben.\n\nFilter prüfen oder über „📚 Inhalte“\neinen Vokabel-Pack installieren.\n\n[Esc] zurück ins Menü"
 	_end_label.visible = true
@@ -980,6 +1027,9 @@ func _finish_wave(won: bool) -> void:
 	_finished = true
 	_last_won = won
 	_answer_input.visible = false
+	_fast_resolve_button.visible = false
+	# Endet die Welle, während die Rückfrage offen ist, gibt es nichts mehr aufzulösen.
+	_fast_resolve_confirm.hide()
 	# Cutscene, Auflösung und Statistik immer in Normaltempo.
 	_slow_motion.stop()
 	# VOR der Cutscene: der Festungsausbau bringt seinen eigenen goldenen Blitz mit, die

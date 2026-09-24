@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://src/battle/wave_runner.gd" id="1_battle"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="2_hud"]
@@ -10,6 +10,7 @@
 [ext_resource type="Script" path="res://src/battle/slow_motion.gd" id="8_slowmo"]
 [ext_resource type="PackedScene" path="res://scenes/ui/slow_mo_vignette.tscn" id="9_vignette"]
 [ext_resource type="Script" path="res://src/battle/slow_mo_sfx.gd" id="10_slowmosfx"]
+[ext_resource type="PackedScene" path="res://scenes/ui/confirm_dialog.tscn" id="11_confirm"]
 
 [sub_resource type="Environment" id="Env_1"]
 background_mode = 1
@@ -73,6 +74,19 @@ modulate = Color(1, 1, 1, 0)
 
 [node name="AnswerInput" parent="UI" instance=ExtResource("3_input")]
 
+[node name="FastResolveButton" type="Button" parent="UI"]
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = 232.0
+offset_top = -64.0
+offset_right = 272.0
+offset_bottom = -24.0
+grow_vertical = 0
+focus_mode = 0
+text = "⏩"
+
 [node name="DebugPanel" parent="UI" instance=ExtResource("4_debug")]
 
 [node name="WaveStats" parent="UI" instance=ExtResource("5_stats")]
@@ -96,3 +110,5 @@ theme_override_font_sizes/font_size = 24
 horizontal_alignment = 1
 vertical_alignment = 1
 visible = false
+
+[node name="FastResolveConfirm" parent="UI" instance=ExtResource("11_confirm")]

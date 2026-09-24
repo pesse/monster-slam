@@ -62,6 +62,18 @@ func _lines(path := "") -> Array:
 	return out
 
 
+## „Schnell auflösen" steht als eigene Zeile vor den Leaks, die es auslöst.
+func test_a_fast_resolve_is_logged_with_its_wave() -> void:
+	GameState.current_wave = "procedural_3"
+	_log.note_fast_resolve(4, 2)
+	_log.note_leak(TASK, 10)
+	var lines := _lines()
+	assert_array(lines.map(func(l): return l["e"])).is_equal(["fast_resolve", "leak"])
+	assert_str(str(lines[0]["wave"])).is_equal("procedural_3")
+	assert_int(int(lines[0]["unspawned"])).is_equal(4)
+	assert_int(int(lines[0]["on_field"])).is_equal(2)
+
+
 func _verdict(matched: bool, id: String, candidates: Array) -> Dictionary:
 	return {
 		"matched": matched, "complete": matched, "learnable_id": id, "source_id": "",

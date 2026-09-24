@@ -16,6 +16,11 @@ func after_test() -> void:
 	Engine.time_scale = 1.0
 
 
+## Echtzeit, bis das Vorspulen voll steht — plus Luft für Frames, die länger dauern.
+func _ramp_up_ms() -> int:
+	return int((SlowMotion.FAST_FORWARD_FACTOR - 1.0) / SlowMotion.FAST_FORWARD_RAMP_PER_SEC * 1000.0) + 400
+
+
 ## Lässt `ms` ECHTE Millisekunden Frames laufen.
 func _pump(ms: int) -> void:
 	var until := Time.get_ticks_msec() + ms
@@ -72,6 +77,52 @@ func test_intensity_is_reported_for_the_vignette() -> void:
 		assert_float(v).is_between(0.0, 1.0)
 	EventBus.typing_stopped.emit()
 	assert_float(seen[-1]).is_equal(0.0)
+
+
+## „Schnell auflösen": time_scale gehört diesem Knoten, also spult er auch vor.
+func test_fast_forward_speeds_time_up() -> void:
+	_sm.fast_forward()
+	await _pump(_ramp_up_ms())
+	assert_float(Engine.time_scale).is_equal_approx(SlowMotion.FAST_FORWARD_FACTOR, 0.01)
+
+
+## Das Vorspulen nimmt Fahrt auf, statt auf einen Schlag loszurasen.
+func test_fast_forward_rises_gradually() -> void:
+	_sm.fast_forward()
+	await _pump(500)
+	assert_float(Engine.time_scale).is_greater(1.0)
+	assert_float(Engine.time_scale).is_less(SlowMotion.FAST_FORWARD_FACTOR / 2.0)
+
+
+## Tippen während des Vorspulens bremst nicht — sonst fiele die Welle mitten im
+## Zeitraffer in die Zeitlupe.
+func test_typing_does_not_interrupt_fast_forward() -> void:
+	_sm.fast_forward()
+	EventBus.typing_activity.emit()
+	await _pump(_ramp_up_ms())
+	assert_float(Engine.time_scale).is_equal_approx(SlowMotion.FAST_FORWARD_FACTOR, 0.01)
+
+
+## _finish_wave ruft stop(): Auflösung und Statistik laufen wieder in Normaltempo, und
+## die nächste Welle beginnt ohne Zeitraffer.
+func test_stop_ends_fast_forward() -> void:
+	_sm.fast_forward()
+	await _pump(300)
+	_sm.stop()
+	assert_float(Engine.time_scale).is_equal(1.0)
+	assert_bool(_sm.is_fast_forwarding()).is_false()
+	await _pump(200)
+	assert_float(Engine.time_scale).is_equal(1.0)
+
+
+## Die Vignette gehört zur Zeitlupe: beim Vorspulen bleibt sie aus.
+func test_fast_forward_reports_no_slow_motion_intensity() -> void:
+	var seen: Array[float] = []
+	EventBus.slow_motion_changed.connect(func(v: float) -> void: seen.append(v))
+	_sm.fast_forward()
+	await _pump(600)
+	for v in seen:
+		assert_float(v).is_equal(0.0)
 
 
 ## Der Zeitwandler-Baum verzweigt sich in Dauer und Tiefe — beide Äste landen hier.

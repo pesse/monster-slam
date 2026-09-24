@@ -85,6 +85,13 @@ func test_a_leak_stands_out() -> void:
 	assert_str(rows[0]["style"]).is_equal("Accent")
 
 
+func test_a_fast_resolve_says_how_much_was_skipped() -> void:
+	var rows := _events(TraceView.rows([{"at": NOON, "e": "fast_resolve",
+			"wave": "procedural_3", "unspawned": 4, "on_field": 2}]))
+	assert_str(rows[0]["text"]).is_equal(
+			"⏩ schnell aufgelöst · 2 unterwegs, 4 noch nicht erschienen")
+
+
 ## Neue Ereignisarten kommen im Protokoll dazu; die Ansicht zeigt sie mit Namen, statt sie
 ## zu verschlucken.
 func test_an_unknown_event_is_shown_by_its_name() -> void:

@@ -10,6 +10,9 @@ extends Node
 signal wave_started(wave_id: String)
 signal wave_totals(total: int)
 signal wave_cleared(wave_id: String)
+## Der Spieler hat den Rest der Welle „schnell aufgelöst": was noch kommt, läuft im
+## Zeitraffer durch. `unspawned` = noch nicht erschienen, `on_field` = gerade unterwegs.
+signal wave_fast_resolved(unspawned: int, on_field: int)
 ## `task` ist die aufgelöste Aufgabe (TaskResolver), damit ein Mithörer weiß, WELCHES
 ## Lexem gerade erscheint — `monster` ist nur die Darstellung.
 signal monster_spawned(monster: Dictionary, task: Dictionary)
