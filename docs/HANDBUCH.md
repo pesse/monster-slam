@@ -157,6 +157,8 @@ auswählen: das Spiel sucht selbst das Monster, zu dem deine Antwort passt.
 - **Richtig, aber unvollständig:** Hast du etwas weggelassen, das nur in Klammern steht
   oder ein Platzhalter wie „sb.“ ist, zählt die Antwort trotzdem. Die vollständige Form
   wird dann kurz über dem Monster eingeblendet, damit du sie einmal gesehen hast.
+  Platzhalter darfst du schreiben, wie du willst: „sb“, „somebody“, „jn.“, „jmd.“ und
+  „jemanden“ gelten gleich.
 - **Falsch:** Es blitzt rot und das Bild wackelt. Sonst passiert nichts. Eine falsche
   Eingabe wird keinem Wort als Fehler angerechnet, weil nicht klar ist, welches Monster
   gemeint war. Als Fehler zählt erst ein Monster, das die Festung erreicht.
@@ -248,9 +250,10 @@ ausgebaut!“). Mehr dazu in Kapitel 10.
 ### Die Vokabel-Auflösung
 
 Die Karte „Durchgelassen — die richtigen Antworten“ zeigt jedes Wort, das dir entwischt
-ist: erst die Aufgabe, einen Moment später die richtige Antwort, dazu die Wortart und,
-wenn vorhanden, weitere richtige Antworten („auch: …“) und die Bedeutung. Die Karten laufen von selbst
-durch, etwa drei Sekunden je Karte.
+ist: erst die Aufgabe, einen Moment später die richtige Antwort, dazu die Wortart und die
+Bedeutung. Hat ein Wort mehrere Übersetzungen, stehen sie auf beiden Seiten als „auch: …“
+dabei — unter der Aufgabe und unter der Antwort. Die Karten laufen von selbst durch, etwa
+drei Sekunden je Karte.
 
 Danach kannst du mit „◀“ und „▶“ blättern. „Alle anzeigen“ nimmt auch die Wörter dazu,
 die du richtig hattest. Das geht schon während des Durchlaufs: die richtigen kommen dann

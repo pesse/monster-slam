@@ -20,7 +20,7 @@ func before_test() -> void:
 	_resolver = TaskResolver.new()
 	ContentRegistry.lexemes[SRC] = {
 		"id": SRC, "type": "verb", "lemma_en": "bully", "lemma_de": "schikanieren",
-		"lemma_de_alt": ["drangsalieren"],
+		"lemma_de_alt": ["drangsalieren"], "lemma_en_alt": ["harass"],
 	}
 	ContentRegistry.lexemes[BIG] = {"id": BIG, "type": "adjective", "lemma_en": "big", "lemma_de": "groß"}
 	ContentRegistry.lexemes[TGT] = {"id": TGT, "type": "adjective", "lemma_en": "small", "lemma_de": "klein"}
@@ -59,3 +59,18 @@ func test_the_translation_task_has_no_meaning() -> void:
 		{"task_type": "translate", "direction": "de_to_en", "difficulty": 1},
 		ContentRegistry.lexemes[BIG])
 	assert_str(str(task.get("meaning", "MISSING"))).is_equal("")
+
+
+## Das Reveal zeigt beide Seiten vollständig: zur Aufgabe ihre Alternativen, zur
+## Antwort die ihren.
+func test_the_translation_task_carries_the_alternatives_of_its_prompt() -> void:
+	var de_to_en := _resolver.resolve(
+		{"task_type": "translate", "direction": "de_to_en", "difficulty": 1},
+		ContentRegistry.lexemes[SRC])
+	assert_array(de_to_en.get("prompt_alt", [])).contains_exactly(["drangsalieren"])
+	assert_array(de_to_en.get("accepted_answers", [])).contains_exactly(["bully", "harass"])
+	var en_to_de := _resolver.resolve(
+		{"task_type": "translate", "direction": "en_to_de", "difficulty": 1},
+		ContentRegistry.lexemes[SRC])
+	assert_array(en_to_de.get("prompt_alt", [])).contains_exactly(["harass"])
+	assert_array(en_to_de.get("accepted_answers", [])).contains_exactly(["schikanieren", "drangsalieren"])

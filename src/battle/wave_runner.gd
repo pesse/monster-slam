@@ -913,6 +913,7 @@ func _flash_feedback(color: Color) -> void:
 func _task_snapshot(monster: Monster, leaked: bool) -> Dictionary:
 	return {
 		"prompt": String(monster.task.get("prompt", "")),
+		"prompt_alt": (monster.task.get("prompt_alt", []) as Array).duplicate(),
 		"answers": (monster.task.get("accepted_answers", []) as Array).duplicate(),
 		"lexeme_type": String(monster.task.get("lexeme_type", "")),
 		"meaning": String(monster.task.get("meaning", "")),

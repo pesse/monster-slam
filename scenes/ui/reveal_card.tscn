@@ -23,6 +23,14 @@ text = "Wort"
 horizontal_alignment = 1
 autowrap_mode = 3
 
+[node name="PromptAlt" type="Label" parent="Box"]
+unique_name_in_owner = true
+theme_override_colors/font_color = Color(0.75, 0.78, 0.85, 1)
+theme_override_font_sizes/font_size = 18
+text = "auch: …"
+horizontal_alignment = 1
+autowrap_mode = 3
+
 [node name="Solution" type="VBoxContainer" parent="Box"]
 unique_name_in_owner = true
 theme_override_constants/separation = 4

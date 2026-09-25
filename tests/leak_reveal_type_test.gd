@@ -45,6 +45,25 @@ func test_card_without_meaning_hides_the_meaning_label() -> void:
 	assert_bool((card.get_node("%Meaning") as Label).visible).is_false()
 
 
+
+## Beide Seiten tragen ihre Alternativen. Die der Aufgabe stehen außerhalb des
+## Lösungsteils — sie verraten nichts und sind schon vor dem Aufdecken da.
+func test_card_shows_the_alternatives_of_both_sides() -> void:
+	var card := _make_card({
+		"prompt": "go", "prompt_alt": ["walk"],
+		"answers": ["gehen", "laufen"], "lexeme_type": "verb",
+	}, false)
+	var prompt_alt := card.get_node("%PromptAlt") as Label
+	assert_bool(prompt_alt.visible).is_true()
+	assert_str(prompt_alt.text).is_equal("auch: walk")
+	assert_bool(card.solution().is_ancestor_of(prompt_alt)).is_false()
+	assert_str((card.get_node("%Alt") as Label).text).is_equal("auch: laufen")
+
+
+func test_card_without_prompt_alternatives_hides_the_line() -> void:
+	var card := _make_card({"prompt": "die Katze", "answers": ["cat"], "lexeme_type": "noun"}, true)
+	assert_bool((card.get_node("%PromptAlt") as Label).visible).is_false()
+
 ## Der Hintergrund sagt je Karte, wie es ausging — nicht nur der Titel der Auflösung.
 func test_a_leaked_card_is_red_and_a_correct_one_green() -> void:
 	var leaked := _make_card({"prompt": "x", "answers": ["y"], "leaked": true}, true)
