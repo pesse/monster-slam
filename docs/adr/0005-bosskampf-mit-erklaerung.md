@@ -150,5 +150,5 @@ Antwort nach zehn Sekunden wegzuwerfen.
 - **Der Boss im Lauf**: nach Wellen oder am Ende einer Unit.
 - **Windows-Build mit Gemma**: gemessen ist `b11002` unter Linux. Dass der Windows-Build
   dieselbe GGUF lädt, ist plausibel und ungeprüft — ebenso SmartScreen (ADR 0004).
-- **Das Manifest im Release-Kanal**: `tools/model/model.json` zeigt auf Gemma, ist aber
-  noch nicht neben `index.json` veröffentlicht.
+- ~~**Das Manifest im Release-Kanal**~~: seit 2026-09-25 (App 0.10.0) liegt
+  `tools/model/model.json` neben `index.json`; Prüfsummen vor dem Hochladen nachgerechnet.

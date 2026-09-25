@@ -220,7 +220,9 @@ stehen so im Code, in den ADRs und in den Commit-Texten:
 - **Das Manifest liegt im Release-Kanal** (`model.json` neben `index.json`): ein anderes
   Modell ist eine Datei, kein Release. `tools/model/model.json` ist der **Kandidat**, nicht
   das Veröffentlichte. Gewichts-URLs immer auf einen HF-Commit festnageln
-  (`/resolve/<commit>/`), nie auf `main`.
+  (`/resolve/<commit>/`), nie auf `main`. Veröffentlicht wird von Hand und nicht vom
+  Pack-Workflow (der lädt nur hoch und lässt `model.json` liegen):
+  `gh release upload packs tools/model/model.json --repo pesse/monster-slam-packs --clobber`.
 - **Gemessen gilt Qwen3-4B-Instruct-2507 Q4_K_M** (90–92 % am Antwortbogen); EuroLLM-1.7B
   blieb auf der Basislinie. `model.json` nennt noch EuroLLM, weil nur der Linux-Build des
   Tauschkandidaten geprüft ist (Nachtrag vom 2026-09-17 im ADR).
