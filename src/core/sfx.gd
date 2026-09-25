@@ -43,6 +43,12 @@ const SOUNDS := {
 	&"fortress_hit": {"file": "fortress_hit.mp3", "db": 2.5},
 	&"wave_cleared": {"file": "wave_cleared.wav", "db": 3.5},
 	&"fortress_destroyed": {"file": "fortress_destroyed.wav", "db": 4.5},
+	# Meister-Feier (Issue #23). Die Aufgabe liegt knapp unter der Wellen-Fanfare, weil sie
+	# öfter kommt; das Wort darüber, es ist der größte gute Moment im Kampf. Die Quelle von
+	# `word_mastered` steht an der Aussteuerungsgrenze (-12 dBFS RMS, Spitzen bei 0) — daher
+	# der kräftige Abzug.
+	&"task_mastered": {"file": "task_mastered.wav", "db": -2.0},
+	&"word_mastered": {"file": "word_mastered.wav", "db": -6.5},
 }
 
 const BUS_SFX := &"SFX"
@@ -68,6 +74,9 @@ var _next_allowed_ms: Dictionary = {}
 
 
 func _ready() -> void:
+	# Auch in der Baum-Pause (Meister-Feier): ein Effektsound, der mitten im Klang anhält
+	# und zwei Sekunden später weiterspielt, klingt kaputt.
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	for id: StringName in SOUNDS:
 		var path := _path_of(id)
 		# Einmalig laden: `play()` läuft im Kampf mehrmals pro Sekunde, ein Ladeversuch je

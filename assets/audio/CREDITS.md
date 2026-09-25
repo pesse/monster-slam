@@ -14,6 +14,8 @@ und Eintrag gehören in denselben Commit.
 | `fortress_hit.mp3` | https://freesound.org/people/canberries4/sounds/868110/ | CC0 | canberries4 |
 | `wave_cleared.wav` | https://freesound.org/people/plasterbrain/sounds/397355/ | CC0 | plasterbrain |
 | `fortress_destroyed.wav` | https://freesound.org/people/taranp/sounds/362206/ | CC0 | TaranP |
+| `task_mastered.wav` | https://freesound.org/people/colorsCrimsonTears/sounds/562292/ | CC0 | colorsCrimsonTears |
+| `word_mastered.wav` | https://freesound.org/people/qubodup/sounds/442774/ | CC0 | qubodup |
 
 `wave_cleared.wav` ist die verlustfreie WAV-Fassung der dort angebotenen FLAC-Datei —
 Godot 4.7 lädt FLAC nicht („No loader found for resource"). Die Quelle ist innen bereits

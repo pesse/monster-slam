@@ -92,6 +92,15 @@ func test_a_fast_resolve_says_how_much_was_skipped() -> void:
 			"⏩ schnell aufgelöst · 2 unterwegs, 4 noch nicht erschienen")
 
 
+## Meisterungen (Issue #23) nennen das Wort aus der spawn-Zeile, nicht nur die Id.
+func test_a_mastery_names_its_word() -> void:
+	var rows := _events(TraceView.rows([SPAWN,
+			{"at": NOON + 6, "e": "mastered", "id": SPAWN["id"]},
+			{"at": NOON + 6, "e": "word_mastered", "lex": SPAWN["lex"]}]))
+	assert_str(rows[0]["text"]).is_equal("🏆 Wort gemeistert: Koralle")
+	assert_str(rows[1]["text"]).is_equal("🏅 gemeistert: Koralle")
+
+
 ## Neue Ereignisarten kommen im Protokoll dazu; die Ansicht zeigt sie mit Namen, statt sie
 ## zu verschlucken.
 func test_an_unknown_event_is_shown_by_its_name() -> void:
@@ -104,7 +113,8 @@ func test_an_unknown_event_is_shown_by_its_name() -> void:
 func test_the_styles_exist_in_the_theme() -> void:
 	var theme: Theme = load("res://scenes/ui/ui_theme.tres")
 	var rows := TraceView.rows([SPAWN, _answer("x", false),
-			{"at": NOON, "e": "leak", "prompt": "", "answers": [], "dmg": 1}])
+			{"at": NOON, "e": "leak", "prompt": "", "answers": [], "dmg": 1},
+			{"at": NOON, "e": "word_mastered", "lex": "zz.lex.x"}])
 	for row in rows:
 		var style := str(row["style"])
 		if not style.is_empty():

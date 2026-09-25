@@ -181,6 +181,23 @@ wenn du Enter drückst.
 langsam tippt, soll deshalb nicht verlieren. Mit dem Fähigkeitsbaum „Zeitwandler“ hält die
 Zeitlupe länger oder wird noch tiefer.
 
+### Feier beim Meistern
+
+Meisterst du im Kampf eine Aufgabe **zum ersten Mal**, hält das Spiel kurz an: ein grüner
+Funkenregen mit Schockwelle und „Aufgabe gemeistert!“, gut eine Sekunde lang. Sitzt mit
+dieser Antwort ein **Wort** in beiden Richtungen, wird es größer: ein weißer Blitz über das
+ganze Bild, goldene Lichtstrahlen, zwei Funkenwellen, aufsteigende Glut, Blitze vom Rand
+und „Wort gemeistert!“, zwei Sekunden lang. Schafft eine Antwort beides,
+gibt es nur die Wort-Feier.
+
+Während der Feier stehen die Monster still und es erscheinen keine neuen. Die Zeit zählt
+auch nicht als Bedenkzeit. Du kannst weitertippen, und was du mit Enter abschickst, wird
+direkt nach der Feier gewertet.
+
+Jede Aufgabe und jedes Wort wird nur einmal gefeiert. Fällt eine Aufgabe später zurück und
+sitzt dann wieder, gibt es keine zweite Feier. Jede Meisterung bekommt ihre Feier, auch die
+mit dem letzten Monster einer Welle – die Welle endet erst danach.
+
 ### Festung, Schaden und Rüstung
 
 Erreicht ein Monster die Festung, explodiert es dort und die Festung verliert HP. Wie viel,

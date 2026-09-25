@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://src/battle/wave_runner.gd" id="1_battle"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="2_hud"]
@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/slow_mo_vignette.tscn" id="9_vignette"]
 [ext_resource type="Script" path="res://src/battle/slow_mo_sfx.gd" id="10_slowmosfx"]
 [ext_resource type="PackedScene" path="res://scenes/ui/confirm_dialog.tscn" id="11_confirm"]
+[ext_resource type="PackedScene" path="res://scenes/ui/mastery_celebration.tscn" id="12_celebration"]
 
 [sub_resource type="Environment" id="Env_1"]
 background_mode = 1
@@ -70,9 +71,12 @@ modulate = Color(1, 1, 1, 0)
 
 [node name="SlowMoVignette" parent="UI" instance=ExtResource("9_vignette")]
 
+[node name="MasteryCelebration" parent="UI" instance=ExtResource("12_celebration")]
+
 [node name="HUD" parent="UI" instance=ExtResource("2_hud")]
 
 [node name="AnswerInput" parent="UI" instance=ExtResource("3_input")]
+process_mode = 3
 
 [node name="FastResolveButton" type="Button" parent="UI"]
 anchor_left = 0.5
