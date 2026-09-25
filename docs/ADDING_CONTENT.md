@@ -324,8 +324,13 @@ Was das für Autoren heißt:
 - **Ein Pack überschreibt Eingebautes** bei gleicher `id` — so lassen sich Werte
   korrigieren, ohne eine neue EXE zu verteilen.
 - **Ein neues Feld, das Code braucht, braucht `min_app_version`.** Sonst bekommt ein
-  Spieler mit alter EXE Daten, die sie nicht versteht. Die Nummer in `packs.yaml` hochziehen;
-  ältere Apps blockieren den Pack dann sichtbar statt still falsch zu spielen.
+  Spieler mit alter EXE Daten, die sie nicht versteht. Die Nummer in `packs.yaml`
+  hochziehen, und zwar **beim Pack, in dem die Datei liegt** — global gesetzt sperrt sie
+  auch die Packs, die von dem Feld nichts wissen. Ältere Apps blockieren den Pack dann
+  sichtbar statt still falsch zu spielen.
+- **Felder kommen dazu, sie werden nicht umbenannt oder entfernt.** Der Kanal hält je Pack
+  nur die neueste Datei vor; es gibt nichts, was einem alten Client stattdessen
+  ausgeliefert werden könnte.
 - **Nutzer-Meldungen (⚑) landen nicht im Content**, sondern in
   `user://lexeme_flags.json`. Eine gemeldete Datei wird also weiter aktualisiert; die
   Meldung selbst ist im Repo nicht zu sehen — sie muss aus dem Spiel abgeschrieben werden.
@@ -340,4 +345,5 @@ Was das für Autoren heißt:
 - [ ] Jede Referenz zeigt in den eigenen Pack (Form/Relation/Satz → Lexem, Welle → Boss,
 	  Regel → Monster). Der `--dry-run` prüft das mit; eine Relation eines Buch-Worts auf
 	  den Grundwortschatz ist ein Datenfehler, keine Ausnahme (`docs/PACK_FORMAT.md`).
-- [ ] Braucht die Datei neuen Code? Dann `min_app_version` in `packs.yaml` hochziehen.
+- [ ] Braucht die Datei neuen Code? Dann `min_app_version` des Packs hochziehen, in dem
+	  sie liegt (nicht die globale in `packs.yaml`).

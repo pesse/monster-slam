@@ -10,6 +10,7 @@ verschiedener Wege vergleichbar zu machen. Pro Lauf ein Eintrag; Vergleichstabel
 | #1 | 2026-07-03 | Parallel-Fan-out + Merge/Validate-Skript | Sonnet (Agenten), Opus (Orchestrierung) | 40 | ~2,0 Mio. | **~40 $** | 7.377 | 0 Fehler / 0 Dubletten |
 | #2 | 2026-09-03 | Ein-Kontext-Lauf aus Buchfotos (Vision) + Merge/Validate-Skript | Opus | 0 | ~2 Mio. (geschätzt) | ~30 $ (geschätzt) | 1.166 | 0 Fehler / 0 Dubletten |
 | #3 | 2026-09-14 | Ein-Kontext-Lauf aus Buchfotos, ohne Beispielsätze | Opus | 0 | ~0,2 Mio. | ~3 $ | 279 | 0 Fehler / 0 Dubletten |
+| #4 | 2026-09-25 | Sätze je Unit: Fan-out je Unit + Gegenlesung + Prüf-/Merge-Skript | Opus | 9 | ~0,85 Mio. | n. b. | 257 Sätze, 397 Verknüpfungen | 0 Fehler, Datentests grün |
 
 ---
 
@@ -186,3 +187,70 @@ zwei Abweichungen:
 - **−** Angeschnittene Seitenfüße fallen erst beim Zählen auf, weil die Liste nahtlos
   weiterläuft. Beim Fotografieren gehört die Fußzeile mit ins Bild — sie ist der Beleg,
   dass die Seite vollständig ist.
+
+---
+
+## Lauf #4 — Sätze je Unit für den Bosskampf
+
+**Datum:** 2026-09-25
+**Ziel:** Die 1.522 erzeugten Sätze aus Lauf #1 verwerfen und je Unit ein Satzpaket
+schreiben, das die Befunde der Werkstatt `prompt-eval` berücksichtigt (`STAND.md`,
+`befunde/2026-09-25-war-geschlossen.md`). Vorgabe: `docs/prompts/sentence_generation.md`.
+
+### Ansatz
+- **Generierung (6 Agenten, je Unit einer, parallel):** Vorgabe, Befund, Regelkatalog und
+  die Wörter der Unit mit ihren Formen aus dem Bestand als Eingabe; Ausgabe in den
+  Scratchpad, nicht nach `data/`.
+- **Selbstprüfung per Skript** (`validate.py`, Nachbau von `AnswerEvaluator.tokens` und
+  `SentenceCard.contains_phrase`): Tags nur aus `GrammarRules.RULES`, `must_contain`-Formen
+  wörtlich aus dem Bestand und in jeder Lösung, keine Stolperstelle auf einer Lösung,
+  Past Perfect nur mit „hatte/war“ und „had“, Passiv nur mit „werden“, kein Zustand als
+  Past Perfect.
+- **Gegenlesung (3 frische Agenten, je zwei Units):** Rolle strenge Englischlehrkraft,
+  Satz für Satz: Tag/Deutsch/Musterlösung, fehlende richtige Fassungen, Stolperstellen,
+  die richtige Antworten treffen könnten, sachlich falsche Rückmeldungen.
+- **Deterministisch im Skript** (`merge.py`): Ids, feste Felder, Komma- und
+  Kurzform-Varianten der Lösungen (die Prüfkarte vergleicht Kommas und Kurzformen
+  wörtlich), Kurzform-Varianten der Stolperstellen, `sentence_lexemes`.
+
+### Aufwand
+| | Generierung | Gegenlesung | Summe |
+|---|---|---|---|
+| Agenten (Opus) | 6 | 3 | 9 |
+| ~Agent-Tokens | ~0,56 Mio. | ~0,28 Mio. | ~0,85 Mio. |
+| Wall-clock (längster Agent) | ~7 min | ~2,5 min | 2 Wellen |
+
+### Output
+| Unit | Sätze | Golem-Pool (Tag des Golems, Schwierigkeit ≤ 3) | Ø Lösungen | Ø Stolperstellen |
+|---|---|---|---|---|
+| Access 2, Unit 6 | 42 | 27 | 10,7 | 2,3 |
+| Access 3, Unit 1 | 43 | 27 | 10,3 | 2,9 |
+| Access 4, Unit 1 | 43 | 27 | 7,1 | 2,9 |
+| Access 4, Unit 2 | 42 | 26 | 5,0 | 2,9 |
+| Access 4, Unit 3 | 40 | 25 | 5,7 | 2,8 |
+| Access 4, Unit 4 | 47 | 32 | 12,1 | 2,8 |
+
+Die Lösungen zählen die Komma- und Kurzform-Varianten mit.
+
+### Qualität
+- **Automatisch:** Prüfskript für alle Units ohne Fehler, Testsuite 804/804 grün
+  (darunter drei neue Datentests: Tags aus dem Katalog, Past Perfect, Passiv),
+  Pack-Zuordnung eindeutig.
+- **Gegenlesung:** 51 von 257 Sätzen geändert, einer ersetzt. Häufigste Korrektur:
+  fehlende richtige Fassungen, vor allem „going to“ bei Vorhersagen; drei bzw. eine
+  Stolperstelle hätten genau diese richtige Antwort getadelt. Den Fehler aus dem Befund
+  (Zustand als Past Perfect) fand keine der drei Gegenlesungen.
+- **Offen:** alle Sätze `draft`, von keiner Lehrkraft gegengelesen. Die Grammatik je Band
+  folgt der Klassenstufe, nicht dem Inhaltsverzeichnis des Buchs.
+
+### Stärken / Schwächen dieses Ansatzes
+- **+** Die Regeln aus der Messung stehen als Skript neben dem Agenten; Fehler der Art
+  „war geschlossen“ scheitern schon beim Schreiben.
+- **+** Die Gegenlesung findet, was ein Skript nicht sieht: richtige Fassungen, die
+  fehlen, und Stolperstellen, die sie treffen würden.
+- **−** Viele Wörter der Units taugen nicht für `must_contain`: Ihre Einträge tragen
+  Klammern, Platzhalter oder „…“, und Plurale sowie Vergangenheitsformen fehlen im
+  Bestand. Die Wortverteilung ist dadurch schmaler; die Wörter stehen dann nur in
+  `sentence_lexemes`.
+- **−** Britische Norm als Maßstab: Simple Past mit „just“/„already“/„ever“ steht als
+  Stolperstelle, obwohl es im Amerikanischen vertretbar ist.

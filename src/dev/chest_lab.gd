@@ -33,8 +33,15 @@ const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 @onready var _leaked_spin: SpinBox = %LeakedSpin
 @onready var _wave_result: Label = %WaveResult
 
+## Das Fenster, dessen Größe die Werkbank geliehen hat.
+var _room: Window
+
 
 func _ready() -> void:
+	# Eine Werkbank bekommt mehr Platz als das Spiel — am Fensterrand zu ziehen hilft
+	# dagegen nicht, das Bild skaliert dann bloß mit (LabRoom).
+	_room = get_window()
+	LabRoom.enlarge(_room)
 	for i in ChestReward.TIER_NAMES.size():
 		_tier_select.add_item(str(ChestReward.TIER_NAMES[i]), i)
 	_tier_select.select(ChestReward.Tier.SILVER)
@@ -53,6 +60,13 @@ func _ready() -> void:
 
 	_apply_hold_time()
 	_present()
+
+
+
+## Das Fenster gehört dem Spiel; die Werkbank gibt es zurück. Hier und nicht an den beiden
+## Ausgängen: es gibt Knopf, Escape und das Beenden, und drei Stellen wären zwei zu viel.
+func _exit_tree() -> void:
+	LabRoom.restore(_room)
 
 
 func _input(event: InputEvent) -> void:

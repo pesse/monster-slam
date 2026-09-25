@@ -28,6 +28,7 @@ die wissen wollen, was im Spiel passiert und warum es sich so verhält.
 17. [Hinweise am Mauszeiger](#17-hinweise-am-mauszeiger)
 18. [Für Eltern und Lehrkräfte: Wie das Spiel lernt](#18-für-eltern-und-lehrkräfte-wie-das-spiel-lernt)
 19. [Wo die Daten liegen](#19-wo-die-daten-liegen)
+20. [Der Bosskampf](#20-der-bosskampf)
 
 ---
 
@@ -39,7 +40,8 @@ Zeile.
 
 Die Knöpfe:
 
-- **„▶ Spielen“** – weiter zur Auswahl, was geübt wird, und dann in den Kampf.
+- **„▶ Spielen“** – weiter zur Auswahl, was geübt wird, und dann in den Kampf oder in den
+  Bosskampf (Kapitel 20).
 - **„🗺 Landkarte“** – alle Units mit ihrer Festungsstufe; ein Klick spielt eine Unit
   (Kapitel 10).
 - **„🌳 Fähigkeiten“** – Skillpunkte ausgeben (Kapitel 11).
@@ -92,9 +94,14 @@ sie auf.
   Units“ nichts gewählt ist.
 - Die Auswahl wird für das Profil gespeichert und gilt beim nächsten Mal wieder.
 
+Unten stehen zwei Knöpfe: **„▶ Kampf starten“** führt in die Wellen mit einzelnen Wörtern,
+**„👹 Bosskampf starten“** zum Satzmeister mit ganzen Sätzen (Kapitel 20). Beide benutzen
+dieselbe Auswahl; für den Bosskampf zählen davon nur „Bücher & Units“ und die Tags.
+
 Ist die Auswahl so eng, dass kein einziges Wort übrig bleibt, wird „▶ Kampf starten“ grau
 und darunter steht, dass die Filter gelockert werden müssen. So landet man nie auf einem
-leeren Schlachtfeld.
+leeren Schlachtfeld. Genauso wird „👹 Bosskampf starten“ grau, wenn es zu den gewählten
+Units noch keine Sätze gibt.
 
 ## 4. Schwierigkeit
 
@@ -609,3 +616,41 @@ diesem Rechner, nicht im Spielordner. Deshalb überlebt es auch ein Update. Unte
 ist das in der Regel `%APPDATA%\Godot\app_userdata\Monster Slam\`. Den genauen Pfad der
 Protokolldatei zeigt der Reiter „Protokoll“ in den Einstellungen, und „Ordner öffnen“
 führt direkt dorthin.
+
+## 20. Der Bosskampf
+
+Im Bosskampf übersetzt du keine einzelnen Wörter, sondern **ganze Sätze** ins Englische.
+Du stehst in einem Gewölbe vor dem Satzmeister, einem Skelett-Magier, der vor dir auf und
+ab geht. Du erreichst ihn über „▶ Spielen“ und dort „👹 Bosskampf starten“. Er stellt fünf
+Sätze aus den Units, die du dort ausgewählt hast —
+der deutsche Satz steht in seiner Sprechblase oben, deine Antwort tippst du unten in deine
+eigene. Es gibt **keinen Zeitdruck**.
+
+- Tippe die Übersetzung und drücke Enter oder „⚔ Angreifen“. Danach führt Enter (oder
+  „Weiter“) zum nächsten Satz.
+- **Jede richtige Übersetzung kostet den Satzmeister ein Herz** — er zuckt zurück, und der
+  Balken oben wird kürzer. Hat er keine Herzen mehr, fällt er um und ist besiegt. Sind die fünf Sätze vorbei und er steht noch, zieht er ab – mehr passiert nicht.
+- **Nach jeder Antwort** steht in seiner Sprechblase rechts die Musterlösung — auch wenn
+  du getroffen hast, denn oft gibt es mehr als eine richtige Fassung.
+- **Ist eine Übersetzung falsch**, hüpft der Satzmeister vor Freude, und meistens steht dort
+  auch, *was* nicht stimmt: „Du hast ‚seen‘ benutzt, es muss ‚saw‘ heißen.“ Diese
+  Erklärung braucht ein paar Sekunden länger als das Urteil; Erklärung und Musterlösung
+  erscheinen dann zusammen. Mit „Weiter“ musst du nicht auf sie warten.
+- Andere Wörter als die Musterlösung sind erlaubt, solange der Satz dasselbe sagt und die
+  geübte Form trägt. Steht der deutsche Satz im Passiv („wurde gebaut“), muss auch die
+  Übersetzung im Passiv stehen.
+- Der Bosskampf bringt bisher kein Gold und keine Erfahrung und ändert den Lernstand nicht.
+
+**Das Sprachmodell.** Ob eine frei formulierte Übersetzung richtig ist und was an einer
+falschen nicht stimmt, beurteilt ein Sprachmodell, das **auf diesem Rechner** läuft. Es
+kommt nicht mit dem Spiel, sondern wird einmal über „📚 Inhalte“ geholt („Sprachmodell für
+Bosskämpfe“, rund 4,6 GB). Beim Betreten des Bosskampfs startet es; bis es geladen ist,
+steht dort „Er erwacht …“. Nichts, was getippt wird, verlässt den Rechner.
+
+**Ohne Sprachmodell** zählt nur, was als Lösung hinterlegt ist – für die meisten Sätze
+also nur die Musterlösung Wort für Wort. Das Spiel sagt das unten im Bosskampf.
+
+**Für Eltern und Lehrkräfte:** Das Modell irrt sich. Gemessen an Übersetzungen mit dem
+Urteil einer Lehrkraft lässt es keine falsche Übersetzung durch, weist aber etwa eine von
+zehn richtigen, frei formulierten ab, und etwa jede zehnte Erklärung hat ein schiefes
+Detail. Deshalb zählt der Bosskampf vorerst nicht für den Lernstand.

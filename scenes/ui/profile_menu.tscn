@@ -58,8 +58,11 @@ placeholder_text = "Neuer Profilname"
 unique_name_in_owner = true
 text = "Neues Profil"
 
-[node name="PlayButton" type="Button" parent="Margin/Root"]
+[node name="PlayRow" type="HBoxContainer" parent="Margin/Root"]
+
+[node name="PlayButton" type="Button" parent="Margin/Root/PlayRow"]
 unique_name_in_owner = true
+size_flags_horizontal = 3
 text = "▶ Spielen"
 
 [node name="PlayHint" type="Label" parent="Margin/Root"]

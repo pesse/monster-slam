@@ -11,6 +11,7 @@ const STATS_SCENE := "res://scenes/ui/stats_screen.tscn"
 const SKILL_SCENE := "res://scenes/ui/skill_tree.tscn"
 const CONTENT_SCENE := "res://scenes/ui/content_manager.tscn"
 const MAP_SCENE := "res://scenes/ui/unit_map.tscn"
+## Vorerst ein eigener Menüpunkt und nicht Teil des Laufs (ADR 0005, Entscheidung 6).
 
 @onready var _gold_label: Label = %GoldLabel
 @onready var _level_label: Label = %LevelLabel

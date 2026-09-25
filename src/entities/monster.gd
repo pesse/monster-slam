@@ -93,41 +93,18 @@ func _apply_outline(root: Node3D, color: Color, model_scale: float) -> void:
 		(mi as MeshInstance3D).material_overlay = mat
 
 
-## KayKit-Charaktere haben keine eigenen Animationen — diese liegen in einer
-## separaten Rig-Datei mit identischem "Rig_Medium/Skeleton3D"-Aufbau. Wir hängen
-## einen AnimationPlayer an den Modell-Root, dessen root_node dorthin zeigt, und
-## bespielen ihn mit der geteilten Bewegungs-Library (loopt "Walking_A").
+## KayKit-Charaktere haben keine eigenen Animationen — sie kommen aus der geteilten
+## Bewegungs-Library (RigAnimations); das Monster loopt "Walking_A".
 func _setup_animation(model_root: Node3D) -> void:
-	var lib := _get_movement_library()
+	var lib := RigAnimations.movement()
 	if lib == null:
 		return
-	var anim := AnimationPlayer.new()
-	model_root.add_child(anim)
-	anim.root_node = anim.get_path_to(model_root)
-	anim.add_animation_library("", lib)
+	var anim := RigAnimations.attach_player(model_root, {"": lib})
 	for candidate in ["Walking_A", "Walking_B", "Walking_C", "Running_A"]:
 		if lib.has_animation(candidate):
 			lib.get_animation(candidate).loop_mode = Animation.LOOP_LINEAR
 			anim.play(candidate)
 			return
-
-
-## Lädt die Bewegungs-AnimationLibrary einmalig und teilt sie zwischen allen Monstern.
-static var _movement_library: AnimationLibrary
-
-static func _get_movement_library() -> AnimationLibrary:
-	const ANIM_SCENE := "res://assets/models/animations/Rig_Medium_MovementBasic.glb"
-	if _movement_library != null:
-		return _movement_library
-	if not ResourceLoader.exists(ANIM_SCENE):
-		return null
-	var scene: PackedScene = load(ANIM_SCENE)
-	var inst := scene.instantiate()
-	var src := inst.find_child("AnimationPlayer", true, false) as AnimationPlayer
-	if src != null and not src.get_animation_library_list().is_empty():
-		_movement_library = src.get_animation_library(src.get_animation_library_list()[0])
-	inst.free()
-	return _movement_library
 
 
 func _physics_process(delta: float) -> void:

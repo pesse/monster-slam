@@ -128,7 +128,8 @@ func test_theme_declares_the_role_variations() -> void:
 	for role in ["Display", "Title", "SectionTitle", "Hint", "Caption", "Accent",
 			"SectionButton", "RowButton", "SkillIcon", "ScreenMargin", "ScrollGutter",
 			"ScreenStack",
-			"SectionStack", "Tight", "HudPanel"]:
+			"SectionStack", "Tight", "HudPanel", "BossBubble", "PlayerBubble", "BubbleText",
+			"BubbleTitle", "BubbleAccent", "BubbleHint", "Shout", "BossHp", "ActionButton"]:
 		assert_str(theme.get_type_variation_base(role)).override_failure_message(
 				"Variation fehlt im Theme: " + role).is_not_empty()
 
@@ -142,6 +143,7 @@ func test_scenes_reference_only_declared_variations() -> void:
 	declared.append_array(theme.get_type_variation_list("MarginContainer"))
 	declared.append_array(theme.get_type_variation_list("BoxContainer"))
 	declared.append_array(theme.get_type_variation_list("PanelContainer"))
+	declared.append_array(theme.get_type_variation_list("ProgressBar"))
 	var files: Array = []
 	_collect("res://scenes", ".tscn", files)
 	var unknown: Array = []
