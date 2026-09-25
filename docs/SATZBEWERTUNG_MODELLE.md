@@ -1,6 +1,6 @@
 # Modelle für die Satzbewertung — Recherchestand
 
-Stand: 2026-09-17 · Gehört zu: [`adr/0004-satzbewertung-ohne-modell.md`](adr/0004-satzbewertung-ohne-modell.md)
+Stand: 2026-09-24 · Gehört zu: [`adr/0004-satzbewertung-ohne-modell.md`](adr/0004-satzbewertung-ohne-modell.md)
 
 Diese Notiz hält fest, **was es an kleinen Modellen für Englisch↔Deutsch gibt** und warum
 die Entscheidung trotzdem gegen ein ausgeliefertes Modell fiel. Sie ist Material für das
@@ -129,9 +129,44 @@ als Kür.
   (Apache-2.0, 2,5 GB) — ein generisches Modell der doppelten Größe, das die Aufgabe kann.
   Das ist der Fall, für den dieser Abschnitt geschrieben war: eine Empfehlung aus
   Modellkarten hält, bis jemand misst.
+- **Europäische Alternative: Ministral-3-3B-Instruct-2512** (Mistral, Apache-2.0, Q4_K_M
+  rund 2 GB, offizielle GGUF von Mistral). Ungemessen, siehe „Alternative: Ministral 3"
+  unten.
 - **Stufe 1b in der EXE, falls je gewünscht:** xCOMET-lite quantisiert (~100 MB).
   **Nicht** ein Übersetzungsmodell und **nicht** ein kleines Allzweck-LLM.
 - **Finger weg von CC-BY-NC** (NLLB), solange das Spiel öffentlich verteilt wird.
+
+## Alternative: Ministral 3 (Recherche 2026-09-24, ungemessen)
+
+Qwen3-4B ist gemessen und gilt. Soll Stufe 1 ein **europäisches** Modell tragen, ist
+**Ministral-3-3B-Instruct-2512** der naheliegende Gegenkandidat — und zwar der einzige, der
+in derselben Gewichtsklasse liegt:
+
+| | Ministral-3-3B-Instruct-2512 | Ministral-3-8B-Instruct-2512 |
+|---|---|---|
+| Hersteller | Mistral AI (FR) | Mistral AI (FR) |
+| Lizenz | Apache-2.0 | Apache-2.0 |
+| GGUF | offiziell von Mistral, dazu Unsloth | offiziell von Mistral, dazu Unsloth |
+| Größe Q4_K_M (geschätzt) | ~2 GB | ~5 GB |
+| Deutsch | laut Modellkarte ausdrücklich | laut Modellkarte ausdrücklich |
+| Rolle | **Tauschkandidat** für Qwen3-4B | Obergrenze: was ein Europäer kann, wenn die Größe egal ist |
+
+Dafür spricht: Es läuft auf dem offiziellen llama.cpp, also ohne eigenen Build neben
+`b11002`. Mistral liefert die GGUF selbst, `model.json` würde damit auf eine
+Herstellerdatei festgenagelt statt auf eine Community-Quantisierung. Und die Lizenz ist
+dieselbe wie bisher.
+
+Offen ist alles, was zählt. Die Familie kann Bilder verstehen; ob der Text-Teil allein als
+GGUF sauber lädt und wie viel RAM er dann braucht, ist ungeprüft. Vor allem ist ungeprüft,
+ob es die Falsch-Positiven des ausgelieferten Prompts (`judge-keyed`, 0 von 32) hält.
+**EuroLLM-1.7B ist die Warnung**: dessen Empfehlung stand genauso auf Modellkarten und fiel
+bei der ersten Messung durch. Gemessen wird wie bei Qwen, in der Werkstatt gegen
+`tests/stage1.yaml`, Dauer auf der CPU. Hält das 8B-Modell die Falsch-Positiven nicht,
+braucht man das 3B gar nicht erst anzusehen.
+
+Die anderen europäischen Familien (EuroLLM-9B, Apertus-8B, Salamandra, Teuken, Pharia)
+sind entweder zu groß für die Zielklasse, zu klein zum Urteilen oder lizenzrechtlich
+heikel. Keine davon ist ein Tauschkandidat für das 4B-Modell.
 
 ## Gemessen wird gegen einen Antwortbogen
 
@@ -353,4 +388,5 @@ Aufbau, Zahlen im Einzelnen und die nächsten Schritte stehen in `STAND.md` der 
 - [Unbabel/wmt22-cometkiwi-da](https://huggingface.co/Unbabel/wmt22-cometkiwi-da) · [IWSLT 2026 Metrics Track](https://aclanthology.org/2026.iwslt-1.36/)
 - [Pillars of Grammatical Error Correction](https://arxiv.org/pdf/2404.14914) · [gec-t5](https://github.com/gotutiyan/gec-t5)
 - [Grammarly — On-Device AI at Scale](https://www.grammarly.com/blog/engineering/on-device-models-scale/)
+- [mistralai/Ministral-3-3B-Instruct-2512-GGUF](https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-GGUF) · [Ministral-3-8B-Instruct-2512-GGUF](https://huggingface.co/mistralai/Ministral-3-8B-Instruct-2512-GGUF)
 - [NobodyWho](https://github.com/nobodywho-ooo/nobodywho) · [godot-local-llm](https://github.com/MhrnMhrn/godot-local-llm) · [godot-llm](https://github.com/Adriankhl/godot-llm)

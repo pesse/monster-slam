@@ -196,7 +196,7 @@
         {"text": "In 1890 the museum was built.", "expect": "richtig", "kind": "variante"},
         {"text": "The museum was built in the year 1890.", "expect": "richtig", "kind": "frei"},
         {"text": "They built the museum in 1890.", "expect": "falsch", "kind": "falle",
-         "note": "Inhaltlich richtig, aber die Aufgabe übt das Passiv — eine Stolperstelle, über die man streiten kann.",
+         "note": "Inhaltlich richtig, aber falsch: steht der deutsche Satz im Passiv, muss die Übersetzung im Passiv stehen (entschieden 25.09.2026).",
          "why": "Satzbau: Aktiv statt Passiv; der deutsche Satz steht im Passiv („wurde gebaut“): „The museum was built“. Inhaltlich nicht falsch, aber die Aufgabe übt das Passiv."},
         {"text": "The museum has been built in 1890.", "expect": "falsch", "kind": "fehler",
          "why": "Zeitform: mit der Jahreszahl (abgeschlossener Zeitpunkt) steht das Simple Past: „was built“, nicht „has been built“."},
