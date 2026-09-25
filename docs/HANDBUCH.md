@@ -28,6 +28,7 @@ die wissen wollen, was im Spiel passiert und warum es sich so verhält.
 17. [Hinweise am Mauszeiger](#17-hinweise-am-mauszeiger)
 18. [Für Eltern und Lehrkräfte: Wie das Spiel lernt](#18-für-eltern-und-lehrkräfte-wie-das-spiel-lernt)
 19. [Wo die Daten liegen](#19-wo-die-daten-liegen)
+20. [Der Bosskampf](#20-der-bosskampf)
 
 ---
 
@@ -40,6 +41,7 @@ Zeile.
 Die Knöpfe:
 
 - **„▶ Spielen“** – weiter zur Auswahl, was geübt wird, und dann in den Kampf.
+- **„👹 Bosskampf“** – ganze Sätze übersetzen gegen den Grammatik-Golem (Kapitel 20).
 - **„🗺 Landkarte“** – alle Units mit ihrer Festungsstufe; ein Klick spielt eine Unit
   (Kapitel 10).
 - **„🌳 Fähigkeiten“** – Skillpunkte ausgeben (Kapitel 11).
@@ -606,3 +608,35 @@ diesem Rechner, nicht im Spielordner. Deshalb überlebt es auch ein Update. Unte
 ist das in der Regel `%APPDATA%\Godot\app_userdata\Monster Slam\`. Den genauen Pfad der
 Protokolldatei zeigt der Reiter „Protokoll“ in den Einstellungen, und „Ordner öffnen“
 führt direkt dorthin.
+
+## 20. Der Bosskampf
+
+Im Bosskampf übersetzt du keine einzelnen Wörter, sondern **ganze Sätze** ins Englische.
+Der Grammatik-Golem stellt fünf Sätze, die eine Zeitform oder das Passiv üben, und zwar
+aus den Units, die du unter „▶ Spielen“ ausgewählt hast. Es gibt **keinen Zeitdruck**.
+
+- Tippe die Übersetzung und drücke Enter oder „Prüfen“.
+- **Jede richtige Übersetzung kostet den Golem ein Herz.** Hat er keine mehr, ist er
+  besiegt. Sind die fünf Sätze vorbei und er steht noch, zieht er ab – mehr passiert nicht.
+- **Ist eine Übersetzung falsch**, steht darunter die Musterlösung, und meistens auch, *was*
+  nicht stimmt: „Du hast ‚seen‘ benutzt, es muss ‚saw‘ heißen.“ Diese Erklärung braucht
+  ein paar Sekunden länger als das Urteil; Erklärung und Musterlösung erscheinen dann
+  zusammen. Mit „Weiter“ musst du nicht auf sie warten.
+- Andere Wörter als die Musterlösung sind erlaubt, solange der Satz dasselbe sagt und die
+  geübte Form trägt. Steht der deutsche Satz im Passiv („wurde gebaut“), muss auch die
+  Übersetzung im Passiv stehen.
+- Der Bosskampf bringt bisher kein Gold und keine Erfahrung und ändert den Lernstand nicht.
+
+**Das Sprachmodell.** Ob eine frei formulierte Übersetzung richtig ist und was an einer
+falschen nicht stimmt, beurteilt ein Sprachmodell, das **auf diesem Rechner** läuft. Es
+kommt nicht mit dem Spiel, sondern wird einmal über „📚 Inhalte“ geholt („Sprachmodell für
+Bosskämpfe“, rund 4,6 GB). Beim Betreten des Bosskampfs startet es; bis es geladen ist,
+steht dort „Der Golem erwacht …“. Nichts, was getippt wird, verlässt den Rechner.
+
+**Ohne Sprachmodell** zählt nur, was als Lösung hinterlegt ist – für die meisten Sätze
+also nur die Musterlösung Wort für Wort. Das Spiel sagt das unten im Bosskampf.
+
+**Für Eltern und Lehrkräfte:** Das Modell irrt sich. Gemessen an Übersetzungen mit dem
+Urteil einer Lehrkraft lässt es keine falsche Übersetzung durch, weist aber etwa eine von
+zehn richtigen, frei formulierten ab, und etwa jede zehnte Erklärung hat ein schiefes
+Detail. Deshalb zählt der Bosskampf vorerst nicht für den Lernstand.

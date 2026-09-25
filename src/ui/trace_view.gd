@@ -78,6 +78,21 @@ static func describe(line: Dictionary, tasks: Dictionary = {}) -> Dictionary:
 					"Accent", {"title": str(line.get("prompt", "")),
 					"body": "Richtig wäre gewesen: %s" % _answers(line),
 					"note": str(line.get("id", ""))})
+		"boss_start":
+			return _entry("👹 Bosskampf beginnt · %s" % str(line.get("boss", "")))
+		"boss_answer":
+			var who := "Modell" if str(line.get("stage", "")) == "model" else "Prüfkarte"
+			if not bool(line.get("sure", false)):
+				who = "ohne Urteil"
+			return _entry("%s „%s“ · %s" % [
+					"✔" if bool(line.get("hit", false)) else "✘", str(line.get("text", "")), who],
+					"" if bool(line.get("hit", false)) else "Accent",
+					{"title": str(line.get("id", "")), "note": "Güte %.2f" % float(line.get("q", 0.0))})
+		"boss_explained":
+			return _entry("↳ %s" % str(line.get("why", "")), "Hint")
+		"boss_end":
+			return _entry("👹 Bosskampf endet · %s" % (
+					"gewonnen" if bool(line.get("won", false)) else "verloren"))
 	return _entry("· %s" % e, "Hint")
 
 

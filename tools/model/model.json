@@ -11,10 +11,10 @@
     },
     {
       "file": "model.gguf",
-      "url": "https://huggingface.co/QuantFactory/EuroLLM-1.7B-Instruct-GGUF/resolve/4126f034ddfe7fd39ca3378ae58d3b1d74065315/EuroLLM-1.7B-Instruct.Q4_K_M.gguf",
-      "sha256": "f22ab4b628f6e3cd12ec2e5aa6d1e460be2fa83f25cb6a8f5dd6d4d77b285b66",
-      "bytes": 1045156992
+      "url": "https://huggingface.co/ggml-org/gemma-4-E4B-it-GGUF/resolve/b8093469224f83f5c38f691eb906c380e9e63114/gemma-4-E4B-it-Q4_0.gguf",
+      "sha256": "a555b900214b477d8880e7832e0b8925e139b0159640036b09fe472b6f2097f2",
+      "bytes": 4590807392
     }
   ],
-  "note": "EuroLLM 1.7B Instruct (Q4_K_M) mit llama.cpp b11002, CPU-Build für Windows x64."
+  "note": "Gemma 4 E4B Instruct (Q4_0, Apache 2.0) mit llama.cpp b11002, CPU-Build für Windows x64 (ADR 0005)."
 }

@@ -14,11 +14,14 @@ extends Control
 ## musste man den Dienst von Hand starten und dabei wissen, dass das URL-Feld auf Ollamas
 ## Port zeigte und nicht auf unseren — zwei Stolperstellen vor der ersten Antwort.
 ##
-## **Die Zeitlimits sind hier andere als im Kampf** (`LAB_HTTP_TIMEOUT`). Der Boss holt vier
-## Sekunden aus, ein 1,7-B-Modell auf der CPU ist danach nicht fertig; mit den
-## Kampf-Vorgaben meldete die Werkbank „kein Dienst erreichbar", während der Dienst
-## einwandfrei rechnete. Beurteilt wird hier, ob ein Modell die Aufgabe KANN — ob es das
-## rechtzeitig tut, ist eine andere Frage und gehört in den Kampf.
+## **Stufe 1 fragt zweimal** (docs/adr/0005-bosskampf-mit-erklaerung.md): erst das Urteil,
+## dann — nur bei „falsch" — die Erklärung. Die Spalte zeigt beides mit der Zeit, die jeder
+## Aufruf gebraucht hat, und darunter, was das Modell wörtlich geschrieben hat. Die Zeit
+## steht dabei, weil sie auf der CPU das ist, was der Bosskampf inszenieren muss.
+##
+## **Die Zeitlimits sind hier großzügiger als im Kampf** (`LAB_HTTP_TIMEOUT`). Beurteilt
+## wird hier, ob ein Modell die Aufgabe KANN — auch auf einem langsamen Rechner, auf dem
+## der Kampf-Wert knapp wäre.
 ##
 ## Der Schlüssel ist hier **veränderbar**. Eine Stolperstelle beurteilt man, indem man sie
 ## formuliert und sofort dagegen tippt; der Umweg über eine Datei im Submodule und einen
@@ -28,8 +31,8 @@ extends Control
 ## Starten: im Editor mit F6 auf dieser Szene, oder
 ## `tools/godot.sh res://scenes/dev/boss_lab.tscn` (headless zeichnet nichts).
 ## Die Szene liegt unter scenes/dev/ und ist im Export ausgeschlossen (`exclude_filter`).
-## Sie ist **nicht** in den Spielfluss eingehängt: es gibt keinen Boss-Kampf, sie verbucht
-## nichts und sie meldet nichts an PlayerProgress.
+## Sie ist **nicht** in den Spielfluss eingehängt (der Bosskampf ist scenes/battle/
+## boss_fight.tscn), sie verbucht nichts und sie meldet nichts an PlayerProgress.
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 
@@ -40,7 +43,7 @@ const MAX_CHOICES := 60
 ## Wie lange die Werkbank auf eine Antwort wartet. Großzügig, und mit Absicht nicht die
 ## Vorgabe aus dem Kampf: siehe oben. Der Richter wartet etwas LÄNGER als das Backend —
 ## gäbe er früher auf, stünde die Anfrage noch und jede weitere fiele in die Sperre.
-const LAB_HTTP_TIMEOUT := 60.0
+const LAB_HTTP_TIMEOUT := 120.0
 const LAB_JUDGE_TIMEOUT := LAB_HTTP_TIMEOUT + 2.0
 
 ## Die Felder, die den Lösungsschlüssel ausmachen — und damit das, was in der Werkbank
@@ -71,6 +74,8 @@ var _server: LocalModelServer
 var _choices: Array = []
 ## Das Fenster, dessen Größe die Werkbank geliehen hat.
 var _room: Window
+## Das Urteil über der Erklärung, solange die Erklärung noch rechnet.
+var _verdict_text := ""
 
 
 func _ready() -> void:
@@ -82,6 +87,8 @@ func _ready() -> void:
 	_judge.timeout = LAB_JUDGE_TIMEOUT
 	add_child(_judge)
 	_judge.refined.connect(_on_refined)
+	_judge.denied.connect(_on_denied)
+	_judge.explained.connect(_on_explained)
 	_judge.gave_up.connect(_on_gave_up)
 	_backend = LocalModelBackend.new()
 	# VOR dem Einhängen: LocalModelBackend liest den Wert in seinem _ready().
@@ -346,7 +353,7 @@ func _on_serve_pressed() -> void:
 		_render_serve()
 		return
 	_serve_button.disabled = true
-	_serve_status.text = "Startet … beim ersten Mal lädt ein Gigabyte von der Platte."
+	_serve_status.text = "Startet … die Gewichte (mehrere Gigabyte) laden von der Platte."
 	var started := await _server.start()
 	_serve_button.disabled = false
 	if started:
@@ -379,11 +386,42 @@ func _render_serve() -> void:
 func _on_model_toggled(on: bool) -> void:
 	_backend.url = _model_url.text.strip_edges()
 	_judge.model_backend = _backend.judge if on else Callable()
+	_judge.explainer = _backend.explain if on else Callable()
 	_model_result.text = _model_idle_text()
 
 
 func _on_refined(result: Dictionary) -> void:
-	_model_result.text = describe(result)
+	_model_result.text = "Urteil: richtig (%.1f s)\n%s%s" % [
+		_backend.last_seconds, describe(result), _raw_output()]
+
+
+## Das Urteil „falsch" steht sofort da — wie im Kampf. Die Erklärung rechnet noch.
+func _on_denied(_result: Dictionary) -> void:
+	_verdict_text = "Urteil: falsch (%.1f s)%s" % [_backend.last_seconds, _raw_output()]
+	_model_result.text = _verdict_text + "\n\nErklärung wird geschrieben …"
+
+
+func _on_explained(result: Dictionary) -> void:
+	_model_result.text = _verdict_text + "\n\n" + explanation_text(result, _backend.last_seconds) \
+			+ _raw_output()
+
+
+## Die Erklärung, wie der Kampf sie zeigt — oder, wo der Erklärer keinen Fehler fand, die
+## Musterlösung. Das ist der Fall, in dem Aufruf 1 eine richtige Antwort abgewiesen haben
+## kann; eine Erklärung dazu wäre erfunden.
+static func explanation_text(result: Dictionary, seconds: float) -> String:
+	var text := str(result.get("explanation", ""))
+	if text.is_empty():
+		return "Keine Erklärung (%.1f s) — der Erklärer findet keinen Fehler.\nMusterlösung: %s" % [
+			seconds, str(result.get("reference", ""))]
+	return "Erklärung (%.1f s):\n%s" % [seconds, text]
+
+
+## Was das Modell wörtlich geschrieben hat — um Prompt und Antwort gegen die Werkstatt
+## `prompt-eval` halten zu können.
+func _raw_output() -> String:
+	var raw := _backend.last_content.strip_edges()
+	return "" if raw.is_empty() else "\n\nRoh: %s" % raw
 
 
 func _on_gave_up() -> void:
@@ -397,5 +435,5 @@ func _on_gave_up() -> void:
 
 func _model_idle_text() -> String:
 	if _model_toggle != null and _model_toggle.button_pressed:
-		return "Bereit — fragt bei unsicherem Urteil."
+		return "Bereit — fragt bei unsicherem Urteil, bei „falsch“ auch nach dem Grund."
 	return "Aus. Stufe 1 ist nicht Teil der Auslieferung;\nsie braucht einen Dienst — siehe „Dienst starten“."

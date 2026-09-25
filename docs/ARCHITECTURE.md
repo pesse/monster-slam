@@ -84,8 +84,8 @@ Darstellung unabhängig wachsen können (siehe `docs/ADDING_CONTENT.md`):
 - **sentences / sentence_lexemes** — für Boss-/Satzübungen. Ein Satz trägt neben der
   `reference_translation` seinen Lösungsschlüssel (`accepted`, `must_contain`,
   `pitfalls`); bewertet und ausgewählt wird damit offline (siehe „Sätze bewerten" unten
-  und `docs/adr/0004-satzbewertung-ohne-modell.md`). Der Boss-Kampf selbst — Szene,
-  Schaden, Ablauf — ist noch nicht gebaut.
+  und `docs/adr/0004-satzbewertung-ohne-modell.md`). Der Bosskampf ist ein eigener
+  Menüpunkt (`scenes/battle/boss_fight.tscn`, ADR 0005).
 
 Die Auflösung Definition × Lexeme → spielbare Aufgabe `{prompt, accepted_answers, …}`
 macht `src/learning/task_resolver.gd`; die Enumeration der Kandidaten (Definition × Lexeme)
@@ -137,7 +137,7 @@ Score, aktive Welle) und reagiert selbst nur über EventBus-Signale.
   Recall (offline, deterministisch). Hier wohnt die Normalisierung (Artikel,
   Platzhalter, Klammergruppen, Typografie); die Satzbewertung nimmt sie über `tokens()`.
 
-### Sätze bewerten (`docs/adr/0004-satzbewertung-ohne-modell.md`)
+### Sätze bewerten (`docs/adr/0004-satzbewertung-ohne-modell.md`, `docs/adr/0005-bosskampf-mit-erklaerung.md`)
 
 Ausgeliefert wird **kein** Sprachmodell. Der Lösungsschlüssel entsteht zur Autorenzeit und
 steht in den Daten (`accepted`, `must_contain`, `pitfalls` am Satz); bewertet wird in
@@ -146,14 +146,15 @@ Stufen, und Stufe 0 trägt das Spiel allein.
 | Baustein | Aufgabe |
 |---|---|
 | `sentence_card.gd` | Stufe 0, die „Prüfkarte": Abgleich gegen `accepted`, `must_contain`, `pitfalls`. Reine Rechnung, deterministisch, ohne Netz. Ein Treffer schlägt jede Stolperstelle. |
-| `sentence_judge.gd` | Der Vertrag `{quality, feedback, matched}` für ALLE Stufen. `judge()` gibt Stufe 0 sofort zurück; Stufe 1 kommt als `refined` nach — oder gar nicht. Sie darf nur **heben**, nie senken. |
-| `local_model_backend.gd` | Stufe 1: HTTP an einen Dienst auf `127.0.0.1` (Ollama, llama.cpp, LM Studio). Nicht Teil der Auslieferung; ohne Dienst existiert sie für das Spiel nicht. Keine Stufe 2 in der Cloud. |
+| `sentence_judge.gd` | Der Vertrag `{quality, feedback, matched}` für ALLE Stufen. `judge()` gibt Stufe 0 sofort zurück; Stufe 1 kommt als `refined` (Treffer) oder `denied` (kein Treffer) nach — oder gar nicht. Nach `denied` folgt `explained` mit der Erklärung oder leer. Stufe 1 darf nur **heben**, nie senken, und erklärt, wo sie nicht hebt. |
+| `local_model_backend.gd` | Stufe 1: HTTP an einen Dienst auf `127.0.0.1`, zwei Aufrufe: `judge()` urteilt mit Schlüssel, `explain()` erklärt ohne. Ohne Dienst existiert sie für das Spiel nicht. Keine Stufe 2 in der Cloud. |
+| `stage_one_prompts.gd`, `grammar_rules.gd` | Die beiden Aufträge und der Regelkatalog je `grammar_tag`, wörtlich aus der Werkstatt `prompt-eval`, wo sie gemessen werden. Geändert wird dort, nicht hier. |
 | `sentence_selector.gd` | Welcher Satz drankommt: `sentence_lexemes` → Lexem → Scope, gewichtet nach dem Netto-Maß `t - c` — demselben, das Tempo, Punkte und XP tragen. |
 
 Ein Boss trägt deshalb **keine Sätze mehr selbst**, sondern eine `sentence_rule`
 (`data/bosses/grammar_golem.json`). Ausprobieren lässt sich das Ganze in der Werkbank
-`scenes/dev/boss_lab.tscn`; in den Spielfluss eingehängt ist es noch nicht (es gibt keinen
-Boss-Kampf — siehe „Nicht entschieden" im ADR).
+`scenes/dev/boss_lab.tscn`; gespielt wird es im Bosskampf (`scenes/battle/boss_fight.tscn`),
+der vorerst ein eigener Menüpunkt ist und nichts verbucht (ADR 0005).
 
 **Die Wörter, die hier gelten.** Die meisten Begriffe sind für dieses Projekt erfunden und
 stehen so im Code, in den ADRs und in den Commit-Texten:
@@ -168,6 +169,7 @@ stehen so im Code, in den ADRs und in den Commit-Texten:
 | **Antwortbogen** | 10 erfundene Sätze mit 63 getippten Antworten, jede mit dem Urteil einer Lehrkraft — der Maßstab, gegen den gemessen wird | `src/dev/answer_sheet.json` |
 | **Falsch-Negativ / -Positiv** | richtige Antwort abgewiesen / falsche durchgewinkt. Im Bosskampf beide teuer, weil er Satzbau prüft | Messung |
 | **Stufe 0 / Stufe 1** | Prüfkarte (immer da) / lokales Modell über HTTP (darf nur heben) | `SentenceJudge` |
+| **Urteil / Erklärung** | die zwei Aufrufe von Stufe 1: binär mit Schlüssel, dann — nur bei „falsch" — der Grund, ohne Schlüssel und mit den Grammatikregeln des Satzes | `StageOnePrompts`, ADR 0005 |
 | **Modellkarte** | die Selbstauskunft eines Modells auf Hugging Face — eine Behauptung, kein Befund über UNSERE Aufgabe | `docs/SATZBEWERTUNG_MODELLE.md` |
 
 **Die Prüfkarte.**
@@ -197,7 +199,12 @@ stehen so im Code, in den ADRs und in den Commit-Texten:
   eigenen Beinen"): `llama-server.exe` plus GGUF aus `user://model/`, gestartet mit
   ausdrücklichem `--host 127.0.0.1`, auf `/health` gewartet, beendet auch in
   `_exit_tree()`. An der Bewertung ändert das nichts, `LocalModelBackend` bekommt nur eine
-  andere `url`. Offen sind SmartScreen, Modellauswahl und Lebenszyklus im Spiel.
+  andere `url`. Das Modell ist Gemma 4 E4B (ADR 0005); der Bosskampf startet den Dienst
+  beim Betreten und beendet ihn beim Verlassen. Offen ist SmartScreen.
+- **Zwei Aufrufe** (ADR 0005): das Urteil wird sofort gezeigt, die Erklärung kommt nach.
+  Findet der Erklärer — ohne Schlüssel, unabhängig vom Urteil — keinen Fehler, gibt es
+  keine Erklärung, nur die Musterlösung. Die Begründung des Urteils selbst wird nie
+  gezeigt.
 - **Geholt wird das Modell über `ModelService`** (Autoload, Knopf in der
   Inhalte-Verwaltung). Wir spiegeln nichts; geliefert wird die Zusicherung, WELCHE Datei
   gemeint ist — alles hängt an `sha256`, und `tools/model/make_manifest.py` rechnet die

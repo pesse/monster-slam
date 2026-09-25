@@ -33,6 +33,19 @@ func test_the_arguments_name_weights_port_and_context() -> void:
 	assert_array(args).contains(["--ctx-size", "2048"])
 
 
+## Gemma denkt ohne `--reasoning off` im Klartext und erreicht das JSON nie; so wurde in
+## der Werkstatt gemessen (ADR 0005).
+func test_the_service_runs_as_measured() -> void:
+	var args := LocalModelServer.arguments("C:/irgendwo/model.gguf", 11435, 4096)
+	assert_array(args).contains(["--jinja"])
+	assert_array(args).contains(["--reasoning", "off"])
+
+
+## Das Backend fragt ohne weitere Einstellung den Dienst, den das Spiel selbst startet.
+func test_the_backend_asks_our_own_service() -> void:
+	assert_str(LocalModelBackend.URL).is_equal(_server.url())
+
+
 ## Beide Adressen müssen auf denselben Dienst zeigen — sonst fragt die Messung den einen
 ## Port nach seinem Zustand und den anderen nach einem Urteil.
 func test_both_addresses_share_the_port() -> void:

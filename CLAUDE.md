@@ -92,7 +92,11 @@ urheberrechtlich geschütztem Lehrbuchmaterial und liegen im privaten Submodule
 **Satzbewertung und Boss** (ADR 0004, `docs/ARCHITECTURE.md` „Sätze bewerten"):
 - Ein Treffer in `accepted` schlägt jede Stolperstelle; ohne Schlüsseltreffer gibt die
   Prüfkarte **kein** Urteil, und die Nähe (`overlap`) ist nie eine Güte.
-- Stufe 1 darf nur heben, nie senken, und spricht nur mit `127.0.0.1`.
+- Stufe 1 darf nur heben, nie senken, und spricht nur mit `127.0.0.1`. Wo sie nicht hebt,
+  erklärt ein zweiter Aufruf ohne Schlüssel; findet er keinen Fehler, gibt es keine
+  Erklärung (ADR 0005). Die Begründung des Urteils wird nie gezeigt.
+- Prompts (`StageOnePrompts`) und Regelkatalog (`GrammarRules`) werden in der Werkstatt
+  `prompt-eval` geändert und gemessen und erst dann wörtlich übernommen.
 - Ein Boss trägt keine Sätze, sondern eine `sentence_rule` — Sätze liegen im Submodule.
 - Die Normalisierung gibt es einmal (`AnswerEvaluator.tokens()`), das Auswahlmaß ist `t - c`.
 - Neue Felder am Satz heben `min_app_version` **am Pack `language-basic`** (derzeit

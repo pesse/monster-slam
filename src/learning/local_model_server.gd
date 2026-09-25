@@ -33,11 +33,11 @@ const WEIGHTS_NAME := "model.gguf"
 ## 11435 liegt neben Ollamas 11434 und sagt damit auch, was hier läuft.
 const DEFAULT_PORT := 11435
 
-## Wie viel Zusammenhang das Modell bekommt. Der Auftrag aus `LocalModelBackend.prompt_for`
-## ist ein paar Zeilen lang — mehr Kontext kostet nur Speicher.
-const DEFAULT_CONTEXT := 2048
+## Wie viel Zusammenhang das Modell bekommt. Die Aufträge aus StageOnePrompts sind mit
+## Regeln und Antwort unter 1000 Token lang — mehr Kontext kostet nur Speicher.
+const DEFAULT_CONTEXT := 4096
 
-## Wie lange auf „bereit" gewartet wird. Großzügig, denn hier lädt ein Gigabyte von der
+## Wie lange auf „bereit" gewartet wird. Großzügig, denn hier laden Gigabytes von der
 ## Platte in den Arbeitsspeicher; das ist die Wartezeit EINMAL beim Start und nicht die
 ## je Frage. Das Zeitlimit im Kampf ist ein anderes (SentenceJudge.DEFAULT_TIMEOUT).
 const READY_TIMEOUT := 180.0
@@ -110,12 +110,18 @@ static func missing_in(dir: String) -> PackedStringArray:
 
 ## Die Argumentliste — statisch und damit ohne Programm prüfbar, wie der Prompt-Bau in
 ## LocalModelBackend.
+##
+## `--jinja` und `--reasoning off` sind die Einstellung, mit der die Werkstatt gemessen
+## hat: Gemma denkt sonst im Klartext und erreicht das verabredete JSON nie
+## (`--reasoning-budget 0` reicht dafür nicht, ADR 0005).
 static func arguments(weights: String, port: int, context_size: int) -> PackedStringArray:
 	return PackedStringArray([
 		"--model", weights,
 		"--host", "127.0.0.1",
 		"--port", str(port),
 		"--ctx-size", str(context_size),
+		"--jinja",
+		"--reasoning", "off",
 	])
 
 

@@ -53,6 +53,10 @@ func _ready() -> void:
 	EventBus.monster_spawned.connect(func(_monster, task): note_spawn(task))
 	EventBus.answer_judged.connect(note_answer)
 	EventBus.monster_reached_fortress.connect(func(_monster, task, damage): note_leak(task, damage))
+	EventBus.boss_started.connect(note_boss_start)
+	EventBus.boss_answer_judged.connect(note_boss_answer)
+	EventBus.boss_answer_explained.connect(note_boss_explained)
+	EventBus.boss_ended.connect(note_boss_end)
 
 
 func _exit_tree() -> void:
@@ -75,6 +79,30 @@ func note_run_end(summary: Dictionary = {}) -> void:
 		"difficulty": int(summary.get("difficulty_last", 0)),
 		"won": bool(summary.get("last_wave_won", false)),
 	})
+
+
+func note_boss_start(boss_id: String) -> void:
+	_write({"e": "boss_start", "boss": boss_id})
+
+
+## Eine Antwort im Bosskampf. `stage` sagt, wer geurteilt hat (card oder model) — genau
+## das, was man beim Nachsehen eines Modellurteils wissen will.
+func note_boss_answer(sentence_id: String, text: String, result: Dictionary) -> void:
+	_write({
+		"e": "boss_answer", "id": sentence_id, "text": text,
+		"hit": bool(result.get("hit", false)),
+		"q": snappedf(float(result.get("quality", 0.0)), 0.01),
+		"stage": str(result.get("stage", "")),
+		"sure": bool(result.get("sure", false)),
+	})
+
+
+func note_boss_explained(sentence_id: String, explanation: String) -> void:
+	_write({"e": "boss_explained", "id": sentence_id, "why": explanation})
+
+
+func note_boss_end(boss_id: String, won: bool) -> void:
+	_write({"e": "boss_end", "boss": boss_id, "won": won})
 
 
 func note_wave_start(wave_id: String) -> void:

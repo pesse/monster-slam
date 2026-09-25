@@ -19,50 +19,67 @@ extends Node
 ## Wörter. `URL` zeigt deshalb auf 127.0.0.1, und das ist keine Einstellung, sondern die
 ## Entscheidung.
 ##
-## Einhängen: `judge.model_backend = backend.judge` (siehe SentenceJudge). Prompt-Bau und
-## Antwort-Auswertung sind statisch und damit ohne Netz prüfbar.
+## **Zwei Aufrufe** (docs/adr/0005-bosskampf-mit-erklaerung.md): `judge()` urteilt mit dem
+## Lösungsschlüssel, `explain()` erklärt ohne ihn. Die Aufträge stehen in StageOnePrompts.
+## Einhängen: `judge.model_backend = backend.judge`, `judge.explainer = backend.explain`
+## (siehe SentenceJudge). Prompt-Bau und Antwort-Auswertung sind statisch und damit ohne
+## Netz prüfbar.
 
-## Ollamas Vorgabe-Port. Wer LM Studio benutzt, setzt `url` auf 1234.
-const URL := "http://127.0.0.1:11434/v1/chat/completions"
-const MODEL := "qwen2.5:3b-instruct"
+## Die Adresse des Dienstes, den LocalModelServer startet. Wer Ollama oder LM Studio
+## benutzt, setzt `url` auf deren Port (11434 bzw. 1234).
+const URL := "http://127.0.0.1:11435/v1/chat/completions"
+## llama-server beantwortet jeden Namen mit dem Modell, das er geladen hat; der Name hier
+## ist für Ollama und LM Studio, die mehrere Modelle führen.
+const MODEL := "gemma-4-e4b"
 
-## Sekunden, nach denen die Anfrage abgebrochen wird. Kürzer als SentenceJudge wartet:
-## eine Verbindung, die dann noch offen ist, hilft niemandem mehr.
-const HTTP_TIMEOUT := 3.5
+## Sekunden, nach denen eine Anfrage abgebrochen wird. Gemessen braucht Gemma auf einer
+## schnellen CPU für das Urteil 3–5 s, auf einem Kinder-Laptop ein Mehrfaches — und ein
+## Bosskampf hat keinen Zeitdruck, der eine Antwort nach zehn Sekunden wertlos machte
+## (ADR 0005, Entscheidung 7). SentenceJudge wartet etwas länger als das hier.
+const HTTP_TIMEOUT := 45.0
 
-## Wie viel Spielraum das Modell bekommt. Es soll ein Urteil und einen Satz Rückmeldung
-## liefern, keinen Aufsatz.
-const MAX_TOKENS := 200
+## Wie viel Spielraum das Modell bekommt: ein JSON-Objekt mit ein, zwei Sätzen darin. Die
+## Werkstatt hat mit 400 bis 700 gemessen; beides ist nur eine Obergrenze, die ein
+## Modell, das sich an die Form hält, nie erreicht.
+const MAX_TOKENS := 400
 
 ## Was in `last_note` steht, wenn schon eine Anfrage offen ist. Als Konstante, weil ein
 ## Test daran hängt: dieser Fall war einmal der einzige, der gar nichts sagte.
 const BUSY_NOTE := "Vorige Anfrage läuft noch — diese wurde nicht gestellt."
 
+## Die Güte, die ein Urteil von Aufruf 1 bedeutet. Das Modell urteilt binär (ADR 0005);
+## die Zahl ist die Form, in der SentenceJudge und der Kampf rechnen.
+const CORRECT_QUALITY := 1.0
+const INCORRECT_QUALITY := 0.0
+
 var url := URL
 var model := MODEL
 
-## Wie lange auf den Dienst gewartet wird, bevor die Verbindung abgebrochen wird. Im Spiel
-## bleibt es bei HTTP_TIMEOUT — der Boss holt vier Sekunden lang aus, eine Antwort nach
-## dreißig ist wertlos.
-##
-## Verstellbar, weil eine MESSUNG etwas anderes fragt als der Kampf: dort geht es darum, ob
-## ein Modell die Aufgabe kann, und nicht darum, ob es das rechtzeitig tut. Ohne diese Naht
-## lief jede Anfrage an ein 3-B-Modell auf der CPU in den Abbruch und die Messung meldete
-## „kein Dienst erreichbar", während der Dienst einwandfrei rechnete. Gelesen wird der Wert
-## in _ready(), also VOR dem Einhängen setzen.
+## Wie lange auf den Dienst gewartet wird, bevor die Verbindung abgebrochen wird.
+## Verstellbar für Messung und Werkbank, die länger warten dürfen als der Kampf. Gelesen
+## wird der Wert in _ready(), also VOR dem Einhängen setzen.
 var http_timeout := HTTP_TIMEOUT
 
 ## Woran es beim letzten Mal lag, im Klartext — leer, solange alles in Ordnung war.
 ##
-## `parse_reply()` gibt {} zurück, wenn KEIN Dienst antwortet, und ebenso, wenn ein Modell
-## antwortet, das sich nicht an die Form hält. Für das Spiel ist beides dasselbe („kein
-## Beitrag"), und das soll es bleiben. Beim Messen und in der Werkbank ist es der
-## Unterschied zwischen „nichts installiert" und „falsches Modell" — und ohne diese Naht
-## sähe man an derselben Stelle denselben Satz und suchte am falschen Ende.
+## Eine Antwort ohne verwertbaren Inhalt ergibt {}, ebenso ein Dienst, der gar nicht
+## antwortet. Für das Spiel ist beides dasselbe („kein Beitrag"), und das soll es bleiben.
+## Beim Messen und in der Werkbank ist es der Unterschied zwischen „nichts installiert"
+## und „falsches Modell" — und ohne diese Naht suchte man am falschen Ende.
 var last_note := ""
+
+## Die rohe Ausgabe des Modells bei der letzten Antwort — für die Werkbank, die zeigen
+## will, WAS das Modell geschrieben hat, und nicht nur, was davon ankam.
+var last_content := ""
+
+## Wie lange die letzte Anfrage gedauert hat, in Sekunden.
+var last_seconds := 0.0
 
 var _http: HTTPRequest
 var _on_done: Callable
+## Wie die Antwort der offenen Anfrage gelesen wird: parse_verdict oder parse_explanation.
+var _parse: Callable
+var _started_msec := 0
 
 
 func _ready() -> void:
@@ -72,10 +89,38 @@ func _ready() -> void:
 	_http.request_completed.connect(_on_completed)
 
 
-## Die Callable-Form, die SentenceJudge erwartet.
+## Aufruf 1 in der Callable-Form, die SentenceJudge als `model_backend` erwartet.
+## `on_done` bekommt { "quality", "verdict", "feedback" } oder {}.
 func judge(sentence: Dictionary, answer: String, on_done: Callable) -> void:
+	_ask(StageOnePrompts.verdict_messages(sentence, answer), parse_verdict, on_done)
+
+
+## Aufruf 2 in der Callable-Form, die SentenceJudge als `explainer` erwartet.
+## `on_done` bekommt { "mistake", "explanation" } oder {}.
+func explain(sentence: Dictionary, answer: String, on_done: Callable) -> void:
+	_ask(StageOnePrompts.explain_messages(sentence, answer), parse_explanation, on_done)
+
+
+## Steht noch eine Anfrage offen? Solange das gilt, wird jede weitere abgewiesen — wer
+## der Reihe nach fragt (das Messskript), wartet darauf.
+func busy() -> bool:
+	return _on_done.is_valid()
+
+
+## Der Rumpf der Anfrage — statisch und damit ohne Dienst prüfbar. Kein `response_format`:
+## gemessen wurde ohne, und Gemma hält die Form aus dem Prompt heraus (ADR 0005).
+static func request_body(messages: Array, model_name: String) -> String:
+	return JSON.stringify({
+		"model": model_name,
+		"temperature": 0.0,
+		"max_tokens": MAX_TOKENS,
+		"messages": messages,
+	})
+
+
+func _ask(messages: Array, parse: Callable, on_done: Callable) -> void:
 	if _http == null or _on_done.is_valid():
-		# Eine Anfrage zur Zeit. Die zweite bekommt kein Urteil — das ist kein Fehler,
+		# Eine Anfrage zur Zeit. Die zweite bekommt kein Ergebnis — das ist kein Fehler,
 		# sondern der Normalfall „kein Modell da".
 		#
 		# Sie bekommt aber eine Begründung: gibt SentenceJudge früher auf, als HTTP_TIMEOUT
@@ -85,86 +130,94 @@ func judge(sentence: Dictionary, answer: String, on_done: Callable) -> void:
 		on_done.call({})
 		return
 	_on_done = on_done
+	_parse = parse
 	last_note = ""
-	var body := JSON.stringify({
-		"model": model,
-		"temperature": 0.0,
-		"max_tokens": MAX_TOKENS,
-		"messages": [{"role": "user", "content": prompt_for(sentence, answer)}],
-	})
-	var error := _http.request(url, ["Content-Type: application/json"], HTTPClient.METHOD_POST, body)
+	last_content = ""
+	_started_msec = Time.get_ticks_msec()
+	var error := _http.request(url, ["Content-Type: application/json"], HTTPClient.METHOD_POST,
+			request_body(messages, model))
 	if error != OK:
 		last_note = "Anfrage an %s nicht abgesetzt (Fehler %d)" % [url, error]
 		_finish({})
 
 
-## Steht noch eine Anfrage offen? Solange das gilt, wird jede weitere abgewiesen — wer
-## der Reihe nach fragt (das Messskript), wartet darauf.
-func busy() -> bool:
-	return _on_done.is_valid()
-
-
-## Der Auftrag an das Modell. Es bewertet NICHT auf freiem Feld: es bekommt den Satz, die
-## Musterlösung und die gleichwertigen Formulierungen mit — die Frage ist nur noch, ob die
-## Antwort eine weitere gleichwertige Formulierung ist. Das ist die Frage, die auch ein
-## kleines Modell noch beantworten kann.
-static func prompt_for(sentence: Dictionary, answer: String) -> String:
-	var lines := PackedStringArray([
-		"Du bewertest die Übersetzung einer Schülerin oder eines Schülers (Klasse 9).",
-		"Deutscher Satz: %s" % str(sentence.get("source_text", "")),
-		"Musterlösung: %s" % str(sentence.get("reference_translation", "")),
-	])
-	var accepted := Array(sentence.get("accepted", []))
-	if not accepted.is_empty():
-		lines.append("Ebenfalls richtig: %s" % "; ".join(PackedStringArray(accepted.map(str))))
-	lines.append("Antwort: %s" % answer)
-	lines.append(
-		"Ist die Antwort sinngemäß richtig? Im Zweifel großzügig sein: eine richtige "
-		+ "Antwort abzulehnen ist schlimmer, als eine falsche durchzulassen."
-	)
-	lines.append(
-		'Antworte NUR mit JSON: {"quality": 0.0 bis 1.0, "feedback": "ein kurzer Satz '
-		+ 'auf Deutsch"}'
-	)
-	return "\n".join(lines)
-
-
-## Zieht { "quality", "feedback" } aus der Antwort des Dienstes, oder {} wenn dabei
-## irgendetwas nicht stimmt. Ein Modell, das sich nicht an die Form hält, ist hier kein
-## Fehlerfall, sondern schlicht ein Modell ohne Beitrag.
-static func parse_reply(body: String) -> Dictionary:
-	var envelope: Variant = JSON.parse_string(body)
+## Der Text, den das Modell geschrieben hat, aus der OpenAI-Hülle — oder "", wenn die
+## Hülle nicht stimmt.
+static func content_of(body: String) -> String:
+	var envelope: Variant = _quiet_parse(body)
 	if not (envelope is Dictionary):
-		return {}
+		return ""
 	var choices: Array = Array((envelope as Dictionary).get("choices", []))
-	if choices.is_empty():
-		return {}
-	var message: Dictionary = (choices[0] as Dictionary).get("message", {})
-	return parse_content(str(message.get("content", "")))
+	if choices.is_empty() or not (choices[0] is Dictionary):
+		return ""
+	var message: Variant = (choices[0] as Dictionary).get("message", {})
+	if not (message is Dictionary):
+		return ""
+	return str((message as Dictionary).get("content", ""))
 
 
-## Das JSON-Objekt aus der Ausgabe des Modells. Kleine Modelle schreiben gern noch einen
-## Satz davor oder legen einen Codeblock darum — deshalb wird von der ersten Klammer bis
-## zur letzten gelesen, statt auf ein sauberes Dokument zu hoffen.
-static func parse_content(content: String) -> Dictionary:
+## Das JSON-Objekt aus der Ausgabe des Modells, oder {}. Kleine Modelle schreiben gern
+## einen Satz davor, legen einen Codeblock darum oder hängen ein zweites Objekt an. Erst
+## wird von der ersten Klammer bis zur letzten gelesen; geht das nicht, zählt die erste
+## Zeile, die ein Objekt ist — so liest auch die Werkstatt (`parts_of`).
+static func object_in(content: String) -> Dictionary:
 	var start := content.find("{")
 	var end := content.rfind("}")
 	if start < 0 or end <= start:
 		return {}
-	var parsed: Variant = JSON.parse_string(content.substr(start, end - start + 1))
-	if not (parsed is Dictionary):
-		return {}
-	var out: Dictionary = parsed
-	if not out.has("quality"):
+	var chunk := content.substr(start, end - start + 1)
+	var parsed: Variant = _quiet_parse(chunk)
+	if parsed is Dictionary:
+		return parsed
+	for line in chunk.split("\n", false):
+		var trimmed := line.strip_edges()
+		if trimmed.begins_with("{") and trimmed.ends_with("}"):
+			parsed = _quiet_parse(trimmed)
+			if parsed is Dictionary:
+				return parsed
+	return {}
+
+
+## JSON.new().parse() statt JSON.parse_string(): eine Antwort, die kein JSON ist, ist hier
+## der Normalfall und kein Fehler, den jemand in der Konsole lesen müsste.
+static func _quiet_parse(text: String) -> Variant:
+	var json := JSON.new()
+	return json.data if json.parse(text) == OK else null
+
+
+## Aufruf 1: { "verdict": "correct"|"incorrect", "reason" } -> { quality, verdict,
+## feedback }, oder {} wenn das Urteil fehlt oder keins der beiden Wörter ist. Ein Modell,
+## das sich nicht an die Form hält, ist kein Fehlerfall, sondern ein Modell ohne Beitrag.
+static func parse_verdict(content: String) -> Dictionary:
+	var obj := object_in(content)
+	var verdict := str(obj.get("verdict", "")).strip_edges().to_lower()
+	if not (verdict in ["correct", "incorrect"]):
 		return {}
 	return {
-		"quality": clampf(float(out["quality"]), 0.0, 1.0),
-		"feedback": str(out.get("feedback", "")),
+		"verdict": verdict,
+		"quality": CORRECT_QUALITY if verdict == "correct" else INCORRECT_QUALITY,
+		"feedback": str(obj.get("reason", "")).strip_edges(),
+	}
+
+
+## Aufruf 2: { "mistake": bool, "explanation" } -> dasselbe, oder {}. Ein Fehler ohne
+## Erklärung ist keiner: das Spiel zeigte sonst „falsch, weil:" und dahinter nichts.
+static func parse_explanation(content: String) -> Dictionary:
+	var obj := object_in(content)
+	if not obj.has("mistake"):
+		return {}
+	var raw: Variant = obj["mistake"]
+	var mistake: bool = (raw is bool and raw) or str(raw).strip_edges().to_lower() == "true"
+	var explanation := str(obj.get("explanation", "")).strip_edges()
+	return {
+		"mistake": mistake and not explanation.is_empty(),
+		"explanation": explanation if mistake else "",
 	}
 
 
 func _on_completed(result: int, code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
 	last_note = ""
+	last_seconds = float(Time.get_ticks_msec() - _started_msec) / 1000.0
 	if result != HTTPRequest.RESULT_SUCCESS:
 		last_note = "Kein Dienst auf %s erreichbar (Ergebnis %d)" % [url, result]
 		_report(last_note, "")
@@ -176,10 +229,13 @@ func _on_completed(result: int, code: int, _headers: PackedStringArray, body: Pa
 		_report("HTTP %d von %s" % [code, url], text)
 		_finish({})
 		return
-	var reply := parse_reply(text)
+	last_content = content_of(text)
+	var parse := _parse if _parse.is_valid() else Callable(parse_verdict)
+	var reply: Dictionary = parse.call(last_content)
 	if reply.is_empty():
-		last_note = "Antwort ohne verwertbares Urteil: %s" % _excerpt(text)
-		_report("Antwort ohne verwertbares Urteil von %s" % url, text)
+		last_note = "Antwort ohne verwertbares Ergebnis: %s" % _excerpt(
+				last_content if not last_content.is_empty() else text)
+		_report("Antwort ohne verwertbares Ergebnis von %s" % url, text)
 	_finish(reply)
 
 
@@ -202,5 +258,6 @@ static func _excerpt(text: String) -> String:
 func _finish(reply: Dictionary) -> void:
 	var done := _on_done
 	_on_done = Callable()
+	_parse = Callable()
 	if done.is_valid():
 		done.call(reply)

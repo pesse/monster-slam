@@ -11,6 +11,11 @@ für Bosskämpfe keine Kür mehr.
 mitgeliefert.** Entscheidung 3 ist damit in ihrem zweiten Absatz überholt — „kein Pack mit
 Gewichten" gilt nicht mehr.
 
+**Fortgesetzt in [ADR 0005](0005-bosskampf-mit-erklaerung.md) (2026-09-25): Urteil und
+Erklärung in zwei Aufrufen, Gemma 4 E4B statt Qwen3-4B, der Bosskampf als Menüpunkt.**
+Der Nachtrag vom 2026-09-17 ist damit in der Modellwahl und in „Was daraus zu bauen ist"
+überholt; „Stufe 1 hebt nur" gilt weiter, sie darf jetzt aber erklären, wo sie nicht hebt.
+
 Umgesetzt am 2026-09-16, ohne den Kampf: `SentenceCard`, `SentenceJudge`,
 `LocalModelBackend` und `SentenceSelector` stehen samt Tests und der Werkbank
 `scenes/dev/boss_lab.tscn`, die ausgelieferten Sätze tragen den Schlüssel, und der Golem

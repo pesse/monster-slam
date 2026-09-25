@@ -42,6 +42,12 @@ signal fortress_damaged(amount: int)
 signal boss_started(boss_id: String)
 signal boss_sentence_presented(sentence: Dictionary)
 signal boss_answer_evaluated(quality: float, feedback: String)
+## Eine Antwort im Bosskampf ist entschieden — mit dem, was die Spur braucht: welcher Satz,
+## was getippt wurde, und wer wie geurteilt hat ({ quality, stage, sure, hit }).
+signal boss_answer_judged(sentence_id: String, text: String, result: Dictionary)
+## Das Modell hat erklärt, was an der Antwort nicht stimmt (ADR 0005).
+signal boss_answer_explained(sentence_id: String, explanation: String)
+signal boss_ended(boss_id: String, won: bool)
 
 ## --- Zauber (aktive Fähigkeiten mit Abklingzeit) ---
 ## Nicht zu verwechseln mit den Skills des Fähigkeitsbaums: die sind dauerhaft, werden

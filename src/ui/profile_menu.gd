@@ -11,6 +11,8 @@ const STATS_SCENE := "res://scenes/ui/stats_screen.tscn"
 const SKILL_SCENE := "res://scenes/ui/skill_tree.tscn"
 const CONTENT_SCENE := "res://scenes/ui/content_manager.tscn"
 const MAP_SCENE := "res://scenes/ui/unit_map.tscn"
+## Vorerst ein eigener Menüpunkt und nicht Teil des Laufs (ADR 0005, Entscheidung 6).
+const BOSS_SCENE := "res://scenes/battle/boss_fight.tscn"
 
 @onready var _gold_label: Label = %GoldLabel
 @onready var _level_label: Label = %LevelLabel
@@ -20,10 +22,12 @@ const MAP_SCENE := "res://scenes/ui/unit_map.tscn"
 @onready var _content_button: Button = %ContentButton
 @onready var _play_button: Button = %PlayButton
 @onready var _play_hint: Label = %PlayHint
+@onready var _boss_button: Button = %BossButton
 
 
 func _ready() -> void:
 	_play_button.pressed.connect(func(): get_tree().change_scene_to_file(SESSION_SETUP_SCENE))
+	_boss_button.pressed.connect(func(): get_tree().change_scene_to_file(BOSS_SCENE))
 	(%MapButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(MAP_SCENE))
 	(%SkillButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(SKILL_SCENE))
 	(%StatsButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(STATS_SCENE))
@@ -129,6 +133,8 @@ func _refresh_play_gate() -> void:
 	var playable := WaveGenerator.new().has_playable({})
 	_play_button.disabled = not playable
 	_play_hint.visible = not playable
+	# Der Golem braucht Sätze, keine Vokabeln — ohne Sprachdaten hat er beides nicht.
+	_boss_button.disabled = ContentRegistry.sentences.is_empty()
 
 
 ## Zeigt an, wenn Inhalte nachzuziehen sind. „Programm zu alt" zählt hier nicht mit — dagegen

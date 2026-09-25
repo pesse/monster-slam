@@ -63,6 +63,9 @@ var _server: LocalModelServer
 ## Gefüllt vom `refined`-Signal, geleert vor jeder Frage — der Unterschied zwischen
 ## „Stufe 1 hat angehoben" und „Stufe 1 hatte nichts beizutragen".
 var _lift: Dictionary = {}
+## Dasselbe für „Stufe 1 sagt falsch" und die Erklärung dazu (ADR 0005).
+var _deny: Dictionary = {}
+var _explanation: Dictionary = {}
 
 
 func _ready() -> void:
@@ -150,6 +153,7 @@ func _load_rows() -> Array:
 				"expect": str(answer.get("expect", "richtig")),
 				"kind": str(answer.get("kind", "")),
 				"note": str(answer.get("note", "")),
+				"why": str(answer.get("why", "")),
 			})
 	return rows
 
@@ -330,13 +334,18 @@ func _run_model(rows: Array) -> void:
 	_backend.http_timeout = maxf(_timeout, LocalModelBackend.HTTP_TIMEOUT)
 	add_child(_backend)
 	_judge.model_backend = _backend.judge
+	_judge.explainer = _backend.explain
 	_judge.refined.connect(func(result: Dictionary): _lift = result)
+	_judge.denied.connect(func(result: Dictionary): _deny = result)
+	_judge.explained.connect(func(result: Dictionary): _explanation = result)
 
 	print("  URL     %s" % _url)
 	print("  Modell  %s  (Zeitlimit %.1f s)" % [_model, _timeout])
 
 	var asked := 0
 	var lifted := 0
+	var denied := 0
+	var explained := 0
 	var silent := 0
 	var notes := {}
 	var started := Time.get_ticks_msec()
@@ -346,8 +355,15 @@ func _run_model(rows: Array) -> void:
 			continue
 		asked += 1
 		_lift = {}
+		_deny = {}
+		_explanation = {}
 		_judge.judge(row["sentence"], str(row["text"]))
 		while _judge.pending():
+			await get_tree().process_frame
+		var verdict_seconds := _backend.last_seconds
+		# Nach „falsch" erklärt der zweite Aufruf — gemessen wird die ganze Kette, die ein
+		# Kind im Bosskampf sähe.
+		while _judge.explaining() or (not _deny.is_empty() and _explanation.is_empty()):
 			await get_tree().process_frame
 		# Erst weiter, wenn die Leitung wieder frei ist. Gibt SentenceJudge früher auf,
 		# als das Backend wartet (--timeout kleiner als LocalModelBackend.HTTP_TIMEOUT),
@@ -355,7 +371,21 @@ func _run_model(rows: Array) -> void:
 		# ohne je gestellt worden zu sein. Gemessen würde dann eine einzige Frage.
 		while _backend.busy():
 			await get_tree().process_frame
-		if _lift.is_empty():
+		if not _deny.is_empty():
+			denied += 1
+			row["final"] = _deny
+			var text := str(_explanation.get("explanation", ""))
+			explained += int(not text.is_empty())
+			if _verbose:
+				print("    ↓  falsch (%.1f s)  %-9s %s   [Bogen: %s]" % [
+						verdict_seconds, row["kind"], row["text"], row["expect"]])
+				if text.is_empty():
+					print("         ↳ keine Erklärung (%.1f s) — Musterlösung" % _backend.last_seconds)
+				else:
+					print("         ↳ %s (%.1f s)" % [text, _backend.last_seconds])
+				if not str(row["why"]).is_empty():
+					print("         ≡ Lehrkraft: %s" % row["why"])
+		elif _lift.is_empty():
 			silent += 1
 			var note := _backend.last_note
 			notes[note] = int(notes.get(note, 0)) + 1
@@ -374,8 +404,8 @@ func _run_model(rows: Array) -> void:
 				print("         ↳ %s" % _lift.get("feedback", ""))
 
 	var seconds := float(Time.get_ticks_msec() - started) / 1000.0
-	print("\n  %d unsichere Antworten gefragt, %d angehoben, %d ohne Beitrag — %.1f s (%.1f s je Frage)"
-			% [asked, lifted, silent, seconds, seconds / maxf(1.0, float(asked))])
+	print("\n  %d unsichere Antworten gefragt, %d angehoben, %d abgewiesen (%d davon erklärt), %d ohne Beitrag — %.1f s (%.1f s je Antwort)"
+			% [asked, lifted, denied, explained, silent, seconds, seconds / maxf(1.0, float(asked))])
 	for note in notes:
 		if not str(note).is_empty():
 			print("    %dx %s" % [notes[note], note])
