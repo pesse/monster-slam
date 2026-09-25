@@ -53,9 +53,17 @@ func test_cooldown_suppresses_immediate_repeat() -> void:
 	assert_str(String(Sfx.last_played)).is_equal("slow_mo_out")
 
 
+## Wartet den Cooldown ab — nach der Uhr, gegen die Sfx ihn prüft (Time.get_ticks_msec),
+## nicht mit einem SceneTreeTimer: der zählt die geglätteten Frame-Deltas und löste auf
+## einem langsamen CI-Runner schon vor Ablauf des Cooldowns aus (Release 0.10.1).
+func _wait_out_cooldown() -> void:
+	var until := Time.get_ticks_msec() + Sfx.COOLDOWN_MS * 2
+	while Time.get_ticks_msec() < until:
+		await get_tree().process_frame
+
+
 func test_cooldown_expires() -> void:
-	# ignore_time_scale, damit der Timer auch bei laufender Slow-Motion in Echtzeit misst.
-	await get_tree().create_timer(Sfx.COOLDOWN_MS * 2.0 / 1000.0, true, false, true).timeout
+	await _wait_out_cooldown()
 	Sfx.play(&"monster_kill")
 	assert_str(String(Sfx.last_played)).is_equal("monster_kill")
 
@@ -94,7 +102,7 @@ func test_play_reports_the_level_of_the_id() -> void:
 	#
 	# `slow_mo_in` ist oben schon gelaufen — erst den Cooldown abwarten, sonst verwirft
 	# `play()` den Aufruf und der Seam zeigt noch den Wert des Nachbartests.
-	await get_tree().create_timer(Sfx.COOLDOWN_MS * 2.0 / 1000.0, true, false, true).timeout
+	await _wait_out_cooldown()
 	Sfx.play(&"slow_mo_in")
 	assert_str(String(Sfx.last_played)).is_equal("slow_mo_in")
 	assert_float(Sfx.last_volume_db).is_equal(Sfx.gain_db(&"slow_mo_in"))
