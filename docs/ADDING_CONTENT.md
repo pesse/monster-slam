@@ -226,7 +226,7 @@ Bosse verwenden ganze Sätze; die Bewertung erfolgt semantisch (siehe
 }
 ```
 `time_pressure`: `none` | `low` | `medium` | `high`. Ein Spawn nennt **kein** Monster mehr —
-der `WaveGenerator` wählt aus dem `task_pool` eine (bevorzugt fällige/neue) Aufgabe und leitet
+der `WaveGenerator` wählt aus dem `task_pool` eine (bevorzugt in dieser Welle noch nicht gezeigte, darin fällige/neue) Aufgabe und leitet
 das Monster über die `monster_task_rules` ab. `task_pool`-Felder (alle optional):
 `task_types` (Liste), `direction`, `tags` (Lexem-Tags), `difficulty_max` (0 = kein Limit).
 Eine Boss-Welle nutzt statt `spawns` das Feld `"boss": "<boss-id>"`.

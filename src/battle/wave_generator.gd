@@ -124,37 +124,68 @@ func has_playable(pool: Dictionary) -> bool:
 
 ## `exclude_sources` (als Set: Lexem-id -> true) verhindert, dass ein Grundwort
 ## gewählt wird, das bereits als Monster auf dem Feld steht (Aufrufer: WaveRunner).
-func pick(pool: Dictionary, exclude_sources: Dictionary = {}) -> Dictionary:
+## `shown_sources` (Lexem-id -> laufende Spawn-Nummer der letzten Zeigung) sind die in
+## dieser Welle schon gezeigten Grundwörter; sie kommen erst dran, wenn der Rest des
+## Pools erschöpft ist (siehe ordered()).
+func pick(pool: Dictionary, exclude_sources: Dictionary = {}, shown_sources: Dictionary = {}) -> Dictionary:
 	var candidates := _candidates(pool)
 	if candidates.is_empty():
 		return {}
-	# Reihenfolge: fällige zuerst, dann neue, dann der Rest — innerhalb gemischt.
-	var due := PlayerProgress.due_task_ids()
-	var buckets := {"due": [], "new": [], "rest": []}
-	for c in candidates:
-		var id: String = c["learnable_id"]
-		if id in due:
-			buckets["due"].append(c)
-		elif not PlayerProgress.has_seen(id):
-			buckets["new"].append(c)
-		else:
-			buckets["rest"].append(c)
+	var ordered_candidates := ordered(candidates, PlayerProgress.due_task_ids(),
+		PlayerProgress.has_seen, shown_sources)
 
-	# Erste nicht-leere Priorität durchprobieren, bis eine Aufgabe auflösbar ist.
+	# Der Reihe nach durchprobieren, bis eine Aufgabe auflösbar ist.
 	# Erster Durchlauf meidet bereits sichtbare Grundwörter; findet sich damit nichts
 	# Spielbares, lässt der zweite Durchlauf die Sperre fallen (lieber ein Duplikat
 	# als eine hängende Welle).
 	for respect_exclude in [true, false]:
-		for key in ["due", "new", "rest"]:
-			var pool_list: Array = buckets[key]
-			pool_list.shuffle()
-			for candidate in pool_list:
-				if respect_exclude and exclude_sources.has(str(candidate["source"].get("id", ""))):
-					continue
-				var plan := _build_plan(candidate)
-				if not plan.is_empty():
-					return plan
+		for candidate in ordered_candidates:
+			if respect_exclude and exclude_sources.has(str(candidate["source"].get("id", ""))):
+				continue
+			var plan := _build_plan(candidate)
+			if not plan.is_empty():
+				return plan
 	return {}
+
+
+## Die Auswahlreihenfolge von pick(), statisch und ohne Autoload prüfbar.
+##
+## Oberste Stufe ist „in dieser Welle schon gezeigt" (Issue #24): erst alle Kandidaten,
+## deren Grundwort noch nicht dran war — darin fällige, dann neue, dann der Rest, je Stufe
+## gemischt. Danach die Wiederholungen, geordnet nach Grundwort: das am längsten nicht
+## gezeigte (kleinste Nummer in `shown`) zuerst, innerhalb wieder fällig → neu → Rest.
+## Die Sperre greift am Grundwort, nicht am learnable_id — sonst käme dasselbe Wort über
+## eine andere Richtung oder Aufgabenart sofort wieder.
+##
+## `due`: learnable_ids, die heute fällig sind. `seen`: learnable_id -> bool.
+static func ordered(candidates: Array, due: Array, seen: Callable, shown: Dictionary) -> Array:
+	var due_set := {}
+	for id in due:
+		due_set[id] = true
+	var fresh: Array = [[], [], []]
+	var repeats := {} # Spawn-Nummer -> [fällig, neu, Rest]
+	for c in candidates:
+		var id: String = c["learnable_id"]
+		var rank := 0 if due_set.has(id) else (1 if not seen.call(id) else 2)
+		var source_id := str(c["source"].get("id", ""))
+		if shown.has(source_id):
+			var key := int(shown[source_id])
+			if not repeats.has(key):
+				repeats[key] = [[], [], []]
+			repeats[key][rank].append(c)
+		else:
+			fresh[rank].append(c)
+	var out: Array = []
+	for bucket in fresh:
+		bucket.shuffle()
+		out.append_array(bucket)
+	var keys := repeats.keys()
+	keys.sort()
+	for key in keys:
+		for bucket in repeats[key]:
+			bucket.shuffle()
+			out.append_array(bucket)
+	return out
 
 
 ## Erzeugt alle spielbaren Kandidaten (Definition × Lexeme [× Form/Relation]) für den

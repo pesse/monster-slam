@@ -90,6 +90,10 @@ Darstellung unabhängig wachsen können (siehe `docs/ADDING_CONTENT.md`):
 Die Auflösung Definition × Lexeme → spielbare Aufgabe `{prompt, accepted_answers, …}`
 macht `src/learning/task_resolver.gd`; die Enumeration der Kandidaten (Definition × Lexeme)
 und die Auswahl fälliger/neuer Aufgaben + Monster-Mapping `src/battle/wave_generator.gd`.
+Oberste Stufe der Auswahl ist „in dieser Welle schon gezeigt“ (am Grundwort, nicht am
+`learnable_id`): Wiederholungen erst, wenn der Pool erschöpft ist, dann das am längsten
+nicht gezeigte Wort zuerst (`WaveGenerator.ordered`). Die Menge führt der `WaveRunner`
+je Welle, gespeichert wird sie nicht.
 
 ### Tempo = Schwierigkeit (Monster-Geschwindigkeit)
 Geschwindigkeit ist **kein eigenständiges Attribut**, sondern die sichtbare Projektion der

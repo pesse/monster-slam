@@ -46,6 +46,10 @@ var _fast_resolving: bool = false
 ## Während der Meister-Feier abgeschickte Antworten: sie werden nach der Feier in dieser
 ## Reihenfolge ausgewertet, damit keine verloren geht (siehe _on_answer_submitted).
 var _held_answers: Array[String] = []
+## In dieser Welle schon gezeigte Grundwörter: Lexem-id -> Spawn-Nummer der letzten
+## Zeigung. WaveGenerator.pick() nimmt sie erst, wenn der Pool erschöpft ist (Issue #24).
+## Gilt nur für die laufende Welle und wird nicht gespeichert.
+var _wave_shown: Dictionary = {}
 
 var _cam_base: Vector3
 var _shake_left: float = 0.0
@@ -703,6 +707,7 @@ func _start_next_wave() -> void:
 	_no_content = false
 	_wave_correct = 0
 	_wave_leaked = 0
+	_wave_shown.clear()
 	_wave_leaked_tasks.clear()
 	_wave_played_tasks.clear()
 	_score_at_start = GameState.score
@@ -813,7 +818,7 @@ func _spawn(entry: Dictionary) -> void:
 	var active_sources := {}
 	for m in _active:
 		active_sources[str(m.task.get("source_id", ""))] = true
-	var plan: Dictionary = _generator.pick(entry.get("task_pool", {}), active_sources)
+	var plan: Dictionary = _generator.pick(entry.get("task_pool", {}), active_sources, _wave_shown)
 	if plan.is_empty():
 		# Kein Plan heißt „im Pool ist nichts Spielbares" und NICHT „steht gerade alles
 		# auf dem Feld": WaveGenerator.pick() lässt im zweiten Durchlauf die
@@ -835,6 +840,7 @@ func _spawn(entry: Dictionary) -> void:
 	monster.reached_goal.connect(_on_monster_reached_goal)
 	_monsters.add_child(monster)
 	_active.append(monster)
+	_wave_shown[str(plan["task"].get("source_id", ""))] = _spawned
 	_spawned += 1
 	EventBus.monster_spawned.emit(plan["monster_def"], plan["task"])
 
