@@ -5,6 +5,8 @@ extends PanelContainer
 
 ## Der Nutzer hat eine Festungsstufe (0..4) gewählt.
 signal fortress_tier_selected(tier: int)
+## Die Meister-Feier testweise zeigen (`word` = Wort-Feier statt Aufgaben-Feier).
+signal celebration_requested(word: bool)
 
 
 func _ready() -> void:
@@ -18,6 +20,8 @@ func _ready() -> void:
 	var row := $Root/Body/TierRow
 	for tier in row.get_child_count():
 		(row.get_child(tier) as Button).pressed.connect(_on_tier_pressed.bind(tier))
+	($Root/Body/CelebrateRow/Task as Button).pressed.connect(celebration_requested.emit.bind(false))
+	($Root/Body/CelebrateRow/Word as Button).pressed.connect(celebration_requested.emit.bind(true))
 
 
 func _on_tier_pressed(tier: int) -> void:

@@ -280,6 +280,28 @@ in den Pool:
   ein Einzelfall, im ungebundenen Grundwortschatz die Regel — wer den Balken einer Unit
   beurteilt, prüft erst, ob der Scope gesetzt ist.
 
+### Die Feier beim Meistern (Issue #23)
+
+Der Anlass ist der Übergang von `mastered_at` 0 auf einen Zeitstempel: `PlayerProgress.record()`
+liefert dann `true` (nur wenn die Confidence vorher unter der Schwelle lag, sonst würde
+Altbestand ohne Zeitstempel gefeiert). Der WaveRunner meldet danach `EventBus.task_mastered`
+und, wenn `mastered_lexeme_of()` ein Lexem nennt, `lexeme_mastered`. Kein neues Speicherfeld.
+
+- **Anzeige** `MasteryCelebration` (`scenes/ui/mastery_celebration.tscn`) hängt nur am
+  EventBus. Sie sammelt bis zum Frame-Ende und nimmt die größere Feier; jede weitere stellt
+  sich an. Solange eine ansteht (`is_busy`), hält `WaveRunner._check_end` das Wellenende
+  zurück — auch das letzte Monster wird gefeiert. Die Spur schreibt `mastered` und
+  `word_mastered`; das Debug-Panel feiert über `celebrate()` an beidem vorbei.
+- **Anhalten** über die Baum-Pause (`get_tree().paused`), nicht über `time_scale`: die
+  Effekte sind `GPUParticles2D` in der Szene, und die hängen an `delta` — bei time_scale 0
+  stünden sie mit. Weiter laufen nur Knoten auf `process_mode = ALWAYS`: die Feier, die
+  Antwort-Eingabe (in `battle.tscn`) und `Sfx`. Wer einen Timer im Kampf anlegt, der in
+  der Pause stehen soll, braucht `create_timer(t, false)` — der Standard läuft weiter
+  (Spawn-Timer, Explosion). Nur die Blitze sind ein eigener Knoten (`src/fx/lightning.gd`).
+- **Antwortzeit**: der WaveRunner schiebt `spawned_at_ms` jedes Monsters auf dem Feld um die
+  Dauer der Feier. Während der Feier abgeschickte Antworten werden aufgehoben und danach
+  ausgewertet (`_held_answers`).
+
 ## Wirtschaft: Gold und Schatzkisten (`src/economy/`)
 
 Gold ist die erste Währung. Verdient wird es als **Schatzkiste am Wellenende**, gehalten

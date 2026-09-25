@@ -68,3 +68,10 @@ signal run_ended(summary: Dictionary)
 ## `response_time_ms` ist 0, wo es keine gemessene Zeit gibt (durchgelassenes Monster) —
 ## dieselbe Konvention wie in PlayerProgress.record().
 signal item_reviewed(item_id: String, correct: bool, response_time_ms: int)
+## Eine Aufgabe ist ZUM ERSTEN MAL gemeistert (PlayerProgress.record() lieferte true).
+## Nie ein zweites Mal für dieselbe Aufgabe — `mastered_at` wird nicht zurückgenommen.
+signal task_mastered(task_id: String)
+## Mit dieser Antwort sitzt ein Wort zum ersten Mal in allen Richtungen
+## (PlayerProgress.LEXEME_MASTERY_DIRECTIONS). Kommt direkt nach dem task_mastered der
+## Aufgabe, die es abgeschlossen hat.
+signal lexeme_mastered(lexeme_id: String)

@@ -62,6 +62,16 @@ func _lines(path := "") -> Array:
 	return out
 
 
+## Meisterungen (Issue #23) sind eigene Zeilen, nur mit Ids.
+func test_masteries_are_logged() -> void:
+	_log.note_task_mastered(TASK["learnable_id"])
+	_log.note_lexeme_mastered(TASK["source_id"])
+	var lines := _lines()
+	assert_array(lines.map(func(l): return l["e"])).is_equal(["mastered", "word_mastered"])
+	assert_str(str(lines[0]["id"])).is_equal(TASK["learnable_id"])
+	assert_str(str(lines[1]["lex"])).is_equal(TASK["source_id"])
+
+
 ## „Schnell auflösen" steht als eigene Zeile vor den Leaks, die es auslöst.
 func test_a_fast_resolve_is_logged_with_its_wave() -> void:
 	GameState.current_wave = "procedural_3"

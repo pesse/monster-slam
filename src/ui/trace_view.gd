@@ -78,6 +78,22 @@ static func describe(line: Dictionary, tasks: Dictionary = {}) -> Dictionary:
 					"Accent", {"title": str(line.get("prompt", "")),
 					"body": "Richtig wäre gewesen: %s" % _answers(line),
 					"note": str(line.get("id", ""))})
+		"mastered":
+			var id := str(line.get("id", ""))
+			var prompt := str((tasks.get(id, {}) as Dictionary).get("prompt", id))
+			return _entry("🏅 gemeistert: %s" % prompt, "", {"title": "Zum ersten Mal gemeistert",
+					"body": prompt, "note": id})
+		"word_mastered":
+			var lex := str(line.get("lex", ""))
+			var word := lex
+			# Die Zeile kennt nur die Lexem-Id; das Wort steht in einer spawn-Zeile dazu.
+			for task: Dictionary in tasks.values():
+				if str(task.get("lex", "")) == lex and str(task.get("type", "")) == "translate":
+					word = str(task.get("prompt", lex))
+					break
+			return _entry("🏆 Wort gemeistert: %s" % word, "Accent",
+					{"title": "Wort gemeistert", "body": "Sitzt jetzt in beiden Richtungen.",
+					"note": lex})
 		"boss_start":
 			return _entry("👹 Bosskampf beginnt · %s" % str(line.get("boss", "")))
 		"boss_answer":

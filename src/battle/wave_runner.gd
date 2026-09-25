@@ -43,6 +43,9 @@ var _last_won: bool = true         # Ausgang der zuletzt beendeten Welle
 var _wave_gen: int = 0
 ## Läuft der Rest der Welle gerade im Zeitraffer (siehe _fast_resolve_wave)?
 var _fast_resolving: bool = false
+## Während der Meister-Feier abgeschickte Antworten: sie werden nach der Feier in dieser
+## Reihenfolge ausgewertet, damit keine verloren geht (siehe _on_answer_submitted).
+var _held_answers: Array[String] = []
 
 var _cam_base: Vector3
 var _shake_left: float = 0.0
@@ -65,6 +68,7 @@ var _cutscene: bool = false   # läuft gerade die Ausbau-Cutscene? (unterdrückt
 @onready var _slow_motion: SlowMotion = $SlowMotion
 @onready var _fast_resolve_button: Button = $UI/FastResolveButton
 @onready var _fast_resolve_confirm: ConfirmDialog = $UI/FastResolveConfirm
+@onready var _celebration: MasteryCelebration = $UI/MasteryCelebration
 
 
 func _ready() -> void:
@@ -94,6 +98,8 @@ func _ready() -> void:
 	var debug_panel := $UI/DebugPanel
 	if debug_panel.has_signal("fortress_tier_selected"):
 		debug_panel.fortress_tier_selected.connect(_on_debug_tier_selected)
+	if debug_panel.has_signal("celebration_requested"):
+		debug_panel.celebration_requested.connect(_on_debug_celebration)
 	if _stats.has_signal("next_wave_requested"):
 		_stats.next_wave_requested.connect(_on_next_wave_requested)
 	if _stats.has_signal("back_to_menu_requested"):
@@ -105,6 +111,8 @@ func _ready() -> void:
 	_fast_resolve_button.pressed.connect(_on_fast_resolve_pressed)
 	_fast_resolve_confirm.confirmed.connect(_fast_resolve_wave)
 	_fast_resolve_confirm.cancelled.connect(_on_fast_resolve_cancelled)
+	_celebration.started.connect(_on_celebration_started)
+	_celebration.finished.connect(_on_celebration_finished)
 	Hints.attach(_fast_resolve_button, "Schnell auflösen",
 			"Spult den Rest der Welle vor, wenn du die Wörter gerade nicht weißt.",
 			"Die Monster treffen die Festung trotzdem, danach werden ihre Wörter aufgelöst.")
@@ -642,6 +650,12 @@ func _abort_battle() -> void:
 	get_tree().change_scene_to_file(MENU_SCENE)
 
 
+## Die Pause gehört zum Kampf: ein Szenenwechsel mitten in einer Feier darf sie nicht
+## ins Menü mitnehmen.
+func _exit_tree() -> void:
+	get_tree().paused = false
+
+
 ## „Schnell auflösen" fragt erst nach. Solange die Frage steht, ist die Eingabe weg: sie
 ## holt sich sonst jeden Frame den Fokus zurück, und Enter ginge an sie statt an „Abbrechen".
 ## Das Spiel läuft dabei weiter — ein Pausieren hielten die Spawn-Timer ohnehin nicht an.
@@ -700,6 +714,7 @@ func _start_next_wave() -> void:
 	_stats.hide_stats()
 	_answer_input.visible = true
 	_fast_resolving = false
+	_held_answers.clear()
 	_fast_resolve_button.visible = true
 	_fast_resolve_button.disabled = false
 
@@ -782,7 +797,9 @@ func _run_spawn_batch(entry: Dictionary, gen: int) -> void:
 	var count := int(entry.get("count", 0))
 	var interval := float(entry.get("interval", 2.0))
 	for i in count:
-		await get_tree().create_timer(interval).timeout
+		# process_always = false: in der Baum-Pause (Meister-Feier) läuft der Timer nicht
+		# weiter, sonst erschienen danach mehrere Monster auf einmal.
+		await get_tree().create_timer(interval, false).timeout
 		if _finished or not is_inside_tree() or gen != _wave_gen:
 			return
 		_spawn(entry)
@@ -824,6 +841,11 @@ func _spawn(entry: Dictionary) -> void:
 
 func _on_answer_submitted(text: String) -> void:
 	if _finished:
+		return
+	# Während der Feier steht das Spiel; eine Antwort jetzt auszuwerten hieße, ein Monster
+	# in der Pause zu besiegen und die nächste Feier anzustoßen. Aufheben statt verwerfen.
+	if _celebration.is_playing():
+		_held_answers.append(text)
 		return
 	# Zwei Durchläufe, weil die Auswertung Toleranz kennt (AnswerEvaluator): ein
 	# vollständig passendes Monster muss gewinnen, sonst schnappt sich bei mehreren
@@ -878,7 +900,8 @@ func _active_learnable_ids() -> Array:
 func _score_hit(monster: Monster, text: String = "", full_form: String = "") -> void:
 	var rt := Time.get_ticks_msec() - monster.spawned_at_ms
 	var task_id := str(monster.task.get("learnable_id", ""))
-	PlayerProgress.record(task_id, true, rt, float(monster.task.get("initial_confidence", -1.0)))
+	var newly_mastered := PlayerProgress.record(task_id, true, rt,
+			float(monster.task.get("initial_confidence", -1.0)))
 	EventBus.item_reviewed.emit(task_id, true, rt)
 	# Nach record(), damit ein Mithörer die Confidence DANACH liest — die davor steht in
 	# der Spawn-Zeile des Protokolls.
@@ -887,11 +910,48 @@ func _score_hit(monster: Monster, text: String = "", full_form: String = "") -> 
 		"source_id": str(monster.task.get("source_id", "")), "response_time_ms": rt,
 		"canonical": full_form, "candidates": _active_learnable_ids(),
 	})
+	# Nach answer_judged, damit die Spur erst die Antwort und dann die Meisterung zeigt.
+	if newly_mastered:
+		EventBus.task_mastered.emit(task_id)
+		var lexeme_id := PlayerProgress.mastered_lexeme_of(task_id)
+		if not lexeme_id.is_empty():
+			EventBus.lexeme_mastered.emit(lexeme_id)
 	var pos := monster.position
 	_defeat(monster)
 	_flash_feedback(FLASH_CORRECT)
 	if not full_form.is_empty():
 		_spawn_form_hint(pos + Vector3(0.0, 3.4, 0.0), full_form)
+
+
+## Eine Meister-Feier beginnt: der Kampf pausiert (Baum-Pause). Monster, Animationen,
+## Tweens und Spawn-Timer stehen; weiter laufen nur Knoten mit process_mode ALWAYS — die
+## Feier selbst, die Antwort-Eingabe und Sfx. Engine.time_scale bleibt SlowMotion.
+## Die Antwortzeit misst Echtzeit ab dem Erscheinen; ohne Ausgleich zählte die Feier bei
+## jedem Monster auf dem Feld als Bedenkzeit mit. Stehen mehrere Feiern an, kommt
+## `started` je Feier und `finished` nach der letzten.
+func _on_celebration_started(duration_ms: int) -> void:
+	get_tree().paused = true
+	for monster in _active:
+		monster.spawned_at_ms += duration_ms
+
+
+func _on_celebration_finished() -> void:
+	get_tree().paused = false
+	var held := _held_answers.duplicate()
+	_held_answers.clear()
+	for text in held:
+		_on_answer_submitted(text)
+	_check_end()
+
+
+## Debug-Panel: feiert mit dem Wort des ersten Monsters auf dem Feld (sonst ohne Wort),
+## aber an der Meisterung vorbei — Lernstand und Spur bleiben unberührt.
+func _on_debug_celebration(word: bool) -> void:
+	var task: Dictionary = _active[0].task if not _active.is_empty() else {}
+	if word:
+		_celebration.celebrate(MasteryCelebration.Kind.WORD, str(task.get("source_id", "")))
+	else:
+		_celebration.celebrate(MasteryCelebration.Kind.TASK, str(task.get("learnable_id", "")))
 
 
 func _shake(magnitude: float = SHAKE_MAGNITUDE) -> void:
@@ -1034,6 +1094,10 @@ func _on_monster_reached_goal(monster: Monster) -> void:
 
 func _check_end() -> void:
 	if _finished:
+		return
+	# Meistert das letzte Monster etwas, wird erst gefeiert und dann abgerechnet —
+	# _on_celebration_finished ruft hierher zurück.
+	if _celebration.is_busy():
 		return
 	if _spawned >= _total and _active.is_empty():
 		EventBus.wave_cleared.emit(GameState.current_wave)

@@ -43,3 +43,16 @@ text = "3"
 [node name="Tier4" type="Button" parent="Root/Body/TierRow"]
 focus_mode = 0
 text = "4"
+
+[node name="CelebrateLabel" type="Label" parent="Root/Body"]
+text = "Feier"
+
+[node name="CelebrateRow" type="HBoxContainer" parent="Root/Body"]
+
+[node name="Task" type="Button" parent="Root/Body/CelebrateRow"]
+focus_mode = 0
+text = "Aufgabe"
+
+[node name="Word" type="Button" parent="Root/Body/CelebrateRow"]
+focus_mode = 0
+text = "Wort"

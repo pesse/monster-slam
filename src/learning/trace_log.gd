@@ -53,6 +53,8 @@ func _ready() -> void:
 	EventBus.monster_spawned.connect(func(_monster, task): note_spawn(task))
 	EventBus.answer_judged.connect(note_answer)
 	EventBus.monster_reached_fortress.connect(func(_monster, task, damage): note_leak(task, damage))
+	EventBus.task_mastered.connect(note_task_mastered)
+	EventBus.lexeme_mastered.connect(note_lexeme_mastered)
 	EventBus.boss_started.connect(note_boss_start)
 	EventBus.boss_answer_judged.connect(note_boss_answer)
 	EventBus.boss_answer_explained.connect(note_boss_explained)
@@ -175,6 +177,17 @@ func note_leak(task: Dictionary, damage: int) -> void:
 		"answers": task.get("accepted_answers", []),
 		"dmg": damage,
 	})
+
+
+## Eine Aufgabe ist zum ersten Mal gemeistert (Issue #23). Steht direkt hinter der
+## answer-Zeile, die es geschafft hat — auch wenn die Feier dazu ausfiel.
+func note_task_mastered(task_id: String) -> void:
+	_write({"e": "mastered", "id": task_id})
+
+
+## Ein Wort sitzt zum ersten Mal in allen Richtungen.
+func note_lexeme_mastered(lexeme_id: String) -> void:
+	_write({"e": "word_mastered", "lex": lexeme_id})
 
 
 # --- Schalter und Profil ------------------------------------------------------

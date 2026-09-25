@@ -72,9 +72,15 @@ func _ensure(task_id: String, initial_confidence: float = -1.0) -> void:
 
 
 ## Verbucht ein Antwort-Ergebnis für eine Aufgabe und aktualisiert Fortschritt + Scheduler.
-func record(task_id: String, correct: bool, response_time_ms: int = 0, initial_confidence: float = -1.0) -> void:
+##
+## Rückgabe: true genau dann, wenn diese Antwort die Aufgabe ZUM ERSTEN MAL gemeistert hat
+## (`mastered_at` springt von 0 auf einen Zeitstempel und die Confidence lag vorher unter
+## der Schwelle). Das ist der Anlass der Feier im
+## Kampf (Issue #23); ob damit auch das Wort sitzt, sagt mastered_lexeme_of().
+func record(task_id: String, correct: bool, response_time_ms: int = 0, initial_confidence: float = -1.0) -> bool:
 	_ensure(task_id, initial_confidence)
 	var rec: Dictionary = _records[task_id]
+	var was_below := float(rec["confidence"]) < MASTERY_CONFIDENCE
 	rec["attempts"] += 1
 	rec["last_correct"] = correct
 	rec["last_response_time_ms"] = response_time_ms
@@ -94,8 +100,12 @@ func record(task_id: String, correct: bool, response_time_ms: int = 0, initial_c
 	# fällt die Confidence später unter die Schwelle und steigt wieder, bleibt das Datum
 	# der ersten Meisterung stehen — sonst taucht dasselbe Wort immer wieder unter
 	# „frisch gemeistert" auf und die Lernkurve bekäme Sprünge in die Vergangenheit.
+	# Gemeldet wird nur ein echter Übergang: ein Altbestand-Record ohne Zeitstempel, der
+	# schon über der Schwelle stand, bekommt hier sein Datum, ist aber nicht NEU gemeistert.
+	var newly_mastered := false
 	if int(rec.get("mastered_at", 0)) == 0 and float(rec["confidence"]) >= MASTERY_CONFIDENCE:
 		rec["mastered_at"] = rec["last_seen_at"]
+		newly_mastered = was_below
 
 	# SM-2-Qualität (0..5): schnell+richtig hoch, falsch < 3 (Reset im Scheduler).
 	var quality := 2
@@ -103,6 +113,7 @@ func record(task_id: String, correct: bool, response_time_ms: int = 0, initial_c
 		quality = 5 if (response_time_ms > 0 and response_time_ms < 4000) else 4
 	_sr.review(task_id, quality, _today())
 	rec["next_review_at"] = _due_day(task_id) * 86400
+	return newly_mastered
 
 
 ## Nächster Fälligkeitstag (Tageszähler) des Items laut Scheduler.
@@ -290,6 +301,29 @@ static func mastered_lexemes_in(records: Dictionary, threshold := MASTERY_CONFID
 		if hits[lexeme_id].size() == LEXEME_MASTERY_DIRECTIONS.size():
 			out[lexeme_id] = true
 	return out
+
+
+## Das Lexem, dessen Meisterung die Aufgabe `task_id` gerade abschließt — oder "".
+##
+## Gedacht für den Moment direkt nach einem record(), das true geliefert hat: ist die
+## Aufgabe eine der Übersetzungsrichtungen aus LEXEME_MASTERY_DIRECTIONS und sitzen jetzt
+## alle, ist das WORT zum ersten Mal gemeistert. Zum ersten Mal, weil diese Richtung eben
+## erst ihre erste Meisterung bekam — vorher können nie beide zugleich gesessen haben.
+## Dieselbe Regel wie mastered_lexemes(), nur für ein einzelnes Wort.
+func mastered_lexeme_of(task_id: String, threshold := MASTERY_CONFIDENCE) -> String:
+	return mastered_lexeme_in(_records, task_id, threshold)
+
+
+## Wie mastered_lexeme_of(), statisch über übergebene Records (prüfbar ohne Autoload).
+static func mastered_lexeme_in(records: Dictionary, task_id: String, threshold := MASTERY_CONFIDENCE) -> String:
+	var parts := task_id.split(":")
+	if parts.size() != 3 or parts[0] != "translate" or not (parts[1] in LEXEME_MASTERY_DIRECTIONS):
+		return ""
+	for direction in LEXEME_MASTERY_DIRECTIONS:
+		var id := "translate:%s:%s" % [direction, parts[2]]
+		if float(records.get(id, {}).get("confidence", 0.0)) < threshold:
+			return ""
+	return parts[2]
 
 
 ## Kann dieses Lexem überhaupt gemeistert werden — gibt es zu ihm Übersetzungsaufgaben?

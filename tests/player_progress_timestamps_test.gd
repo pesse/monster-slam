@@ -113,3 +113,48 @@ func test_progress_file_without_timestamps_still_works() -> void:
 
 	_pp.record(TASK, true, 1200)   # 0.75 -> 0.81, reißt die Schwelle
 	assert_int(int(_pp._records[TASK]["mastered_at"])).is_greater(0)
+
+
+# --- Der Anlass der Feier (Issue #23) ------------------------------------------
+
+## record() meldet genau die EINE Antwort, die die Schwelle zum ersten Mal reißt.
+func test_record_reports_the_first_mastery_exactly_once() -> void:
+	var reports: Array = []
+	for i in 10:
+		reports.append(_pp.record(TASK, true, 1500))
+	assert_int(reports.count(true)).is_equal(1)
+	# Rückfall und Wiederaufstieg: keine zweite Meldung.
+	_pp.record(TASK, false, 0)
+	for i in 10:
+		assert_bool(_pp.record(TASK, true, 1500)).is_false()
+
+
+## Ein Altbestand-Record ohne Zeitstempel, der schon über der Schwelle stand, bekommt sein
+## Datum — gefeiert wird er nicht, er war nicht eben erst gemeistert.
+func test_a_legacy_record_above_the_threshold_is_not_reported() -> void:
+	_pp.record(TASK, true, 1200)
+	_pp._records[TASK]["confidence"] = 0.85
+	_pp._records[TASK]["mastered_at"] = 0
+	assert_bool(_pp.record(TASK, true, 1200)).is_false()
+	assert_int(int(_pp._records[TASK]["mastered_at"])).is_greater(0)
+
+
+## Das Wort ist erst gemeistert, wenn die zweite Richtung dazukommt.
+func test_the_second_direction_completes_the_word() -> void:
+	var de_en := "translate:de_to_en:zz.lex.a"
+	var en_de := "translate:en_to_de:zz.lex.a"
+	_master(de_en)
+	assert_str(_pp.mastered_lexeme_of(de_en)).is_empty()
+	_master(en_de)
+	assert_str(_pp.mastered_lexeme_of(en_de)).is_equal("zz.lex.a")
+
+
+## Andere Aufgabentypen schließen kein Wort ab, auch wenn beide Richtungen sitzen.
+func test_other_task_types_complete_no_word() -> void:
+	var records := {
+		"translate:de_to_en:zz.lex.a": {"confidence": 0.9},
+		"translate:en_to_de:zz.lex.a": {"confidence": 0.9},
+		"conjugation:zz.lex.a:past": {"confidence": 0.9},
+	}
+	assert_str(PROGRESS.mastered_lexeme_in(records, "conjugation:zz.lex.a:past")).is_empty()
+	assert_str(PROGRESS.mastered_lexeme_in(records, "translate:de_to_en:zz.lex.a")).is_equal("zz.lex.a")
