@@ -65,11 +65,6 @@ unique_name_in_owner = true
 size_flags_horizontal = 3
 text = "▶ Spielen"
 
-[node name="BossButton" type="Button" parent="Margin/Root/PlayRow"]
-unique_name_in_owner = true
-size_flags_horizontal = 3
-text = "👹 Bosskampf"
-
 [node name="PlayHint" type="Label" parent="Margin/Root"]
 theme_type_variation = &"Accent"
 unique_name_in_owner = true

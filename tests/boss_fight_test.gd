@@ -76,20 +76,24 @@ func test_the_first_sentence_is_on_the_table() -> void:
 	assert_bool((_fight.get_node("%NextButton") as Button).disabled).is_true()
 
 
-## Ein Treffer der Prüfkarte kostet den Golem 1 HP — sofort, ohne Modell.
+## Ein Treffer der Prüfkarte kostet den Golem 1 HP — sofort, ohne Modell. Die Musterlösung
+## steht auch nach einem Treffer da: eine andere richtige Fassung zu sehen, lehrt auch.
 func test_a_known_solution_hits() -> void:
 	_build(true)
 	_answer("We saw the reef yesterday.")
 	assert_int(_asked).is_equal(0)
 	assert_int(_fight.hp).is_equal(1)
 	assert_str(_text("HpLabel")).contains("1/2")
+	assert_str(_text("ReferenceLabel")).contains("Yesterday we saw the reef.")
 	assert_bool((_fight.get_node("%NextButton") as Button).disabled).is_false()
 
 
-## Nichts getippt ist kein Versuch: der Satz bleibt, der Golem auch.
+## Nichts getippt ist kein Versuch: der Satz bleibt, der Golem auch — und die Musterlösung
+## bleibt verdeckt, sonst holte man sie sich mit Enter.
 func test_an_empty_answer_is_not_a_try() -> void:
 	_build(true)
 	_answer("   ")
+	assert_str(_text("ReferenceLabel")).is_empty()
 	assert_int(_fight.hp).is_equal(2)
 	assert_bool((_fight.get_node("%NextButton") as Button).disabled).is_true()
 	assert_int(_asked).is_equal(0)

@@ -1,7 +1,7 @@
 extends Control
 ## Der Bosskampf (scenes/battle/boss_fight.tscn) — docs/adr/0005-bosskampf-mit-erklaerung.md.
 ##
-## Der Grammatik-Golem stellt fünf Sätze aus seiner `sentence_rule` über der Auswahl des
+## Der Satzmeister stellt fünf Sätze aus seiner `sentence_rule` über der Auswahl des
 ## Profils. Jeder Treffer kostet ihn 1 HP; ist er bei 0, ist er besiegt, sind die Sätze
 ## vorher aus, zieht er ab. Kein Zeitdruck und keine Strafe — und vorerst auch kein Gold,
 ## keine Erfahrung und kein Lernstand (ADR 0005, Entscheidung 6).
@@ -13,6 +13,10 @@ extends Control
 ##                              └─ „falsch" ─► die Erklärung kommt nach, „Weiter" ist schon frei;
 ##                                 Rückmeldung und Musterlösung erst mit ihr
 ##     kein Modell / Zeitlimit ─► kein Treffer, Musterlösung
+##
+## **Die Musterlösung steht nach jedem Urteil da**, auch nach einem Treffer — nur nicht
+## VOR der Erklärung: rechnet die noch, kommt sie mit ihr. Ein leerer Versuch zeigt sie nie,
+## sonst holte man sie sich mit Enter.
 ##
 ## **Der Dienst startet beim Betreten und endet beim Verlassen** (LocalModelServer hängt
 ## als Kind an dieser Szene und beendet ihn in seinem _exit_tree). Solange er lädt, ist
@@ -33,7 +37,7 @@ const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 const SELF_SCENE := "res://scenes/battle/boss_fight.tscn"
 const BOSS_ID := "boss.grammar_golem"
 
-## Ab welcher Güte eine Antwort den Golem trifft. Ein Volltreffer (1,0) und ein Treffer mit
+## Ab welcher Güte eine Antwort den Satzmeister trifft. Ein Volltreffer (1,0) und ein Treffer mit
 ## weggelassener Kleinigkeit (0,7) treffen, eine Stolperstelle (0,35) nicht.
 const HIT_QUALITY := 0.6
 ## Wie viele Sätze, wenn der Boss es nicht selbst sagt.
@@ -52,7 +56,7 @@ const NO_VERDICT_TEXT := "Das kann ich nicht beurteilen — das zählt nicht als
 const WON_TEXT := "Neiiin … ich zerfalle zu Staub! Du hast gewonnen!"
 const LOST_TEXT := "Meine Sätze sind aus. Beim nächsten Mal kriege ich dich!"
 ## Die große Zeile in der Blase, wenn der Kampf vorbei ist.
-const WON_FAREWELL := "🏆 Du hast den Golem besiegt!"
+const WON_FAREWELL := "🏆 Du hast den Satzmeister besiegt!"
 const LOST_FAREWELL := "💨 Er ist fort — für diesmal."
 ## Der Ausruf in der Bildmitte.
 const HIT_SHOUT := "TREFFER!"
@@ -60,7 +64,7 @@ const MISS_SHOUT := "DANEBEN!"
 const WON_SHOUT := "SIEG!"
 const HIT_SHOUT_TINT := Color(1.0, 0.86, 0.3)
 const MISS_SHOUT_TINT := Color(0.65, 0.85, 1.0)
-const EMPTY_POOL_TEXT := "Für den Golem passt kein Satz zu deiner Auswahl. Wähle unter „▶ Spielen“ mehr Units aus."
+const EMPTY_POOL_TEXT := "Für den Satzmeister passt kein Satz zu deiner Auswahl. Wähle unter „▶ Spielen“ mehr Units aus."
 const NO_MODEL_NOTE := "Ohne Sprachmodell zählt nur, was als Lösung hinterlegt ist. Das Modell gibt es unter „📚 Inhalte“."
 const MODEL_NOTE := "Das Sprachmodell läuft auf diesem Rechner; nichts verlässt ihn."
 const FAILED_MODEL_NOTE := "Das Sprachmodell ließ sich nicht starten — es zählt nur, was als Lösung hinterlegt ist."
@@ -103,7 +107,7 @@ var hits := 0
 var _judge: SentenceJudge
 var _backend: LocalModelBackend
 var _server: LocalModelServer
-## Der Dienst lädt noch — solange nimmt der Golem keine Antwort an.
+## Der Dienst lädt noch — solange nimmt der Satzmeister keine Antwort an.
 var _waking := false
 ## Diese Runde ist entschieden; „Weiter" führt zum nächsten Satz.
 var _decided := false
@@ -250,10 +254,10 @@ func _render_answer_gate() -> void:
 		return
 	if _waking:
 		_golem_line.text = WAKING_TEXT
-		_lock_answer("💤 Der Golem erwacht …")
+		_lock_answer("💤 Er erwacht …")
 	elif _judge.pending():
 		_golem_line.text = THINKING_TEXT
-		_lock_answer("🤔 Der Golem prüft …")
+		_lock_answer("🤔 Er prüft …")
 		_stage.listen()
 		_boss_bubble.wobble(true)
 	else:
@@ -306,12 +310,12 @@ func _decide(result: Dictionary, headline := "", explanation_coming := false) ->
 		_render_hp()
 	_golem_line.text = _line(HIT_LINES) if hit else (headline if not headline.is_empty() else _line(MISS_LINES))
 	_verdict_label.text = "" if explanation_coming else str(result.get("feedback", ""))
-	_reference_label.text = "" if hit or explanation_coming else _reference_text(result)
+	_reference_label.text = "" if explanation_coming else _reference_text()
 	_lock_answer("⚔ Angreifen")
 	_next_button.disabled = false
 	_next_button.grab_focus.call_deferred()
 	_react(hit, headline.is_empty())
-	_show_result(not (_verdict_label.text.is_empty() and _reference_label.text.is_empty()) or explanation_coming)
+	_show_result(true)
 	var sentence: Dictionary = sentences[index]
 	EventBus.boss_answer_evaluated.emit(float(result.get("quality", 0.0)), str(result.get("feedback", "")))
 	EventBus.boss_answer_judged.emit(str(sentence.get("id", "")), _answer, {
@@ -344,7 +348,7 @@ func _on_explained(result: Dictionary) -> void:
 		_golem_line.text = _line(MISS_LINES)
 	_result_bubble.wobble(false)
 	_explanation_label.text = text
-	_reference_label.text = _reference_text(result)
+	_reference_label.text = _reference_text()
 	# Ohne gefundenen Fehler keine Rückmeldung, nur die Musterlösung (ADR 0005). Mit ihm
 	# ersetzt die Erklärung die allgemeine Rückmeldung der Karte, sie steht nicht daneben.
 	_verdict_label.text = "" if text.is_empty() else "Das stimmt noch nicht:"
@@ -354,8 +358,10 @@ func _on_explained(result: Dictionary) -> void:
 	_result_bubble.pop()
 
 
-static func _reference_text(result: Dictionary) -> String:
-	return "Musterlösung: %s" % str(result.get("reference", ""))
+## Aus dem Satz selbst, nicht aus dem Ergebnis: so ist sie da, egal welche Stufe geurteilt
+## hat — auch nach einem Treffer, dessen Ergebnis keine Musterlösung mitbringt.
+func _reference_text() -> String:
+	return "Musterlösung: %s" % str(sentences[index].get("reference_translation", ""))
 
 
 func _on_gave_up() -> void:

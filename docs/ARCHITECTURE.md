@@ -84,8 +84,8 @@ Darstellung unabhängig wachsen können (siehe `docs/ADDING_CONTENT.md`):
 - **sentences / sentence_lexemes** — für Boss-/Satzübungen. Ein Satz trägt neben der
   `reference_translation` seinen Lösungsschlüssel (`accepted`, `must_contain`,
   `pitfalls`); bewertet und ausgewählt wird damit offline (siehe „Sätze bewerten" unten
-  und `docs/adr/0004-satzbewertung-ohne-modell.md`). Der Bosskampf ist ein eigener
-  Menüpunkt (`scenes/battle/boss_fight.tscn`, ADR 0005).
+  und `docs/adr/0004-satzbewertung-ohne-modell.md`). Der Bosskampf startet wie der
+  Wellenkampf aus „Runde vorbereiten“ (`scenes/battle/boss_fight.tscn`, ADR 0005).
 
 Die Auflösung Definition × Lexeme → spielbare Aufgabe `{prompt, accepted_answers, …}`
 macht `src/learning/task_resolver.gd`; die Enumeration der Kandidaten (Definition × Lexeme)
@@ -154,7 +154,8 @@ Stufen, und Stufe 0 trägt das Spiel allein.
 Ein Boss trägt deshalb **keine Sätze mehr selbst**, sondern eine `sentence_rule`
 (`data/bosses/grammar_golem.json`). Ausprobieren lässt sich das Ganze in der Werkbank
 `scenes/dev/boss_lab.tscn`; gespielt wird es im Bosskampf (`scenes/battle/boss_fight.tscn`),
-der vorerst ein eigener Menüpunkt ist und nichts verbucht (ADR 0005). Seine Bühne
+der neben dem Wellenkampf aus „Runde vorbereiten“ startet, dieselbe Auswahl liest (nur
+Scope und Tags) und nichts verbucht (ADR 0005). Seine Bühne
 (`scenes/battle/boss_stage.tscn`, `BossStage`) ist ein Gewölbe aus der Ich-Sicht mit dem
 Skelett-Magier darin; sie spielt nur vor (`hurt`, `gloat`, `fall`, `leave`) und weiß nichts
 von Sätzen und Urteilen. Die Oberfläche darüber sind Sprechblasen (`SpeechBubble`), deren

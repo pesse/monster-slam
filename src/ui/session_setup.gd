@@ -16,10 +16,20 @@ extends Control
 ## Eine ENGE Auswahl kann dagegen leer ausgehen (die Filter kombinieren sich mit UND).
 ## Dann sperrt "Kampf starten" — siehe _refresh_start_gate().
 ##
+## **Von hier geht es in beide Kämpfe**: "▶ Kampf starten" in die Wellen,
+## "👹 Bosskampf starten" zum Satzmeister. Beide lesen dieselbe Auswahl; der Bosskampf
+## nimmt davon nur Bücher & Units und Tags (Sätze haben keinen Aufgaben- und keinen
+## Vokabel-Typ). Jeder Knopf sperrt für sich, wenn seine Auswahl nichts hergibt.
+##
 ## Das statische Layout liegt in session_setup.tscn; hier nur die datengetriebenen
 ## Inhalte (Muster wie profile_menu._refresh_words()).
 
 const BATTLE_SCENE := "res://scenes/battle/battle.tscn"
+const BOSS_SCENE := "res://scenes/battle/boss_fight.tscn"
+const BossFight := preload("res://src/battle/boss_fight.gd")
+
+const NO_WORDS_TEXT := "Diese Auswahl trifft keine Vokabel — Filter lockern oder Inhalte installieren."
+const NO_SENTENCES_TEXT := "Für den Bosskampf passt kein Satz zu diesen Units und Tags — andere wählen."
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 
 ## Hübschere deutsche Beschriftungen für Aufgabentypen (Wert bleibt der rohe Typ).
@@ -42,6 +52,7 @@ const MAX_SUGGESTIONS := 10
 @onready var _tag_suggestions: VBoxContainer = %TagSuggestions
 @onready var _tag_badges: HFlowContainer = %TagBadges
 @onready var _start_button: Button = %StartButton
+@onready var _boss_start_button: Button = %BossStartButton
 @onready var _start_hint: Label = %StartHint
 
 var _all_tags: PackedStringArray = PackedStringArray()
@@ -55,6 +66,7 @@ var _generator := WaveGenerator.new()
 
 func _ready() -> void:
 	_start_button.pressed.connect(func(): get_tree().change_scene_to_file(BATTLE_SCENE))
+	_boss_start_button.pressed.connect(func(): get_tree().change_scene_to_file(BOSS_SCENE))
 	(%BackButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(MENU_SCENE))
 	_build_scope()
 	_build_task_types()
@@ -72,11 +84,25 @@ func _ready() -> void:
 ## fände der WaveRunner nichts zu spawnen, die Welle endete nie und das Schlachtfeld
 ## wäre leer. Lieber hier sagen, dass die Auswahl zu eng ist, als dort.
 ## Läuft nach jeder Änderung, weil jeder Filter das Ergebnis kippen kann.
+##
+## Der Bosskampf hat sein eigenes Tor: er braucht Sätze, und die fehlen einer Unit, für die
+## noch keine erzeugt sind, auch wenn ihre Vokabeln spielbar sind.
 func _refresh_start_gate() -> void:
 	var pool := WaveGenerator.pool_from_settings(UserSettings.default_difficulty())
 	var playable := _generator.has_playable(pool)
+	var boss_playable := has_boss_sentences()
 	_start_button.disabled = not playable
-	_start_hint.visible = not playable
+	_boss_start_button.disabled = not boss_playable
+	_start_hint.visible = not (playable and boss_playable)
+	_start_hint.text = NO_WORDS_TEXT if not playable else NO_SENTENCES_TEXT
+
+
+## Gibt die Auswahl dem Satzmeister mindestens einen Satz?
+static func has_boss_sentences() -> bool:
+	var boss := ContentRegistry.get_entry("bosses", BossFight.BOSS_ID)
+	if boss.is_empty():
+		return false
+	return not SentenceSelector.new().candidates(SentenceSelector.pool_for_boss(boss)).is_empty()
 
 
 ## Macht `header` zum Auf-/Zuklapp-Schalter für `content` (Pfeil ▸/▾), zugeklappt.

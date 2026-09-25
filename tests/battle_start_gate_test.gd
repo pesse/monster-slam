@@ -73,6 +73,7 @@ func test_session_setup_locks_start_without_playable_task() -> void:
 	var runner := scene_runner(SETUP_SCENE)
 	var setup := runner.scene()
 	assert_bool((setup.get_node("%StartButton") as Button).disabled).is_true()
+	assert_bool((setup.get_node("%BossStartButton") as Button).disabled).is_true()
 	assert_bool((setup.get_node("%StartHint") as Label).visible).is_true()
 
 
@@ -85,4 +86,5 @@ func test_session_setup_allows_start_with_playable_task(
 	var runner := scene_runner(SETUP_SCENE)
 	var setup := runner.scene()
 	assert_bool((setup.get_node("%StartButton") as Button).disabled).is_false()
+	assert_bool((setup.get_node("%BossStartButton") as Button).disabled).is_false()
 	assert_bool((setup.get_node("%StartHint") as Label).visible).is_false()
