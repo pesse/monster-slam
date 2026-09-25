@@ -154,7 +154,12 @@ Stufen, und Stufe 0 trägt das Spiel allein.
 Ein Boss trägt deshalb **keine Sätze mehr selbst**, sondern eine `sentence_rule`
 (`data/bosses/grammar_golem.json`). Ausprobieren lässt sich das Ganze in der Werkbank
 `scenes/dev/boss_lab.tscn`; gespielt wird es im Bosskampf (`scenes/battle/boss_fight.tscn`),
-der vorerst ein eigener Menüpunkt ist und nichts verbucht (ADR 0005).
+der vorerst ein eigener Menüpunkt ist und nichts verbucht (ADR 0005). Seine Bühne
+(`scenes/battle/boss_stage.tscn`, `BossStage`) ist ein Gewölbe aus der Ich-Sicht mit dem
+Skelett-Magier darin; sie spielt nur vor (`hurt`, `gloat`, `fall`, `leave`) und weiß nichts
+von Sätzen und Urteilen. Die Oberfläche darüber sind Sprechblasen (`SpeechBubble`), deren
+Spitzen dem Kopf des Skeletts folgen. Die Animationen teilen sich Boss und Monster über
+`RigAnimations`.
 
 **Die Wörter, die hier gelten.** Die meisten Begriffe sind für dieses Projekt erfunden und
 stehen so im Code, in den ADRs und in den Commit-Texten:

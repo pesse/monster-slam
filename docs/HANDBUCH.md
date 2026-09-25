@@ -612,13 +612,17 @@ führt direkt dorthin.
 ## 20. Der Bosskampf
 
 Im Bosskampf übersetzt du keine einzelnen Wörter, sondern **ganze Sätze** ins Englische.
-Der Grammatik-Golem stellt fünf Sätze aus den Units, die du unter „▶ Spielen“
-ausgewählt hast. Es gibt **keinen Zeitdruck**.
+Du stehst in einem Gewölbe vor dem Grammatik-Golem, einem Skelett-Magier, der vor dir auf und
+ab geht. Er stellt fünf Sätze aus den Units, die du unter „▶ Spielen“ ausgewählt hast —
+der deutsche Satz steht in seiner Sprechblase oben, deine Antwort tippst du unten in deine
+eigene. Es gibt **keinen Zeitdruck**.
 
-- Tippe die Übersetzung und drücke Enter oder „Prüfen“.
-- **Jede richtige Übersetzung kostet den Golem ein Herz.** Hat er keine mehr, ist er
-  besiegt. Sind die fünf Sätze vorbei und er steht noch, zieht er ab – mehr passiert nicht.
-- **Ist eine Übersetzung falsch**, steht darunter die Musterlösung, und meistens auch, *was*
+- Tippe die Übersetzung und drücke Enter oder „⚔ Angreifen“. Danach führt Enter (oder
+  „Weiter“) zum nächsten Satz.
+- **Jede richtige Übersetzung kostet den Golem ein Herz** — er zuckt zurück, und der
+  Balken oben wird kürzer. Hat er keine Herzen mehr, fällt er um und ist besiegt. Sind die fünf Sätze vorbei und er steht noch, zieht er ab – mehr passiert nicht.
+- **Ist eine Übersetzung falsch**, hüpft der Golem vor Freude, und in seiner Sprechblase
+  rechts steht die Musterlösung, und meistens auch, *was*
   nicht stimmt: „Du hast ‚seen‘ benutzt, es muss ‚saw‘ heißen.“ Diese Erklärung braucht
   ein paar Sekunden länger als das Urteil; Erklärung und Musterlösung erscheinen dann
   zusammen. Mit „Weiter“ musst du nicht auf sie warten.

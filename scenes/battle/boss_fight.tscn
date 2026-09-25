@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://src/battle/boss_fight.gd" id="1_boss"]
+[ext_resource type="PackedScene" path="res://scenes/battle/boss_stage.tscn" id="2_stage"]
+[ext_resource type="Script" path="res://src/ui/speech_bubble.gd" id="3_bubble"]
 
 [node name="BossFight" type="Control"]
 layout_mode = 3
@@ -11,119 +13,243 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_boss")
 
-[node name="Margin" type="MarginContainer" parent="."]
-theme_type_variation = &"ScreenMargin"
+[node name="Stage" parent="." instance=ExtResource("2_stage")]
+unique_name_in_owner = true
+
+[node name="Flash" type="ColorRect" parent="."]
+unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0)
+layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 0.85, 0.4, 0.3)
+
+[node name="Margin" type="MarginContainer" parent="."]
+theme_type_variation = &"ScreenMargin"
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
 
 [node name="Root" type="VBoxContainer" parent="Margin"]
 theme_type_variation = &"ScreenStack"
+layout_mode = 2
+mouse_filter = 2
 
 [node name="Header" type="HBoxContainer" parent="Margin/Root"]
 theme_type_variation = &"SectionStack"
+layout_mode = 2
+mouse_filter = 2
 
 [node name="BackButton" type="Button" parent="Margin/Root/Header"]
 unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
 text = "← Zurück"
 
-[node name="BossName" type="Label" parent="Margin/Root/Header"]
+[node name="LeftSpace" type="Control" parent="Margin/Root/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="BossPlate" type="PanelContainer" parent="Margin/Root/Header"]
+theme_type_variation = &"HudPanel"
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+
+[node name="PlateStack" type="VBoxContainer" parent="Margin/Root/Header/BossPlate"]
+theme_type_variation = &"Tight"
+layout_mode = 2
+
+[node name="PlateTop" type="HBoxContainer" parent="Margin/Root/Header/BossPlate/PlateStack"]
+theme_type_variation = &"ScreenStack"
+layout_mode = 2
+
+[node name="BossName" type="Label" parent="Margin/Root/Header/BossPlate/PlateStack/PlateTop"]
 unique_name_in_owner = true
-theme_type_variation = &"Display"
+theme_type_variation = &"SectionTitle"
+layout_mode = 2
 size_flags_horizontal = 3
 text = "Grammatik-Golem"
 
-[node name="HpLabel" type="Label" parent="Margin/Root/Header"]
+[node name="HpLabel" type="Label" parent="Margin/Root/Header/BossPlate/PlateStack/PlateTop"]
 unique_name_in_owner = true
-theme_type_variation = &"Title"
+theme_type_variation = &"SectionTitle"
+layout_mode = 2
 text = "❤ 3/3"
 
-[node name="Arena" type="HBoxContainer" parent="Margin/Root"]
-theme_type_variation = &"SectionStack"
-
-[node name="Golem" type="Label" parent="Margin/Root/Arena"]
+[node name="HpBar" type="ProgressBar" parent="Margin/Root/Header/BossPlate/PlateStack"]
 unique_name_in_owner = true
-theme_type_variation = &"Display"
-text = "🗿"
+theme_type_variation = &"BossHp"
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+max_value = 3.0
+step = 0.01
+value = 3.0
+show_percentage = false
 
-[node name="Status" type="VBoxContainer" parent="Margin/Root/Arena"]
+[node name="RightSpace" type="Control" parent="Margin/Root/Header"]
+layout_mode = 2
 size_flags_horizontal = 3
-alignment = 1
+mouse_filter = 2
 
-[node name="GolemLine" type="Label" parent="Margin/Root/Arena/Status"]
-unique_name_in_owner = true
-theme_type_variation = &"Accent"
-custom_minimum_size = Vector2(400, 0)
-autowrap_mode = 3
-text = "Der Golem wartet."
+[node name="RoundPlate" type="PanelContainer" parent="Margin/Root/Header"]
+theme_type_variation = &"HudPanel"
+custom_minimum_size = Vector2(260, 0)
+layout_mode = 2
+size_flags_vertical = 4
 
-[node name="RoundLabel" type="Label" parent="Margin/Root/Arena/Status"]
+[node name="RoundLabel" type="Label" parent="Margin/Root/Header/RoundPlate"]
 unique_name_in_owner = true
-theme_type_variation = &"Caption"
+theme_type_variation = &"SectionTitle"
+layout_mode = 2
+horizontal_alignment = 1
 text = "Satz 1 von 5"
 
-[node name="SourceText" type="Label" parent="Margin/Root"]
+[node name="BossBubble" type="PanelContainer" parent="Margin/Root"]
 unique_name_in_owner = true
-theme_type_variation = &"Title"
-custom_minimum_size = Vector2(400, 0)
+theme_type_variation = &"BossBubble"
+custom_minimum_size = Vector2(720, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+script = ExtResource("3_bubble")
+
+[node name="BossSays" type="VBoxContainer" parent="Margin/Root/BossBubble"]
+theme_type_variation = &"Tight"
+layout_mode = 2
+
+[node name="GolemLine" type="Label" parent="Margin/Root/BossBubble/BossSays"]
+unique_name_in_owner = true
+theme_type_variation = &"BubbleAccent"
+custom_minimum_size = Vector2(600, 0)
+layout_mode = 2
+autowrap_mode = 3
+text = "Übersetze, wenn du kannst!"
+
+[node name="SourceText" type="Label" parent="Margin/Root/BossBubble/BossSays"]
+unique_name_in_owner = true
+theme_type_variation = &"BubbleTitle"
+custom_minimum_size = Vector2(600, 80)
+layout_mode = 2
 autowrap_mode = 3
 text = "—"
 
-[node name="AnswerRow" type="HBoxContainer" parent="Margin/Root"]
+[node name="Middle" type="HBoxContainer" parent="Margin/Root"]
 theme_type_variation = &"SectionStack"
-
-[node name="AnswerEdit" type="LineEdit" parent="Margin/Root/AnswerRow"]
-unique_name_in_owner = true
-size_flags_horizontal = 3
-placeholder_text = "Übersetzung tippen und Enter"
-
-[node name="SubmitButton" type="Button" parent="Margin/Root/AnswerRow"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(240, 0)
-text = "Prüfen"
-
-[node name="ResultScroll" type="ScrollContainer" parent="Margin/Root"]
-custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
 size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="BossSpace" type="Control" parent="Margin/Root/Middle"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="ResultBubble" type="PanelContainer" parent="Margin/Root/Middle"]
+unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0)
+theme_type_variation = &"BossBubble"
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+tail_direction = Vector2(-1, 0)
+script = ExtResource("3_bubble")
+
+[node name="ResultScroll" type="ScrollContainer" parent="Margin/Root/Middle/ResultBubble"]
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
 horizontal_scroll_mode = 0
 
-[node name="Gutter" type="MarginContainer" parent="Margin/Root/ResultScroll"]
+[node name="Gutter" type="MarginContainer" parent="Margin/Root/Middle/ResultBubble/ResultScroll"]
 theme_type_variation = &"ScrollGutter"
+layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="ResultBox" type="VBoxContainer" parent="Margin/Root/ResultScroll/Gutter"]
+[node name="ResultBox" type="VBoxContainer" parent="Margin/Root/Middle/ResultBubble/ResultScroll/Gutter"]
 theme_type_variation = &"Tight"
+layout_mode = 2
 
-[node name="VerdictLabel" type="Label" parent="Margin/Root/ResultScroll/Gutter/ResultBox"]
+[node name="VerdictLabel" type="Label" parent="Margin/Root/Middle/ResultBubble/ResultScroll/Gutter/ResultBox"]
 unique_name_in_owner = true
-theme_type_variation = &"SectionTitle"
-custom_minimum_size = Vector2(400, 0)
+theme_type_variation = &"BubbleAccent"
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
 autowrap_mode = 3
 
-[node name="ExplanationLabel" type="Label" parent="Margin/Root/ResultScroll/Gutter/ResultBox"]
+[node name="ExplanationLabel" type="Label" parent="Margin/Root/Middle/ResultBubble/ResultScroll/Gutter/ResultBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(400, 0)
+theme_type_variation = &"BubbleText"
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
 autowrap_mode = 3
 
-[node name="ReferenceLabel" type="Label" parent="Margin/Root/ResultScroll/Gutter/ResultBox"]
+[node name="ReferenceLabel" type="Label" parent="Margin/Root/Middle/ResultBubble/ResultScroll/Gutter/ResultBox"]
 unique_name_in_owner = true
-theme_type_variation = &"Hint"
-custom_minimum_size = Vector2(400, 0)
+theme_type_variation = &"BubbleHint"
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
 autowrap_mode = 3
 
-[node name="Footer" type="HBoxContainer" parent="Margin/Root"]
-theme_type_variation = &"SectionStack"
+[node name="PlayerBubble" type="PanelContainer" parent="Margin/Root"]
+unique_name_in_owner = true
+theme_type_variation = &"PlayerBubble"
+layout_mode = 2
+script = ExtResource("3_bubble")
 
-[node name="ModelNote" type="Label" parent="Margin/Root/Footer"]
+[node name="AnswerRow" type="HBoxContainer" parent="Margin/Root/PlayerBubble"]
+theme_type_variation = &"ScreenStack"
+layout_mode = 2
+
+[node name="AnswerEdit" type="LineEdit" parent="Margin/Root/PlayerBubble/AnswerRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Deine Übersetzung — Enter zum Angreifen"
+
+[node name="SubmitButton" type="Button" parent="Margin/Root/PlayerBubble/AnswerRow"]
+unique_name_in_owner = true
+theme_type_variation = &"ActionButton"
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+text = "⚔ Angreifen"
+
+[node name="NextButton" type="Button" parent="Margin/Root/PlayerBubble/AnswerRow"]
+unique_name_in_owner = true
+theme_type_variation = &"ActionButton"
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+disabled = true
+text = "Weiter ▶"
+
+[node name="ModelNote" type="Label" parent="Margin/Root"]
 unique_name_in_owner = true
 theme_type_variation = &"Caption"
-size_flags_horizontal = 3
 custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
 autowrap_mode = 3
 
-[node name="NextButton" type="Button" parent="Margin/Root/Footer"]
+[node name="Shout" type="Label" parent="."]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(240, 0)
-disabled = true
-text = "Weiter"
+modulate = Color(1, 1, 1, 0)
+theme_type_variation = &"Shout"
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -60.0
+offset_right = 300.0
+offset_bottom = 60.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+horizontal_alignment = 1
+vertical_alignment = 1
