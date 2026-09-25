@@ -26,7 +26,12 @@ tools/report/php.sh server/melden/test_endpoint.php
   Pfad) und strippt CRLF schon selbst.
 - Physik und `SceneTreeTimer` laufen headless nach Wanduhr — lange genug laufen lassen.
 - GDScript-Änderungen end-to-end prüfen, bevor sie als funktionierend gemeldet werden.
-- **Ein echter Kampf headless spielt im aktiven Spielerprofil** und schreibt Lernstand,
+- **Editor und EXE haben getrennte `user://`**: jeder Lauf mit dem Editor-Binary (auch
+  `tools/godot.sh`, Tests, CI) nutzt `%APPDATA%\Monster Slam (Entwicklung)`, die
+  installierte EXE `%APPDATA%\Godot\app_userdata\Monster Slam`
+  (`config/use_custom_user_dir.editor` in `project.godot`). Nie auf die Basis-Schlüssel
+  ausweiten — sonst zieht die EXE mit und verliert die Profile der Spieler.
+- **Ein echter Kampf headless spielt im aktiven Entwicklungsprofil** und schreibt Lernstand,
   Sitzungen und Spur. Vorher `user://` sichern und danach zurückspielen, oder nicht tun.
 
 ## Was in welches Repo gehört
@@ -125,7 +130,7 @@ urheberrechtlich geschütztem Lehrbuchmaterial und liegen im privaten Submodule
 
 ## Tests
 
-- `user://` ist projektübergreifend dasselbe Verzeichnis und enthält das echte Profil.
+- `user://` ist für alle Editor-Läufe dasselbe Verzeichnis und enthält das Entwicklungsprofil.
   Tests auf Wallet, PlayerLevel, SkillBook, TraceLog laufen auf eigenen Instanzen mit
   `zz-`-Profil und räumen ihre Dateien weg. Fixture-Packs bekommen eine `zz-`-Id (Packs
   werden nach Id sortiert, der letzte gewinnt).
