@@ -16,6 +16,8 @@ config/version="0.10.0"
 run/main_scene="res://scenes/ui/profile_menu.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
+config/use_custom_user_dir.editor=true
+config/custom_user_dir_name.editor="Monster Slam (Entwicklung)"
 
 [autoload]
 

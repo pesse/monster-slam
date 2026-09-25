@@ -71,8 +71,11 @@ Nachstellen lässt sich der CI-Zustand mit einem Clone ohne `git submodule updat
 
 ## Hygiene: `user://` ist geteilt
 
-`user://` ist projektübergreifend dasselbe Verzeichnis wie im echten Spiel, und die Dateien
-des aktiven Profils sind das echte Gold, die echte Erfahrung und die echte Spur des Spielers.
+`user://` ist für jeden Lauf mit dem Editor-Binary — Editor, `tools/godot.sh`, Tests —
+dasselbe Verzeichnis, `%APPDATA%\Monster Slam (Entwicklung)`. Die installierte EXE hat ein
+eigenes (`%APPDATA%\Godot\app_userdata\Monster Slam`); das stellen die `.editor`-Schlüssel
+in `project.godot` ein. Die Dateien des aktiven Entwicklungsprofils sind trotzdem das Gold,
+die Erfahrung und die Spur dessen, der im Editor spielt.
 
 - **Autoloads mit Profildateien werden auf einer eigenen Instanz mit `zz-`Profil geprüft**,
   und der Test räumt seine Datei weg: `Wallet` (`tests/wallet_test.gd`), `PlayerLevel`,
