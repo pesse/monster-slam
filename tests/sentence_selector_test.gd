@@ -69,3 +69,13 @@ func test_the_net_measure_is_difficulty_minus_confidence() -> void:
 ## Die Skala ist die des Kampfes und keine zweite daneben.
 func test_the_scale_is_the_one_the_waves_use() -> void:
 	assert_int(SentenceSelector.DIFFICULTY_MAX).is_equal(WaveGenerator.DIFFICULTY_MAX)
+
+
+## Ein Filter, der kein Lexem trifft, lässt keinen Satz übrig. Vorher hieß die leere
+## Lexem-Menge „keine Einschränkung" — ein Tippfehler im Tag gab dem Boss alle Sätze.
+func test_a_filter_matching_nothing_leaves_nothing(
+		do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:
+	var selector := SentenceSelector.new()
+	assert_array(selector.candidates({})).is_not_empty()
+	assert_array(selector.candidates({"tags": ["kein-tag-mit-diesem-namen"]})).is_empty()
+	assert_array(selector.candidates({"scope": ["kein-buch/99"]})).is_empty()

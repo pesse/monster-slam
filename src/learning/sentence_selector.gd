@@ -92,6 +92,10 @@ func candidates(pool: Dictionary) -> Array:
 	if not scope.is_empty() or not tags.is_empty():
 		for lexeme in ContentRegistry.lexemes_scoped(scope, tags):
 			in_scope[str((lexeme as Dictionary).get("id", ""))] = true
+		# Ein Filter, der kein Lexem trifft, lässt nichts übrig — und nicht alles: für
+		# `matches` hieße die leere Menge „keine Einschränkung".
+		if in_scope.is_empty():
+			return []
 	var out: Array = []
 	for sentence in ContentRegistry.sentences.values():
 		if matches(sentence, pool, in_scope):
