@@ -88,7 +88,7 @@ Der Bestand kennt nur Einzelsätze; es gibt kein Feld, das Sätze zu einem Text 
 Der erste Bosskampf stellt deshalb **fünf Einzelsätze** nacheinander. Portionen von zwei bis
 drei Sätzen sind gemessen und besser als ein ganzer Text am Stück, brauchen aber ein neues
 Satzfeld (Text-Id und Position) im Submodule und damit ein höheres `min_app_version` am
-Pack `language-basic` — das ist eine eigene Entscheidung und nicht Teil dieser.
+Pack, der die Sätze trägt — das ist eine eigene Entscheidung und nicht Teil dieser.
 
 ### 5. Prompts und Regelkatalog stehen im Code, gemessen wird in der Werkstatt
 

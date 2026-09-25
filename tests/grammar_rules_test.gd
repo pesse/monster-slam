@@ -3,11 +3,12 @@ extends GdUnitTestSuite
 
 
 ## Jeder Tag, nach dem der Golem fragt, hat eine Regel — sonst erklärt Aufruf 2 genau die
-## Sätze ohne Regel, um die es im Bosskampf geht.
+## Sätze ohne Regel, um die es im Bosskampf geht. Fragt er nach keinem Tag, zieht er alle
+## Sätze der Auswahl; dass deren Tags im Katalog stehen, hält tests/sentence_data_test.gd.
 func test_every_golem_tag_has_a_rule() -> void:
 	var golem: Dictionary = JSON.parse_string(
 			FileAccess.get_file_as_string("res://data/bosses/grammar_golem.json"))
-	for tag in golem["sentence_rule"]["grammar_tags"]:
+	for tag in (golem["sentence_rule"] as Dictionary).get("grammar_tags", []):
 		assert_str(GrammarRules.rule_for(str(tag))).override_failure_message(
 				"Keine Regel für %s" % tag).is_not_empty()
 

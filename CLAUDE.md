@@ -99,8 +99,11 @@ urheberrechtlich geschütztem Lehrbuchmaterial und liegen im privaten Submodule
   `prompt-eval` geändert und gemessen und erst dann wörtlich übernommen.
 - Ein Boss trägt keine Sätze, sondern eine `sentence_rule` — Sätze liegen im Submodule.
 - Die Normalisierung gibt es einmal (`AnswerEvaluator.tokens()`), das Auswahlmaß ist `t - c`.
-- Neue Felder am Satz heben `min_app_version` **am Pack `language-basic`** (derzeit
-  0.10.0), nicht global. Erst die App veröffentlichen, dann im Content-Repo nach `main`.
+- Sätze gibt es je Unit (`sentences/en_<band>_unit<n>.json`), erzeugt nach
+  `docs/prompts/sentence_generation.md`: deutscher Satz, `grammar_tags` und Musterlösung
+  tragen dieselbe Form, und Tags nur aus `GrammarRules.RULES`.
+- Neue Felder am Satz heben `min_app_version` **an den Access-Paketen** (derzeit 0.10.0),
+  nicht global. Erst die App veröffentlichen, dann im Content-Repo nach `main`.
 - Kein Test startet `llama-server` oder spricht mit einem Dienst.
 
 **Oberfläche:**

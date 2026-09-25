@@ -141,7 +141,8 @@ Wartezeit ist Inszenierung, nicht Blockade.
 ## Folgen
 
 **`min_app_version` muss steigen** — am Pack `language-basic`, in dem die Sätze liegen,
-auf 0.10.0. Nicht auf 0.8.0 oder 0.9.0: beide Fassungen sind ohne die Satzbewertung
+auf 0.10.0. (Seit Lauf #4 liegen die Sätze je Unit in den Access-Paketen; die Schranke
+ist mit ihnen dorthin gewandert.) Nicht auf 0.8.0 oder 0.9.0: beide Fassungen sind ohne die Satzbewertung
 erschienen (Spur, Fortschrittsbalken, eindeutige Prompts; Festungsstufe je Unit), die
 Bewertung kommt mit dem Bosskampf. Ein Client vor dieser Änderung liest `accepted`,
 `must_contain` und `pitfalls` nicht; er würde einen Satz mit reichem Schlüssel gegen die eine

@@ -594,8 +594,9 @@ kein Tor, damit die Entwicklung nicht an ihren eigenen Versionsnummern hängt.
 **`min_app_version` steht am Pack, der das neue Feld trägt**, nicht global über der
 `packs.yaml`. Global gesetzt träfe die harte Schranke auch `game` und die Access-Bände, die
 von dem Feld nichts wissen, und eine Korrektur dort erreichte den Spieler nicht mehr. Die
-Sätze tragen seit ADR 0004 `accepted`/`must_contain`/`pitfalls`, also steht bei
-`language-basic` die 0.10.0 — die Version, mit der die Bewertung erscheint. Die Reihenfolge
+Sätze tragen seit ADR 0004 `accepted`/`must_contain`/`pitfalls` und liegen seit Lauf #4
+je Unit in den Access-Paketen, also steht dort die 0.10.0 — die Version, mit der die
+Bewertung erscheint. Die Reihenfolge
 ist deshalb: erst die App-Version veröffentlichen, dann im Content-Repo nach `main`
 (gebaut wird beim Merge, nicht beim Push).
 

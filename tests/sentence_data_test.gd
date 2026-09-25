@@ -124,6 +124,50 @@ func test_every_pitfall_has_parts_and_something_to_say(
 			).is_not_empty()
 
 
+## Nur Tags aus dem Katalog. Ein Tag, den GrammarRules nicht kennt, bekommt keine Regel,
+## und der Golem zieht nur, was er beim Namen kennt — Schreibvarianten wie früher
+## (`simple_past` neben `past_simple`) fielen still durch beide Raster.
+func test_every_grammar_tag_is_in_the_catalog(
+		do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:
+	for sentence in _sentences:
+		for tag in sentence.get("grammar_tags", []):
+			assert_bool(GrammarRules.RULES.has(str(tag))).override_failure_message(
+					"'%s' trägt den Tag '%s', den GrammarRules.RULES nicht kennt"
+					% [sentence.get("id", "?"), tag]).is_true()
+
+
+## Tag, deutscher Satz und Musterlösung tragen dieselbe Form (prompt-eval, Befund
+## „war geschlossen“ vom 25.09.2026): ein Past Perfect ohne „hatte“/„war“ im Deutschen oder
+## ohne „had“ in der Musterlösung behauptet eine Form, die der Satz nicht hat — und das
+## Modell erklärt dann einen Fehler, den es nicht gibt. Grob, aber es fängt genau diesen Fall.
+func test_a_past_perfect_is_one_in_both_languages(
+		do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:
+	var german := RegEx.create_from_string("\\b(hatte|hattest|hatten|hattet|war|warst|waren|wart)\\b")
+	for sentence in _sentences:
+		if not ("past_perfect" in Array(sentence.get("grammar_tags", []))):
+			continue
+		var id := str(sentence.get("id", "?"))
+		assert_object(german.search(str(sentence.get("source_text", "")).to_lower())
+		).override_failure_message("'%s': past_perfect ohne „hatte“/„war“ im Deutschen" % id
+		).is_not_null()
+		assert_bool("had" in _evaluator.tokens(str(sentence.get("reference_translation", "")))
+		).override_failure_message("'%s': past_perfect ohne „had“ in der Musterlösung" % id
+		).is_true()
+
+
+## Dasselbe fürs Passiv: der deutsche Satz steht im Vorgangspassiv mit „werden“, sonst
+## verlangt die Musterlösung ein Passiv, das der Satz nicht fordert.
+func test_a_passive_is_one_in_german(
+		do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:
+	var german := RegEx.create_from_string("\\b(wird|wirst|werden|wurde|wurden|wurdest|worden)\\b")
+	for sentence in _sentences:
+		if not ("passive" in Array(sentence.get("grammar_tags", []))):
+			continue
+		assert_object(german.search(str(sentence.get("source_text", "")).to_lower())
+		).override_failure_message("'%s': passive ohne „werden“ im Deutschen"
+				% sentence.get("id", "?")).is_not_null()
+
+
 ## Und der Satz, um dessentwillen diese Suite überhaupt läuft. Alle Prüfungen oben laufen
 ## über eine Liste — eine leere Liste macht jede davon still grün. Also steht hier, dass
 ## die Liste nicht leer ist UND dass darin Sätze mit Schlüssel stehen.

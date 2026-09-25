@@ -5,17 +5,6 @@
   "hp": 3,
   "sprite": "res://assets/sprites/bosses/grammar_golem.png",
   "sentence_rule": {
-	"grammar_tags": [
-	  "past_simple",
-	  "simple_past",
-	  "present_perfect",
-	  "past_perfect",
-	  "present_continuous",
-	  "present_progressive",
-	  "future_simple",
-      "passive"
-	],
-	"difficulty_max": 3,
-	"count": 5
+    "count": 5
   }
 }

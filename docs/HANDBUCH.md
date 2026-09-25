@@ -612,8 +612,8 @@ führt direkt dorthin.
 ## 20. Der Bosskampf
 
 Im Bosskampf übersetzt du keine einzelnen Wörter, sondern **ganze Sätze** ins Englische.
-Der Grammatik-Golem stellt fünf Sätze, die eine Zeitform oder das Passiv üben, und zwar
-aus den Units, die du unter „▶ Spielen“ ausgewählt hast. Es gibt **keinen Zeitdruck**.
+Der Grammatik-Golem stellt fünf Sätze aus den Units, die du unter „▶ Spielen“
+ausgewählt hast. Es gibt **keinen Zeitdruck**.
 
 - Tippe die Übersetzung und drücke Enter oder „Prüfen“.
 - **Jede richtige Übersetzung kostet den Golem ein Herz.** Hat er keine mehr, ist er
