@@ -21,9 +21,10 @@ var _forms: Dictionary = {}
 var _evaluator := AnswerEvaluator.new()
 
 
-func before_test() -> void:
-	if LanguageData.missing():
-		return
+## Einmal je Suite: die Daten ändern sich zwischen den Tests nicht. Übersprungen wird hier
+## auf Suite-Ebene — je Test übersprungen hinterließ gdUnit je Test einen verwaisten Knoten,
+## und die Orphan-Warnung lässt den Release-Build mit Code 101 scheitern.
+func before(do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:
 	_sentences = LanguageData.entries("sentences")
 	_lexemes = {}
 	_forms = {}
