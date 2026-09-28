@@ -11,7 +11,7 @@ die wissen wollen, was im Spiel passiert und warum es sich so verhält.
 
 1. [Der Start-Screen](#1-der-start-screen)
 2. [Profile](#2-profile)
-3. [Was geübt wird: „Runde vorbereiten“](#3-was-geübt-wird-runde-vorbereiten)
+3. [Expertenmodus: „Runde vorbereiten“](#3-expertenmodus-runde-vorbereiten)
 4. [Schwierigkeit](#4-schwierigkeit)
 5. [Der Kampf](#5-der-kampf)
 6. [„Schnell auflösen“](#6-schnell-auflösen)
@@ -40,10 +40,8 @@ Zeile.
 
 Die Knöpfe:
 
-- **„▶ Spielen“** – weiter zur Auswahl, was geübt wird, und dann in den Kampf oder in den
-  Bosskampf (Kapitel 20).
-- **„🗺 Landkarte“** – alle Units mit ihrer Festungsstufe; ein Klick spielt eine Unit
-  (Kapitel 10).
+- **„▶ Spielen“** – zur Buchauswahl und von dort über die Landkarte des Buchs in ein
+  Level oder zum Boss einer Unit (Kapitel 10).
 - **„🌳 Fähigkeiten“** – Skillpunkte ausgeben (Kapitel 11).
 - **„📊 Statistik“** – dein Lernstand (Kapitel 12).
 - **„⚙ Einstellungen“** – Profil, Tempo, Protokoll, Melden (Kapitel 13).
@@ -51,6 +49,9 @@ Die Knöpfe:
   Zahl dahinter, zum Beispiel „📚 Inhalte (2 neu)“.
 - **„⬆ Update auf …“** – erscheint nur, wenn es eine neue Fassung des Spiels gibt
   (Kapitel 16).
+
+Unter den Knöpfen steht klein **„Expertenmodus: Runde frei zusammenstellen“**. Er führt
+zu „Runde vorbereiten“, wo man selbst auswählt, was geübt wird (Kapitel 3).
 
 **Warum ist „▶ Spielen“ grau?** Dann sind noch keine Vokabeln da. Das Spiel selbst bringt
 keine mit; sie kommen als Pack über „📚 Inhalte“. Der Hinweis unter dem Knopf sagt das
@@ -67,10 +68,12 @@ Erfahrung und Level, die gelernten Fähigkeiten, die Auswahl, was geübt wird, d
 Standard-Schwierigkeit und die Grund-Geschwindigkeit. Umbenennen kann man ein Profil in
 den Einstellungen.
 
-## 3. Was geübt wird: „Runde vorbereiten“
+## 3. Expertenmodus: „Runde vorbereiten“
 
-Nach „▶ Spielen“ kommt der Screen „Runde vorbereiten“. Hier legst du fest, welche Wörter
-in den Kampf kommen. Alle Bereiche sind zugeklappt; ein Klick auf die Überschrift klappt
+Der normale Weg ins Spiel führt über die Landkarte (Kapitel 10). Wer selbst zusammenstellen
+will, was geübt wird, nimmt auf dem Start-Screen den kleinen Knopf „Expertenmodus: Runde
+frei zusammenstellen“. Dann kommt der Screen „Runde vorbereiten“. Hier legst du fest,
+welche Wörter in den Kampf kommen. Alle Bereiche sind zugeklappt; ein Klick auf die Überschrift klappt
 sie auf.
 
 - **„Bücher & Units“** – wähle ganze Units oder nur Teile davon. Jede Unit ist in bis zu
@@ -90,9 +93,8 @@ sie auf.
 - Nichts gewählt heißt: keine Einschränkung.
 - Die Bereiche werden kombiniert: „Buch/Unit UND Thema“. Wer „Unit 6“ und ein Thema
   wählt, bekommt die Wörter dieses Themas aus Unit 6.
-- Wörter, die zu keinem Buch gehören (Grundwortschatz), kommen nur, wenn bei „Bücher &
-  Units“ nichts gewählt ist.
-- Die Auswahl wird für das Profil gespeichert und gilt beim nächsten Mal wieder.
+- Die Auswahl wird für das Profil gespeichert und gilt beim nächsten Mal wieder. Für die
+  Level der Landkarte zählt sie nicht.
 
 Unten stehen zwei Knöpfe: **„▶ Kampf starten“** führt in die Wellen mit einzelnen Wörtern,
 **„👹 Bosskampf starten“** zum Satzmeister mit ganzen Sätzen (Kapitel 20). Beide benutzen
@@ -102,6 +104,9 @@ Ist die Auswahl so eng, dass kein einziges Wort übrig bleibt, wird „▶ Kampf
 und darunter steht, dass die Filter gelockert werden müssen. So landet man nie auf einem
 leeren Schlachtfeld. Genauso wird „👹 Bosskampf starten“ grau, wenn es zu den gewählten
 Units noch keine Sätze gibt.
+
+Ein Bosssieg aus dem Expertenmodus zählt nicht für die Medaillen auf der Landkarte: er gehört
+zu keiner einzelnen Unit.
 
 ## 4. Schwierigkeit
 
@@ -385,8 +390,6 @@ der Baustelle.
   und eine neue Unit zusammen spielt, kämpft mit der Festung der neuen.
 - **Die Unit zählt immer ganz.** Spielst du nur einen Teil einer Unit oder nur ein Thema
   daraus, zählen für die Stufe trotzdem alle Wörter der Unit.
-- **Wörter ohne Unit** (Grundwortschatz) haben keine Festungsstufe. Spielst du nur solche
-  Wörter, steht die Festung auf Stufe 0.
 
 Ausgebaut wird nur nach einer **gewonnenen** Welle, nicht mitten im Kampf. Dann fährt die
 Kamera kurz an die Festung heran, und ein Banner zeigt die neue Stufe und die dazu
@@ -395,11 +398,44 @@ aktuelle Stand steigen um denselben Betrag.
 
 ### Die Landkarte
 
-„🗺 Landkarte“ auf dem Start-Screen zeigt je Buch einen Pfad aus Units. Jeder Kreis ist
-eine Unit: die Farbe zeigt die Stufe, der Ring außen, wie viele Wörter schon sitzen.
-Zeigt die Maus auf eine Unit, steht dort zum Beispiel „14 von 40 Wörtern gemeistert“ und
-„Noch 10 Wörter bis Stufe 3 (+25 HP)“. Ein Klick wählt diese Unit aus und öffnet „Runde
-vorbereiten“.
+„▶ Spielen“ führt über drei Stufen in den Kampf:
+
+1. **Buchauswahl.** Die Bücher stehen mit dem Rücken nach vorn in einem Regal; je mehr
+   Units, desto dicker das Buch. Zeigt die Maus auf ein Buch (oder mit ←/→), wird es
+   herausgezogen und zeigt sein Cover: oben die Landkarte des Buchs im Goldrahmen,
+   darunter der Stand – wie viele Wörter gemeistert und wie viele Bosse besiegt sind.
+   Die Festungsstufe steht nicht auf dem Cover, sie gilt je Unit (siehe Buchkarte). Ein
+   Klick (oder Enter) schlägt das Buch auf; auf der Doppelseite liegt die Landkarte, und
+   in sie geht es hinein.
+2. **Buchkarte.** Die Landkarte des Buchs mit einem Ort je Unit – die Units sind die
+   Gebiete. Die Farbe eines Ortes zeigt die Festungsstufe der Unit, der Ring außen, wie
+   viele Wörter schon sitzen. Zeigt die Maus auf eine Unit, steht dort zum Beispiel
+   „14 von 40 Wörtern gemeistert“ und „Noch 10 Wörter bis Stufe 3 (+25 HP)“. Ein Klick
+   öffnet das Gebiet.
+3. **Gebietskarte.** Die Level einer Unit auf ihrer eigenen Karte:
+   - **Teil 1 bis Teil 4** – die Unit in vier Stücken, in der Reihenfolge des Buchs.
+   - **Gesamt (★)** – alle Wörter der Unit zusammen.
+   - **Boss (💀)** – der Satzmeister mit Sätzen aus dieser Unit (Kapitel 20).
+
+   Hat eine Unit wenige Wörter, gibt es weniger Teile; bei nur einem Teil fehlt „Gesamt“.
+
+**Alles ist offen.** Jedes Level lässt sich jederzeit spielen; der Weg auf der Karte schlägt
+nur eine Reihenfolge vor. Ein Level läuft wie ein Kampf aus dem Expertenmodus – Welle auf
+Welle, bis du aufhörst oder die Festung fällt. Es spielt alle Aufgaben und Wortarten seines
+Teils. „⟵ Zurück zur Karte“ führt wieder auf die Gebietskarte.
+
+**Wie weit ein Level ist**, zeigt die Karte an drei Stellen: die Füllfarbe steht für die
+Stufe 0 bis 4 (dieselben Schwellen wie bei der Festung), die vier kleinen Punkte darunter
+leuchten bis zur erreichten Stufe, und der Ring wächst mit jedem gemeisterten Wort. Nichts
+davon wird gespeichert – es wird jedes Mal aus dem Lernstand gerechnet.
+
+**Boss-Medaillen.** Jeder Sieg über den Boss einer Unit wird gezählt. Ab 1 Sieg bekommt er
+einen bronzenen Ring und eine Krone, ab 3 einen silbernen, ab 5 einen goldenen. Die Zahl
+der Siege steht auch auf der Buchkarte. Gibt es zu einer Unit noch keine Sätze, ist ihr
+Boss grau.
+
+Hat eine Karte noch kein Bild, steht dort eine schlichte Fläche, und die Orte liegen in
+Reihen. Spielen lässt sich trotzdem alles.
 
 ## 11. Fähigkeiten
 
@@ -575,6 +611,9 @@ nachliefern, ohne das ganze Spiel neu herunterzuladen.
 - Stößt die Installation auf Dateien, die schon da sind, erscheint „Vorhandene Dateien
   übernehmen“.
 - **Ohne Internet** bleiben installierte Inhalte nutzbar. Nur neue holen geht dann nicht.
+- **Zurückgezogene Packs** verschwinden von selbst: Führt die Liste einen installierten Pack
+  nicht mehr, entfernt das Spiel ihn beim nächsten Abruf. So ging es dem früheren
+  Grundwortschatz-Pack; alle Vokabeln kommen jetzt aus den Büchern.
 
 ## 16. Updates des Spiels
 
@@ -627,7 +666,7 @@ Auch das graue „↺“ im Fähigkeiten-Screen sagt am Zeiger, warum es gerade 
 
 ## 19. Wo die Daten liegen
 
-Alles, was ein Profil sich erspielt (Lernstand, Gold, Erfahrung, Fähigkeiten,
+Alles, was ein Profil sich erspielt (Lernstand, Gold, Erfahrung, Fähigkeiten, Boss-Siege,
 Einstellungen, Meldungen und Protokoll), liegt im Benutzer-Datenordner des Spiels auf
 diesem Rechner, nicht im Spielordner. Deshalb überlebt es auch ein Update. Unter Windows
 ist das in der Regel `%APPDATA%\Godot\app_userdata\Monster Slam\`. Den genauen Pfad der
@@ -638,10 +677,10 @@ führt direkt dorthin.
 
 Im Bosskampf übersetzt du keine einzelnen Wörter, sondern **ganze Sätze** ins Englische.
 Du stehst in einem Gewölbe vor dem Satzmeister, einem Skelett-Magier, der vor dir auf und
-ab geht. Du erreichst ihn über „▶ Spielen“ und dort „👹 Bosskampf starten“. Er stellt fünf
-Sätze aus den Units, die du dort ausgewählt hast —
-der deutsche Satz steht in seiner Sprechblase oben, deine Antwort tippst du unten in deine
-eigene. Es gibt **keinen Zeitdruck**.
+ab geht. Du triffst ihn am Ende jeder Unit auf der Gebietskarte (💀, Kapitel 10), und er stellt
+fünf Sätze aus dieser Unit. Im Expertenmodus gibt es außerdem „👹 Bosskampf starten“ mit
+Sätzen aus allen dort gewählten Units (Kapitel 3). Der deutsche Satz steht in seiner
+Sprechblase oben, deine Antwort tippst du unten in deine eigene. Es gibt **keinen Zeitdruck**.
 
 - Tippe die Übersetzung und drücke Enter oder „⚔ Angreifen“. Danach führt Enter (oder
   „Weiter“) zum nächsten Satz.
@@ -657,6 +696,7 @@ eigene. Es gibt **keinen Zeitdruck**.
   geübte Form trägt. Steht der deutsche Satz im Passiv („wurde gebaut“), muss auch die
   Übersetzung im Passiv stehen.
 - Der Bosskampf bringt bisher kein Gold und keine Erfahrung und ändert den Lernstand nicht.
+  Ein Sieg von der Landkarte zählt aber für die Medaille dieser Unit (Kapitel 10).
 
 **Das Sprachmodell.** Ob eine frei formulierte Übersetzung richtig ist und was an einer
 falschen nicht stimmt, beurteilt ein Sprachmodell, das **auf diesem Rechner** läuft. Es

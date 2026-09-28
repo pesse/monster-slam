@@ -34,9 +34,10 @@ Wortart. Steuert `allowed_types` der Aufgaben; **nicht** in die `tags` duplizier
 **Zwei getrennte Auswahl-Achsen** (fürs Session-Setup, siehe `docs/ARCHITECTURE.md`):
 - *Themen* über `tags` (z.B. `animals`, `body`, `nature`; Attribute wie `plural`,
   `irregular`, `context`). Leere/keine Tags = keine Themen-Einschränkung.
-- *Curriculum* über die optionalen Felder `book` (z.B. `"access2"`) + `unit` (int). Damit
-  lässt sich „genau diese Unit" üben (Filter schneidet Curriculum UND Themen). Ohne die
-  Felder zählt das Wort zum ungebundenen Grundwortschatz und erscheint nur ohne Scope.
+- *Curriculum* über die Felder `book` (z.B. `"access2"`) + `unit` (int). Damit lässt sich
+  „genau diese Unit" üben (Filter schneidet Curriculum UND Themen), und nur so erscheint
+  das Wort auf der Landkarte. Einen ungebundenen Grundwortschatz gibt es seit ADR 0006
+  nicht mehr — jedes Lexem gehört zu einer Unit.
 ```json
 { "id": "lex.en.a2.throat", "type": "noun", "book": "access2", "unit": 6, "lemma_de": "der Hals", "lemma_de_alt": ["die Kehle"], "lemma_en": "throat", "tags": ["body"] }
 ```
@@ -56,12 +57,12 @@ Lernstand (`PlayerProgress.confidence`); Aufgaben-Schwierigkeit steht auf der `t
 
 **Keine Dubletten.** Dasselbe Wort unter zwei Lexem-Ids hat zwei Fortschrittsstände; die
 Treffer verteilen sich, und keine der beiden Ids wird je gemeistert. Vor dem Anlegen
-prüfen, ob das Wort schon existiert (auch im ungebundenen Grundwortschatz).
+prüfen, ob das Wort schon existiert (auch in anderen Units und Büchern).
 
 **Mehrfachübersetzungen** über optionale Arrays `lemma_en_alt` / `lemma_de_alt` — alle
 gelten bei `translate` als richtig (Prompt zeigt weiter das primäre Lemma):
 ```json
-{ "id": "lex.en.go", "type": "verb", "lemma_de": "gehen", "lemma_en": "go", "lemma_en_alt": ["walk"], "lemma_de_alt": ["laufen"], "tags": ["basics"] }
+{ "id": "lex.en.go", "type": "verb", "lemma_de": "gehen", "lemma_en": "go", "lemma_en_alt": ["walk"], "lemma_de_alt": ["laufen"], "tags": ["school"], "book": "access2", "unit": 1 }
 ```
 So akzeptiert „gehen" → `go`/`walk` und „go" → `gehen`/`laufen`. Für reine Varianten
 (z. B. `quick`/`fast`, `colour`/`color`) sind die Alt-Listen gedacht. Ist die Alternative
@@ -344,6 +345,6 @@ Was das für Autoren heißt:
 	  grün) — sonst kommt die Datei beim Spieler nie an.
 - [ ] Jede Referenz zeigt in den eigenen Pack (Form/Relation/Satz → Lexem, Welle → Boss,
 	  Regel → Monster). Der `--dry-run` prüft das mit; eine Relation eines Buch-Worts auf
-	  den Grundwortschatz ist ein Datenfehler, keine Ausnahme (`docs/PACK_FORMAT.md`).
+	  ein anderes Buch ist ein Datenfehler, keine Ausnahme (`docs/PACK_FORMAT.md`).
 - [ ] Braucht die Datei neuen Code? Dann `min_app_version` des Packs hochziehen, in dem
 	  sie liegt (nicht die globale in `packs.yaml`).

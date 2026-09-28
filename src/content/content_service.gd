@@ -94,8 +94,25 @@ func refresh() -> void:
 	for entry in (parsed as Dictionary)["packs"]:
 		if entry is Dictionary and not str(entry.get("id", "")).is_empty():
 			_entries[str(entry["id"])] = entry
+	_retire_missing()
 	rebuild()
 	_set_state(State.READY)
+
+
+## Deinstalliert Packs, die das Verzeichnis nicht mehr führt.
+##
+## `rebuild()` kennt nur Packs aus dem Verzeichnis — ein zurückgezogener Pack (so der
+## frühere Grundwortschatz, ADR 0006) bliebe sonst unsichtbar liegen und würde weiter
+## geladen. Ein leeres Verzeichnis räumt nichts ab: das ist eher ein kaputter Abruf als
+## ein Rückzug von allem.
+func _retire_missing() -> void:
+	var gone := PackInstaller.retired(PackInstaller.installed(), _entries.keys())
+	if gone.is_empty():
+		return
+	for id in gone:
+		PackInstaller.uninstall(id)
+	ContentRegistry.reload()
+	message = "%d Pack(s) zurückgezogen und entfernt" % gone.size()
 
 
 ## Baut die Pack-Liste aus dem letzten Verzeichnis und dem aktuellen lokalen Stand neu.

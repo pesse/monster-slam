@@ -16,6 +16,13 @@ unique_name_in_owner = true
 text = "Name"
 autowrap_mode = 3
 
+[node name="Image" type="TextureRect" parent="Root"]
+unique_name_in_owner = true
+visible = false
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
 [node name="Body" type="Label" parent="Root"]
 theme_type_variation = &"Hint"
 unique_name_in_owner = true

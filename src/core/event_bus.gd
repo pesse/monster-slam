@@ -48,6 +48,9 @@ signal boss_answer_judged(sentence_id: String, text: String, result: Dictionary)
 ## Das Modell hat erklärt, was an der Antwort nicht stimmt (ADR 0005).
 signal boss_answer_explained(sentence_id: String, explanation: String)
 signal boss_ended(boss_id: String, won: bool)
+## Ein Boss am Ende einer Unit ist besiegt (von der Karte gestartet, ADR 0006). Kommt
+## zusätzlich zu `boss_ended`, nicht statt ihm.
+signal boss_won(boss_id: String, unit_key: String)
 
 ## --- Zauber (aktive Fähigkeiten mit Abklingzeit) ---
 ## Nicht zu verwechseln mit den Skills des Fähigkeitsbaums: die sind dauerhaft, werden

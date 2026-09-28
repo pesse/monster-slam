@@ -5,8 +5,8 @@ extends GdUnitTestSuite
 
 func test_all_lexeme_tags_contains_known_tags(do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:
 	var tags := ContentRegistry.all_lexeme_tags()
-	assert_bool("basics" in tags).is_true()
-	assert_bool("core" in tags).is_true()
+	assert_bool("school" in tags).is_true()
+	assert_bool("people" in tags).is_true()
 
 
 func test_all_lexeme_tags_sorted_and_distinct(do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:

@@ -54,7 +54,7 @@ func _write(rel: String, text: String) -> void:
 # --- Pfad-Schutz ------------------------------------------------------------------------
 
 func test_kategorieverzeichnisse_sind_erlaubt() -> void:
-	assert_bool(PackInstaller.is_allowed_entry("lexemes/basics.json")).is_true()
+	assert_bool(PackInstaller.is_allowed_entry("lexemes/en_fixture.json")).is_true()
 	assert_bool(PackInstaller.is_allowed_entry("monsters/unter/ordner.json")).is_true()
 
 
@@ -202,3 +202,13 @@ func test_deinstallieren_behaelt_verzeichnis_mit_lokaler_datei() -> void:
 
 func test_deinstallieren_ohne_installation_wird_benannt() -> void:
 	assert_str(PackInstaller.uninstall(PACK_ID).error).is_equal("Nicht installiert.")
+
+
+func test_pack_ausserhalb_des_verzeichnisses_ist_zurueckgezogen() -> void:
+	var installed := {"zz-alt": {}, "game": {}, "language-access2": {}}
+	var gone := PackInstaller.retired(installed, ["game", "language-access2"])
+	assert_array(gone).contains_exactly(["zz-alt"])
+
+
+func test_leeres_verzeichnis_zieht_nichts_zurueck() -> void:
+	assert_array(PackInstaller.retired({"game": {}}, [])).is_empty()

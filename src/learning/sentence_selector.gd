@@ -9,7 +9,7 @@ extends RefCounted
 ## Lexeme, um derentwillen er gestellt wird (`sentence_lexemes`).
 ##
 ## Der Weg vom Satz zum Lehrplan geht ebenfalls über `sentence_lexemes`: Satz -> Lexem ->
-## `book`/`unit` gegen `UserSettings.selected_scope()`. Ein Satz zählt zum Scope, wenn
+## `book`/`unit` gegen den Scope des Laufs (RunRequest). Ein Satz zählt zum Scope, wenn
 ## EINES seiner Lexeme dazu zählt — er wird ja um dieses Wortes willen gestellt.
 ##
 ## Pool (wie WaveGenerator.pool_from_settings, leere Einträge = keine Einschränkung):
@@ -28,28 +28,51 @@ const DIRECTION := "de_to_en"
 const MIN_WEIGHT := 0.05
 
 
-## Der Pool aus der Auswahl des aktiven Profils (Session-Setup) — EINE Quelle mit dem
-## Kampf, damit ein Boss nicht in einem Buch fragt, das der Spieler abgewählt hat.
-static func pool_from_settings(difficulty: int = 0) -> Dictionary:
+## Der Pool über einem Bereich aus Scope und Themen.
+static func pool_for_scope(scope: Array, tags: Array, difficulty: int = 0) -> Dictionary:
 	return {
-		"scope": Array(UserSettings.selected_scope()),
-		"tags": Array(UserSettings.selected_tags()),
+		"scope": scope.duplicate(),
+		"tags": tags.duplicate(),
 		"grammar_tags": [],
 		"difficulty_max": clampi(difficulty, 0, DIFFICULTY_MAX),
 	}
 
 
-## Der Pool eines Bosses: seine Auswahlregel über der Auswahl des Spielers. Ein Boss trägt
-## seit ADR 0004 keine Sätze mehr selbst — er sagt, WELCHE Sätze zu ihm passen, und der
-## Vorrat kommt aus dem Content (data/bosses/grammar_golem.json).
-static func pool_for_boss(boss: Dictionary, difficulty: int = 0) -> Dictionary:
-	var pool := pool_from_settings(difficulty)
+## Der Pool aus dem Bereich des Laufs (RunRequest: Level der Karte oder die Auswahl des
+## Expertenmodus) — EINE Quelle mit dem Kampf, damit ein Boss nicht in einem Buch fragt,
+## das der Spieler gar nicht spielt.
+static func pool_from_settings(difficulty: int = 0) -> Dictionary:
+	return pool_for_scope(RunRequest.scope(), RunRequest.tags(), difficulty)
+
+
+## Der Pool eines Bosses: seine Auswahlregel über dem Bereich — ohne `base` der des Laufs.
+## Ein Boss trägt seit ADR 0004 keine Sätze mehr selbst — er sagt, WELCHE Sätze zu ihm
+## passen, und der Vorrat kommt aus dem Content (data/bosses/grammar_golem.json).
+static func pool_for_boss(boss: Dictionary, difficulty: int = 0, base: Dictionary = {}) -> Dictionary:
+	var pool := base.duplicate(true) if not base.is_empty() else pool_from_settings(difficulty)
 	var rule: Dictionary = boss.get("sentence_rule", {})
 	pool["grammar_tags"] = Array(rule.get("grammar_tags", []))
 	var limit := int(rule.get("difficulty_max", 0))
 	if limit > 0:
 		pool["difficulty_max"] = limit
 	return pool
+
+
+## Alle Satz-Lexem-Verknüpfungen auf einmal: Satz-id -> [Lexem-ids]. Ein Durchlauf statt
+## einem je Satz — `lexeme_ids` für jeden Kandidaten einzeln ginge über alle Verknüpfungen
+## je Satz und kostete beim Öffnen einer Gebietskarte zwei Frames.
+static func links() -> Dictionary:
+	var out := {}
+	for entry in ContentRegistry.sentence_lexemes.values():
+		var sentence_id := str((entry as Dictionary).get("sentence_id", ""))
+		var lexeme_id := str((entry as Dictionary).get("lexeme_id", ""))
+		if sentence_id.is_empty() or lexeme_id.is_empty():
+			continue
+		if not out.has(sentence_id):
+			out[sentence_id] = []
+		if not lexeme_id in out[sentence_id]:
+			(out[sentence_id] as Array).append(lexeme_id)
+	return out
 
 
 ## Die Lexeme, um derentwillen ein Satz gestellt wird.
@@ -97,15 +120,19 @@ func candidates(pool: Dictionary) -> Array:
 		if in_scope.is_empty():
 			return []
 	var out: Array = []
+	var linked := links() if not in_scope.is_empty() else {}
 	for sentence in ContentRegistry.sentences.values():
-		if matches(sentence, pool, in_scope):
+		if matches(sentence, pool, in_scope, linked):
 			out.append(sentence)
 	return out
 
 
 ## Passt ein Satz zum Pool? `in_scope` ist die vorberechnete Lexem-Menge des Scopes; eine
 ## LEERE Menge heißt „keine Einschränkung" (dieselbe Semantik wie im Wave-Pool).
-static func matches(sentence: Dictionary, pool: Dictionary, in_scope: Dictionary = {}) -> bool:
+##
+## `linked` ist `links()`, wenn der Aufrufer viele Sätze prüft; ohne wird je Satz gesucht.
+static func matches(sentence: Dictionary, pool: Dictionary, in_scope: Dictionary = {},
+		linked: Dictionary = {}) -> bool:
 	var difficulty_max := int(pool.get("difficulty_max", 0))
 	if difficulty_max > 0 and int(sentence.get("difficulty", 1)) > difficulty_max:
 		return false
@@ -120,7 +147,8 @@ static func matches(sentence: Dictionary, pool: Dictionary, in_scope: Dictionary
 			return false
 	if in_scope.is_empty():
 		return true
-	for lexeme_id in lexeme_ids(str(sentence.get("id", ""))):
+	var id := str(sentence.get("id", ""))
+	for lexeme_id in (linked.get(id, []) if not linked.is_empty() else lexeme_ids(id)):
 		if in_scope.has(lexeme_id):
 			return true
 	return false

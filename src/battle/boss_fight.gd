@@ -1,10 +1,12 @@
 extends Control
 ## Der Bosskampf (scenes/battle/boss_fight.tscn) — docs/adr/0005-bosskampf-mit-erklaerung.md.
 ##
-## Der Satzmeister stellt fünf Sätze aus seiner `sentence_rule` über der Auswahl des
-## Profils. Jeder Treffer kostet ihn 1 HP; ist er bei 0, ist er besiegt, sind die Sätze
-## vorher aus, zieht er ab. Kein Zeitdruck und keine Strafe — und vorerst auch kein Gold,
-## keine Erfahrung und kein Lernstand (ADR 0005, Entscheidung 6).
+## Der Satzmeister stellt fünf Sätze aus seiner `sentence_rule` über dem Bereich des Laufs
+## (RunRequest: eine Unit von der Karte oder die Auswahl des Expertenmodus). Jeder Treffer
+## kostet ihn 1 HP; ist er bei 0, ist er besiegt, sind die Sätze vorher aus, zieht er ab.
+## Kein Zeitdruck und keine Strafe — kein Gold, keine Erfahrung und kein Lernstand (ADR
+## 0005, Entscheidung 6). Ein Sieg über den Boss einer Unit wird gezählt (BossRecord, ADR
+## 0006) und macht ihn auf der Karte golden.
 ##
 ## Bewertet wird über SentenceJudge, also in Stufen:
 ##
@@ -33,7 +35,6 @@ extends Control
 ## der Bildmitte. Aufploppen und Ausblenden gehen über `scale` und `modulate`, nie über die
 ## Größe: das Layout steht still, auch wenn die Blasen es nicht tun.
 
-const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 const SELF_SCENE := "res://scenes/battle/boss_fight.tscn"
 const BOSS_ID := "boss.grammar_golem"
 
@@ -64,7 +65,7 @@ const MISS_SHOUT := "DANEBEN!"
 const WON_SHOUT := "SIEG!"
 const HIT_SHOUT_TINT := Color(1.0, 0.86, 0.3)
 const MISS_SHOUT_TINT := Color(0.65, 0.85, 1.0)
-const EMPTY_POOL_TEXT := "Für den Satzmeister passt kein Satz zu deiner Auswahl. Wähle unter „▶ Spielen“ mehr Units aus."
+const EMPTY_POOL_TEXT := "Für den Satzmeister passt kein Satz zu deiner Auswahl. Wähle eine Unit mit Sätzen oder im Expertenmodus mehr Units aus."
 const NO_MODEL_NOTE := "Ohne Sprachmodell zählt nur, was als Lösung hinterlegt ist. Das Modell gibt es unter „📚 Inhalte“."
 const MODEL_NOTE := "Das Sprachmodell läuft auf diesem Rechner; nichts verlässt ihn."
 const FAILED_MODEL_NOTE := "Das Sprachmodell ließ sich nicht starten — es zählt nur, was als Lösung hinterlegt ist."
@@ -75,6 +76,9 @@ var start_service := true
 ## Für Tests: ein erfundenes Stufe-1-Backend statt LocalModelBackend. Vor dem Einhängen setzen.
 var fake_backend: Callable = Callable()
 var fake_explainer: Callable = Callable()
+## Ob ein Sieg von der Karte in BossRecord gebucht wird. Aus für Tests, die sonst ins
+## Entwicklungsprofil schrieben. Vor dem Einhängen setzen.
+var record_wins := true
 
 var boss: Dictionary = {}
 var sentences: Array = []
@@ -84,6 +88,7 @@ var index := 0
 var hits := 0
 
 @onready var _stage: BossStage = %Stage
+@onready var _scene_zoom: SceneZoom = $SceneZoom
 @onready var _boss_bubble: SpeechBubble = %BossBubble
 @onready var _result_bubble: SpeechBubble = %ResultBubble
 @onready var _player_bubble: SpeechBubble = %PlayerBubble
@@ -134,6 +139,13 @@ func _ready() -> void:
 	var chosen := ContentRegistry.get_entry("bosses", BOSS_ID)
 	begin(chosen, pick_sentences(chosen))
 	_attach_stage_one()
+	# Aus dem Dunkel heran, wie der Kampf und die Karten (SceneZoom).
+	_scene_zoom.reveal(func(k: float) -> void: _scale_to(lerpf(SceneZoom.FROM, 1.0, k)))
+
+
+func _scale_to(factor: float) -> void:
+	pivot_offset = size * 0.5
+	scale = Vector2(factor, factor)
 
 
 ## Die Spitzen der Boss-Blasen folgen seinem Kopf.
@@ -151,7 +163,7 @@ func _input(event: InputEvent) -> void:
 		_leave()
 
 
-## Die Sätze des Kampfes: aus der Regel des Bosses über der Auswahl des Profils, ohne
+## Die Sätze des Kampfes: aus der Regel des Bosses über dem Bereich des Laufs, ohne
 ## Wiederholung, gewichtet nach dem Netto-Maß wie im Wave-Pool.
 static func pick_sentences(the_boss: Dictionary) -> Array:
 	var rule: Dictionary = the_boss.get("sentence_rule", {})
@@ -406,6 +418,18 @@ func _finish() -> void:
 	else:
 		_stage.leave()
 	EventBus.boss_ended.emit(str(boss.get("id", "")), won)
+	if won:
+		_record_win()
+
+
+## Ein Sieg am Ende einer Unit zählt auf der Karte (ADR 0006); einer aus dem Expertenmodus
+## gehört zu keiner Unit.
+func _record_win() -> void:
+	var unit := RunRequest.unit_key()
+	if unit.is_empty() or not record_wins:
+		return
+	BossRecord.record_win(unit, UserSettings.active_profile())
+	EventBus.boss_won.emit(str(boss.get("id", "")), unit)
 
 
 func _render_hp() -> void:
@@ -468,8 +492,13 @@ func _line(lines: Array) -> String:
 
 
 func _leave() -> void:
+	if _scene_zoom.is_running():
+		return
 	_judge.cancel()
-	get_tree().change_scene_to_file(MENU_SCENE)
+	MapSelection.zoom_out = RunRequest.is_level()
+	_scene_zoom.cover(func(k: float) -> void: _scale_to(lerpf(1.0, SceneZoom.FROM, k)))
+	await _scene_zoom.finished
+	get_tree().change_scene_to_file(RunRequest.return_scene())
 
 
 ## Ist der Kampf vorbei? Für Tests und für die Anzeige.

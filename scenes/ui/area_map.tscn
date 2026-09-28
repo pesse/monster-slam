@@ -1,0 +1,150 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://src/ui/area_map.gd" id="1_screen"]
+[ext_resource type="Script" path="res://src/ui/map_canvas.gd" id="2_canvas"]
+
+[sub_resource type="Gradient" id="shade_g"]
+colors = PackedColorArray(0, 0, 0, 0.6, 0, 0, 0, 0)
+
+[sub_resource type="GradientTexture2D" id="shade"]
+gradient = SubResource("shade_g")
+width = 4
+height = 64
+fill_to = Vector2(0, 1)
+
+[node name="AreaMap" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_screen")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.05, 0.06, 0.1, 1)
+
+[node name="Canvas" type="Control" parent="."]
+unique_name_in_owner = true
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_canvas")
+
+[node name="Shade" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 120.0
+grow_horizontal = 2
+mouse_filter = 2
+texture = SubResource("shade")
+expand_mode = 1
+
+[node name="Hud" type="MarginContainer" parent="."]
+theme_type_variation = &"ScreenMargin"
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Corners" type="Control" parent="Hud"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Header" type="HBoxContainer" parent="Hud/Corners"]
+unique_name_in_owner = true
+layout_mode = 0
+mouse_filter = 2
+
+[node name="BackButton" type="Button" parent="Hud/Corners/Header"]
+unique_name_in_owner = true
+theme_type_variation = &"MapButton"
+layout_mode = 2
+size_flags_vertical = 4
+text = "◀ Buchkarte"
+
+[node name="Banner" type="PanelContainer" parent="Hud/Corners/Header"]
+theme_type_variation = &"MapBanner"
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Lines" type="VBoxContainer" parent="Hud/Corners/Header/Banner"]
+theme_type_variation = &"Tight"
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Book" type="Label" parent="Hud/Corners/Header/Banner/Lines"]
+unique_name_in_owner = true
+theme_type_variation = &"Caption"
+layout_mode = 2
+text = "Buch"
+
+[node name="Title" type="Label" parent="Hud/Corners/Header/Banner/Lines"]
+unique_name_in_owner = true
+theme_type_variation = &"Title"
+layout_mode = 2
+text = "Unit"
+
+
+[node name="Fortress" type="PanelContainer" parent="Hud/Corners"]
+unique_name_in_owner = true
+theme_type_variation = &"MapBanner"
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="Row" type="HBoxContainer" parent="Hud/Corners/Fortress"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Icon" type="Label" parent="Hud/Corners/Fortress/Row"]
+theme_type_variation = &"SkillIcon"
+layout_mode = 2
+size_flags_vertical = 4
+text = "🏰"
+
+[node name="Lines" type="VBoxContainer" parent="Hud/Corners/Fortress/Row"]
+theme_type_variation = &"Tight"
+layout_mode = 2
+mouse_filter = 2
+
+[node name="FortressTitle" type="Label" parent="Hud/Corners/Fortress/Row/Lines"]
+unique_name_in_owner = true
+theme_type_variation = &"SectionTitle"
+layout_mode = 2
+text = "Festung · Stufe 0"
+
+[node name="FortressBar" type="ProgressBar" parent="Hud/Corners/Fortress/Row/Lines"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 8)
+layout_mode = 2
+mouse_filter = 2
+max_value = 1.0
+show_percentage = false
+
+[node name="FortressNext" type="Label" parent="Hud/Corners/Fortress/Row/Lines"]
+unique_name_in_owner = true
+theme_type_variation = &"Caption"
+layout_mode = 2
+text = "noch 0 Wörter bis Stufe 1"

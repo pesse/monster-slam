@@ -71,6 +71,33 @@ static func unit_tiers(lexemes: Array, mastered: Dictionary) -> Dictionary:
 	return groups
 
 
+## Stand je Teil einer Unit: „<book>/<unit>/<teil>" -> { book, unit, part, done, total,
+## tier, lexemes } — dieselbe Zählung und dieselben Schwellen wie `unit_tiers`, nur feiner
+## gruppiert. Für die Level T1–T4 der Gebietskarte (ADR 0006); das Level „Gesamt" ist die
+## Unit selbst und liest `unit_tiers`.
+##
+## `part_of` bildet eine Lexem-Id auf ihren Teil ab (ContentRegistry.part_of); 0 heißt:
+## ohne Teil, fällt heraus.
+static func part_tiers(lexemes: Array, mastered: Dictionary, part_of: Callable) -> Dictionary:
+	var groups := {}
+	for entry in lexemes:
+		if not PROGRESS.masterable(entry):
+			continue
+		var unit := unit_key(entry)
+		var part := int(part_of.call(str(entry.get("id", ""))))
+		if unit.is_empty() or part <= 0:
+			continue
+		var key := "%s/%d" % [unit, part]
+		count_into(groups, key, entry, mastered)
+		groups[key]["book"] = str(entry["book"])
+		groups[key]["unit"] = int(entry["unit"])
+		groups[key]["part"] = part
+	for key in groups:
+		var group: Dictionary = groups[key]
+		group["tier"] = tier_for(int(group["done"]), int(group["total"]))
+	return groups
+
+
 ## Zählt ein Lexem in die Gruppe `key`: eines mehr insgesamt, und eines mehr gemeistert,
 ## wenn es in der Menge steht. Die eine Zählregel für Units (hier) und Themen
 ## (StatsScreen.tag_rows).

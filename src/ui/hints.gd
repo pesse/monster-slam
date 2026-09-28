@@ -84,7 +84,8 @@ func attach(target: Control, title: String, body := "", note := "", list := []) 
 
 ## Eine Fläche, die ihre Treffer selbst sucht (`SkillGraph`): statt fester Zeilen hängt hier
 ## eine Funktion, die für einen Punkt IN der Fläche die Karte liefert — oder ein leeres
-## Dictionary für „hier ist nichts". Leer heißt wirklich nichts: gefragt wird dann nicht
+## Dictionary für „hier ist nichts". Nur hier kann die Karte ein Bild tragen (`"image"`,
+## eine Texture2D) — ein fester Hinweis bleibt Text. Leer heißt wirklich nichts: gefragt wird dann nicht
 ## beim Elternknoten weiter, denn die Fläche hat schon geantwortet.
 func attach_live(target: Control, provider: Callable) -> void:
 	target.set_meta(META, provider)
@@ -137,7 +138,7 @@ func _show(found: Dictionary, at: Vector2) -> void:
 		_card.hide()
 		return
 	_card.fill(str(found.get("title", "")), str(found.get("body", "")),
-			str(found.get("note", "")), found.get("list", []))
+			str(found.get("note", "")), found.get("list", []), found.get("image") as Texture2D)
 	_place(at)
 	_card.show()
 

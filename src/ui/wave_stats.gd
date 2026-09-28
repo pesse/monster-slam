@@ -110,6 +110,9 @@ func _ready() -> void:
 		(_choice_buttons[i] as Button).pressed.connect(_on_choice_pressed.bind(i))
 	_start_button.pressed.connect(_on_start_pressed)
 	_menu_button.pressed.connect(func(): back_to_menu_requested.emit())
+	# Ein Level von der Karte führt auf die Karte zurück (RunRequest.return_scene).
+	if RunRequest.is_level():
+		_menu_button.text = "⟵ Zurück zur Karte"
 	_result_continue.pressed.connect(func(): _goto_stage(Stage.NEXT))
 	_chest.opened.connect(_on_chest_opened)
 	_update_choice_highlight()
