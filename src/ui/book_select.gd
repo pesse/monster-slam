@@ -8,6 +8,9 @@ extends Control
 ## bis die Karte den Bildschirm füllt — dort steht die Buchkarte, und der Wechsel fällt
 ## nicht auf. Zurück geht es denselben Weg rückwärts: aus dem Buch heraus, zu, ins Regal.
 ##
+## Jede Sprache hat ihr eigenes Regalfach: oben Englisch, darunter die übrigen (Latein,
+## Issue #31). Mit mehr Fächern rückt die Kamera zurück, bis alle ins Bild passen.
+##
 ## Die Zahlen kommen aus FortressTier.unit_tiers und BossRecord — derselben Zählung wie
 ## Karte und Kampf.
 
@@ -23,6 +26,13 @@ const SHELF_PAD := 0.35
 const MIN_SHELF := 1.6
 ## Breite der Rückwand und der Böden in book_select.tscn, bevor sie zugeschnitten werden.
 const SHELF_MESH_WIDTH := 2.6
+## Höhe der Rückwand und der Seitenwände in book_select.tscn, für ein Fach.
+const SHELF_BACK_HEIGHT := 1.8
+const SHELF_SIDE_HEIGHT := 1.76
+## Von Boden zu Boden: ein Fach unter dem anderen.
+const ROW_HEIGHT := 1.66
+## So viel weiter zurück steht die Kamera je weiterem Fach.
+const CAMERA_BACK_PER_ROW := 2.3
 
 @onready var _stage: SubViewportContainer = %Stage
 @onready var _camera: Camera3D = %Camera
@@ -42,8 +52,8 @@ func _ready() -> void:
 	(%BackButton as Button).pressed.connect(_back)
 	_stage.gui_input.connect(_on_stage_input)
 	set_process(false)
-	_camera_home = _camera.transform
 	_fill()
+	_camera_home = _camera.transform
 	# Aus der Buchkarte zurück: die Kamera steht im aufgeschlagenen Buch, die flache Karte
 	# deckt noch den Bildschirm wie eben auf der Buchkarte; dann geht es heraus.
 	if MapSelection.to_shelf:
@@ -72,6 +82,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif count > 0 and event.is_action_pressed("ui_left"):
 		get_viewport().set_input_as_handled()
 		_select(count - 1 if _selected < 0 else maxi(_selected - 1, 0))
+	elif count > 0 and event.is_action_pressed("ui_down"):
+		get_viewport().set_input_as_handled()
+		_select(_first_of_row(_row_of(_selected) + 1))
+	elif count > 0 and event.is_action_pressed("ui_up"):
+		get_viewport().set_input_as_handled()
+		_select(_first_of_row(_row_of(_selected) - 1))
 	elif _selected >= 0 and event.is_action_pressed("ui_accept"):
 		get_viewport().set_input_as_handled()
 		_open(_books.get_child(_selected) as Book3D)
@@ -88,33 +104,105 @@ func _fill() -> void:
 	var wins := BossRecord.wins(UserSettings.active_profile())
 	_empty_hint.visible = shelves.is_empty()
 	var books := Array(ContentRegistry.all_books()).filter(func(b): return shelves.has(b))
-	var placed: Array[Book3D] = []
-	for i in books.size():
-		var book: String = books[i]
-		var node := BOOK_SCENE.instantiate() as Book3D
-		node.set_meta("book", book)
-		_books.add_child(node)
-		node.fill(ContentRegistry.book_label(book), MapLayout.book_texture(book), i,
-				stats(shelves[book], wins))
-		placed.append(node)
-	# Nebeneinander, als Reihe mittig im Regal; jedes Buch so dick wie seine Units.
-	var width := 0.0
-	for node in placed:
-		width += node.thickness + Book3D.GAP
-	var x := -(width - Book3D.GAP) * 0.5
-	for node in placed:
-		node.position = Vector3(x + node.thickness * 0.5, Book3D.HEIGHT * 0.5, 0.0)
-		x += node.thickness + Book3D.GAP
-	_fit_shelf(width - Book3D.GAP)
+	var rows := shelf_rows(books, ContentRegistry.book_language)
+	var placed: Array = []
+	var i := 0
+	for r in rows.size():
+		var row: Array[Book3D] = []
+		for book: String in rows[r]:
+			row.append(_place_book(book, i, r, shelves, wins))
+			i += 1
+		placed.append(row)
+	# Je Fach nebeneinander, als Reihe mittig im Regal; jedes Buch so dick wie seine Units.
+	var widest := 0.0
+	for r in placed.size():
+		var width := 0.0
+		for node: Book3D in placed[r]:
+			width += node.thickness + Book3D.GAP
+		widest = maxf(widest, width - Book3D.GAP)
+		var x := -(width - Book3D.GAP) * 0.5
+		for node: Book3D in placed[r]:
+			node.position = Vector3(x + node.thickness * 0.5,
+					Book3D.HEIGHT * 0.5 - r * ROW_HEIGHT, 0.0)
+			x += node.thickness + Book3D.GAP
+	_fit_shelf(widest, maxi(rows.size(), 1))
 
 
-## Schneidet das Regal auf die Bücher zu: Rückwand, Böden und Seitenwände.
-func _fit_shelf(books_width: float) -> void:
+func _place_book(book: String, i: int, row: int, shelves: Dictionary, wins: Dictionary) -> Book3D:
+	var node := BOOK_SCENE.instantiate() as Book3D
+	node.set_meta("book", book)
+	node.set_meta("row", row)
+	_books.add_child(node)
+	var info := stats(shelves[book], wins)
+	info["language"] = Lexeme.language_name(ContentRegistry.book_language(book))
+	# Bosse gibt es nur, wo die Unit Sätze hat — ein Buch ohne Sätze (Latein) hat keine.
+	info["bosses"] = ContentRegistry.units_for(book).filter(
+			func(u): return AreaMap.has_boss_sentences(book, int(u))).size()
+	node.fill(ContentRegistry.book_label(book), MapLayout.book_texture(book), i, info)
+	return node
+
+
+## Die Bücher je Regalfach, eine Sprache je Fach: Englisch oben, die übrigen Sprachen
+## alphabetisch darunter. Innerhalb eines Fachs bleibt die Reihenfolge von `books`.
+## `language_of` liefert die Sprache eines Buchs (ContentRegistry.book_language) — als
+## Callable, damit die Regel ohne Autoload prüfbar bleibt.
+static func shelf_rows(books: Array, language_of: Callable) -> Array:
+	var by_language := {}
+	for book in books:
+		var lang := str(language_of.call(book))
+		if not by_language.has(lang):
+			by_language[lang] = []
+		(by_language[lang] as Array).append(book)
+	var languages: Array = by_language.keys()
+	languages.sort_custom(func(a, b):
+		if (a == Lexeme.DEFAULT_LANGUAGE) != (b == Lexeme.DEFAULT_LANGUAGE):
+			return a == Lexeme.DEFAULT_LANGUAGE
+		return str(a) < str(b))
+	return languages.map(func(lang): return by_language[lang])
+
+
+## Schneidet das Regal auf die Bücher zu: Rückwand, Böden und Seitenwände, und stellt es
+## auf `rows` Fächer hoch. Je weiteres Fach ein Boden mehr darunter (eine Kopie von
+## `%ShelfFloor`); die Kamera rückt so weit zurück, dass alle Fächer im Bild sind.
+func _fit_shelf(books_width: float, rows: int) -> void:
 	var inner := maxf(books_width + 2.0 * SHELF_PAD, MIN_SHELF)
-	for board: Node3D in [%ShelfBack, %ShelfFloor, %ShelfTop]:
+	var floor := %ShelfFloor as Node3D
+	var boards: Array[Node3D] = [%ShelfBack, floor, %ShelfTop]
+	for r in range(1, rows):
+		var extra := floor.duplicate() as Node3D
+		extra.unique_name_in_owner = false
+		extra.name = "ShelfFloor%d" % (r + 1)
+		extra.position.y = floor.position.y - r * ROW_HEIGHT
+		floor.get_parent().add_child(extra)
+		boards.append(extra)
+	for board in boards:
 		board.scale.x = (inner + 0.2) / SHELF_MESH_WIDTH
+	var drop := (rows - 1) * ROW_HEIGHT
+	var back := %ShelfBack as Node3D
+	back.scale.y = (SHELF_BACK_HEIGHT + drop) / SHELF_BACK_HEIGHT
+	back.position.y -= drop * 0.5
+	for side: Node3D in [%ShelfLeft, %ShelfRight]:
+		side.scale.y = (SHELF_SIDE_HEIGHT + drop) / SHELF_SIDE_HEIGHT
+		side.position.y -= drop * 0.5
 	(%ShelfLeft as Node3D).position.x = -inner * 0.5 - 0.05
 	(%ShelfRight as Node3D).position.x = inner * 0.5 + 0.05
+	_camera.position += Vector3(0.0, -drop * 0.5, (rows - 1) * CAMERA_BACK_PER_ROW)
+	($Stage/World/Lamp as Node3D).position.y -= drop * 0.5
+
+
+## Das Fach eines Buchs (Index unter `%Books`), -1 ohne Auswahl.
+func _row_of(index: int) -> int:
+	if index < 0 or index >= _books.get_child_count():
+		return -1
+	return int(_books.get_child(index).get_meta("row", 0))
+
+
+## Das erste Buch im Fach `row`, oder die bisherige Auswahl, wenn es das Fach nicht gibt.
+func _first_of_row(row: int) -> int:
+	for child in _books.get_children():
+		if int(child.get_meta("row", 0)) == maxi(row, 0):
+			return child.get_index()
+	return _selected
 
 
 ## Der Stand eines Buchs: Units, gemeisterte Wörter, Bosskronen. Die Festungsstufe gilt je

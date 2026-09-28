@@ -17,9 +17,6 @@ const MASTERY_CONFIDENCE := 0.8
 ## CEFR/Frequenz des Lexems abgeleiteter Prior (WaveGenerator) kann diesen Wert beim
 ## ersten Kontakt ersetzen — schwerere/seltenere Wörter starten dann unsicherer.
 const DEFAULT_CONFIDENCE := 0.3
-## Die Richtungen, in denen die Übersetzungsaufgabe eines Lexems sitzen muss, damit das
-## WORT als gemeistert gilt (siehe mastered_lexemes).
-const LEXEME_MASTERY_DIRECTIONS := ["de_to_en", "en_to_de"]
 ## So viele Wochen umfasst die Lernkurve (siehe mastery_curve). Fest und nicht
 ## umschaltbar: ein Vierteljahr ist lang genug für einen Verlauf und kurz genug, dass
 ## die letzte Woche noch zu erkennen ist.
@@ -283,7 +280,8 @@ func mastered_lexemes(threshold := MASTERY_CONFIDENCE) -> Dictionary:
 ## Wie mastered_lexemes(), aber über übergebene Records — statisch und ohne Autoload,
 ## damit die Regel für sich prüfbar bleibt (siehe tests/mastered_lexemes_test.gd).
 static func mastered_lexemes_in(records: Dictionary, threshold := MASTERY_CONFIDENCE) -> Dictionary:
-	# lexeme_id -> Menge der gemeisterten Richtungen.
+	# lexeme_id -> Menge der gemeisterten Richtungen. Die Sprache steht in der Richtung
+	# („de_to_la"); ein Wort ist gemeistert, wenn beide Richtungen EINER Sprache sitzen.
 	var hits := {}
 	for id in records:
 		if float(records[id].get("confidence", 0.0)) < threshold:
@@ -291,22 +289,24 @@ static func mastered_lexemes_in(records: Dictionary, threshold := MASTERY_CONFID
 		var parts := str(id).split(":")
 		if parts.size() != 3 or parts[0] != "translate":
 			continue
-		if not (parts[1] in LEXEME_MASTERY_DIRECTIONS):
+		var lang := Lexeme.language_of_direction(parts[1])
+		if lang.is_empty():
 			continue
-		if not hits.has(parts[2]):
-			hits[parts[2]] = {}
-		hits[parts[2]][parts[1]] = true
+		var key := "%s|%s" % [parts[2], lang]
+		if not hits.has(key):
+			hits[key] = {}
+		hits[key][parts[1]] = true
 	var out := {}
-	for lexeme_id in hits:
-		if hits[lexeme_id].size() == LEXEME_MASTERY_DIRECTIONS.size():
-			out[lexeme_id] = true
+	for key in hits:
+		if hits[key].size() == 2:
+			out[str(key).get_slice("|", 0)] = true
 	return out
 
 
 ## Das Lexem, dessen Meisterung die Aufgabe `task_id` gerade abschließt — oder "".
 ##
 ## Gedacht für den Moment direkt nach einem record(), das true geliefert hat: ist die
-## Aufgabe eine der Übersetzungsrichtungen aus LEXEME_MASTERY_DIRECTIONS und sitzen jetzt
+## Aufgabe eine der Übersetzungsrichtungen (Lexeme.mastery_directions) und sitzen jetzt
 ## alle, ist das WORT zum ersten Mal gemeistert. Zum ersten Mal, weil diese Richtung eben
 ## erst ihre erste Meisterung bekam — vorher können nie beide zugleich gesessen haben.
 ## Dieselbe Regel wie mastered_lexemes(), nur für ein einzelnes Wort.
@@ -317,9 +317,12 @@ func mastered_lexeme_of(task_id: String, threshold := MASTERY_CONFIDENCE) -> Str
 ## Wie mastered_lexeme_of(), statisch über übergebene Records (prüfbar ohne Autoload).
 static func mastered_lexeme_in(records: Dictionary, task_id: String, threshold := MASTERY_CONFIDENCE) -> String:
 	var parts := task_id.split(":")
-	if parts.size() != 3 or parts[0] != "translate" or not (parts[1] in LEXEME_MASTERY_DIRECTIONS):
+	if parts.size() != 3 or parts[0] != "translate":
 		return ""
-	for direction in LEXEME_MASTERY_DIRECTIONS:
+	var lang := Lexeme.language_of_direction(parts[1])
+	if lang.is_empty():
+		return ""
+	for direction in Lexeme.mastery_directions(lang):
 		var id := "translate:%s:%s" % [direction, parts[2]]
 		if float(records.get(id, {}).get("confidence", 0.0)) < threshold:
 			return ""

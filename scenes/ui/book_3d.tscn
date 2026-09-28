@@ -115,6 +115,13 @@ theme_type_variation = &"Tight"
 layout_mode = 2
 alignment = 1
 
+[node name="Language" type="Label" parent="Art/Print/Lines"]
+unique_name_in_owner = true
+theme_type_variation = &"Hint"
+layout_mode = 2
+text = "Sprache"
+horizontal_alignment = 1
+
 [node name="Title" type="Label" parent="Art/Print/Lines"]
 unique_name_in_owner = true
 theme_type_variation = &"Title"

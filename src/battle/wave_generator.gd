@@ -33,7 +33,7 @@ const DIFFICULTY_MAX := 5
 
 ## Aufgabenarten, die der Schwierigkeitsriegel (`difficulty_max`) NIE aus dem Pool nimmt.
 ## Die Übersetzung ist das Fundament des Lernstands — ein WORT gilt erst als gemeistert,
-## wenn beide Richtungen sitzen (PlayerProgress.LEXEME_MASTERY_DIRECTIONS). Auf Stufe 1
+## wenn beide Richtungen sitzen (Lexeme.mastery_directions). Auf Stufe 1
 ## fiel `def.translate.en_de` (difficulty 2) heraus; damit war kein Wort je zu meistern,
 ## jeder Fortschrittsbalken stand dauerhaft auf „0 von N" und jedes Wort auf „0 %",
 ## während „Gemeisterte Aufgaben" im Überblick weiterstieg — ein Widerspruch, der wie ein
@@ -257,7 +257,12 @@ func _expand(definition: Dictionary, lexemes: Array, result: Array, limit: int =
 ## verschwindet es damit auch aus der Aufgabenzahl der Statistik — und
 ## `PlayerProgress.masterable()` nimmt es aus dem NENNER des Fortschrittsbalkens, sonst
 ## stünde die Unit dauerhaft bei „N-1 von N".
+##
+## Eine Definition gilt nur für Lexeme ihrer Sprache (`language`, ohne Feld englisch):
+## sonst stellte die englische Übersetzung ein lateinisches Wort und umgekehrt.
 func _instances(definition: Dictionary, source: Dictionary) -> Array:
+	if Lexeme.language(definition) != Lexeme.language(source):
+		return []
 	if str(definition.get("task_type", "")) in source.get("excluded_task_types", []):
 		return []
 	if not _type_allowed(source, definition.get("allowed_types", ["*"])):

@@ -380,6 +380,27 @@ func test_the_binding_has_a_round_spine_and_a_groove() -> void:
 	assert_int(mesh.get_surface_count()).is_equal(1)
 
 
+## Je Sprache ein Regalfach: Englisch oben, die übrigen alphabetisch darunter; innerhalb
+## eines Fachs bleibt die Reihenfolge der Bücher.
+func test_each_language_gets_its_own_shelf_row() -> void:
+	var language := {"b1": "la", "a1": "en", "a2": "en", "c1": "fr"}
+	var rows: Array = load("res://src/ui/book_select.gd").shelf_rows(
+			["a1", "b1", "c1", "a2"], func(b): return language[b])
+	assert_array(rows).is_equal([["a1", "a2"], ["c1"], ["b1"]])
+
+
+## Das Cover nennt die Sprache, und ein Buch ohne Boss (Latein, Issue #31) zählt keine
+## Bosse, die es nicht gibt.
+func test_the_cover_names_the_language_and_a_missing_boss() -> void:
+	var book: Book3D = auto_free(load("res://scenes/ui/book_3d.tscn").instantiate())
+	add_child(book)
+	book.fill("Buch", null, 0, {"units": 2, "done": 0, "total": 10, "crowns": 0,
+			"language": "Latein", "bosses": 0})
+	assert_str((book.get_node("%Language") as Label).text).is_equal("Latein")
+	assert_str((book.get_node("%Crowns") as Label).text).is_equal("Noch kein Bosskampf")
+	remove_child(book)
+
+
 ## Im Regal zeigt das Buch den Rücken; ausgewählt kommt es nach vorn und zeigt das Cover.
 func test_a_selected_book_comes_out_and_turns() -> void:
 	var book: Book3D = auto_free(load("res://scenes/ui/book_3d.tscn").instantiate())
@@ -508,14 +529,20 @@ func test_a_real_unit_has_its_levels(do_skip := LanguageData.missing(), skip_rea
 	assert_bool(scoped.is_empty()).is_false()
 
 
-## Jedes Level jeder echten Unit gibt dem Kampf etwas zu tun, und jeder Boss hat Sätze.
+## Jedes Level jeder echten Unit gibt dem Kampf etwas zu tun, und in einem Buch mit Sätzen
+## hat jeder Boss welche. Ein Buch ganz ohne Sätze (Latein, Issue #31) zeigt den Boss
+## gesperrt — das ist kein Datenfehler einer Unit.
 func test_every_real_level_is_playable(do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:
 	var generator := WaveGenerator.new()
 	for book in ContentRegistry.all_books():
+		var has_sentences := ContentRegistry.units_for(book).any(
+				func(u): return AreaMap.has_boss_sentences(book, int(u)))
 		for unit in ContentRegistry.units_for(book):
 			for level in MapLevel.levels_for(book, int(unit), ContentRegistry.parts_for(book, int(unit))):
 				RunRequest.start_level(level)
 				if str(level["kind"]) == MapLevel.KIND_BOSS:
+					if not has_sentences:
+						continue
 					assert_bool(AreaMap.has_boss_sentences(book, int(unit))).override_failure_message(
 							"%s/%s: Boss ohne Sätze" % [book, unit]).is_true()
 				else:

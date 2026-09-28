@@ -184,7 +184,7 @@ func _refresh_flags() -> void:
 		var type_label := String(WordTypePalette.LABELS.get(type_key, type_key))
 		var header := Label.new()
 		header.text = "%s → %s  ·  %s" % [
-			str(entry.get("lemma_de", "")), str(entry.get("lemma_en", "")), type_label]
+			str(entry.get("lemma_de", "")), Lexeme.foreign(entry), type_label]
 		box.add_child(header)
 		var flag: Dictionary = entry.get("flag", {})
 		var comment := Label.new()

@@ -39,8 +39,6 @@ const LIST_COUNT := 5
 const FRESH_DAYS := 7
 ## Ab so vielen Fehlversuchen ist eine wiedergewonnene Aufgabe ein Comeback.
 const COMEBACK_MISSES := 3
-## Beschriftung der beiden Übersetzungsrichtungen im Mouseover einer Wortzeile.
-const DIRECTION_LABELS := {"de_to_en": "de→en", "en_to_de": "en→de"}
 ## Ab diesem HP-Stand trägt der schonendste Lauf seine Auszeichnung. Ein fester Betrag
 ## und kein Anteil des Maximums: wer sein Maximum über die Fähigkeiten angehoben hat, hat
 ## sich das Polster verdient — und die Sitzungen schreiben ihr Maximum nicht mit.
@@ -497,7 +495,7 @@ static func word_rows(lexemes: Array, conf: Callable, learnables := Callable()) 
 		var directions: Array = []
 		var weakest := 1.0
 		var seen := false
-		for direction in PROGRESS.LEXEME_MASTERY_DIRECTIONS:
+		for direction in Lexeme.mastery_directions(Lexeme.language(entry)):
 			var value := float(conf.call("translate:%s:%s" % [direction, id]))
 			directions.append({"direction": direction, "confidence": value})
 			if value < 0.0:
@@ -583,8 +581,7 @@ static func word_hint(row: Dictionary, describe := Callable()) -> Array:
 	for direction in row.get("directions", []):
 		var value := float(direction["confidence"])
 		lines.append(["✓" if value >= PROGRESS.MASTERY_CONFIDENCE else "",
-				"Übersetzung " + str(DIRECTION_LABELS.get(str(direction["direction"]),
-						str(direction["direction"]))),
+				"Übersetzung " + Lexeme.direction_label(str(direction["direction"]), "→"),
 				percent_label(value)])
 	for extra in row.get("extras", []):
 		var name_text := str(extra["id"])
@@ -605,11 +602,11 @@ static func percent_label(confidence: float) -> String:
 ## Ein Wort in beiden Sprachen, „house — Haus". Beide, weil die Liste unter einer Unit
 ## zum Nachschlagen da ist und die Meisterung ohnehin beide Richtungen verlangt.
 static func word_label(entry: Dictionary) -> String:
-	var en := str(entry.get("lemma_en", ""))
+	var foreign := Lexeme.foreign(entry)
 	var de := str(entry.get("lemma_de", ""))
-	if en.is_empty() or de.is_empty():
-		return en if de.is_empty() else de
-	return "%s — %s" % [en, de]
+	if foreign.is_empty() or de.is_empty():
+		return foreign if de.is_empty() else de
+	return "%s — %s" % [foreign, de]
 
 
 func _fill_progress(box: VBoxContainer, rows: Array, empty_text: String) -> void:

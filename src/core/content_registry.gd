@@ -260,6 +260,15 @@ func book_label(book: String) -> String:
 	return name if num.is_empty() else "%s %s" % [name, num]
 
 
+## Die Sprache eines Buchs (Lexeme.language seiner Lexeme), "" für ein unbekanntes Buch.
+## Ein Buch hat genau eine Sprache — es genügt das erste Lexem.
+func book_language(book: String) -> String:
+	for entry in lexemes.values():
+		if str(entry.get("book", "")) == book:
+			return Lexeme.language(entry)
+	return ""
+
+
 ## Alle distinkten Units eines Buchs (Lexem-Feld "unit"), numerisch aufsteigend sortiert.
 func units_for(book: String) -> Array:
 	var seen := {}

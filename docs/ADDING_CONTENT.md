@@ -55,11 +55,28 @@ Lernstand (`PlayerProgress.confidence`); Aufgaben-Schwierigkeit steht auf der `t
 - Unregelmäßige Verben mit dem Tag `"irregular"` markieren (kein eigenes Feld) — so lässt sich
   später eine „unregelmäßige Verben"-Welle über den Tag-Filter ziehen.
 
+**Weitere Sprache (Latein, Issue #31, ADR 0007).** Die Sprache steht im Feld `language`;
+ohne Feld ist ein Lexem englisch. Die fremde Seite heißt `lemma_<language>` /
+`lemma_<language>_alt`, gelesen wird sie nur über `Lexeme.foreign`. Ids und Dateien tragen
+die Sprache (`lex.la.<buch>.…`, `la_<buch>_unit<n>.json`), die Buch-Id darf mit keinem
+anderen Buch kollidieren.
+```json
+{ "id": "lex.la.<buch>.amicus", "language": "la", "type": "noun", "book": "<buch>", "unit": 1, "lemma_de": "der Freund", "lemma_la": "amīcus" }
+```
+Makrons dürfen (und sollen, wie im Buch) in den Daten stehen — der `AnswerEvaluator` faltet
+sie auf beiden Seiten weg, getippt werden sie nie. Die Formen, die das Buch mitlernen
+lässt, stehen als `lexeme_forms` mit `language: "la"`: `la_genitive` und `la_gender`
+(`m`/`f`/`n`) am Nomen, `la_perfect` und `la_ppp` am Verb. Sie stellen je eine
+`forms`-Aufgabe (`data/task_definitions/la_basics.json`) und erscheinen im Reveal der
+Übersetzung als Lexikonform („Gen. amīcī · m"). Die Aufgabendefinitionen einer Sprache
+tragen ebenfalls `language` und gelten nur für Lexeme dieser Sprache; jede neue Richtung
+braucht eine `monster_task_rule`.
+
 **Keine Dubletten.** Dasselbe Wort unter zwei Lexem-Ids hat zwei Fortschrittsstände; die
 Treffer verteilen sich, und keine der beiden Ids wird je gemeistert. Vor dem Anlegen
 prüfen, ob das Wort schon existiert (auch in anderen Units und Büchern).
 
-**Mehrfachübersetzungen** über optionale Arrays `lemma_en_alt` / `lemma_de_alt` — alle
+**Mehrfachübersetzungen** über optionale Arrays `lemma_en_alt` (bzw. `lemma_<sprache>_alt`) / `lemma_de_alt` — alle
 gelten bei `translate` als richtig (Prompt zeigt weiter das primäre Lemma):
 ```json
 { "id": "lex.en.go", "type": "verb", "lemma_de": "gehen", "lemma_en": "go", "lemma_en_alt": ["walk"], "lemma_de_alt": ["laufen"], "tags": ["school"], "book": "access2", "unit": 1 }

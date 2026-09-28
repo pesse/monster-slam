@@ -15,8 +15,6 @@ extends RefCounted
 ## Arten kommen im Protokoll dazu (TraceLog, Regel 2), und eine Ansicht, die Neues still
 ## verschluckt, lügt über das, was in der Datei steht.
 
-const DIRECTIONS := {"de_to_en": "de → en", "en_to_de": "en → de"}
-
 
 ## Einträge, NEUESTE zuerst, mit einer Tageszeile vor jedem Tag. `lines` wie von
 ## `TraceLog.recent()` (älteste zuerst). `bias_minutes` ist der Abstand der Ortszeit zu UTC
@@ -145,7 +143,7 @@ static func _task_hint(line: Dictionary) -> Dictionary:
 	var parts: Array = [str(line.get("type", ""))]
 	var dir := str(line.get("dir", ""))
 	if not dir.is_empty():
-		parts.append(DIRECTIONS.get(dir, dir))
+		parts.append(Lexeme.direction_label(dir))
 	parts.append("Schwierigkeit %d" % int(line.get("diff", 0)))
 	var conf := float(line.get("conf", -1.0))
 	if conf >= 0.0:
