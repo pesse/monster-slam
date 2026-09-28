@@ -16,8 +16,7 @@ extends Control
 
 
 func _ready() -> void:
-	(%BackButton as Button).pressed.connect(
-			func(): get_tree().change_scene_to_file(MapSelection.BOOKS_SCENE))
+	(%BackButton as Button).pressed.connect(_back_to_shelf)
 	_canvas.node_selected.connect(_on_unit_selected)
 	_canvas.cover = true
 	var books := ContentRegistry.all_books()
@@ -40,7 +39,13 @@ func _ready() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
-		get_tree().change_scene_to_file(MapSelection.BOOKS_SCENE)
+		_back_to_shelf()
+
+
+## Zurück ins Regal: die Buchauswahl fliegt aus dem offenen Buch heraus und schlägt es zu.
+func _back_to_shelf() -> void:
+	MapSelection.to_shelf = true
+	get_tree().change_scene_to_file(MapSelection.BOOKS_SCENE)
 
 
 func _fill() -> void:

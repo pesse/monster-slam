@@ -433,6 +433,8 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
 | `MapLayout` | `src/ui/map_layout.gd` | Bild und Punkte unter `assets/maps/<book>/` (`book.png`, `unit<n>.png`, `map.json`) |
 | `MapCanvas` | `src/ui/map_canvas.gd` | zeichnet eine Karte: Bild letterboxed in 16:9, Weg, Orte mit Stufe, Ring, Medaille |
 | Screens | `book_select`, `book_map`, `area_map` (`src/ui/` + `scenes/ui/`) | die drei Ebenen |
+| `Book3D` | `src/ui/book_3d.gd` + `scenes/ui/book_3d.tscn` | ein gebundenes Buch im 3D-Regal der Buchauswahl: Rücken nach vorn, ausgewählt herausgezogen und schräg gedreht, beim Öffnen schlägt der vordere Deckel am Falz auf. Das Cover ist eine 2D-Szene im SubViewport (Karte im `OrnateFrame` oben, Stand unten); die Doppelseite trägt die Buchkarte. `spread_view` liefert den Kamerastand, aus dem die Doppelseite das Bild so füllt wie die Buchkarte — die Buchauswahl fliegt die Kamera dorthin und blendet erst am Ende auf das flache Bild über |
+| `BookMesh` | `src/ui/book_mesh.gd` | Profile des Einbands (gerundeter Rücken, Deckel mit Falz) und ihre Extrusion zu Meshes, je Buch nach seiner Dicke |
 | Werkbank | `scenes/dev/map_lab.tscn` | Punkte und Weg auf die Kartenbilder setzen, schreibt `map.json`; im Export ausgeschlossen |
 
 - **Kampf und Boss lesen ihren Bereich aus `RunRequest`, nie aus `UserSettings`.**

@@ -315,16 +315,83 @@ func test_the_boss_hint_names_the_next_medal() -> void:
 	assert_str(body).contains("Silber ab 3 Siegen")
 
 
-func test_book_summary_counts_crowns() -> void:
+func test_book_stats_count_crowns() -> void:
 	var units := [
 		{"key": "b/1", "unit": 1, "done": 2, "total": 10, "tier": 1},
 		{"key": "b/2", "unit": 2, "done": 8, "total": 10, "tier": 3},
 	]
-	var text: String = load("res://src/ui/book_select.gd").summary(units, {"b/2": 1})
-	assert_str(text).contains("2 Units")
-	assert_str(text).contains("10 von 20 Wörtern")
-	assert_str(text).contains("Stufe 1")
-	assert_str(text).contains("👑 1 von 2")
+	var stats: Dictionary = load("res://src/ui/book_select.gd").stats(units, {"b/2": 1})
+	assert_int(int(stats["units"])).is_equal(2)
+	assert_int(int(stats["done"])).is_equal(10)
+	assert_int(int(stats["total"])).is_equal(20)
+	assert_bool(stats.has("lowest")).is_false()
+	assert_int(int(stats["crowns"])).is_equal(1)
+
+
+## Die Profile des Einbands: der Rücken wölbt sich über die Deckel hinaus, und hinter dem
+## Scharnier liegt im Deckel die Rinne des Falzes.
+func test_the_binding_has_a_round_spine_and_a_groove() -> void:
+	var spine := BookMesh.spine_profile(-0.43, 0.12, 0.07, 0.03)
+	var xs: Array = Array(spine["points"]).map(func(p): return p.x)
+	assert_float(xs.min()).is_equal_approx(-0.5, 0.001)
+	var board := BookMesh.board_profile(0.93, 0.03, 0.012, 0.035, 0.012)
+	var outer: Array = Array(board["points"]).filter(func(p): return p.x > 0.012 and p.x < 0.047)
+	assert_bool(outer.any(func(p): return p.y < 0.03 - 0.01)).is_true()
+	var mesh := BookMesh.extrude(board, -0.7, 0.7)
+	assert_int(mesh.get_surface_count()).is_equal(1)
+
+
+## Im Regal zeigt das Buch den Rücken; ausgewählt kommt es nach vorn und zeigt das Cover.
+func test_a_selected_book_comes_out_and_turns() -> void:
+	var book: Book3D = auto_free(load("res://scenes/ui/book_3d.tscn").instantiate())
+	add_child(book)
+	book.fill("Buch", null, 0, {"units": 2, "done": 3, "total": 10, "crowns": 1})
+	assert_str((book.get_node("%Crowns") as Label).text).contains("1 von 2")
+	var body := book.get_node("%Body") as Node3D
+	# Rücken (-X der Buchlage) zeigt zur Kamera (+Z).
+	assert_float((body.global_basis * Vector3.LEFT).z).is_equal_approx(1.0, 0.001)
+	book.set_selected(true)
+	for i in 40:
+		book._process(0.02)
+	assert_float(book.lift).is_equal(1.0)
+	# Ausgewählt leicht schräg (Rücken bleibt sichtbar), beim Öffnen ganz zur Kamera.
+	assert_float((body.global_basis * Vector3.BACK).z).is_equal_approx(cos(deg_to_rad(Book3D.SHOWN_ANGLE)), 0.001)
+	assert_float(body.position.z).is_greater(Book3D.WIDTH * 0.5)
+	# Aufschlagen: gerade zur Kamera, der Deckel geht nach links auf, die Doppelseite liegt offen.
+	book.open_book()
+	for i in 80:
+		book._process(0.02)
+	assert_bool(book.is_facing()).is_true()
+	assert_bool(book.is_spread_open()).is_true()
+	assert_float((body.global_basis * Vector3.BACK).z).is_equal_approx(1.0, 0.001)
+	var hinge := book.get_node("%Hinge") as Node3D
+	assert_float((hinge.global_basis * Vector3.RIGHT).x).is_equal_approx(-1.0, 0.001)
+	# Der Blick ins Buch: mittig vor dem Bund, senkrecht auf die Doppelseite, so nah, dass die
+	# Karte an der knapperen Achse gerade randlos ist.
+	var view := book.spread_view(40.0, 16.0 / 9.0)
+	var bund := (book.get_node("%Body") as Node3D).global_transform * Vector3(Book3D.hinge_x(), 0, 0)
+	assert_float(view.origin.x).is_equal_approx(bund.x, 0.001)
+	assert_float(view.basis.z.z).is_equal_approx(1.0, 0.001)
+	var visible_height := 2.0 * (view.origin.z - bund.z - book.thickness * 0.5 + Book3D.BOARD) * tan(deg_to_rad(20.0))
+	assert_float(visible_height).is_less_equal(book.spread_height() + 0.01)
+	book.hold_forward(false)
+	for i in 80:
+		book._process(0.02)
+	assert_bool(book.is_spread_open()).is_false()
+	book.set_selected(false)
+	for i in 40:
+		book._process(0.02)
+	assert_float(book.lift).is_equal(0.0)
+	remove_child(book)
+
+
+## Ein Strahl von vorn trifft den Rücken im Regal, daneben nichts.
+func test_a_ray_hits_the_spine_in_the_shelf() -> void:
+	var book: Book3D = auto_free(load("res://scenes/ui/book_3d.tscn").instantiate())
+	add_child(book)
+	assert_float(book.hit(Vector3(0, 0, 5), Vector3.FORWARD)).is_equal_approx(5.0 - Book3D.WIDTH * 0.5, 0.001)
+	assert_float(book.hit(Vector3(1, 0, 5), Vector3.FORWARD)).is_equal(INF)
+	remove_child(book)
 
 
 # --- Screens ------------------------------------------------------------------
@@ -384,7 +451,7 @@ func test_the_book_select_loads() -> void:
 	var screen: Control = auto_free(BOOKS_SCENE.instantiate())
 	add_child(screen)
 	await get_tree().process_frame
-	var books := screen.get_node("%Books") as VBoxContainer
+	var books := screen.get_node("%Books") as Node3D
 	assert_int(books.get_child_count()).is_equal(ContentRegistry.all_books().size())
 	remove_child(screen)
 

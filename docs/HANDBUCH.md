@@ -400,8 +400,13 @@ aktuelle Stand steigen um denselben Betrag.
 
 „▶ Spielen“ führt über drei Stufen in den Kampf:
 
-1. **Buchauswahl.** Je Buch eine Karte mit dem Stand: wie viele Units, wie viele Wörter
-   gemeistert, die Festungsstufe der schwächsten Unit und wie viele Bosse besiegt sind.
+1. **Buchauswahl.** Die Bücher stehen mit dem Rücken nach vorn in einem Regal; je mehr
+   Units, desto dicker das Buch. Zeigt die Maus auf ein Buch (oder mit ←/→), wird es
+   herausgezogen und zeigt sein Cover: oben die Landkarte des Buchs im Goldrahmen,
+   darunter der Stand – wie viele Wörter gemeistert und wie viele Bosse besiegt sind.
+   Die Festungsstufe steht nicht auf dem Cover, sie gilt je Unit (siehe Buchkarte). Ein
+   Klick (oder Enter) schlägt das Buch auf; auf der Doppelseite liegt die Landkarte, und
+   in sie geht es hinein.
 2. **Buchkarte.** Die Landkarte des Buchs mit einem Ort je Unit – die Units sind die
    Gebiete. Die Farbe eines Ortes zeigt die Festungsstufe der Unit, der Ring außen, wie
    viele Wörter schon sitzen. Zeigt die Maus auf eine Unit, steht dort zum Beispiel

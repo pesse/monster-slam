@@ -1,0 +1,144 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://src/ui/book_3d.gd" id="1_book"]
+[ext_resource type="Script" path="res://src/ui/ornate_frame.gd" id="2_frame"]
+
+[sub_resource type="StandardMaterial3D" id="paper"]
+albedo_color = Color(0.8, 0.75, 0.64, 1)
+roughness = 1.0
+
+[sub_resource type="StandardMaterial3D" id="gold"]
+cull_mode = 2
+albedo_color = Color(0.85, 0.66, 0.3, 1)
+metallic = 0.6
+roughness = 0.4
+
+[node name="Book3D" type="Node3D"]
+script = ExtResource("1_book")
+
+[node name="Body" type="Node3D" parent="."]
+unique_name_in_owner = true
+
+[node name="Back" type="MeshInstance3D" parent="Body"]
+unique_name_in_owner = true
+
+[node name="Spine" type="MeshInstance3D" parent="Body"]
+unique_name_in_owner = true
+
+[node name="Pages" type="MeshInstance3D" parent="Body"]
+unique_name_in_owner = true
+material_override = SubResource("paper")
+
+[node name="RightMap" type="MeshInstance3D" parent="Body"]
+unique_name_in_owner = true
+
+[node name="Hinge" type="Node3D" parent="Body"]
+unique_name_in_owner = true
+
+[node name="Front" type="MeshInstance3D" parent="Body/Hinge"]
+unique_name_in_owner = true
+
+[node name="CoverFace" type="MeshInstance3D" parent="Body/Hinge"]
+unique_name_in_owner = true
+
+[node name="LeftPage" type="MeshInstance3D" parent="Body/Hinge"]
+unique_name_in_owner = true
+
+[node name="LeftMap" type="MeshInstance3D" parent="Body/Hinge"]
+unique_name_in_owner = true
+
+[node name="SpineTitle" type="Label3D" parent="Body"]
+unique_name_in_owner = true
+pixel_size = 0.004
+double_sided = false
+font_size = 36
+outline_size = 0
+text = "Buch"
+
+[node name="BandTop" type="MeshInstance3D" parent="Body"]
+unique_name_in_owner = true
+material_override = SubResource("gold")
+
+[node name="BandBottom" type="MeshInstance3D" parent="Body"]
+unique_name_in_owner = true
+material_override = SubResource("gold")
+
+[node name="Art" type="SubViewport" parent="."]
+unique_name_in_owner = true
+disable_3d = true
+size = Vector2i(264, 420)
+
+[node name="Paper" type="ColorRect" parent="Art"]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.16, 0.33, 0.62, 1)
+
+[node name="Frame" type="Control" parent="Art"]
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+grow_horizontal = 2
+script = ExtResource("2_frame")
+
+[node name="Map" type="TextureRect" parent="Art/Frame"]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Print" type="MarginContainer" parent="Art"]
+theme_type_variation = &"ScreenMargin"
+anchors_preset = -1
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Lines" type="VBoxContainer" parent="Art/Print"]
+theme_type_variation = &"Tight"
+layout_mode = 2
+alignment = 1
+
+[node name="Title" type="Label" parent="Art/Print/Lines"]
+unique_name_in_owner = true
+theme_type_variation = &"Title"
+layout_mode = 2
+text = "Buch"
+horizontal_alignment = 1
+
+[node name="Words" type="Label" parent="Art/Print/Lines"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "0 von 0 Wörtern gemeistert"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Bar" type="ProgressBar" parent="Art/Print/Lines"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+show_percentage = false
+
+[node name="Crowns" type="Label" parent="Art/Print/Lines"]
+unique_name_in_owner = true
+theme_type_variation = &"Accent"
+layout_mode = 2
+text = "👑 0 von 0 Bossen besiegt"
+horizontal_alignment = 1
+autowrap_mode = 3

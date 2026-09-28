@@ -17,3 +17,5 @@ static var unit := 0
 static var zoom_in := false
 ## Kommt die Buchkarte gerade aus einer Gebietskarte? Dann kommt sie aus dieser Unit heraus.
 static var zoom_out := false
+## Geht es gerade von der Buchkarte zurück ins Regal? Dann beginnt die Buchauswahl im offenen Buch.
+static var to_shelf := false
