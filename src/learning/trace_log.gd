@@ -59,6 +59,7 @@ func _ready() -> void:
 	EventBus.boss_answer_judged.connect(note_boss_answer)
 	EventBus.boss_answer_explained.connect(note_boss_explained)
 	EventBus.boss_ended.connect(note_boss_end)
+	EventBus.boss_won.connect(note_boss_won)
 
 
 func _exit_tree() -> void:
@@ -105,6 +106,10 @@ func note_boss_explained(sentence_id: String, explanation: String) -> void:
 
 func note_boss_end(boss_id: String, won: bool) -> void:
 	_write({"e": "boss_end", "boss": boss_id, "won": won})
+
+
+func note_boss_won(boss_id: String, unit_key: String) -> void:
+	_write({"e": "boss_won", "boss": boss_id, "unit": unit_key})
 
 
 func note_wave_start(wave_id: String) -> void:

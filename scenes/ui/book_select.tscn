@@ -1,15 +1,15 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://src/ui/unit_map.gd" id="1_map"]
+[ext_resource type="Script" path="res://src/ui/book_select.gd" id="1_screen"]
 
-[node name="UnitMap" type="Control"]
+[node name="BookSelect" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_map")
+script = ExtResource("1_screen")
 
 [node name="Margin" type="MarginContainer" parent="."]
 theme_type_variation = &"ScreenMargin"
@@ -30,14 +30,14 @@ text = "← Zurück"
 [node name="Title" type="Label" parent="Margin/Root/Header"]
 theme_type_variation = &"Title"
 size_flags_horizontal = 3
-text = "Landkarte"
+text = "Welches Buch?"
 horizontal_alignment = 1
 
 [node name="EmptyHint" type="Label" parent="Margin/Root"]
-theme_type_variation = &"Hint"
 unique_name_in_owner = true
 visible = false
-text = "Noch keine Units vorhanden — im Start-Screen unter „📚 Inhalte“ einen Vokabel-Pack installieren."
+theme_type_variation = &"Hint"
+text = "Noch kein Buch vorhanden — im Start-Screen unter „📚 Inhalte“ einen Vokabel-Pack installieren."
 horizontal_alignment = 1
 autowrap_mode = 3
 
@@ -50,6 +50,6 @@ theme_type_variation = &"ScrollGutter"
 size_flags_horizontal = 3
 
 [node name="Books" type="VBoxContainer" parent="Margin/Root/Scroll/Gutter"]
-theme_type_variation = &"SectionStack"
 unique_name_in_owner = true
+theme_type_variation = &"SectionStack"
 size_flags_horizontal = 3

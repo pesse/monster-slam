@@ -221,6 +221,19 @@ static func _write_state(pack_id: String, entry: Dictionary, files: Array) -> vo
 	file.close()
 
 
+## Installierte Packs, die das Verzeichnis nicht mehr nennt — sie sind zurückgezogen.
+## Ein leeres Verzeichnis nennt keinen: das ist eher ein kaputter Abruf als ein Rückzug.
+static func retired(installed_packs: Dictionary, index_ids: Array) -> Array[String]:
+	var out: Array[String] = []
+	if index_ids.is_empty():
+		return out
+	for id in installed_packs:
+		if not index_ids.has(id):
+			out.append(str(id))
+	out.sort()
+	return out
+
+
 ## Entfernt einen Pack vollständig: alle von uns installierten, unveränderten Dateien und
 ## den Zustand. Lokal Verändertes bleibt liegen — es wäre sonst unwiederbringlich weg.
 static func uninstall(pack_id: String) -> Summary:

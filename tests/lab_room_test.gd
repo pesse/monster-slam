@@ -14,6 +14,7 @@ extends GdUnitTestSuite
 const LABS := [
 	"res://scenes/dev/boss_lab.tscn",
 	"res://scenes/dev/chest_lab.tscn",
+	"res://scenes/dev/map_lab.tscn",
 ]
 
 

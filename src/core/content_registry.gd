@@ -288,6 +288,11 @@ func _scope_keys(entry: Dictionary) -> Array:
 	return keys
 
 
+## Der Teil (1…PART_COUNT) eines Lexems innerhalb seiner Unit, 0 ohne Unit.
+func part_of(lexeme_id: String) -> int:
+	return int(_parts.get(lexeme_id, 0))
+
+
 ## Anzahl der Teile, in die eine Unit zerfällt — PART_COUNT, außer die Unit hat weniger
 ## Lexeme als das. Für die Auswahl-UI, damit sie keine leeren Teile anbietet.
 func parts_for(book: String, unit: int) -> int:

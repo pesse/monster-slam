@@ -4,12 +4,12 @@ extends GdUnitTestSuite
 ## die im Betrieb niemand von Hand nachstellt.
 
 const OPEN := {
-	"id": "language-basic",
+	"id": "language-fixture",
 	"name": "Grundwortschatz",
 	"protected": false,
 	"version": "abc123",
 	"minVersion": "0.2.0",
-	"file": "language-basic.zip",
+	"file": "language-fixture.zip",
 }
 
 const PROTECTED := {

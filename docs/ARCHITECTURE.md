@@ -39,7 +39,7 @@ Eintrag ersetzt, ist der Zweck der Übung und bleibt still.
 - Jede JSON-Datei enthält ein Objekt **oder** ein Array von Objekten.
 - Jedes Objekt braucht eine eindeutige `id` (String).
 - Zugriff: `ContentRegistry.monsters`, `.get_entry("lexemes", "lex.en.house")`,
-  `.all("waves")`, `.lexemes_by_tags(["basics"])`, `.forms_for(id, form_type)`,
+  `.all("waves")`, `.lexemes_by_tags(["school"])`, `.forms_for(id, form_type)`,
   `.relations_of(id, "opposite")`, `.monster_rule_for(task_type, direction)`.
 - Auswahl-Filter fürs Session-Setup: `.lexemes_scoped(scope, tags)` (Schnitt aus
   Curriculum-Scope UND Themen, siehe unten), plus `.all_books()` / `.units_for(book)` /
@@ -61,9 +61,9 @@ Darstellung unabhängig wachsen können (siehe `docs/ADDING_CONTENT.md`):
 	Wort stammt; *Themen* über `tags` (z.B. `body`, `animals`) — worum es geht. Die
 	Wortart steckt in `type`, **nicht** in `tags`. `.lexemes_scoped(scope, tags)`
 	schneidet beide Achsen (Scope UND Themen; innerhalb der Tags ODER), leer = keine
-	Einschränkung. So ist z.B. „Körperteile aus Access 2 / Unit 6" ausdrückbar. Lexeme
-    ohne `book`/`unit` (Grundwortschatz) sind keinem Curriculum zugeordnet und erscheinen
-    nur, wenn kein Scope gewählt ist.
+	Einschränkung. So ist z.B. „Körperteile aus Access 2 / Unit 6" ausdrückbar. Seit
+	ADR 0006 gibt es keinen Grundwortschatz mehr; ein Lexem ohne `book`/`unit` ist ein
+	Datenfehler und erschiene nur ohne Scope.
 	Der Scope hat DREI Stufen: `"access2"`, `"access2/6"` und `"access2/6/2"` — das
 	zweite Viertel der Unit. Die Teile stehen NICHT in den Daten, sondern werden aus der
 	**Position** in der Unit gerechnet (`ContentRegistry._index_parts`, gleich große
@@ -84,8 +84,8 @@ Darstellung unabhängig wachsen können (siehe `docs/ADDING_CONTENT.md`):
 - **sentences / sentence_lexemes** — für Boss-/Satzübungen. Ein Satz trägt neben der
   `reference_translation` seinen Lösungsschlüssel (`accepted`, `must_contain`,
   `pitfalls`); bewertet und ausgewählt wird damit offline (siehe „Sätze bewerten" unten
-  und `docs/adr/0004-satzbewertung-ohne-modell.md`). Der Bosskampf startet wie der
-  Wellenkampf aus „Runde vorbereiten“ (`scenes/battle/boss_fight.tscn`, ADR 0005).
+  und `docs/adr/0004-satzbewertung-ohne-modell.md`). Der Bosskampf startet vom Boss-Ort der
+  Gebietskarte oder aus dem Expertenmodus (`scenes/battle/boss_fight.tscn`, ADR 0005/0006).
 
 Die Auflösung Definition × Lexeme → spielbare Aufgabe `{prompt, accepted_answers, …}`
 macht `src/learning/task_resolver.gd`; die Enumeration der Kandidaten (Definition × Lexeme)
@@ -281,8 +281,8 @@ in den Pool:
   sonst steht der Balken auf „N-1 von N".
 - **Dubletten**: dasselbe Wort unter zwei Ids hat zwei Fortschrittsstände, die vier nötigen
   Treffer verteilen sich, und keine Id wird gemeistert. Unter den buchgebundenen Lexemen
-  ein Einzelfall, im ungebundenen Grundwortschatz die Regel — wer den Balken einer Unit
-  beurteilt, prüft erst, ob der Scope gesetzt ist.
+  ein Einzelfall; der ungebundene Grundwortschatz, in dem es die Regel war, ist entfallen
+  (ADR 0006).
 
 ### Die Feier beim Meistern (Issue #23)
 
@@ -419,6 +419,38 @@ der umgekehrten Absicht: Gold ist Beute, Erfahrung ist Lernfortschritt.
   Kopfleiste passt bei 1152 Pixeln nur knapp (`tests/hud_header_test.gd` misst mit einem
   späten Spielstand). Was dort dazukommt, muss anderswo eingespart werden.
 
+## Karte und Laufanfrage (ADR 0006)
+
+Der Hauptweg ins Spiel: **Buchauswahl → Buchkarte → Gebietskarte → Kampf**. Das alte
+Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
+
+| Baustein | Wo | Aufgabe |
+|---|---|---|
+| `RunRequest` | `src/core/run_request.gd` | statisch: was der nächste Lauf spielt — ein Level der Karte oder die Auswahl des Expertenmodus; Scope, Tags, Aufgabenpool, Unit, Rücksprung |
+| `MapLevel` | `src/progression/map_level.gd` | die Level einer Unit (T1…T4, Gesamt, Boss) aus `ContentRegistry.parts_for`; Stufe und Zählung je Level |
+| `BossRecord` | `src/progression/boss_record.gd` | Boss-Siege je Unit (Ursprungswert), Medaille bei 1/3/5 Siegen |
+| `MapSelection` | `src/ui/map_selection.gd` | welches Buch, welche Unit gerade offen ist (überdauert den Szenenwechsel) |
+| `MapLayout` | `src/ui/map_layout.gd` | Bild und Punkte unter `assets/maps/<book>/` (`book.png`, `unit<n>.png`, `map.json`) |
+| `MapCanvas` | `src/ui/map_canvas.gd` | zeichnet eine Karte: Bild letterboxed in 16:9, Weg, Orte mit Stufe, Ring, Medaille |
+| Screens | `book_select`, `book_map`, `area_map` (`src/ui/` + `scenes/ui/`) | die drei Ebenen |
+| Werkbank | `scenes/dev/map_lab.tscn` | Punkte und Weg auf die Kartenbilder setzen, schreibt `map.json`; im Export ausgeschlossen |
+
+- **Kampf und Boss lesen ihren Bereich aus `RunRequest`, nie aus `UserSettings`.**
+  `WaveRunner` (Aufgabenpool, Festungsstufe, Rücksprung), `SentenceSelector.pool_from_settings`
+  und `BossFight` fragen dort. Ohne Level fällt `RunRequest` auf die gespeicherte Auswahl
+  zurück — das ist der Expertenmodus, der beim Öffnen `start_expert()` ruft. Ein Level
+  spielt alle Aufgaben- und Wortarten seines Scopes und keine Tags.
+- **Nichts wird gesperrt, nichts als Abschluss gespeichert.** Die Stufe eines Levels ist
+  `FortressTier.part_tiers` (Teil) bzw. `unit_tiers` (Gesamt) — dieselbe Zählregel und
+  dieselben Schwellen wie die Festung. Gespeichert wird nur, was sich nicht ableiten
+  lässt: der Boss-Sieg. Nur ein Sieg mit `RunRequest.unit_key()` zählt; er geht über
+  `EventBus.boss_won` auch in die Spur.
+- **Bilder liegen in der EXE**, nicht im Pack (`export_presets.cfg` nimmt
+  `assets/maps/*.json` mit). Punkte stehen in Anteilen des Bildes (0..1). Fehlt Bild oder
+  ein Punkt, zeichnet `MapCanvas` eine schlichte Fläche und legt ALLE Orte selbst aus
+  (`default_positions`) — eine neue Unit ist so spielbar, bevor ihr Bild existiert.
+  Prompts: `docs/prompts/map_images/`.
+
 ## Fähigkeitsbäume: wofür die Punkte da sind
 
 Die Skillpunkte aus den Levelups werden in Bäumen ausgegeben. Der Screen hängt am
@@ -541,6 +573,9 @@ vorhandenen Handlern. (Noch zu implementieren — siehe `docs/ADDING_CONTENT.md`
   `user://progress/<player>_level.json`. Gelesen wird daraus nur `total_xp` — Level und
   Skillpunkte stehen zum Mitlesen in der Datei, kommen aber aus der Rechnung. Gesichert
   wird **sofort** bei jeder Änderung, also mitten in der Welle.
+- **Boss-Siege** (`BossRecord`, `src/progression/boss_record.gd`): JSON unter
+  `user://progress/<player>_bosses.json`, je Sieg ein Eintrag `{unit, won_at}`. Zahl und
+  Medaille werden beim Lesen gezählt (ADR 0006).
 - **Ereignis-Protokoll** (`TraceLog`, `src/learning/trace_log.gd`): JSON Lines unter
   `user://logs/<player>_trace.jsonl`, eine Zeile je Ereignis. Siehe „Die Spur eines Laufs"
   unten.

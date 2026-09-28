@@ -13,7 +13,7 @@ Formatversion. Warum es die Packs überhaupt gibt: `docs/adr/0001-app-und-conten
 
 ## Offene Packs
 
-Ein gewöhnliches ZIP mit content-relativen Pfaden (`lexemes/en_basics.json`). Keine Hülle,
+Ein gewöhnliches ZIP mit content-relativen Pfaden (`lexemes/en_access2_unit6.json`). Keine Hülle,
 keine Kopfdaten. Der erste Pfadabschnitt muss eine Content-Kategorie sein — geprüft beim
 Bauen (`check_paths`) und noch einmal beim Auspacken
 (`PackInstaller.is_allowed_entry`).
@@ -24,7 +24,7 @@ Pack-Version allein am Inhalt und nicht an der Uhrzeit des Builds.
 ## Ein Pack ist referenz-abgeschlossen
 
 Jede Id, auf die ein Objekt zeigt, liegt **im selben Pack**. Wer nur „Access 2" installiert,
-hat den Grundwortschatz nicht; eine Relation von einem Access-Wort auf ein Lexem von dort
+hat „Access 3" nicht; eine Relation von einem Wort aus Access 2 auf ein Lexem von dort
 wäre beim Spieler unauflösbar. Die Registry lädt tolerant, der Fehler zeigt sich also nicht,
 sondern kostet still eine Aufgabe. Deshalb prüft der Build (`check_references`), fail-closed
 und für alle Packs in einem Lauf:

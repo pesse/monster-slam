@@ -402,3 +402,11 @@ Umgesetzt am 2026-08-31. Was anders kam als oben geplant, und warum:
 `PUBLIC_RELEASE_TOKEN`, `CONTENT_DISPATCH_TOKEN`). Ob `language-basic` wirklich
 offen verteilt werden darf, ist eine inhaltliche Entscheidung — Belege in
 `docs/CONTENT_GENERATION_RUNS.md` (Lauf #1).
+
+## Nachtrag 2026-09-25: kein Grundwortschatz mehr
+
+`language-basic` ist entfallen (ADR 0006): das Spiel ist buchzentriert, und der selbst
+erzeugte Bestand war zu schwach. Verteilt werden `game` (offen) und die Access-Bände
+(geschützt). Weil das Verzeichnis nur führt, was es gibt, deinstalliert die App einen
+installierten Pack, den es nicht mehr nennt (`PackInstaller.retired`) — sonst läge er
+unsichtbar in `user://content` und würde weiter geladen.

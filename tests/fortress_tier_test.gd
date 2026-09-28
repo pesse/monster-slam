@@ -136,8 +136,8 @@ func test_a_tag_filter_is_rated_as_the_whole_unit() -> void:
 	assert_int(FortressTier.run_tier(body, tiers)).is_equal(1)
 
 
-## Grundwortschatz (ohne Buch/Unit) bringt keine Stufe — und hebt auch keine.
-func test_basic_vocabulary_is_tier_zero() -> void:
+## Wörter ohne Buch/Unit bringen keine Stufe — und heben auch keine.
+func test_unbound_vocabulary_is_tier_zero() -> void:
 	var tiers := FortressTier.unit_tiers([_lexeme("a", "", 0)], {"a": true})
 	assert_int(FortressTier.run_tier([_lexeme("a", "", 0)], tiers)).is_equal(0)
 	assert_int(FortressTier.run_tier([], tiers)).is_equal(0)

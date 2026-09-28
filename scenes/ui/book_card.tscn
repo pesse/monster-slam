@@ -1,0 +1,29 @@
+[gd_scene format=3]
+
+[node name="BookCard" type="Button"]
+custom_minimum_size = Vector2(0, 88)
+size_flags_horizontal = 3
+
+[node name="Lines" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"Tight"
+alignment = 1
+
+[node name="Title" type="Label" parent="Lines"]
+unique_name_in_owner = true
+theme_type_variation = &"SectionTitle"
+text = "Buch"
+horizontal_alignment = 1
+
+[node name="Stats" type="Label" parent="Lines"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 0)
+theme_type_variation = &"Hint"
+text = "Stand"
+horizontal_alignment = 1
+autowrap_mode = 3

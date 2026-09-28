@@ -2,7 +2,8 @@ class_name HintCard
 extends PanelContainer
 ## Die Karte am Zeiger — im ganzen Spiel dieselbe.
 ##
-## Sie kennt vier Teile und sonst nichts: Überschrift, Text, Liste, Nachsatz. Was leer
+## Sie kennt vier Teile und sonst nichts: Überschrift, Text, Liste, Nachsatz — dazu
+## höchstens ein Bild unter der Überschrift (die Vorschau einer Gebietskarte). Was leer
 ## ist, steht nicht da. Die Liste ist eine echte Tabelle (Zeichen | Bezeichnung | Wert) und
 ## kein Text mit „·" dazwischen: eine Aufzählung liest man Zeile für Zeile, und die Werte
 ## sollen untereinander stehen, damit man sie vergleichen kann. Sie weiß nicht, ob sie einen Fähigkeitsknoten, eine Wortzeile oder eine
@@ -26,6 +27,7 @@ const MIN_WIDTH := 140.0
 @onready var _body: Label = %Body
 @onready var _note: Label = %Note
 @onready var _list: GridContainer = %List
+@onready var _image: TextureRect = %Image
 
 
 ## Trägt die vier Teile ein und stellt die Karte auf die Breite ein, die ihr Text braucht.
@@ -36,7 +38,10 @@ const MIN_WIDTH := 140.0
 ##
 ## `list` ist ein Array von Zeilen, jede `[zeichen, bezeichnung, wert]`; ein leeres Zeichen
 ## lässt die Spalte in dieser Zeile frei, die Bezeichnungen stehen trotzdem untereinander.
-func fill(title: String, body := "", note := "", list := []) -> void:
+##
+## Ein Bild macht die Karte so breit, wie sie werden darf (`MAX_WIDTH`): eine Vorschau in
+## Textbreite wäre eine Briefmarke.
+func fill(title: String, body := "", note := "", list := [], image: Texture2D = null) -> void:
 	# Eine leere Zeile verschwindet, statt eine leere Zeile zu hinterlassen: die Karte für
 	# eine Münze ist eine Zeile hoch und kein Kasten mit Luft.
 	_title.text = title
@@ -45,6 +50,8 @@ func fill(title: String, body := "", note := "", list := []) -> void:
 	_body.visible = not body.is_empty()
 	_note.text = note
 	_note.visible = not note.is_empty()
+	_image.texture = image
+	_image.visible = image != null
 	_fill_list(list)
 	_fit()
 
@@ -102,10 +109,16 @@ func _fit() -> void:
 	for label: Label in labels + names:
 		label.autowrap_mode = TextServer.AUTOWRAP_OFF
 		label.custom_minimum_size.x = 0.0
+	_image.custom_minimum_size = Vector2.ZERO
 	# Gemessen wird an der Tafel, der Innenabstand aus `PanelContainer/styles/panel` steckt
 	# also schon drin. Mehrzeilige Hinweise messen sich über ihre längste Zeile.
 	var outer := clampf(get_combined_minimum_size().x, MIN_WIDTH, MAX_WIDTH)
+	if _image.visible:
+		outer = MAX_WIDTH
 	var inner := outer - get_theme_stylebox("panel").get_minimum_size().x
+	if _image.visible:
+		var picture := _image.texture.get_size()
+		_image.custom_minimum_size = Vector2(inner, inner * picture.y / maxf(picture.x, 1.0))
 	# 2. Umbruch wieder an und die Breite in die Labels DRÜCKEN, bevor jemand nach der
 	#    Höhe fragt. `size.x` löst den Umbruch aus, `custom_minimum_size.x` hält ihn, wenn
 	#    der Container gleich neu sortiert — beides, nicht eins von beidem.

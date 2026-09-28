@@ -75,11 +75,6 @@ autowrap_mode = 3
 
 [node name="NavRow" type="HBoxContainer" parent="Margin/Root"]
 
-[node name="MapButton" type="Button" parent="Margin/Root/NavRow"]
-unique_name_in_owner = true
-size_flags_horizontal = 3
-text = "🗺 Landkarte"
-
 [node name="SkillButton" type="Button" parent="Margin/Root/NavRow"]
 unique_name_in_owner = true
 size_flags_horizontal = 3
@@ -97,6 +92,13 @@ text = "⚙ Einstellungen"
 [node name="ContentButton" type="Button" parent="Margin/Root"]
 unique_name_in_owner = true
 text = "📚 Inhalte"
+
+[node name="ExpertButton" type="Button" parent="Margin/Root"]
+unique_name_in_owner = true
+size_flags_horizontal = 4
+theme_type_variation = &"Hint"
+text = "Expertenmodus: Runde frei zusammenstellen"
+flat = true
 
 [node name="UpdateButton" type="Button" parent="Margin/Root"]
 unique_name_in_owner = true

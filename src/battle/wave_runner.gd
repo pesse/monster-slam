@@ -4,7 +4,6 @@ extends Node3D
 ## Nutzt ausschließlich bestehende Autoloads + AnswerEvaluator — rein additiv.
 
 const MONSTER_SCENE := preload("res://scenes/entities/monster.tscn")
-const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 const GOAL_Z := 6.5           # Festungsfront (Monster-Ziel)
 const SPAWN_Z := -24.0        # Spawn am hinteren Ende der Bahn (längerer Anmarsch)
 const LANE_HALF_WIDTH := 7.0
@@ -64,6 +63,9 @@ var _cutscene: bool = false   # läuft gerade die Ausbau-Cutscene? (unterdrückt
 
 @onready var _monsters: Node3D = $Monsters
 @onready var _camera: Camera3D = $CameraPivot/Camera3D
+@onready var _scene_zoom: SceneZoom = $SceneZoom
+## Der Zoom hinaus läuft: ein zweites Escape wechselt nicht noch einmal.
+var _leaving := false
 @onready var _end_label: Label = $UI/EndLabel
 @onready var _flash: ColorRect = $UI/Flash
 @onready var _stats: PanelContainer = $UI/WaveStats
@@ -78,6 +80,10 @@ var _cutscene: bool = false   # läuft gerade die Ausbau-Cutscene? (unterdrückt
 func _ready() -> void:
 	_rng.randomize()
 	_setup_view()
+	# Der Kampf kommt aus der Ferne heran (SceneZoom, wie die Karten): das Gelände wird für
+	# den weitesten Blick gebaut, sonst sähe man beim Heranzoomen seinen Rand.
+	var view_size := _camera.size
+	_camera.size = view_size / SceneZoom.FROM
 	_setup_ground()
 	_decorate()
 	_build_fortress()
@@ -123,6 +129,22 @@ func _ready() -> void:
 	# Startschwierigkeit aus den persistenten Einstellungen des aktiven Profils.
 	_difficulty = UserSettings.default_difficulty()
 	_start_next_wave()
+	_scene_zoom.reveal(func(k: float) -> void:
+		_camera.size = view_size / lerpf(SceneZoom.FROM, 1.0, k))
+
+
+## Zurück auf die Karte (oder ins Menü), als Zoom hinaus — die Umkehrung des Wegs herein.
+## Die Karte setzt ihn fort (MapSelection.zoom_out).
+func _leave_battle() -> void:
+	if _leaving:
+		return
+	_leaving = true
+	MapSelection.zoom_out = RunRequest.is_level()
+	var view_size := _camera.size
+	_scene_zoom.cover(func(k: float) -> void:
+		_camera.size = view_size / lerpf(1.0, SceneZoom.FROM, k))
+	await _scene_zoom.finished
+	get_tree().change_scene_to_file(RunRequest.return_scene())
 
 
 ## Prozedurales Low-Poly-Terrain: flaches Innenfeld (Spielfläche/Props/Festung),
@@ -419,11 +441,10 @@ func _build_fortress() -> void:
 
 
 ## Die Festungsstufe für den gewählten Bereich: die Units kommen aus Scope und Themen des
-## Session-Setups (dieselben Achsen wie WaveGenerator.pool_from_settings), gewertet wird
-## jede Unit als Ganzes über den ganzen Katalog (siehe FortressTier.run_tier).
+## Laufs (RunRequest, dieselben Achsen wie der Aufgaben-Pool), gewertet wird jede Unit als
+## Ganzes über den ganzen Katalog (siehe FortressTier.run_tier).
 func _current_fortress_tier() -> int:
-	var scoped := ContentRegistry.lexemes_scoped(
-			UserSettings.selected_scope(), UserSettings.selected_tags())
+	var scoped := ContentRegistry.lexemes_scoped(RunRequest.scope(), RunRequest.tags())
 	var units := FortressTier.unit_tiers(
 			ContentRegistry.lexemes.values(), PlayerProgress.mastered_lexemes())
 	return FortressTier.run_tier(scoped, units)
@@ -651,7 +672,7 @@ func _abort_battle() -> void:
 	_report_run_ended()
 	_wave_gen += 1   # bindet laufende Spawn-Coroutinen ab (siehe _run_spawn_batch)
 	_slow_motion.stop()
-	get_tree().change_scene_to_file(MENU_SCENE)
+	_leave_battle()
 
 
 ## Die Pause gehört zum Kampf: ein Szenenwechsel mitten in einer Feier darf sie nicht
@@ -763,7 +784,7 @@ func _generate_wave(difficulty: int, wave_number: int) -> Array:
 		# Aufgabentypen, Wortarten, Scope und Tags kommen aus der Profil-Auswahl
 		# (Session-Setup); leere Auswahl heißt dort "alle". Dieselbe Funktion fragen die
 		# Menüs für ihre Verfügbarkeitsprüfung — Pool und Sperre dürfen nicht auseinanderlaufen.
-		"task_pool": WaveGenerator.pool_from_settings(difficulty),
+		"task_pool": RunRequest.task_pool(difficulty),
 	}]
 
 
@@ -1202,7 +1223,7 @@ func _on_next_wave_requested(delta: int) -> void:
 func _on_back_to_menu() -> void:
 	PlayerProgress.save_progress()
 	_report_run_ended()
-	get_tree().change_scene_to_file(MENU_SCENE)
+	_leave_battle()
 
 
 ## Meldet das Ende des Laufs mit dem, was nur hier bekannt ist. Beide Ausgänge gehen

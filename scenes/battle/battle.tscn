@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://src/battle/wave_runner.gd" id="1_battle"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="2_hud"]
@@ -12,6 +12,7 @@
 [ext_resource type="Script" path="res://src/battle/slow_mo_sfx.gd" id="10_slowmosfx"]
 [ext_resource type="PackedScene" path="res://scenes/ui/confirm_dialog.tscn" id="11_confirm"]
 [ext_resource type="PackedScene" path="res://scenes/ui/mastery_celebration.tscn" id="12_celebration"]
+[ext_resource type="PackedScene" path="res://scenes/ui/scene_zoom.tscn" id="20_zoom"]
 
 [sub_resource type="Environment" id="Env_1"]
 background_mode = 1
@@ -116,3 +117,5 @@ vertical_alignment = 1
 visible = false
 
 [node name="FastResolveConfirm" parent="UI" instance=ExtResource("11_confirm")]
+
+[node name="SceneZoom" parent="." instance=ExtResource("20_zoom")]

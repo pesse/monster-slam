@@ -10,8 +10,9 @@ const SETTINGS_SCENE := "res://scenes/ui/settings_menu.tscn"
 const STATS_SCENE := "res://scenes/ui/stats_screen.tscn"
 const SKILL_SCENE := "res://scenes/ui/skill_tree.tscn"
 const CONTENT_SCENE := "res://scenes/ui/content_manager.tscn"
-const MAP_SCENE := "res://scenes/ui/unit_map.tscn"
-## Vorerst ein eigener Menüpunkt und nicht Teil des Laufs (ADR 0005, Entscheidung 6).
+## „▶ Spielen" führt über die Karte (ADR 0006); das freie Zusammenstellen der Runde ist der
+## unauffällige Expertenmodus darunter.
+const BOOKS_SCENE := "res://scenes/ui/book_select.tscn"
 
 @onready var _gold_label: Label = %GoldLabel
 @onready var _level_label: Label = %LevelLabel
@@ -24,8 +25,9 @@ const MAP_SCENE := "res://scenes/ui/unit_map.tscn"
 
 
 func _ready() -> void:
-	_play_button.pressed.connect(func(): get_tree().change_scene_to_file(SESSION_SETUP_SCENE))
-	(%MapButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(MAP_SCENE))
+	_play_button.pressed.connect(func(): get_tree().change_scene_to_file(BOOKS_SCENE))
+	(%ExpertButton as Button).pressed.connect(
+			func(): get_tree().change_scene_to_file(SESSION_SETUP_SCENE))
 	(%SkillButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(SKILL_SCENE))
 	(%StatsButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(STATS_SCENE))
 	(%SettingsButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(SETTINGS_SCENE))

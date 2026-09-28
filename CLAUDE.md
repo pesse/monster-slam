@@ -94,6 +94,17 @@ urheberrechtlich geschütztem Lehrbuchmaterial und liegen im privaten Submodule
 - Der HP-Bonus geht in dasselbe `max_health` wie `SkillBook.bonuses()`; ein Anstieg mitten im
   Lauf über `GameState.grow_fortress`. Das Debug-Panel baut nur das Bild um.
 
+**Karte und Laufanfrage** (ADR 0006, `docs/ARCHITECTURE.md` „Karte und Laufanfrage"):
+- Kampf und Boss lesen Scope, Tags und Aufgabenpool über `RunRequest`, **nie** direkt aus
+  `UserSettings` — sonst spielt ein Level mit alten Expertenmodus-Filtern.
+- Kein gespeicherter Level-Abschluss und keine Sperre: die Stufe eines Levels kommt aus
+  `FortressTier.part_tiers`/`unit_tiers`. Gespeichert werden nur Boss-Siege (`BossRecord`).
+- Kartenbilder und Punkte liegen unter `assets/maps/<book>/` in der EXE (kein Pack);
+  gezeichnet wird nur in `MapCanvas`, Punkte setzt `scenes/dev/map_lab.tscn`. Bilder ohne
+  Schrift und ohne Vokabeln; Low-Poly-Hex-Brett wie die Kampfmodelle, je Buch eine
+  Prompt-Datei mit eigenem Thema (`docs/prompts/map_images/`).
+- Es gibt keinen Grundwortschatz mehr: jedes Lexem trägt `book` und `unit`.
+
 **Satzbewertung und Boss** (ADR 0004, `docs/ARCHITECTURE.md` „Sätze bewerten"):
 - Ein Treffer in `accepted` schlägt jede Stolperstelle; ohne Schlüsseltreffer gibt die
   Prüfkarte **kein** Urteil, und die Nähe (`overlap`) ist nie eine Güte.

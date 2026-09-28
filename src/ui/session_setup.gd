@@ -65,6 +65,8 @@ var _generator := WaveGenerator.new()
 
 
 func _ready() -> void:
+	# Der Expertenmodus spielt die gespeicherte Auswahl, nicht ein Level der Karte.
+	RunRequest.start_expert()
 	_start_button.pressed.connect(func(): get_tree().change_scene_to_file(BATTLE_SCENE))
 	_boss_start_button.pressed.connect(func(): get_tree().change_scene_to_file(BOSS_SCENE))
 	(%BackButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(MENU_SCENE))

@@ -106,6 +106,12 @@ halten die Form aus dem Prompt heraus (ADR 0004, Nachtrag 2026-09-17).
 
 ### 6. Der Bosskampf ist vorerst ein eigener Menüpunkt
 
+> **Nachtrag 2026-09-25 (ADR 0006):** Der Boss steht jetzt als letztes Level am Ende jeder
+> Unit auf der Gebietskarte und bekommt die Sätze dieser Unit. Er bleibt freiwillig — kein
+> Level ist gesperrt, auch nicht durch den Boss. Siege werden gezählt (`BossRecord`) und
+> machen ihn golden; Gold, Erfahrung und Lernstand verbucht er weiterhin nicht. Der
+> Menüpunkt ist entfallen; im Expertenmodus gibt es ihn weiter über der freien Auswahl.
+
 „👹 Bosskampf" im Startmenü, neben „Spielen". Nicht nach N Wellen und nicht am Ende einer
 Unit: solange die Bewertung im Spiel neu ist, soll ein Bosskampf etwas sein, das man
 bewusst anfängt, und keine Hürde, die zwischen einem Kind und seiner nächsten Welle steht.
@@ -147,7 +153,8 @@ Antwort nach zehn Sekunden wegzuwerfen.
 - **Textportionen** (Entscheidung 4): Satzfeld, Aufruf B-abdeckung, „Satz n fehlt" aus dem
   leeren Zitat, Zitat gleich Muster ohne Modell.
 - **Belohnung und Lernstand**: was ein Sieg einbringt, als Projektion von `t - c`.
-- **Der Boss im Lauf**: nach Wellen oder am Ende einer Unit.
+- **Der Boss im Lauf**: nach Wellen. (~~Am Ende einer Unit~~ seit ADR 0006 als letztes
+  Level der Gebietskarte.)
 - **Windows-Build mit Gemma**: gemessen ist `b11002` unter Linux. Dass der Windows-Build
   dieselbe GGUF lädt, ist plausibel und ungeprüft — ebenso SmartScreen (ADR 0004).
 - ~~**Das Manifest im Release-Kanal**~~: seit 2026-09-25 (App 0.10.0) liegt
