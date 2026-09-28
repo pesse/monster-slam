@@ -33,8 +33,10 @@ func _ready() -> void:
 	_canvas.path_over_image = false
 	_canvas.show_captions = false
 	_canvas.cover = true
-	# Aus dem Kampf zurück: dort steht, welche Unit gespielt wurde.
-	if RunRequest.is_level():
+	# Aus dem Kampf zurück: dort steht, welche Unit gespielt wurde. Nur dann — das Level
+	# bleibt nach dem Kampf in RunRequest stehen, und der Zoom aus der Buchkarte hat seine
+	# Unit schon in MapSelection gesetzt.
+	if MapSelection.zoom_out and RunRequest.is_level():
 		MapSelection.book = str(RunRequest.level().get("book", MapSelection.book))
 		MapSelection.unit = int(RunRequest.level().get("unit", MapSelection.unit))
 	_show_image()

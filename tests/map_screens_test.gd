@@ -495,6 +495,29 @@ func test_the_area_map_draws_small_bare_nodes_without_its_own_path() -> void:
 	remove_child(book)
 
 
+## Das Level des letzten Kampfes bleibt in RunRequest stehen. Der Zoom aus der Buchkarte
+## zeigt trotzdem die angeklickte Unit, nicht die zuletzt gespielte — nur der Rückweg aus
+## dem Kampf nimmt sie aus RunRequest.
+func test_the_area_map_shows_the_clicked_unit_not_the_last_played() -> void:
+	RunRequest.start_level({"book": "zz-alt", "unit": 2, "key": "t1"})
+	MapSelection.book = "zz-neu"
+	MapSelection.unit = 1
+	MapSelection.zoom_in = true
+	var area: Control = auto_free(AREA_SCENE.instantiate())
+	add_child(area)
+	assert_str(MapSelection.book).is_equal("zz-neu")
+	assert_int(MapSelection.unit).is_equal(1)
+	remove_child(area)
+	MapSelection.zoom_in = false
+	MapSelection.zoom_out = true
+	var back: Control = auto_free(AREA_SCENE.instantiate())
+	add_child(back)
+	assert_str(MapSelection.book).is_equal("zz-alt")
+	assert_int(MapSelection.unit).is_equal(2)
+	remove_child(back)
+	MapSelection.zoom_out = false
+
+
 ## Hat eine Gebietskarte ein Bild, sitzt jedes ihrer Level auf einem gesetzten Punkt —
 ## sonst legte die Karte alle Orte selbst aus, quer über das Bild.
 func test_every_area_image_has_a_point_for_every_level(do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:
