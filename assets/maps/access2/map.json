@@ -1128,5 +1128,13 @@
 				}
 			]
 		}
+	},
+	"themes": {
+		"1": "meadow",
+		"2": "meadow",
+		"3": "forest",
+		"4": "mountain",
+		"5": "alpine",
+		"6": "alpine"
 	}
 }

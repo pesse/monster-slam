@@ -26,6 +26,8 @@
 #   tools/godot.sh --quit-after 60
 #   tools/godot.sh -s res://addons/gdUnit4/bin/GdUnitCmdTool.gd --ignoreHeadlessMode -a res://tests
 #
+#   GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/battle_theme_lab.tscn -- --shoot=<dir>
+#
 # --headless und --path setzt das Skript selbst (inklusive der Windows-Schreibweise des
 # Pfades, die Godot unter WSL braucht). Godot-Pfad per GODOT=... überschreibbar.
 set -uo pipefail
@@ -72,7 +74,11 @@ before_main="$(changed_in .)"
 before_sub=""
 [[ -d data/language/.git || -f data/language/.git ]] && before_sub="$(changed_in data/language)"
 
-"$GODOT" --headless --path "$WIN_PATH" "$@" 2>&1 | tr -d '\r'
+# GODOT_WINDOW=1 lässt --headless weg: nur für Werkbänke, die ein Bild rendern und
+# speichern (headless gibt es keinen Renderer). Die Nacharbeit unten läuft trotzdem.
+HEADLESS=(--headless)
+[[ "${GODOT_WINDOW:-}" == "1" ]] && HEADLESS=()
+"$GODOT" "${HEADLESS[@]}" --path "$WIN_PATH" "$@" 2>&1 | tr -d '\r'
 rc=${PIPESTATUS[0]}
 
 echo ">> Nacharbeit: Einrückungsschäden des Editors zurücknehmen"

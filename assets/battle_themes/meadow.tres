@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="BattleTheme" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/battle/battle_theme.gd" id="1_theme"]
+
+[resource]
+script = ExtResource("1_theme")
+ground_texture = "grass"
+ground_texture_strength = 0.8
+trees = Array[String](["props/tree.glb", "props/tree.glb", "forge/blossom_tree.glb"])

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="BattleTheme" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/battle/battle_theme.gd" id="1_theme"]
+
+[resource]
+script = ExtResource("1_theme")
+ground_texture = "grass"
+ground_texture_strength = 0.8
+ground_low = Color(0.3, 0.42, 0.2, 1)
+ground_high = Color(0.48, 0.58, 0.32, 1)
+hill = Color(0.62, 0.62, 0.65, 1)
+peak = Color(1.0, 1.0, 1.0, 1)
+peak_height = 3.0
+background = Color(0.12, 0.14, 0.2, 1)
+ambient = Color(0.58, 0.6, 0.7, 1)
+sun_energy = 1.1
+trees = Array[String](["forge/pine.glb", "forge/pine_snow.glb"])
+rocks = Array[String](["forge/boulder_grey.glb", "forge/boulder_snow.glb"])

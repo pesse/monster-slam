@@ -788,5 +788,11 @@
 				}
 			]
 		}
+	},
+	"themes": {
+		"1": "savanna",
+		"2": "desert",
+		"3": "canyon",
+		"4": "jungle"
 	}
 }

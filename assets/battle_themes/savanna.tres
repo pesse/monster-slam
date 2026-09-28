@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="BattleTheme" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/battle/battle_theme.gd" id="1_theme"]
+
+[resource]
+script = ExtResource("1_theme")
+ground_texture = "grass"
+ground_texture_strength = 0.8
+ground_low = Color(0.86, 0.62, 0.22, 1)
+ground_high = Color(0.96, 0.76, 0.32, 1)
+hill = Color(0.72, 0.62, 0.5, 1)
+background = Color(0.16, 0.1, 0.08, 1)
+ambient = Color(0.7, 0.62, 0.54, 1)
+ambient_energy = 1.1
+sun_color = Color(1.0, 0.93, 0.8, 1)
+sun_energy = 1.25
+trees = Array[String](["forge/acacia.glb", "forge/acacia.glb", "forge/dead_tree.glb"])
+rocks = Array[String](["forge/sandstone_rock.glb"])
+grass = Array[String](["forge/dry_grass.glb"])

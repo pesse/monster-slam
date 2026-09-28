@@ -1,0 +1,27 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/dev/battle_theme_lab.gd" id="1_lab"]
+
+[node name="BattleThemeLab" type="Node3D"]
+script = ExtResource("1_lab")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+shadow_enabled = true
+
+[node name="CameraPivot" type="Node3D" parent="."]
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot"]
+current = true
+
+[node name="Ground" type="MeshInstance3D" parent="."]
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Name" type="Label" parent="UI"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 416.0
+offset_bottom = 56.0
+theme_type_variation = &"Display"
