@@ -4,7 +4,7 @@ extends GdUnitTestSuite
 ## `difficulty_max` (die gewählte Wellenschwierigkeit) filtert die task_definitions über
 ## ihre Grundschwierigkeit. `def.translate.en_de` hat difficulty 2 und fiel damit auf
 ## Stufe 1 komplett heraus — und weil ein WORT erst als gemeistert gilt, wenn BEIDE
-## Übersetzungsrichtungen sitzen (PlayerProgress.LEXEME_MASTERY_DIRECTIONS), stand der
+## Übersetzungsrichtungen sitzen (Lexeme.mastery_directions), stand der
 ## Fortschrittsbalken jeder Unit dort dauerhaft auf „0 von N". Die Statistik rechnete
 ## richtig; die Richtung kam nie an.
 ##
@@ -67,7 +67,7 @@ func test_both_directions_are_in_the_pool_on_every_difficulty(
 			var definition: Dictionary = candidate["definition"]
 			if str(definition.get("task_type", "")) == "translate":
 				directions[str(definition.get("direction", ""))] = true
-		for direction in PlayerProgress.LEXEME_MASTERY_DIRECTIONS:
+		for direction in Lexeme.mastery_directions("en"):
 			assert_bool(directions.has(direction)) \
 				.override_failure_message("Richtung %s fehlt auf Stufe %d" % [direction, level]) \
 				.is_true()

@@ -79,6 +79,6 @@ signal item_reviewed(item_id: String, correct: bool, response_time_ms: int)
 ## Nie ein zweites Mal für dieselbe Aufgabe — `mastered_at` wird nicht zurückgenommen.
 signal task_mastered(task_id: String)
 ## Mit dieser Antwort sitzt ein Wort zum ersten Mal in allen Richtungen
-## (PlayerProgress.LEXEME_MASTERY_DIRECTIONS). Kommt direkt nach dem task_mastered der
+## (Lexeme.mastery_directions). Kommt direkt nach dem task_mastered der
 ## Aufgabe, die es abgeschlossen hat.
 signal lexeme_mastered(lexeme_id: String)

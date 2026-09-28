@@ -158,12 +158,12 @@ func _glitter_later() -> void:
 	_emit(_glitter)
 
 
-## „englisch ↔ deutsch", oder leer, wenn das Lexem nicht geladen ist.
+## „fremdsprachig ↔ deutsch", oder leer, wenn das Lexem nicht geladen ist.
 func _word_label(lexeme_id: String) -> String:
 	var lex := ContentRegistry.get_entry("lexemes", lexeme_id)
 	if lex.is_empty():
 		return ""
-	return "%s ↔ %s" % [lex.get("lemma_en", ""), lex.get("lemma_de", "")]
+	return "%s ↔ %s" % [Lexeme.foreign(lex), lex.get("lemma_de", "")]
 
 
 func _pop_in(duration_ms: int) -> void:

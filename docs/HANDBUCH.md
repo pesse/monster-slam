@@ -1,8 +1,8 @@
 # Monster Slam – Handbuch
 
-Monster Slam ist ein Lernspiel für Englisch-Vokabeln. Monster marschieren auf deine
-Festung zu, und jedes trägt eine Aufgabe über dem Kopf. Tippst du die richtige Antwort,
-ist das Monster besiegt. Kommt es bis zur Festung, nimmt sie Schaden.
+Monster Slam ist ein Lernspiel für Vokabeln — Englisch, und neu auch Latein. Monster
+marschieren auf deine Festung zu, und jedes trägt eine Aufgabe über dem Kopf. Tippst du
+die richtige Antwort, ist das Monster besiegt. Kommt es bis zur Festung, nimmt sie Schaden.
 
 Dieses Handbuch ist für Spielerinnen und Spieler gedacht und für Eltern und Lehrkräfte,
 die wissen wollen, was im Spiel passiert und warum es sich so verhält.
@@ -135,8 +135,12 @@ langsam tippen.
 ### Was du siehst
 
 - **Monster** laufen von hinten auf deine Festung zu. Über jedem steht eine Aufgabe, zum
-  Beispiel ein deutsches Wort, das du auf Englisch schreiben sollst, oder ein englisches,
-  das du auf Deutsch schreiben sollst.
+  Beispiel ein deutsches Wort, das du auf Englisch (oder Latein) schreiben sollst, oder ein
+  englisches (lateinisches), das du auf Deutsch schreiben sollst.
+- **Latein** fragt außerdem die Formen ab, die du mit der Vokabel lernst: bei Nomen
+  Genitiv und Genus („m“, „f“, „n“ — oder „maskulin“ …), bei Verben das Perfekt. Die
+  Längenstriche (ā, ē …) musst du nie tippen; nach einer Übersetzung zeigt die Auflösung
+  die Lexikonform mit, etwa den Genitiv und das Genus.
 - **Der farbige Rand** eines Monsters zeigt die Wortart. Die Legende am unteren Bildrand
   sagt, welche Farbe was bedeutet (zum Beispiel Nomen, Verb, Adjektiv). Das hilft, wenn
   ein Wort mehrere Bedeutungen hat.
@@ -427,9 +431,12 @@ aktuelle Stand steigen um denselben Betrag.
 „▶ Spielen“ führt über drei Stufen in den Kampf:
 
 1. **Buchauswahl.** Die Bücher stehen mit dem Rücken nach vorn in einem Regal; je mehr
-   Units, desto dicker das Buch. Zeigt die Maus auf ein Buch (oder mit ←/→), wird es
+   Units, desto dicker das Buch. Jede Sprache hat ihr eigenes Fach: oben Englisch, darunter
+   Latein (mit ↑/↓ wechselst du das Fach). Zeigt die Maus auf ein Buch (oder mit ←/→), wird es
    herausgezogen und zeigt sein Cover: oben die Landkarte des Buchs im Goldrahmen,
-   darunter der Stand – wie viele Wörter gemeistert und wie viele Bosse besiegt sind.
+   darunter die Sprache (Englisch oder Latein) und der Stand – wie viele Wörter gemeistert
+   und wie viele Bosse besiegt sind. Latein hat noch keinen Bosskampf; das Cover sagt
+   „Noch kein Bosskampf“, und der Boss auf der Gebietskarte bleibt gesperrt.
    Die Festungsstufe steht nicht auf dem Cover, sie gilt je Unit (siehe Buchkarte). Ein
    Klick (oder Enter) schlägt das Buch auf; auf der Doppelseite liegt die Landkarte, und
    in sie geht es hinein.
@@ -544,8 +551,8 @@ einer Unit steht ihre Festungsstufe („🏰 Stufe 2“, Kapitel 10). Ein Klick 
 zeigt ihre Wörter.
 
 **Ein Wort gilt erst als gemeistert, wenn es in BEIDE Richtungen sitzt**: Deutsch→Englisch
-und Englisch→Deutsch. Warum: wer ein Wort nur erkennt, aber nicht selbst hinschreiben
-kann (oder umgekehrt), kann es noch nicht.
+und Englisch→Deutsch (bei Latein: Deutsch→Latein und Latein→Deutsch). Warum: wer ein
+Wort nur erkennt, aber nicht selbst hinschreiben kann (oder umgekehrt), kann es noch nicht.
 
 Die Zeichen:
 

@@ -104,7 +104,8 @@ func _ready() -> void:
 	set_process(false)
 
 
-## Titel, Kartenbild (oder null), Platz im Regal und Stand aus BookSelect.stats.
+## Titel, Kartenbild (oder null), Platz im Regal und Stand aus BookSelect.stats, dazu
+## `language` (Anzeigename der Sprache) und `bosses` (Units mit Boss; ohne Feld alle).
 func fill(title: String, texture: Texture2D, index: int, stats: Dictionary) -> void:
 	_texture = texture
 	thickness = thickness_for(int(stats.get("units", 0)))
@@ -114,6 +115,7 @@ func fill(title: String, texture: Texture2D, index: int, stats: Dictionary) -> v
 	(%Map as TextureRect).texture = texture
 	_left_map.albedo_texture = texture
 	_right_map.albedo_texture = texture
+	(%Language as Label).text = str(stats.get("language", ""))
 	(%Title as Label).text = title
 	(%SpineTitle as Label3D).text = title
 	var done := int(stats.get("done", 0))
@@ -122,7 +124,9 @@ func fill(title: String, texture: Texture2D, index: int, stats: Dictionary) -> v
 	var bar := %Bar as ProgressBar
 	bar.max_value = maxi(total, 1)
 	bar.value = done
-	(%Crowns as Label).text = "👑 %d von %d Bossen besiegt" % [int(stats.get("crowns", 0)), int(stats.get("units", 0))]
+	var bosses := int(stats.get("bosses", stats.get("units", 0)))
+	(%Crowns as Label).text = "Noch kein Bosskampf" if bosses == 0 \
+			else "👑 %d von %d Bossen besiegt" % [int(stats.get("crowns", 0)), bosses]
 	_shape()
 
 

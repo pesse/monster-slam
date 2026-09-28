@@ -120,6 +120,11 @@ def human_time(report: dict) -> str:
     return report_time(report).strftime("%d.%m.%Y %H:%M UTC")
 
 
+def foreign_lemma(entry: dict) -> str:
+    """Die fremdsprachige Seite eines Lexems: `lemma_<language>`, ohne Feld englisch."""
+    return str(entry.get("lemma_%s" % (entry.get("language") or "en"), ""))
+
+
 def title_for(target_type: str, target_id: str, entry: dict | None) -> str:
     """Titel eines Issues. Die Id steht immer drin — daran findet man es wieder."""
     if entry is None:
@@ -127,7 +132,7 @@ def title_for(target_type: str, target_id: str, entry: dict | None) -> str:
     if target_type == "lexeme":
         naming = " → ".join(x for x in [
             str(entry.get("lemma_de", "")).strip(),
-            str(entry.get("lemma_en", "")).strip()] if x)
+            foreign_lemma(entry).strip()] if x)
     else:
         naming = str(entry.get("source_text", "")).strip()
     naming = naming if len(naming) <= 80 else naming[:77] + "…"
@@ -425,6 +430,9 @@ def self_test() -> int:
     assert "Id im Checkout nicht gefunden" in title_for("lexeme", "lex.weg", None)
     assert title_for("lexeme", "lex.x", {"lemma_de": "Beispiel", "lemma_en": "example"}) \
         == "Meldung: lex.x — „Beispiel → example“"
+    assert title_for("lexeme", "lex.y", {"lemma_de": "Beispiel", "language": "la",
+                                          "lemma_la": "exemplum"}) \
+        == "Meldung: lex.y — „Beispiel → exemplum“"
     assert title_for("sentence", "sen.x", {"source_text": "Ein Satz."}) \
         == "Meldung: sen.x — „Ein Satz.“"
     # Sehr langer Text wird gekürzt, die Id bleibt vollständig.

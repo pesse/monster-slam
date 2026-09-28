@@ -263,7 +263,8 @@ stehen so im Code, in den ADRs und in den Commit-Texten:
 
 Der Fortschrittsbalken je Unit und Thema (Statistik, Reiter „Fortschritt") zählt WÖRTER:
 `PlayerProgress.mastered_lexemes` nimmt ein Lexem erst auf, wenn `translate:de_to_en:<id>`
-UND `translate:en_to_de:<id>` über der Schwelle liegen (`LEXEME_MASTERY_DIRECTIONS`). Der
+UND `translate:en_to_de:<id>` über der Schwelle liegen — allgemein beide Richtungen seiner
+Sprache (`Lexeme.mastery_directions`: `de_to_<sprache>`/`<sprache>_to_de`, ADR 0007). Der
 Reiter „Aufgaben" daneben zählt learnable_ids — zwei Maße, zwei Reiter, mit Absicht.
 
 Die Kopplung macht den Balken **empfindlich gegen alles, was EINE Richtung stört**: fällt

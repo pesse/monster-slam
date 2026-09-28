@@ -40,6 +40,7 @@ const TASK_TYPE_LABELS := {
 	"confusables": "Verwechslungen",
 	"conjugation": "Konjugation",
 	"tense": "Zeitform",
+	"forms": "Formen",
 }
 
 ## Wie viele Auto-Vervollständigungs-Vorschläge maximal angezeigt werden.

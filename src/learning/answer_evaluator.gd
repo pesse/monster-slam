@@ -46,6 +46,12 @@ const GROUP_PATTERN := "\\(([^)]*)\\)"
 const MAX_GROUPS := 3
 const MAX_PLACEHOLDERS := 4
 
+## Längenzeichen des Lateinischen. Kein Kind tippt „ā", und das Buch fragt die Vokabel ab,
+## nicht die Quantität: auf Eingabe UND hinterlegter Antwort auf den Grundbuchstaben
+## gefaltet. Umlaute sind keine Längenzeichen und bleiben.
+const _MACRONS := {"ā": "a", "ē": "e", "ī": "i", "ō": "o", "ū": "u", "ȳ": "y",
+		"ă": "a", "ĕ": "e", "ĭ": "i", "ŏ": "o", "ŭ": "u"}
+
 static var _group_re: RegEx = RegEx.create_from_string(GROUP_PATTERN)
 static var _placeholder_re: RegEx = RegEx.create_from_string(PLACEHOLDER_PATTERN)
 
@@ -197,6 +203,8 @@ func _normalize(s: String) -> String:
 	normalized = normalized.replace("’", "'").replace("‘", "'")
 	normalized = normalized.replace("“", '"').replace("”", '"')
 	normalized = normalized.replace("–", "-").replace("—", "-")
+	for mark in _MACRONS:
+		normalized = normalized.replace(mark, _MACRONS[mark])
 	while normalized.ends_with(".") or normalized.ends_with("!") or normalized.ends_with("?"):
 		normalized = normalized.substr(0, normalized.length() - 1).strip_edges()
 	return _strip_optional_prefix(_collapse(normalized))

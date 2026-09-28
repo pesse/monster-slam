@@ -4,7 +4,7 @@ extends GdUnitTestSuite
 ## Lemmata dürfen keine " / "-getrennten Inline-Varianten enthalten (z. B.
 ## "jeder / jede / jedes"). Solche Strings werden bei der Antwort-Auswertung als EIN
 ## wörtlicher String behandelt und sind praktisch unlösbar. Mehrfachformen gehören in
-## die strukturierten Arrays lemma_de_alt / lemma_en_alt (siehe docs/TESTING.md).
+## die strukturierten Arrays lemma_de_alt / lemma_<sprache>_alt (siehe docs/TESTING.md).
 
 const LEXEME_DIR := "res://data/language/lexemes"
 
@@ -65,7 +65,7 @@ func test_lemmas_survive_the_optional_part_expansion() -> void:
 ## Der de→en-Prompt zeigt NUR das deutsche Lemma (TaskResolver._resolve_translate),
 ## akzeptiert aber ausschließlich das englische Wort SEINES Lexems. Teilen sich zwei
 ## Lexeme derselben Unit den Prompt, ist die Aufgabe geraten — und weil ein WORT erst in
-## BEIDEN Richtungen als gemeistert gilt (PlayerProgress.LEXEME_MASTERY_DIRECTIONS),
+## BEIDEN Richtungen als gemeistert gilt (Lexeme.mastery_directions),
 ## bleibt der Fortschrittsbalken der Unit stehen, obwohl der Spieler alles kann. Die
 ## Gegenrichtung hat das Problem nicht: der englische Prompt nennt ein Wort.
 ##
@@ -127,7 +127,7 @@ func _prompt_collisions() -> Array[String]:
 					continue
 				seen[key] = true
 				violations.append('%s: "%s" -> %s / %s' % [_unit_of(a),
-						a.get("lemma_de", ""), a.get("lemma_en", ""), b.get("lemma_en", "")])
+						a.get("lemma_de", ""), Lexeme.foreign(a), Lexeme.foreign(b)])
 	violations.sort()
 	return violations
 
@@ -145,19 +145,19 @@ func _complete_variants(evaluator: AnswerEvaluator, lemma: String) -> Array[Stri
 
 
 ## Gibt es eine Antwort, die BEIDE Lexeme vollständig gelten lassen? Gefragt wird über die
-## akzeptierten Antworten (lemma_en + lemma_en_alt), also über das, was der TaskResolver
-## der de→en-Aufgabe mitgibt — nicht nur über das primäre Lemma.
+## akzeptierten Antworten (Lexeme.foreign + foreign_alt), also über das, was der TaskResolver
+## der de→Fremdsprache-Aufgabe mitgibt — nicht nur über das primäre Lemma.
 func _answers_overlap(evaluator: AnswerEvaluator, a: Dictionary, b: Dictionary) -> bool:
-	var answers_b := _english_answers(b)
-	for answer in _english_answers(a):
+	var answers_b := _foreign_answers(b)
+	for answer in _foreign_answers(a):
 		if bool(evaluator.evaluate(answers_b, answer)["complete"]):
 			return true
 	return false
 
 
-func _english_answers(entry: Dictionary) -> Array:
-	var out: Array = [str(entry.get("lemma_en", ""))]
-	out.append_array(entry.get("lemma_en_alt", []))
+func _foreign_answers(entry: Dictionary) -> Array:
+	var out: Array = [Lexeme.foreign(entry)]
+	out.append_array(Lexeme.foreign_alt(entry))
 	return out
 
 
@@ -180,10 +180,10 @@ func _book_lexemes() -> Array[Dictionary]:
 
 func _all_lemmas(entry: Dictionary) -> Array[String]:
 	var result: Array[String] = []
-	for field in ["lemma_de", "lemma_en"]:
+	for field in _lemma_fields(entry):
 		if entry.has(field):
 			result.append(str(entry[field]))
-	for field in ["lemma_de_alt", "lemma_en_alt"]:
+	for field in _alt_fields(entry):
 		for value in entry.get(field, []):
 			result.append(str(value))
 	return result
@@ -191,10 +191,10 @@ func _all_lemmas(entry: Dictionary) -> Array[String]:
 
 func _collect_violations(entry: Dictionary, violations: Array[String]) -> void:
 	var id := str(entry.get("id", "?"))
-	for field in ["lemma_de", "lemma_en"]:
+	for field in _lemma_fields(entry):
 		if entry.has(field) and VARIANT_SEP in str(entry[field]):
 			violations.append('%s: %s = "%s"' % [id, field, entry[field]])
-	for field in ["lemma_de_alt", "lemma_en_alt"]:
+	for field in _alt_fields(entry):
 		for value in entry.get(field, []):
 			if VARIANT_SEP in str(value):
 				violations.append('%s: %s enthält "%s"' % [id, field, value])
@@ -216,3 +216,12 @@ func _json_files(dir_path: String) -> Array[String]:
 		file_name = dir.get_next()
 	dir.list_dir_end()
 	return result
+
+
+## Die Lemma-Felder eines Lexems: Deutsch und seine Fremdsprache (Lexeme.language).
+func _lemma_fields(entry: Dictionary) -> Array:
+	return ["lemma_de", "lemma_%s" % Lexeme.language(entry)]
+
+
+func _alt_fields(entry: Dictionary) -> Array:
+	return ["lemma_de_alt", "lemma_%s_alt" % Lexeme.language(entry)]
