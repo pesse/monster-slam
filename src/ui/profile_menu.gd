@@ -102,7 +102,9 @@ func _refresh_level() -> void:
 	var text := "⭐ Level %d  ·  %d/%d XP" % [
 		int(progress["level"]), int(progress["xp_in_level"]), int(progress["xp_for_level_up"])]
 	var points := SkillBook.available()
-	if points > 0:
+	if SkillBook.unlimited_points:
+		text += "  ·  ∞ Skillpunkte (Debug)"
+	elif points > 0:
 		text += "  ·  %d Skillpunkt%s offen" % [points, "" if points == 1 else "e"]
 	_level_label.text = text
 

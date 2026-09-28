@@ -28,19 +28,24 @@ var _hold_until_ms: int = 0
 var _last_tick_ms: int = 0
 var _intensity: float = 0.0
 var _fast_forward: bool = false
+## Ich-Sicht: hält die Zeitlupe, solange die Eingabe offen ist (EventBus.typing_started),
+## ohne Haltedauer — bis stop(). Der Zeitwandler-Ast „Nachwirkung" hat dort nichts zu
+## verlängern; die Tiefe (`factor`) gilt weiter.
+var _held_open: bool = false
 
 
 func _ready() -> void:
 	_last_tick_ms = Time.get_ticks_msec()
 	EventBus.typing_activity.connect(_on_typing_activity)
 	EventBus.typing_stopped.connect(stop)
+	EventBus.typing_started.connect(hold_open)
 
 
 func _process(_delta: float) -> void:
 	var now := Time.get_ticks_msec()
 	var real_delta := float(now - _last_tick_ms) / 1000.0
 	_last_tick_ms = now
-	var target := factor if now < _hold_until_ms else 1.0
+	var target := factor if now < _hold_until_ms or _held_open else 1.0
 	var ramp := RAMP_PER_SEC
 	if _fast_forward:
 		target = FAST_FORWARD_FACTOR
@@ -77,6 +82,7 @@ func apply_skills(bonuses: Dictionary) -> void:
 ## sähe aus wie ein Ruckler. Die Vignette bleibt aus, weil _publish_intensity auf 0..1 klemmt.
 func fast_forward() -> void:
 	_hold_until_ms = 0
+	_held_open = false
 	_fast_forward = true
 
 
@@ -90,8 +96,16 @@ func _on_typing_activity() -> void:
 	_hold_until_ms = Time.get_ticks_msec() + hold_ms
 
 
+## Zeitlupe ab sofort und ohne Ende, bis stop() — die Eingabe der Ich-Sicht ist offen.
+func hold_open() -> void:
+	if _fast_forward:
+		return
+	_held_open = true
+
+
 ## Sofortiges Ende ohne Rampe.
 func stop() -> void:
+	_held_open = false
 	_hold_until_ms = 0
 	_fast_forward = false
 	Engine.time_scale = 1.0

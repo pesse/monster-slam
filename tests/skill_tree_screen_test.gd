@@ -37,6 +37,7 @@ var _level_before: int = 1
 var _level_profile_before: String = ""
 var _gold_before: int = 0
 var _wallet_profile_before: String = ""
+var _unlimited_gold_before := false
 
 
 func before_test() -> void:
@@ -54,6 +55,9 @@ func before_test() -> void:
 	PlayerLevel.level = 1
 	Wallet.player_id = TEST_PROFILE
 	Wallet.gold = 0
+	# Im Debug-Build (auch im Testlauf) kostet sonst nichts etwas.
+	_unlimited_gold_before = Wallet.unlimited_gold
+	Wallet.unlimited_gold = false
 	_remove_files()
 	_book = auto_free(FixedBook.new())
 	_book.player_id = TEST_PROFILE
@@ -66,6 +70,7 @@ func after_test() -> void:
 	PlayerLevel.level = _level_before
 	Wallet.player_id = _wallet_profile_before
 	Wallet.gold = _gold_before
+	Wallet.unlimited_gold = _unlimited_gold_before
 
 
 func _remove_files() -> void:

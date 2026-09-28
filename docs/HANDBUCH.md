@@ -176,6 +176,32 @@ macht.
 
 Dasselbe Wort steht nie zweimal gleichzeitig auf dem Feld.
 
+### Ich-Sicht
+
+Hast du den **Späherblick** gelernt (Kapitel 11), steht auf der Gebietskarte links neben
+der Festungs-Anzeige unten rechts der Schalter **👁**. Ist er gedrückt, stehst du im
+Wellenkampf selbst auf dem Feld, statt von oben daraufzusehen. Der Bosskampf bleibt, wie
+er ist.
+
+- **Laufen:** W, A, S, D (oder die Pfeiltasten). Mit der Maus siehst du dich um.
+- **Antworten:** **Enter** öffnet das Eingabefeld, du tippst, und das zweite **Enter**
+  schickt ab und schließt es wieder. **Escape** schließt das Feld, ohne abzuschicken.
+  Solange das Feld offen ist, stehst du still, und der Mauszeiger ist da, etwa für „⏩“.
+- **Zeitlupe:** Sie beginnt, sobald du mit Enter das Feld öffnest, und hält, bis du
+  abschickst oder das Feld schließt. Wie lange du tippst, spielt dabei keine Rolle. Der
+  Zeitwandler-Ast für die Nachwirkung bringt hier deshalb nichts, der für die Tiefe schon.
+- **Getroffen wird nur, was du siehst.** Passt deine Antwort zu einem Monster, das gerade
+  nicht im Bild ist, zählt sie wie eine falsche Eingabe. Kleine Pfeile am Bildrand zeigen,
+  wo die anderen Monster stehen, in der Farbe ihrer Wortart.
+- **Sturmangriff:** Hast du im Späher-Baum den **Sturmangriff** gelernt, rast du bei
+  jedem Treffer auf das Monster zu und krachst hinein, erst dann platzt es. Gezählt ist
+  der Treffer sofort, beim Abschicken.
+- **Maus freigeben:** Auch beim Laufen ist der Mauszeiger da, solange du **Alt** gedrückt
+  hältst. Nach der Welle ist er von selbst wieder da.
+
+Sonst ist alles gleich: dieselben Monster und dasselbe Tempo.
+Der Schalter merkt sich deine Wahl, bis du das Spiel beendest.
+
 ### Zeitlupe beim Tippen
 
 Sobald du tippst, verlangsamt sich das ganze Spiel stark, und am Bildrand erscheint ein
@@ -443,17 +469,19 @@ Reihen. Spielen lässt sich trotzdem alles.
 zwischen den Läufen, nicht im Kampf. Oben steht, wie viele Punkte du offen hast („⭐ …
 Skillpunkte“ oder „⭐ 0 — jedes Level bringt einen“).
 
-### Die drei Bäume
+### Die vier Bäume
 
 Jeder Baum hat einen eigenen Anfangsknoten und verzweigt sich danach in zwei Äste. Man
 baut einen Ast aus und kann den anderen liegen lassen. Knoten der ersten und zweiten
-Stufe kosten 1 Skillpunkt, die der dritten 2.
+Stufe kosten 1 Skillpunkt, die der dritten 2. Im Späher kosten der Anfang und der
+Sturmangriff je 5.
 
 | Baum | Was er tut |
 |---|---|
 | **Genesung** | Jedes besiegte Monster heilt die Festung um mehr HP. |
 | **Bollwerk** | Die Festung bekommt Rüstung. Ein Ast vergrößert den Vorrat, der andere setzt ihn zu jeder Welle ein Stück instand. |
 | **Zeitwandler** | Die Zeitlupe beim Tippen hält länger nach (ein Ast) oder wird noch tiefer (der andere Ast). |
+| **Späher** | Der Anfang, der **Späherblick**, schaltet die Ich-Sicht frei (Kapitel 5). Beide Äste danach machen dich darin schneller, am Ende des einen wartet der **Sturmangriff**. |
 
 Alle Wirkungen zählen zusammen: zwei Knoten, die je 1 HP mehr heilen, heilen zusammen
 2 HP mehr.

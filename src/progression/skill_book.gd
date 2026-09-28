@@ -30,8 +30,15 @@ signal changed()
 var unlocked: PackedStringArray = PackedStringArray()
 var player_id: String = "default"
 
+## Debug-Build: so viele Punkte, wie man ausgeben möchte — zum Ausprobieren der Bäume, ohne
+## erst Level zu sammeln. Nur das Autoload setzt das (in `_ready`); eine Instanz im Test
+## rechnet mit den echten Punkten. Gespeichert wird weiter nur die Liste der Knoten.
+var unlimited_points := false
+const UNLIMITED_POINTS := 999
+
 
 func _ready() -> void:
+	unlimited_points = OS.is_debug_build()
 	player_id = UserSettings.active_profile()
 	load_skills()
 	# Profilwechsel mitschalten, damit Gelerntes nicht im falschen Profil landet —
@@ -49,6 +56,8 @@ func entries() -> Array:
 ## Verdiente minus ausgegebene Punkte. `PlayerLevel.skill_points()` ist der VERDIENTE
 ## Stand — der Abzug gehört hierher, weil hier steht, wofür sie ausgegeben wurden.
 func available() -> int:
+	if unlimited_points:
+		return UNLIMITED_POINTS
 	return PlayerLevel.skill_points() - SkillTree.spent(entries(), unlocked)
 
 

@@ -521,3 +521,26 @@ func test_every_real_level_is_playable(do_skip := LanguageData.missing(), skip_r
 				else:
 					assert_bool(generator.has_playable(RunRequest.task_pool(3))).override_failure_message(
 							"%s/%s %s: nichts spielbar" % [book, unit, level["key"]]).is_true()
+
+
+## Der Ich-Sicht-Schalter ist ein Symbol direkt links neben der Festungs-Anzeige, gleich hoch.
+func test_first_person_toggle_sits_left_of_the_fortress_at_its_height() -> void:
+	MapSelection.book = "zz-kein-buch"
+	MapSelection.unit = 1
+	var area: Control = auto_free(AREA_SCENE.instantiate())
+	add_child(area)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var toggle := area.get_node("%FirstPersonToggle") as Button
+	var fortress := area.get_node("%BottomRight/Fortress") as Control
+	# Der Testlauf ist ein Debug-Build: der Schalter steht immer da.
+	assert_bool(toggle.visible).is_true()
+	assert_object(toggle.get_parent()).is_same(fortress.get_parent())
+	assert_int(toggle.get_index()).is_equal(fortress.get_index() - 1)
+	var t := toggle.get_global_rect()
+	var f := fortress.get_global_rect()
+	assert_float(t.size.y).is_equal_approx(f.size.y, 0.5)
+	assert_float(t.position.y).is_equal_approx(f.position.y, 0.5)
+	assert_float(t.end.x).is_less_equal(f.position.x)
+	assert_float(f.position.x - t.end.x).is_less_equal(8.0)
+	remove_child(area)

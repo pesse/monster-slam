@@ -279,7 +279,9 @@ Eine Datei je Baum. Der erste Eintrag ist der Baum-Kopf, die übrigen sind seine
 - `cost` sind Skillpunkte; ein großer Knoten kostet mehrere.
 - `effects` ist ein Dictionary und **additiv** auf den Grundwert. Erlaubt sind nur die
   Schlüssel aus `SkillTree.EFFECT_KEYS`: `heal_per_correct`, `fortress_armor` (Vorrat),
-  `armor_regen` (Instandsetzung je Wellenstart), `max_health`, `slow_hold_ms`, `slow_factor` (negativ = tiefere Zeitlupe). Ein neuer
+  `armor_regen` (Instandsetzung je Wellenstart), `max_health`, `slow_hold_ms`, `slow_factor` (negativ = tiefere Zeitlupe),
+  `first_person` (> 0 schaltet die Ich-Sicht frei), `walk_speed` (Anteil auf das Lauftempo der Ich-Sicht) und
+  `charge` (> 0: Sturmangriff bei jedem Treffer in der Ich-Sicht). Ein neuer
   Schlüssel braucht einen Eintrag dort **und** ein `apply_skills`, das ihn liest.
 
 Die Beträge sind reine Balance und ohne Code-Änderung justierbar. Was sich nicht ändern

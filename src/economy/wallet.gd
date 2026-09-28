@@ -32,8 +32,15 @@ var total_earned: int = 0
 var chests_opened: int = 0
 var player_id: String = "default"
 
+## Debug-Build: jeder Kauf geht, und nichts wird abgezogen — zum Ausprobieren von Laden und
+## Bäumen, ohne erst Kisten zu sammeln. Nur das Autoload setzt das (in `_ready`); eine
+## Instanz im Test rechnet mit dem echten Stand. Verdient und gespeichert wird weiter
+## das echte Gold.
+var unlimited_gold := false
+
 
 func _ready() -> void:
+	unlimited_gold = OS.is_debug_build()
 	player_id = UserSettings.active_profile()
 	load_wallet()
 	# Profilwechsel mitschalten, damit Gold nicht im falschen Profil landet — dasselbe
@@ -59,6 +66,8 @@ func earn(amount: int, from_chest := false) -> void:
 ## zurück. Der Aufrufer entscheidet, was er dem Spieler dazu sagt — hier wird nur
 ## gerechnet.
 func spend(amount: int) -> bool:
+	if amount > 0 and unlimited_gold:
+		return true
 	if amount <= 0 or amount > gold:
 		return false
 	gold -= amount
@@ -69,12 +78,15 @@ func spend(amount: int) -> bool:
 
 ## True, wenn der Stand für `amount` reicht (für das Ausgrauen von Kaufknöpfen).
 func can_afford(amount: int) -> bool:
-	return gold >= amount
+	return unlimited_gold or gold >= amount
 
 
 ## Goldstand als Text mit Tausenderpunkten: „1.240 Gold". Steht hier und nicht in jedem
-## Screen, damit die Währung überall gleich aussieht.
+## Screen, damit die Währung überall gleich aussieht. Ohne Betrag der eigene Stand —
+## im Debug-Build „∞ Gold (Debug)".
 func label(amount := -1) -> String:
+	if amount < 0 and unlimited_gold:
+		return "∞ Gold (Debug)"
 	var value := amount if amount >= 0 else gold
 	var digits := str(value)
 	var out := ""

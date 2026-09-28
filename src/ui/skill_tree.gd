@@ -82,7 +82,9 @@ func _rebuild() -> void:
 
 
 func _refresh_points(points: int) -> void:
-	if points > 0:
+	if bool(book.get("unlimited_points")):
+		_points_label.text = "⭐ ∞ Skillpunkte (Debug)"
+	elif points > 0:
 		_points_label.text = "⭐ %d Skillpunkt%s" % [points, "" if points == 1 else "e"]
 	else:
 		_points_label.text = "⭐ 0 — jedes Level bringt einen"
@@ -156,6 +158,12 @@ func _on_node_selected(id: String) -> void:
 	var left := points - cost
 	_pending = {"kind": "learn", "id": id}
 	Hints.refresh()
+	if bool(book.get("unlimited_points")):
+		_confirm.ask("„%s“ lernen?" % str(node.get("name", id)),
+				"%s\n\nIm Debug-Build sind die Skillpunkte unbegrenzt."
+				% str(node.get("description", "")),
+				"Lernen · %d P." % cost)
+		return
 	_confirm.ask(
 			"„%s“ lernen?" % str(node.get("name", id)),
 			"%s\n\nDas kostet %d Skillpunkt%s, danach %s noch %d offen. Zurückholen lässt "

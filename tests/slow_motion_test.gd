@@ -57,6 +57,19 @@ func test_submit_ends_slow_motion_immediately() -> void:
 	assert_float(Engine.time_scale).is_equal(1.0)
 
 
+## Ich-Sicht: offen gehalten endet die Zeitlupe nicht nach der Haltedauer, sondern erst
+## mit dem Stopp (Abschicken oder Schließen der Eingabe).
+func test_held_open_outlasts_the_hold_until_stopped() -> void:
+	_sm.hold_ms = 100
+	EventBus.typing_started.emit()
+	await _pump(500)
+	assert_float(Engine.time_scale).is_equal_approx(_sm.factor, 0.01)
+	EventBus.typing_stopped.emit()
+	assert_float(Engine.time_scale).is_equal(1.0)
+	await _pump(150)
+	assert_float(Engine.time_scale).is_equal(1.0)
+
+
 func test_removing_the_node_restores_normal_speed() -> void:
 	EventBus.typing_activity.emit()
 	await _pump(250)
