@@ -151,6 +151,11 @@ def unit_routes(access, mapping):
                           "y": round(point[1] / image_size[1], 4)}
                          for point in NEW_UNIT_PATHS[unit]],
             }
+        mapping["areas"][str(unit)]["path"] = [
+            {"x": round(point[0] / TARGET_SIZE[0], 4),
+             "y": round(point[1] / TARGET_SIZE[1], 4)}
+            for point in route["path"]
+        ]
 
 
 def book_route(access, mapping):

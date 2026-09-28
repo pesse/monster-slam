@@ -1,8 +1,8 @@
-"""Find broad paving areas along the standard Monster Slam detail-map route.
+"""Check Monster Slam route metadata and render an overlay for visual review.
 
-Tuned for the 1672x941 access3-style route; inspect the numbered overlay when
-artwork or route layout changes. Requires Pillow and NumPy. The final arena
-counts as one of the six areas; off-route plazas do not.
+With --route-json, validates the image size, ordered stops and path spacing.
+Without metadata, uses a legacy paving detector calibrated on 1672x941 maps.
+Requires Pillow and NumPy.
 """
 
 from __future__ import annotations
