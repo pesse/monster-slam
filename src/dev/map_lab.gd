@@ -8,7 +8,7 @@ extends Control
 ## „Speichern" schreibt assets/maps/<book>/map.json (MapLayout.save) — nur im Editor-Lauf,
 ## im Export ist res:// read-only und diese Werkbank ohnehin ausgeschlossen.
 ##
-## Die Bilder selbst entstehen außerhalb (docs/prompts/map_images/) und werden als
+## Die Bilder selbst entstehen außerhalb dieses Repos und werden als
 ## assets/maps/<book>/book.png bzw. unit<n>.png abgelegt; danach einmal importieren.
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"

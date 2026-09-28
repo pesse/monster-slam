@@ -451,7 +451,7 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
   `assets/maps/*.json` mit). Punkte stehen in Anteilen des Bildes (0..1). Fehlt Bild oder
   ein Punkt, zeichnet `MapCanvas` eine schlichte Fläche und legt ALLE Orte selbst aus
   (`default_positions`) — eine neue Unit ist so spielbar, bevor ihr Bild existiert.
-  Prompts: `docs/prompts/map_images/`.
+  Die Bilder entstehen außerhalb dieses Repos.
 
 ## Fähigkeitsbäume: wofür die Punkte da sind
 

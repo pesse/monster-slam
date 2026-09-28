@@ -101,8 +101,8 @@ urheberrechtlich geschütztem Lehrbuchmaterial und liegen im privaten Submodule
   `FortressTier.part_tiers`/`unit_tiers`. Gespeichert werden nur Boss-Siege (`BossRecord`).
 - Kartenbilder und Punkte liegen unter `assets/maps/<book>/` in der EXE (kein Pack);
   gezeichnet wird nur in `MapCanvas`, Punkte setzt `scenes/dev/map_lab.tscn`. Bilder ohne
-  Schrift und ohne Vokabeln; Low-Poly-Hex-Brett wie die Kampfmodelle, je Buch eine
-  Prompt-Datei mit eigenem Thema (`docs/prompts/map_images/`).
+  Schrift und ohne Vokabeln; Low-Poly-Hex-Brett wie die Kampfmodelle, je Buch ein eigenes
+  Thema. Die Bilder entstehen außerhalb dieses Repos.
 - Es gibt keinen Grundwortschatz mehr: jedes Lexem trägt `book` und `unit`.
 
 **Satzbewertung und Boss** (ADR 0004, `docs/ARCHITECTURE.md` „Sätze bewerten"):

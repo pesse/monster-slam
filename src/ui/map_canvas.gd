@@ -357,7 +357,7 @@ func _draw() -> void:
 		draw_texture_rect(_texture, rect, false)
 	else:
 		# Ohne Bild eine schlichte Fläche mit Rand — die Karte soll als Karte lesbar bleiben,
-		# bis ihr Bild da ist (docs/prompts/map_images/).
+		# bis ihr Bild da ist.
 		draw_rect(rect, BLANK_COLOR)
 		draw_rect(rect.grow(-8.0), BLANK_EDGE, false, 2.0)
 	if _texture == null or path_over_image:

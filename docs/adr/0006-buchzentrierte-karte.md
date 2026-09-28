@@ -63,12 +63,12 @@ Aufgaben- und Wortarten seines Bereichs und filtert nicht nach Themen.
 
 `assets/maps/<book>/book.png`, `unit<n>.png` und `map.json` (Punkte in Anteilen des Bildes).
 Bild und Punkte gehören zusammen; ein Pack trägt nur JSON und hätte eine neue Kategorie an
-vier Stellen gebraucht. Die Bilder entstehen mit einem Bild-KI-Tool aus
-`docs/prompts/map_images/`, die Punkte setzt die Werkbank `scenes/dev/map_lab.tscn`.
+vier Stellen gebraucht. Die Bilder entstehen mit einem Bild-KI-Tool außerhalb
+dieses Repos, die Punkte setzt die Werkbank `scenes/dev/map_lab.tscn`.
 Der Stil folgt den Modellen des Kampfes: ein Low-Poly-Spielbrett aus Sechseck-Kacheln auf
 dem Dunkelblau der Oberfläche, keine gemalte Landschaft — die erste, gemalte Fassung sah
 weder nach Karte noch nach dem Spiel aus. Jedes Buch hat ein eigenes Thema (Landschaft,
-Jahreszeit, Stimmung) und eine eigene Prompt-Datei.
+Jahreszeit, Stimmung).
 Fehlt ein Bild oder ein Punkt, zeigt die Karte eine schlichte Fläche und legt die Orte
 selbst aus — eine Unit aus einem Content-Update ist so spielbar, bevor ihr Bild existiert.
 
