@@ -19,11 +19,18 @@ func _ready() -> void:
 	(%BackButton as Button).pressed.connect(_back_to_shelf)
 	_canvas.node_selected.connect(_on_unit_selected)
 	_canvas.cover = true
+	# Wie auf der Gebietskarte: kleine Orte, die unter dem Zeiger wachsen; was eine Unit
+	# ist, sagt die Hinweiskarte.
+	_canvas.node_radius = MapCanvas.AREA_NODE_RADIUS
+	_canvas.hover_radius = MapCanvas.NODE_RADIUS
+	_canvas.show_captions = false
 	var books := ContentRegistry.all_books()
 	if not MapSelection.book in books and not books.is_empty():
 		MapSelection.book = books[0]
 	_title.text = ContentRegistry.book_label(MapSelection.book)
 	_canvas.setup(MapLayout.book_texture(MapSelection.book), [], [], func(_n): return {})
+	# Nicht abgewartet: der Zoom soll nicht auf den Kopf warten.
+	_place_header()
 	# Aus einer Gebietskarte zurück: die Buchkarte kommt aus dieser Unit heraus — erst der
 	# Zoom über das Bild, dann die Rechnung und die Orte, wie auf dem Weg hinein.
 	if MapSelection.zoom_out:
@@ -34,6 +41,16 @@ func _ready() -> void:
 		await _canvas.zoom_finished
 	_fill()
 	_canvas.appear()
+
+
+## Der Kopf weicht den Orten aus, bevor er zu sehen ist — die Größen stehen erst nach
+## einem Frame Layout fest.
+func _place_header() -> void:
+	var header: Control = %Header
+	header.modulate.a = 0.0
+	await get_tree().process_frame
+	_canvas.place_header(header, MapLayout.unit_points(MapLayout.data(MapSelection.book)).values())
+	header.modulate.a = 1.0
 
 
 func _unhandled_input(event: InputEvent) -> void:

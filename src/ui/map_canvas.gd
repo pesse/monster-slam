@@ -260,6 +260,28 @@ func to_local_point(at: Vector2) -> Vector2:
 	return rect.position + at * rect.size
 
 
+## Liegt einer der Punkte `points` (Anteile des Bildes) unter `rect` (global)? Mit dem
+## Rand eines gewachsenen Ortes: auch unter dem Zeiger soll kein Ort darunter verschwinden.
+func covers(rect: Rect2, points: Array) -> bool:
+	var local := Rect2(rect.position - global_position, rect.size).grow(maxf(hover_radius, node_radius))
+	for at in points:
+		if at is Vector2 and (at as Vector2).is_finite() and local.has_point(to_local_point(at)):
+			return true
+	return false
+
+
+## Stellt den Kopf eines Screens (`header`, oben links in seinem Eltern-Control) nach unten
+## links, wenn oben ein Ort darunter läge und unten keiner. Vor dem Einblenden aufrufen,
+## nach einem Frame Layout: danach bleibt der Kopf, wo er ist.
+func place_header(header: Control, points: Array) -> void:
+	var top := header.get_global_rect()
+	var parent := header.get_parent() as Control
+	var bottom := Rect2(Vector2(top.position.x, parent.get_global_rect().end.y - top.size.y), top.size)
+	if covers(top, points) and not covers(bottom, points):
+		header.grow_vertical = Control.GROW_DIRECTION_BEGIN
+		header.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_MINSIZE)
+
+
 ## Der Anteil des Bildes unter `local` — die Umkehrung, für die Werkbank.
 func to_map_point(local: Vector2) -> Vector2:
 	var rect := map_rect(size, aspect(), cover)

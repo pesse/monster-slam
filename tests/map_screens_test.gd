@@ -118,6 +118,45 @@ func test_a_hovered_node_grows_and_shrinks_back() -> void:
 	remove_child(canvas)
 
 
+## Liegt ein Ort unter dem Kopf oben links, rückt der Kopf nach unten links; liegt keiner
+## darunter, bleibt er oben.
+func test_the_header_moves_down_when_a_node_lies_under_it() -> void:
+	var parent: Control = auto_free(Control.new())
+	add_child(parent)
+	parent.size = Vector2(1104, 540)
+	var canvas := MapCanvas.new()
+	parent.add_child(canvas)
+	canvas.size = parent.size
+	canvas.node_radius = MapCanvas.AREA_NODE_RADIUS
+	canvas.hover_radius = MapCanvas.NODE_RADIUS
+	var header := Control.new()
+	parent.add_child(header)
+	header.custom_minimum_size = Vector2(300, 80)
+	header.size = header.custom_minimum_size
+	canvas.place_header(header, [Vector2(0.8, 0.8)])
+	assert_float(header.position.y).is_equal(0.0)
+	canvas.place_header(header, [Vector2(0.05, 0.05), Vector2(0.8, 0.8)])
+	assert_float(header.position.y).is_equal_approx(540.0 - 80.0, 0.5)
+	remove_child(parent)
+
+
+## Unten ist auch belegt: dann bleibt der Kopf oben — unten wäre nichts gewonnen.
+func test_the_header_stays_when_both_corners_are_taken() -> void:
+	var parent: Control = auto_free(Control.new())
+	add_child(parent)
+	parent.size = Vector2(1104, 540)
+	var canvas := MapCanvas.new()
+	parent.add_child(canvas)
+	canvas.size = parent.size
+	var header := Control.new()
+	parent.add_child(header)
+	header.custom_minimum_size = Vector2(300, 80)
+	header.size = header.custom_minimum_size
+	canvas.place_header(header, [Vector2(0.05, 0.05), Vector2(0.05, 0.95)])
+	assert_float(header.position.y).is_equal(0.0)
+	remove_child(parent)
+
+
 ## Der Zoom endet mit zoom_finished; hinein blendet aus, heraus blendet ein.
 func test_the_zoom_fades_and_finishes() -> void:
 	var canvas: MapCanvas = auto_free(MapCanvas.new())
@@ -411,7 +450,7 @@ func test_the_map_screens_load_with_hints_on_the_canvas() -> void:
 
 
 ## Auf der Gebietskarte sind die Orte klein und der Weg kommt aus dem Bild; die Buchkarte
-## behält große Orte und ihren gestrichelten Weg.
+## hat dieselben kleinen Orte, aber ihren gestrichelten Weg.
 func test_the_area_map_draws_small_bare_nodes_without_its_own_path() -> void:
 	MapSelection.book = "zz-kein-buch"
 	MapSelection.unit = 1
@@ -428,7 +467,10 @@ func test_the_area_map_draws_small_bare_nodes_without_its_own_path() -> void:
 	var book: Control = auto_free(BOOK_SCENE.instantiate())
 	add_child(book)
 	await get_tree().process_frame
-	assert_float((book.get_node("%Canvas") as MapCanvas).node_radius).is_equal(MapCanvas.NODE_RADIUS)
+	var book_canvas := book.get_node("%Canvas") as MapCanvas
+	assert_float(book_canvas.node_radius).is_equal(MapCanvas.AREA_NODE_RADIUS)
+	assert_float(book_canvas.hover_radius).is_equal(MapCanvas.NODE_RADIUS)
+	assert_bool(book_canvas.show_captions).is_false()
 	remove_child(book)
 
 

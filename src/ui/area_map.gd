@@ -37,6 +37,8 @@ func _ready() -> void:
 		MapSelection.book = str(RunRequest.level().get("book", MapSelection.book))
 		MapSelection.unit = int(RunRequest.level().get("unit", MapSelection.unit))
 	_show_image()
+	# Nicht abgewartet: der Zoom soll nicht auf den Kopf warten.
+	_place_header()
 	# Erst der Zoom, dann die Rechnung: während das Bild heranfährt, rechnet nichts, und
 	# erst danach springen die Orte auf und die Festung blendet ein.
 	if MapSelection.zoom_in:
@@ -53,6 +55,17 @@ func _ready() -> void:
 	_fill()
 	_canvas.appear()
 	create_tween().tween_property(_fortress, "modulate:a", 1.0, MapCanvas.APPEAR_TIME)
+
+
+## Der Kopf weicht den Orten aus, bevor er zu sehen ist — die Größen stehen erst nach
+## einem Frame Layout fest.
+func _place_header() -> void:
+	var header: Control = %Header
+	header.modulate.a = 0.0
+	await get_tree().process_frame
+	_canvas.place_header(header, MapLayout.area_points(MapLayout.data(MapSelection.book),
+			MapSelection.unit).values())
+	header.modulate.a = 1.0
 
 
 ## Was vor dem Zoom dasteht: Bild und Überschrift, ohne Orte und Festung. Nichts davon

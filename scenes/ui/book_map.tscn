@@ -66,28 +66,29 @@ mouse_filter = 2
 layout_mode = 2
 mouse_filter = 2
 
-[node name="TopLeft" type="HBoxContainer" parent="Hud/Corners"]
+[node name="Header" type="HBoxContainer" parent="Hud/Corners"]
+unique_name_in_owner = true
 layout_mode = 0
 mouse_filter = 2
 
-[node name="BackButton" type="Button" parent="Hud/Corners/TopLeft"]
+[node name="BackButton" type="Button" parent="Hud/Corners/Header"]
 unique_name_in_owner = true
 theme_type_variation = &"MapButton"
 layout_mode = 2
 size_flags_vertical = 4
 text = "◀ Bücher"
 
-[node name="Banner" type="PanelContainer" parent="Hud/Corners/TopLeft"]
+[node name="Banner" type="PanelContainer" parent="Hud/Corners/Header"]
 theme_type_variation = &"MapBanner"
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Lines" type="VBoxContainer" parent="Hud/Corners/TopLeft/Banner"]
+[node name="Lines" type="VBoxContainer" parent="Hud/Corners/Header/Banner"]
 theme_type_variation = &"Tight"
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Title" type="Label" parent="Hud/Corners/TopLeft/Banner/Lines"]
+[node name="Title" type="Label" parent="Hud/Corners/Header/Banner/Lines"]
 unique_name_in_owner = true
 theme_type_variation = &"Title"
 layout_mode = 2
