@@ -1,6 +1,6 @@
 # ADR 0007 — Eine zweite Fremdsprache: Latein
 
-Status: **Entwurf** · Datum: 2026-09-28 · Issue: #31
+Status: **angenommen** · Datum: 2026-09-28 · Issue: #31
 
 ## Kontext
 
