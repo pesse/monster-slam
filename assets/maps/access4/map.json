@@ -792,5 +792,11 @@
 				}
 			]
 		}
+	},
+	"themes": {
+		"1": "ice",
+		"2": "tundra",
+		"3": "snowforest",
+		"4": "alpine"
 	}
 }

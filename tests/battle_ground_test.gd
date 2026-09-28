@@ -104,3 +104,52 @@ func test_the_ground_follows_the_camera() -> void:
 	var after: Rect2 = WaveRunnerScript.visible_ground_area(_camera)
 	assert_float(after.size.x).is_greater(before.size.x)
 	assert_float(after.size.y).is_greater(before.size.y)
+
+
+## Kein Hügel ragt vor die Kamera. Die Orthogonal-Kamera schneidet alles vor ihrer
+## Nahebene weg; stand sie zu nah, fehlten am unteren Bildrand die Hügelkuppen samt Deko,
+## und der Hintergrund schien durch. Geprüft wird im weitesten Blick (SceneZoom.FROM), für
+## den der Boden gebaut wird, und an jeder gebauten Kachel in voller Hügelhöhe.
+func test_no_hill_reaches_in_front_of_the_camera() -> void:
+	_camera.size = _camera.size / SceneZoom.FROM
+	var mesh: ArrayMesh = WaveRunnerScript.build_terrain(_camera, WaveRunnerScript.terrain_noise(4711))
+	var basis := _camera.global_transform.basis
+	var origin := _camera.global_position
+	var top: float = WaveRunnerScript.TERRAIN_HEIGHT_MAX
+	var nearest := INF
+	for v: Vector3 in mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]:
+		nearest = minf(nearest, (Vector3(v.x, top, v.z) - origin).dot(-basis.z))
+	assert_float(nearest).is_greater(_camera.near)
+
+
+## Und nichts liegt hinter der Fernebene: `far` ist seit den Schatten nicht mehr 4000 m,
+## sondern SHADOW_DISTANCE (setup_view) — reicht sie nicht, fehlt oben im Bild der Boden.
+func test_no_ground_lies_beyond_the_far_plane() -> void:
+	_camera.size = _camera.size / SceneZoom.FROM
+	var mesh: ArrayMesh = WaveRunnerScript.build_terrain(_camera, WaveRunnerScript.terrain_noise(4711))
+	var basis := _camera.global_transform.basis
+	var origin := _camera.global_position
+	var farthest := 0.0
+	for v: Vector3 in mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]:
+		farthest = maxf(farthest, (Vector3(v.x, 0.0, v.z) - origin).dot(-basis.z))
+	assert_float(farthest).is_less(_camera.far)
+
+
+## Jedes Dreieck zeigt Godot seine Vorderseite von oben (im Uhrzeigersinn). Andersherum
+## dreht cull_disabled die Normale nach unten: der Boden bekäme kein Sonnenlicht und
+## zeigte keine Schatten — so war es, bis die Schatten kamen.
+func test_the_ground_faces_the_sky() -> void:
+	var mesh: ArrayMesh = WaveRunnerScript.build_terrain(_camera, WaveRunnerScript.terrain_noise(4711))
+	var verts: PackedVector3Array = mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+	var upside_down := 0
+	for i in range(0, verts.size(), 3):
+		# Vorderseite im Uhrzeigersinn: das Kreuzprodukt zeigt vom Betrachter WEG.
+		if (verts[i + 1] - verts[i]).cross(verts[i + 2] - verts[i]).y >= 0.0:
+			upside_down += 1
+	assert_int(upside_down).is_equal(0)
+
+
+func test_the_ground_casts_no_shadow() -> void:
+	var ground := auto_free(MeshInstance3D.new()) as MeshInstance3D
+	WaveRunnerScript.dress_ground(ground, BattleTheme.new())
+	assert_int(ground.cast_shadow).is_equal(GeometryInstance3D.SHADOW_CASTING_SETTING_OFF)

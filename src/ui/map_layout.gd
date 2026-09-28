@@ -12,7 +12,10 @@ extends RefCounted
 ##
 ##     { "units": { "2": {"x": 0.41, "y": 0.62}, …, "path": [{x, y}, …] },
 ##       "areas": { "2": { "t1": {x, y}, …, "all": {x, y}, "boss": {x, y},
-##                         "path": [{x, y}, …] } } }
+##                         "path": [{x, y}, …] } },
+##       "themes": { "2": "desert", … } }
+##
+## `themes` nennt je Unit das BattleTheme des Kampfes; die Werkbank lässt es stehen.
 ##
 ## Die Dateien liegen im Export und nicht im Pack: Bild und Punkte gehören zusammen, und
 ## ein Pack trägt nur JSON. Eine Unit, die ein Content-Update bringt, bevor es ihr Bild

@@ -156,5 +156,8 @@
         }
       ]
     }
+  },
+  "themes": {
+    "11": "mediterranean"
   }
 }

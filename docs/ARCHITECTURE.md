@@ -437,6 +437,9 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
 | `Book3D` | `src/ui/book_3d.gd` + `scenes/ui/book_3d.tscn` | ein gebundenes Buch im 3D-Regal der Buchauswahl: Rücken nach vorn, ausgewählt herausgezogen und schräg gedreht, beim Öffnen schlägt der vordere Deckel am Falz auf. Das Cover ist eine 2D-Szene im SubViewport (Karte im `OrnateFrame` oben, Stand unten); die Doppelseite trägt die Buchkarte. `spread_view` liefert den Kamerastand, aus dem die Doppelseite das Bild so füllt wie die Buchkarte — die Buchauswahl fliegt die Kamera dorthin und blendet erst am Ende auf das flache Bild über |
 | `BookMesh` | `src/ui/book_mesh.gd` | Profile des Einbands (gerundeter Rücken, Deckel mit Falz) und ihre Extrusion zu Meshes, je Buch nach seiner Dicke |
 | Werkbank | `scenes/dev/map_lab.tscn` | Punkte und Weg auf die Kartenbilder setzen, schreibt `map.json`; im Export ausgeschlossen |
+| `BattleTheme` | `src/battle/battle_theme.gd` + `assets/battle_themes/*.tres` | Farben von Boden und Licht und die Deko im Kampf, je Unit passend zur Gebietskarte; Zuordnung unter `themes` in `map.json` |
+| Werkbank | `scenes/dev/battle_theme_lab.tscn` | das Schlachtfeld in jedem Thema, ohne Kampf; `-- --shoot` legt Bilder unter `reports/battle_themes/` ab, `-- --specimens` Nahaufnahmen der Deko (braucht `GODOT_WINDOW=1`) |
+| Modellschmiede | `src/dev/model_forge.gd` | baut die eigenen Low-Poly-Modelle unter `assets/models/forge/` aus Grundformen; die `.glb` sind Ergebnis, geändert wird der Generator |
 
 - **Kampf und Boss lesen ihren Bereich aus `RunRequest`, nie aus `UserSettings`.**
   `WaveRunner` (Aufgabenpool, Festungsstufe, Rücksprung), `SentenceSelector.pool_from_settings`
@@ -453,6 +456,31 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
   ein Punkt, zeichnet `MapCanvas` eine schlichte Fläche und legt ALLE Orte selbst aus
   (`default_positions`) — eine neue Unit ist so spielbar, bevor ihr Bild existiert.
   Die Bilder entstehen außerhalb dieses Repos.
+- **Der Kampf steht in der Landschaft seiner Gebietskarte** (`BattleTheme`). Ein Thema
+  färbt Boden, Hügel, Kuppen und Flecken (Schnee), Hintergrund, Umgebungslicht und
+  Sonne und wählt die Deko: je Platz (`trees`, `rocks`, `grass`, `props`, `landmarks`)
+  eine Liste von Modellen. Wo die Deko steht, wie viel und wie groß, gehört dem Platz im
+  `WaveRunner` — ein Modell wird für seinen Platz bemessen, nicht der Platz fürs Modell.
+  Bahn, Hügelform und Festung sind überall dieselben. Dazu kann ein Thema eine graue
+  Detailtextur des Bodens nennen (`ground_texture`, Kachel 8 × 8 m unter
+  `assets/textures/ground/`, Shader `assets/shaders/battle_ground.gdshader`): sie moduliert
+  nur die Helligkeit der Vertexfarben, 50 % Grau lässt sie stehen. Fehlt die Datei, bleibt
+  der Boden glatt. Die Texturen malt ein Bild-Agent nach `assets/textures/ground/BRIEF.md`;
+  ein Test hält, dass jede genannte Textur dort bestellt ist. Die Vorgaben der Klasse SIND
+  das Aussehen ohne Thema (Expertenmodus, Unit ohne Eintrag). Ein Test hält, dass jede
+  Unit mit Gebietsbild ein vorhandenes Thema nennt (`tests/battle_theme_test.gd`).
+  Die Farben kommen im Licht des Kampfes etwa halb so hell an, wie sie in der `.tres`
+  stehen — abgestimmt wird am Bild der Werkbank, nicht an den Zahlen.
+- **Schatten und Licht des Bodens.** Der Bodenshader beleuchtet selbst (`light()`): Grund
+  ist das Umgebungslicht des Themas, die Sonne legt nur einen festen Anteil davon dazu
+  (`shadow_depth`, nach Neigung zur Sonne). So steht flacher Boden in der Sonne in der Farbe
+  des Themas, egal wie hell dessen Sonne ist; im Schatten und an abgewandten Hängen fehlt
+  der Anteil. `gl_compatibility` multipliziert den Schatten nach `light()` auf das Ergebnis
+  (`ATTENUATION` enthält ihn nicht) — die Sonne muss dort also addieren, nicht abziehen.
+  Die Sonne wirft EINE Schattenkarte (`SHADOW_ORTHOGONAL`); bei der Orthogonal-Kamera
+  spannt sie sich bis `camera.far`, deshalb setzt `setup_view` `far` auf `SHADOW_DISTANCE`
+  — der Wert bestimmt zugleich, wie weich die Schatten sind. Der Boden selbst wirft keinen
+  Schatten (`dress_ground`), sonst braucht es einen großen Bias, der Baumschatten schluckt.
 
 ## Fähigkeitsbäume: wofür die Punkte da sind
 

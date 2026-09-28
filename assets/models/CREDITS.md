@@ -81,3 +81,15 @@ Import als Datei daneben heraus. Alle fünf PNGs sind byte-identisch (git-Blob
 Die Skelette werden nicht mit eigenen Animationen ausgeliefert, sondern über diese
 gemeinsame AnimationLibrary bewegt (dasselbe Rig „Medium"). Deshalb liegen die beiden
 Dateien getrennt von den Monstern: sie gehören keinem einzelnen.
+
+## `forge/` — selbst erzeugt
+
+| Datei | Quelle | Lizenz | Autor |
+| ----- | ------ | ------ | ----- |
+| alle `*.glb` in `forge/` (Bäume, Felsen, Gras, Wahrzeichen der BattleThemes) | erzeugt von `src/dev/model_forge.gd` | MPL-2.0 wie das Repo | dieses Projekt |
+
+Keine fremde Vorlage: die Modelle sind aus Grundformen im Code gebaut (Kegelstumpf,
+verbeulte Kugel, Quader), eine Farbe je Fläche, keine Textur. Die `.glb` sind Ergebnis,
+nicht Quelle — geändert wird der Generator, dann neu erzeugt:
+`tools/godot.sh -s res://src/dev/model_forge.gd`. Verglichen mit den gekauften Modellen
+wird in der Werkbank: `GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/battle_theme_lab.tscn -- --specimens`.

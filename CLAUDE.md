@@ -13,6 +13,7 @@ tools/godot.sh --quit-after 60   # Parse-/Ladeprüfung
 tools/godot.sh --import          # nötig nach neuen class_name-Dateien, sonst „Identifier not declared"
 tools/godot.sh -s res://addons/gdUnit4/bin/GdUnitCmdTool.gd --ignoreHeadlessMode -a res://tests
 timeout 14 tools/godot.sh        # längerer Lauf, z. B. um Spawns zu sehen
+GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/battle_theme_lab.tscn -- --shoot  # rendert Bilder (headless geht nicht)
 
 # Pack-Zuordnung prüfen (nach jeder neuen Datei unter data/):
 python3 tools/packs/build_packs.py --config data/language/packs.yaml \
@@ -104,6 +105,13 @@ urheberrechtlich geschütztem Lehrbuchmaterial und liegen im privaten Submodule
   Schrift und ohne Vokabeln; Low-Poly-Hex-Brett wie die Kampfmodelle, je Buch ein eigenes
   Thema. Die Bilder entstehen außerhalb dieses Repos.
 - Es gibt keinen Grundwortschatz mehr: jedes Lexem trägt `book` und `unit`.
+- Jede Unit mit Gebietsbild nennt unter `themes` in `map.json` ein `BattleTheme`
+  (`assets/battle_themes/`) — der Kampf steht in der Landschaft der Karte. Farben am Bild
+  der Werkbank abstimmen (`battle_theme_lab`), nicht an den Zahlen. Deko-Modelle eines
+  Themas liegen unter `assets/models/`; eigene baut `src/dev/model_forge.gd` in der Größe
+  ihres Platzes (Vergleich: `-- --specimens`). Bodentexturen sind grau und kacheln
+  (8 × 8 m); was gemalt wird, steht in `assets/textures/ground/BRIEF.md` — eine neue
+  Textur zuerst dort bestellen.
 
 **Satzbewertung und Boss** (ADR 0004, `docs/ARCHITECTURE.md` „Sätze bewerten"):
 - Ein Treffer in `accepted` schlägt jede Stolperstelle; ohne Schlüsseltreffer gibt die

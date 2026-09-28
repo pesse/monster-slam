@@ -93,6 +93,10 @@ func _ready() -> void:
 	# den weitesten Blick gebaut, sonst sähe man beim Heranzoomen seinen Rand.
 	var view_size := _camera.size
 	_camera.size = view_size / SceneZoom.FROM
+	# Das Thema VOR Boden und Ich-Sicht: der Boden nimmt seine Farben, der Nebel der
+	# Ich-Sicht die Hintergrundfarbe des schon gefärbten Environments.
+	_theme = BattleTheme.for_level(RunRequest.level())
+	_theme.apply($WorldEnvironment as WorldEnvironment, $Sun as DirectionalLight3D)
 	_setup_ground()
 	_decorate()
 	_build_fortress()
@@ -159,9 +163,9 @@ func _leave_battle() -> void:
 	get_tree().change_scene_to_file(RunRequest.return_scene())
 
 
-## Prozedurales Low-Poly-Terrain: flaches Innenfeld (Spielfläche/Props/Festung),
-## sanfte facettierte Hügel am Rand, dezente Grün-Variation je Facette. Flat-Shading
-## über manuell gesetzte Face-Normalen — passt zum Stil von Burg/Skeletten.
+## Prozedurales Terrain: flaches Innenfeld (Spielfläche/Props/Festung), sanfte Hügel am
+## Rand, weiche Farbflecken (Farben aus dem BattleTheme der Unit). Glatt schattiert über
+## Normalen aus der Höhenfunktion — den Low-Poly-Stil tragen Burg, Monster und Deko.
 ##
 ## Der Boden reicht bis an den BILDRAND und nicht nur bis an das Spielfeld: eine grüne
 ## Insel vor der Hintergrundfarbe sieht aus, als schwebte sie. Wie weit das ist, wird
@@ -169,7 +173,10 @@ func _leave_battle() -> void:
 ## Konstante daneben — sonst hinkt das Terrain jeder Änderung an Zoom oder Blickwinkel
 ## hinterher. Gespielt wird davon nichts: die Bahn bleibt SPAWN_Z..GOAL_Z bei
 ## ±LANE_HALF_WIDTH, und das Innenfeld bleibt flach (siehe terrain_height).
-const TERRAIN_STEP := 3.0
+## Rasterweite. Der Boden ist GLATT schattiert (Normalen und Farben je Ecke, nicht je
+## Dreieck) — den Low-Poly-Stil tragen die Modelle; ein facettierter Boden sah daneben
+## nach Scherben aus, am deutlichsten beim Schnee der Tundra. 1.5 hält die Hügel rund.
+const TERRAIN_STEP := 1.5
 ## Abstand vom Innenfeld, ab dem die Hügel nicht weiter wachsen, und ihr Höhenfaktor.
 ## Bis zu einem `edge` von 4 ist das die alte Kurve am Spielfeldrand; darüber liegt nur
 ## noch Kulisse, die kräftiger rollen darf, weil dort nichts steht und nichts läuft.
@@ -188,16 +195,23 @@ const VIEW_MAX_ASPECT := 2.4
 const VIEW_MARGIN := TERRAIN_HEIGHT_MAX + SHAKE_MAGNITUDE
 
 var _terrain_noise: FastNoiseLite
+## Farben von Boden und Licht für die Unit des Laufs (BattleTheme, aus map.json).
+var _theme: BattleTheme
 
 func _setup_ground() -> void:
 	_terrain_noise = terrain_noise(_rng.randi())
-	var mat := StandardMaterial3D.new()
-	mat.vertex_color_use_as_albedo = true
-	mat.roughness = 1.0
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	var ground := $Ground as MeshInstance3D
-	ground.mesh = build_terrain(_camera, _terrain_noise)
-	ground.material_override = mat
+	ground.mesh = build_terrain(_camera, _terrain_noise, _theme)
+	dress_ground(ground, _theme)
+
+
+## Material und Schatten des Bodens — statisch, damit die Werkbank ihn genauso anzieht.
+## Der Boden wirft selbst keinen Schatten: die Hügel schattiert der Bodenshader über ihre
+## Neigung, und ohne Selbstschatten reicht ein kleiner Bias (setup_view), ohne dass der
+## Boden Streifen bekommt.
+static func dress_ground(ground: MeshInstance3D, theme: BattleTheme) -> void:
+	ground.material_override = theme.ground_material()
+	ground.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
 ## Das Rauschen des Terrains — EINE Stelle, damit Boden und Streudeko dieselben Hügel
@@ -211,7 +225,10 @@ static func terrain_noise(seed_value: int) -> FastNoiseLite:
 
 ## Baut den sichtbaren Boden für DIESE Kamera. Statisch und ohne Szene, damit
 ## `tests/battle_ground_test.gd` genau das Mesh prüfen kann, das im Spiel steht.
-static func build_terrain(camera: Camera3D, noise: FastNoiseLite) -> ArrayMesh:
+## Ohne Thema gilt die Vorgabe von BattleTheme.
+static func build_terrain(camera: Camera3D, noise: FastNoiseLite, theme: BattleTheme = null) -> ArrayMesh:
+	if theme == null:
+		theme = BattleTheme.new()
 	var area := visible_ground_area(camera)
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -226,8 +243,11 @@ static func build_terrain(camera: Camera3D, noise: FastNoiseLite) -> ArrayMesh:
 				var b := _terrain_point(x, z + TERRAIN_STEP, noise)
 				var c := _terrain_point(x + TERRAIN_STEP, z + TERRAIN_STEP, noise)
 				var d := _terrain_point(x + TERRAIN_STEP, z, noise)
-				_add_terrain_tri(st, noise, a, b, c)
-				_add_terrain_tri(st, noise, a, c, d)
+				# Im Uhrzeigersinn von oben gesehen — das ist in Godot die Vorderseite. Andersherum
+				# dreht die Materialeinstellung cull_disabled die Normale nach unten: der Boden
+				# bekommt dann kein Sonnenlicht und zeigt keine Schatten.
+				_add_terrain_tri(st, noise, theme, a, c, b)
+				_add_terrain_tri(st, noise, theme, a, d, c)
 			z += TERRAIN_STEP
 		x += TERRAIN_STEP
 	return st.commit()
@@ -287,24 +307,28 @@ static func terrain_height(x: float, z: float, noise: FastNoiseLite) -> float:
 	return clampf(edge, 0.0, TERRAIN_EDGE_MAX) * (0.3 + 0.7 * n) * TERRAIN_HEIGHT_SCALE
 
 
-static func _add_terrain_tri(st: SurfaceTool, noise: FastNoiseLite, a: Vector3, b: Vector3, c: Vector3) -> void:
-	var n := (b - a).cross(c - a).normalized()
-	if n.y < 0.0:
-		n = -n
-	# EINE Farbe pro Dreieck (aus dem Zentrum) -> echte flache Low-Poly-Facetten.
-	var col := _terrain_color((a + b + c) / 3.0, noise)
-	for v in [a, b, c]:
-		st.set_color(col)
-		st.set_normal(n)
+static func _add_terrain_tri(st: SurfaceTool, noise: FastNoiseLite, theme: BattleTheme, a: Vector3, b: Vector3, c: Vector3) -> void:
+	# Farbe und Normale je ECKE, aus Rauschen und Höhenfunktion an genau diesem Punkt:
+	# Nachbardreiecke teilen sie, dazwischen wird weich gemischt — keine Kanten im Boden.
+	for v: Vector3 in [a, b, c]:
+		st.set_color(_terrain_color(v, noise, theme))
+		st.set_normal(terrain_normal(v.x, v.z, noise))
 		st.add_vertex(v)
 
 
-static func _terrain_color(center: Vector3, noise: FastNoiseLite) -> Color:
-	var t := noise.get_noise_2d(center.x * 2.3 + 100.0, center.z * 2.3) * 0.5 + 0.5
-	var col := Color(0.22, 0.34, 0.15).lerp(Color(0.42, 0.56, 0.28), t)
-	if center.y > 0.4:
-		col = col.lerp(Color(0.44, 0.44, 0.30), clampf(center.y / 3.0, 0.0, 0.55))
-	return col
+static func _terrain_color(p: Vector3, noise: FastNoiseLite, theme: BattleTheme) -> Color:
+	var t := noise.get_noise_2d(p.x * 2.3 + 100.0, p.z * 2.3) * 0.5 + 0.5
+	return theme.ground_color(t, p.y)
+
+
+## Normale der Höhenfunktion bei (x,z), über zentrale Differenzen. Aus der Funktion und
+## nicht aus den Dreiecken: so ist sie an jeder Ecke dieselbe, egal zu welchem Dreieck sie
+## gehört, und der Knick am Rand des flachen Innenfelds wird über TERRAIN_STEP verrundet.
+static func terrain_normal(x: float, z: float, noise: FastNoiseLite) -> Vector3:
+	var e := TERRAIN_STEP * 0.5
+	var dx := terrain_height(x + e, z, noise) - terrain_height(x - e, z, noise)
+	var dz := terrain_height(x, z + e, noise) - terrain_height(x, z - e, noise)
+	return Vector3(-dx, 2.0 * e, -dz).normalized()
 
 
 ## Bodenhöhe des Terrains an (x,z) — damit Streudeko auf den Hügeln aufsitzt.
@@ -312,10 +336,15 @@ func _ground_y(x: float, z: float) -> float:
 	return terrain_height(x, z, _terrain_noise) if _terrain_noise != null else 0.0
 
 
-## Platziert ein Modell (filename inkl. Endung) auf Terrain-Höhe mit zufälliger
-## Drehung; Position/Skalierung kommen vom Aufrufer.
-func _scatter(parent: Node3D, filename: String, x: float, z: float, scale: float) -> void:
-	_place_model(parent, filename, Vector3(x, _ground_y(x, z), z), _rng.randf_range(0.0, 360.0), Vector3.ONE * scale)
+## Platziert eines der Modelle eines Deko-Platzes (`BattleTheme.trees` …, Pfade unter
+## assets/models/) auf Terrain-Höhe mit zufälliger Drehung; ein leerer Platz stellt nichts
+## hin. Position/Skalierung kommen vom Aufrufer.
+func _scatter(parent: Node3D, slot: Array[String], x: float, z: float, scale: float) -> void:
+	if slot.is_empty():
+		return
+	var model := slot[_rng.randi() % slot.size()]
+	_place_model(parent, model.get_file(), Vector3(x, _ground_y(x, z), z), _rng.randf_range(0.0, 360.0),
+			Vector3.ONE * scale, model.get_base_dir())
 
 
 const GRASS_SCALE_FIRST_PERSON := 0.4
@@ -323,6 +352,7 @@ const GRASS_SCALE_FIRST_PERSON := 0.4
 ## Randomisierte Streudekoration (jeder Start anders): Bäume an den Seitenstreifen
 ## (halten den Lauf-Korridor frei), Steine/Grasbüschel übers Feld, ein paar
 ## Requisiten und Fackelsäulen. Alles hinter der Festung (z < 5). Fortress bleibt fix.
+## WELCHE Modelle, sagt das Thema (BattleTheme); wo und wie groß, steht hier.
 func _decorate() -> void:
 	var d := Node3D.new()
 	d.name = "Decor"
@@ -334,23 +364,27 @@ func _decorate() -> void:
 	# Bäume nur an den Seitenstreifen (|x| groß), damit die Bahn frei bleibt
 	for i in _rng.randi_range(8, 14):
 		var sx := (1.0 if _rng.randf() < 0.5 else -1.0) * _rng.randf_range(9.5, 12.5)
-		_scatter(d, "tree.glb", sx, _rng.randf_range(z_back, z_front), _rng.randf_range(0.85, 1.2))
+		_scatter(d, _theme.trees, sx, _rng.randf_range(z_back, z_front), _rng.randf_range(0.85, 1.2))
 
 	# Steine über das Feld verteilt
 	for i in _rng.randi_range(5, 10):
-		_scatter(d, "rock.glb", _rng.randf_range(-10.0, 10.0), _rng.randf_range(z_back, z_front), _rng.randf_range(1.6, 2.6))
+		_scatter(d, _theme.rocks, _rng.randf_range(-10.0, 10.0), _rng.randf_range(z_back, z_front), _rng.randf_range(1.6, 2.6))
 
 	# Grasbüschel. Für die Draufsicht bemessen — aus Augenhöhe stünden sie als Hecke
 	# zwischen Spieler und Monstern, deshalb in der Ich-Sicht deutlich kleiner.
 	var grass_scale := GRASS_SCALE_FIRST_PERSON if _first_person_run else 1.0
 	for i in _rng.randi_range(22, 34):
-		_scatter(d, "grass.glb", _rng.randf_range(-11.0, 11.0), _rng.randf_range(z_back, z_front + 0.5), _rng.randf_range(1.2, 2.0) * grass_scale)
+		_scatter(d, _theme.grass, _rng.randf_range(-11.0, 11.0), _rng.randf_range(z_back, z_front + 0.5), _rng.randf_range(1.2, 2.0) * grass_scale)
 
 	# Fässer/Kisten an den Rändern
 	for i in _rng.randi_range(3, 6):
 		var bx := (1.0 if _rng.randf() < 0.5 else -1.0) * _rng.randf_range(8.5, 10.5)
-		var kind := "barrel_large.gltf" if _rng.randf() < 0.5 else "crates_stacked.gltf"
-		_scatter(d, kind, bx, _rng.randf_range(SPAWN_Z + 4.0, GOAL_Z - 3.0), 1.0)
+		_scatter(d, _theme.props, bx, _rng.randf_range(SPAWN_Z + 4.0, GOAL_Z - 3.0), 1.0)
+
+	# Wahrzeichen (Ruinen, Felsnadeln): ein, zwei an den Seitenstreifen, wo man sie sieht
+	for i in _rng.randi_range(1, 2):
+		var lx := (1.0 if _rng.randf() < 0.5 else -1.0) * _rng.randf_range(10.0, 12.5)
+		_scatter(d, _theme.landmarks, lx, _rng.randf_range(z_back, z_front), _rng.randf_range(0.8, 1.0))
 
 	# Zwei Fackelsäulen am hinteren Rand (Spawn-Seite)
 	for side: float in [-1.0, 1.0]:
@@ -385,11 +419,15 @@ func _decorate_outskirts(d: Node3D) -> void:
 	for i in _rng.randi_range(55, 80):
 		var p := _outskirts_point(area, field)
 		if p != Vector2.INF:
-			_scatter(d, "tree.glb", p.x, p.y, _rng.randf_range(0.8, 1.4))
+			_scatter(d, _theme.trees, p.x, p.y, _rng.randf_range(0.8, 1.4))
 	for i in _rng.randi_range(18, 30):
 		var p := _outskirts_point(area, field)
 		if p != Vector2.INF:
-			_scatter(d, "rock.glb", p.x, p.y, _rng.randf_range(1.8, 3.2))
+			_scatter(d, _theme.rocks, p.x, p.y, _rng.randf_range(1.8, 3.2))
+	for i in _rng.randi_range(3, 6):
+		var p := _outskirts_point(area, field)
+		if p != Vector2.INF:
+			_scatter(d, _theme.landmarks, p.x, p.y, _rng.randf_range(0.8, 1.2))
 
 
 ## Zufälliger Punkt im Umland, oder Vector2.INF wenn keiner gefunden wurde. Verworfen
@@ -450,6 +488,8 @@ func _blocks_field(x: float, z: float, field: Dictionary) -> bool:
 ## assets/models/hexagon/ (blaue Farbvariante, passend zu den Sample-Renders).
 const HEX_DIR := "hexagon"
 const FORTRESS_SCALE := 3.0
+## Gierwinkel der Mauerteile, siehe _spawn_fortress.
+const WALL_YAW := 180.0
 
 func _build_fortress() -> void:
 	_fortress_tier = _current_fortress_tier()
@@ -488,11 +528,13 @@ func _spawn_fortress(tier: int) -> void:
 		_hex(fort, "building_scaffolding", seg * 0.7, fz + 3.5)
 		return
 
-	# Ab Stufe 2: Wehrmauer mit Tor + Ecktürmen.
+	# Ab Stufe 2: Wehrmauer mit Tor + Ecktürmen. Die Mauerteile um 180° gedreht: im Pack
+	# liegen die Zinnen auf +z, hier gehören sie auf die Feindseite (-z), der Wehrgang
+	# dahinter zu den Verteidigern. Die Teile sind mittig, die Drehung verschiebt nichts.
 	if tier >= 2:
-		_hex(fort, "wall_straight", -seg, fz)
-		_hex(fort, "wall_straight_gate", 0.0, fz)
-		_hex(fort, "wall_straight", seg, fz)
+		_hex(fort, "wall_straight", -seg, fz, WALL_YAW)
+		_hex(fort, "wall_straight_gate", 0.0, fz, WALL_YAW)
+		_hex(fort, "wall_straight", seg, fz, WALL_YAW)
 		var end_tower := "building_tower_catapult_blue" if tier >= 4 else "building_tower_B_blue"
 		_hex(fort, end_tower, -seg * 1.5, fz)
 		_hex(fort, end_tower, seg * 1.5, fz)
@@ -634,6 +676,18 @@ func _place_model(parent: Node3D, filename: String, pos: Vector3, yaw_deg: float
 	return inst
 
 
+## Abstand der Iso-Kamera vom Drehpunkt. Das Bild ändert er nicht (orthografisch), nur was
+## vor der Nahebene liegt: bei 32 ragten die Hügel am unteren Bildrand vor die Kamera und
+## wurden abgeschnitten — darunter stand ein Streifen Hintergrund, der erst mit den hellen
+## Hintergründen der BattleThemes auffiel. `tests/battle_ground_test.gd` hält das.
+const CAMERA_DISTANCE := 64.0
+## Tiefe der Schattenkarte ab Kamera, zugleich deren `far`. Muss hinter den Boden reichen
+## (Kamera CAMERA_DISTANCE vor dem Drehpunkt, der Boden bis etwa 110 m tief). Darüber hinaus
+## macht sie die Schatten weich: 140 ist scharf, 400 gewählt am Bild der Werkbank, ab 1000
+## bleibt von einer Palme nur ein Fleck.
+const SHADOW_DISTANCE := 400.0
+
+
 func _setup_view() -> void:
 	setup_view($CameraPivot as Node3D, _camera, $Sun as DirectionalLight3D)
 
@@ -648,8 +702,20 @@ static func setup_view(pivot: Node3D, camera: Camera3D, sun: DirectionalLight3D)
 	pivot.position = Vector3(0.0, 0.0, VIEW_CENTER_Z)
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
 	camera.size = 32.0
-	camera.position = Vector3(0.0, 0.0, 32.0)
-	sun.rotation_degrees = Vector3(-55.0, -35.0, 0.0)
+	camera.position = Vector3(0.0, 0.0, CAMERA_DISTANCE)
+	sun.rotation_degrees = Vector3(-BattleTheme.SUN_ELEVATION, -35.0, 0.0)
+	# Schatten mit EINER Schattenkarte statt gestaffelter (PSSM): die Staffelung rechnet mit
+	# einer Kamera, die in die Tiefe schaut, und liefert mit dieser Orthogonal-Kamera auf
+	# CAMERA_DISTANCE gar keinen Schatten.
+	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+	sun.directional_shadow_max_distance = SHADOW_DISTANCE
+	# Die eine Karte spannt sich bei einer Orthogonal-Kamera über deren ganze Tiefe bis
+	# `far` — beim Standard (4000 m) war sie so grob, dass kein Schatten übrig blieb.
+	camera.far = SHADOW_DISTANCE
+	# Klein, weil der Boden keinen Schatten wirft (dress_ground); der Standard-Normalbias
+	# (2.0) ließ von einem Baum nur einen Fleck am Fuß.
+	sun.shadow_bias = 0.1
+	sun.shadow_normal_bias = 1.0
 
 
 func _process(delta: float) -> void:
