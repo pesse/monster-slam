@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from collections import deque
 from pathlib import Path
@@ -55,7 +56,11 @@ def find_waypoints(
 ) -> list[tuple[int, int, int]]:
     image = Image.open(path).convert("RGB")
     if image.size != (1672, 941):
-        raise ValueError(f"Expected 1672x941, got {image.size}")
+        original_size = image.size
+        image = image.resize((1672, 941), Image.Resampling.LANCZOS)
+        if route:
+            route = [(round(x * 1672 / original_size[0]), round(y * 941 / original_size[1]))
+                     for x, y in route]
     rgb = np.asarray(image).astype(np.int16)
     red, green, blue = rgb[..., 0], rgb[..., 1], rgb[..., 2]
     pale = (
@@ -83,27 +88,81 @@ def find_waypoints(
     return found
 
 
+def distance_to_path(point, path):
+    best = float("inf")
+    for a, b in zip(path, path[1:]):
+        dx, dy = b[0] - a[0], b[1] - a[1]
+        length_sq = dx * dx + dy * dy
+        fraction = max(0, min(1, ((point[0] - a[0]) * dx + (point[1] - a[1]) * dy)
+                              / length_sq)) if length_sq else 0
+        projected = (a[0] + fraction * dx, a[1] + fraction * dy)
+        best = min(best, math.dist(point, projected))
+    return best
+
+
+def validate_metadata(image_path: Path, metadata: dict, overlay: Path | None, expected: int):
+    image = Image.open(image_path).convert("RGB")
+    if list(image.size) != metadata.get("size"):
+        raise ValueError(f"{image_path}: route size {metadata.get('size')} != image size {image.size}")
+    stops = metadata.get("stops", [])
+    keys = [stop.get("key") for stop in stops]
+    required = ([f"unit{i}" for i in range(1, expected + 1)] if image_path.stem == "book"
+                else ["t1", "t2", "t3", "t4", "all", "boss"])
+    if keys != required:
+        raise ValueError(f"{image_path}: expected stop keys {required}, got {keys}")
+    path = metadata.get("path", [])
+    if len(path) < 2:
+        raise ValueError(f"{image_path}: path has fewer than two points")
+    for a, b in zip(path, path[1:]):
+        if math.dist(a, b) > 121:
+            raise ValueError(f"{image_path}: path sample spacing exceeds 120 px")
+    for stop in stops:
+        point = (stop["x"], stop["y"])
+        if not (0 <= point[0] < image.width and 0 <= point[1] < image.height):
+            raise ValueError(f"{image_path}: stop out of bounds: {stop}")
+        if distance_to_path(point, path) > 32:
+            raise ValueError(f"{image_path}: stop is off path: {stop}")
+    if overlay:
+        draw = ImageDraw.Draw(image)
+        draw.line([tuple(p) for p in path], fill="#ff3470", width=5, joint="curve")
+        for stop in stops:
+            x, y = stop["x"], stop["y"]
+            draw.ellipse((x - 14, y - 14, x + 14, y + 14), fill="#ff3470", outline="white", width=3)
+            draw.text((x + 16, y - 12), stop["key"], fill="white", stroke_width=2,
+                      stroke_fill="#162438")
+        image.save(overlay)
+    return stops
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("images", nargs="+", type=Path)
     parser.add_argument("--overlay-dir", type=Path)
     parser.add_argument("--expected", type=int, default=6)
-    parser.add_argument("--route-json", type=Path, help="JSON array of [x,y] route points for a different layout")
+    parser.add_argument("--route-json", type=Path, help="Route metadata with size, stops and path")
     args = parser.parse_args()
     route = None
+    metadata = None
     if args.route_json:
         points = json.loads(args.route_json.read_text(encoding="utf-8"))
-        if len(points) < 2 or any(len(point) != 2 for point in points):
-            parser.error("--route-json needs at least two [x,y] points")
-        route = [tuple(map(int, point)) for point in points]
+        if isinstance(points, dict):
+            metadata = points
+        else:
+            if len(points) < 2 or any(len(point) != 2 for point in points):
+                parser.error("--route-json needs at least two [x,y] points")
+            route = [tuple(map(int, point)) for point in points]
     if args.overlay_dir:
         args.overlay_dir.mkdir(parents=True, exist_ok=True)
     failed = False
     for path in args.images:
         overlay = args.overlay_dir / path.name if args.overlay_dir else None
-        found = find_waypoints(path, overlay, route)
+        if metadata is not None:
+            found = validate_metadata(path, metadata, overlay, args.expected)
+        else:
+            found = find_waypoints(path, overlay, route)
         status = "OK" if len(found) == args.expected else "FAIL"
-        print(f"{status} {path.name}: {len(found)} areas: {[(x, y) for x, y, _ in found]}")
+        coords = [(stop["x"], stop["y"]) for stop in found] if metadata else [(x, y) for x, y, _ in found]
+        print(f"{status} {path.name}: {len(found)} areas: {coords}")
         failed |= len(found) != args.expected
     if failed:
         sys.exit(1)

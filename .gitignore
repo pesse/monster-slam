@@ -40,3 +40,8 @@ raw/
 .envrc
 .direnv/
 .claude/settings.local.json
+
+# Quellbilder der Karten: im Spiel und im Repo liegen nur die WebPs daraus
+# (assets/maps/export_webp.py), die PNGs bleiben beim Bildprozess.
+assets/maps/**/*.png
+assets/maps/**/*.png.import

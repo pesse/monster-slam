@@ -4,8 +4,8 @@ extends RefCounted
 ##
 ## Je Buch ein Verzeichnis unter assets/maps/<book>/:
 ##
-##     book.png          die Buchkarte — die Units sind ihre Gebiete
-##     unit<n>.png       die Gebietskarte einer Unit — dort liegen ihre Level
+##     book.webp         die Buchkarte — die Units sind ihre Gebiete
+##     unit<n>.webp      die Gebietskarte einer Unit — dort liegen ihre Level
 ##     map.json          wo die Punkte liegen, in Anteilen des Bildes (0..1)
 ##
 ## Das Seitenverhältnis gibt das Bild vor (MapCanvas), gedacht ist 16:9.
@@ -21,7 +21,8 @@ extends RefCounted
 ## Punkte setzt man in der Werkbank scenes/dev/map_lab.tscn, nicht von Hand.
 
 const ROOT := "res://assets/maps"
-const EXTENSIONS := ["png", "webp", "jpg"]
+## WebP zuerst: die PNGs daneben sind die Quellen, aus denen export_webp.py die Bilder macht.
+const EXTENSIONS := ["webp", "png", "jpg"]
 
 ## Geladene Bilder, über den Szenenwechsel hinaus gehalten: der Ressourcen-Cache von Godot
 ## vergisst ein Bild, sobald niemand es mehr hält — und der Zoom von der Buch- in die
