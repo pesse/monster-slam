@@ -100,10 +100,8 @@ theme_type_variation = &"Title"
 layout_mode = 2
 text = "Unit"
 
-
-[node name="Fortress" type="PanelContainer" parent="Hud/Corners"]
+[node name="BottomRight" type="HBoxContainer" parent="Hud/Corners"]
 unique_name_in_owner = true
-theme_type_variation = &"MapBanner"
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
@@ -114,28 +112,43 @@ grow_horizontal = 0
 grow_vertical = 0
 mouse_filter = 2
 
-[node name="Row" type="HBoxContainer" parent="Hud/Corners/Fortress"]
+[node name="FirstPersonToggle" type="Button" parent="Hud/Corners/BottomRight"]
+unique_name_in_owner = true
+visible = false
+theme_type_variation = &"MapButton"
+layout_mode = 2
+focus_mode = 0
+toggle_mode = true
+text = "👁"
+
+[node name="Fortress" type="PanelContainer" parent="Hud/Corners/BottomRight"]
+unique_name_in_owner = true
+theme_type_variation = &"MapBanner"
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Icon" type="Label" parent="Hud/Corners/Fortress/Row"]
+[node name="Row" type="HBoxContainer" parent="Hud/Corners/BottomRight/Fortress"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Icon" type="Label" parent="Hud/Corners/BottomRight/Fortress/Row"]
 theme_type_variation = &"SkillIcon"
 layout_mode = 2
 size_flags_vertical = 4
 text = "🏰"
 
-[node name="Lines" type="VBoxContainer" parent="Hud/Corners/Fortress/Row"]
+[node name="Lines" type="VBoxContainer" parent="Hud/Corners/BottomRight/Fortress/Row"]
 theme_type_variation = &"Tight"
 layout_mode = 2
 mouse_filter = 2
 
-[node name="FortressTitle" type="Label" parent="Hud/Corners/Fortress/Row/Lines"]
+[node name="FortressTitle" type="Label" parent="Hud/Corners/BottomRight/Fortress/Row/Lines"]
 unique_name_in_owner = true
 theme_type_variation = &"SectionTitle"
 layout_mode = 2
 text = "Festung · Stufe 0"
 
-[node name="FortressBar" type="ProgressBar" parent="Hud/Corners/Fortress/Row/Lines"]
+[node name="FortressBar" type="ProgressBar" parent="Hud/Corners/BottomRight/Fortress/Row/Lines"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 8)
 layout_mode = 2
@@ -143,7 +156,7 @@ mouse_filter = 2
 max_value = 1.0
 show_percentage = false
 
-[node name="FortressNext" type="Label" parent="Hud/Corners/Fortress/Row/Lines"]
+[node name="FortressNext" type="Label" parent="Hud/Corners/BottomRight/Fortress/Row/Lines"]
 unique_name_in_owner = true
 theme_type_variation = &"Caption"
 layout_mode = 2

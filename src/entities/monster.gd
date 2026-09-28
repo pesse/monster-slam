@@ -23,6 +23,12 @@ var xp: int = Experience.MONSTER_XP_MIN
 ## Zeitpunkt des Spawns (ms) für die Antwortzeit-Messung; vom WaveRunner gesetzt.
 var spawned_at_ms: int = 0
 
+## Ich-Sicht: das Schild hat eine feste Größe im Bild statt in der Welt — sonst ist ein
+## Prompt am Spawn unlesbar klein und direkt vor der Nase riesig. Vor add_child setzen.
+var screen_sized_label := false
+## Bildgröße des Schilds in der Ich-Sicht (Label3D.fixed_size rechnet damit je Bildhöhe).
+const SCREEN_LABEL_PIXEL_SIZE := 0.0009
+
 var _speed: float = 2.0
 var _target_z: float = 0.0
 var _done: bool = false
@@ -52,6 +58,9 @@ func setup(def: Dictionary, task_data: Dictionary, target_z: float, speed_units:
 
 func _ready() -> void:
 	_label.text = str(task.get("prompt", "?"))
+	if screen_sized_label:
+		_label.fixed_size = true
+		_label.pixel_size = SCREEN_LABEL_PIXEL_SIZE
 	_apply_model()
 
 
@@ -105,6 +114,12 @@ func _setup_animation(model_root: Node3D) -> void:
 			lib.get_animation(candidate).loop_mode = Animation.LOOP_LINEAR
 			anim.play(candidate)
 			return
+
+
+## Bleibt stehen, wo es ist, und erreicht die Festung nicht mehr — getroffen, aber das
+## Platzen kommt später (Sturmangriff in der Ich-Sicht).
+func halt() -> void:
+	_done = true
 
 
 func _physics_process(delta: float) -> void:

@@ -43,6 +43,7 @@ var _level_before: int = 1
 var _level_profile_before: String = ""
 var _gold_before: int = 0
 var _wallet_profile_before: String = ""
+var _unlimited_gold_before := false
 
 
 func before_test() -> void:
@@ -60,6 +61,9 @@ func before_test() -> void:
 	PlayerLevel.level = 1
 	Wallet.player_id = TEST_PROFILE
 	Wallet.gold = 0
+	# Im Debug-Build (auch im Testlauf) kostet sonst nichts etwas.
+	_unlimited_gold_before = Wallet.unlimited_gold
+	Wallet.unlimited_gold = false
 	_remove_files()
 	_book = auto_free(FixedBook.new())
 	_book.player_id = TEST_PROFILE
@@ -72,6 +76,7 @@ func after_test() -> void:
 	PlayerLevel.level = _level_before
 	Wallet.player_id = _wallet_profile_before
 	Wallet.gold = _gold_before
+	Wallet.unlimited_gold = _unlimited_gold_before
 
 
 func _remove_files() -> void:
@@ -118,6 +123,19 @@ func test_a_big_skill_waits_for_its_points() -> void:
 	_give_points(4)
 	assert_bool(_book.unlock("s.right")).is_true()
 	assert_int(_book.available()).is_equal(0)
+
+
+## Debug-Build: ohne ein einziges Level ist alles lernbar, und gespeichert wird trotzdem
+## nur die Liste der Knoten. Eine Instanz ohne den Schalter rechnet wie immer.
+func test_unlimited_points_learn_without_levels() -> void:
+	assert_bool(_book.unlimited_points).is_false()
+	assert_bool(_book.unlock("s.root")).is_false()
+	_book.unlimited_points = true
+	assert_bool(_book.unlock("s.root")).is_true()
+	assert_bool(_book.unlock("s.right")).is_true()
+	assert_int(_book.available()).is_equal(_book.UNLIMITED_POINTS)
+	_book.unlimited_points = false
+	assert_int(_book.available()).is_less(0)
 
 
 ## Eine Id, die es nicht gibt, ist kein Absturz, sondern ein `false`.

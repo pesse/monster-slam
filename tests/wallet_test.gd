@@ -116,3 +116,14 @@ func test_label_groups_thousands() -> void:
 	assert_str(_wallet.label(7)).is_equal("7 Gold")
 	assert_str(_wallet.label(1240)).is_equal("1.240 Gold")
 	assert_str(_wallet.label(1234567)).is_equal("1.234.567 Gold")
+
+
+## Debug-Build: jeder Kauf geht, abgezogen und gespeichert wird nichts — verdient wird echt.
+func test_unlimited_gold_buys_without_spending() -> void:
+	_wallet.unlimited_gold = true
+	_wallet.earn(5)
+	assert_bool(_wallet.can_afford(1_000_000)).is_true()
+	assert_bool(_wallet.spend(1_000_000)).is_true()
+	assert_int(_wallet.gold).is_equal(5)
+	assert_str(_wallet.label()).contains("∞")
+	assert_str(_wallet.label(12)).is_equal("12 Gold")

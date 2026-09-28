@@ -4,6 +4,7 @@ extends Node3D
 ## Nutzt ausschließlich bestehende Autoloads + AnswerEvaluator — rein additiv.
 
 const MONSTER_SCENE := preload("res://scenes/entities/monster.tscn")
+const FIRST_PERSON_SCENE := preload("res://scenes/battle/first_person_view.tscn")
 const GOAL_Z := 6.5           # Festungsfront (Monster-Ziel)
 const SPAWN_Z := -24.0        # Spawn am hinteren Ende der Bahn (längerer Anmarsch)
 const LANE_HALF_WIDTH := 7.0
@@ -60,6 +61,13 @@ var _fortress: Node3D = null
 ## Das Debug-Panel baut nur das Bild um und fasst diesen Wert nicht an.
 var _fortress_tier: int = -1
 var _cutscene: bool = false   # läuft gerade die Ausbau-Cutscene? (unterdrückt Kamera-Wackeln)
+## Die Ich-Sicht (Späher-Baum, RunRequest.first_person), oder null für die Iso-Kamera.
+var _fp: FirstPersonView = null
+## Spielt dieser Lauf aus der Ich-Sicht? Einmal am Anfang gefragt: schon die Streudeko
+## richtet sich danach, bevor die Ich-Sicht steht.
+var _first_person_run := false
+## Laufende Sturmangriffe (Ich-Sicht): so lange wartet das Wellenende.
+var _charging := 0
 
 @onready var _monsters: Node3D = $Monsters
 @onready var _camera: Camera3D = $CameraPivot/Camera3D
@@ -79,6 +87,7 @@ var _leaving := false
 
 func _ready() -> void:
 	_rng.randomize()
+	_first_person_run = RunRequest.first_person()
 	_setup_view()
 	# Der Kampf kommt aus der Ferne heran (SceneZoom, wie die Karten): das Gelände wird für
 	# den weitesten Blick gebaut, sonst sähe man beim Heranzoomen seinen Rand.
@@ -99,6 +108,8 @@ func _ready() -> void:
 			+ FortressTier.health_bonus(_fortress_tier)
 	GameState.apply_skills(skill_bonuses)
 	_slow_motion.apply_skills(skill_bonuses)
+	if _first_person_run:
+		_setup_first_person(skill_bonuses)
 	# Der Lauf beginnt hier, nicht mit der ersten Welle: alles, was über die Wellen hinweg
 	# zählt (Sitzungs-Log, GameState-Zähler), hängt an diesem Punkt.
 	EventBus.run_started.emit()
@@ -139,6 +150,7 @@ func _leave_battle() -> void:
 	if _leaving:
 		return
 	_leaving = true
+	_set_view_active(false)
 	MapSelection.zoom_out = RunRequest.is_level()
 	var view_size := _camera.size
 	_scene_zoom.cover(func(k: float) -> void:
@@ -306,6 +318,8 @@ func _scatter(parent: Node3D, filename: String, x: float, z: float, scale: float
 	_place_model(parent, filename, Vector3(x, _ground_y(x, z), z), _rng.randf_range(0.0, 360.0), Vector3.ONE * scale)
 
 
+const GRASS_SCALE_FIRST_PERSON := 0.4
+
 ## Randomisierte Streudekoration (jeder Start anders): Bäume an den Seitenstreifen
 ## (halten den Lauf-Korridor frei), Steine/Grasbüschel übers Feld, ein paar
 ## Requisiten und Fackelsäulen. Alles hinter der Festung (z < 5). Fortress bleibt fix.
@@ -326,9 +340,11 @@ func _decorate() -> void:
 	for i in _rng.randi_range(5, 10):
 		_scatter(d, "rock.glb", _rng.randf_range(-10.0, 10.0), _rng.randf_range(z_back, z_front), _rng.randf_range(1.6, 2.6))
 
-	# Grasbüschel
+	# Grasbüschel. Für die Draufsicht bemessen — aus Augenhöhe stünden sie als Hecke
+	# zwischen Spieler und Monstern, deshalb in der Ich-Sicht deutlich kleiner.
+	var grass_scale := GRASS_SCALE_FIRST_PERSON if _first_person_run else 1.0
 	for i in _rng.randi_range(22, 34):
-		_scatter(d, "grass.glb", _rng.randf_range(-11.0, 11.0), _rng.randf_range(z_back, z_front + 0.5), _rng.randf_range(1.2, 2.0))
+		_scatter(d, "grass.glb", _rng.randf_range(-11.0, 11.0), _rng.randf_range(z_back, z_front + 0.5), _rng.randf_range(1.2, 2.0) * grass_scale)
 
 	# Fässer/Kisten an den Rändern
 	for i in _rng.randi_range(3, 6):
@@ -530,6 +546,15 @@ func _play_upgrade_cutscene(tier: int, bonus: int) -> void:
 		return
 	_cutscene = true
 	_shake_left = 0.0                 # laufendes Wackeln stoppen, sonst kämpft es mit der Fahrt
+	if _fp != null:
+		# Aus der Ich-Sicht fährt keine Kamera: Blitz und Banner stehen, solange die Fahrt
+		# der Iso-Kamera dauern würde.
+		_fp.shake(Vector2.ZERO)
+		_spawn_explosion(Vector3(0.0, 2.0, GOAL_Z + 2.0), Color(1.0, 0.85, 0.3), 3.0)
+		_show_upgrade_banner(tier, bonus)
+		await get_tree().create_timer(2.4).timeout
+		_cutscene = false
+		return
 
 	var pivot := $CameraPivot as Node3D
 	var pivot_base := pivot.position
@@ -633,11 +658,14 @@ func _process(delta: float) -> void:
 	if _shake_left <= 0.0:
 		return
 	_shake_left = max(0.0, _shake_left - delta)
-	if _shake_left == 0.0:
-		_camera.position = _cam_base
-	else:
+	var offset := Vector2.ZERO
+	if _shake_left > 0.0:
 		var mag := _shake_mag * (_shake_left / SHAKE_DURATION)
-		_camera.position = _cam_base + Vector3(randf_range(-mag, mag), randf_range(-mag, mag), 0.0)
+		offset = Vector2(randf_range(-mag, mag), randf_range(-mag, mag))
+	if _fp != null:
+		_fp.shake(offset)
+	else:
+		_camera.position = _cam_base + Vector3(offset.x, offset.y, 0.0)
 
 
 ## Escape bricht den laufenden Kampf ab. Bewusst `_input` und nicht `_unhandled_input`:
@@ -677,6 +705,12 @@ func _abort_battle() -> void:
 
 ## Die Pause gehört zum Kampf: ein Szenenwechsel mitten in einer Feier darf sie nicht
 ## ins Menü mitnehmen.
+## Die Ich-Sicht fängt die Maus nur, solange gekämpft wird. Ohne Ich-Sicht nichts.
+func _set_view_active(on: bool) -> void:
+	if _fp != null:
+		_fp.set_active(on)
+
+
 func _exit_tree() -> void:
 	get_tree().paused = false
 
@@ -688,6 +722,7 @@ func _on_fast_resolve_pressed() -> void:
 	if _finished or _fast_resolving:
 		return
 	_answer_input.visible = false
+	_set_view_active(false)
 	_fast_resolve_confirm.ask("Schnell auflösen?",
 			"Die übrigen Monster laufen im Zeitraffer durch und treffen die Festung wie sonst "
 			+ "auch. Ihre Wörter zählen als nicht gewusst und werden danach aufgelöst.",
@@ -697,6 +732,7 @@ func _on_fast_resolve_pressed() -> void:
 func _on_fast_resolve_cancelled() -> void:
 	if not _finished and not _fast_resolving:
 		_answer_input.visible = true
+		_set_view_active(true)
 
 
 ## Spult den Rest der Welle vor — und tut sonst NICHTS. Jedes Monster kommt über den
@@ -710,6 +746,9 @@ func _fast_resolve_wave() -> void:
 	_fast_resolving = true
 	_answer_input.visible = false
 	_fast_resolve_button.disabled = true
+	# Ich-Sicht: zurück zum Laufen — die Frage hat die Maus freigegeben, und eine Eingabe
+	# gibt es im Zeitraffer nicht mehr.
+	_set_view_active(true)
 	EventBus.wave_fast_resolved.emit(maxi(0, _total - _spawned), _active.size())
 	_slow_motion.fast_forward()
 
@@ -743,6 +782,7 @@ func _start_next_wave() -> void:
 	_held_answers.clear()
 	_fast_resolve_button.visible = true
 	_fast_resolve_button.disabled = false
+	_set_view_active(true)
 
 	GameState.current_wave = "procedural_%d" % _wave_number
 	# Tempo = Schwierigkeit × profilweite Grund-Geschwindigkeit (Barrierefreiheit / Grundtempo).
@@ -801,6 +841,7 @@ func _nothing_playable(spawns: Array) -> bool:
 func _show_no_content() -> void:
 	_no_content = true
 	_finished = true
+	_set_view_active(false)
 	_answer_input.visible = false
 	_fast_resolve_button.visible = false
 	_stats.hide_stats()
@@ -857,6 +898,7 @@ func _spawn(entry: Dictionary) -> void:
 	monster.reward = plan["reward"]
 	monster.xp = plan["xp"]
 	monster.spawned_at_ms = Time.get_ticks_msec()
+	monster.screen_sized_label = _fp != null
 	monster.position = Vector3(randf_range(-LANE_HALF_WIDTH, LANE_HALF_WIDTH), 0.0, SPAWN_Z)
 	monster.reached_goal.connect(_on_monster_reached_goal)
 	_monsters.add_child(monster)
@@ -880,7 +922,7 @@ func _on_answer_submitted(text: String) -> void:
 	# ("take" gegen "take (on sth.)").
 	var partial: Monster = null
 	var partial_form := ""
-	for monster in _active:
+	for monster in _hittable():
 		var verdict := _evaluator.evaluate(monster.task.get("accepted_answers", []), text)
 		if not bool(verdict["matched"]):
 			continue
@@ -904,6 +946,7 @@ func _on_answer_submitted(text: String) -> void:
 	EventBus.answer_judged.emit(text, {
 		"matched": false, "complete": false, "learnable_id": "", "source_id": "",
 		"response_time_ms": 0, "canonical": "", "candidates": _active_learnable_ids(),
+		"unseen": _unseen_learnable_ids(),
 	})
 	_flash_feedback(FLASH_WRONG)
 	_shake()
@@ -918,6 +961,66 @@ func _active_learnable_ids() -> Array:
 	for monster in _active:
 		ids.append(str(monster.task.get("learnable_id", "")))
 	return ids
+
+
+## Die Monster, die eine Antwort treffen kann: alle — außer in der Ich-Sicht, dort nur
+## die im Bild. Die einzige Regel, die die Ich-Sicht zum Kampf dazubringt.
+func _hittable() -> Array[Monster]:
+	if _fp == null:
+		return _active
+	var out: Array[Monster] = []
+	for monster in _active:
+		if _in_view(monster):
+			out.append(monster)
+	return out
+
+
+## Im Bild heißt: der Körper oder das Schild über ihm. Aus der Nähe ist das Schild über
+## dem Bildrand, von weit weg der Körper hinter dem Schild zu klein, um zu zählen.
+func _in_view(monster: Monster) -> bool:
+	return FirstPersonView.sees(_fp.camera, monster.global_position + Vector3(0.0, 1.2, 0.0)) \
+			or FirstPersonView.sees(_fp.camera, monster.global_position + Vector3(0.0, 4.6, 0.0))
+
+
+## Für die Spur: welche Aufgaben standen auf dem Feld, aber außerhalb des Bildes? Daran
+## liest man ab, dass eine richtige Antwort am Blick und nicht am Wort gescheitert ist.
+## Leer außerhalb der Ich-Sicht.
+func _unseen_learnable_ids() -> Array:
+	var ids: Array = []
+	if _fp == null:
+		return ids
+	for monster in _active:
+		if not _in_view(monster):
+			ids.append(str(monster.task.get("learnable_id", "")))
+	return ids
+
+
+## Baut die Ich-Sicht auf: Spieler vor dem Festungstor, Blick die Bahn hinunter, Nebel
+## statt Weltrand. Die Iso-Kamera bleibt in der Szene — Boden und Deko sind für ihren
+## (weitesten) Blick gebaut, und SceneZoom darf sie weiter bewegen, sie ist nur nicht
+## mehr die aktive.
+func _setup_first_person(bonuses: Dictionary) -> void:
+	_fp = FIRST_PERSON_SCENE.instantiate() as FirstPersonView
+	_fp.speed = FirstPersonView.speed_for(bonuses)
+	_fp.charges = FirstPersonView.charges_for(bonuses)
+	_fp.bounds = Rect2(-FIELD_HALF_X + 1.0, SPAWN_Z - 1.0,
+			2.0 * (FIELD_HALF_X - 1.0), GOAL_Z - 1.5 - (SPAWN_Z - 1.0))
+	_fp.position = Vector3(0.0, 0.0, GOAL_Z - 2.0)
+	_fp.answer_input = _answer_input
+	add_child(_fp)
+	(_fp.get_node("Overlay/Markers") as OffscreenMarkers).track(_fp.camera,
+			func() -> Array[Monster]: return _active)
+	# Kopie: das Environment ist eine Ressource der Szene und käme beim nächsten Kampf in
+	# der Iso-Sicht mit Nebel wieder (geladene Ressourcen sind geteilt).
+	var world := $WorldEnvironment as WorldEnvironment
+	var env := world.environment.duplicate() as Environment
+	env.fog_enabled = true
+	env.fog_mode = Environment.FOG_MODE_DEPTH
+	env.fog_light_color = env.background_color
+	env.fog_depth_begin = FirstPersonView.FOG_BEGIN
+	env.fog_depth_end = FirstPersonView.FOG_END
+	world.environment = env
+	_answer_input.gated = true
 
 
 ## Treffer verbuchen. `full_form` != "" heißt: die Antwort war richtig, ließ aber einen
@@ -944,7 +1047,10 @@ func _score_hit(monster: Monster, text: String = "", full_form: String = "") -> 
 		if not lexeme_id.is_empty():
 			EventBus.lexeme_mastered.emit(lexeme_id)
 	var pos := monster.position
-	_defeat(monster)
+	if _fp != null and _fp.charges:
+		_defeat_by_charge(monster)
+	else:
+		_defeat(monster)
 	_flash_feedback(FLASH_CORRECT)
 	if not full_form.is_empty():
 		_spawn_form_hint(pos + Vector3(0.0, 3.4, 0.0), full_form)
@@ -1011,10 +1117,31 @@ func _task_snapshot(monster: Monster, leaked: bool) -> Dictionary:
 
 
 func _defeat(monster: Monster) -> void:
-	_active.erase(monster)
-	_wave_correct += 1
-	_wave_played_tasks.append(_task_snapshot(monster, false))
-	_spawn_explosion(monster.position + Vector3(0.0, 1.0, 0.0), Color(0.7, 1.0, 0.4), 1.5)
+	_book_defeat(monster)
+	_burst(monster)
+	_check_end()
+
+
+## Sturmangriff (Späher-Baum): gebucht wird SOFORT wie bei jedem Treffer — Lernstand,
+## Erfahrung, Punkte, Spur —, nur das Bild wartet, bis der Spieler in das Monster gekracht
+## ist. Das Monster bleibt stehen und ist nicht mehr auf dem Feld (_active): es kann die
+## Festung nicht mehr erreichen und keine zweite Antwort fangen. Das Wellenende wartet den
+## Aufprall ab, sonst stünde die Statistik vor dem Knall.
+func _defeat_by_charge(monster: Monster) -> void:
+	_book_defeat(monster)
+	monster.halt()
+	_charging += 1
+	await _fp.charge_at(monster.global_position)
+	_charging -= 1
+	if is_instance_valid(monster):
+		_shake(0.6)
+		_burst(monster, 2.2)
+	_check_end()
+
+
+## Das Bild zum Treffer: Explosion, Klang, „+XP" und das Monster geht.
+func _burst(monster: Monster, size: float = 1.5) -> void:
+	_spawn_explosion(monster.position + Vector3(0.0, 1.0, 0.0), Color(0.7, 1.0, 0.4), size)
 	# Hier und nicht in _spawn_explosion(): denselben Effekt nutzen auch der Festungsausbau
 	# und der Aufschlag eines durchgelassenen Monsters — die klingen nicht gleich.
 	Sfx.play(&"monster_kill")
@@ -1022,6 +1149,14 @@ func _defeat(monster: Monster) -> void:
 	# Punkte: sie ist der Lernfortschritt, und sie steht im HUD als Balken beim Namen —
 	# die Zahl fliegt dorthin, wo sie sich sichtbar auswirkt. Gleiche Farbe wie der Balken.
 	_spawn_xp_popup(monster.position + Vector3(0.0, 2.0, 0.0), monster.xp)
+	monster.queue_free()
+
+
+## Was ein besiegtes Monster zählt. Ohne Bild — das kommt aus _burst.
+func _book_defeat(monster: Monster) -> void:
+	_active.erase(monster)
+	_wave_correct += 1
+	_wave_played_tasks.append(_task_snapshot(monster, false))
 	# Erfahrung SOFORT verbuchen, wie das Gold in der Geldbörse: sie gehört zum Profil
 	# (PlayerLevel), nicht zum Lauf, und ein Absturz mitten in der Welle darf sie nicht
 	# kosten. Der Zähler daneben ist nur für den Wellenabschluss.
@@ -1031,8 +1166,6 @@ func _defeat(monster: Monster) -> void:
 	var info := monster.monster_def.duplicate()
 	info["reward"] = monster.reward
 	EventBus.monster_defeated.emit(info, true)
-	monster.queue_free()
-	_check_end()
 
 
 ## Deutlich sichtbarer 3D-Text (+XP), der an der Trefferstelle aufpoppt, aufsteigt
@@ -1042,6 +1175,7 @@ func _spawn_xp_popup(pos: Vector3, amount: int) -> void:
 	label.text = "+%d XP" % amount
 	label.font_size = 200
 	label.pixel_size = 0.02
+	_screen_size_in_first_person(label, POPUP_SCREEN_SCALE)
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.no_depth_test = true
 	label.modulate = Color(1.0, 0.9, 0.25)
@@ -1068,6 +1202,7 @@ func _spawn_form_hint(pos: Vector3, form: String) -> void:
 	label.text = form
 	label.font_size = 130
 	label.pixel_size = 0.02
+	_screen_size_in_first_person(label, 1.4)
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.no_depth_test = true
 	label.modulate = Color(0.85, 0.95, 1.0)
@@ -1080,6 +1215,19 @@ func _spawn_form_hint(pos: Vector3, form: String) -> void:
 	tw.tween_property(label, "position:y", pos.y + 2.0, 1.8).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tw.tween_property(label, "modulate:a", 0.0, 0.6).set_delay(1.2)
 	tw.chain().tween_callback(label.queue_free)
+
+
+## Wie groß „+XP" in der Ich-Sicht gegenüber dem Prompt-Schild steht.
+const POPUP_SCREEN_SCALE := 2.0
+
+## In der Ich-Sicht bekommt ein aufsteigender Text eine feste Bildgröße wie die Schilder
+## (Monster.screen_sized_label): in Weltgröße füllte er nach einem Sturmangriff aus der
+## Nähe das ganze Bild. `scale` ist die Größe gegenüber dem Prompt-Schild.
+func _screen_size_in_first_person(label: Label3D, scale: float) -> void:
+	if _fp == null:
+		return
+	label.fixed_size = true
+	label.pixel_size = Monster.SCREEN_LABEL_PIXEL_SIZE * scale * 64.0 / float(label.font_size)
 
 
 ## Instanziiert einen kurzlebigen Explosionseffekt an der Weltposition.
@@ -1122,6 +1270,9 @@ func _on_monster_reached_goal(monster: Monster) -> void:
 func _check_end() -> void:
 	if _finished:
 		return
+	# Ein Sturmangriff ist noch unterwegs: sein Aufprall ruft hierher zurück.
+	if _charging > 0:
+		return
 	# Meistert das letzte Monster etwas, wird erst gefeiert und dann abgerechnet —
 	# _on_celebration_finished ruft hierher zurück.
 	if _celebration.is_busy():
@@ -1137,6 +1288,7 @@ func _finish_wave(won: bool) -> void:
 		return
 	_finished = true
 	_last_won = won
+	_set_view_active(false)
 	_answer_input.visible = false
 	_fast_resolve_button.visible = false
 	# Endet die Welle, während die Rückfrage offen ist, gibt es nichts mehr aufzulösen.

@@ -531,6 +531,58 @@ Start-Screen (`🌳 Fähigkeiten`), nicht am Kampf: gelernt wird zwischen den L�
   Schriftgrößen liest `_draw()` aus dem Theme (`SkillIcon`, `SectionTitle`, `Hint`,
   `Caption`), Farbe und Zeichen kommen aus den Daten.
 
+### Ich-Sicht (Späher-Baum)
+
+Der Späherblick (`first_person`, 5 Punkte) schaltet für den **Wellenkampf** eine zweite
+Kamera frei; die Äste darunter heben nur das Lauftempo (`walk_speed`, Anteile auf
+`FirstPersonView.BASE_SPEED`). Der Bosskampf bleibt, wie er ist.
+
+- **Wahl und Freischaltung sind getrennt.** Der Schalter „👁" auf der Gebietskarte (links neben der Festung)
+  setzt nur einen Wunsch in `RunRequest`; `RunRequest.first_person()` gilt erst mit
+  gelerntem Knoten und nur für ein Level. Kein zweiter Merker: wer den Knoten verlernt,
+  steht wieder auf der Festung. Der Wunsch hält bis zum Programmende, nicht im Profil.
+  Im Debug-Build steht der Schalter immer da und gilt auch ohne Knoten
+  (`RunRequest.first_person_selectable`) — zum Ausprobieren ohne fünf Skillpunkte. Dazu hat
+  dort das SkillBook des Profils unbegrenzt Punkte (`SkillBook.unlimited_points`, nur das
+  Autoload setzt es); gespeichert wird auch dann nur die Liste der Knoten. Ebenso kostet
+  dort nichts Gold (`Wallet.unlimited_gold`: `spend` und `can_afford` gehen immer, nichts
+  wird abgezogen, verdient und gespeichert wird das echte Gold). Tests am Autoload
+  schalten beides ab.
+- **Der Kampf ist derselbe.** `WaveRunner` baut Boden, Deko und Festung wie immer für die
+  Iso-Kamera (die bleibt in der Szene, nur nicht aktiv) und setzt `FirstPersonView`
+  darauf: Nebel in der Hintergrundfarbe statt Weltrand, kleineres Gras, Prompt-Schilder in
+  fester Bildgröße (`Monster.screen_sized_label`). Wellen, Tempo, `t - c` und Auswertung
+  fasst die Ich-Sicht nicht an.
+- **Die eine neue Regel: eine Antwort trifft nur ein Monster im Bild** (`WaveRunner._hittable`,
+  `FirstPersonView.sees` — Körper oder Schild im Sichtkegel, verdeckt zählt als sichtbar).
+  Eine richtige Antwort auf ein Monster außerhalb ist eine Falscheingabe; die Spur trägt
+  dafür bei der Falscheingabe das Feld `unseen`. Pfeile am Bildrand (`OffscreenMarkers`)
+  zeigen, wohin man sich drehen muss.
+- **Eingabe mit zwei Zuständen** (`AnswerInput.gated`): zu, bis Enter sie öffnet; Enter
+  schickt ab und schließt, Escape schließt nur. Solange sie zu ist, gehören WASD/Pfeile
+  dem Laufen, solange sie offen ist, den Buchstaben — die Bewegung fragt
+  `AnswerInput.is_typing()` ausdrücklich, weil `Input.is_physical_key_pressed` den Fokus
+  nicht kennt.
+- **Die Zeitlupe hält, solange die Eingabe offen ist**: das öffnende Enter sendet
+  `EventBus.typing_started`, SlowMotion hält dann ohne Haltedauer (`hold_open`), bis
+  `typing_stopped` kommt — beim Abschicken, bei Escape und wenn die offene Eingabe
+  verschwindet. Die Nachwirkung des Zeitwandlers (`slow_hold_ms`) hat damit in der
+  Ich-Sicht nichts zu verlängern; das ist gewollt, dafür kostet der Späherblick. Die Tiefe
+  (`slow_factor`) gilt weiter.
+- **Sturmangriff** (`charge`): bei einem Treffer rast der Spieler auf das Monster zu
+  (`FirstPersonView.charge_at`), erst beim Aufprall platzt es (`WaveRunner._burst`).
+  Gebucht wird trotzdem sofort (`_book_defeat`: Lernstand, XP, Punkte, Spur) — das Bild
+  wartet, die Zahlen nicht. Das Monster steht (`Monster.halt`) und ist aus `_active`
+  heraus, kann also weder die Festung erreichen noch eine zweite Antwort fangen;
+  `_check_end` wartet laufende Anläufe ab (`_charging`). Ein zweiter Treffer während eines
+  Anlaufs lässt den ersten sofort ankommen. Aufsteigende Texte („+XP", Vollform) haben in
+  der Ich-Sicht eine feste Bildgröße, sonst füllten sie aus der Nähe das Bild.
+- **Gelaufen wird nach der Wanduhr**, nicht mit `delta`: weder Zeitlupe noch der Zeitraffer
+  von „Schnell auflösen" sollen den Spieler mitnehmen, und `Engine.time_scale` gehört
+  SlowMotion. Die Maus ist nur im laufenden Kampf gefangen (`FirstPersonView.set_active`)
+  und nicht bei offener Eingabe — die Zeit steht dann, und „Schnell auflösen" ist einen
+  Klick entfernt (`mouse_captured`). Alt gibt sie auch beim Laufen frei.
+
 ## Erweiterungspunkte für den KI-Agenten
 
 | Erweiterung | Wie | Bestehender Code betroffen? |

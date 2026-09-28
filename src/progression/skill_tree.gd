@@ -101,6 +101,9 @@ const EFFECT_KEYS: Array[String] = [
 	"max_health",
 	"slow_hold_ms",
 	"slow_factor",
+	"first_person",
+	"walk_speed",
+	"charge",
 ]
 
 
@@ -433,6 +436,12 @@ static func effect_label(key: String, value: float) -> String:
 			return "+%s s Zeitlupe" % _decimal(value / 1000.0, 1)
 		"slow_factor":
 			return "Zeitlupe %s tiefer" % _decimal(absf(value), 2)
+		"first_person":
+			return "Ich-Sicht freigeschaltet"
+		"walk_speed":
+			return "+%d %% Laufgeschwindigkeit" % int(round(value * 100.0))
+		"charge":
+			return "Sturmangriff bei jedem Treffer"
 	return ""
 
 

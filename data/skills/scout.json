@@ -1,0 +1,93 @@
+[
+	{
+		"id": "tree.scout",
+		"kind": "tree",
+		"order": 4,
+		"name": "Späher",
+		"description": "Steig von der Festung herunter und lauf selbst zwischen den Monstern herum.",
+		"color": "#8fcf7a"
+	},
+	{
+		"id": "skill.scout.root",
+		"kind": "skill",
+		"tree": "tree.scout",
+		"name": "Späherblick",
+		"icon": "👁",
+		"description": "Schaltet die Ich-Sicht frei: auf der Gebietskarte wählbar. Du läufst mit WASD, Enter öffnet die Eingabe und hält die Zeit an, bis du abschickst — getroffen wird nur, was du siehst.",
+		"cost": 5,
+		"tier": 1,
+		"branch": 0,
+		"requires": [],
+		"effects": {
+			"first_person": 1
+		}
+	},
+	{
+		"id": "skill.scout.boots",
+		"kind": "skill",
+		"tree": "tree.scout",
+		"name": "Leichte Stiefel",
+		"icon": "👢",
+		"description": "Du läufst in der Ich-Sicht 25 % schneller.",
+		"cost": 1,
+		"tier": 2,
+		"branch": 0,
+		"requires": [
+			"skill.scout.root"
+		],
+		"effects": {
+			"walk_speed": 0.25
+		}
+	},
+	{
+		"id": "skill.scout.light",
+		"kind": "skill",
+		"tree": "tree.scout",
+		"name": "Leichtfuß",
+		"icon": "🪶",
+		"description": "Du läufst in der Ich-Sicht 25 % schneller.",
+		"cost": 1,
+		"tier": 2,
+		"branch": 1,
+		"requires": [
+			"skill.scout.root"
+		],
+		"effects": {
+			"walk_speed": 0.25
+		}
+	},
+	{
+		"id": "skill.scout.sprint",
+		"kind": "skill",
+		"tree": "tree.scout",
+		"name": "Siebenmeilenstiefel",
+		"icon": "🥾",
+		"description": "Nochmal 50 % schneller.",
+		"cost": 2,
+		"tier": 3,
+		"branch": 0,
+		"requires": [
+			"skill.scout.boots"
+		],
+		"effects": {
+			"walk_speed": 0.5
+		}
+	},
+	{
+		"id": "skill.scout.charge",
+		"kind": "skill",
+		"tree": "tree.scout",
+		"name": "Sturmangriff",
+		"icon": "💥",
+		"description": "Bei jedem Treffer rast du auf das Monster zu und krachst hinein — erst dann platzt es.",
+		"cost": 5,
+		"tier": 3,
+		"branch": 1,
+		"requires": [
+			"skill.scout.light"
+		],
+		"effects": {
+			"charge": 1
+		}
+	}
+]

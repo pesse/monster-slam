@@ -14,7 +14,8 @@ const BossFight := preload("res://src/battle/boss_fight.gd")
 @onready var _canvas: MapCanvas = %Canvas
 @onready var _title: Label = %Title
 @onready var _book: Label = %Book
-@onready var _fortress: Control = %Fortress
+## Festungsanzeige und daneben der Schalter für die Ich-Sicht: blenden zusammen ein.
+@onready var _fortress: Control = %BottomRight
 @onready var _fortress_title: Label = %FortressTitle
 @onready var _fortress_bar: ProgressBar = %FortressBar
 @onready var _fortress_next: Label = %FortressNext
@@ -37,6 +38,7 @@ func _ready() -> void:
 		MapSelection.book = str(RunRequest.level().get("book", MapSelection.book))
 		MapSelection.unit = int(RunRequest.level().get("unit", MapSelection.unit))
 	_show_image()
+	_setup_first_person_toggle()
 	# Nicht abgewartet: der Zoom soll nicht auf den Kopf warten.
 	_place_header()
 	# Erst der Zoom, dann die Rechnung: während das Bild heranfährt, rechnet nichts, und
@@ -55,6 +57,21 @@ func _ready() -> void:
 	_fill()
 	_canvas.appear()
 	create_tween().tween_property(_fortress, "modulate:a", 1.0, MapCanvas.APPEAR_TIME)
+
+
+## Der Schalter für die Ich-Sicht (nur das Auge, links an der Festungsanzeige und so hoch
+## wie sie) steht nur da, wenn der Späherblick gelernt ist (im Debug-Build immer,
+## RunRequest.first_person_selectable) — vor dem ersten Bild entschieden, damit die Ecke
+## nicht nachträglich wächst. Er gilt für die
+## Wellenkämpfe; der Boss bleibt, wie er ist (RunRequest.first_person).
+func _setup_first_person_toggle() -> void:
+	var toggle := %FirstPersonToggle as Button
+	toggle.visible = RunRequest.first_person_selectable()
+	toggle.button_pressed = RunRequest.wants_first_person()
+	toggle.toggled.connect(RunRequest.want_first_person)
+	Hints.attach(toggle, "Ich-Sicht",
+			"Du stehst selbst auf dem Feld: WASD zum Laufen, die Maus zum Umsehen, Enter öffnet die Eingabe.",
+			"Getroffen wird nur ein Monster, das du gerade siehst. Der Boss bleibt, wie er ist.")
 
 
 ## Der Kopf weicht den Orten aus, bevor er zu sehen ist — die Größen stehen erst nach

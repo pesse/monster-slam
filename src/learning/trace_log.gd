@@ -167,6 +167,11 @@ func note_answer(text: String, verdict: Dictionary) -> void:
 	var canonical := str(verdict.get("canonical", ""))
 	if not canonical.is_empty():
 		line["canonical"] = canonical
+	# Ich-Sicht: was auf dem Feld stand, aber nicht im Bild war — und deshalb nicht zu
+	# treffen. Nur wenn es das gibt; die Iso-Sicht schreibt die Zeile wie bisher.
+	var unseen: Array = verdict.get("unseen", [])
+	if not unseen.is_empty():
+		line["unseen"] = unseen
 	_write(line)
 
 
