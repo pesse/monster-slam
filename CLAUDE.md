@@ -106,7 +106,9 @@ urheberrechtlich geschütztem Lehrbuchmaterial und liegen im privaten Submodule
   Thema. Die Bilder entstehen außerhalb dieses Repos.
 - Es gibt keinen Grundwortschatz mehr: jedes Lexem trägt `book` und `unit`.
 - Jede Unit mit Gebietsbild nennt unter `themes` in `map.json` ein `BattleTheme`
-  (`assets/battle_themes/`) — der Kampf steht in der Landschaft der Karte. Farben am Bild
+  (`assets/battle_themes/`) — der Kampf steht in der Landschaft der Karte. Ein Stop mit
+  anderer Umgebung (Siedlung, Stadtpark) bekommt ein eigenes über
+  `{ "default": …, "<key>": … }`; das Licht teilt er über `light_from` mit der Unit. Farben am Bild
   der Werkbank abstimmen (`battle_theme_lab`), nicht an den Zahlen. Deko-Modelle eines
   Themas liegen unter `assets/models/`; eigene baut `src/dev/model_forge.gd` in der Größe
   ihres Platzes (Vergleich: `-- --specimens`). Bodentexturen sind grau und kacheln

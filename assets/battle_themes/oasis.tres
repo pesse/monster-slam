@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="BattleTheme" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/battle/battle_theme.gd" id="1_theme"]
+
+[resource]
+script = ExtResource("1_theme")
+light_from = "desert"
+ground_texture = "sand"
+ground_low = Color(0.88, 0.78, 0.46, 1)
+ground_high = Color(0.94, 0.84, 0.54, 1)
+hill = Color(0.88, 0.6, 0.36, 1)
+trees = Array[String](["forge/palm.glb", "forge/palm.glb", "forge/palm.glb", "forge/olive.glb"])
+rocks = Array[String](["forge/sandstone_rock.glb"])
+grass = Array[String](["forge/reeds.glb", "forge/dry_grass.glb"])
+props = Array[String]([])
+landmarks = Array[String](["forge/oasis_pond.glb"])

@@ -474,6 +474,14 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
   ein Test hält, dass jede genannte Textur dort bestellt ist. Die Vorgaben der Klasse SIND
   das Aussehen ohne Thema (Expertenmodus, Unit ohne Eintrag). Ein Test hält, dass jede
   Unit mit Gebietsbild ein vorhandenes Thema nennt (`tests/battle_theme_test.gd`).
+  Liegt auf einer Karte eine Siedlung oder Stadt zwischen Busch und Strand, nennt die Unit
+  statt eines Namens `{ "default": …, "t2": … }`: ein Stop mit eigenem Eintrag bekommt
+  sein Thema, jeder andere `default` (`BattleTheme.for_level` liest dafür `key` des
+  Levels). Das Licht gehört der Unit, nicht dem Ort: ein Thema mit `light_from` nimmt
+  Hintergrund, Umgebungslicht und Sonne von dort, so dass eine Unit zu einer Tageszeit
+  spielt. Eine Stadt ist im Kampf ein Stadtpark — Rasen, Laternen, Bänke, Türme nur im
+  Umland —, denn die Hügel sind in jedem Thema dieselben und gepflastert sähen sie falsch
+  aus. Der Bosskampf trägt kein Thema.
   Die Farben kommen im Licht des Kampfes etwa halb so hell an, wie sie in der `.tres`
   stehen — abgestimmt wird am Bild der Werkbank, nicht an den Zahlen.
 - **Schatten und Licht des Bodens.** Der Bodenshader beleuchtet selbst (`light()`): Grund

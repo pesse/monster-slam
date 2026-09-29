@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="BattleTheme" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/battle/battle_theme.gd" id="1_theme"]
+
+[resource]
+script = ExtResource("1_theme")
+ground_texture = "autumn_leaves"
+ground_texture_strength = 0.8
+ground_low = Color(0.64, 0.46, 0.2, 1)
+ground_high = Color(0.76, 0.56, 0.26, 1)
+hill = Color(0.66, 0.58, 0.42, 1)
+background = Color(0.1, 0.07, 0.08, 1)
+ambient = Color(0.66, 0.58, 0.52, 1)
+ambient_energy = 1.05
+sun_color = Color(1.0, 0.88, 0.72, 1)
+sun_energy = 1.1
+trees = Array[String](["forge/autumn_red.glb", "forge/autumn_orange.glb", "forge/autumn_yellow.glb", "forge/pine.glb"])
+rocks = Array[String](["forge/boulder_grey.glb", "forge/boulder_moss.glb"])
+grass = Array[String](["forge/dry_grass.glb", "forge/fern.glb"])
+props = Array[String]([])
+landmarks = Array[String]([])

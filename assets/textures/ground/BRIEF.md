@@ -1,8 +1,8 @@
 # Auftrag: Bodentexturen für das Schlachtfeld
 
-Dieser Ordner nimmt **fünf graue, nahtlos kachelnde Detailtexturen** für den Boden des
+Dieser Ordner nimmt **graue, nahtlos kachelnde Detailtexturen** für den Boden des
 Kampfes auf. Das Spiel legt sie von oben auf den Boden und nimmt sie automatisch, sobald
-die Datei hier liegt — sonst ist nichts zu tun. Bitte nur die fünf PNGs (und die
+die Datei hier liegt — sonst ist nichts zu tun. Bitte nur die PNGs aus der Liste unten (und die
 `CREDITS.md`) hier ablegen; Entwürfe, Vorschauen und Mosaike woanders, denn jede Bilddatei
 in diesem Ordner wird ins Spiel importiert.
 
@@ -28,7 +28,7 @@ Gesehen wird der Boden auf zwei Arten:
 - **Ich-Sicht**: aus 1,6 m Augenhöhe über den Boden, bis zu einem Nebel. Hier sieht man die
   Textur aus der Nähe — sie soll dort glaubhaft aussehen, nicht verwaschen.
 
-## Technische Vorgaben (für alle fünf)
+## Technische Vorgaben (für alle)
 
 | | |
 | --- | --- |
@@ -111,6 +111,77 @@ Spiegelung. Themen: Eis, Tundra, Winterwald.
 > (values mostly 110–150), realistic snow grain kept low in contrast, flat even overcast lighting, no cast shadows, no
 > sparkle, no footprints, no ice reflections, no objects, no text.
 
+### `gravel.png`
+
+Steinwüste des australischen Outbacks (Gibber-Ebene): eine dichte, flache Decke aus
+abgerundeten Kieseln von 15–60 Pixeln, eng aneinander, dazwischen etwas feiner Staub. Die
+Steine leicht unterschiedlich hell, ohne einzelnen großen Brocken; in Gruppen etwas
+dichter oder lockerer, damit eine ruhige Fleckung von 60–150 Pixeln entsteht. Das Spiel
+färbt sie rot. Themen: Outback, Farm, Sandsteinplateau.
+
+> Seamless tileable photorealistic ground texture, delit albedo map, grayscale, top-down
+> orthographic view, gibber plain: dense flat layer of small rounded pebbles 15–60 px packed
+> closely with a little fine dust between, pebbles vary slightly in brightness, loose soft
+> clusters forming a calm mottling, no large single stones, flat even lighting, no cast
+> shadows, low contrast, average mid-gray, no objects, no text.
+
+### `eucalyptus_litter.png`
+
+Boden eines Eukalyptuswalds: lange, schmale Blätter (sichelförmig, 40–90 Pixel lang, nur
+8–15 breit) und abgeschälte Rindenstreifen, die flach und kreuz und quer liegen, dazwischen
+trockene Erde. Heller und trockener als `forest_floor`, kein Moos. Die Blätter so zahlreich,
+dass sie zu einer Fleckung verschmelzen. Themen: Busch an der Küste, Feuchtgebiet.
+
+> Seamless tileable photorealistic ground texture, delit albedo map, grayscale, top-down
+> orthographic view, dry eucalyptus forest floor, many long narrow sickle-shaped leaves and
+> curled strips of shed bark lying flat in all directions, patches of dry soil between, no
+> moss, leaves merge into a calm mottling, flat even lighting, no cast shadows, low contrast,
+> average mid-gray, no objects, no text.
+
+### `marsh.png`
+
+Feuchtwiese am Billabong: flach liegendes, nasses Seggengras in weichen Polstern, dazwischen
+glatte, etwas dunklere Flecken Schlamm (60–150 Pixel). Kein offenes Wasser, keine
+Spiegelung, keine Pfützen mit hellem Rand. Thema: Feuchtgebiet.
+
+> Seamless tileable photorealistic ground texture, delit albedo map, grayscale, top-down
+> orthographic view, wet marsh meadow, flattened sedge grass in soft cushions with smooth
+> slightly darker patches of mud 60–150 px between, no open water, no reflections, no
+> puddles, flat even overcast lighting, no cast shadows, low contrast, average mid-gray, no
+> objects, no text.
+
+### `flagstone.png`
+
+Römisches Pflaster eines Forums: rechteckige und leicht unregelmäßige Steinplatten
+(60–160 Pixel, also 0,5–1,2 m), in versetzten Reihen verlegt, Kanten abgerundet und
+abgetreten, die Oberfläche fein porös wie Travertin. Die Fugen schmal (4–8 Pixel) und nur
+sanft dunkler, mit etwas Staub darin, nicht schwarz. Die Platten leicht unterschiedlich
+hell, damit eine ruhige Fleckung entsteht; keine einzelne Platte mit Riss oder Fleck, die
+auffällt, keine Inschrift, kein Muster aus farbigen Steinen. Das Spiel färbt sie warm
+beige. Themen: Forum, Markt, Hafen, Himmelsruinen.
+
+> Seamless tileable photorealistic ground texture, delit albedo map, grayscale, top-down
+> orthographic view, ancient roman forum pavement, worn rectangular travertine flagstones
+> 0.5–1.2 m laid in staggered rows, rounded worn edges, finely porous surface, narrow soft
+> joints only slightly darker with a little dust, stones vary slightly in brightness, no
+> single standout crack or stain, no inscriptions, no mosaic, flat even overcast lighting,
+> no cast shadows, low contrast, average mid-gray, no objects, no text.
+
+### `autumn_leaves.png`
+
+Herbstlaub im Mischwald: eine geschlossene Decke aus flach liegenden, breiten Blättern
+(Ahorn, Buche, Eiche; 25–70 Pixel), dicht übereinander, dazwischen kaum Erde. Die Blätter
+unterschiedlich hell, damit sie zu Laubhaufen von 80–150 Pixeln verschmelzen; **kein
+einzelnes großes Blatt**, das man im Muster wiederfindet (das war der Fehler der ersten
+`forest_floor`). Das Spiel färbt sie orange-rot. Themen: Herbstwald, Weinberg.
+
+> Seamless tileable photorealistic ground texture, delit albedo map, grayscale, top-down
+> orthographic view, autumn forest floor fully covered with flat lying broad fallen leaves
+> of maple, beech and oak 25–70 px, densely overlapping, very little soil visible, leaves
+> vary in brightness and merge into soft leaf piles 80–150 px, no single large standout
+> leaf, flat even overcast lighting, no cast shadows, low contrast, average mid-gray, no
+> objects, no text.
+
 ## Stand
 
 **Neu bestellt 2026-09-28: alle fünf realistisch** (Vorgaben oben). Die erste, handgemalte
@@ -126,6 +197,11 @@ bleibt im Spiel, bis die neue Datei sie ersetzt (gleicher Dateiname, einfach
 | `sand.png` | neu bestellt (realistisch) |
 | `dry_earth.png` | neu bestellt (realistisch) |
 | `snow.png` | neu bestellt (realistisch) |
+| `gravel.png` | erstellt (realistisch), 2026-09-29 |
+| `eucalyptus_litter.png` | erstellt (realistisch), 2026-09-29 |
+| `marsh.png` | erstellt (realistisch), 2026-09-29 |
+| `flagstone.png` | erstellt (realistisch), 2026-09-29 |
+| `autumn_leaves.png` | erstellt (realistisch), 2026-09-29 |
 
 Neue Texturen werden hier als eigener Abschnitt unter „Die Texturen" bestellt und in
 diese Tabelle eingetragen.

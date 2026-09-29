@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="BattleTheme" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/battle/battle_theme.gd" id="1_theme"]
+
+[resource]
+script = ExtResource("1_theme")
+light_from = "sydney_bush"
+ground_texture = "grass"
+ground_texture_strength = 0.8
+ground_low = Color(0.28, 0.48, 0.18, 1)
+ground_high = Color(0.42, 0.6, 0.24, 1)
+hill = Color(0.5, 0.54, 0.34, 1)
+trees = Array[String](["forge/park_tree.glb", "forge/park_tree.glb", "forge/palm.glb"])
+rocks = Array[String](["forge/boulder_grey.glb"])
+grass = Array[String]([])
+props = Array[String](["forge/street_lamp.glb", "forge/park_bench.glb", "forge/wheelie_bin.glb"])
+landmarks = Array[String](["forge/office_towers.glb"])
