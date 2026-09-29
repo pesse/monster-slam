@@ -19,6 +19,8 @@ extends Node
 ##     … -- --shoot --settings[=<reiter>] drückt „Einstellungen", Reiter 1–3 (Profil, Melden,
 ##                                       Protokoll)
 ##     … -- --shoot --badge-hint         die Karte am Medaillon der Plakette (Level, XP, Punkte)
+##     … -- --shoot --map=book [--book=<id>]            die Buchkarte
+##     … -- --shoot --map=area [--book=<id>] [--unit=N] die Gebietskarte einer Unit
 ##
 ## Das Menü liest das aktive Profil nur (Name, Gold, Level); geschrieben wird nichts.
 ## Headless gibt es keinen Renderer — deshalb GODOT_WINDOW=1.
@@ -36,6 +38,13 @@ func _ready() -> void:
 		var parts := size.split("x")
 		get_window().size = Vector2i(int(parts[0]), int(parts[1]))
 	var path := BACKDROP_SCENE if _has_arg("backdrop") else MENU_SCENE
+	var map := _arg("map")
+	if not map.is_empty():
+		var books := ContentRegistry.all_books()
+		MapSelection.book = _arg("book") if not _arg("book").is_empty() \
+				else (str(books[0]) if not books.is_empty() else "")
+		MapSelection.unit = int(_arg("unit")) if not _arg("unit").is_empty() else 1
+		path = MapSelection.AREA_SCENE if map == "area" else MapSelection.BOOK_SCENE
 	ProfileMenu.intro_done = not _has_arg("intro")
 	var screen := (load(path) as PackedScene).instantiate()
 	add_child(screen)
@@ -98,6 +107,8 @@ func _shoot() -> void:
 	var what := "backdrop" if _has_arg("backdrop") else ("intro" if _has_arg("intro") else "menu")
 	if _has_arg("library"):
 		what = "library"
+	if not _arg("map").is_empty():
+		what = "map_" + _arg("map")
 	if _has_arg("to-library"):
 		what += "_to_library"
 	if _has_arg("to-menu"):

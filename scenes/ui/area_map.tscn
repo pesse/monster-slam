@@ -1,7 +1,9 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://src/ui/area_map.gd" id="1_screen"]
 [ext_resource type="Script" path="res://src/ui/map_canvas.gd" id="2_canvas"]
+[ext_resource type="Texture2D" path="res://assets/ui/library/back.webp" id="3_back"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/play.webp" id="4_play"]
 
 [sub_resource type="Gradient" id="shade_g"]
 colors = PackedColorArray(0, 0, 0, 0.6, 0, 0, 0, 0)
@@ -73,10 +75,13 @@ mouse_filter = 2
 
 [node name="BackButton" type="Button" parent="Hud/Corners/Header"]
 unique_name_in_owner = true
-theme_type_variation = &"MapButton"
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_vertical = 4
-text = "◀ Buchkarte"
+focus_mode = 0
+theme_type_variation = &"WindowButton"
+text = "Buchkarte"
+icon = ExtResource("3_back")
 
 [node name="Banner" type="PanelContainer" parent="Hud/Corners/Header"]
 theme_type_variation = &"MapBanner"
@@ -115,9 +120,10 @@ mouse_filter = 2
 [node name="FirstPersonToggle" type="Button" parent="Hud/Corners/BottomRight"]
 unique_name_in_owner = true
 visible = false
-theme_type_variation = &"MapButton"
+custom_minimum_size = Vector2(56, 0)
 layout_mode = 2
 focus_mode = 0
+theme_type_variation = &"ToolChoice"
 toggle_mode = true
 text = "👁"
 
@@ -164,7 +170,13 @@ text = "noch 0 Wörter bis Stufe 1"
 
 [node name="PlayButton" type="Button" parent="Hud/Corners/BottomRight"]
 unique_name_in_owner = true
-theme_type_variation = &"ActionButton"
+custom_minimum_size = Vector2(200, 48)
 layout_mode = 2
+size_flags_vertical = 4
+focus_mode = 0
+theme_type_variation = &"WindowPrimary"
 disabled = true
-text = "▶ Spielen"
+text = "Spielen"
+icon = ExtResource("4_play")
+icon_alignment = 2
+expand_icon = true
