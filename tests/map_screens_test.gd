@@ -687,7 +687,7 @@ func test_place_and_fortress_share_one_plate_and_the_toggle_sits_before_play() -
 	await get_tree().process_frame
 	var plate := area.get_node("%Plate") as Control
 	assert_bool(plate.is_ancestor_of(area.get_node("%Title"))).is_true()
-	assert_bool(plate.is_ancestor_of(area.get_node("%FortressTitle"))).is_true()
+	assert_bool(plate.is_ancestor_of(area.get_node("%FortressBar"))).is_true()
 	var p := plate.get_global_rect()
 	assert_float(p.get_center().x).is_equal_approx(area.get_global_rect().get_center().x, 1.0)
 	var toggle := area.get_node("%FirstPersonToggle") as Button

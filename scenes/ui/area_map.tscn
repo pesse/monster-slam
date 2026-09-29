@@ -116,13 +116,13 @@ theme_type_variation = &"Tight"
 [node name="Book" type="Label" parent="Hud/Corners/Plate/NamePanel/Place"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"Caption"
+theme_type_variation = &"FortressBook"
 text = "Buch"
 
 [node name="Title" type="Label" parent="Hud/Corners/Plate/NamePanel/Place"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"Title"
+theme_type_variation = &"FortressTitle"
 text = "Unit"
 
 [node name="Fortress" type="PanelContainer" parent="Hud/Corners/Plate"]
@@ -136,12 +136,6 @@ layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
 theme_type_variation = &"Tight"
-
-[node name="FortressTitle" type="Label" parent="Hud/Corners/Plate/Fortress/Lines"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"Hint"
-text = "Festung"
 
 [node name="FortressBar" type="ProgressBar" parent="Hud/Corners/Plate/Fortress/Lines"]
 unique_name_in_owner = true
@@ -161,19 +155,19 @@ theme_type_variation = &"Tight"
 [node name="Before" type="Label" parent="Hud/Corners/Plate/Fortress/Lines/FortressNext"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"Caption"
+theme_type_variation = &"FortressLine"
 text = "Noch"
 
 [node name="Count" type="Label" parent="Hud/Corners/Plate/Fortress/Lines/FortressNext"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"CaptionGold"
+theme_type_variation = &"FortressCount"
 text = "0"
 
 [node name="After" type="Label" parent="Hud/Corners/Plate/Fortress/Lines/FortressNext"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"Caption"
+theme_type_variation = &"FortressLine"
 text = "Wörter bis Stufe 1"
 
 [node name="Medal" type="Control" parent="Hud/Corners/Plate"]
@@ -216,7 +210,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_type_variation = &"SectionTitle"
+theme_type_variation = &"FortressLevel"
 text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1

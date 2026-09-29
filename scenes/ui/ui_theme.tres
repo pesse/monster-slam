@@ -18,6 +18,8 @@
 [ext_resource type="Texture2D" path="res://assets/ui/statistics/tabs/tab_highlighted.webp" id="tab_gold_tex"]
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/small/button_normal.webp" id="win_btn_tex"]
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/small/button_highlighted.webp" id="win_btn_gold_tex"]
+[ext_resource type="FontFile" path="res://assets/fonts/fira_sans/FiraSans-Bold.ttf" id="fira_bold"]
+[ext_resource type="FontFile" path="res://assets/fonts/fira_sans/FiraSans-SemiBold.ttf" id="fira_semibold"]
 [ext_resource type="Texture2D" path="res://assets/ui/fortress/small/name_panel.webp" id="fort_name_tex"]
 [ext_resource type="Texture2D" path="res://assets/ui/fortress/small/progress_panel.webp" id="fort_progress_tex"]
 [ext_resource type="Texture2D" path="res://assets/ui/fortress/small/progress_track.webp" id="fort_track_tex"]
@@ -991,8 +993,24 @@ FortressProgress/styles/panel = SubResource("fortress_progress")
 FortressBar/base_type = &"ProgressBar"
 FortressBar/styles/background = SubResource("fortress_track")
 FortressBar/styles/fill = SubResource("fortress_fill")
-CaptionGold/base_type = &"Caption"
-CaptionGold/colors/font_color = Color(1, 0.84, 0.4, 1)
+FortressBook/base_type = &"Label"
+FortressBook/colors/font_color = Color(0.7, 0.8, 0.94, 1)
+FortressBook/fonts/font = ExtResource("fira_semibold")
+FortressBook/font_sizes/font_size = 16
+FortressTitle/base_type = &"Label"
+FortressTitle/colors/font_color = Color(0.94, 0.96, 1, 1)
+FortressTitle/fonts/font = ExtResource("fira_bold")
+FortressTitle/font_sizes/font_size = 30
+FortressLine/base_type = &"Label"
+FortressLine/colors/font_color = Color(0.82, 0.87, 0.95, 1)
+FortressLine/fonts/font = ExtResource("fira_semibold")
+FortressLine/font_sizes/font_size = 16
+FortressCount/base_type = &"FortressLine"
+FortressCount/colors/font_color = Color(1, 0.8, 0.3, 1)
+FortressLevel/base_type = &"Label"
+FortressLevel/colors/font_color = Color(0.94, 0.96, 1, 1)
+FortressLevel/fonts/font = ExtResource("fira_bold")
+FortressLevel/font_sizes/font_size = 20
 MapBanner/base_type = &"PanelContainer"
 MapBanner/styles/panel = SubResource("map_banner")
 MainMenuButton/base_type = &"Button"
