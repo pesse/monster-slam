@@ -28,20 +28,29 @@ func _units_with_image() -> Dictionary:
 	return out
 
 
-## Jede Unit mit Gebietskarte hat ein Thema, und es gibt die Datei dazu. Ohne Eintrag
-## stünde der Kampf still in der Vorgabe-Wiese — das fiele erst im Spiel auf.
+## Jede Unit mit Gebietskarte hat ein Thema, und es gibt die Datei dazu — auch jeder Stop
+## mit eigenem Eintrag und jedes Thema, dessen Licht eines übernimmt. Ohne Eintrag stünde
+## der Kampf still in der Vorgabe-Wiese — das fiele erst im Spiel auf.
 func test_every_mapped_unit_names_an_existing_theme() -> void:
 	var books := _units_with_image()
 	assert_int(books.size()).is_greater(0)
 	for book: String in books:
 		var themes: Dictionary = MapLayout.data(book).get("themes", {})
 		for unit: int in books[book]:
-			var theme_name := str(themes.get(str(unit), ""))
-			assert_str(theme_name).override_failure_message(
+			var entry: Variant = themes.get(str(unit), "")
+			var names: Array = (entry as Dictionary).values() if entry is Dictionary else [entry]
+			assert_str(BattleTheme.name_for(book, unit)).override_failure_message(
 				"%s/unit%d hat kein Thema in map.json" % [book, unit]).is_not_empty()
-			assert_bool(ResourceLoader.exists("%s/%s.tres" % [BattleTheme.DIR, theme_name])) \
-				.override_failure_message("%s/unit%d: Thema '%s' fehlt" % [book, unit, theme_name]) \
-				.is_true()
+			for theme_name: String in names:
+				_assert_theme_exists(theme_name, "%s/unit%d" % [book, unit])
+				var light := (load("%s/%s.tres" % [BattleTheme.DIR, theme_name]) as BattleTheme).light_from
+				if not light.is_empty():
+					_assert_theme_exists(light, "%s/unit%d, Licht von %s" % [book, unit, theme_name])
+
+
+func _assert_theme_exists(theme_name: String, where: String) -> void:
+	assert_bool(ResourceLoader.exists("%s/%s.tres" % [BattleTheme.DIR, theme_name])) \
+		.override_failure_message("%s: Thema '%s' fehlt" % [where, theme_name]).is_true()
 
 
 ## Jede Datei unter assets/battle_themes lädt als BattleTheme.
@@ -66,9 +75,56 @@ func test_a_level_picks_the_theme_of_its_unit() -> void:
 	var books := _units_with_image()
 	var book: String = books.keys()[0]
 	var unit: int = books[book][0]
-	var expected := BattleTheme.named(str(MapLayout.data(book)["themes"][str(unit)]))
+	var expected := BattleTheme.named(BattleTheme.name_for(book, unit))
 	var picked := BattleTheme.for_level({"book": book, "unit": unit})
 	assert_that(picked.ground_high).is_equal(expected.ground_high)
+
+
+## Ein Stop mit eigenem Eintrag bekommt sein Thema, jeder andere das der Unit — ein Name
+## statt eines Wörterbuchs gilt für alle Stops.
+func test_a_stop_can_name_its_own_theme() -> void:
+	var themes := {"1": {"default": "forest", "t2": "desert"}, "2": "canyon"}
+	assert_str(BattleTheme.name_in(themes, 1, "t2")).is_equal("desert")
+	assert_str(BattleTheme.name_in(themes, 1, "t1")).is_equal("forest")
+	assert_str(BattleTheme.name_in(themes, 1)).is_equal("forest")
+	assert_str(BattleTheme.name_in(themes, 2, "t2")).is_equal("canyon")
+	assert_str(BattleTheme.name_in(themes, 3, "t2")).is_empty()
+
+
+## Auf einer echten Karte wählt der Stop-Schlüssel des Levels das Thema seines Stops.
+func test_a_level_on_a_stop_with_its_own_theme_picks_it() -> void:
+	var found := false
+	for book: String in _units_with_image():
+		var themes: Dictionary = MapLayout.data(book).get("themes", {})
+		for unit_key: String in themes:
+			if not themes[unit_key] is Dictionary:
+				continue
+			for key: String in themes[unit_key]:
+				if key == "default":
+					continue
+				found = true
+				var level := {"book": book, "unit": int(unit_key), "key": key}
+				assert_that(BattleTheme.for_level(level).ground_high) \
+					.is_equal(BattleTheme.named(str(themes[unit_key][key])).ground_high)
+	assert_bool(found).is_true()
+
+
+## `light_from` nimmt Hintergrund, Umgebungslicht und Sonne vom anderen Thema, Boden und
+## Deko bleiben die eigenen — und das geladene Thema im Cache bleibt, wie es war.
+func test_light_from_takes_the_light_of_another_theme() -> void:
+	var variant := _theme_files().filter(func(t: BattleTheme) -> bool: return not t.light_from.is_empty())
+	assert_int(variant.size()).is_greater(0)
+	var raw: BattleTheme = variant[0]
+	var theme_name := raw.resource_path.get_file().get_basename()
+	var raw_sun := raw.sun_color
+	var light := BattleTheme.named(raw.light_from)
+	var picked := BattleTheme.named(theme_name)
+	assert_that(picked.sun_color).is_equal(light.sun_color)
+	assert_that(picked.ambient).is_equal(light.ambient)
+	assert_that(picked.background).is_equal(light.background)
+	assert_that(picked.ground_low).is_equal(raw.ground_low)
+	assert_array(picked.trees).is_equal(raw.trees)
+	assert_that(raw.sun_color).is_equal(raw_sun)
 
 
 ## Das flache Innenfeld trägt nur Töne zwischen den beiden Bodenfarben des Themas —

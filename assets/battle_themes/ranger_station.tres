@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="BattleTheme" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/battle/battle_theme.gd" id="1_theme"]
+
+[resource]
+script = ExtResource("1_theme")
+light_from = "wetland"
+ground_texture = "grass"
+ground_texture_strength = 0.8
+ground_low = Color(0.44, 0.5, 0.24, 1)
+ground_high = Color(0.58, 0.6, 0.3, 1)
+hill = Color(0.74, 0.66, 0.52, 1)
+trees = Array[String](["forge/eucalyptus.glb", "forge/pandanus.glb"])
+rocks = Array[String](["forge/boulder_grey.glb"])
+grass = Array[String](["forge/dry_grass.glb"])
+props = Array[String](["props/crates_stacked.gltf", "props/barrel_large.gltf", "forge/canoe.glb"])
+landmarks = Array[String](["forge/lookout_tower.glb", "forge/tin_shed.glb", "forge/water_tank.glb"])

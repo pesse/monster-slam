@@ -8,6 +8,16 @@ extends Resource
 ##
 ##     { "units": …, "areas": …, "themes": { "2": "desert", … } }
 ##
+## Liegt auf einer Karte eine Siedlung zwischen Busch und Strand, bekommt die Unit statt
+## eines Namens ein Wörterbuch: `default` gilt für die ganze Unit, ein Stop-Schlüssel
+## (`t1` … `all`, `boss`) für diesen Stop allein:
+##
+##     "themes": { "1": { "default": "sydney_bush", "t2": "suburb", "boss": "harbour" } }
+##
+## Das Licht gehört dabei der Unit, nicht dem Ort: ein Thema mit `light_from` nimmt
+## Hintergrund, Umgebungslicht und Sonne von dort, so dass eine Unit zu einer Tageszeit
+## spielt, auch wo Boden und Deko wechseln.
+##
 ## Die Vorgaben hier SIND das Aussehen ohne Thema (Expertenmodus, Unit ohne Eintrag) —
 ## eine `.tres` setzt nur, was abweicht. Gespielt wird davon nichts: Bahn, Hügelform und
 ## Festung sind in jedem Thema dieselben, und die Deko steht an denselben Stellen.
@@ -41,6 +51,10 @@ const SUN_ELEVATION := 55.0
 @export var ambient_energy := 1.0
 @export var sun_color := Color(1.0, 1.0, 1.0)
 @export var sun_energy := 1.0
+## Thema, dessen Licht (Hintergrund, Umgebungslicht, Sonne) dieses übernimmt — die Farben
+## oben gelten dann nicht. Leer: das eigene. Nur eine Stufe: das Licht dort zählt, wie es
+## in der Datei steht.
+@export var light_from := ""
 
 ## Die Deko je Platz: Modelle unter `assets/models/` (etwa "props/tree.glb"), aus denen der
 ## Kampf zufällig zieht. Größe und Menge gehören dem PLATZ, nicht dem Modell — ein Modell
@@ -71,25 +85,57 @@ const GROUND_SHADER := preload("res://assets/shaders/battle_ground.gdshader")
 static func for_level(level: Dictionary) -> BattleTheme:
 	if level.is_empty():
 		return BattleTheme.new()
-	return for_unit(str(level.get("book", "")), int(level.get("unit", 0)))
+	return for_unit(str(level.get("book", "")), int(level.get("unit", 0)), str(level.get("key", "")))
 
 
-static func for_unit(book: String, unit: int) -> BattleTheme:
-	var themes: Variant = MapLayout.data(book).get("themes", {})
-	if not themes is Dictionary:
-		return BattleTheme.new()
-	var theme_name := str((themes as Dictionary).get(str(unit), ""))
+## Das Thema am Stop `key` der Unit; ohne eigenen Eintrag das der ganzen Unit.
+static func for_unit(book: String, unit: int, key := "") -> BattleTheme:
+	var theme_name := name_for(book, unit, key)
 	return named(theme_name) if not theme_name.is_empty() else BattleTheme.new()
+
+
+## Der Name aus `themes` in map.json, oder "" ohne Eintrag.
+static func name_for(book: String, unit: int, key := "") -> String:
+	return name_in(MapLayout.data(book).get("themes", {}), unit, key)
+
+
+## Der Name für Unit und Stop aus einem `themes`-Block: ein Name gilt für die ganze Unit,
+## ein Wörterbuch nennt `default` und Stops, die abweichen.
+static func name_in(themes: Variant, unit: int, key := "") -> String:
+	if not themes is Dictionary:
+		return ""
+	var entry: Variant = (themes as Dictionary).get(str(unit), "")
+	if entry is Dictionary:
+		return str((entry as Dictionary).get(key, (entry as Dictionary).get("default", "")))
+	return str(entry)
 
 
 ## Das Thema `theme_name`, oder die Vorgabe, wenn es die Datei nicht gibt.
 static func named(theme_name: String) -> BattleTheme:
+	var loaded := _load(theme_name)
+	if loaded == null:
+		return BattleTheme.new()
+	if loaded.light_from.is_empty():
+		return loaded
+	var light := _load(loaded.light_from)
+	if light == null:
+		return loaded
+	# Auf einer Kopie: das geladene Thema ist geteilt und käme sonst anders beleuchtet wieder.
+	var out := loaded.duplicate() as BattleTheme
+	out.background = light.background
+	out.ambient = light.ambient
+	out.ambient_energy = light.ambient_energy
+	out.sun_color = light.sun_color
+	out.sun_energy = light.sun_energy
+	return out
+
+
+static func _load(theme_name: String) -> BattleTheme:
 	var path := "%s/%s.tres" % [DIR, theme_name]
 	if not ResourceLoader.exists(path):
 		push_warning("BattleTheme: kein Thema '%s'" % theme_name)
-		return BattleTheme.new()
-	var loaded := load(path) as BattleTheme
-	return loaded if loaded != null else BattleTheme.new()
+		return null
+	return load(path) as BattleTheme
 
 
 ## Alle Deko-Modelle des Themas, ohne Doppel.
