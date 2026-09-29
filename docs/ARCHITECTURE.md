@@ -495,6 +495,12 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
   und `BossFight` fragen dort. Ohne Level fällt `RunRequest` auf die gespeicherte Auswahl
   zurück — das ist der Expertenmodus, der beim Öffnen `start_expert()` ruft. Ein Level
   spielt alle Aufgaben- und Wortarten seines Scopes und keine Tags.
+- **Ein Klick markiert, „Spielen" startet.** `MapLevel.toggle` führt die Auswahl der
+  Gebietskarte: Teile beliebig zusammen, Gesamt und Boss allein. `MapLevel.combine` macht
+  daraus EIN Level für `RunRequest` — mehrere Teile mit allen ihren Scopes, `keys` nennt
+  die Orte (Zoom hinein und zurück in ihre Mitte, Vorauswahl nach dem Kampf). Markiert
+  zeichnet `MapCanvas.set_selected`; der Knopf `%PlayButton` wird gesperrt statt
+  ausgeblendet.
 - **Nichts wird gesperrt, nichts als Abschluss gespeichert.** Die Stufe eines Levels ist
   `FortressTier.part_tiers` (Teil) bzw. `unit_tiers` (Gesamt) — dieselbe Zählregel und
   dieselben Schwellen wie die Festung. Gespeichert wird nur, was sich nicht ableiten

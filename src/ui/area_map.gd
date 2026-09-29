@@ -4,12 +4,17 @@ extends Control
 ##
 ## Jeder Ort zeigt die Stufe 0..4 seines Levels aus der Meisterung (FortressTier), der Boss
 ## seine Medaille aus den gezählten Siegen (BossRecord). Alle Level sind frei wählbar; nur
-## ein Boss ohne Sätze ist gesperrt und sagt warum. Ein Klick setzt das Level in
-## RunRequest und startet den Kampf — der kommt über RunRequest.return_scene hierher zurück.
+## ein Boss ohne Sätze ist gesperrt und sagt warum. Ein Klick markiert einen Ort
+## (MapLevel.toggle): mehrere Teile zusammen, Gesamt und Boss allein. „Spielen" unten
+## rechts setzt die Auswahl als ein Level in RunRequest (MapLevel.combine) und startet den
+## Kampf — der kommt über RunRequest.return_scene hierher zurück.
 
 const BATTLE_SCENE := "res://scenes/battle/battle.tscn"
 const BOSS_SCENE := "res://scenes/battle/boss_fight.tscn"
 const BossFight := preload("res://src/battle/boss_fight.gd")
+## Die Zeile unter der Karte eines Ortes: was ein Klick tut.
+const NOTE_PART := "Klick markiert den Teil — mehrere Teile spielst du zusammen."
+const NOTE_ALONE := "Klick markiert ihn — er wird allein gespielt."
 
 @onready var _canvas: MapCanvas = %Canvas
 @onready var _title: Label = %Title
@@ -19,13 +24,17 @@ const BossFight := preload("res://src/battle/boss_fight.gd")
 @onready var _fortress_title: Label = %FortressTitle
 @onready var _fortress_bar: ProgressBar = %FortressBar
 @onready var _fortress_next: Label = %FortressNext
+@onready var _play: Button = %PlayButton
 
 var _levels: Array = []
+## Die markierten Orte (Schlüssel aus MapLevel.levels_for), in Spielreihenfolge.
+var _selected: Array = []
 
 
 func _ready() -> void:
 	(%BackButton as Button).pressed.connect(_back)
-	_canvas.node_selected.connect(_on_level_selected)
+	_canvas.node_selected.connect(_on_level_clicked)
+	_play.pressed.connect(_start)
 	# Die Level sitzen klein auf den Plätzen des Bildes und wachsen unter dem Zeiger; das
 	# Bild zeigt seinen Weg selbst, die Hinweiskarte sagt, was ein Ort ist.
 	_canvas.node_radius = MapCanvas.AREA_NODE_RADIUS
@@ -52,9 +61,9 @@ func _ready() -> void:
 	elif MapSelection.zoom_out:
 		# Aus dem Kampf zurück: die Karte kommt aus dem Level heraus, das gespielt wurde.
 		MapSelection.zoom_out = false
-		var layout := MapLayout.data(MapSelection.book)
-		_canvas.zoom_back_to(MapLayout.area_points(layout, MapSelection.unit)
-				.get(str(RunRequest.level().get("key", "")), Vector2.INF))
+		var points := MapLayout.area_points(MapLayout.data(MapSelection.book), MapSelection.unit)
+		_canvas.zoom_back_to(MapCanvas.centroid(played_keys().map(
+				func(k): return points.get(str(k), Vector2.INF))))
 		await _canvas.zoom_finished
 	_fill()
 	_canvas.appear()
@@ -110,10 +119,35 @@ func _fill() -> void:
 	_fortress_bar.value = float(fortress["share"])
 	_fortress_next.text = str(fortress["next"])
 	var wins := int(BossRecord.wins(UserSettings.active_profile()).get("%s/%d" % [book, unit], 0))
-	_canvas.setup(MapLayout.unit_texture(book, unit),
-			nodes_for(_levels, units, parts, wins, has_boss_sentences(book, unit),
-				MapLayout.area_points(layout, unit)),
-			MapLayout.area_path(layout, unit), hint_lines)
+	var nodes := nodes_for(_levels, units, parts, wins, has_boss_sentences(book, unit),
+			MapLayout.area_points(layout, unit))
+	_canvas.setup(MapLayout.unit_texture(book, unit), nodes, MapLayout.area_path(layout, unit),
+			hint_lines)
+	_select(_initial_selection(nodes))
+
+
+## Was markiert ist, wenn die Karte aufgeht: die Auswahl des letzten Laufs, wenn er in
+## dieser Unit war — so spielt „Spielen" nach dem Kampf dasselbe noch einmal. Sonst nichts.
+func _initial_selection(nodes: Array) -> Array:
+	if not RunRequest.is_level():
+		return []
+	var last := RunRequest.level()
+	if str(last.get("book", "")) != MapSelection.book or int(last.get("unit", 0)) != MapSelection.unit:
+		return []
+	var open := {}
+	for node in nodes:
+		if not bool(node.get("disabled", false)):
+			open[str(node["key"])] = true
+	return played_keys().filter(func(k): return open.has(str(k)))
+
+
+## Die Orte, die der letzte Lauf gespielt hat (MapLevel.combine: `keys`, ältere nur `key`).
+static func played_keys() -> Array:
+	var last := RunRequest.level()
+	if last.has("keys"):
+		return Array(last["keys"])
+	var key := str(last.get("key", ""))
+	return [] if key.is_empty() else [key]
 
 
 ## Wie viele Teil-Level die Unit zeigt: so viele, wie der Inhalt hat, oder — wenn die Karte
@@ -199,7 +233,7 @@ static func hint_lines(node: Dictionary) -> Dictionary:
 			if medal < BossRecord.MEDAL_WINS.size():
 				body += " (%s ab %d Siegen)" % [BossRecord.MEDAL_NAMES[medal + 1],
 						int(BossRecord.MEDAL_WINS[medal])]
-		return {"title": title, "body": body}
+		return {"title": title, "body": body, "note": NOTE_ALONE}
 	var done := int(node.get("done", 0))
 	var total := int(node.get("total", 0))
 	if bool(node.get("disabled", false)):
@@ -215,7 +249,8 @@ static func hint_lines(node: Dictionary) -> Dictionary:
 				int(node.get("tier", 0)), FortressTier.MAX_TIER, done, total]
 		body += "\nAlle Sterne." if next.is_empty() else "\nNoch %d %s bis zum %d. Stern" % [
 				needed, "Wort" if needed == 1 else "Wörter", int(next["tier"])]
-	return {"title": title, "body": body}
+	var whole := str(node.get("kind", "")) == MapLevel.KIND_ALL
+	return {"title": title, "body": body, "note": NOTE_ALONE if whole else NOTE_PART}
 
 
 ## Gibt die Unit dem Satzmeister mindestens einen Satz?
@@ -231,6 +266,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
 		_back()
+	elif event.is_action_pressed("ui_accept") and not _play.disabled:
+		get_viewport().set_input_as_handled()
+		_start()
 
 
 ## Zurück zur Buchkarte, als Zoom heraus — die Umkehrung des Wegs herein.
@@ -243,21 +281,39 @@ func _back() -> void:
 	get_tree().change_scene_to_file(MapSelection.BOOK_SCENE)
 
 
-func _on_level_selected(key: String) -> void:
-	for level in _levels:
-		if str(level["key"]) != key:
-			continue
-		if _canvas.is_zooming():
-			return
-		RunRequest.start_level(level)
-		# Hinein ins Level, wie von der Buch- in die Gebietskarte; der Kampf setzt fort.
-		_canvas.zoom_into(key)
-		_fade_out_hud()
-		await _canvas.zoom_finished
-		await _present_dark()
-		var boss := str(level["kind"]) == MapLevel.KIND_BOSS
-		get_tree().change_scene_to_file(BOSS_SCENE if boss else BATTLE_SCENE)
+func _on_level_clicked(key: String) -> void:
+	if _canvas.is_zooming():
 		return
+	_select(MapLevel.toggle(_levels, _selected, key))
+
+
+## Markiert `keys` auf der Karte und stellt „Spielen" danach: gesperrt ohne Auswahl, die
+## Karte am Knopf sagt, was gespielt wird. Der Knopf bleibt dabei stehen, wie er ist.
+func _select(keys: Array) -> void:
+	_selected = keys
+	_canvas.set_selected(keys)
+	var level := MapLevel.combine(_levels, keys)
+	_play.disabled = level.is_empty()
+	if level.is_empty():
+		Hints.attach(_play, "Spielen", "Wähle auf der Karte, was du spielen willst.",
+				"Mehrere Teile lassen sich zusammen markieren; Gesamt und Boss stehen allein.")
+	else:
+		Hints.attach(_play, "Spielen", "Unit %d · %s" % [MapSelection.unit, str(level["label"])])
+
+
+func _start() -> void:
+	var level := MapLevel.combine(_levels, _selected)
+	if level.is_empty() or _canvas.is_zooming():
+		return
+	RunRequest.start_level(level)
+	# Hinein ins Level, wie von der Buch- in die Gebietskarte; der Kampf setzt fort.
+	_play.disabled = true
+	_canvas.zoom_into_all(level["keys"])
+	_fade_out_hud()
+	await _canvas.zoom_finished
+	await _present_dark()
+	var boss := str(level["kind"]) == MapLevel.KIND_BOSS
+	get_tree().change_scene_to_file(BOSS_SCENE if boss else BATTLE_SCENE)
 
 
 ## Kopfleiste und Schatten gehen mit der Karte ins Dunkel: der Kampf lädt und wärmt danach

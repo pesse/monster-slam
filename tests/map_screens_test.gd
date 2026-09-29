@@ -662,3 +662,42 @@ func test_first_person_toggle_sits_left_of_the_fortress_at_its_height() -> void:
 	assert_float(t.end.x).is_less_equal(f.position.x)
 	assert_float(f.position.x - t.end.x).is_less_equal(8.0)
 	remove_child(area)
+
+
+## Ein Klick markiert nur; „Spielen" rechts neben der Festung ist ohne Auswahl gesperrt und
+## startet erst mit einer.
+func test_a_click_marks_and_play_sits_right_of_the_fortress() -> void:
+	MapSelection.book = "zz-kein-buch"
+	MapSelection.unit = 1
+	var area: AreaMap = auto_free(AREA_SCENE.instantiate())
+	add_child(area)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var play := area.get_node("%PlayButton") as Button
+	var fortress := area.get_node("%BottomRight/Fortress") as Control
+	assert_object(play.get_parent()).is_same(fortress.get_parent())
+	assert_int(play.get_index()).is_equal(fortress.get_index() + 1)
+	assert_bool(play.disabled).is_true()
+	area._levels = MapLevel.levels_for("zz-kein-buch", 1, 4)
+	area._on_level_clicked("t2")
+	area._on_level_clicked("t3")
+	var canvas := area.get_node("%Canvas") as MapCanvas
+	assert_bool(canvas.is_selected("t2")).is_true()
+	assert_bool(canvas.is_selected("t3")).is_true()
+	assert_bool(play.disabled).is_false()
+	assert_bool(RunRequest.is_level()).is_false()
+	assert_str(str(Hints.hint_of(play).get("body", ""))).contains("Teil 2 + 3")
+	area._on_level_clicked("all")
+	assert_bool(canvas.is_selected("t2")).is_false()
+	assert_bool(canvas.is_selected("all")).is_true()
+	area._on_level_clicked("all")
+	assert_bool(play.disabled).is_true()
+	remove_child(area)
+
+
+## Nach dem Kampf steht die gespielte Auswahl wieder markiert da.
+func test_the_last_run_comes_back_marked() -> void:
+	RunRequest.start_level(MapLevel.combine(MapLevel.levels_for("zz-kein-buch", 1, 4), ["t2", "t3"]))
+	assert_array(AreaMap.played_keys()).is_equal(["t2", "t3"])
+	RunRequest.start_level({"book": "b", "unit": 1, "key": "t1"})
+	assert_array(AreaMap.played_keys()).is_equal(["t1"])

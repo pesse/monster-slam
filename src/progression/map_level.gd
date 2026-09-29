@@ -15,6 +15,9 @@ extends RefCounted
 ## gibt, folgt aus dem Katalog, wie weit ein Level ist, aus der Meisterung
 ## (FortressTier.part_tiers / unit_tiers). Gesperrt ist keines.
 ##
+## Gespielt wird eine Auswahl (`toggle`, `combine`): Teile lassen sich beliebig zusammen
+## markieren, etwa nur Teil 2 und 3; Gesamt und Boss stehen nur allein.
+##
 ## Reine Rechnung ohne Szene; die Teilzahl kommt als Argument, damit sie ohne Katalog
 ## prüfbar ist (tests/map_level_test.gd).
 
@@ -74,3 +77,61 @@ static func counts_of(level: Dictionary, units: Dictionary, parts: Dictionary) -
 	else:
 		group = units.get(unit_key, {})
 	return {"done": int(group.get("done", 0)), "total": int(group.get("total", 0))}
+
+
+## Die Auswahl (Schlüssel wie in `levels_for`) nach einem Klick auf den Ort `key`. Ein Teil
+## kommt dazu oder geht wieder und nimmt Gesamt und Boss aus der Auswahl; Gesamt und Boss
+## stehen allein — ein Klick darauf ersetzt die Auswahl, ein zweiter leert sie. Die
+## Schlüssel kommen in Spielreihenfolge zurück.
+static func toggle(levels: Array, selected: Array, key: String) -> Array:
+	var level := _find(levels, key)
+	if level.is_empty():
+		return selected.duplicate()
+	if str(level["kind"]) != KIND_PART:
+		return [] if selected == [key] else [key]
+	var chosen := {}
+	for other in selected:
+		if str(_find(levels, str(other)).get("kind", "")) == KIND_PART:
+			chosen[str(other)] = true
+	if chosen.has(key):
+		chosen.erase(key)
+	else:
+		chosen[key] = true
+	var out: Array = []
+	for each in levels:
+		if chosen.has(str(each["key"])):
+			out.append(str(each["key"]))
+	return out
+
+
+## Das Level, das eine Auswahl spielt — leer ohne Auswahl. Ein einzelner Ort bleibt sein
+## Level; mehrere Teile werden eines mit allen ihren Scopes. `keys` nennt immer alle
+## gewählten Orte (für den Zoom zurück aus dem Kampf), `key` den ersten.
+static func combine(levels: Array, keys: Array) -> Dictionary:
+	var chosen := levels.filter(func(l): return str(l["key"]) in keys)
+	if chosen.is_empty():
+		return {}
+	var first: Dictionary = chosen[0]
+	if chosen.size() == 1:
+		var one := first.duplicate(true)
+		one["keys"] = [str(first["key"])]
+		return one
+	var scope: Array = []
+	var parts: Array = []
+	var picked: Array = []
+	for level in chosen:
+		scope.append_array(level["scope"])
+		parts.append(int(level["part"]))
+		picked.append(str(level["key"]))
+	return {
+		"key": str(first["key"]), "keys": picked, "kind": KIND_PART,
+		"book": first["book"], "unit": first["unit"], "part": 0, "parts": parts,
+		"scope": scope, "label": "Teil %s" % " + ".join(parts.map(func(p): return str(p))),
+	}
+
+
+static func _find(levels: Array, key: String) -> Dictionary:
+	for level in levels:
+		if str(level["key"]) == key:
+			return level
+	return {}

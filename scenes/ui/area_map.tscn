@@ -161,3 +161,10 @@ unique_name_in_owner = true
 theme_type_variation = &"Caption"
 layout_mode = 2
 text = "noch 0 Wörter bis Stufe 1"
+
+[node name="PlayButton" type="Button" parent="Hud/Corners/BottomRight"]
+unique_name_in_owner = true
+theme_type_variation = &"ActionButton"
+layout_mode = 2
+disabled = true
+text = "▶ Spielen"

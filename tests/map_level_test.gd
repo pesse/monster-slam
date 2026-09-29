@@ -68,3 +68,41 @@ func test_tier_of_reads_part_unit_and_boss() -> void:
 	assert_int(MapLevel.tier_of(levels[2], units, parts)).is_equal(3)
 	assert_int(MapLevel.tier_of(levels[3], units, parts)).is_equal(0)
 	assert_dict(MapLevel.counts_of(levels[2], units, parts)).is_equal({"done": 7, "total": 10})
+
+
+# --- Auswahl auf der Gebietskarte ----------------------------------------------
+
+func test_parts_are_marked_together_in_play_order() -> void:
+	var levels := MapLevel.levels_for("b", 1, 4)
+	var picked := MapLevel.toggle(levels, [], "t3")
+	picked = MapLevel.toggle(levels, picked, "t2")
+	assert_array(picked).is_equal(["t2", "t3"])
+	assert_array(MapLevel.toggle(levels, picked, "t3")).is_equal(["t2"])
+
+
+## Gesamt und Boss stehen allein: sie ersetzen die Auswahl, ein Teil nimmt sie heraus.
+func test_whole_unit_and_boss_stand_alone() -> void:
+	var levels := MapLevel.levels_for("b", 1, 4)
+	assert_array(MapLevel.toggle(levels, ["t1", "t2"], "all")).is_equal(["all"])
+	assert_array(MapLevel.toggle(levels, ["all"], "boss")).is_equal(["boss"])
+	assert_array(MapLevel.toggle(levels, ["boss"], "t4")).is_equal(["t4"])
+	assert_array(MapLevel.toggle(levels, ["boss"], "boss")).is_empty()
+
+
+func test_several_parts_play_as_one_level_with_all_their_scopes() -> void:
+	var levels := MapLevel.levels_for("b", 1, 4)
+	var level := MapLevel.combine(levels, ["t2", "t3"])
+	assert_str(str(level["kind"])).is_equal(MapLevel.KIND_PART)
+	assert_array(level["scope"]).is_equal(["b/1/2", "b/1/3"])
+	assert_array(level["keys"]).is_equal(["t2", "t3"])
+	assert_str(str(level["label"])).is_equal("Teil 2 + 3")
+	assert_int(int(level["unit"])).is_equal(1)
+
+
+func test_a_single_mark_plays_its_own_level() -> void:
+	var levels := MapLevel.levels_for("b", 1, 4)
+	var boss := MapLevel.combine(levels, ["boss"])
+	assert_str(str(boss["kind"])).is_equal(MapLevel.KIND_BOSS)
+	assert_array(boss["scope"]).is_equal(["b/1"])
+	assert_array(boss["keys"]).is_equal(["boss"])
+	assert_dict(MapLevel.combine(levels, [])).is_empty()

@@ -473,6 +473,13 @@ aktuelle Stand steigen um denselben Betrag.
    Im Lateinbuch hat jede Unit sechs Teile, einen je Lektion. Eine Lektion, deren Wörter
    noch fehlen, steht grau auf der Karte und lässt sich nicht spielen.
 
+   **Auswählen und spielen.** Ein Klick auf einen Ort markiert ihn (er wird größer und
+   bekommt einen goldenen Ring), ein zweiter Klick nimmt die Markierung wieder weg. Teile
+   lassen sich beliebig zusammen markieren – etwa nur Teil 2 und 3; dann kommen die Wörter
+   beider Teile in den Kampf. „Gesamt“ und der Boss stehen allein: wer sie markiert, hebt
+   die übrige Auswahl auf. Los geht es mit **„▶ Spielen“** unten rechts (oder Enter); ohne
+   Auswahl ist der Knopf grau. Nach dem Kampf ist das zuletzt Gespielte wieder markiert.
+
 **Alles ist offen.** Jedes Level lässt sich jederzeit spielen; der Weg auf der Karte schlägt
 nur eine Reihenfolge vor. Ein Level läuft wie ein Kampf aus dem Expertenmodus – Welle auf
 Welle, bis du aufhörst oder die Festung fällt. Es spielt alle Aufgaben und Wortarten seines
