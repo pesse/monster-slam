@@ -138,6 +138,19 @@ func test_two_placeholders_are_decided_separately() -> void:
 	assert_bool(_evaluator.evaluate(accepted, "prefer")["complete"]).is_false()
 
 
+## "sb./sth." ist eine Stelle mit zwei Lesarten: jede allein ist vollständig.
+func test_slashed_placeholders_are_one_slot() -> void:
+	var accepted := ["wait for sb./sth."]
+	for answer in ["wait for sb./sth.", "wait for sb/sth", "wait for sb / sth", "wait for sb.",
+			"wait for sth", "wait for somebody", "wait for something/somebody"]:
+		assert_bool(_evaluator.evaluate(accepted, answer)["complete"]).override_failure_message(
+			'"%s" sollte vollständig sein' % answer).is_true()
+	var core := _evaluator.evaluate(accepted, "wait for")
+	assert_bool(core["matched"]).is_true()
+	assert_bool(core["complete"]).is_false()
+	assert_bool(_evaluator.evaluate(["auf jn./etwas warten"], "auf jmd. warten")["complete"]).is_true()
+
+
 func test_optional_preposition_without_placeholder() -> void:
 	var accepted := ["disagree (with)"]
 	assert_bool(_evaluator.evaluate(accepted, "disagree with")["complete"]).is_true()

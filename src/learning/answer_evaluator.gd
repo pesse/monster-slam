@@ -31,10 +31,16 @@ const _OPTIONAL_PREFIXES := ["der ", "die ", "das ", "eine ", "ein ", "the ", "t
 ## sind: "sb." = "sb" = "somebody" = "jn." = "jmd." = "jemanden". Zusätzlich darf jeder
 ## Platzhalter ganz entfallen. Längere Alternativen zuerst, damit die Alternation nicht
 ## kürzer greift. "jmd."/"jmdn."/"jmdm." stehen nicht im Buch, aber so kürzen Kinder ab.
+##
+## Mit Schrägstrich verbundene Platzhalter ("wait for sb./sth.", "jn./etwas") sind EINE
+## Stelle mit zwei Lesarten, nicht zwei Stellen: "wait for sb", "wait for sth" und
+## "wait for sb / sth" sind alle vollständig.
 const WILDCARD := "•"
-const PLACEHOLDER_PATTERN := \
-	"(?<!\\p{L})(?:somebody|someone|something|jemandem|jemanden|jemand|etwas|etw\\.?" \
+const _PLACEHOLDER_ATOM := \
+	"(?:somebody|someone|something|jemandem|jemanden|jemand|etwas|etw\\.?" \
 	+ "|sth\\.?|sb\\.?|jmdn\\.?|jmdm\\.?|jmd\\.?|jdn\\.?|jm\\.?|jn\\.?|jd\\.?|…|\\.\\.\\.)(?!\\p{L})"
+const PLACEHOLDER_PATTERN := \
+	"(?<!\\p{L})" + _PLACEHOLDER_ATOM + "(?:\\s*/\\s*" + _PLACEHOLDER_ATOM + ")*"
 
 ## Klammergruppen sind optional: "(for)", "(wegen)", aber auch Glossen wie "(Kleidung)"
 ## oder "(Pl.)". Für die Auswertung ist beides dasselbe — was in Klammern steht, darf
