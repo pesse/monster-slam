@@ -1,0 +1,83 @@
+{
+  "format": "lossless WebP RGBA",
+  "assets": {
+    "name_panel": {
+      "path": "res://assets/ui/fortress/textures/name_panel.webp",
+      "size": [
+        600,
+        180
+      ],
+      "slice": [
+        55,
+        24,
+        55,
+        24
+      ]
+    },
+    "progress_panel": {
+      "path": "res://assets/ui/fortress/textures/progress_panel.webp",
+      "size": [
+        480,
+        180
+      ],
+      "slice": [
+        35,
+        24,
+        35,
+        24
+      ]
+    },
+    "medallion": {
+      "path": "res://assets/ui/fortress/textures/medallion.webp",
+      "size": [
+        320,
+        320
+      ],
+      "slice": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "castle": {
+      "path": "res://assets/ui/fortress/textures/castle.webp",
+      "size": [
+        256,
+        256
+      ],
+      "slice": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "level_plate": {
+      "path": "res://assets/ui/fortress/textures/level_plate.webp",
+      "size": [
+        160,
+        120
+      ],
+      "slice": [
+        32,
+        25,
+        32,
+        25
+      ]
+    },
+    "progress_track": {
+      "path": "res://assets/ui/fortress/textures/progress_track.webp",
+      "size": [
+        400,
+        48
+      ],
+      "slice": [
+        25,
+        12,
+        25,
+        12
+      ]
+    }
+  }
+}

@@ -474,8 +474,9 @@ aktuelle Stand steigen um denselben Betrag.
    Im Lateinbuch hat jede Unit sechs Teile, einen je Lektion. Eine Lektion, deren Wörter
    noch fehlen, steht grau auf der Karte und lässt sich nicht spielen.
 
-   Unten in der Mitte steht ein Schild: links Buch und Unit, rechts die Festungsstufe
-   dieser Unit mit ihrem Balken und dem, was bis zur nächsten Stufe fehlt. Unten links
+   Unten in der Mitte steht ein Schild: links Buch und Unit, daneben der Balken bis zur
+   nächsten Festungsstufe mit den Wörtern, die noch fehlen, rechts im Medaillon die
+   Festung dieser Unit, so wie sie im Kampf steht, und darunter ihre Stufe. Unten links
    geht es zurück zur Buchkarte; liegt dort ein Ort, rückt der Knopf nach oben.
 
    **Auswählen und spielen.** Ein Klick auf einen Ort markiert ihn (er wird größer und

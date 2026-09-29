@@ -16,15 +16,19 @@ const BossFight := preload("res://src/battle/boss_fight.gd")
 @onready var _canvas: MapCanvas = %Canvas
 @onready var _title: Label = %Title
 @onready var _book: Label = %Book
-## Ein Schild unten in der Mitte: links der Ort (Buch, Unit), rechts die Festung. Der Ort
-## steht mit dem Bild da; die Festung und unten rechts Ich-Sicht und „Spielen" blenden
-## erst nach der Rechnung ein — ausgeblendet, nicht versteckt, damit das Schild seine
-## Größe behält.
+## Ein Schild unten in der Mitte (Vorlage `assets/ui/fortress/`): links der Ort (Buch,
+## Unit), dann der Weg zur nächsten Stufe, rechts das Medaillon mit der Festung, wie sie im
+## Kampf steht (Bilder aus `src/dev/fortress_icons.gd`), und ihrer Stufe. Der Ort steht mit
+## dem Bild da; Festung, Medaillon und unten rechts Ich-Sicht und „Spielen" blenden erst
+## nach der Rechnung ein — ausgeblendet, nicht versteckt, damit das Schild seine Größe
+## behält. Der Balken ist breiter als jede Zeile darunter, deshalb ändert auch der Text
+## die Breite nicht.
 @onready var _fortress: Control = %Fortress
+@onready var _medal: Control = %Medal
 @onready var _actions: Control = %BottomRight
-@onready var _fortress_title: Label = %FortressTitle
 @onready var _fortress_bar: ProgressBar = %FortressBar
-@onready var _fortress_next: Label = %FortressNext
+@onready var _fortress_image: TextureRect = %FortressImage
+@onready var _fortress_level: Label = %FortressLevel
 @onready var _play: Button = %PlayButton
 
 var _levels: Array = []
@@ -68,7 +72,7 @@ func _ready() -> void:
 		await _canvas.zoom_finished
 	_fill()
 	_canvas.appear()
-	for part: Control in [_fortress, _actions]:
+	for part: Control in [_fortress, _medal, _actions]:
 		create_tween().tween_property(part, "modulate:a", 1.0, MapCanvas.APPEAR_TIME)
 
 
@@ -114,8 +118,8 @@ func _place_header() -> void:
 func _show_image() -> void:
 	_book.text = ContentRegistry.book_label(MapSelection.book)
 	_title.text = "Unit %d" % MapSelection.unit
-	_fortress.modulate.a = 0.0
-	_actions.modulate.a = 0.0
+	for part: Control in [_fortress, _medal, _actions]:
+		part.modulate.a = 0.0
 	_canvas.setup(MapLayout.unit_texture(MapSelection.book, MapSelection.unit), [], [], hint_lines)
 
 
@@ -129,9 +133,12 @@ func _fill() -> void:
 	var units := FortressTier.unit_tiers(lexemes, mastered)
 	var parts := FortressTier.part_tiers(lexemes, mastered, ContentRegistry.part_of)
 	var fortress := fortress_state(units.get("%s/%d" % [book, unit], {}))
-	_fortress_title.text = str(fortress["title"])
 	_fortress_bar.value = float(fortress["share"])
-	_fortress_next.text = str(fortress["next"])
+	(%Before as Label).text = str(fortress["before"])
+	(%Count as Label).text = str(fortress["count"])
+	(%After as Label).text = str(fortress["after"])
+	_fortress_level.text = str(fortress["tier"])
+	_fortress_image.texture = fortress_image(int(fortress["tier"]))
 	var wins := int(BossRecord.wins(UserSettings.active_profile()).get("%s/%d" % [book, unit], 0))
 	var nodes := nodes_for(_levels, units, parts, wins, has_boss_sentences(book, unit),
 			MapLayout.area_points(layout, unit))
@@ -206,17 +213,18 @@ static func nodes_for(levels: Array, units: Dictionary, parts: Dictionary, wins:
 	return out
 
 
-## Die Festung in der Ecke: sie gilt für die ganze Unit, in jedem ihrer Level dieselbe —
+## Die Festung im Schild: sie gilt für die ganze Unit, in jedem ihrer Level dieselbe —
 ## deshalb steht sie dort und nicht an den Orten. `share` ist der Weg von der erreichten
-## zur nächsten Stufe (0..1), auf der höchsten Stufe voll.
+## zur nächsten Stufe (0..1), auf der höchsten Stufe voll. Die Zeile unter dem Balken in
+## drei Stücken, damit die Zahl golden stehen kann: „Noch" · `count` · „Wörter bis Stufe 2".
 static func fortress_state(group: Dictionary) -> Dictionary:
 	var done := int(group.get("done", 0))
 	var total := int(group.get("total", 0))
 	var tier := int(group.get("tier", 0))
-	var title := "Festung · Stufe %d" % tier
 	var next := FortressTier.next_threshold(done, total)
 	if next.is_empty():
-		return {"title": title, "next": "Höchste Stufe" if total > 0 else "", "share": 1.0 if total > 0 else 0.0}
+		return {"tier": tier, "before": "Höchste Stufe" if total > 0 else "", "count": "",
+				"after": "", "share": 1.0 if total > 0 else 0.0}
 	var needed := int(next["needed"])
 	var from := 0
 	if tier > 0:
@@ -224,10 +232,18 @@ static func fortress_state(group: Dictionary) -> Dictionary:
 		from = (int(FortressTier.THRESHOLDS_PERCENT[tier - 1]) * total + 99) / 100
 	var span := maxi(1, done + needed - from)
 	return {
-		"title": title,
-		"next": "noch %d %s bis Stufe %d" % [needed, "Wort" if needed == 1 else "Wörter", int(next["tier"])],
+		"tier": tier,
+		"before": "Noch",
+		"count": str(needed),
+		"after": "%s bis Stufe %d" % ["Wort" if needed == 1 else "Wörter", int(next["tier"])],
 		"share": clampf(float(done - from) / float(span), 0.0, 1.0),
 	}
+
+
+## Das Bild der Festung einer Stufe (72 px, so groß wie im Medaillon); über der höchsten die
+## höchste.
+static func fortress_image(tier: int) -> Texture2D:
+	return load("res://assets/ui/fortress/tiers/tier_%d.webp" % clampi(tier, 0, FortressTier.THRESHOLDS_PERCENT.size())) as Texture2D
 
 
 ## Die Karte am Zeiger für ein Level.

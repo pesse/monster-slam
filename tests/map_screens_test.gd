@@ -341,13 +341,24 @@ func test_level_hints_speak_of_stars_and_never_of_the_fortress() -> void:
 func test_the_fortress_badge_fills_from_one_tier_to_the_next() -> void:
 	# 10 Wörter: Stufe 1 ab 1, Stufe 2 ab 4 — mit 2 ist ein Drittel des Wegs geschafft.
 	var state := AreaMap.fortress_state({"tier": 1, "done": 2, "total": 10})
-	assert_str(str(state["title"])).is_equal("Festung · Stufe 1")
-	assert_str(str(state["next"])).is_equal("noch 2 Wörter bis Stufe 2")
+	assert_int(int(state["tier"])).is_equal(1)
+	assert_str("%s %s %s" % [state["before"], state["count"], state["after"]]).is_equal(
+			"Noch 2 Wörter bis Stufe 2")
 	assert_float(float(state["share"])).is_equal_approx(1.0 / 3.0, 0.001)
 	var top := AreaMap.fortress_state({"tier": 4, "done": 10, "total": 10})
-	assert_str(str(top["next"])).is_equal("Höchste Stufe")
+	assert_str(str(top["before"])).is_equal("Höchste Stufe")
+	assert_str(str(top["count"])).is_empty()
 	assert_float(float(top["share"])).is_equal(1.0)
-	assert_str(str(AreaMap.fortress_state({})["title"])).contains("Stufe 0")
+	assert_int(int(AreaMap.fortress_state({})["tier"])).is_equal(0)
+
+
+## Jede Stufe hat ihr Bild im Medaillon, gerendert aus derselben Festung wie im Kampf.
+func test_every_fortress_tier_has_its_image() -> void:
+	for tier in FortressTier.THRESHOLDS_PERCENT.size() + 1:
+		var image := AreaMap.fortress_image(tier)
+		assert_object(image).override_failure_message("Stufe %d ohne Bild" % tier).is_not_null()
+		assert_int(image.get_width()).is_equal(72)
+	assert_object(AreaMap.fortress_image(99)).is_same(AreaMap.fortress_image(4))
 
 
 func test_unit_images_load_ahead_and_stay_the_same_instance() -> void:

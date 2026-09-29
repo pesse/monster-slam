@@ -18,6 +18,9 @@
 [ext_resource type="Texture2D" path="res://assets/ui/statistics/tabs/tab_highlighted.webp" id="tab_gold_tex"]
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/small/button_normal.webp" id="win_btn_tex"]
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/small/button_highlighted.webp" id="win_btn_gold_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/fortress/small/name_panel.webp" id="fort_name_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/fortress/small/progress_panel.webp" id="fort_progress_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/fortress/small/progress_track.webp" id="fort_track_tex"]
 
 [sub_resource type="StyleBoxFlat" id="btn_disabled"]
 content_margin_left = 12.0
@@ -460,6 +463,51 @@ texture_margin_left = 32.0
 texture_margin_top = 32.0
 texture_margin_right = 32.0
 texture_margin_bottom = 32.0
+
+[sub_resource type="StyleBoxTexture" id="fortress_name"]
+content_margin_left = 32.0
+content_margin_top = 12.0
+content_margin_right = 32.0
+content_margin_bottom = 12.0
+texture = ExtResource("fort_name_tex")
+texture_margin_left = 22.0
+texture_margin_top = 10.0
+texture_margin_right = 22.0
+texture_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxTexture" id="fortress_progress"]
+content_margin_left = 40.0
+content_margin_top = 12.0
+content_margin_right = 40.0
+content_margin_bottom = 12.0
+texture = ExtResource("fort_progress_tex")
+texture_margin_left = 14.0
+texture_margin_top = 10.0
+texture_margin_right = 14.0
+texture_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxTexture" id="fortress_track"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+texture = ExtResource("fort_track_tex")
+texture_margin_left = 6.0
+texture_margin_top = 3.0
+texture_margin_right = 6.0
+texture_margin_bottom = 3.0
+
+[sub_resource type="StyleBoxFlat" id="fortress_fill"]
+bg_color = Color(0.263, 0.729, 0.98, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.263, 0.729, 0.98, 0)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
 
 [sub_resource type="StyleBoxEmpty" id="menu_btn_focus"]
 
@@ -936,6 +984,15 @@ ActionButton/styles/normal = SubResource("action_normal")
 ActionButton/styles/hover = SubResource("action_hover")
 ActionButton/styles/pressed = SubResource("action_pressed")
 ActionButton/styles/disabled = SubResource("action_disabled")
+FortressName/base_type = &"PanelContainer"
+FortressName/styles/panel = SubResource("fortress_name")
+FortressProgress/base_type = &"PanelContainer"
+FortressProgress/styles/panel = SubResource("fortress_progress")
+FortressBar/base_type = &"ProgressBar"
+FortressBar/styles/background = SubResource("fortress_track")
+FortressBar/styles/fill = SubResource("fortress_fill")
+CaptionGold/base_type = &"Caption"
+CaptionGold/colors/font_color = Color(1, 0.84, 0.4, 1)
 MapBanner/base_type = &"PanelContainer"
 MapBanner/styles/panel = SubResource("map_banner")
 MainMenuButton/base_type = &"Button"

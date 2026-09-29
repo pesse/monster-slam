@@ -421,6 +421,14 @@ Erspielte.
   (`statistics/tabs/`) und Spieler-Medaillon (`player_badge/menu/`) liegen deshalb vorab
   verkleinert vor, so dass sie bei 1920 × 1080 Pixel für Pixel stehen, mit Mipmaps für
   die Bezugsgröße. Erzeugt mit `src/dev/shrink_image.gd` aus den Paketbildern.
+- **Festungsanzeige der Gebietskarte** nach `assets/ui/fortress/` (README dort): Namens-
+  und Fortschrittsrahmen, Medaillon, Stufenplakette, verkleinert unter `fortress/small/`
+  (Variationen `FortressName`, `FortressProgress`, `FortressBar`). Die Rahmen greifen
+  ineinander — `OverlapRow` schiebt jedes Teil um seinen Rand in das vorige, vorn liegt der
+  Namensrahmen (`z_index`). Statt des Burg-Bildes der Vorlage zeigt das Medaillon die Festung
+  der Stufe aus dem Kampf: `FortressModel` baut sie für `WaveRunner` und für
+  `src/dev/fortress_icons.gd`, das daraus `fortress/tiers/tier_<n>.webp` rendert
+  (`GODOT_WINDOW=1`). Ändert sich die Festung im Kampf, die Bilder neu rendern.
 
 ## Erfahrung und Level (`src/progression/`)
 

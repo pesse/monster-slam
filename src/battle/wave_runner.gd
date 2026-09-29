@@ -519,10 +519,8 @@ func _blocks_field(x: float, z: float, field: Dictionary) -> bool:
 ## Festung = modular aus dem KayKit Medieval Hexagon Pack (CC0, Kay Lousberg)
 ## zusammengesetzt und stufenweise mit dem Lernfortschritt gewachsen. Modelle unter
 ## assets/models/hexagon/ (blaue Farbvariante, passend zu den Sample-Renders).
-const HEX_DIR := "hexagon"
-const FORTRESS_SCALE := 3.0
-## Gierwinkel der Mauerteile, siehe _spawn_fortress.
-const WALL_YAW := 180.0
+const FORTRESS_SCALE := FortressModel.SCALE
+const WALL_YAW := FortressModel.WALL_YAW   # für battle_theme_lab
 
 func _build_fortress() -> void:
 	_fortress_tier = _current_fortress_tier()
@@ -539,67 +537,15 @@ func _current_fortress_tier() -> int:
 	return FortressTier.run_tier(scoped, units)
 
 
-## Baut die Festung passend zur Stufe (0..4) neu auf. Additiv: höhere Stufen zeigen
-## mehr Türme/Mauern/Nebengebäude. Nur die -z-Front (Angriffsfront) liegt im Bild,
-## Burg + Nebengebäude laufen nach hinten (+z) aus dem sichtbaren Feld.
+## Baut die Festung passend zur Stufe (0..4) neu auf; die Anordnung steht in
+## FortressModel, die Mauerfront ist die Ziel-Linie der Monster.
 func _spawn_fortress(tier: int) -> void:
 	var fort := Node3D.new()
 	fort.name = "Fortress"
 	add_child(fort)
 	_fortress = fort
-
-	var fz := GOAL_Z              # Mauerfront = Ziel-Linie der Monster
-	var seg := 2.0 * FORTRESS_SCALE   # Weltbreite eines Mauersegments
-
 	print("[FORTRESS] Stufe %d (+%d HP)" % [tier, FortressTier.health_bonus(tier)])
-
-	if tier <= 0:
-		# Baustelle: Turmstumpf + Baugerüst. Kleine Stufe an den hinteren Rand
-		# (Verteidiger-Rückseite = +z, näher zur Kamera) gezogen, weg von der
-		# Monster-Front, aber noch komplett im Bild.
-		_hex(fort, "building_tower_base_blue", 0.0, fz + 3.5)
-		_hex(fort, "building_scaffolding", seg * 0.7, fz + 3.5)
-		return
-
-	# Ab Stufe 2: Wehrmauer mit Tor + Ecktürmen. Die Mauerteile um 180° gedreht: im Pack
-	# liegen die Zinnen auf +z, hier gehören sie auf die Feindseite (-z), der Wehrgang
-	# dahinter zu den Verteidigern. Die Teile sind mittig, die Drehung verschiebt nichts.
-	if tier >= 2:
-		_hex(fort, "wall_straight", -seg, fz, WALL_YAW)
-		_hex(fort, "wall_straight_gate", 0.0, fz, WALL_YAW)
-		_hex(fort, "wall_straight", seg, fz, WALL_YAW)
-		var end_tower := "building_tower_catapult_blue" if tier >= 4 else "building_tower_B_blue"
-		_hex(fort, end_tower, -seg * 1.5, fz)
-		_hex(fort, end_tower, seg * 1.5, fz)
-
-	# Zentrum: erst ein Turm (Stufe 1/2), ab Stufe 3 die große Burg.
-	if tier >= 3:
-		_hex(fort, "building_castle_blue", 0.0, fz + 3.0)
-	elif tier == 2:
-		_hex(fort, "building_tower_A_blue", 0.0, fz + 1.0)  # hinter der Mauer
-	else:
-		# Stufe 1 ohne Mauer: Turm an den hinteren Rand (+z), weg von der Front.
-		_hex(fort, "building_tower_A_blue", 0.0, fz + 3.0)
-
-	# Vollausbau: Nebengebäude hinter der Mauer + Fahnen auf den Ecktürmen.
-	if tier >= 4:
-		_hex(fort, "building_barracks_blue", -seg * 1.3, fz + 4.5, 20.0)
-		_hex(fort, "building_blacksmith_blue", seg * 1.3, fz + 4.5, -20.0)
-		_hex(fort, "building_home_A_blue", -seg * 0.6, fz + 6.5)
-		_hex(fort, "building_home_B_blue", seg * 0.6, fz + 6.5)
-		_hex(fort, "building_church_blue", 0.0, fz + 8.0)
-		_hex(fort, "building_windmill_blue", -seg * 1.9, fz + 2.5)
-		var flag_y := 2.2 * FORTRESS_SCALE
-		for sx: float in [-seg * 1.5, seg * 1.5]:
-			var flag := _hex(fort, "flag_blue", sx, fz)
-			if flag != null:
-				flag.position.y += flag_y
-
-
-## Platziert ein Hexagon-Pack-Modell (ohne .gltf-Endung) auf Terrain-Höhe, skaliert
-## mit FORTRESS_SCALE. Gibt die Instanz zurück (null wenn Modell fehlt).
-func _hex(parent: Node3D, model: String, x: float, z: float, yaw := 0.0, extra := 1.0) -> Node3D:
-	return _place_model(parent, "%s.gltf" % model, Vector3(x, _ground_y(x, z), z), yaw, Vector3.ONE * FORTRESS_SCALE * extra, HEX_DIR)
+	FortressModel.build(fort, tier, GOAL_Z, _ground_y)
 
 
 ## Baut die Festung neu auf, mit kurzem Bau-Effekt als Feedback. Nur das Bild — die
