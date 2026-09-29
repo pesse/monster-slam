@@ -15,6 +15,7 @@ extends Node
 ##     … -- --shoot --intro --to-menu    schiebt wie „Weiter" ins Menü (ohne Profilwechsel)
 ##     … -- --shoot --stats              drückt „Statistik": das Fenster über der Kulisse
 ##     … -- --shoot --stats=close        … und schließt es wieder; druckt, wer den Fokus hat
+##     … -- --shoot --badge-hint         die Karte am Medaillon der Plakette (Level, XP, Punkte)
 ##
 ## Das Menü liest das aktive Profil nur (Name, Gold, Level); geschrieben wird nichts.
 ## Headless gibt es keinen Renderer — deshalb GODOT_WINDOW=1.
@@ -74,6 +75,10 @@ func _ready() -> void:
 
 func _shoot() -> void:
 	await get_tree().create_timer(SETTLE).timeout
+	if _has_arg("badge-hint"):
+		var medallion := get_tree().root.find_child("Medallion", true, false) as Control
+		if medallion != null:
+			Hints.probe(medallion)
 	await RenderingServer.frame_post_draw
 	var dir := ProjectSettings.globalize_path(SHOT_DIR)
 	DirAccess.make_dir_recursive_absolute(dir)
@@ -89,6 +94,8 @@ func _shoot() -> void:
 		what += "_slide" + _arg("slide")
 	if _has_arg("stats") or not _arg("stats").is_empty():
 		what += "_stats" + ("_closed" if _arg("stats") == "close" else "")
+	if _has_arg("badge-hint"):
+		what += "_badge_hint"
 	var file := "%s/%s_%dx%d.png" % [dir, what,
 			img.get_width(), img.get_height()]
 	img.save_png(file)

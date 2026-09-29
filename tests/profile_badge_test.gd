@@ -20,6 +20,17 @@ func test_it_shows_name_gold_and_level_of_the_active_profile() -> void:
 			str(int(PlayerLevel.progress()["level"])))
 
 
+func test_the_medallion_names_xp_and_open_skill_points() -> void:
+	var badge := _badge()
+	var hint := Hints.hint_of(badge.get_node("%Medallion") as Control)
+	assert_str(str(hint.get("body", ""))).contains("XP")
+	assert_str(str(hint.get("note", ""))).is_equal(
+			ProfileBadge.points_text(SkillBook.available(), SkillBook.unlimited_points))
+	assert_str(ProfileBadge.points_text(1)).is_equal("1 Skillpunkt offen")
+	assert_str(ProfileBadge.points_text(3)).is_equal("3 Skillpunkte offen")
+	assert_str(ProfileBadge.points_text(3, true)).is_equal("∞ Skillpunkte (Debug)")
+
+
 func test_the_switch_is_a_button_that_explains_itself() -> void:
 	var badge := _badge()
 	var fired := [0]

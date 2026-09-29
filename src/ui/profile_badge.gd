@@ -44,6 +44,7 @@ func _ready() -> void:
 	Hints.attach(%SwitchButton as Control, "Profil wechseln", "zurück zu „Wer spielt?“")
 	PlayerLevel.changed.connect(func(_total_xp, _level): refresh())
 	Wallet.changed.connect(func(_gold): refresh())
+	SkillBook.changed.connect(refresh)
 	refresh()
 
 
@@ -58,9 +59,18 @@ func refresh() -> void:
 	_level_label.text = str(level)
 	_ratio = clampf(float(in_level) / float(maxi(for_up, 1)), 0.0, 1.0)
 	Hints.attach(%Medallion as Control, "Level %d" % level, "%d / %d XP bis Level %d" % [
-			in_level, for_up, level + 1])
+			in_level, for_up, level + 1], points_text(SkillBook.available(),
+			SkillBook.unlimited_points))
 	Hints.attach(%Plates as Control, UserSettings.display_name(), "", Wallet.label())
 	queue_redraw()
+
+
+## Der OFFENE Stand (verdient minus ausgegeben) als Nachsatz unter der Erfahrung — dieselbe
+## Zahl wie in der Statistik, nicht das Level, das schon in der Überschrift steht.
+static func points_text(points: int, unlimited := false) -> String:
+	if unlimited:
+		return "∞ Skillpunkte (Debug)"
+	return "%d Skillpunkt%s offen" % [points, "" if points == 1 else "e"]
 
 
 ## Ein Punkt der Leinwand im Control.

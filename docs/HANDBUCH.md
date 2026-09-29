@@ -45,7 +45,7 @@ bewegt sich leise, spielen kann man dort nichts.
 
 Rechts oben steht deine Plakette: rechts dein Bild im Ring, unten darauf dein Level. Der
 blaue Bogen um das Bild zeigt, wie weit du im Level bist; am Zeiger steht es genau
-(„166 / 400 XP bis Level 5“). Links daneben stehen dein Name und dein Gold, ganz links der
+(„166 / 400 XP bis Level 5“), darunter, wie viele Skillpunkte du noch ausgeben kannst. Links daneben stehen dein Name und dein Gold, ganz links der
 Pfeil **„Profil wechseln“** (zurück zu „Wer spielt?“). Dieselbe Plakette steht in der
 Bibliothek.
 
