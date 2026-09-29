@@ -1,0 +1,78 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://src/ui/stats_day.gd" id="1_day"]
+[ext_resource type="Texture2D" path="res://assets/ui/skill_tree/medallions/locked.webp" id="2_base"]
+[ext_resource type="Texture2D" path="res://assets/ui/statistics/icons/activity_coin.webp" id="3_coin"]
+[ext_resource type="Texture2D" path="res://assets/ui/skill_tree/medallions/focus_ring.webp" id="4_ring"]
+
+[node name="StatsDay" type="VBoxContainer"]
+custom_minimum_size = Vector2(28, 0)
+size_flags_horizontal = 3
+focus_mode = 2
+theme_type_variation = &"Tight"
+script = ExtResource("1_day")
+
+[node name="Medal" type="Control" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+
+[node name="Base" type="TextureRect" parent="Medal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("2_base")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Coin" type="TextureRect" parent="Medal"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 2.0
+offset_top = 2.0
+offset_right = -2.0
+offset_bottom = -2.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("3_coin")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Ring" type="TextureRect" parent="Medal"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -4.0
+offset_top = -4.0
+offset_right = 4.0
+offset_bottom = 4.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("4_ring")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Day" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"DayNumber"
+text = "1"
+horizontal_alignment = 1

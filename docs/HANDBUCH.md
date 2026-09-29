@@ -554,27 +554,34 @@ verloren ist er aber nie: mit Gold lässt er sich zurückholen.
 
 ## 12. Die Statistik
 
-„📊 Statistik“ auf dem Start-Screen hat drei Reiter.
+„Statistik“ im Hauptmenü öffnet ein Fenster über dem Menü. Oben rechts schließt „✕“ es
+wieder, oder du drückst **Esc**. Das Fenster hat drei Reiter. Kopf und Reiter bleiben
+stehen, der Inhalt darunter lässt sich scrollen.
 
 ### Reiter „Überblick“
 
-- **„🔥 … Tage in Folge geübt“** – deine Tages-Serie.
-- **„🪙 An … Tagen geübt“** und die **Monatsleiste**: eine Münze für jeden Tag des Monats.
-  Gold heißt „geübt“, grau „nicht geübt“, der heutige Tag hat einen Ring. **Diese Münzen
-  sind kein Gold**, sie zählen nur Tage, an denen du gespielt hast. Mit der Maus über
-  einer Münze siehst du das Datum.
-- **„✅ Genauigkeit“** – wie viele Antworten gesessen haben, verglichen mit den Tagen
-  davor.
-- Gold und Zahl der geöffneten Schatzkisten, Level und Skillpunkte, gemeisterte Aufgaben
-  und wie viele Aufgaben heute zur Wiederholung fällig sind.
-- **„🏆 Rekorde“** – Bestwerte über alle Läufe, „kein Lernziel, nur zum Angeben“.
-- **„📈 Lernkurve“** – die gemeisterten Aufgaben über die letzten Wochen. Diese Linie
+- **Flamme: „… Tage in Folge“** – deine Tages-Serie. Darunter steht, ob heute schon
+  dabei ist. Der laufende Tag reißt die Serie nicht, erst ein ganzer Tag ohne Lauf.
+- **Haken: „… % richtig“** – wie viele Antworten in der letzten Sitzung gesessen haben,
+  verglichen mit den Tagen davor.
+- **Die Monatsreihe**: ein Medaillon für jeden Tag des Monats. Auf einem Tag, an dem du
+  geübt hast, liegt eine goldene Münze, und seine Zahl ist golden. Der heutige Tag hat
+  einen leisen Ring, die Tage danach sind blasser. **Diese Münzen sind kein Gold**, sie
+  zählen nur Tage, an denen du gespielt hast. Zeigt die Maus auf einen Tag (oder springst
+  du mit der Tastatur hin), siehst du Datum und Stand.
+- **„Dein Fortschritt“** – dein Level, der Balken bis zum nächsten Level und alle XP
+  zusammen. Darunter Gold, geöffnete Schatzkisten und Skillpunkte, die du noch ausgeben
+  kannst.
+- **„Rekorde“** – Bestwerte über alle Läufe, kein Lernziel, nur zum Angeben. Darunter
+  gemeisterte Aufgaben und wie viele Aufgaben heute zur Wiederholung fällig sind.
+- **„Lernkurve“** – die gemeisterten Aufgaben über die letzten Wochen. Diese Linie
   geht nicht zurück.
-- **„🌱 Frisch gemeistert“** – was seit dieser Woche sitzt.
-- **„🏅 Comeback“** – Wörter, die dir mindestens dreimal entwischt sind und jetzt sitzen.
-- **„🎯 Fahndungsliste“** – Wörter, die dir entwischt sind. Hol sie dir zurück!
-- **„📊 Insgesamt“** – alles seit dem ersten Lauf. Diese Genauigkeit sinkt, wenn du
-  schwere Wörter übst. Das ist gewollt und kein Rückschritt.
+- **„Frisch gemeistert“** – was seit dieser Woche sitzt.
+- **„Comeback“** – Wörter, die dir mindestens dreimal entwischt sind und jetzt sitzen.
+- **„Fahndungsliste“** – Wörter, die dir entwischt sind. Hol sie dir zurück!
+- **„Insgesamt“** – alles seit dem ersten Lauf, auch an wie vielen Tagen du geübt hast.
+  Diese Genauigkeit sinkt, wenn du schwere Wörter übst. Das ist gewollt und kein
+  Rückschritt.
 
 ### Reiter „Fortschritt“: gezählt werden Wörter
 
@@ -706,7 +713,7 @@ Zum Beispiel:
 
 - die Schatzkiste und der Knopf „⏩“,
 - jeder Knoten, jeder Baumname und die Zeichen „⛶“ und „↺“ im Fähigkeiten-Screen,
-- Zeilen und Wörter in der Statistik, die Münzen der Monatsleiste,
+- Zeilen und Wörter in der Statistik, die Tage der Monatsreihe,
 - die Knöpfe im Reiter „Protokoll“.
 
 Auch das graue „↺“ im Fähigkeiten-Screen sagt am Zeiger, warum es gerade nicht geht.

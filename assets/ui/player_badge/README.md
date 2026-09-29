@@ -16,6 +16,16 @@ Die generative Rahmenextraktion ist eine stilgetreue Rekonstruktion und nicht pi
 - `preview/badge-render.png`: tatsächlicher Godot-Render mit Level 99 und 999.999 Gold.
 - `sources/`: Original, Generierungsauftrag und reproduzierbarer WebP-Export. Quellen und Vorschauen sind vom Godot-Import ausgeschlossen.
 
+## Wie das Spiel die Teile benutzt
+
+`scenes/ui/profile_badge.tscn` mit `src/ui/profile_badge.gd` (nicht die Vorlage
+`player_badge.tscn`). Gezeichnet wird auf ein Fünftel der Leinwand (277 × 136 in der
+Bezugsgröße 1152 × 648). Die Bilder dafür liegen **vorab verkleinert** unter `menu/`, so
+dass sie bei 1920 × 1080 Pixel für Pixel stehen: `frame.webp` und `level_overlay.webp` auf
+ein Drittel, dazu Avatar und Wechsel-Icon aus `../main_menu/icons/`. Zur Laufzeit von
+1536 px auf ein Fünftel gezeichnet, ließ der Rahmen an den feinen Kanten Fragmente stehen.
+Neu erzeugen mit `src/dev/shrink_image.gd`, wenn sich ein Bild oder die Größe ändert.
+
 ## Umsetzungsschritte
 
 1. Bestehende Profil-/Menülogik untersuchen und die Komponente in Hauptmenü und Bibliothek instanziieren. An der rechten oberen Ecke verankern; ausreichend Abstand zum Fensterrand lassen. Die transparente Textur hat Außenabstand, daher sichtbare Silhouette statt Canvasrand bei Positionierung beachten.

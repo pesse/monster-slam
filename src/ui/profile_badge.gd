@@ -12,11 +12,16 @@ extends Control
 ## 1536 × 1024) mal `SCALE`, verschoben um `ORIGIN`: das Control deckt nur die sichtbare
 ## Silhouette, nicht den durchsichtigen Rand der Leinwand.
 ##
+## Die Bilder liegen vorab verkleinert unter `player_badge/menu/` (`src/dev/shrink_image.gd`,
+## Faktor so, dass sie bei 1920 × 1080 Pixel für Pixel stehen): die Leinwand des Pakets auf
+## ein Fünftel zu zeichnen, ließ an den feinen Kanten Fragmente stehen. Neu erzeugen, wenn
+## sich das Paket oder `SCALE` ändert.
+##
 ## Was „Profil wechseln" tut, entscheidet der Screen (`switch_pressed`).
 
 signal switch_pressed
 
-const FRAME := preload("res://assets/ui/player_badge/frame.webp")
+const FRAME := preload("res://assets/ui/player_badge/menu/frame.webp")
 const CANVAS := Vector2(1536, 1024)
 const SCALE := 0.2
 ## Linke obere Ecke der Silhouette auf der Leinwand (gemessen am Render des Pakets; die

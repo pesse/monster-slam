@@ -1,9 +1,9 @@
 [gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://src/ui/profile_badge.gd" id="1_badge"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/profile.webp" id="2_bust"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/switch_profile.webp" id="3_switch"]
-[ext_resource type="Texture2D" path="res://assets/ui/player_badge/level_overlay.webp" id="4_level"]
+[ext_resource type="Texture2D" path="res://assets/ui/player_badge/menu/avatar.webp" id="2_bust"]
+[ext_resource type="Texture2D" path="res://assets/ui/player_badge/menu/switch_profile.webp" id="3_switch"]
+[ext_resource type="Texture2D" path="res://assets/ui/player_badge/menu/level_overlay.webp" id="4_level"]
 
 [node name="ProfileBadge" type="Control"]
 custom_minimum_size = Vector2(277, 136)

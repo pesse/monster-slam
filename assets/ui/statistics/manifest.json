@@ -1,0 +1,41 @@
+{
+  "format": "lossless WebP RGBA",
+  "icons": {
+    "streak_flame": {
+      "path": "res://assets/ui/statistics/icons/streak_flame.webp",
+      "width": 256,
+      "height": 256
+    },
+    "correct_check": {
+      "path": "res://assets/ui/statistics/icons/correct_check.webp",
+      "width": 256,
+      "height": 256
+    },
+    "records_trophy": {
+      "path": "res://assets/ui/statistics/icons/records_trophy.webp",
+      "width": 256,
+      "height": 256
+    },
+    "gold_coins": {
+      "path": "res://assets/ui/statistics/icons/gold_coins.webp",
+      "width": 256,
+      "height": 256
+    },
+    "treasure_chest": {
+      "path": "res://assets/ui/statistics/icons/treasure_chest.webp",
+      "width": 256,
+      "height": 256
+    },
+    "activity_coin": {
+      "path": "res://assets/ui/statistics/icons/activity_coin.webp",
+      "width": 256,
+      "height": 256
+    }
+  },
+  "reuse": {
+    "level_star": "res://assets/ui/skill_tree/icons/skill_point.webp",
+    "medallion": "res://assets/ui/skill_tree/medallions/available.webp",
+    "hover_ring": "res://assets/ui/skill_tree/medallions/focus_ring.webp",
+    "tooltip": "res://assets/ui/skill_tree/tooltip/tooltip_shell.tscn"
+  }
+}

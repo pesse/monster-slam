@@ -10,7 +10,7 @@ script = ExtResource("1_progress_row")
 
 [node name="Header" type="Button" parent="Row"]
 theme_type_variation = &"RowButton"
-custom_minimum_size = Vector2(200, 0)
+custom_minimum_size = Vector2(280, 0)
 text = "Bezeichnung"
 alignment = 0
 clip_text = true

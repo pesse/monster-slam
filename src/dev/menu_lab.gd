@@ -13,6 +13,8 @@ extends Node
 ##     … -- --shoot --library --book=<id> … mit diesem Buch herausgenommen
 ##     … -- --shoot --to-library         schiebt wie „Lernen" in die Bibliothek
 ##     … -- --shoot --intro --to-menu    schiebt wie „Weiter" ins Menü (ohne Profilwechsel)
+##     … -- --shoot --stats              drückt „Statistik": das Fenster über der Kulisse
+##     … -- --shoot --stats=close        … und schließt es wieder; druckt, wer den Fokus hat
 ##
 ## Das Menü liest das aktive Profil nur (Name, Gold, Level); geschrieben wird nichts.
 ## Headless gibt es keinen Renderer — deshalb GODOT_WINDOW=1.
@@ -54,6 +56,18 @@ func _ready() -> void:
 	if screen is ProfileMenu and _has_arg("to-menu"):
 		get_tree().create_timer(0.5).timeout.connect(
 				func(): (screen as ProfileMenu).call("_slide_to", ProfileMenu.MENU))
+	if screen is ProfileMenu and (_has_arg("stats") or not _arg("stats").is_empty()):
+		get_tree().create_timer(0.5).timeout.connect(
+				func(): (screen.get_node("%StatsButton") as Button).pressed.emit())
+		if _arg("stats") == "close":
+			get_tree().create_timer(1.2).timeout.connect(func():
+				var window := screen.get_node_or_null("StatsScreen")
+				print("menu_lab: Fenster offen: ", window != null)
+				if window != null:
+					window.call("close")
+				await get_tree().process_frame
+				print("menu_lab: Fokus bei ", get_viewport().gui_get_focus_owner(),
+						", Fenster noch da: ", is_instance_valid(window) and window.is_inside_tree()))
 	if _has_arg("shoot"):
 		_shoot.call_deferred()
 
@@ -73,6 +87,8 @@ func _shoot() -> void:
 		what += "_to_menu"
 	if not _arg("slide").is_empty():
 		what += "_slide" + _arg("slide")
+	if _has_arg("stats") or not _arg("stats").is_empty():
+		what += "_stats" + ("_closed" if _arg("stats") == "close" else "")
 	var file := "%s/%s_%dx%d.png" % [dir, what,
 			img.get_width(), img.get_height()]
 	img.save_png(file)

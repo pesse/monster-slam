@@ -1,0 +1,1 @@
+Built-in image_gen.imagegen edit of statistics-v2.webp: Remove only the entire top-right player profile badge including avatar, name, level, XP and profile switch with its border. Fill with matching header texture. Preserve close X and all statistics body content, including body XP section.

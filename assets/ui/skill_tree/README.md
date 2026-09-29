@@ -20,7 +20,8 @@ Umsetzung" dem Bild vor. Eingebaut ist:
 - **Medaillons** zeichnet `src/ui/skill_graph.gd`. Benutzt wird nur `available.webp`,
   moduliert mit der Baumfarbe (hell: lernbar oder gelernt; gedämpft: zu teuer oder
   gesperrt). Gelernt tönt eine gezeichnete Scheibe die Mitte, dazu der Haken; gesperrt
-  steht das Schloss statt des Icons. `locked.webp` und `learned.webp` bleiben ungenutzt.
+  steht das Schloss statt des Icons. `learned.webp` bleibt ungenutzt; `locked.webp` ist
+  die dunkle Basis der Monatsreihe in der Statistik (`scenes/ui/stats_day.tscn`).
   Den Ring misst `scenes/dev/skill_tree_lab.tscn -- --medallion` (innen 90, außen 111 px
   auf 256).
 - **Icons** lädt `src/ui/skill_icons.gd` über `skill_icons.json`;

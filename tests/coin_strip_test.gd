@@ -68,8 +68,8 @@ func test_february_follows_the_gregorian_leap_rule() -> void:
 func test_date_label_advances_by_one_day() -> void:
 	# 1.9.2026 war ein Dienstag (Tagesindex 20697 in UTC-Rechnung).
 	var index := 20697
-	assert_str(COIN_STRIP.date_label(index)).is_equal("Di, 1.9.")
-	assert_str(COIN_STRIP.date_label(index + 1)).is_equal("Mi, 2.9.")
+	assert_str(COIN_STRIP.date_label(index)).is_equal("Di, 1. September")
+	assert_str(COIN_STRIP.date_label(index + 1)).is_equal("Mi, 2. September")
 
 
 ## Die Szene muss sich bauen lassen, ihre Knoten finden und für jeden Tag des laufenden
@@ -84,3 +84,23 @@ func test_scene_builds_one_coin_per_day_of_the_month() -> void:
 	var expected: int = COIN_STRIP.days_in_month(int(now["year"]), int(now["month"]))
 	assert_int(strip.get_node("%Coins").get_child_count()).is_equal(expected)
 	remove_child(strip)
+
+
+## Jeder Tag trägt seine Zahl und seine Karte: Datum als Überschrift, der Stand darunter.
+func test_each_day_carries_its_number_and_card() -> void:
+	var strip: VBoxContainer = auto_free(COIN_STRIP_SCENE.instantiate())
+	add_child(strip)
+	strip.refresh()
+	var first := strip.get_node("%Coins").get_child(0) as StatsDay
+	assert_str((first.get_node("%Day") as Label).text).is_equal("1")
+	assert_str(str(Hints.hint_of(first).get("title", ""))).contains("1. ")
+	assert_str(str(Hints.hint_of(first).get("body", ""))).is_not_empty()
+	assert_int(first.focus_mode).is_equal(Control.FOCUS_ALL)
+	remove_child(strip)
+
+
+func test_state_text_names_today() -> void:
+	assert_str(COIN_STRIP.state_text(DayCoin.State.EARNED, true)).contains("Heute")
+	assert_str(COIN_STRIP.state_text(DayCoin.State.EARNED)).not_contains("Heute")
+	assert_str(COIN_STRIP.state_text(DayCoin.State.OPEN, true)).contains("noch nicht")
+	assert_str(COIN_STRIP.state_text(DayCoin.State.FUTURE)).is_equal("Kommt noch")

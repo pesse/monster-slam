@@ -379,10 +379,25 @@ Erspielte.
   der Bildmitte, und eine Größenänderung beim Weiterblättern verschiebt die Knöpfe unter
   dem Zeiger. Dafür der `PageStack` plus die Regel, innerhalb einer Seite nur zu sperren
   und umzubeschriften statt ein- und auszublenden.
-- **Die Münzen der Tages-Leiste sind keine Währung.** Sie markieren geübte TAGE
-  (`CoinStrip`, `DayCoin`, Vorrat aus `SessionLog.played_day_count()`); Gold zählt in
-  Beträgen. Deshalb redet die Leiste von Tagen — zwei Dinge, die „Goldstück" heißen,
-  wären eines zu viel.
+- **Die Münzen der Monatsreihe sind keine Währung.** Sie markieren geübte TAGE
+  (`CoinStrip` rechnet die Zustände, `StatsDay` zeigt einen Tag; Vorrat aus
+  `SessionLog.played_day_count()`); Gold zählt in Beträgen. Deshalb redet die Reihe von
+  Tagen — zwei Dinge, die „Goldstück" heißen, wären eines zu viel. `DayCoin` ist nur noch
+  die gezeichnete Münze, die aus der Schatzkiste fliegt; ihr `State` bleibt das Maß für
+  beide.
+- **Die Statistik ist ein Fenster wie die Fähigkeiten** (`stats_screen.tscn`): dieselben
+  Schichten (Rahmen `GameWindow`, gekachelte Fläche, Titelband, Gelenke), dasselbe
+  Schließen-X, `closed` an `profile_menu._open_window`, das den Fokus an den Knopf
+  zurückgibt. Die Reiter sind drei Knöpfe `WindowTab` in einer `ButtonGroup` statt eines
+  `TabContainer` — dessen Reiter nähmen die Bilder des Fensterpakets nur über das ganze
+  Theme an. Alle Seiten liegen übereinander in `Pages`, das Fenster ändert beim Umschalten
+  seine Größe nicht. Den Tag unter dem Tastaturfokus erklärt `Hints.show_for`. Werkbank:
+  `scenes/dev/stats_lab.tscn -- --shoot [--tab=N] [--day=N] [--scroll=N] [--sizes]`.
+- **Bilder in der Größe, in der sie stehen.** Ein 9-Slice-Rahmen zeichnet seine Ränder in
+  Texturpixeln, ein stark verkleinertes Bild flimmert an feinen Kanten. Reiter
+  (`statistics/tabs/`) und Spieler-Medaillon (`player_badge/menu/`) liegen deshalb vorab
+  verkleinert vor, so dass sie bei 1920 × 1080 Pixel für Pixel stehen, mit Mipmaps für
+  die Bezugsgröße. Erzeugt mit `src/dev/shrink_image.gd` aus den Paketbildern.
 
 ## Erfahrung und Level (`src/progression/`)
 

@@ -125,6 +125,13 @@ func probe(control: Control, at := Vector2.INF) -> void:
 	_show(_hint_under(control, point), point)
 
 
+## Die Karte für ein Control, das den Tastaturfokus bekommen hat — dieselbe wie unter der
+## Maus, auf seine Mitte gesetzt. Sie bleibt stehen, bis sich der Zeiger bewegt: `_look`
+## fragt nur nach, wenn sich unter ihm etwas geändert hat.
+func show_for(control: Control) -> void:
+	probe(control)
+
+
 func _look(forced: bool) -> void:
 	var view := get_viewport()
 	if view == null:

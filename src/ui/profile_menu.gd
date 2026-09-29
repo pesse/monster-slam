@@ -11,7 +11,7 @@ extends Control
 ## Das Layout liegt in profile_menu.tscn (im Editor sichtbar, Entwurf unter
 ## assets/ui/main_menu/sources/); hier wird nur bedient und angezeigt. Hinter dem Menü
 ## steht die 3D-Kulisse (menu_backdrop.tscn). Einstellungen (Profil, Standard-Schwierigkeit, Reset) liegen im
-## settings_menu-Screen, der Lernstand im stats_screen-Screen.
+## settings_menu-Screen, der Lernstand im Statistik-Fenster (stats_screen).
 
 const SESSION_SETUP_SCENE := "res://scenes/ui/session_setup.tscn"
 const SETTINGS_SCENE := "res://scenes/ui/settings_menu.tscn"
@@ -59,7 +59,7 @@ func _ready() -> void:
 	(%ExpertButton as Button).pressed.connect(
 			func(): get_tree().change_scene_to_file(SESSION_SETUP_SCENE))
 	(%SkillButton as Button).pressed.connect(_open_skills)
-	(%StatsButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(STATS_SCENE))
+	(%StatsButton as Button).pressed.connect(_open_window.bind(STATS_SCENE, %StatsButton))
 	(%SettingsButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(SETTINGS_SCENE))
 	_badge.switch_pressed.connect(_back_to_intro)
 	_intro.picked.connect(_play_as)
@@ -98,14 +98,18 @@ func _play_as(id: String) -> void:
 	_slide_to(MENU)
 
 
-## Die Fähigkeiten öffnen als Fenster über dem Menü, nicht als eigener Screen: die Kulisse
-## bleibt stehen. Beim Schließen geht der Fokus an den Knopf zurück, von dem es kam.
+## Fähigkeiten und Statistik öffnen als Fenster über dem Menü, nicht als eigener Screen: die
+## Kulisse bleibt stehen. Beim Schließen geht der Fokus an den Knopf zurück, von dem es kam.
 func _open_skills() -> void:
-	var window := (load(SKILL_SCENE) as PackedScene).instantiate()
+	_open_window(SKILL_SCENE, %SkillButton)
+
+
+func _open_window(path: String, opener: Control) -> void:
+	var window := (load(path) as PackedScene).instantiate()
 	add_child(window)
 	window.connect("closed", func() -> void:
 		window.queue_free()
-		(%SkillButton as Button).grab_focus())
+		opener.grab_focus())
 
 
 func _back_to_intro() -> void:

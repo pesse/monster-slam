@@ -1,17 +1,17 @@
 extends Control
-## Statistik-Screen: Zahlen zum Lernstand, Lernkurve, Listen, Fortschritt, Wortliste.
+## Statistik-Fenster: Zahlen zum Lernstand, Monatsreihe, Rekorde, Lernkurve, Listen,
+## Fortschritt, Wortliste.
 ##
-## Ausgelagert aus dem Einstellungs-Screen. Dort hing die Statistik zwischen
-## Profilauswahl, Reset und Melde-Token — sie ist aber der motivierende Teil und
-## verdient einen eigenen Screen, direkt vom Start-Screen (profile_menu) aus erreichbar.
-##
-## Das Layout liegt in stats_screen.tscn (im Editor gestaltbar), die Zeilen-Vorlagen in
-## stat_row.tscn und progress_row.tscn, die Tages-Leiste in coin_strip.tscn, der
-## Zeichen-Control der Kurve in stats_chart.gd; hier wird nur befüllt.
+## Öffnet als Fenster über dem Hauptmenü wie die Fähigkeiten (`profile_menu._open_stats`):
+## derselbe Rahmen, dasselbe Titelband, dasselbe Schließen-X, Escape schließt. Entwurf:
+## `assets/ui/statistics/concept/statistics-v3.webp`. Das Layout liegt in stats_screen.tscn,
+## die Zeilen-Vorlagen in stat_row.tscn, record_row.tscn und progress_row.tscn, die
+## Monatsreihe in coin_strip.tscn, der Zeichen-Control der Kurve in stats_chart.gd; hier
+## wird nur befüllt.
 ##
 ## Drei Reiter: „Überblick" trägt die Abschnitte, die zum Weiterspielen motivieren
-## (Tages-Serie #6, Sitzungs-Genauigkeit #13, Kennzahlen #5, Kampf-Rekorde #11, Lernkurve
-## #7, frisch gemeistert und Comeback #9, Fahndungsliste #5, Lebenszeitwerte unter
+## (Tages-Serie #6, Sitzungs-Genauigkeit #13, Level und Gold #5, Kampf-Rekorde #11,
+## Lernkurve #7, frisch gemeistert und Comeback #9, Fahndungsliste #5, Lebenszeitwerte unter
 ## „Insgesamt" #13), „Fortschritt" die Balken pro Unit und Thema (#8) — die
 ## wachsen mit dem Katalog und schöben im Überblick alles andere aus dem Bild —, „Aufgaben" die
 ## vollständige Liste der Learnables. Ein Balken lässt sich aufklappen und zeigt dann die
@@ -21,14 +21,21 @@ extends Control
 ## Die beiden Maße auseinanderzuhalten ist der Sinn der Reiter-Namen: „Aufgaben" zählt
 ## learnable_ids (Richtung, Form, Relation — das Maß von mastered_count), „Fortschritt"
 ## zählt Wörter (beide Übersetzungsrichtungen — das Maß von mastered_lexemes).
+##
+## Die Reiter sind eigene Knöpfe und kein `TabContainer`: dessen Reiter lassen sich nicht
+## mit den Bildern des Fensterpakets belegen, ohne das ganze Theme umzustellen. Alle drei
+## Seiten liegen übereinander in `Pages`, sichtbar ist eine — das Fenster behält seine Größe.
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 const ROW_SCENE := preload("res://scenes/ui/stat_row.tscn")
+const RECORD_ROW_SCENE := preload("res://scenes/ui/record_row.tscn")
 const PROGRESS_ROW_SCENE := preload("res://scenes/ui/progress_row.tscn")
 ## Für die Schwellen und Richtungen der Meisterung in den statischen Funktionen —
 ## der Autoload PlayerProgress ist dasselbe Skript, aber nicht statisch erreichbar.
 const PROGRESS := preload("res://src/learning/player_progress.gd")
 
+## So lange blendet das Fenster auf (s) — wie die Fähigkeiten.
+const FADE_IN := 0.15
 ## So viele Wörter stehen auf der Fahndungsliste. Kurz halten: eine lange Liste ist
 ## keine Fahndung mehr, sondern die Wortliste im zweiten Reiter.
 const WANTED_COUNT := 5
@@ -47,12 +54,16 @@ const SPOTLESS_FORTRESS_HP := 90
 ## zwei Punkte sind bei dreißig Antworten eine einzige.
 const TREND_STEADY_POINTS := 3
 
+## Das Fenster will zu. Wer es geöffnet hat, nimmt es weg; hängt niemand daran (der Screen
+## läuft allein, etwa aus dem Editor), geht es zurück ins Startmenü.
+signal closed()
+
 @onready var _streak_label: Label = %StreakLabel
-@onready var _coin_label: Label = %CoinLabel
+@onready var _streak_note: Label = %StreakNote
 @onready var _coin_strip: CoinStrip = %CoinStrip
 @onready var _accuracy_label: Label = %AccuracyLabel
+@onready var _accuracy_which: Label = %AccuracyWhich
 @onready var _accuracy_trend: Label = %AccuracyTrend
-@onready var _stat_lines: VBoxContainer = %StatLines
 @onready var _total_lines: VBoxContainer = %TotalLines
 @onready var _record_list: VBoxContainer = %RecordList
 @onready var _curve: StatsChart = %Curve
@@ -68,11 +79,51 @@ var _resolver := TaskResolver.new()
 @onready var _unit_list: VBoxContainer = %UnitList
 @onready var _tag_list: VBoxContainer = %TagList
 @onready var _task_list: VBoxContainer = %TaskList
+## Reiter → Seite, in der Reihenfolge der Knöpfe.
+@onready var _pages := {
+	%OverviewTab: %OverviewPage,
+	%ProgressTab: %ProgressPage,
+	%TaskTab: %TaskPage,
+}
 
 
 func _ready() -> void:
-	(%BackButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(MENU_SCENE))
+	(%CloseButton as BaseButton).pressed.connect(close)
+	Hints.attach(%CloseButton as Control, "Schließen", "", "Esc")
+	for tab: Button in _pages:
+		tab.toggled.connect(func(on: bool) -> void:
+			if on:
+				_show_page(tab))
+	Hints.attach(%StreakCard as Control, "Tage in Folge",
+			"Jeder Tag mit mindestens einem Lauf zählt. Heute ist keine Lücke, solange der "
+			+ "Tag läuft — die Serie reißt erst, wenn ein ganzer Tag fehlt.")
+	Hints.attach(%PointsRow as Control, "Skillpunkte",
+			"Ein Punkt je Level. Ausgeben im Hauptmenü unter „Fähigkeiten“.")
 	_refresh()
+	modulate.a = 0.0
+	create_tween().tween_property(self, "modulate:a", 1.0, FADE_IN)
+	(%OverviewTab as Control).grab_focus.call_deferred()
+
+
+## Schließt das Fenster: meldet es dem, der es geöffnet hat (das Menü nimmt es weg), oder
+## geht allein zurück ins Startmenü.
+func close() -> void:
+	if closed.get_connections().is_empty():
+		get_tree().change_scene_to_file(MENU_SCENE)
+		return
+	closed.emit()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		get_viewport().set_input_as_handled()
+		close()
+
+
+## Zeigt die Seite zu `tab`. Der Knopf selbst steht schon gedrückt (ButtonGroup).
+func _show_page(tab: Button) -> void:
+	for each: Button in _pages:
+		(_pages[each] as Control).visible = each == tab
 
 
 func _refresh() -> void:
@@ -88,57 +139,53 @@ func _refresh() -> void:
 	_refresh_tasks()
 
 
-## Tages-Serie und Tages-Leiste (Issue #6).
+## Tages-Serie und Monatsreihe (Issue #6).
 ##
-## Die Leiste zeigt einen wachsenden Vorrat statt eines Monatsrasters: ein Kalender führt
-## vor allem Lücken vor und liest sich wie eine Buchhaltung. Die Bilanzzeile darunter
-## nennt den Gesamtvorrat und sagt bei offenem Tag, dass heute noch eines zu holen ist —
-## der laufende Tag ist keine Lücke (SessionLog.current_streak zählt ihn auch nicht als
-## solche), das soll man lesen können und nicht an der Zahl ablesen müssen.
+## Die Zeile unter der Zahl sagt bei offenem Tag, dass heute noch einer zu holen ist — der
+## laufende Tag ist keine Lücke (SessionLog.current_streak zählt ihn auch nicht als solche),
+## das soll man lesen können und nicht an der Zahl ablesen müssen.
 func _refresh_streak() -> void:
 	var streak := SessionLog.current_streak()
 	_coin_strip.refresh()
-
-	if streak == 0:
-		_streak_label.text = "Noch keine Serie — heute ist ein guter Tag dafür."
-	elif streak == 1:
-		_streak_label.text = "🔥 1 Tag in Folge geübt"
-	else:
-		_streak_label.text = "🔥 %d Tage in Folge geübt" % streak
-
-	var total := SessionLog.played_day_count()
-	_coin_label.text = "🪙 An %d Tag%s geübt" % [total, "" if total == 1 else "en"]
+	_streak_label.text = "%d Tag%s" % [streak, "" if streak == 1 else "e"]
 	if SessionLog.played_today():
-		_coin_label.text += " — heute ist dabei."
+		_streak_note.text = "Heute ist dabei"
+	elif streak == 0:
+		_streak_note.text = "Heute ist ein guter Tag dafür"
 	else:
-		_coin_label.text += " — heute fehlt noch."
+		_streak_note.text = "Heute fehlt noch — ein Lauf hält die Serie"
 
 
+## Level, Gold, Kisten, offene Punkte und die beiden Aufgabenzahlen der Fußzeile.
 func _refresh_numbers() -> void:
-	_clear(_stat_lines)
+	var progress := PlayerLevel.progress()
+	var in_level := int(progress["xp_in_level"])
+	var for_level := int(progress["xp_for_level_up"])
+	(%LevelLabel as Label).text = "Level %d" % int(progress["level"])
+	(%XpBar as ProgressBar).value = float(in_level) / float(maxi(for_level, 1))
+	(%XpLabel as Label).text = "%d / %d XP" % [in_level, for_level]
+	(%XpTotal as Label).text = "Insgesamt " + PlayerLevel.label()
 	# Der Goldstand zuerst: er ist das einzige, was man ausgeben kann, und die Kisten
 	# sagen, wie oft es dafür schon einen Grund gab.
-	_add_line(_stat_lines, "💰 %s  (%d Schatzkiste%s geöffnet)" % [
-		Wallet.label(), Wallet.chests_opened, "" if Wallet.chests_opened == 1 else "n"])
-	# Danach das Level: es sagt, wie lange schon gespielt wird, und führt die Skillpunkte
-	# mit. Gezeigt wird der OFFENE Stand (verdient minus ausgegeben) und dazu, wohin man
-	# damit geht — ein Punktestand ohne Weg wäre eine offene Frage.
-	var progress := PlayerLevel.progress()
+	(%GoldValue as Label).text = Wallet.digits()
+	(%GoldText as Label).text = "Gold (Debug)" if Wallet.unlimited_gold else "Gold"
+	(%ChestsValue as Label).text = str(Wallet.chests_opened)
+	(%ChestsText as Label).text = "Schatzkiste%s geöffnet" % ("" if Wallet.chests_opened == 1 else "n")
+	# Der OFFENE Stand (verdient minus ausgegeben), nicht das Level: das steht schon darüber.
 	var points := SkillBook.available()
-	_add_line(_stat_lines, "⭐ Level %d  (%d/%d XP, insgesamt %s)  ·  %d Skillpunkt%s%s" % [
-		int(progress["level"]), int(progress["xp_in_level"]), int(progress["xp_for_level_up"]),
-		PlayerLevel.label(), points, "" if points == 1 else "e",
-		" offen — im Start-Screen unter „🌳 Fähigkeiten“" if points > 0 else ""])
-	# Keine Festungsstufe mehr daneben: sie hängt an der Unit, nicht am Profil, und steht
-	# im Reiter „Fortschritt" an jeder Unit-Zeile und auf der Landkarte.
-	_add_line(_stat_lines, "Gemeisterte Aufgaben: %d" % PlayerProgress.mastered_count())
-	_add_line(_stat_lines, "Heute fällig: %d" % PlayerProgress.due_count())
+	(%PointsValue as Label).text = str(points)
+	(%PointsText as Label).text = "Skillpunkt%s offen" % ("" if points == 1 else "e")
+	# Keine Festungsstufe daneben: sie hängt an der Unit, nicht am Profil, und steht im
+	# Reiter „Fortschritt" an jeder Unit-Zeile und auf der Landkarte.
+	(%MasteredValue as Label).text = str(PlayerProgress.mastered_count())
+	(%DueValue as Label).text = str(PlayerProgress.due_count())
 
 
 ## Genauigkeit der letzten Sitzung mit Trendpfeil (Issue #13) — die Kopfzahl.
 func _refresh_accuracy() -> void:
 	var lines := accuracy_lines(SessionLog.session_accuracy())
 	_accuracy_label.text = str(lines["title"])
+	_accuracy_which.text = str(lines["which"])
 	_accuracy_trend.text = str(lines["detail"])
 
 
@@ -149,6 +196,8 @@ func _refresh_accuracy() -> void:
 ## Antworten bewegt sie sich ohnehin kaum noch. Sie bleibt — als Bilanz, nicht als Urteil.
 func _refresh_totals() -> void:
 	_clear(_total_lines)
+	var days := SessionLog.played_day_count()
+	_add_line(_total_lines, "Geübt an %d Tag%s" % [days, "" if days == 1 else "en"])
 	_add_line(_total_lines, "Gesamt-Genauigkeit: %d %%" % int(round(PlayerProgress.overall_accuracy() * 100.0)))
 	_add_line(_total_lines, "Gesehene Wörter: %d    Versuche: %d" % [
 		PlayerProgress.seen_count(), PlayerProgress.total_attempts()])
@@ -163,7 +212,8 @@ func _refresh_totals() -> void:
 			"Nicht die Tages-Serie oben und nicht die Serie ohne Durchlass bei den Rekorden.")
 
 
-## Überschrift und Trendzeile aus SessionLog.accuracy_trend(): { title, detail }.
+## Kopfzahl, Unterzeile und Trendzeile aus SessionLog.accuracy_trend():
+## { title, which, detail }.
 ##
 ## Der Pfeil steht nur, wo es zwei Werte gibt. Ohne Vorsitzung fehlt er, statt einen
 ## Vergleich gegen „0 %" zu behaupten; unter der Mindestzahl an Antworten steht die Sitzung
@@ -173,30 +223,36 @@ static func accuracy_lines(summary: Dictionary) -> Dictionary:
 	var answers := int(summary.get("answers", 0))
 	if answers == 0:
 		return {
-			"title": "✅ Genauigkeit: noch keine Sitzung",
+			"title": "Noch keine Sitzung",
+			"which": "Genauigkeit",
 			"detail": "Nach dem ersten Lauf steht hier, wie viele deiner Antworten gesessen haben.",
 		}
 	var which := "Diese Sitzung" if bool(summary.get("live", false)) else "Letzte Sitzung"
 	var accuracy := float(summary.get("accuracy", -1.0))
 	if accuracy < 0.0:
 		return {
-			"title": "✅ %s: %d von %d richtig" % [which, int(summary.get("correct", 0)), answers],
+			"title": "%d von %d richtig" % [int(summary.get("correct", 0)), answers],
+			"which": which,
 			"detail": "Zu wenige Antworten für eine Quote — ab %d gibt es eine." % SessionLog.MIN_ACCURACY_ANSWERS,
 		}
-	var title := "✅ %s: %d %% richtig" % [which, int(round(accuracy * 100.0))]
+	var title := "%d %% richtig" % int(round(accuracy * 100.0))
 	var baseline := float(summary.get("baseline", -1.0))
 	if baseline < 0.0:
-		return {"title": title, "detail": "Noch kein Vergleich — der kommt mit der nächsten Sitzung."}
+		return {"title": title, "which": which,
+				"detail": "Noch kein Vergleich — der kommt mit der nächsten Sitzung."}
 	var against := "den %d Tagen davor" % SessionLog.ACCURACY_WINDOW_DAYS \
 			if str(summary.get("baseline_kind", "")) == "week" else "der Sitzung davor"
 	var base_text := "%d %%" % int(round(baseline * 100.0))
 	# Auf die ANGEZEIGTEN Prozente gerechnet, damit „84 % gegen 80 %" nicht „3 Punkte" heißt.
 	var delta := int(round(accuracy * 100.0)) - int(round(baseline * 100.0))
 	if absi(delta) < TREND_STEADY_POINTS:
-		return {"title": title + "  →", "detail": "So gut wie in %s (%s)." % [against, base_text]}
+		return {"title": title + "  →", "which": which,
+				"detail": "So gut wie in %s (%s)." % [against, base_text]}
 	if delta > 0:
-		return {"title": title + "  ↑", "detail": "%d Punkte über %s (%s)." % [delta, against, base_text]}
-	return {"title": title + "  ↓", "detail": "%d Punkte unter %s (%s) — schwere Wörter drücken die Quote, das ist kein Rückschritt." % [-delta, against, base_text]}
+		return {"title": title + "  ↑", "which": which,
+				"detail": "%d Punkte über %s (%s)." % [delta, against, base_text]}
+	return {"title": title + "  ↓", "which": which,
+			"detail": "%d Punkte unter %s (%s) — schwere Wörter drücken die Quote, das ist kein Rückschritt." % [-delta, against, base_text]}
 
 
 ## Kampf-Rekorde über alle Sitzungen (Issue #11).
@@ -209,9 +265,15 @@ func _refresh_records() -> void:
 	if rows.is_empty():
 		_add_line(_record_list, "Noch kein Lauf gespielt — die Bestwerte kommen mit der ersten Welle.")
 		return
-	for row in rows:
-		_add_row(_record_list, str(row["label"]), str(row["value"]),
-				str(row["mark"]), str(row["hint"]))
+	for i in rows.size():
+		if i > 0:
+			var line := HSeparator.new()
+			line.theme_type_variation = &"StatRule"
+			_record_list.add_child(line)
+		var row: Dictionary = rows[i]
+		var record := RECORD_ROW_SCENE.instantiate() as StatRow
+		_record_list.add_child(record)
+		record.setup(str(row["label"]), str(row["value"]), str(row["mark"]), str(row["hint"]))
 
 
 ## Die Kampf-Rekorde als fertige Zeilen (Bezeichnung, Wert, Zeichen, Hinweis) aus den
@@ -656,9 +718,12 @@ func _clear(box: VBoxContainer) -> void:
 		child.queue_free()
 
 
+## Umbrechend, weil die Listen im Überblick nebeneinander stehen: ein Leertext, der nicht
+## umbricht, drückt sonst das ganze Fenster breiter als das Bild.
 func _add_line(box: VBoxContainer, text: String) -> Label:
 	var label := Label.new()
 	label.text = text
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(label)
 	return label
 
