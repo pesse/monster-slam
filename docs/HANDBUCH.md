@@ -79,7 +79,8 @@ sie auf.
 - **„Bücher & Units“** – wähle ganze Units oder nur Teile davon. Jede Unit ist in bis zu
   vier gleich große Teile geteilt, in der Reihenfolge des Buchs: Teil 1 ist der Anfang
   der Unit. Ein Teil entspricht ungefähr dem, was man vor einer Arbeit in einer Woche
-  übt. Hakst du eine Unit an, sind alle ihre Teile dabei.
+  übt. Hakst du eine Unit an, sind alle ihre Teile dabei. Im Lateinbuch sind die Teile
+  die Lektionen: sechs Lektionen bilden eine Unit (Lektion 7 bis 12 sind Unit 2).
 - **„Aufgabentypen“** – zum Beispiel „Übersetzen“, „Gegenteil“, „Synonym“,
   „Verwechslungen“ oder „Konjugation“. Es erscheinen nur die Typen, die es in den
   installierten Inhalten gibt.
@@ -458,6 +459,8 @@ aktuelle Stand steigen um denselben Betrag.
    - **Boss (💀)** – der Satzmeister mit Sätzen aus dieser Unit (Kapitel 20).
 
    Hat eine Unit wenige Wörter, gibt es weniger Teile; bei nur einem Teil fehlt „Gesamt“.
+   Im Lateinbuch hat jede Unit sechs Teile, einen je Lektion. Eine Lektion, deren Wörter
+   noch fehlen, steht grau auf der Karte und lässt sich nicht spielen.
 
 **Alles ist offen.** Jedes Level lässt sich jederzeit spielen; der Weg auf der Karte schlägt
 nur eine Reihenfolge vor. Ein Level läuft wie ein Kampf aus dem Expertenmodus – Welle auf

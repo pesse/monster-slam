@@ -63,6 +63,12 @@ anderen Buch kollidieren.
 ```json
 { "id": "lex.la.<buch>.amicus", "language": "la", "type": "noun", "book": "<buch>", "unit": 1, "lemma_de": "der Freund", "lemma_la": "amīcus" }
 ```
+Das Lateinbuch zählt 36 kleine Lektionen statt Units: je sechs sind eine Unit
+(Lektion 1–6 → Unit 1, 7–12 → Unit 2, …), und die Lektion ist der **Teil** der Unit — als
+Feld `part` (1–6) am Lexem, Lektion 10 also `"unit": 2, "part": 4`. Trägt ein Lexem einer
+Unit `part`, gilt das Feld für die ganze Unit statt der Viertelung nach Position; die
+Gebietskarte hat sechs Teil-Stationen, noch leere stehen gesperrt da.
+
 Makrons dürfen (und sollen, wie im Buch) in den Daten stehen — der `AnswerEvaluator` faltet
 sie auf beiden Seiten weg, getippt werden sie nie. Die Formen, die das Buch mitlernen
 lässt, stehen als `lexeme_forms` mit `language: "la"`: `la_genitive` und `la_gender`

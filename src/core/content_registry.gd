@@ -138,6 +138,11 @@ func reload() -> void:
 ## Der Rest einer nicht glatt teilbaren Unit geht nach vorn (134 -> 34/34/33/33): die
 ## vorderen Teile sind die, mit denen man anfängt, und ein Wort mehr fällt dort weniger auf
 ## als eine ungleiche Lücke am Ende.
+##
+## Ausnahme: ein Buch, das selbst in kleine Lektionen zerfällt (Latein: 36 Lektionen, je
+## sechs sind eine Unit), trägt den Teil als Feld `part` am Lexem — dort IST der Teil die
+## Lektion und nicht ein Viertel. Trägt ein Lexem einer Unit `part`, gilt für die ganze
+## Unit das Feld; ein Lexem ohne Feld hat dann keinen Teil und steht nur in der Unit.
 func _index_parts() -> void:
 	_parts.clear()
 	var by_unit: Dictionary = {}   # "<book>/<unit>" -> Array[id], in Bestandsreihenfolge
@@ -153,6 +158,12 @@ func _index_parts() -> void:
 
 	for key in by_unit:
 		var ids: Array = by_unit[key]
+		if ids.any(func(id): return lexemes[id].has("part")):
+			for id in ids:
+				var explicit := int(lexemes[id].get("part", 0))
+				if explicit > 0:
+					_parts[id] = explicit
+			continue
 		var parts := mini(PART_COUNT, ids.size())
 		if parts <= 0:
 			continue
@@ -297,19 +308,37 @@ func _scope_keys(entry: Dictionary) -> Array:
 	return keys
 
 
-## Der Teil (1…PART_COUNT) eines Lexems innerhalb seiner Unit, 0 ohne Unit.
+## Der Teil eines Lexems innerhalb seiner Unit (1…PART_COUNT, oder sein Feld `part`),
+## 0 ohne Teil.
 func part_of(lexeme_id: String) -> int:
 	return int(_parts.get(lexeme_id, 0))
 
 
-## Anzahl der Teile, in die eine Unit zerfällt — PART_COUNT, außer die Unit hat weniger
-## Lexeme als das. Für die Auswahl-UI, damit sie keine leeren Teile anbietet.
+## Die höchste Teilnummer einer Unit — PART_COUNT, außer die Unit hat weniger Lexeme als
+## das; bei einem Buch mit Feld `part` die höchste vergebene Lektion. Davor darf ein Teil
+## leer sein (Latein, Unit 2 beginnt mit Teil 4) — ob er Wörter hat, sagt part_has_words.
 func parts_for(book: String, unit: int) -> int:
 	var count := 0
-	for entry in lexemes.values():
+	var highest := 0
+	for id in lexemes:
+		var entry: Dictionary = lexemes[id]
 		if str(entry.get("book", "")) == book and entry.has("unit") and int(entry["unit"]) == unit:
 			count += 1
-	return mini(PART_COUNT, count)
+			if entry.has("part"):
+				highest = maxi(highest, part_of(str(id)))
+	return highest if highest > 0 else mini(PART_COUNT, count)
+
+
+## Hat Teil `part` der Unit mindestens ein Lexem? Für Auswahl und Karte, damit sie einen
+## leeren Teil nicht zum Spielen anbieten.
+func part_has_words(book: String, unit: int, part: int) -> bool:
+	for id in _parts:
+		if int(_parts[id]) != part:
+			continue
+		var entry: Dictionary = lexemes.get(id, {})
+		if str(entry.get("book", "")) == book and int(entry.get("unit", -1)) == unit:
+			return true
+	return false
 
 
 ## Lexeme gefiltert nach Curriculum-Scope UND Themen-Tags (die beiden Achsen aus dem

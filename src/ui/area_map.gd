@@ -99,7 +99,8 @@ func _show_image() -> void:
 func _fill() -> void:
 	var book := MapSelection.book
 	var unit := MapSelection.unit
-	_levels = MapLevel.levels_for(book, unit, ContentRegistry.parts_for(book, unit))
+	var layout := MapLayout.data(book)
+	_levels = MapLevel.levels_for(book, unit, part_count(book, unit, layout))
 	var lexemes := ContentRegistry.lexemes.values()
 	var mastered := PlayerProgress.mastered_lexemes()
 	var units := FortressTier.unit_tiers(lexemes, mastered)
@@ -109,14 +110,22 @@ func _fill() -> void:
 	_fortress_bar.value = float(fortress["share"])
 	_fortress_next.text = str(fortress["next"])
 	var wins := int(BossRecord.wins(UserSettings.active_profile()).get("%s/%d" % [book, unit], 0))
-	var layout := MapLayout.data(book)
 	_canvas.setup(MapLayout.unit_texture(book, unit),
 			nodes_for(_levels, units, parts, wins, has_boss_sentences(book, unit),
 				MapLayout.area_points(layout, unit)),
 			MapLayout.area_path(layout, unit), hint_lines)
 
 
-## Die Orte der Gebietskarte, einer je Level.
+## Wie viele Teil-Level die Unit zeigt: so viele, wie der Inhalt hat, oder — wenn die Karte
+## mehr Stationen hat — so viele wie die Karte. Die leeren stehen dann gesperrt da.
+static func part_count(book: String, unit: int, layout: Dictionary) -> int:
+	var parts := ContentRegistry.parts_for(book, unit)
+	if parts <= 0:
+		return 0
+	return maxi(parts, MapLayout.area_parts(layout, unit))
+
+
+## Die Orte der Gebietskarte, einer je Level. Ein Teil ohne Wörter ist gesperrt.
 static func nodes_for(levels: Array, units: Dictionary, parts: Dictionary, wins: int,
 		boss_ready: bool, points: Dictionary) -> Array:
 	var out: Array = []
@@ -133,6 +142,9 @@ static func nodes_for(levels: Array, units: Dictionary, parts: Dictionary, wins:
 		match kind:
 			MapLevel.KIND_PART:
 				node["glyph"] = str(int(level["part"]))
+				if int(counts["total"]) == 0:
+					node["disabled"] = true
+					node["stars"] = false
 			MapLevel.KIND_ALL:
 				node["glyph"] = "★"
 				node["stars"] = false
@@ -190,6 +202,8 @@ static func hint_lines(node: Dictionary) -> Dictionary:
 		return {"title": title, "body": body}
 	var done := int(node.get("done", 0))
 	var total := int(node.get("total", 0))
+	if bool(node.get("disabled", false)):
+		return {"title": title, "body": "Für diesen Teil gibt es noch keine Wörter."}
 	var body := ""
 	if str(node.get("kind", "")) == MapLevel.KIND_ALL:
 		# Gesamt hat keine Sterne: es ist die ganze Unit, ihre Stufe steht oben im Kopf.

@@ -71,7 +71,7 @@ func _pick_map() -> void:
 		for unit in ContentRegistry.units_for(_book()):
 			_point_select.add_item(str(int(unit)))
 	else:
-		for level in MapLevel.levels_for(_book(), _unit, ContentRegistry.parts_for(_book(), _unit)):
+		for level in MapLevel.levels_for(_book(), _unit, AreaMap.part_count(_book(), _unit, _content)):
 			_point_select.add_item(str(level["key"]))
 	_point_select.add_item(PATH_KEY)
 	_redraw()

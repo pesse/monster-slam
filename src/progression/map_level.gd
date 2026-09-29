@@ -7,6 +7,9 @@ extends RefCounted
 ##
 ##     T1 → T2 → T3 → T4 → Gesamt → Boss
 ##
+## Ein Buch mit Lektionen als Teilen (Feld `part`, Latein: sechs je Unit) hat entsprechend
+## mehr T-Level; wie viele, legt AreaMap.part_count aus Inhalt und Karte fest.
+##
 ## Hat die Unit weniger Teile, gibt es weniger T-Level; bei nur einem Teil wäre „Gesamt"
 ## dasselbe Level noch einmal und entfällt. Nichts davon wird gespeichert: welche Level es
 ## gibt, folgt aus dem Katalog, wie weit ein Level ist, aus der Meisterung
@@ -23,7 +26,7 @@ const KIND_BOSS := "boss"
 ## Die Level einer Unit in Spielreihenfolge:
 ## [{ key, kind, book, unit, part, scope, label }].
 ##
-## `key` ist der Name des Punkts auf der Karte („t1" … „t4", „all", „boss") — derselbe
+## `key` ist der Name des Punkts auf der Karte („t1" … „t4" bzw. „t6", „all", „boss") — derselbe
 ## Schlüssel wie in assets/maps/<book>/map.json. `scope` ist der Curriculum-Scope des
 ## Levels in der Form von ContentRegistry.lexemes_scoped.
 static func levels_for(book: String, unit: int, part_count: int) -> Array:

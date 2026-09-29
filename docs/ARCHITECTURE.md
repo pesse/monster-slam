@@ -70,6 +70,11 @@ Darstellung unabhängig wachsen können (siehe `docs/ADDING_CONTENT.md`):
 	Viertel, Rest nach vorn): die Lexeme stehen in Seitenreihenfolge in der Quelldatei,
 	damit ist Teil 1 der Anfang der Unit. Ein Teil ist damit ungefähr eine Woche
 	Unterricht — die Einheit, in der vor einer Arbeit tatsächlich geübt wird.
+	Ausnahme Latein: das Buch zählt 36 Lektionen, je sechs sind eine Unit, und die
+	Lektion ist der Teil — als Feld `part` am Lexem. Trägt ein Lexem einer Unit `part`,
+	gilt das Feld für die ganze Unit. Wie viele Teil-Level die Gebietskarte zeigt, legt
+	`AreaMap.part_count` fest: so viele, wie Inhalt oder Kartenpunkte (`t1`…`t6`) es
+	verlangen; ein Teil ohne Wörter steht gesperrt da.
 - **task_definitions** — *Regeln*, was abgefragt wird (translate/opposite/synonym/
   conjugation/… + `direction`, `allowed_types`, `requires_relation`/`requires_form`,
   `difficulty`). Wenige, statische Einträge (Größenordnung ~10–20) — **unabhängig von

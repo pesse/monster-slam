@@ -129,6 +129,18 @@ static func area_points(content: Dictionary, unit: int) -> Dictionary:
 	return _points_of(_area(content, unit))
 
 
+## Die höchste Teilnummer, für die die Gebietskarte einen Punkt hat („t6" -> 6), 0 ohne.
+## Ein Buch, dessen Units mehr Stationen haben, als der Inhalt schon füllt (Latein: sechs
+## Lektionen je Unit), zeigt so alle — die leeren gesperrt.
+static func area_parts(content: Dictionary, unit: int) -> int:
+	var highest := 0
+	for key in _points_of(_area(content, unit)):
+		var name := str(key)
+		if name.begins_with("t") and name.substr(1).is_valid_int():
+			highest = maxi(highest, int(name.substr(1)))
+	return highest
+
+
 ## Wegpunkte der Gebietskarte, oder [] — dann verbindet der Weg die Level direkt.
 static func area_path(content: Dictionary, unit: int) -> Array:
 	return _path_of(_area(content, unit))

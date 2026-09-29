@@ -167,6 +167,8 @@ func _add_unit_row(book: String, unit: int, selected: PackedStringArray) -> void
 		indent.custom_minimum_size.x = 24
 		part_row.add_child(indent)
 		for part in range(1, ContentRegistry.parts_for(book, unit) + 1):
+			if not ContentRegistry.part_has_words(book, unit, part):
+				continue
 			var part_key := "%s/%d" % [unit_key, part]
 			var part_check := CheckBox.new()
 			part_check.text = str(part)

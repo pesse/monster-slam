@@ -347,6 +347,34 @@ func test_the_hint_card_shows_an_image_at_full_width() -> void:
 	card.hide()
 
 
+## Hat die Karte mehr Stationen als der Inhalt Teile (Latein: sechs Lektionen je Unit),
+## zeigt sie alle; ein Teil ohne Wörter steht gesperrt da und sagt, warum.
+func test_an_empty_part_is_shown_locked() -> void:
+	var layout := {"areas": {"1": {"t1": {"x": 0.1, "y": 0.1}, "t3": {"x": 0.3, "y": 0.3},
+			"all": {"x": 0.5, "y": 0.5}, "boss": {"x": 0.9, "y": 0.9}, "path": []}}}
+	assert_int(MapLayout.area_parts(layout, 1)).is_equal(3)
+	assert_int(MapLayout.area_parts(layout, 2)).is_equal(0)
+	var levels := MapLevel.levels_for("b", 1, 3)
+	var parts := {"b/1/2": {"tier": 1, "done": 1, "total": 5}}
+	var nodes := AreaMap.nodes_for(levels, {}, parts, 0, true, {})
+	assert_bool(bool(nodes[0].get("disabled", false))).is_true()
+	assert_bool(bool(nodes[0].get("stars", true))).is_false()
+	assert_str(str(AreaMap.hint_lines(nodes[0])["body"])).contains("keine Wörter")
+	assert_bool(bool(nodes[1].get("disabled", false))).is_false()
+
+
+## Latein zählt Lektionen: sechs je Unit, die Gebietskarte hat für jede eine Station —
+## auch für die, deren Wörter noch fehlen.
+func test_a_latin_unit_shows_all_six_lessons(do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:
+	if not "latein" in ContentRegistry.all_books():
+		return
+	for unit in ContentRegistry.units_for("latein"):
+		var levels := MapLevel.levels_for("latein", int(unit),
+				AreaMap.part_count("latein", int(unit), MapLayout.data("latein")))
+		assert_array(levels.map(func(l): return l["key"])) \
+				.is_equal(["t1", "t2", "t3", "t4", "t5", "t6", "all", "boss"])
+
+
 func test_the_boss_hint_names_the_next_medal() -> void:
 	var nodes := AreaMap.nodes_for(MapLevel.levels_for("b", 1, 1), {}, {}, 1, true, {})
 	var body := str(AreaMap.hint_lines(nodes[1])["body"])
@@ -562,6 +590,11 @@ func test_every_real_level_is_playable(do_skip := LanguageData.missing(), skip_r
 				func(u): return AreaMap.has_boss_sentences(book, int(u)))
 		for unit in ContentRegistry.units_for(book):
 			for level in MapLevel.levels_for(book, int(unit), ContentRegistry.parts_for(book, int(unit))):
+				# Ein Teil ohne Wörter steht gesperrt auf der Karte (Latein: Unit 2 beginnt
+				# mit Lektion 10, ihrem vierten Teil).
+				if str(level["kind"]) == MapLevel.KIND_PART \
+						and not ContentRegistry.part_has_words(book, int(unit), int(level["part"])):
+					continue
 				RunRequest.start_level(level)
 				if str(level["kind"]) == MapLevel.KIND_BOSS:
 					if not has_sentences:

@@ -130,3 +130,37 @@ func test_part_and_tags_intersect(do_skip := LanguageData.missing(), skip_reason
 	for entry in scoped:
 		assert_bool("body" in entry.get("tags", [])).is_true()
 	assert_bool(scoped.size() <= ContentRegistry.lexemes_scoped(["access2/6"], ["body"]).size()).is_true()
+
+
+# --- Teile aus dem Feld `part` (Lektionen, Latein) -------------------------------
+
+const ZZ_A := "zz-lex.test.part.a"
+const ZZ_B := "zz-lex.test.part.b"
+const ZZ_C := "zz-lex.test.part.c"
+
+
+func _add_lesson_lexemes() -> void:
+	ContentRegistry.lexemes[ZZ_A] = {"id": ZZ_A, "book": "zz-lektionen", "unit": 2, "part": 4}
+	ContentRegistry.lexemes[ZZ_B] = {"id": ZZ_B, "book": "zz-lektionen", "unit": 2, "part": 5}
+	ContentRegistry.lexemes[ZZ_C] = {"id": ZZ_C, "book": "zz-lektionen", "unit": 2, "part": 5}
+	ContentRegistry._index_parts()
+
+
+func _remove_lesson_lexemes() -> void:
+	for id in [ZZ_A, ZZ_B, ZZ_C]:
+		ContentRegistry.lexemes.erase(id)
+	ContentRegistry._index_parts()
+
+
+## Trägt ein Lexem `part`, ist das sein Teil — keine Viertelung nach Position. Davor
+## liegende Teile bleiben leer.
+func test_an_explicit_part_is_taken_as_is() -> void:
+	_add_lesson_lexemes()
+	assert_int(ContentRegistry.part_of(ZZ_A)).is_equal(4)
+	assert_int(ContentRegistry.part_of(ZZ_C)).is_equal(5)
+	assert_int(ContentRegistry.parts_for("zz-lektionen", 2)).is_equal(5)
+	assert_bool(ContentRegistry.part_has_words("zz-lektionen", 2, 1)).is_false()
+	assert_bool(ContentRegistry.part_has_words("zz-lektionen", 2, 5)).is_true()
+	assert_int(ContentRegistry.lexemes_scoped(["zz-lektionen/2/5"], []).size()).is_equal(2)
+	assert_int(ContentRegistry.lexemes_scoped(["zz-lektionen/2"], []).size()).is_equal(3)
+	_remove_lesson_lexemes()
