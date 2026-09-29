@@ -117,16 +117,6 @@ grow_horizontal = 0
 grow_vertical = 0
 mouse_filter = 2
 
-[node name="FirstPersonToggle" type="Button" parent="Hud/Corners/BottomRight"]
-unique_name_in_owner = true
-visible = false
-custom_minimum_size = Vector2(56, 0)
-layout_mode = 2
-focus_mode = 0
-theme_type_variation = &"ToolChoice"
-toggle_mode = true
-text = "👁"
-
 [node name="Fortress" type="PanelContainer" parent="Hud/Corners/BottomRight"]
 unique_name_in_owner = true
 theme_type_variation = &"MapBanner"
@@ -167,6 +157,17 @@ unique_name_in_owner = true
 theme_type_variation = &"Caption"
 layout_mode = 2
 text = "noch 0 Wörter bis Stufe 1"
+
+[node name="FirstPersonToggle" type="Button" parent="Hud/Corners/BottomRight"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+size_flags_vertical = 4
+focus_mode = 0
+theme_type_variation = &"ToolChoice"
+toggle_mode = true
+text = "👁"
 
 [node name="PlayButton" type="Button" parent="Hud/Corners/BottomRight"]
 unique_name_in_owner = true

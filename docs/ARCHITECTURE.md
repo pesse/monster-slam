@@ -649,7 +649,7 @@ Der Späherblick (`first_person`, 5 Punkte) schaltet für den **Wellenkampf** ei
 Kamera frei; die Äste darunter heben nur das Lauftempo (`walk_speed`, Anteile auf
 `FirstPersonView.BASE_SPEED`). Der Bosskampf bleibt, wie er ist.
 
-- **Wahl und Freischaltung sind getrennt.** Der Schalter „👁" auf der Gebietskarte (links neben der Festung)
+- **Wahl und Freischaltung sind getrennt.** Der Schalter „👁" auf der Gebietskarte (rechts neben der Festung)
   setzt nur einen Wunsch in `RunRequest`; `RunRequest.first_person()` gilt erst mit
   gelerntem Knoten und nur für ein Level. Kein zweiter Merker: wer den Knoten verlernt,
   steht wieder auf der Festung. Der Wunsch hält bis zum Programmende, nicht im Profil.

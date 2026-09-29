@@ -193,8 +193,8 @@ Dasselbe Wort steht nie zweimal gleichzeitig auf dem Feld.
 
 ### Ich-Sicht
 
-Hast du den **Späherblick** gelernt (Kapitel 11), steht auf der Gebietskarte links neben
-der Festungs-Anzeige unten rechts der Schalter **👁**. Ist er gedrückt, stehst du im
+Hast du den **Späherblick** gelernt (Kapitel 11), steht auf der Gebietskarte unten rechts
+zwischen Festungs-Anzeige und „Spielen“ der Schalter **👁**. Ist er gedrückt, stehst du im
 Wellenkampf selbst auf dem Feld, statt von oben daraufzusehen. Der Bosskampf bleibt, wie
 er ist.
 
