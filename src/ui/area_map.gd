@@ -238,7 +238,28 @@ func _on_level_selected(key: String) -> void:
 		RunRequest.start_level(level)
 		# Hinein ins Level, wie von der Buch- in die Gebietskarte; der Kampf setzt fort.
 		_canvas.zoom_into(key)
+		_fade_out_hud()
 		await _canvas.zoom_finished
+		await _present_dark()
 		var boss := str(level["kind"]) == MapLevel.KIND_BOSS
 		get_tree().change_scene_to_file(BOSS_SCENE if boss else BATTLE_SCENE)
 		return
+
+
+## Kopfleiste und Schatten gehen mit der Karte ins Dunkel: der Kampf lädt und wärmt danach
+## vor (FxWarmup), und so lange steht das letzte gezeichnete Bild — das muss ganz dunkel
+## sein, nicht eine halb ausgeblendete Karte mit Kopfleiste.
+func _fade_out_hud() -> void:
+	var tw := create_tween().set_parallel(true)
+	for node: CanvasItem in [$Hud, $Shade]:
+		tw.tween_property(node, "modulate:a", 0.0, MapCanvas.ZOOM_IN_TIME) \
+				.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+
+
+## Wartet, bis das dunkle Bild wirklich gezeichnet ist. `change_scene_to_file` lädt sofort,
+## noch im selben Frame — ohne das stünde während des Ladens das vorletzte Bild des Zooms.
+func _present_dark() -> void:
+	for node: CanvasItem in [$Hud, $Shade]:
+		node.modulate.a = 0.0
+	await get_tree().process_frame
+	await get_tree().process_frame

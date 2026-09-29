@@ -174,6 +174,10 @@ urheberrechtlich geschütztem Lehrbuchmaterial und liegen im privaten Submodule
 - **Geladene Ressourcen sind geteilt.** Ein Mesh oder Material aus dem Cache zu ändern
   trifft jede andere Instanz; erst kopieren.
 - **Der Renderer ist `gl_compatibility`**: `GeometryInstance3D.transparency` gibt es dort nicht.
+- **Der erste Auftritt eines Effekts übersetzt Shader** und hält das Bild an (kalt bis 1,5 s).
+  Kampf und Boss zeigen deshalb hinter dem geschlossenen Schleier alles einmal (`FxWarmup`);
+  ein neuer Effekt, ein neues Material oder eine neue Schriftgröße im Kampf gehört dort
+  hinein. Messen: `battle_theme_lab -- --hitches [--warm]` mit leerem `user://shader_cache`.
 - **Kopflos gibt es keine Mausereignisse** — `gui_get_hovered_control()` ist im Test leer;
   dafür gibt es `Hints.probe`.
 - **Ein Autoload läuft nach `_initialize()` eines `-s`-Skripts** — eine dort gesetzte

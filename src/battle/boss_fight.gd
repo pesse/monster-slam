@@ -121,6 +121,9 @@ var _answer := ""
 var _hp_tween: Tween
 var _shout_tween: Tween
 var _result_shown := false
+## Hinter dem Schleier wird noch vorgewärmt — solange führt kein Weg hinaus, sonst liefe
+## das Einblenden danach über das Ausblenden.
+var _warming := false
 
 
 func _ready() -> void:
@@ -139,8 +142,27 @@ func _ready() -> void:
 	var chosen := ContentRegistry.get_entry("bosses", BOSS_ID)
 	begin(chosen, pick_sentences(chosen))
 	_attach_stage_one()
-	# Aus dem Dunkel heran, wie der Kampf und die Karten (SceneZoom).
+	# Erst im Dunkeln vorwärmen (wie der Kampf, FxWarmup), dann aus dem Dunkel heran, wie
+	# der Kampf und die Karten (SceneZoom).
+	_scene_zoom.hold()
+	await _warm_up()
+	if not is_inside_tree():
+		return
 	_scene_zoom.reveal(func(k: float) -> void: _scale_to(lerpf(SceneZoom.FROM, 1.0, k)))
+
+
+## Bühne und Ausruf einmal zeigen, solange der Schleier zu ist. Der Ausruf bekommt danach
+## seine Größe zurück: ein längerer Text hätte ihn sonst dauerhaft verbreitert.
+func _warm_up() -> void:
+	_warming = true
+	var shout_size := _shout.size
+	_shout.text = HIT_SHOUT + MISS_SHOUT + WON_SHOUT
+	_shout.modulate.a = 1.0
+	await _stage.warm_up()
+	_shout.modulate.a = 0.0
+	_shout.text = ""
+	_shout.size = shout_size
+	_warming = false
 
 
 func _scale_to(factor: float) -> void:
@@ -492,7 +514,7 @@ func _line(lines: Array) -> String:
 
 
 func _leave() -> void:
-	if _scene_zoom.is_running():
+	if _scene_zoom.is_running() or _warming:
 		return
 	_judge.cancel()
 	MapSelection.zoom_out = RunRequest.is_level()

@@ -74,6 +74,9 @@ var _charging := 0
 @onready var _scene_zoom: SceneZoom = $SceneZoom
 ## Der Zoom hinaus läuft: ein zweites Escape wechselt nicht noch einmal.
 var _leaving := false
+## Hinter dem Schleier wird noch vorgewärmt — solange bricht Escape nicht ab, sonst liefe
+## das Einblenden danach über das Ausblenden.
+var _warming := false
 @onready var _end_label: Label = $UI/EndLabel
 @onready var _flash: ColorRect = $UI/Flash
 @onready var _stats: PanelContainer = $UI/WaveStats
@@ -144,8 +147,29 @@ func _ready() -> void:
 	# Startschwierigkeit aus den persistenten Einstellungen des aktiven Profils.
 	_difficulty = UserSettings.default_difficulty()
 	_start_next_wave()
+	# Hinter dem geschlossenen Schleier einmal alles zeigen, was sonst beim ersten Treffer
+	# oder der ersten Meisterung Shader übersetzt und das Bild anhält (FxWarmup). Das erste
+	# Monster kommt frühestens nach einem Spawn-Intervall, dann ist das längst vorbei.
+	_scene_zoom.hold()
+	_warming = true
+	await _warm_up()
+	_warming = false
 	_scene_zoom.reveal(func(k: float) -> void:
 		_camera.size = view_size / lerpf(SceneZoom.FROM, 1.0, k))
+
+
+## Vorwärmen (FxWarmup) mit den Schildern und der Feier des Kampfs, in der Ich-Sicht auch
+## in deren fester Bildgröße — das ist eine eigene Shader-Variante.
+func _warm_up() -> void:
+	var xp := xp_label(FxWarmup.GLYPHS)
+	_screen_size_in_first_person(xp, POPUP_SCREEN_SCALE)
+	var form := form_label(FxWarmup.GLYPHS)
+	_screen_size_in_first_person(form, 1.4)
+	var at := FxWarmup.point_in_view(get_viewport().get_camera_3d(),
+			Vector3(0.0, 1.0, VIEW_CENTER_Z))
+	_celebration.warm_up()
+	await FxWarmup.run(self, at, FxWarmup.monster_defs(), [xp, form], _fp != null)
+	_celebration.cool_down()
 
 
 ## Zurück auf die Karte (oder ins Menü), als Zoom hinaus — die Umkehrung des Wegs herein.
@@ -744,6 +768,8 @@ func _input(event: InputEvent) -> void:
 	# Hinweis ohne Inhalte braucht den Ausgang auch im beendeten Zustand.
 	if _finished and not _no_content:
 		return
+	if _warming:
+		return
 	# set_input_as_handled() statt accept_event(): das gibt es nur an Control/Viewport,
 	# der WaveRunner ist ein Node3D.
 	get_viewport().set_input_as_handled()
@@ -1237,16 +1263,8 @@ func _book_defeat(monster: Monster) -> void:
 ## Deutlich sichtbarer 3D-Text (+XP), der an der Trefferstelle aufpoppt, aufsteigt
 ## und ausblendet. Als Label3D (Billboard) im Stil der vorhandenen Monster-Beschriftungen.
 func _spawn_xp_popup(pos: Vector3, amount: int) -> void:
-	var label := Label3D.new()
-	label.text = "+%d XP" % amount
-	label.font_size = 200
-	label.pixel_size = 0.02
+	var label := xp_label("+%d XP" % amount)
 	_screen_size_in_first_person(label, POPUP_SCREEN_SCALE)
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.no_depth_test = true
-	label.modulate = Color(1.0, 0.9, 0.25)
-	label.outline_size = 32
-	label.outline_modulate = Color(0.15, 0.08, 0.0, 1.0)
 	label.position = pos
 	label.scale = Vector3.ONE * 0.4
 	add_child(label)
@@ -1264,16 +1282,8 @@ func _spawn_xp_popup(pos: Vector3, amount: int) -> void:
 ## Die vollständige Form nach einem nur im Kern richtigen Treffer. Bewusst ruhiger als
 ## das "+XP"-Popup (kein Pop, längere Standzeit): es ist ein Hinweis, kein Tadel.
 func _spawn_form_hint(pos: Vector3, form: String) -> void:
-	var label := Label3D.new()
-	label.text = form
-	label.font_size = 130
-	label.pixel_size = 0.02
+	var label := form_label(form)
 	_screen_size_in_first_person(label, 1.4)
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.no_depth_test = true
-	label.modulate = Color(0.85, 0.95, 1.0)
-	label.outline_size = 28
-	label.outline_modulate = Color(0.05, 0.1, 0.2, 1.0)
 	label.position = pos
 	add_child(label)
 	var tw := create_tween()
@@ -1281,6 +1291,35 @@ func _spawn_form_hint(pos: Vector3, form: String) -> void:
 	tw.tween_property(label, "position:y", pos.y + 2.0, 1.8).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tw.tween_property(label, "modulate:a", 0.0, 0.6).set_delay(1.2)
 	tw.chain().tween_callback(label.queue_free)
+
+
+## Das Schild des „+XP"-Popups, ohne Bewegung. Eigene Funktion, damit das Vorwärmen
+## (FxWarmup) dieselbe Schrift in derselben Größe zeichnet.
+static func xp_label(text: String) -> Label3D:
+	var label := Label3D.new()
+	label.text = text
+	label.font_size = 200
+	label.pixel_size = 0.02
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	label.modulate = Color(1.0, 0.9, 0.25)
+	label.outline_size = 32
+	label.outline_modulate = Color(0.15, 0.08, 0.0, 1.0)
+	return label
+
+
+## Das Schild des Form-Hinweises, ohne Bewegung (wie xp_label).
+static func form_label(text: String) -> Label3D:
+	var label := Label3D.new()
+	label.text = text
+	label.font_size = 130
+	label.pixel_size = 0.02
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	label.modulate = Color(0.85, 0.95, 1.0)
+	label.outline_size = 28
+	label.outline_modulate = Color(0.05, 0.1, 0.2, 1.0)
+	return label
 
 
 ## Wie groß „+XP" in der Ich-Sicht gegenüber dem Prompt-Schild steht.

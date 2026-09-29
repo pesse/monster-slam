@@ -85,6 +85,39 @@ func _flush() -> void:
 		_run()
 
 
+## Vorwärmen beim Kampfstart (FxWarmup): zündet jedes Partikelsystem und zeigt die Schrift
+## der Wort-Feier, damit ihre Shader und Zeichen nicht erst bei der ersten Meisterung
+## entstehen. Ohne Klang, ohne `started`, an der Warteschlange vorbei. Danach cool_down().
+func warm_up() -> void:
+	if is_busy():
+		return
+	_headline.theme_type_variation = &"CelebrateWord"
+	_headline.text = FxWarmup.GLYPHS
+	_detail.text = FxWarmup.GLYPHS
+	_content.modulate = Color.WHITE
+	_flash.modulate.a = 0.6
+	visible = true
+	for particles in _all_particles():
+		_emit(particles)
+	_lightning.play(size.length() / 2.0, 50)
+
+
+func cool_down() -> void:
+	if is_busy():
+		return
+	for particles in _all_particles():
+		particles.emitting = false
+	_flash.modulate.a = 0.0
+	visible = false
+
+
+func _all_particles() -> Array[GPUParticles2D]:
+	var found: Array[GPUParticles2D] = []
+	for node in find_children("*", "GPUParticles2D", true, false):
+		found.append(node as GPUParticles2D)
+	return found
+
+
 ## Steht eine Feier an, läuft eine, oder wartet eine? Der WaveRunner hält damit das
 ## Wellenende zurück: auch das letzte Monster bekommt seine Feier.
 func is_busy() -> bool:

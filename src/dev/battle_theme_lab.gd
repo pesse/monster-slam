@@ -13,11 +13,17 @@ extends Node3D
 ##     … -- --specimens
 ##         Nahaufnahme der Deko jedes Themas neben den gekauften Vergleichsstücken, in der
 ##         Größe ihres Platzes, als reports/battle_themes/specimens_<name>.png.
+##     … -- --hitches [--warm]
+##         Misst den längsten Frame beim ERSTEN Auftritt jedes Kampfeffekts (Explosion,
+##         „+XP", Monster, Meister-Feier) und gibt ihn in ms aus; --warm wärmt vorher vor
+##         wie der Kampf (FxWarmup). Ein Lauf je Messung — ein zweiter Effekt im selben Lauf
+##         wäre schon warm.
 ##
 ## Headless gibt es keinen Renderer — deshalb GODOT_WINDOW=1.
 
 const WaveRunnerScript := preload("res://src/battle/wave_runner.gd")
 const BATTLE_SCENE := "res://scenes/battle/battle.tscn"
+const CELEBRATION_SCENE := preload("res://scenes/ui/mastery_celebration.tscn")
 const SHOT_DIR := "res://reports/battle_themes"
 ## Fester Samen: dieselben Hügel und dieselbe Deko in jedem Thema, damit Bilder vergleichbar
 ## sind.
@@ -58,7 +64,9 @@ func _ready() -> void:
 		get_tree().quit(1)
 		return
 	_show(0)
-	if _has_arg("specimens"):
+	if _has_arg("hitches"):
+		_measure_hitches.call_deferred()
+	elif _has_arg("specimens"):
 		_shoot_specimens.call_deferred()
 	elif _has_arg("shoot"):
 		_shoot_all.call_deferred()
@@ -103,6 +111,57 @@ func _shoot_all() -> void:
 		get_viewport().get_texture().get_image().save_png(path)
 		print("battle_theme_lab: ", path)
 	get_tree().quit()
+
+
+func _measure_hitches() -> void:
+	var celebration := CELEBRATION_SCENE.instantiate() as MasteryCelebration
+	$UI.add_child(celebration)
+	var at := Vector3(0.0, 1.0, WaveRunnerScript.VIEW_CENTER_Z)
+	var baseline := await _worst_frame(func() -> void: pass, 60)
+	print("hitches: Grundrauschen %.1f ms" % baseline)
+	if _has_arg("warm"):
+		var t0 := Time.get_ticks_usec()
+		celebration.warm_up()
+		await FxWarmup.run(self, at, FxWarmup.monster_defs(),
+				[WaveRunnerScript.xp_label(FxWarmup.GLYPHS), WaveRunnerScript.form_label(FxWarmup.GLYPHS)])
+		celebration.cool_down()
+		print("hitches: Vorwärmen %.1f ms" % ((Time.get_ticks_usec() - t0) / 1000.0))
+		await _worst_frame(func() -> void: pass, 60)
+	var effects := {
+		"Explosion": func() -> void:
+			var fx := Explosion.new()
+			fx.setup(Color(0.7, 1.0, 0.4), 1.5)
+			fx.position = at
+			add_child(fx),
+		"+XP": func() -> void:
+			var label := WaveRunnerScript.xp_label("+12 XP")
+			label.position = at + Vector3(4.0, 1.0, 0.0)
+			add_child(label),
+		"Monster": func() -> void:
+			var monster := FxWarmup.MONSTER_SCENE.instantiate() as Monster
+			monster.setup(FxWarmup.monster_defs()[0], {"prompt": "house"}, 1000.0, 0.0)
+			monster.position = at + Vector3(-4.0, 0.0, 0.0)
+			add_child(monster),
+		"Wort-Feier": func() -> void:
+			celebration.celebrate(MasteryCelebration.Kind.WORD, ""),
+	}
+	for effect_name: String in effects:
+		print("hitches: %s %.1f ms" % [effect_name, await _worst_frame(effects[effect_name], 20)])
+	get_tree().quit()
+
+
+## Löst `effect` aus und gibt den längsten der folgenden `count` Frames in ms zurück.
+func _worst_frame(effect: Callable, count: int) -> float:
+	await get_tree().process_frame
+	effect.call()
+	var worst := 0.0
+	var last := Time.get_ticks_usec()
+	for i in count:
+		await get_tree().process_frame
+		var now := Time.get_ticks_usec()
+		worst = maxf(worst, (now - last) / 1000.0)
+		last = now
+	return worst
 
 
 ## Das Environment der Kampfszene — gelesen, nicht nachgebaut, damit die Werkbank nicht

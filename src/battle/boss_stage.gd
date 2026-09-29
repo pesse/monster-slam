@@ -91,6 +91,24 @@ func _ready() -> void:
 	_rest(REST_MIN)
 
 
+## Vorwärmen hinter dem Schleier (FxWarmup): Explosion samt Licht und roter Blitz auf dem
+## Skelett einmal zeigen, damit ihre Shader nicht erst beim ersten Treffer entstehen.
+func warm_up() -> void:
+	var fx := Explosion.new()
+	fx.setup(Color.WHITE, 1.0)
+	add_child(fx)
+	fx.global_position = _head_point() - Vector3(0.0, 1.0, 0.0)
+	# Durchsichtig, aber gezeichnet — für den Shader reicht das.
+	for mi in _model.find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).material_overlay = _flash
+	await FxWarmup.frames()
+	# Wie in FxWarmup.run: die Explosion räumt sich selbst weg.
+	if is_instance_valid(fx):
+		fx.visible = false
+	for mi in _model.find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).material_overlay = null
+
+
 ## Das Skelett steigt aus dem Boden.
 func wake() -> void:
 	_state = State.ROAM

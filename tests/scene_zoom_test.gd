@@ -34,3 +34,16 @@ func test_cover_darkens_and_then_says_so() -> void:
 	assert_bool(done[0]).is_true()
 	assert_float((zoom.get_node("Veil") as ColorRect).modulate.a).is_equal(1.0)
 	remove_child(zoom)
+
+
+## Vor dem Einblenden bleibt es dunkel, solange die Szene hinter dem Schleier vorwärmt.
+func test_hold_keeps_the_veil_closed_until_reveal() -> void:
+	var zoom: SceneZoom = auto_free(SCENE.instantiate())
+	add_child(zoom)
+	zoom.hold()
+	var veil := zoom.get_node("Veil") as ColorRect
+	assert_float(veil.modulate.a).is_equal(1.0)
+	assert_bool(zoom.is_running()).is_false()
+	await get_tree().process_frame
+	assert_float(veil.modulate.a).is_equal(1.0)
+	remove_child(zoom)

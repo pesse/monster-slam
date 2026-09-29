@@ -135,3 +135,19 @@ func test_the_answer_input_runs_while_paused() -> void:
 
 func test_sounds_play_while_paused() -> void:
 	assert_int(Sfx.process_mode).is_equal(Node.PROCESS_MODE_ALWAYS)
+
+
+## Das Vorwärmen beim Kampfstart ist keine Feier: kein `started` (das hielte den Kampf an),
+## nichts in der Warteschlange, und danach ist sie wieder weg.
+func test_warm_up_is_no_celebration() -> void:
+	_c.warm_up()
+	assert_bool(_c.visible).is_true()
+	await _frame()
+	_c.cool_down()
+	await _frame()
+	assert_array(_started).is_empty()
+	assert_bool(_c.is_busy()).is_false()
+	assert_bool(_c.visible).is_false()
+	EventBus.task_mastered.emit(TASK)
+	await _frame()
+	assert_array(_started).is_equal([MasteryCelebration.TASK_MS])

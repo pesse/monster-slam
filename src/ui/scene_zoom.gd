@@ -38,6 +38,12 @@ func reveal(apply: Callable = Callable()) -> void:
 	_start(apply, false)
 
 
+## Hält den Schleier geschlossen, bis `reveal` kommt — für Szenen, die vor dem Einblenden
+## noch etwas im Dunkeln zeigen (FxWarmup).
+func hold() -> void:
+	_veil.modulate.a = 1.0
+
+
 ## Geht ins Dunkel: der Schleier kommt, `apply` bekommt k = 0 → 1 (schneller werdend).
 ## Danach kommt `finished` — dann wechselt die Szene.
 func cover(apply: Callable = Callable()) -> void:
