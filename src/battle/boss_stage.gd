@@ -68,6 +68,7 @@ var _rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
 	_rng.randomize()
+	GraphicsQuality.apply_environment($WorldEnvironment as WorldEnvironment)
 	_head = _model.find_child("head", true, false) as Node3D
 	_anim = RigAnimations.attach_player(_model, {
 		"general": RigAnimations.general(),

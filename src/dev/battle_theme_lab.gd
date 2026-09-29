@@ -21,6 +21,10 @@ extends Node3D
 ##         „+XP", Monster, Meister-Feier) und gibt ihn in ms aus; --warm wärmt vorher vor
 ##         wie der Kampf (FxWarmup). Ein Lauf je Messung — ein zweiter Effekt im selben Lauf
 ##         wäre schon warm.
+##     … -- --fps [--theme=<name>] [--windowed]
+##         Misst im Vollbild und ohne VSync die mittlere Bildzeit mit allem an, jeweils ohne
+##         eine Zutat (MSAA, Wolken, Teilchen, Wind, Schatten, Glow) und ohne alles — die
+##         Grundlage für die Stufen in GraphicsQuality. Ein Thema je Lauf (das erste).
 ##
 ## Headless gibt es keinen Renderer — deshalb GODOT_WINDOW=1.
 
@@ -52,6 +56,8 @@ var _decor: Node3D
 var _scene_env: Environment
 var _air: CPUParticles3D
 var _wind_strength := 1.0
+var _theme: BattleTheme
+var _noise: FastNoiseLite
 
 
 func _ready() -> void:
@@ -72,6 +78,8 @@ func _ready() -> void:
 	_show(0)
 	if _has_arg("bow"):
 		_shoot_bow.call_deferred()
+	elif _has_arg("fps"):
+		_measure_fps.call_deferred()
 	elif _has_arg("hitches"):
 		_measure_hitches.call_deferred()
 	elif _has_arg("specimens"):
@@ -101,6 +109,8 @@ func _show(index: int) -> void:
 	_camera.size = view_size
 	WaveRunnerScript.dress_ground(_ground, theme)
 	_wind_strength = theme.wind
+	_theme = theme
+	_noise = noise
 	_build_decor(noise, theme)
 	if _air != null:
 		_air.free()
@@ -202,6 +212,65 @@ func _shoot_bow() -> void:
 	await get_tree().create_timer(0.6).timeout
 	await shot.call("stuck")
 	get_tree().quit()
+
+
+## Zutaten, die --fps einzeln abschaltet, mit ihrem Namen in der Ausgabe.
+const FPS_PARTS := {"msaa": "MSAA", "clouds": "Wolken", "particles": "Teilchen",
+		"wind": "Wind", "shadows": "Schatten", "glow": "Glow"}
+
+
+func _measure_fps() -> void:
+	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+	Engine.max_fps = 0
+	if not _has_arg("windowed"):
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+	await get_tree().create_timer(1.0).timeout
+	var all_on := {}
+	for part: String in FPS_PARTS:
+		all_on[part] = true
+	var runs: Array = [["alles an", all_on]]
+	for part: String in FPS_PARTS:
+		var cfg := all_on.duplicate()
+		cfg[part] = false
+		runs.append(["ohne " + FPS_PARTS[part], cfg])
+	var all_off := {}
+	for part: String in FPS_PARTS:
+		all_off[part] = false
+	runs.append(["alles aus", all_off])
+	print("fps: %s, %s" % [_names[_index], get_viewport().get_visible_rect().size])
+	var base := 0.0
+	for run: Array in runs:
+		_apply_parts(run[1])
+		var ms := await _mean_frame_ms(3.0)
+		if base == 0.0:
+			base = ms
+		print("fps: %-14s %6.2f ms  %5.0f fps  %+5.1f %%" % [run[0], ms, 1000.0 / ms,
+				(ms - base) / base * 100.0])
+	get_tree().quit()
+
+
+func _apply_parts(cfg: Dictionary) -> void:
+	get_viewport().msaa_3d = Viewport.MSAA_4X if cfg.msaa else Viewport.MSAA_DISABLED
+	(_ground.material_override as ShaderMaterial).set_shader_parameter("clouds",
+			_theme.clouds if cfg.clouds else 0.0)
+	if _air != null:
+		_air.emitting = cfg.particles
+		_air.visible = cfg.particles
+	_wind_strength = _theme.wind if cfg.wind else 0.0
+	_build_decor(_noise, _theme)
+	_sun.shadow_enabled = cfg.shadows
+	_world.environment.glow_enabled = cfg.glow
+
+
+## Mittlere Bildzeit über `seconds`, nach einer Sekunde Anlauf (Shader, neue Deko).
+func _mean_frame_ms(seconds: float) -> float:
+	await get_tree().create_timer(1.0).timeout
+	var frames := 0
+	var t0 := Time.get_ticks_usec()
+	while Time.get_ticks_usec() - t0 < seconds * 1000000.0:
+		await get_tree().process_frame
+		frames += 1
+	return (Time.get_ticks_usec() - t0) / 1000.0 / maxi(frames, 1)
 
 
 func _measure_hitches() -> void:

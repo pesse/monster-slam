@@ -36,6 +36,7 @@ func _ready() -> void:
 	if str(_config.get_value("names", DEFAULT_PROFILE, "")).is_empty():
 		_config.set_value("names", DEFAULT_PROFILE, "Spieler")
 		_save()
+	GraphicsQuality.apply_window(get_tree().root, graphics_simple())
 
 
 func active_profile() -> String:
@@ -155,6 +156,18 @@ func music_volume() -> float:
 func set_music_volume(value: float) -> void:
 	_config.set_value("general", "music_volume", clampf(value, 0.0, 1.0))
 	_save()
+
+
+## Grafikstufe „Einfach" (GraphicsQuality)? Geräteweit wie die Lautstärke: ob der Rechner
+## mitkommt, hängt nicht daran, wer spielt. Vorgabe aus („Schön").
+func graphics_simple() -> bool:
+	return bool(_config.get_value("general", "graphics_simple", false))
+
+
+func set_graphics_simple(value: bool) -> void:
+	_config.set_value("general", "graphics_simple", value)
+	_save()
+	GraphicsQuality.apply_window(get_tree().root, value)
 
 
 ## Ausgewählte Lexem-Tags eines Profils (Session-Filter). Leer -> keine Einschränkung

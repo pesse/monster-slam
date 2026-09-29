@@ -106,10 +106,12 @@ func _ready() -> void:
 	# Ich-Sicht die Hintergrundfarbe des schon gefärbten Environments.
 	_theme = BattleTheme.for_level(RunRequest.level())
 	_theme.apply($WorldEnvironment as WorldEnvironment, $Sun as DirectionalLight3D)
+	GraphicsQuality.apply_environment($WorldEnvironment as WorldEnvironment)
 	_setup_ground()
 	_decorate()
 	add_child(Wind.new())
-	var air := AmbientParticles.build(_theme.particles, air_area)
+	var air := AmbientParticles.build(_theme.particles, air_area) \
+			if GraphicsQuality.particles() else null
 	if air != null:
 		add_child(air)
 	_build_fortress()
@@ -246,11 +248,14 @@ func _setup_ground() -> void:
 
 
 ## Material und Schatten des Bodens — statisch, damit die Werkbank ihn genauso anzieht.
+## Wolkenschatten nur, wenn die Grafikstufe sie zeigt (GraphicsQuality).
 ## Der Boden wirft selbst keinen Schatten: die Hügel schattiert der Bodenshader über ihre
 ## Neigung, und ohne Selbstschatten reicht ein kleiner Bias (setup_view), ohne dass der
 ## Boden Streifen bekommt.
 static func dress_ground(ground: MeshInstance3D, theme: BattleTheme) -> void:
 	ground.material_override = theme.ground_material()
+	if not GraphicsQuality.clouds():
+		(ground.material_override as ShaderMaterial).set_shader_parameter("clouds", 0.0)
 	ground.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 

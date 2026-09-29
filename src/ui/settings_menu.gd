@@ -1,6 +1,6 @@
 extends Control
-## Einstellungs-Fenster (Profilname, Standard-Schwierigkeit, Grund-Geschwindigkeit, Reset,
-## Melden, Protokoll).
+## Einstellungs-Fenster (Profilname, Standard-Schwierigkeit, Grund-Geschwindigkeit, Grafik,
+## Reset, Melden, Protokoll).
 ##
 ## Öffnet als Fenster über dem Hauptmenü wie Statistik und Fähigkeiten
 ## (`profile_menu._open_window`): derselbe Rahmen, dasselbe Titelband, dasselbe
@@ -78,6 +78,8 @@ func _ready() -> void:
 	for i in _diff_buttons.size():
 		(_diff_buttons[i] as Button).pressed.connect(_on_difficulty_pressed.bind(i + 1))
 	_speed_slider.value_changed.connect(_on_speed_changed)
+	(%GraphicsFine as Button).pressed.connect(_on_graphics_pressed.bind(false))
+	(%GraphicsSimple as Button).pressed.connect(_on_graphics_pressed.bind(true))
 	(%ResetButton as Button).pressed.connect(func(): _reset_confirm.ask(
 			"Fortschritt zurücksetzen?",
 			"Der Lernstand aller Wörter dieses Profils geht verloren. Gold, Erfahrung und "
@@ -129,6 +131,7 @@ func _refresh() -> void:
 	_refresh_name()
 	_refresh_difficulty()
 	_refresh_speed()
+	_refresh_graphics()
 	_refresh_report()
 	_refresh_trace()
 
@@ -151,6 +154,13 @@ func _refresh_speed() -> void:
 	var value := UserSettings.base_speed()
 	_speed_slider.set_value_no_signal(value)
 	_update_speed_label(value)
+
+
+## Die Grafikstufe ist eine Gruppe wie die Schwierigkeit: die gewählte steht gedrückt.
+func _refresh_graphics() -> void:
+	var simple := UserSettings.graphics_simple()
+	(%GraphicsFine as Button).set_pressed_no_signal(not simple)
+	(%GraphicsSimple as Button).set_pressed_no_signal(simple)
 
 
 func _update_speed_label(value: float) -> void:
@@ -252,6 +262,10 @@ func _on_rename_profile() -> void:
 func _on_difficulty_pressed(level: int) -> void:
 	UserSettings.set_default_difficulty(level)
 	_refresh_difficulty()
+
+
+func _on_graphics_pressed(simple: bool) -> void:
+	UserSettings.set_graphics_simple(simple)
 
 
 func _on_speed_changed(value: float) -> void:
