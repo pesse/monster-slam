@@ -200,6 +200,13 @@ er ist.
 - **Sturmangriff:** Hast du im Späher-Baum den **Sturmangriff** gelernt, rast du bei
   jedem Treffer auf das Monster zu und krachst hinein, erst dann platzt es. Gezählt ist
   der Treffer sofort, beim Abschicken.
+- **Langbogen:** Mit dem **Langbogen** aus dem Späher-Baum hältst du einen Bogen. Öffnest
+  du das Eingabefeld, hebst du ihn, und jeder Buchstabe spannt ihn weiter. Beim Abschicken
+  fliegt der Pfeil: Ist die Antwort richtig, trifft er, und das Monster platzt. Ist sie
+  falsch, geht er am Monster vorbei, das der Bildmitte am nächsten steht, und bleibt
+  dahinter im Boden stecken. Wie stark der Bogen gespannt ist, verrät nichts über die
+  Antwort. Hast du Bogen und Sturmangriff gelernt, wechselst du mit **Tab** zwischen
+  beiden. Das Spiel merkt sich deine Wahl, bis du es beendest.
 - **Maus freigeben:** Auch beim Laufen ist der Mauszeiger da, solange du **Alt** gedrückt
   hältst. Nach der Welle ist er von selbst wieder da.
 
@@ -480,15 +487,15 @@ Skillpunkte“ oder „⭐ 0 — jedes Level bringt einen“).
 
 Jeder Baum hat einen eigenen Anfangsknoten und verzweigt sich danach in zwei Äste. Man
 baut einen Ast aus und kann den anderen liegen lassen. Knoten der ersten und zweiten
-Stufe kosten 1 Skillpunkt, die der dritten 2. Im Späher kosten der Anfang und der
-Sturmangriff je 5.
+Stufe kosten 1 Skillpunkt, die der dritten 2. Im Späher kosten der Anfang, der
+Sturmangriff und der Langbogen je 5.
 
 | Baum | Was er tut |
 |---|---|
 | **Genesung** | Jedes besiegte Monster heilt die Festung um mehr HP. |
 | **Bollwerk** | Die Festung bekommt Rüstung. Ein Ast vergrößert den Vorrat, der andere setzt ihn zu jeder Welle ein Stück instand. |
 | **Zeitwandler** | Die Zeitlupe beim Tippen hält länger nach (ein Ast) oder wird noch tiefer (der andere Ast). |
-| **Späher** | Der Anfang, der **Späherblick**, schaltet die Ich-Sicht frei (Kapitel 5). Beide Äste danach machen dich darin schneller, am Ende des einen wartet der **Sturmangriff**. |
+| **Späher** | Der Anfang, der **Späherblick**, schaltet die Ich-Sicht frei (Kapitel 5). Beide Äste danach machen dich darin schneller, am Ende des einen warten der **Sturmangriff** und der **Langbogen**. |
 
 Alle Wirkungen zählen zusammen: zwei Knoten, die je 1 HP mehr heilen, heilen zusammen
 2 HP mehr.

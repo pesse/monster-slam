@@ -89,5 +89,22 @@
 		"effects": {
 			"charge": 1
 		}
+	},
+	{
+		"id": "skill.scout.bow",
+		"kind": "skill",
+		"tree": "tree.scout",
+		"name": "Langbogen",
+		"icon": "🏹",
+		"description": "Beim Tippen spannst du einen Bogen, beim Abschicken fliegt der Pfeil: richtig trifft er, und das Monster platzt — falsch geht er daneben. Mit dem Sturmangriff zusammen wechselt Tab zwischen beiden.",
+		"cost": 5,
+		"tier": 3,
+		"branch": 2,
+		"requires": [
+			"skill.scout.light"
+		],
+		"effects": {
+			"bow": 1
+		}
 	}
 ]

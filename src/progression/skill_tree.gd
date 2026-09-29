@@ -104,6 +104,7 @@ const EFFECT_KEYS: Array[String] = [
 	"first_person",
 	"walk_speed",
 	"charge",
+	"bow",
 ]
 
 
@@ -442,6 +443,8 @@ static func effect_label(key: String, value: float) -> String:
 			return "+%d %% Laufgeschwindigkeit" % int(round(value * 100.0))
 		"charge":
 			return "Sturmangriff bei jedem Treffer"
+		"bow":
+			return "Bogen in der Ich-Sicht"
 	return ""
 
 

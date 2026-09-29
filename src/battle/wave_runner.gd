@@ -66,8 +66,11 @@ var _fp: FirstPersonView = null
 ## Spielt dieser Lauf aus der Ich-Sicht? Einmal am Anfang gefragt: schon die Streudeko
 ## richtet sich danach, bevor die Ich-Sicht steht.
 var _first_person_run := false
-## Laufende Sturmangriffe (Ich-Sicht): so lange wartet das Wellenende.
-var _charging := 0
+## Laufende Sturmangriffe und fliegende Pfeile (Ich-Sicht): so lange wartet das Wellenende.
+var _underway := 0
+## Woran ein Fehlschuss vorbeizielt: die Körpermitte, wie beim Blick (_in_view). Ein
+## Treffer geht in den Kopf (Monster.head_height).
+const ARROW_AIM_Y := 1.2
 
 @onready var _monsters: Node3D = $Monsters
 @onready var _camera: Camera3D = $CameraPivot/Camera3D
@@ -168,7 +171,13 @@ func _warm_up() -> void:
 	var at := FxWarmup.point_in_view(get_viewport().get_camera_3d(),
 			Vector3(0.0, 1.0, VIEW_CENTER_Z))
 	_celebration.warm_up()
-	await FxWarmup.run(self, at, FxWarmup.monster_defs(), [xp, form], _fp != null)
+	var extras: Array[Node3D] = [xp, form]
+	# Der Pfeil fliegt erst nach der ersten Antwort; der Bogen hängt schon an der Kamera.
+	if _fp != null:
+		var arrow := Arrow.new()
+		arrow.trail = true
+		extras.append(arrow)
+	await FxWarmup.run(self, at, FxWarmup.monster_defs(), extras, _fp != null)
 	_celebration.cool_down()
 
 
@@ -1040,9 +1049,10 @@ func _on_answer_submitted(text: String) -> void:
 		"response_time_ms": 0, "canonical": "", "candidates": _active_learnable_ids(),
 		"unseen": _unseen_learnable_ids(),
 	})
-	_flash_feedback(FLASH_WRONG)
-	_shake()
-	Sfx.play(&"wrong_answer")
+	if _fp != null and _fp.weapon == FirstPersonView.Weapon.BOW:
+		_miss_with_arrow()
+	else:
+		_wrong_feedback()
 
 
 ## Die learnable_ids der Aufgaben, die gerade auf dem Feld stehen — der Zusammenhang, in
@@ -1094,7 +1104,7 @@ func _unseen_learnable_ids() -> Array:
 func _setup_first_person(bonuses: Dictionary) -> void:
 	_fp = FIRST_PERSON_SCENE.instantiate() as FirstPersonView
 	_fp.speed = FirstPersonView.speed_for(bonuses)
-	_fp.charges = FirstPersonView.charges_for(bonuses)
+	_fp.weapons = FirstPersonView.weapons_for(bonuses)
 	_fp.bounds = Rect2(-FIELD_HALF_X + 1.0, SPAWN_Z - 1.0,
 			2.0 * (FIELD_HALF_X - 1.0), GOAL_Z - 1.5 - (SPAWN_Z - 1.0))
 	_fp.position = Vector3(0.0, 0.0, GOAL_Z - 2.0)
@@ -1113,6 +1123,7 @@ func _setup_first_person(bonuses: Dictionary) -> void:
 	env.fog_depth_end = FirstPersonView.FOG_END
 	world.environment = env
 	_answer_input.gated = true
+	_answer_input.weapon_switch = _fp.weapons.size() > 1
 
 
 ## Treffer verbuchen. `full_form` != "" heißt: die Antwort war richtig, ließ aber einen
@@ -1139,8 +1150,11 @@ func _score_hit(monster: Monster, text: String = "", full_form: String = "") -> 
 		if not lexeme_id.is_empty():
 			EventBus.lexeme_mastered.emit(lexeme_id)
 	var pos := monster.position
-	if _fp != null and _fp.charges:
+	var weapon := _fp.weapon if _fp != null else FirstPersonView.Weapon.NONE
+	if weapon == FirstPersonView.Weapon.CHARGE:
 		_defeat_by_charge(monster)
+	elif weapon == FirstPersonView.Weapon.BOW:
+		_defeat_by_arrow(monster)
 	else:
 		_defeat(monster)
 	_flash_feedback(FLASH_CORRECT)
@@ -1222,13 +1236,46 @@ func _defeat(monster: Monster) -> void:
 func _defeat_by_charge(monster: Monster) -> void:
 	_book_defeat(monster)
 	monster.halt()
-	_charging += 1
+	_underway += 1
 	await _fp.charge_at(monster.global_position)
-	_charging -= 1
+	_underway -= 1
 	if is_instance_valid(monster):
 		_shake(0.6)
 		_burst(monster, 2.2)
 	_check_end()
+
+
+## Bogen (Späher-Baum): wie der Sturmangriff — gebucht wird sofort, das Monster bleibt
+## stehen und platzt, wenn der Pfeil ankommt.
+func _defeat_by_arrow(monster: Monster) -> void:
+	_book_defeat(monster)
+	monster.halt()
+	_underway += 1
+	# In den Kopf: das Ziel, das man sieht, ist das Schild darüber — und dort trifft es.
+	await _fp.shoot_at(monster.global_position + Vector3(0.0, monster.head_height(), 0.0))
+	_underway -= 1
+	if is_instance_valid(monster):
+		_shake(0.3)
+		_burst(monster, 2.0)
+	_check_end()
+
+
+## Ein Fehlschuss mit dem Bogen: auf das Monster, das der Bildmitte am nächsten steht, und
+## daran vorbei. Die Rückmeldung (rot, Wackeln, Klang) kommt, wenn der Pfeil steckt.
+func _miss_with_arrow() -> void:
+	var points: Array[Vector3] = []
+	for monster in _hittable():
+		points.append(monster.global_position + Vector3(0.0, ARROW_AIM_Y, 0.0))
+	var eye := _fp.camera.global_position
+	var at := FirstPersonView.nearest_to_view(eye, -_fp.camera.global_basis.z, points)
+	await _fp.shoot_past(points[at] if at >= 0 else null)
+	_wrong_feedback()
+
+
+func _wrong_feedback() -> void:
+	_flash_feedback(FLASH_WRONG)
+	_shake()
+	Sfx.play(&"wrong_answer")
 
 
 ## Das Bild zum Treffer: Explosion, Klang, „+XP" und das Monster geht.
@@ -1375,8 +1422,8 @@ func _on_monster_reached_goal(monster: Monster) -> void:
 func _check_end() -> void:
 	if _finished:
 		return
-	# Ein Sturmangriff ist noch unterwegs: sein Aufprall ruft hierher zurück.
-	if _charging > 0:
+	# Ein Sturmangriff oder Pfeil ist noch unterwegs: sein Aufprall ruft hierher zurück.
+	if _underway > 0:
 		return
 	# Meistert das letzte Monster etwas, wird erst gefeiert und dann abgerechnet —
 	# _on_celebration_finished ruft hierher zurück.

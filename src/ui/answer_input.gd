@@ -17,6 +17,7 @@ extends LineEdit
 
 const PLACEHOLDER_OPEN := "Übersetzung eingeben und Enter…"
 const PLACEHOLDER_CLOSED := "Enter: antworten · WASD: laufen · Alt: Maus"
+const PLACEHOLDER_CLOSED_TAB := "Enter: antworten · Tab: Waffe · Alt: Maus"
 
 ## Ich-Sicht: zu, bis Enter sie öffnet.
 var gated := false:
@@ -24,6 +25,15 @@ var gated := false:
 		gated = value
 		keep_editing_on_text_submit = not gated
 		_set_open(not gated)
+
+## Ich-Sicht mit zwei gelernten Waffen: die geschlossene Eingabe nennt auch Tab. Dafür
+## fällt WASD weg — mit allen vier passt es nicht in das Feld, und Laufen kennt man, bevor
+## man eine zweite Waffe hat.
+var weapon_switch := false:
+	set(value):
+		weapon_switch = value
+		if not _open:
+			placeholder_text = _closed_text()
 
 var _open := true
 
@@ -83,7 +93,7 @@ func _input(event: InputEvent) -> void:
 func _set_open(on: bool) -> void:
 	_open = on
 	editable = on
-	placeholder_text = PLACEHOLDER_OPEN if on else PLACEHOLDER_CLOSED
+	placeholder_text = PLACEHOLDER_OPEN if on else _closed_text()
 	if not is_inside_tree():
 		return
 	if on:
@@ -91,6 +101,10 @@ func _set_open(on: bool) -> void:
 		edit()
 	else:
 		release_focus()
+
+
+func _closed_text() -> String:
+	return PLACEHOLDER_CLOSED_TAB if weapon_switch else PLACEHOLDER_CLOSED
 
 
 ## Nur bei nicht-leerem Feld: das clear() nach dem Absenden löst selbst ein
