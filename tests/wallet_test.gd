@@ -125,5 +125,6 @@ func test_unlimited_gold_buys_without_spending() -> void:
 	assert_bool(_wallet.can_afford(1_000_000)).is_true()
 	assert_bool(_wallet.spend(1_000_000)).is_true()
 	assert_int(_wallet.gold).is_equal(5)
-	assert_str(_wallet.label()).contains("∞")
+	assert_str(_wallet.label()).is_equal("999.999 Gold (Debug)")
+	assert_str(_wallet.digits()).is_equal("999.999")
 	assert_str(_wallet.label(12)).is_equal("12 Gold")

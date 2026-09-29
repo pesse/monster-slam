@@ -669,7 +669,7 @@ Kamera frei; die Äste darunter heben nur das Lauftempo (`walk_speed`, Anteile a
   dort das SkillBook des Profils unbegrenzt Punkte (`SkillBook.unlimited_points`, nur das
   Autoload setzt es); gespeichert wird auch dann nur die Liste der Knoten. Ebenso kostet
   dort nichts Gold (`Wallet.unlimited_gold`: `spend` und `can_afford` gehen immer, nichts
-  wird abgezogen, verdient und gespeichert wird das echte Gold). Tests am Autoload
+  wird abgezogen, verdient und gespeichert wird das echte Gold; angezeigt wird 999.999). Tests am Autoload
   schalten beides ab.
 - **Der Kampf ist derselbe.** `WaveRunner` baut Boden, Deko und Festung wie immer für die
   Iso-Kamera (die bleibt in der Szene, nur nicht aktiv) und setzt `FirstPersonView`
