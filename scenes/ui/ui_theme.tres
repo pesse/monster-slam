@@ -612,6 +612,17 @@ texture_margin_top = 32.0
 texture_margin_right = 32.0
 texture_margin_bottom = 32.0
 
+[sub_resource type="StyleBoxTexture" id="game_card"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+texture = ExtResource("window_tex")
+texture_margin_left = 32.0
+texture_margin_top = 32.0
+texture_margin_right = 32.0
+texture_margin_bottom = 32.0
+
 [sub_resource type="StyleBoxTexture" id="window_title_bar"]
 content_margin_left = 24.0
 content_margin_top = 12.0
@@ -1012,6 +1023,8 @@ LibraryArrow/styles/disabled = SubResource("card_normal")
 LibraryArrow/styles/focus = SubResource("menu_link")
 GameWindow/base_type = &"PanelContainer"
 GameWindow/styles/panel = SubResource("game_window")
+GameCard/base_type = &"PanelContainer"
+GameCard/styles/panel = SubResource("game_card")
 ToolButton/base_type = &"Button"
 ToolButton/constants/icon_max_width = 24
 ToolButton/styles/disabled = SubResource("tool_button_disabled")

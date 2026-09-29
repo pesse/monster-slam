@@ -327,7 +327,7 @@ drei Sekunden je Karte.
 
 Danach kannst du mit „◀“ und „▶“ blättern. „Alle anzeigen“ nimmt auch die Wörter dazu,
 die du richtig hattest. Das geht schon während des Durchlaufs: die richtigen kommen dann
-hinten dran, der Durchlauf zeigt aber erst alle durchgelassenen zu Ende. Mit „✔ Weiter“ geht es zur Statistik. Hast du nichts
+hinten dran, der Durchlauf zeigt aber erst alle durchgelassenen zu Ende. Mit „Weiter ▸“ geht es zur Statistik. Hast du nichts
 durchgelassen, siehst du gleich alle Karten zum Durchblättern.
 
 Ist dort ein Wort falsch, kannst du es mit „⚑ Melden“ melden (Kapitel 14).
@@ -376,7 +376,7 @@ Aufgaben du im Lauf neu gemeistert hast. Mit „↺“ markierte Wörter hast du
 
 Darunter wählst du die **Schwierigkeit der nächsten Welle**, im Vergleich zu der eben
 gespielten: „Viel leichter“, „Leichter“, „Gleich“, „Schwieriger“, „Viel schwieriger“.
-Vorausgewählt ist „Gleich“. Mit „▶ Nächste Welle rufen“ geht es weiter, mit „⟵ Zurück zum
+Vorausgewählt ist „Gleich“. Mit „Nächste Welle“ geht es weiter, mit „⟵ Zurück zum
 Menü“ endet der Lauf.
 
 Jede neue Welle bringt ein Monster mehr als die vorige.

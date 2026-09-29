@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/dev/wave_card_lab.gd" id="1_lab"]
+
+[node name="WaveCardLab" type="Node"]
+script = ExtResource("1_lab")
