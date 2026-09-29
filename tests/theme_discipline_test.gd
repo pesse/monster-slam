@@ -48,7 +48,6 @@ const ALLOWED := {
 	"res://src/battle/wave_runner.gd": "Combo-Zahlen, zur Laufzeit skaliert",
 	"res://src/ui/reveal_card.gd": "Wortart-Farbe kommt aus WordTypePalette, nicht aus dem Theme",
 	"res://src/ui/wave_stats.gd": "Sieg/Niederlage-Farbe zur Laufzeit",
-	"res://src/ui/settings_menu.gd": "separation 0 klebt Meldungs-Kopf und -Kommentar zusammen",
 }
 
 

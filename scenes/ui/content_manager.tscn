@@ -1,7 +1,14 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://src/ui/content_manager.gd" id="1_content"]
-[ext_resource type="PackedScene" path="res://scenes/ui/content_pack_row.tscn" id="2_row"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/window_surface.webp" id="2_surface"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/close.webp" id="3_close"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/close_hover.webp" id="4_close_hover"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/close_pressed.webp" id="5_close_pressed"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/title_joint_left.webp" id="6_joint_left"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/title_joint_right.webp" id="7_joint_right"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/content.webp" id="8_icon"]
+[ext_resource type="PackedScene" path="res://scenes/ui/content_pack_row.tscn" id="9_row"]
 
 [node name="ContentManager" type="Control"]
 layout_mode = 3
@@ -11,92 +18,242 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_content")
-row_template = ExtResource("2_row")
+row_template = ExtResource("9_row")
 
-[node name="Margin" type="MarginContainer" parent="."]
-theme_type_variation = &"ScreenMargin"
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.03, 0.06, 0.6)
+
+[node name="Window" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+
+[node name="Frame" type="PanelContainer" parent="Window"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"GameWindow"
+
+[node name="Surface" type="TextureRect" parent="Window"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 9.0
+offset_top = 9.0
+offset_right = -9.0
+offset_bottom = -9.0
+mouse_filter = 2
+texture = ExtResource("2_surface")
+expand_mode = 1
+stretch_mode = 1
+
+[node name="Layout" type="VBoxContainer" parent="Window"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Root" type="VBoxContainer" parent="Margin"]
+[node name="TitleBar" type="PanelContainer" parent="Window/Layout"]
+layout_mode = 2
+theme_type_variation = &"WindowTitleBar"
+
+[node name="Header" type="HBoxContainer" parent="Window/Layout/TitleBar"]
+layout_mode = 2
 theme_type_variation = &"ScreenStack"
 
-[node name="Header" type="HBoxContainer" parent="Margin/Root"]
+[node name="TitleIcon" type="TextureRect" parent="Window/Layout/TitleBar/Header"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("8_icon")
+expand_mode = 1
+stretch_mode = 5
 
-[node name="BackButton" type="Button" parent="Margin/Root/Header"]
-unique_name_in_owner = true
-text = "← Zurück"
-
-[node name="Title" type="Label" parent="Margin/Root/Header"]
-theme_type_variation = &"Title"
+[node name="Title" type="Label" parent="Window/Layout/TitleBar/Header"]
+layout_mode = 2
 size_flags_horizontal = 3
-text = "Inhalte"
-horizontal_alignment = 1
+theme_type_variation = &"WindowTitle"
+text = "INHALTE"
+vertical_alignment = 1
 
-[node name="RefreshButton" type="Button" parent="Margin/Root/Header"]
+[node name="CloseButton" type="TextureButton" parent="Window/Layout/TitleBar/Header"]
 unique_name_in_owner = true
-text = "↺ Neu suchen"
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 4
+texture_filter = 4
+texture_normal = ExtResource("3_close")
+texture_pressed = ExtResource("5_close_pressed")
+texture_hover = ExtResource("4_close_hover")
+texture_focused = ExtResource("4_close_hover")
+ignore_texture_size = true
+stretch_mode = 5
 
-[node name="Status" type="Label" parent="Margin/Root"]
+[node name="Content" type="MarginContainer" parent="Window/Layout"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_type_variation = &"WindowContent"
+
+[node name="Body" type="VBoxContainer" parent="Window/Layout/Content"]
+layout_mode = 2
+
+[node name="Status" type="Label" parent="Window/Layout/Content/Body"]
 unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatSubline"
 autowrap_mode = 3
 
-[node name="Model" type="PanelContainer" parent="Margin/Root"]
+[node name="Model" type="VBoxContainer" parent="Window/Layout/Content/Body"]
 unique_name_in_owner = true
 visible = false
+layout_mode = 2
 
-[node name="Box" type="VBoxContainer" parent="Margin/Root/Model"]
+[node name="Head" type="HBoxContainer" parent="Window/Layout/Content/Body/Model"]
+layout_mode = 2
 
-[node name="Head" type="HBoxContainer" parent="Margin/Root/Model/Box"]
-
-[node name="ModelTitle" type="Label" parent="Margin/Root/Model/Box/Head"]
-theme_type_variation = &"SectionTitle"
+[node name="ModelTitle" type="Label" parent="Window/Layout/Content/Body/Model/Head"]
+layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"StatHeading"
 text = "Sprachmodell für Bosskämpfe"
 
-[node name="ModelButton" type="Button" parent="Margin/Root/Model/Box/Head"]
+[node name="ModelButton" type="Button" parent="Window/Layout/Content/Body/Model/Head"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 44)
+layout_mode = 2
+theme_type_variation = &"WindowButton"
 text = "Herunterladen"
 
-[node name="ModelRemoveButton" type="Button" parent="Margin/Root/Model/Box/Head"]
+[node name="ModelRemoveButton" type="Button" parent="Window/Layout/Content/Body/Model/Head"]
 unique_name_in_owner = true
 visible = false
+custom_minimum_size = Vector2(200, 44)
+layout_mode = 2
+theme_type_variation = &"WindowButton"
 text = "Entfernen"
 
-[node name="ModelHint" type="Label" parent="Margin/Root/Model/Box"]
+[node name="ModelHint" type="Label" parent="Window/Layout/Content/Body/Model"]
 unique_name_in_owner = true
-theme_type_variation = &"Hint"
+layout_mode = 2
+theme_type_variation = &"Caption"
 autowrap_mode = 3
 
-[node name="ModelProgress" type="ProgressBar" parent="Margin/Root/Model/Box"]
+[node name="ModelProgress" type="ProgressBar" parent="Window/Layout/Content/Body/Model"]
 unique_name_in_owner = true
 visible = false
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+theme_type_variation = &"XpBar"
 max_value = 1.0
 step = 0.001
 show_percentage = false
 
-[node name="Scroll" type="ScrollContainer" parent="Margin/Root"]
+[node name="ModelRule" type="HSeparator" parent="Window/Layout/Content/Body/Model"]
+layout_mode = 2
+theme_type_variation = &"StatRule"
+
+[node name="PacksTitle" type="Label" parent="Window/Layout/Content/Body"]
+layout_mode = 2
+theme_type_variation = &"StatHeading"
+text = "Vokabel-Packs"
+
+[node name="Scroll" type="ScrollContainer" parent="Window/Layout/Content/Body"]
+layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="Gutter" type="MarginContainer" parent="Margin/Root/Scroll"]
+[node name="Gutter" type="MarginContainer" parent="Window/Layout/Content/Body/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_type_variation = &"ScrollGutter"
-size_flags_horizontal = 3
 
-[node name="Packs" type="VBoxContainer" parent="Margin/Root/Scroll/Gutter"]
+[node name="Packs" type="VBoxContainer" parent="Window/Layout/Content/Body/Scroll/Gutter"]
 unique_name_in_owner = true
+layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Footer" type="HBoxContainer" parent="Margin/Root"]
-alignment = 2
+[node name="FooterRule" type="HSeparator" parent="Window/Layout/Content/Body"]
+layout_mode = 2
+theme_type_variation = &"StatRule"
 
-[node name="AdoptButton" type="Button" parent="Margin/Root/Footer"]
+[node name="Footer" type="HBoxContainer" parent="Window/Layout/Content/Body"]
+layout_mode = 2
+
+[node name="RefreshButton" type="Button" parent="Window/Layout/Content/Body/Footer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 44)
+layout_mode = 2
+theme_type_variation = &"WindowButton"
+text = "↺ Neu suchen"
+
+[node name="Spacer" type="Control" parent="Window/Layout/Content/Body/Footer"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="AdoptButton" type="Button" parent="Window/Layout/Content/Body/Footer"]
 unique_name_in_owner = true
 visible = false
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+theme_type_variation = &"WindowButton"
 text = "Vorhandene Dateien übernehmen"
 
-[node name="InstallButton" type="Button" parent="Margin/Root/Footer"]
+[node name="InstallButton" type="Button" parent="Window/Layout/Content/Body/Footer"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 44)
+layout_mode = 2
+theme_type_variation = &"WindowButton"
 text = "Ausgewählte holen"
+
+[node name="JointLeft" type="TextureRect" parent="Window"]
+layout_mode = 0
+offset_top = 51.0
+offset_right = 24.0
+offset_bottom = 75.0
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("6_joint_left")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="JointRight" type="TextureRect" parent="Window"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -24.0
+offset_top = 51.0
+offset_bottom = 75.0
+grow_horizontal = 0
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("7_joint_right")
+expand_mode = 1
+stretch_mode = 5

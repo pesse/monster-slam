@@ -15,8 +15,19 @@ const SCREEN := preload("res://scenes/ui/content_manager.tscn")
 
 func test_the_model_section_starts_hidden() -> void:
 	var screen: Control = auto_free(SCREEN.instantiate())
-	var panel := screen.get_node("%Model") as PanelContainer
+	var panel := screen.get_node("%Model") as Control
 	assert_object(panel).is_not_null()
 	assert_bool(panel.visible).override_failure_message(
 			"Der Zusatz-Abschnitt ist in der Szene sichtbar und blitzt damit auf, "
 			+ "bevor ModelService geantwortet hat.").is_false()
+
+
+## Das Fenster geht zu wie Statistik und Fähigkeiten: `closed` an den, der es geöffnet hat.
+## Nicht eingehängt — `_ready` fragte sonst das Verzeichnis beim Server an.
+func test_close_tells_the_opener() -> void:
+	var screen: Control = auto_free(SCREEN.instantiate())
+	var count := [0]
+	screen.connect("closed", func() -> void: count[0] += 1)
+	screen.call("close")
+	assert_int(count[0]).is_equal(1)
+	assert_object(screen.get_node("%CloseButton")).is_not_null()

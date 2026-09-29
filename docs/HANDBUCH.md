@@ -618,13 +618,15 @@ Richtung sitzt.
 
 ## 13. Einstellungen
 
-„⚙ Einstellungen“ hat drei Reiter.
+„Einstellungen“ im Hauptmenü öffnet ein Fenster über dem Menü; „✕“ oben rechts oder
+**Esc** schließt es wieder. Das Fenster hat drei Reiter.
 
 ### Reiter „Profil“
 
 - **„Profilname“**: dem Profil, das gerade spielt, mit **„Umbenennen“** einen neuen Namen
   geben. Wer spielt, wählst du nicht hier, sondern mit „Profil wechseln“ im Start-Screen.
-- **„Standard-Schwierigkeit“** (1 bis 5): damit beginnt die erste Welle jedes Laufs.
+- **„Standard-Schwierigkeit“** (1 bis 5): damit beginnt die erste Welle jedes Laufs. Die
+  gewählte Stufe steht gedrückt und golden.
 - **„Grund-Geschwindigkeit“** (50 % bis 150 %): macht alle Monster langsamer oder
   schneller, unabhängig von der Schwierigkeit. Gut für Kinder, die noch langsam tippen
   oder lesen.
@@ -672,7 +674,8 @@ Ist ein Wort im Spiel falsch oder unklar, kann man es melden, damit es korrigier
 
 Das Spiel selbst enthält keine Vokabeln. Sie kommen als **Packs**, die man über
 „Inhalte“ auf dem Start-Screen holt. So lassen sich neue oder korrigierte Wörter
-nachliefern, ohne das ganze Spiel neu herunterzuladen.
+nachliefern, ohne das ganze Spiel neu herunterzuladen. „Inhalte“ öffnet ein Fenster über
+dem Menü; „✕“ oder **Esc** schließt es.
 
 - Jeder Pack steht mit Namen, Beschreibung, Größe und Zustand in der Liste, zum Beispiel
   „Installiert“, „Nicht installiert“, „Update verfügbar“ oder „Inhalt veraltet“.

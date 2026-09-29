@@ -15,6 +15,9 @@ extends Node
 ##     … -- --shoot --intro --to-menu    schiebt wie „Weiter" ins Menü (ohne Profilwechsel)
 ##     … -- --shoot --stats              drückt „Statistik": das Fenster über der Kulisse
 ##     … -- --shoot --stats=close        … und schließt es wieder; druckt, wer den Fokus hat
+##     … -- --shoot --content            drückt „Inhalte": das Fenster über der Kulisse
+##     … -- --shoot --settings[=<reiter>] drückt „Einstellungen", Reiter 1–3 (Profil, Melden,
+##                                       Protokoll)
 ##     … -- --shoot --badge-hint         die Karte am Medaillon der Plakette (Level, XP, Punkte)
 ##
 ## Das Menü liest das aktive Profil nur (Name, Gold, Level); geschrieben wird nichts.
@@ -69,6 +72,15 @@ func _ready() -> void:
 				await get_tree().process_frame
 				print("menu_lab: Fokus bei ", get_viewport().gui_get_focus_owner(),
 						", Fenster noch da: ", is_instance_valid(window) and window.is_inside_tree()))
+	if screen is ProfileMenu and _has_arg("content"):
+		get_tree().create_timer(0.5).timeout.connect(
+				func(): (screen.get_node("%ContentButton") as Button).pressed.emit())
+	if screen is ProfileMenu and (_has_arg("settings") or not _arg("settings").is_empty()):
+		get_tree().create_timer(0.5).timeout.connect(func():
+			(screen.get_node("%SettingsButton") as Button).pressed.emit()
+			var tab := int(_arg("settings")) if not _arg("settings").is_empty() else 1
+			var window := screen.get_node("SettingsMenu")
+			(window.get_node("%Tabs").get_child(tab - 1) as Button).button_pressed = true)
 	if _has_arg("shoot"):
 		_shoot.call_deferred()
 
@@ -96,6 +108,10 @@ func _shoot() -> void:
 		what += "_stats" + ("_closed" if _arg("stats") == "close" else "")
 	if _has_arg("badge-hint"):
 		what += "_badge_hint"
+	if _has_arg("content"):
+		what += "_content"
+	if _has_arg("settings") or not _arg("settings").is_empty():
+		what += "_settings" + _arg("settings")
 	var file := "%s/%s_%dx%d.png" % [dir, what,
 			img.get_width(), img.get_height()]
 	img.save_png(file)

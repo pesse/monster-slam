@@ -11,7 +11,7 @@ extends Control
 ## Das Layout liegt in profile_menu.tscn (im Editor sichtbar, Entwurf unter
 ## assets/ui/main_menu/sources/); hier wird nur bedient und angezeigt. Hinter dem Menü
 ## steht die 3D-Kulisse (menu_backdrop.tscn). Einstellungen (Profil, Standard-Schwierigkeit, Reset) liegen im
-## settings_menu-Screen, der Lernstand im Statistik-Fenster (stats_screen).
+## Einstellungs-Fenster (settings_menu), der Lernstand im Statistik-Fenster (stats_screen).
 
 const SESSION_SETUP_SCENE := "res://scenes/ui/session_setup.tscn"
 const SETTINGS_SCENE := "res://scenes/ui/settings_menu.tscn"
@@ -60,11 +60,11 @@ func _ready() -> void:
 			func(): get_tree().change_scene_to_file(SESSION_SETUP_SCENE))
 	(%SkillButton as Button).pressed.connect(_open_skills)
 	(%StatsButton as Button).pressed.connect(_open_window.bind(STATS_SCENE, %StatsButton))
-	(%SettingsButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(SETTINGS_SCENE))
+	(%SettingsButton as Button).pressed.connect(_open_window.bind(SETTINGS_SCENE, %SettingsButton))
 	_badge.switch_pressed.connect(_back_to_intro)
 	_intro.picked.connect(_play_as)
 	_update_button.pressed.connect((%UpdateDialog as Control).open)
-	_content_button.pressed.connect(func(): get_tree().change_scene_to_file(CONTENT_SCENE))
+	_content_button.pressed.connect(_open_window.bind(CONTENT_SCENE, _content_button))
 	UpdateService.changed.connect(_refresh_update_badge)
 	ContentService.changed.connect(_refresh_content_badge)
 	_refresh_update_badge()
@@ -98,8 +98,9 @@ func _play_as(id: String) -> void:
 	_slide_to(MENU)
 
 
-## Fähigkeiten und Statistik öffnen als Fenster über dem Menü, nicht als eigener Screen: die
-## Kulisse bleibt stehen. Beim Schließen geht der Fokus an den Knopf zurück, von dem es kam.
+## Fähigkeiten, Statistik, Inhalte und Einstellungen öffnen als Fenster über dem Menü, nicht
+## als eigener Screen: die Kulisse bleibt stehen. Beim Schließen geht der Fokus an den Knopf
+## zurück, von dem es kam.
 func _open_skills() -> void:
 	_open_window(SKILL_SCENE, %SkillButton)
 
@@ -109,6 +110,10 @@ func _open_window(path: String, opener: Control) -> void:
 	add_child(window)
 	window.connect("closed", func() -> void:
 		window.queue_free()
+		# Was das Fenster geändert haben kann und kein Signal meldet: der Profilname
+		# (Einstellungen) und ob es nach einer Installation etwas zu spielen gibt (Inhalte).
+		_badge.refresh()
+		_refresh_play_gate()
 		opener.grab_focus())
 
 

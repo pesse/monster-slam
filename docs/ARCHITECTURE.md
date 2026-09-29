@@ -393,6 +393,14 @@ Erspielte.
   Theme an. Alle Seiten liegen übereinander in `Pages`, das Fenster ändert beim Umschalten
   seine Größe nicht. Den Tag unter dem Tastaturfokus erklärt `Hints.show_for`. Werkbank:
   `scenes/dev/stats_lab.tscn -- --shoot [--tab=N] [--day=N] [--scroll=N] [--sizes]`.
+- **Inhalte und Einstellungen sind dasselbe Fenster** (`content_manager.tscn`,
+  `settings_menu.tscn`), die Einstellungen mit denselben Reitern. Knöpfe mit Text tragen
+  `WindowButton` (die Rahmen der Hauptmenü-Knöpfe, klein), eine Auswahl wie die
+  Standard-Schwierigkeit `ToolChoice` (Werkzeugrahmen, gedrückt golden) in einer
+  `ButtonGroup`. Abschnitte trennt `StatRule`, eine Pack-Zeile ist kein Kasten mehr. Die
+  Rückfrage zum Zurücksetzen ist ein `ConfirmDialog` im Fenster. Nach dem Schließen liest
+  das Menü Plakette und Spielbarkeit neu — Umbenennen und Installieren melden kein Signal.
+  Werkbank: `menu_lab -- --shoot --content | --settings[=1..3]`.
 - **Bilder in der Größe, in der sie stehen.** Ein 9-Slice-Rahmen zeichnet seine Ränder in
   Texturpixeln, ein stark verkleinertes Bild flimmert an feinen Kanten. Reiter
   (`statistics/tabs/`) und Spieler-Medaillon (`player_badge/menu/`) liegen deshalb vorab
@@ -774,7 +782,7 @@ Zeile JSON.
   vollschreibt, schaltet man ab, und dann hilft es niemandem. Geschrieben wird sofort und
   mit `flush()` — der Absturz, den die Spur erklären soll, kündigt sich nicht an.
 - **Abschaltbar, Vorgabe an** (`UserSettings.trace_enabled`, geräteweit wie die Lautstärke).
-  Der Zugang ist der Reiter „Protokoll" im Einstellungs-Screen: Pfad, Ordner öffnen, leeren.
+  Der Zugang ist der Reiter „Protokoll" im Einstellungs-Fenster: Pfad, Ordner öffnen, leeren.
   Eine Aufzeichnung, die man erst einschalten muss, ist beim Fehler von gestern leer.
 - **Die Spur bleibt auf dem Rechner.** Sie enthält getippte Kindertexte und Lemmata aus
   geschütztem Material — anders als der Melde-Rückkanal, der nur Ids kennt. Das ist der
