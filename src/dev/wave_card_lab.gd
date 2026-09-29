@@ -18,6 +18,9 @@ extends Node
 ##     … -- --snap --card=confirm      die Rückfrage (wie „Welle auflösen")
 ##     … -- --snap --size=1920x1080    anderes Fenster (Bezugsgröße bleibt 1152×648)
 ##
+## Ohne `--snap` bleibt das Fenster offen: unten links schalten ◀/▶ (oder Bild↑/Bild↓)
+## durch alle Karten. Die Karten sind echt — die Kiste lässt sich öffnen, Knöpfe blättern.
+##
 ## Headless gibt es keinen Renderer — deshalb GODOT_WINDOW=1. `--snap` statt `--shoot`:
 ## das Schlachtfeld kommt aus `battle_theme_lab`, und das reagiert selbst auf `--shoot`.
 
@@ -28,8 +31,11 @@ const CONFIRM_SCENE := "res://scenes/ui/confirm_dialog.tscn"
 const SHOT_DIR := "res://reports/wave_cards"
 ## So lange steht das Bild, bevor es gespeichert wird: Kiste, Einblenden, Karussell.
 const SETTLE := 2.5
-## Wie im Kampf (`battle.tscn`): die Karten hängen in der Schicht der Kampf-Oberfläche.
-const UI_LAYER := 1
+## Alle Karten in der Reihenfolge des Umschalters.
+const CARDS: Array[String] = ["result", "opened", "levelup", "consolation", "next", "defeat",
+		"reveal", "confirm"]
+
+var _index := 0
 
 
 func _ready() -> void:
@@ -41,10 +47,39 @@ func _ready() -> void:
 	add_child(field)
 	# Der Name des Themas steht dort oben links; im Kampf gibt es ihn nicht.
 	(field.get_node("UI/Name") as CanvasItem).visible = false
-	var layer := CanvasLayer.new()
-	layer.layer = UI_LAYER
-	add_child(layer)
-	var card := _card_name()
+	_index = maxi(CARDS.find(_card_name()), 0)
+	%Prev.pressed.connect(_step.bind(-1))
+	%Next.pressed.connect(_step.bind(1))
+	_show_card()
+	if _has_arg("snap"):
+		%Switcher.visible = false
+		_snap.call_deferred(CARDS[_index])
+
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	var key := event as InputEventKey
+	if key == null or not key.pressed or key.echo:
+		return
+	if key.keycode == KEY_PAGEUP:
+		_step(-1)
+	elif key.keycode == KEY_PAGEDOWN:
+		_step(1)
+
+
+func _step(delta: int) -> void:
+	_index = posmod(_index + delta, CARDS.size())
+	_show_card()
+
+
+## Baut die Karte neu auf: jede Karte bekommt eine frische Szene, wie im Kampf.
+func _show_card() -> void:
+	var layer := %Cards as CanvasLayer
+	for old in layer.get_children():
+		layer.remove_child(old)
+		old.queue_free()
+	var card := CARDS[_index]
+	%CardName.text = card
+	%Position.text = "%d / %d · Bild↑ Bild↓" % [_index + 1, CARDS.size()]
 	match card:
 		"reveal":
 			var reveal := (load(REVEAL_SCENE) as PackedScene).instantiate() as Control
@@ -65,8 +100,6 @@ func _ready() -> void:
 				chest.hold(TreasureChest.HOLD_TIME)
 			if card in ["next", "defeat"]:
 				(stats.get_node("%ResultContinue") as Button).pressed.emit()
-	if _has_arg("snap"):
-		_snap.call_deferred(card)
 
 
 func _card_name() -> String:
@@ -99,7 +132,7 @@ func _balance() -> Dictionary:
 	for i in 6:
 		words.append({"label": "lorem-%d → ipsum-%d" % [i, i], "misses": 4 if i == 0 else 0,
 				"comeback": i == 0})
-	return {"waves_cleared": 3 if _card_name() != "defeat" else 2, "wave_reached": 3,
+	return {"waves_cleared": 3 if CARDS[_index] != "defeat" else 2, "wave_reached": 3,
 			"answers": 41, "correct": 33, "mastered": words.size(), "comeback": 1,
 			"words": words}
 

@@ -215,8 +215,8 @@ func _goto_stage(next: Stage) -> void:
 	_stage = next
 	_result_page.visible = next == Stage.RESULT
 	_next_page.visible = next == Stage.NEXT
-	# Beide Stufen teilen die Fußzeile: links der Weg zurück, rechts der Weg weiter. Die
-	# Zeile hat die Höhe des Startknopfs, auch wenn er fehlt — der Screen wächst nicht.
+	# Beide Stufen teilen die Fußzeile: links der Weg zurück, rechts der Weg weiter. Alle
+	# Knöpfe der Zeile sind gleich hoch — fehlt der Startknopf, wächst der Screen nicht.
 	_result_continue.visible = next == Stage.RESULT
 	_start_button.visible = next == Stage.NEXT and _won
 	_title.text = _title_for(next)

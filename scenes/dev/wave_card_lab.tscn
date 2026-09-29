@@ -4,3 +4,60 @@
 
 [node name="WaveCardLab" type="Node"]
 script = ExtResource("1_lab")
+
+[node name="Cards" type="CanvasLayer" parent="."]
+unique_name_in_owner = true
+
+[node name="Switcher" type="CanvasLayer" parent="."]
+unique_name_in_owner = true
+layer = 2
+
+[node name="Panel" type="PanelContainer" parent="Switcher"]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -16.0
+offset_right = 16.0
+offset_bottom = -16.0
+grow_vertical = 0
+theme_type_variation = &"HudPanel"
+
+[node name="Stack" type="VBoxContainer" parent="Switcher/Panel"]
+layout_mode = 2
+theme_type_variation = &"Tight"
+
+[node name="CardName" type="Label" parent="Switcher/Panel/Stack"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+theme_type_variation = &"StatHeading"
+text = "result"
+horizontal_alignment = 1
+
+[node name="Position" type="Label" parent="Switcher/Panel/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Caption"
+text = "1 / 8 · Bild↑ Bild↓"
+horizontal_alignment = 1
+
+[node name="Arrows" type="HBoxContainer" parent="Switcher/Panel/Stack"]
+layout_mode = 2
+alignment = 1
+
+[node name="Prev" type="Button" parent="Switcher/Panel/Stack/Arrows"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"ToolButton"
+text = "◀"
+
+[node name="Next" type="Button" parent="Switcher/Panel/Stack/Arrows"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"ToolButton"
+text = "▶"

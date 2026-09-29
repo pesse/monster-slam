@@ -214,7 +214,6 @@ button_group = SubResource("choice_group")
 text = "Viel schwieriger"
 
 [node name="Footer" type="HBoxContainer" parent="Layout/Content/Root"]
-custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 
 [node name="MenuButton" type="Button" parent="Layout/Content/Root/Footer"]
@@ -243,10 +242,10 @@ text = "Weiter ▸"
 [node name="StartButton" type="Button" parent="Layout/Content/Root/Footer"]
 unique_name_in_owner = true
 visible = false
-custom_minimum_size = Vector2(352, 64)
+custom_minimum_size = Vector2(240, 44)
 layout_mode = 2
 focus_mode = 0
-theme_type_variation = &"MainMenuPlay"
+theme_type_variation = &"WindowPrimary"
 text = "NÄCHSTE WELLE"
 icon = ExtResource("5_play")
 icon_alignment = 2

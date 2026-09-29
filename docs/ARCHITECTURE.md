@@ -407,9 +407,12 @@ Erspielte.
   Innenabstand 0). Fläche und Gelenke kann er nicht als verankerte Kinder tragen — ein
   `PanelContainer` zieht jedes Kind auf volle Größe —, deshalb zeichnet sie `WindowChrome`
   selbst: `SURFACE` als erstes Kind der Karte (gekachelt, auf das Achteck innerhalb des
-  Rahmens beschnitten), `JOINTS` als erstes Kind des Titelbands. Werkbank:
-  `wave_card_lab -- --snap --card=result|opened|levelup|consolation|next|defeat|reveal|confirm [--size=WxH]`
-  (`--snap`, weil der eingebettete `battle_theme_lab` auf `--shoot` hört).
+  Rahmens beschnitten), `JOINTS` als erstes Kind des Titelbands. Knöpfe darin tragen
+  `WindowButton`, der eine Weg nach vorn `WindowPrimary` (dieselbe Größe, goldener Rahmen)
+  — `MainMenuPlay` ist für das Hauptmenü gemacht und in einer Karte viel zu groß. Werkbank:
+  `wave_card_lab` schaltet mit ◀/▶ (Bild↑/Bild↓) durch alle Karten;
+  `-- --snap --card=result|opened|levelup|consolation|next|defeat|reveal|confirm [--size=WxH]`
+  speichert eine als Bild (`--snap`, weil der eingebettete `battle_theme_lab` auf `--shoot` hört).
 - **Bilder in der Größe, in der sie stehen.** Ein 9-Slice-Rahmen zeichnet seine Ränder in
   Texturpixeln, ein stark verkleinertes Bild flimmert an feinen Kanten. Reiter
   (`statistics/tabs/`) und Spieler-Medaillon (`player_badge/menu/`) liegen deshalb vorab
