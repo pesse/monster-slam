@@ -16,3 +16,4 @@ sun_energy = 1.1
 trees = Array[String](["forge/jungle_tree.glb", "forge/palm.glb", "props/tree.glb"])
 rocks = Array[String](["forge/boulder_moss.glb"])
 grass = Array[String](["forge/fern.glb", "props/grass.glb"])
+particles = "fireflies"

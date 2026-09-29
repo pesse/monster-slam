@@ -16,3 +16,4 @@ ambient = Color(0.58, 0.6, 0.7, 1)
 sun_energy = 1.1
 trees = Array[String](["forge/pine.glb", "forge/pine_snow.glb"])
 rocks = Array[String](["forge/boulder_grey.glb", "forge/boulder_snow.glb"])
+particles = "pollen"

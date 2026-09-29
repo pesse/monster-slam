@@ -17,3 +17,4 @@ trees = Array[String](["forge/palm.glb", "forge/cactus.glb"])
 rocks = Array[String](["forge/sandstone_rock.glb"])
 grass = Array[String](["forge/dry_grass.glb"])
 landmarks = Array[String](["forge/ruin_column.glb"])
+particles = "dust"

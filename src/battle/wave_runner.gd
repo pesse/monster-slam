@@ -98,6 +98,9 @@ func _ready() -> void:
 	# Der Kampf kommt aus der Ferne heran (SceneZoom, wie die Karten): das Gelände wird für
 	# den weitesten Blick gebaut, sonst sähe man beim Heranzoomen seinen Rand.
 	var view_size := _camera.size
+	# Die Teilchen in der Luft füllen, was im Kampf zu sehen ist — nicht den weiten Blick
+	# des Heranzoomens, sonst stünden sie dort dünner.
+	var air_area := visible_ground_area(_camera)
 	_camera.size = view_size / SceneZoom.FROM
 	# Das Thema VOR Boden und Ich-Sicht: der Boden nimmt seine Farben, der Nebel der
 	# Ich-Sicht die Hintergrundfarbe des schon gefärbten Environments.
@@ -105,6 +108,10 @@ func _ready() -> void:
 	_theme.apply($WorldEnvironment as WorldEnvironment, $Sun as DirectionalLight3D)
 	_setup_ground()
 	_decorate()
+	add_child(Wind.new())
+	var air := AmbientParticles.build(_theme.particles, air_area)
+	if air != null:
+		add_child(air)
 	_build_fortress()
 	_cam_base = _camera.position
 	GameState.reset()
@@ -376,8 +383,9 @@ func _scatter(parent: Node3D, slot: Array[String], x: float, z: float, scale: fl
 	if slot.is_empty():
 		return
 	var model := slot[_rng.randi() % slot.size()]
-	_place_model(parent, model.get_file(), Vector3(x, _ground_y(x, z), z), _rng.randf_range(0.0, 360.0),
-			Vector3.ONE * scale, model.get_base_dir())
+	var inst := _place_model(parent, model.get_file(), Vector3(x, _ground_y(x, z), z),
+			_rng.randf_range(0.0, 360.0), Vector3.ONE * scale, model.get_base_dir())
+	Wind.sway(inst, model, _theme.wind)
 
 
 const GRASS_SCALE_FIRST_PERSON := 0.4

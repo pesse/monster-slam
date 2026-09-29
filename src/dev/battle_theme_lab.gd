@@ -50,11 +50,14 @@ var _names: Array[String] = []
 var _index := 0
 var _decor: Node3D
 var _scene_env: Environment
+var _air: CPUParticles3D
+var _wind_strength := 1.0
 
 
 func _ready() -> void:
 	_scene_env = _battle_environment()
 	WaveRunnerScript.setup_view(_pivot, _camera, _sun)
+	add_child(Wind.new())
 	for file in DirAccess.get_files_at(BattleTheme.DIR):
 		if file.ends_with(".tres"):
 			_names.append(file.get_basename())
@@ -97,7 +100,13 @@ func _show(index: int) -> void:
 	_ground.mesh = WaveRunnerScript.build_terrain(_camera, noise, theme)
 	_camera.size = view_size
 	WaveRunnerScript.dress_ground(_ground, theme)
+	_wind_strength = theme.wind
 	_build_decor(noise, theme)
+	if _air != null:
+		_air.free()
+	_air = AmbientParticles.build(theme.particles, WaveRunnerScript.visible_ground_area(_camera))
+	if _air != null:
+		add_child(_air)
 	_label.text = "%s  (%d/%d)" % [_names[index], index + 1, _names.size()]
 	if not theme.ground_texture.is_empty():
 		var missing := not ResourceLoader.exists(theme.ground_texture_path())
@@ -355,6 +364,7 @@ func _place(model: String, x: float, z: float, noise: FastNoiseLite, yaw: float,
 	inst.rotation_degrees.y = yaw
 	inst.scale = Vector3.ONE * scale
 	_decor.add_child(inst)
+	Wind.sway(inst, model, _wind_strength)
 
 
 func _has_arg(key: String) -> bool:

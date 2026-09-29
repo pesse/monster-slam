@@ -295,3 +295,20 @@ func test_a_delivered_ground_texture_is_used_with_mipmaps() -> void:
 			"%s: Textur liegt da, aber der Boden ist glatt" % theme.resource_path).is_not_null()
 		var detail := mat.get_shader_parameter("detail") as Texture2D
 		assert_bool(detail.get_image().has_mipmaps()).is_true()
+
+
+## Jedes Thema nennt eine Art Teilchen, die es gibt — ein Tippfehler stünde sonst still als
+## klare Luft im Spiel.
+func test_every_theme_names_known_particles() -> void:
+	for theme in _theme_files():
+		assert_bool(theme.particles.is_empty() or AmbientParticles.KINDS.has(theme.particles)) \
+			.override_failure_message("%s: unbekannte Teilchen '%s'" % [theme.resource_path, theme.particles]) \
+			.is_true()
+
+
+## Die Wolkenstärke des Themas kommt im Bodenshader an.
+func test_the_ground_carries_the_theme_clouds() -> void:
+	var theme := BattleTheme.new()
+	theme.clouds = 0.3
+	var mat := theme.ground_material() as ShaderMaterial
+	assert_float(mat.get_shader_parameter("clouds")).is_equal_approx(0.3, 0.0001)

@@ -55,6 +55,14 @@ const SUN_ELEVATION := 55.0
 ## oben gelten dann nicht. Leer: das eigene. Nur eine Stufe: das Licht dort zählt, wie es
 ## in der Datei steht.
 @export var light_from := ""
+## Wie stark Bäume und Gras im Wind schwanken (Wind.sway), 1 = wie in Wind.SWAY, 0 = still.
+@export_range(0.0, 3.0) var wind := 1.0
+## Wie dunkel die Wolkenschatten über den Boden ziehen: der Anteil der Sonne, den eine
+## Wolke nimmt (battle_ground.gdshader). 0 = wolkenlos.
+@export_range(0.0, 1.0) var clouds := 0.6
+## Was in der Luft treibt: eine Art aus AmbientParticles.KINDS ("leaves", "snow", "dust",
+## "pollen", "fireflies"), leer heißt nichts.
+@export var particles := ""
 
 ## Die Deko je Platz: Modelle unter `assets/models/` (etwa "props/tree.glb"), aus denen der
 ## Kampf zufällig zieht. Größe und Menge gehören dem PLATZ, nicht dem Modell — ein Modell
@@ -175,6 +183,7 @@ func ground_material() -> Material:
 	var amb := ambient.srgb_to_linear() * ambient_energy
 	mat.set_shader_parameter("ambient_light", Vector3(amb.r, amb.g, amb.b))
 	mat.set_shader_parameter("sun_sin", sin(deg_to_rad(SUN_ELEVATION)))
+	mat.set_shader_parameter("clouds", clouds)
 	return mat
 
 

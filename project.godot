@@ -56,3 +56,10 @@ theme/custom="res://scenes/ui/ui_theme.tres"
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 anti_aliasing/quality/msaa_3d=2
+
+[shader_globals]
+
+wind_time={
+"type": "float",
+"value": 0.0
+}

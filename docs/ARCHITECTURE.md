@@ -550,6 +550,15 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
   aus. Der Bosskampf trägt kein Thema.
   Die Farben kommen im Licht des Kampfes etwa halb so hell an, wie sie in der `.tres`
   stehen — abgestimmt wird am Bild der Werkbank, nicht an den Zahlen.
+- **Wind, Wolken und Luft.** Bäume und Gras schwanken (`Wind.sway`): das Modell bekommt statt
+  seines StandardMaterial3D den Windshader (`assets/shaders/wind.gdshaderinc`), der es mit
+  denselben Werten zeichnet und die Ecken mit der Höhe biegt; nur Modelle aus `Wind.SWAY`
+  schwanken, denn im Platz `trees` stehen auch Häuser. Über den Boden ziehen Wolkenschatten
+  (gerechnetes Rauschen im Bodenshader, nimmt der Sonne ihren Anteil wie ein Schatten).
+  Beide laufen nach `wind_time`, einem globalen Shader-Parameter, den ein `Wind`-Knoten mit
+  dem skalierten delta treibt — in der Zeitlupe wehen sie langsamer. In der Luft treibt je
+  Thema eine Art `AmbientParticles` (Laub, Schnee, Staub, Pollen, Glühwürmchen) über dem
+  sichtbaren Boden. Stärke je Thema: `wind`, `clouds`, `particles`.
 - **Schatten und Licht des Bodens.** Der Bodenshader beleuchtet selbst (`light()`): Grund
   ist das Umgebungslicht des Themas, die Sonne legt nur einen festen Anteil davon dazu
   (`shadow_depth`, nach Neigung zur Sonne). So steht flacher Boden in der Sonne in der Farbe
