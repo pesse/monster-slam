@@ -10,6 +10,9 @@ func after_test() -> void:
 	RunRequest.want_first_person(false)
 	RunRequest.start_expert()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	# Die Vorliebe ist statisch und gälte sonst im nächsten Test (und im nächsten Kampf).
+	FirstPersonView._preferred = FirstPersonView.Weapon.BOW
+	Engine.time_scale = 1.0
 
 
 # --- Freischaltung und Tempo ---------------------------------------------------
@@ -94,6 +97,155 @@ func test_charge_arrives_and_a_second_one_completes_the_first() -> void:
 	assert_array(arrived).contains_exactly(["first", "second"])
 	assert_bool(view.is_charging()).is_false()
 	assert_float(view.position.distance_to(Vector3(5.0, 0.0, -20.0))).is_less(FirstPersonView.CHARGE_STOP + 0.2)
+
+
+# --- Bogen ------------------------------------------------------------------------
+
+func test_bow_needs_its_node() -> void:
+	assert_bool(FirstPersonView.bows_for({})).is_false()
+	assert_bool(FirstPersonView.bows_for({"bow": 1.0})).is_true()
+	assert_str(SkillTree.effect_label("bow", 1.0)).is_not_empty()
+
+
+## Tab geht nur die gelernten Waffen durch; ohne zwei bleibt es bei der einen.
+func test_tab_cycles_the_learned_weapons() -> void:
+	var both := FirstPersonView.weapons_for({"bow": 1.0, "charge": 1.0})
+	assert_array(both).contains_exactly([FirstPersonView.Weapon.BOW, FirstPersonView.Weapon.CHARGE])
+	assert_int(FirstPersonView.next_weapon(both, FirstPersonView.Weapon.BOW)).is_equal(FirstPersonView.Weapon.CHARGE)
+	assert_int(FirstPersonView.next_weapon(both, FirstPersonView.Weapon.CHARGE)).is_equal(FirstPersonView.Weapon.BOW)
+	var one := FirstPersonView.weapons_for({"charge": 1.0})
+	assert_int(FirstPersonView.next_weapon(one, FirstPersonView.Weapon.CHARGE)).is_equal(FirstPersonView.Weapon.CHARGE)
+	assert_array(FirstPersonView.weapons_for({})).is_empty()
+	assert_int(FirstPersonView.next_weapon([], FirstPersonView.Weapon.NONE)).is_equal(FirstPersonView.Weapon.NONE)
+
+
+## Die gewählte Waffe gilt auch im nächsten Kampf, wenn sie dort gelernt ist.
+func test_the_chosen_weapon_carries_over() -> void:
+	var view := auto_free(preload("res://scenes/battle/first_person_view.tscn").instantiate()) as FirstPersonView
+	add_child(view)
+	await await_idle_frame()
+	view.weapons = FirstPersonView.weapons_for({"bow": 1.0, "charge": 1.0})
+	assert_int(view.weapon).is_equal(FirstPersonView.Weapon.BOW)
+	view.switch_weapon()
+	assert_int(view.weapon).is_equal(FirstPersonView.Weapon.CHARGE)
+	var next := auto_free(preload("res://scenes/battle/first_person_view.tscn").instantiate()) as FirstPersonView
+	add_child(next)
+	await await_idle_frame()
+	next.weapons = FirstPersonView.weapons_for({"bow": 1.0, "charge": 1.0})
+	assert_int(next.weapon).is_equal(FirstPersonView.Weapon.CHARGE)
+	# Nur den Bogen gelernt: dann eben der.
+	next.weapons = FirstPersonView.weapons_for({"bow": 1.0})
+	assert_int(next.weapon).is_equal(FirstPersonView.Weapon.BOW)
+
+
+## Ein Fehlschuss geht sichtbar neben dem Monster vorbei, nicht durch es hindurch, und
+## landet dahinter am Boden.
+func test_a_miss_passes_beside_the_monster() -> void:
+	var from := Vector3(0.0, 2.0, 0.0)
+	var target := Vector3(3.0, 1.2, -15.0)
+	for side: float in [-1.0, 1.0]:
+		var end := FirstPersonView.miss_end(from, target, side)
+		assert_float(end.y).is_equal(0.0)
+		var flat_from := Vector2(from.x, from.z)
+		var flat_end := Vector2(end.x, end.z)
+		var flat_target := Vector2(target.x, target.z)
+		assert_float(flat_from.distance_to(flat_end)).is_greater(flat_from.distance_to(flat_target))
+		var closest := Geometry2D.get_closest_point_to_segment(flat_target, flat_from, flat_end)
+		assert_float(closest.distance_to(flat_target)).is_greater(FirstPersonView.MISS_WIDE * 0.9)
+
+
+## Ohne Fadenkreuz zielt ein Fehlschuss auf das Monster nächst der Bildmitte.
+func test_a_miss_aims_at_the_monster_nearest_the_centre() -> void:
+	var points: Array[Vector3] = [Vector3(8.0, 0.0, -10.0), Vector3(1.0, 0.0, -20.0), Vector3(-6.0, 0.0, -6.0)]
+	assert_int(FirstPersonView.nearest_to_view(Vector3.ZERO, Vector3.FORWARD, points)).is_equal(1)
+	var none: Array[Vector3] = []
+	assert_int(FirstPersonView.nearest_to_view(Vector3.ZERO, Vector3.FORWARD, none)).is_equal(-1)
+
+
+## Die Bahn beginnt und endet, wo sie soll, und steigt dazwischen.
+func test_the_arrow_path_arcs_from_start_to_end() -> void:
+	var from := Vector3(0.0, 2.0, 0.0)
+	var to := Vector3(0.0, 1.0, -20.0)
+	assert_vector(Arrow.path_point(from, to, 1.0, 0.0)).is_equal_approx(from, Vector3.ONE * 0.001)
+	assert_vector(Arrow.path_point(from, to, 1.0, 1.0)).is_equal_approx(to, Vector3.ONE * 0.001)
+	assert_float(Arrow.path_point(from, to, 1.0, 0.5).y).is_equal_approx(2.5, 0.001)
+	assert_float(Arrow.path_direction(from, to, 1.0, 0.0).y).is_greater(0.0)
+
+
+## Die Spannung kommt nur aus den Buchstaben: gedeckelt, und gesenkt wieder entspannt.
+func test_the_bow_draws_with_the_keys_and_relaxes() -> void:
+	var bow := auto_free(Bow.new()) as Bow
+	add_child(bow)
+	await await_idle_frame()
+	bow.pull()
+	await await_millis(150)
+	assert_float(bow.draw).is_equal(0.0)
+	bow.set_raised(true)
+	for i in 30:
+		bow.pull()
+	await await_millis(300)
+	assert_float(bow.draw).is_equal_approx(1.0, 0.001)
+	bow.release()
+	await await_millis(200)
+	assert_float(bow.draw).is_equal_approx(0.0, 0.001)
+	bow.set_raised(false)
+	assert_bool(bow.is_raised()).is_false()
+
+
+## Vor einem Treffer zeigt der Bogen kurz aufs Ziel und geht danach in seine Lage zurück —
+## auch wenn er während des Schwenks gesenkt wird.
+func test_the_bow_swings_to_the_target_and_back() -> void:
+	var holder := auto_free(Node3D.new()) as Node3D
+	add_child(holder)
+	var bow := Bow.new()
+	holder.add_child(bow)
+	await await_idle_frame()
+	bow.set_raised(true)
+	await await_millis(300)
+	var target := bow.global_position + Vector3(6.0, 0.0, -10.0)
+	bow.swing_to(target)
+	bow.set_raised(false)
+	await await_millis(int((Bow.SWING_TIME + 0.03) * 1000.0))
+	var facing := -bow.global_basis.z.normalized()
+	assert_float(facing.dot((target - bow.global_position).normalized())).is_greater(0.99)
+	assert_bool(bow.is_swinging()).is_true()
+	await await_millis(int((Bow.SWING_HOLD + 0.45) * 1000.0))
+	assert_bool(bow.is_swinging()).is_false()
+	assert_vector(bow.position).is_equal_approx(Bow.LOWERED_POS, Vector3.ONE * 0.01)
+
+
+## Ein Treffer geht in den Kopf: bei jeder Art mit Modell über der Körpermitte, auf die ein
+## Fehlschuss zielt, und unter dem Schild darüber.
+func test_a_hit_aims_at_the_head() -> void:
+	for def in FxWarmup.monster_defs():
+		var monster := auto_free(FxWarmup.MONSTER_SCENE.instantiate()) as Monster
+		monster.setup(def, {"prompt": "x"}, 1000.0, 0.0)
+		add_child(monster)
+		var head := monster.head_height()
+		assert_float(head).override_failure_message("%s: Kopf bei %.2f" % [def.get("id"), head]) \
+				.is_greater(preload("res://src/battle/wave_runner.gd").ARROW_AIM_Y + 1.0)
+		assert_float(head).override_failure_message("%s: Kopf bei %.2f" % [def.get("id"), head]) \
+				.is_less(7.0)
+
+
+## Ein Treffer fliegt gerader und schneller als ein Fehlschuss.
+func test_a_hit_flies_straighter_and_faster() -> void:
+	assert_float(FirstPersonView.HIT_LIFT).is_less(FirstPersonView.ARROW_LIFT)
+	assert_float(FirstPersonView.arrow_time(30.0, FirstPersonView.HIT_SPEED, FirstPersonView.HIT_MAX_TIME)) \
+			.is_less(FirstPersonView.arrow_time(30.0))
+
+
+## Der Pfeil kommt auch in der tiefsten Zeitlupe nach der Wanduhr an.
+func test_the_arrow_arrives_in_slow_motion() -> void:
+	var view := auto_free(preload("res://scenes/battle/first_person_view.tscn").instantiate()) as FirstPersonView
+	add_child(view)
+	await await_idle_frame()
+	view.weapons = FirstPersonView.weapons_for({"bow": 1.0})
+	Engine.time_scale = 0.05
+	var t0 := Time.get_ticks_msec()
+	await view.shoot_at(Vector3(0.0, 1.2, -30.0))
+	Engine.time_scale = 1.0
+	assert_int(Time.get_ticks_msec() - t0).is_less(int(FirstPersonView.ARROW_MAX_TIME * 1000.0) + 300)
 
 
 func test_new_effects_have_labels() -> void:

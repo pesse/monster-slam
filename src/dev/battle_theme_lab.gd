@@ -13,6 +13,9 @@ extends Node3D
 ##     … -- --specimens
 ##         Nahaufnahme der Deko jedes Themas neben den gekauften Vergleichsstücken, in der
 ##         Größe ihres Platzes, als reports/battle_themes/specimens_<name>.png.
+##     … -- --bow
+##         Die Ich-Sicht mit dem Bogen: gesenkt, gespannt, ein Treffer und ein Fehlschuss im
+##         Flug, als reports/battle_themes/bow_<schritt>.png.
 ##     … -- --hitches [--warm]
 ##         Misst den längsten Frame beim ERSTEN Auftritt jedes Kampfeffekts (Explosion,
 ##         „+XP", Monster, Meister-Feier) und gibt ihn in ms aus; --warm wärmt vorher vor
@@ -64,7 +67,9 @@ func _ready() -> void:
 		get_tree().quit(1)
 		return
 	_show(0)
-	if _has_arg("hitches"):
+	if _has_arg("bow"):
+		_shoot_bow.call_deferred()
+	elif _has_arg("hitches"):
 		_measure_hitches.call_deferred()
 	elif _has_arg("specimens"):
 		_shoot_specimens.call_deferred()
@@ -110,6 +115,83 @@ func _shoot_all() -> void:
 		var path := "%s/%s.png" % [dir, _names[i]]
 		get_viewport().get_texture().get_image().save_png(path)
 		print("battle_theme_lab: ", path)
+	get_tree().quit()
+
+
+func _shoot_bow() -> void:
+	var dir := ProjectSettings.globalize_path(SHOT_DIR)
+	DirAccess.make_dir_recursive_absolute(dir)
+	var view := (load("res://scenes/battle/first_person_view.tscn") as PackedScene).instantiate() as FirstPersonView
+	view.position = Vector3(0.0, 0.0, WaveRunnerScript.GOAL_Z - 2.0)
+	add_child(view)
+	# Beide Waffen gelernt, damit die Eingabe auch Tab nennt; der Bogen ist gewählt.
+	view.weapons = FirstPersonView.weapons_for({"bow": 1.0, "charge": 1.0})
+	view.weapon = FirstPersonView.Weapon.BOW
+	# Eine echte, gesperrte Eingabe: gehoben wird der Bogen nur, solange sie offen ist.
+	var input := (load("res://scenes/ui/answer_input.tscn") as PackedScene).instantiate() as LineEdit
+	$UI.add_child(input)
+	input.set("gated", true)
+	input.set("weapon_switch", true)
+	view.answer_input = input
+	var enter := InputEventKey.new()
+	enter.keycode = KEY_ENTER
+	enter.pressed = true
+	var monster := FxWarmup.MONSTER_SCENE.instantiate() as Monster
+	monster.setup(FxWarmup.monster_defs()[0], {"prompt": "house"}, 1000.0, 0.0)
+	monster.screen_sized_label = true
+	monster.position = Vector3(2.0, 0.0, WaveRunnerScript.GOAL_Z - 16.0)
+	add_child(monster)
+	monster.halt()
+	var target := monster.global_position + Vector3(0.0, 1.2, 0.0)
+	var head := monster.global_position + Vector3(0.0, monster.head_height(), 0.0)
+	print("battle_theme_lab: Kopfhöhe ", monster.head_height())
+	var shot := func(step: String) -> void:
+		await RenderingServer.frame_post_draw
+		var path := "%s/bow_%s.png" % [dir, step]
+		get_viewport().get_texture().get_image().save_png(path)
+		print("battle_theme_lab: ", path)
+		# Das Speichern dauert: ohne diese Bilder ginge die Zeit dafür im nächsten Schritt
+		# als ein großes delta auf, und Schwenk oder Flug wären schon vorbei.
+		await get_tree().process_frame
+		await get_tree().process_frame
+	# Wie im Kampf: sonst übersetzt die Spur ihren Shader erst im ersten Flug, und das Bild
+	# stünde genau dann.
+	var warm := Arrow.new()
+	warm.trail = true
+	var fx_at := view.camera.global_position - view.camera.global_basis.z * 6.0
+	await FxWarmup.run(self, fx_at, [], [warm])
+	await get_tree().create_timer(1.2).timeout
+	await shot.call("lowered")
+	input.call("_input", enter)
+	for i in 5:
+		await get_tree().create_timer(0.08).timeout
+		EventBus.typing_activity.emit()
+	await get_tree().create_timer(0.4).timeout
+	await shot.call("drawn")
+	# Ein Bild zu speichern dauert länger als ein Flug: Schwenk und Flug aus zwei Schüssen.
+	view.shoot_at(head)
+	input.text_submitted.emit("")
+	await get_tree().create_timer(0.03).timeout
+	await shot.call("swing")
+	await get_tree().create_timer(0.8).timeout
+	input.call("_input", enter)
+	for i in 5:
+		EventBus.typing_activity.emit()
+	await get_tree().create_timer(0.4).timeout
+	view.shoot_at(head)
+	input.text_submitted.emit("")
+	await get_tree().create_timer(0.12).timeout
+	await shot.call("flight")
+	await get_tree().create_timer(0.8).timeout
+	input.call("_input", enter)
+	EventBus.typing_activity.emit()
+	await get_tree().create_timer(0.4).timeout
+	view.shoot_past(target)
+	input.text_submitted.emit("")
+	await get_tree().create_timer(0.15).timeout
+	await shot.call("miss")
+	await get_tree().create_timer(0.6).timeout
+	await shot.call("stuck")
 	get_tree().quit()
 
 

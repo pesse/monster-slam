@@ -116,6 +116,28 @@ func _setup_animation(model_root: Node3D) -> void:
 			return
 
 
+## Ohne Modell (Platzhalter) oder ohne Maße: ungefähr die Kopfhöhe der Modelle.
+const DEFAULT_HEAD_HEIGHT := 2.4
+## Der Kopf sitzt so weit oben am Modell (Anteil der Höhe) — dorthin trifft ein Pfeil.
+const HEAD_SHARE := 0.82
+
+
+## Wie hoch über dem Boden der Kopf ist: aus der Hülle aller Meshes des Modells, in Metern
+## der Welt (model_scale steckt in den Transformen). Ein Skinned Mesh meldet die Hülle der
+## Ruhepose — für ein Ziel genau genug.
+func head_height() -> float:
+	var top := -INF
+	for node in find_children("*", "MeshInstance3D", true, false):
+		var mi := node as MeshInstance3D
+		if mi == _placeholder or mi.mesh == null or not mi.visible:
+			continue
+		var box := global_transform.affine_inverse() * mi.global_transform * mi.get_aabb()
+		top = maxf(top, box.end.y)
+	if top == -INF or top <= 0.0:
+		return DEFAULT_HEAD_HEIGHT
+	return top * HEAD_SHARE
+
+
 ## Bleibt stehen, wo es ist, und erreicht die Festung nicht mehr — getroffen, aber das
 ## Platzen kommt später (Sturmangriff in der Ich-Sicht).
 func halt() -> void:

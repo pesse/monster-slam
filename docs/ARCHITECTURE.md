@@ -603,9 +603,26 @@ Kamera frei; die Äste darunter heben nur das Lauftempo (`walk_speed`, Anteile a
   Gebucht wird trotzdem sofort (`_book_defeat`: Lernstand, XP, Punkte, Spur) — das Bild
   wartet, die Zahlen nicht. Das Monster steht (`Monster.halt`) und ist aus `_active`
   heraus, kann also weder die Festung erreichen noch eine zweite Antwort fangen;
-  `_check_end` wartet laufende Anläufe ab (`_charging`). Ein zweiter Treffer während eines
+  `_check_end` wartet laufende Anläufe und Pfeile ab (`_underway`). Ein zweiter Treffer während eines
   Anlaufs lässt den ersten sofort ankommen. Aufsteigende Texte („+XP", Vollform) haben in
   der Ich-Sicht eine feste Bildgröße, sonst füllten sie aus der Nähe das Bild.
+- **Langbogen** (`bow`): dieselbe Buchung wie beim Sturmangriff, nur fliegt statt des
+  Spielers ein Pfeil (`FirstPersonView.shoot_at`, `Arrow`), und das Monster platzt, wenn er
+  ankommt. Ein Treffer fliegt schnell und fast gerade (`HIT_SPEED`, `HIT_LIFT`) in den Kopf
+  (`Monster.head_height`, aus der Hülle des Modells), der Bogen
+  schwenkt davor kurz aufs Ziel (`Bow.swing_to`), und das Blickfeld zuckt beim Abschuss;
+  der Fehlschuss behält seinen flacheren Bogen. Gewartet wird auf den Schwenk mit einem
+  Timer, nicht auf dessen Tween — den bricht ein Senken ab, und ein nie endendes `await`
+  hielte das Wellenende fest. Der Bogen (`Bow`) hängt an der Kamera: gehoben, solange die Eingabe offen ist,
+  und jedes `typing_activity` spannt ihn weiter — nur nach getippten Buchstaben, nie nach
+  der erwarteten Antwort, sonst verriete er die Wortlänge. Eine falsche Antwort gehört
+  weiter zu keinem Monster (Spur unverändert); der Pfeil fliegt nur fürs Bild an dem
+  sichtbaren Monster vorbei, das der Bildmitte am nächsten steht
+  (`FirstPersonView.nearest_to_view`, `miss_end`), ohne Monster geradeaus. Rot, Wackeln und
+  Klang kommen, wenn er steckt. Es gibt kein Fadenkreuz: gezielt wird nicht, die Regel
+  bleibt „im Bild". Sind Bogen und Sturmangriff gelernt, wechselt Tab
+  (`FirstPersonView.weapons`, `switch_weapon`); die Wahl gilt bis zum Beenden, gespeichert
+  wird sie nicht. Pfeil und Spur sind im Vorwärmen (`FxWarmup`).
 - **Gelaufen wird nach der Wanduhr**, nicht mit `delta`: weder Zeitlupe noch der Zeitraffer
   von „Schnell auflösen" sollen den Spieler mitnehmen, und `Engine.time_scale` gehört
   SlowMotion. Die Maus ist nur im laufenden Kampf gefangen (`FirstPersonView.set_active`)
