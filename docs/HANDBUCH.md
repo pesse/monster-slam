@@ -194,7 +194,7 @@ Dasselbe Wort steht nie zweimal gleichzeitig auf dem Feld.
 ### Ich-Sicht
 
 Hast du den **Späherblick** gelernt (Kapitel 11), steht auf der Gebietskarte unten rechts
-zwischen Festungs-Anzeige und „Spielen“ der Schalter **👁**. Ist er gedrückt, stehst du im
+vor „Spielen“ der Schalter mit dem Auge des Späherblicks. Ist er gedrückt, stehst du im
 Wellenkampf selbst auf dem Feld, statt von oben daraufzusehen. Der Bosskampf bleibt, wie
 er ist.
 
@@ -472,6 +472,9 @@ aktuelle Stand steigen um denselben Betrag.
    Hat eine Unit wenige Wörter, gibt es weniger Teile; bei nur einem Teil fehlt „Gesamt“.
    Im Lateinbuch hat jede Unit sechs Teile, einen je Lektion. Eine Lektion, deren Wörter
    noch fehlen, steht grau auf der Karte und lässt sich nicht spielen.
+
+   Unten in der Mitte steht ein Schild: links Buch und Unit, rechts die Festungsstufe
+   dieser Unit mit ihrem Balken und dem, was bis zur nächsten Stufe fehlt.
 
    **Auswählen und spielen.** Ein Klick auf einen Ort markiert ihn (er wird größer und
    bekommt einen goldenen Ring), ein zweiter Klick nimmt die Markierung wieder weg. Teile

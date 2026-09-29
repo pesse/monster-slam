@@ -19,8 +19,12 @@ const NOTE_ALONE := "Klick markiert ihn — er wird allein gespielt."
 @onready var _canvas: MapCanvas = %Canvas
 @onready var _title: Label = %Title
 @onready var _book: Label = %Book
-## Festungsanzeige und daneben der Schalter für die Ich-Sicht: blenden zusammen ein.
-@onready var _fortress: Control = %BottomRight
+## Ein Schild unten in der Mitte: links der Ort (Buch, Unit), rechts die Festung. Der Ort
+## steht mit dem Bild da; die Festung und unten rechts Ich-Sicht und „Spielen" blenden
+## erst nach der Rechnung ein — ausgeblendet, nicht versteckt, damit das Schild seine
+## Größe behält.
+@onready var _fortress: Control = %Fortress
+@onready var _actions: Control = %BottomRight
 @onready var _fortress_title: Label = %FortressTitle
 @onready var _fortress_bar: ProgressBar = %FortressBar
 @onready var _fortress_next: Label = %FortressNext
@@ -67,7 +71,8 @@ func _ready() -> void:
 		await _canvas.zoom_finished
 	_fill()
 	_canvas.appear()
-	create_tween().tween_property(_fortress, "modulate:a", 1.0, MapCanvas.APPEAR_TIME)
+	for part: Control in [_fortress, _actions]:
+		create_tween().tween_property(part, "modulate:a", 1.0, MapCanvas.APPEAR_TIME)
 
 
 ## Der Schalter für die Ich-Sicht (nur das Auge, links an der Festungsanzeige und so hoch
@@ -102,6 +107,7 @@ func _show_image() -> void:
 	_book.text = ContentRegistry.book_label(MapSelection.book)
 	_title.text = "Unit %d" % MapSelection.unit
 	_fortress.modulate.a = 0.0
+	_actions.modulate.a = 0.0
 	_canvas.setup(MapLayout.unit_texture(MapSelection.book, MapSelection.unit), [], [], hint_lines)
 
 

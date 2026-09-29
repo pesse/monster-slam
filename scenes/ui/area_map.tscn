@@ -1,9 +1,10 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://src/ui/area_map.gd" id="1_screen"]
 [ext_resource type="Script" path="res://src/ui/map_canvas.gd" id="2_canvas"]
 [ext_resource type="Texture2D" path="res://assets/ui/library/back.webp" id="3_back"]
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/play.webp" id="4_play"]
+[ext_resource type="Texture2D" path="res://assets/ui/skill_tree/icons/scout_eye.webp" id="5_eye"]
 
 [sub_resource type="Gradient" id="shade_g"]
 colors = PackedColorArray(0, 0, 0, 0.6, 0, 0, 0, 0)
@@ -83,27 +84,82 @@ theme_type_variation = &"WindowButton"
 text = "Buchkarte"
 icon = ExtResource("3_back")
 
-[node name="Banner" type="PanelContainer" parent="Hud/Corners/Header"]
-theme_type_variation = &"MapBanner"
-layout_mode = 2
-mouse_filter = 2
-
-[node name="Lines" type="VBoxContainer" parent="Hud/Corners/Header/Banner"]
-theme_type_variation = &"Tight"
-layout_mode = 2
-mouse_filter = 2
-
-[node name="Book" type="Label" parent="Hud/Corners/Header/Banner/Lines"]
+[node name="Plate" type="PanelContainer" parent="Hud/Corners"]
 unique_name_in_owner = true
-theme_type_variation = &"Caption"
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_type_variation = &"MapBanner"
+
+[node name="Row" type="HBoxContainer" parent="Hud/Corners/Plate"]
 layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"StatColumns"
+
+[node name="Place" type="VBoxContainer" parent="Hud/Corners/Plate/Row"]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_type_variation = &"Tight"
+
+[node name="Book" type="Label" parent="Hud/Corners/Plate/Row/Place"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Caption"
 text = "Buch"
 
-[node name="Title" type="Label" parent="Hud/Corners/Header/Banner/Lines"]
+[node name="Title" type="Label" parent="Hud/Corners/Plate/Row/Place"]
 unique_name_in_owner = true
-theme_type_variation = &"Title"
 layout_mode = 2
+theme_type_variation = &"Title"
 text = "Unit"
+
+[node name="Divider" type="VSeparator" parent="Hud/Corners/Plate/Row"]
+layout_mode = 2
+theme_type_variation = &"StatDivider"
+
+[node name="Fortress" type="HBoxContainer" parent="Hud/Corners/Plate/Row"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Icon" type="Label" parent="Hud/Corners/Plate/Row/Fortress"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"SkillIcon"
+text = "🏰"
+
+[node name="Lines" type="VBoxContainer" parent="Hud/Corners/Plate/Row/Fortress"]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_type_variation = &"Tight"
+
+[node name="FortressTitle" type="Label" parent="Hud/Corners/Plate/Row/Fortress/Lines"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SectionTitle"
+text = "Festung · Stufe 0"
+
+[node name="FortressBar" type="ProgressBar" parent="Hud/Corners/Plate/Row/Fortress/Lines"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 8)
+layout_mode = 2
+mouse_filter = 2
+max_value = 1.0
+show_percentage = false
+
+[node name="FortressNext" type="Label" parent="Hud/Corners/Plate/Row/Fortress/Lines"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Caption"
+text = "noch 0 Wörter bis Stufe 1"
 
 [node name="BottomRight" type="HBoxContainer" parent="Hud/Corners"]
 unique_name_in_owner = true
@@ -117,47 +173,6 @@ grow_horizontal = 0
 grow_vertical = 0
 mouse_filter = 2
 
-[node name="Fortress" type="PanelContainer" parent="Hud/Corners/BottomRight"]
-unique_name_in_owner = true
-theme_type_variation = &"MapBanner"
-layout_mode = 2
-mouse_filter = 2
-
-[node name="Row" type="HBoxContainer" parent="Hud/Corners/BottomRight/Fortress"]
-layout_mode = 2
-mouse_filter = 2
-
-[node name="Icon" type="Label" parent="Hud/Corners/BottomRight/Fortress/Row"]
-theme_type_variation = &"SkillIcon"
-layout_mode = 2
-size_flags_vertical = 4
-text = "🏰"
-
-[node name="Lines" type="VBoxContainer" parent="Hud/Corners/BottomRight/Fortress/Row"]
-theme_type_variation = &"Tight"
-layout_mode = 2
-mouse_filter = 2
-
-[node name="FortressTitle" type="Label" parent="Hud/Corners/BottomRight/Fortress/Row/Lines"]
-unique_name_in_owner = true
-theme_type_variation = &"SectionTitle"
-layout_mode = 2
-text = "Festung · Stufe 0"
-
-[node name="FortressBar" type="ProgressBar" parent="Hud/Corners/BottomRight/Fortress/Row/Lines"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(200, 8)
-layout_mode = 2
-mouse_filter = 2
-max_value = 1.0
-show_percentage = false
-
-[node name="FortressNext" type="Label" parent="Hud/Corners/BottomRight/Fortress/Row/Lines"]
-unique_name_in_owner = true
-theme_type_variation = &"Caption"
-layout_mode = 2
-text = "noch 0 Wörter bis Stufe 1"
-
 [node name="FirstPersonToggle" type="Button" parent="Hud/Corners/BottomRight"]
 unique_name_in_owner = true
 visible = false
@@ -167,7 +182,9 @@ size_flags_vertical = 4
 focus_mode = 0
 theme_type_variation = &"ToolChoice"
 toggle_mode = true
-text = "👁"
+icon = ExtResource("5_eye")
+icon_alignment = 1
+expand_icon = true
 
 [node name="PlayButton" type="Button" parent="Hud/Corners/BottomRight"]
 unique_name_in_owner = true

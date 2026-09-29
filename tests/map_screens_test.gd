@@ -641,33 +641,37 @@ func test_every_real_level_is_playable(do_skip := LanguageData.missing(), skip_r
 							"%s/%s %s: nichts spielbar" % [book, unit, level["key"]]).is_true()
 
 
-## Der Ich-Sicht-Schalter steht rechts neben der Festungs-Anzeige, vor „Spielen" und so hoch wie es.
-func test_first_person_toggle_sits_between_fortress_and_play_at_play_height() -> void:
+## Ort und Festung sind EIN Schild unten in der Mitte; unten rechts stehen nur der
+## Ich-Sicht-Schalter und „Spielen", gleich hoch, der Schalter direkt davor.
+func test_place_and_fortress_share_one_plate_and_the_toggle_sits_before_play() -> void:
 	MapSelection.book = "zz-kein-buch"
 	MapSelection.unit = 1
 	var area: Control = auto_free(AREA_SCENE.instantiate())
 	add_child(area)
 	await get_tree().process_frame
 	await get_tree().process_frame
+	var plate := area.get_node("%Plate") as Control
+	assert_bool(plate.is_ancestor_of(area.get_node("%Title"))).is_true()
+	assert_bool(plate.is_ancestor_of(area.get_node("%FortressTitle"))).is_true()
+	var p := plate.get_global_rect()
+	assert_float(p.get_center().x).is_equal_approx(area.get_global_rect().get_center().x, 1.0)
 	var toggle := area.get_node("%FirstPersonToggle") as Button
-	var fortress := area.get_node("%BottomRight/Fortress") as Control
 	var play := area.get_node("%PlayButton") as Control
 	# Der Testlauf ist ein Debug-Build: der Schalter steht immer da.
 	assert_bool(toggle.visible).is_true()
-	assert_object(toggle.get_parent()).is_same(fortress.get_parent())
-	assert_int(toggle.get_index()).is_equal(fortress.get_index() + 1)
+	assert_object(toggle.get_parent()).is_same(play.get_parent())
 	assert_int(play.get_index()).is_equal(toggle.get_index() + 1)
 	var t := toggle.get_global_rect()
-	var f := fortress.get_global_rect()
-	var p := play.get_global_rect()
-	assert_float(t.size.y).is_equal_approx(p.size.y, 0.5)
-	assert_float(t.position.y).is_equal_approx(p.position.y, 0.5)
-	assert_float(t.position.x).is_greater_equal(f.end.x)
-	assert_float(t.position.x - f.end.x).is_less_equal(8.0)
+	var r := play.get_global_rect()
+	assert_float(t.size.y).is_equal_approx(r.size.y, 0.5)
+	assert_float(t.position.y).is_equal_approx(r.position.y, 0.5)
+	assert_float(r.position.x - t.end.x).is_less_equal(8.0)
+	# Das Schild in der Mitte und die Knöpfe rechts überdecken sich nicht.
+	assert_float(p.end.x).is_less_equal(t.position.x)
 	remove_child(area)
 
 
-## Ein Klick markiert nur; „Spielen" ganz rechts hinter der Festung ist ohne Auswahl gesperrt und
+## Ein Klick markiert nur; „Spielen" ganz unten rechts ist ohne Auswahl gesperrt und
 ## startet erst mit einer.
 func test_a_click_marks_and_play_sits_right_of_the_fortress() -> void:
 	MapSelection.book = "zz-kein-buch"
@@ -677,9 +681,7 @@ func test_a_click_marks_and_play_sits_right_of_the_fortress() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var play := area.get_node("%PlayButton") as Button
-	var fortress := area.get_node("%BottomRight/Fortress") as Control
-	assert_object(play.get_parent()).is_same(fortress.get_parent())
-	assert_int(play.get_index()).is_greater(fortress.get_index())
+	assert_object(play.get_parent()).is_same(area.get_node("%BottomRight"))
 	assert_int(play.get_index()).is_equal(play.get_parent().get_child_count() - 1)
 	assert_bool(play.disabled).is_true()
 	area._levels = MapLevel.levels_for("zz-kein-buch", 1, 4)
