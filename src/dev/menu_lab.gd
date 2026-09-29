@@ -11,7 +11,7 @@ extends Node
 ##                                       2 = Bibliothek)
 ##     … -- --shoot --library            die Bibliothek (kein Buch herausgenommen)
 ##     … -- --shoot --library --book=<id> … mit diesem Buch herausgenommen
-##     … -- --shoot --to-library         schiebt wie „Lernen" in die Bibliothek
+##     … -- --shoot --to-library         schiebt wie „Spielen" in die Bibliothek
 ##     … -- --shoot --intro --to-menu    schiebt wie „Weiter" ins Menü (ohne Profilwechsel)
 ##     … -- --shoot --stats              drückt „Statistik": das Fenster über der Kulisse
 ##     … -- --shoot --stats=close        … und schließt es wieder; druckt, wer den Fokus hat

@@ -1,6 +1,6 @@
 class_name BookSelect
 extends Control
-## Bibliothek: der erste Schritt nach „Lernen" (ADR 0006, Entwurf
+## Bibliothek: der erste Schritt nach „Spielen" (ADR 0006, Entwurf
 ## `assets/ui/library/concept/library-v6.webp`). Eine Seite des Start-Screens (ProfileMenu):
 ## rechts neben dem Hauptmenü, und die Kamera der Kulisse fährt dafür durch die Mauer in den
 ## Turm (MenuBackdrop, library_room.tscn). Diese Seite hat kein eigenes 3D — sie stellt ihre

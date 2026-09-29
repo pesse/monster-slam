@@ -2,7 +2,7 @@ class_name ProfileMenu
 extends Control
 ## Start-Screen (run/main_scene) mit drei Seiten in derselben Kulisse: „Wer spielt?"
 ## (profile_pick.tscn), das Hauptmenü und die Bibliothek (book_select.tscn). „Weiter" schiebt
-## die Profilwahl nach links hinaus und das Menü von rechts herein, „Lernen" ebenso das Menü
+## die Profilwahl nach links hinaus und das Menü von rechts herein, „Spielen" ebenso das Menü
 ## und die Bibliothek; die Kamera der Kulisse fährt mit — zur Bibliothek durch die Mauer in
 ## den Turm. „Zurück" und „Profil wechseln" schieben zurück. Wer aus einem anderen Screen
 ## hierher zurückkehrt, landet gleich im Menü (`intro_done`), aus der Buchkarte in der
@@ -28,7 +28,7 @@ const LIBRARY_SLIDE_TIME := 1.3
 const SHADE_FADE := 0.4
 const INTRO := 0.0
 const MENU := 1.0
-## „Lernen" führt über die Karte (ADR 0006); das freie Zusammenstellen der Runde ist der
+## „Spielen" führt über die Karte (ADR 0006); das freie Zusammenstellen der Runde ist der
 ## unauffällige Expertenmodus darunter.
 const LIBRARY := 2.0
 

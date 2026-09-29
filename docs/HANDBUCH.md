@@ -51,7 +51,7 @@ Bibliothek.
 
 Die Knöpfe links:
 
-- **„Lernen“** (golden) – in die Bibliothek und von dort über die Landkarte des Buchs in ein
+- **„Spielen“** (golden) – in die Bibliothek und von dort über die Landkarte des Buchs in ein
   Level oder zum Boss einer Unit (Kapitel 10).
 - **„Fähigkeiten“** – Skillpunkte ausgeben (Kapitel 11).
 - **„Statistik“** – dein Lernstand (Kapitel 12).
@@ -65,7 +65,7 @@ Rechts unten erscheint **„⬆ Update auf …“** nur, wenn es eine neue Fassu
 Links unten steht klein **„Eigene Runde – Expertenmodus“**. Er führt zu „Runde
 vorbereiten“, wo man selbst auswählt, was geübt wird (Kapitel 3).
 
-**Warum ist „Lernen“ grau?** Dann sind noch keine Vokabeln da. Das Spiel selbst bringt
+**Warum ist „Spielen“ grau?** Dann sind noch keine Vokabeln da. Das Spiel selbst bringt
 keine mit; sie kommen als Pack über „Inhalte“. Der Hinweis rechts unten sagt das auch.
 
 ## 2. Profile
@@ -446,7 +446,7 @@ aktuelle Stand steigen um denselben Betrag.
 
 ### Die Landkarte
 
-„Lernen“ führt über drei Stufen in den Kampf:
+„Spielen“ führt über drei Stufen in den Kampf:
 
 1. **Bibliothek.** Die Kamera fährt vom Hauptmenü in den Turm; dort stehen die Bücher
    nebeneinander auf einem Lesepult, das Cover nach vorn. Je mehr Units, desto dicker das
