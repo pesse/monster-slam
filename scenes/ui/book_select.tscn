@@ -181,7 +181,7 @@ unique_name_in_owner = true
 visible = false
 theme_type_variation = &"Hint"
 layout_mode = 2
-text = "Noch kein Buch vorhanden — im Start-Screen unter „📚 Inhalte“ einen Vokabel-Pack installieren."
+text = "Noch kein Buch vorhanden — im Start-Screen unter „Inhalte“ einen Vokabel-Pack installieren."
 horizontal_alignment = 1
 autowrap_mode = 3
 

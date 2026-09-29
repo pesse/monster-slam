@@ -1,5 +1,9 @@
 [gd_resource type="Theme" format=3 uid="uid://cl05typg0mkgi"]
 
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/button_normal.webp" id="menu_btn_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/button_highlighted.webp" id="menu_btn_gold_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/panels/profile_panel.webp" id="profile_plate_tex"]
+
 [sub_resource type="StyleBoxFlat" id="btn_disabled"]
 content_margin_left = 12.0
 content_margin_top = 6.0
@@ -501,6 +505,53 @@ corner_radius_top_right = 24
 corner_radius_bottom_right = 24
 corner_radius_bottom_left = 24
 
+[sub_resource type="StyleBoxTexture" id="menu_btn_normal"]
+content_margin_left = 24.0
+content_margin_right = 24.0
+texture = ExtResource("menu_btn_tex")
+
+[sub_resource type="StyleBoxTexture" id="menu_btn_hover"]
+content_margin_left = 24.0
+content_margin_right = 24.0
+texture = ExtResource("menu_btn_gold_tex")
+
+[sub_resource type="StyleBoxTexture" id="menu_btn_pressed"]
+content_margin_left = 24.0
+content_margin_right = 24.0
+texture = ExtResource("menu_btn_gold_tex")
+modulate_color = Color(0.82, 0.78, 0.72, 1)
+
+[sub_resource type="StyleBoxTexture" id="menu_btn_disabled"]
+content_margin_left = 24.0
+content_margin_right = 24.0
+texture = ExtResource("menu_btn_tex")
+modulate_color = Color(0.55, 0.55, 0.6, 0.85)
+
+[sub_resource type="StyleBoxTexture" id="menu_play_hover"]
+content_margin_left = 24.0
+content_margin_right = 24.0
+texture = ExtResource("menu_btn_gold_tex")
+modulate_color = Color(1.2, 1.12, 1, 1)
+
+[sub_resource type="FontVariation" id="menu_font"]
+variation_embolden = 0.9
+
+[sub_resource type="StyleBoxTexture" id="profile_plate"]
+content_margin_left = 24.0
+content_margin_top = 8.0
+content_margin_right = 24.0
+content_margin_bottom = 4.0
+texture = ExtResource("profile_plate_tex")
+
+[sub_resource type="StyleBoxFlat" id="xp_fill"]
+bg_color = Color(1, 0.78, 0.25, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxEmpty" id="menu_link"]
+
 [resource]
 default_font_size = 18
 Button/colors/font_color = Color(0.92, 0.94, 0.98, 1)
@@ -641,3 +692,56 @@ MapButton/base_type = &"SectionButton"
 MapButton/styles/normal = SubResource("map_button_normal")
 MapButton/styles/hover = SubResource("map_button_hover")
 MapButton/styles/pressed = SubResource("map_button_pressed")
+MainMenuButton/base_type = &"Button"
+MainMenuButton/colors/font_color = Color(0.94, 0.95, 0.98, 1)
+MainMenuButton/colors/font_hover_color = Color(1, 0.86, 0.45, 1)
+MainMenuButton/colors/font_focus_color = Color(1, 0.86, 0.45, 1)
+MainMenuButton/colors/font_pressed_color = Color(1, 0.86, 0.45, 1)
+MainMenuButton/colors/font_hover_pressed_color = Color(1, 0.86, 0.45, 1)
+MainMenuButton/colors/font_disabled_color = Color(0.62, 0.64, 0.7, 1)
+MainMenuButton/colors/font_outline_color = Color(0.06, 0.07, 0.12, 1)
+MainMenuButton/constants/outline_size = 6
+MainMenuButton/constants/h_separation = 16
+MainMenuButton/constants/icon_max_width = 40
+MainMenuButton/fonts/font = SubResource("menu_font")
+MainMenuButton/font_sizes/font_size = 24
+MainMenuButton/styles/normal = SubResource("menu_btn_normal")
+MainMenuButton/styles/hover = SubResource("menu_btn_hover")
+MainMenuButton/styles/pressed = SubResource("menu_btn_pressed")
+MainMenuButton/styles/hover_pressed = SubResource("menu_btn_pressed")
+MainMenuButton/styles/disabled = SubResource("menu_btn_disabled")
+MainMenuButton/styles/focus = SubResource("menu_btn_hover")
+MainMenuPlay/base_type = &"MainMenuButton"
+MainMenuPlay/colors/font_color = Color(1, 0.84, 0.4, 1)
+MainMenuPlay/colors/font_hover_color = Color(1, 0.93, 0.62, 1)
+MainMenuPlay/colors/font_focus_color = Color(1, 0.93, 0.62, 1)
+MainMenuPlay/colors/font_outline_color = Color(0.2, 0.1, 0.02, 1)
+MainMenuPlay/font_sizes/font_size = 28
+MainMenuPlay/styles/normal = SubResource("menu_btn_hover")
+MainMenuPlay/styles/hover = SubResource("menu_play_hover")
+MenuLink/base_type = &"Button"
+MenuLink/colors/font_color = Color(0.92, 0.94, 0.98, 1)
+MenuLink/colors/font_hover_color = Color(1, 0.86, 0.45, 1)
+MenuLink/colors/font_focus_color = Color(1, 0.86, 0.45, 1)
+MenuLink/colors/font_outline_color = Color(0.06, 0.07, 0.12, 1)
+MenuLink/constants/outline_size = 4
+MenuLink/constants/h_separation = 8
+MenuLink/constants/icon_max_width = 32
+MenuLink/font_sizes/font_size = 16
+MenuLink/styles/normal = SubResource("menu_link")
+MenuLink/styles/hover = SubResource("menu_link")
+MenuLink/styles/pressed = SubResource("menu_link")
+MenuLink/styles/focus = SubResource("menu_link")
+MenuAccent/base_type = &"Label"
+MenuAccent/colors/font_color = Color(1, 0.84, 0.4, 1)
+MenuAccent/colors/font_outline_color = Color(0.06, 0.07, 0.12, 1)
+MenuAccent/constants/outline_size = 6
+MenuNote/base_type = &"Label"
+MenuNote/colors/font_color = Color(0.94, 0.95, 0.98, 1)
+MenuNote/colors/font_outline_color = Color(0.06, 0.07, 0.12, 1)
+MenuNote/constants/outline_size = 6
+MenuNote/font_sizes/font_size = 14
+ProfilePlate/base_type = &"PanelContainer"
+ProfilePlate/styles/panel = SubResource("profile_plate")
+XpBar/base_type = &"ProgressBar"
+XpBar/styles/fill = SubResource("xp_fill")

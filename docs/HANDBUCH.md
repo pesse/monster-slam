@@ -37,28 +37,32 @@ die wissen wollen, was im Spiel passiert und warum es sich so verhält.
 Das Spiel beginnt mit **„Wer spielt?“**: ein Knopf je Profil, wer zuletzt gespielt hat, ist
 vorgewählt. Ein Klick – und du bist im Start-Screen dieses Profils (Kapitel 2).
 
-Oben stehen dein Name mit dem Knopf **„Profil wechseln“** (zurück zu „Wer spielt?“), dein
-Gold („💰 … Gold“) und dein Level („⭐ Level …“ mit dem Stand deiner Erfahrung). Hast du
-Skillpunkte, die du noch nicht ausgegeben hast, steht das in derselben Zeile.
+Hinter dem Menü steht ein Lager am Waldrand mit einem Skelett in roter Kapuze – das Bild
+bewegt sich leise, spielen kann man dort nichts.
 
-Die Knöpfe:
+Rechts oben steht deine Plakette: dein Name, dein Level und ein Balken mit dem Stand deiner
+Erfahrung („166 / 400 XP“), darunter der Knopf **„Profil wechseln“** (zurück zu „Wer
+spielt?“). Unter der Plakette stehen dein Gold („💰 … Gold“) und – falls du welche hast –
+die Skillpunkte, die du noch nicht ausgegeben hast.
 
-- **„▶ Spielen“** – zur Buchauswahl und von dort über die Landkarte des Buchs in ein
+Die Knöpfe links:
+
+- **„Lernen“** (golden) – zur Buchauswahl und von dort über die Landkarte des Buchs in ein
   Level oder zum Boss einer Unit (Kapitel 10).
-- **„🌳 Fähigkeiten“** – Skillpunkte ausgeben (Kapitel 11).
-- **„📊 Statistik“** – dein Lernstand (Kapitel 12).
-- **„⚙ Einstellungen“** – Profil, Tempo, Protokoll, Melden (Kapitel 13).
-- **„📚 Inhalte“** – Vokabel-Packs holen (Kapitel 15). Gibt es etwas Neues, steht die
-  Zahl dahinter, zum Beispiel „📚 Inhalte (2 neu)“.
-- **„⬆ Update auf …“** – erscheint nur, wenn es eine neue Fassung des Spiels gibt
-  (Kapitel 16).
+- **„Fähigkeiten“** – Skillpunkte ausgeben (Kapitel 11).
+- **„Statistik“** – dein Lernstand (Kapitel 12).
+- **„Inhalte“** – Vokabel-Packs holen (Kapitel 15). Gibt es etwas Neues, steht die
+  Zahl dahinter, zum Beispiel „Inhalte (2 neu)“.
+- **„Einstellungen“** – Profil, Tempo, Protokoll, Melden (Kapitel 13).
 
-Unter den Knöpfen steht klein **„Expertenmodus: Runde frei zusammenstellen“**. Er führt
-zu „Runde vorbereiten“, wo man selbst auswählt, was geübt wird (Kapitel 3).
+Rechts unten erscheint **„⬆ Update auf …“** nur, wenn es eine neue Fassung des Spiels gibt
+(Kapitel 16).
 
-**Warum ist „▶ Spielen“ grau?** Dann sind noch keine Vokabeln da. Das Spiel selbst bringt
-keine mit; sie kommen als Pack über „📚 Inhalte“. Der Hinweis unter dem Knopf sagt das
-auch.
+Links unten steht klein **„Eigene Runde – Expertenmodus“**. Er führt zu „Runde
+vorbereiten“, wo man selbst auswählt, was geübt wird (Kapitel 3).
+
+**Warum ist „Lernen“ grau?** Dann sind noch keine Vokabeln da. Das Spiel selbst bringt
+keine mit; sie kommen als Pack über „Inhalte“. Der Hinweis rechts unten sagt das auch.
 
 ## 2. Profile
 
@@ -75,8 +79,8 @@ den Einstellungen.
 ## 3. Expertenmodus: „Runde vorbereiten“
 
 Der normale Weg ins Spiel führt über die Landkarte (Kapitel 10). Wer selbst zusammenstellen
-will, was geübt wird, nimmt auf dem Start-Screen den kleinen Knopf „Expertenmodus: Runde
-frei zusammenstellen“. Dann kommt der Screen „Runde vorbereiten“. Hier legst du fest,
+will, was geübt wird, nimmt auf dem Start-Screen den kleinen Knopf „Eigene Runde –
+Expertenmodus“ links unten. Dann kommt der Screen „Runde vorbereiten“. Hier legst du fest,
 welche Wörter in den Kampf kommen. Alle Bereiche sind zugeklappt; ein Klick auf die Überschrift klappt
 sie auf.
 
@@ -438,7 +442,7 @@ aktuelle Stand steigen um denselben Betrag.
 
 ### Die Landkarte
 
-„▶ Spielen“ führt über drei Stufen in den Kampf:
+„Lernen“ führt über drei Stufen in den Kampf:
 
 1. **Buchauswahl.** Die Bücher stehen mit dem Rücken nach vorn in einem Regal; je mehr
    Units, desto dicker das Buch. Jede Sprache hat ihr eigenes Fach: oben Englisch, darunter
@@ -644,7 +648,7 @@ Ist ein Wort im Spiel falsch oder unklar, kann man es melden, damit es korrigier
 ## 15. Inhalte: Vokabel-Packs
 
 Das Spiel selbst enthält keine Vokabeln. Sie kommen als **Packs**, die man über
-„📚 Inhalte“ auf dem Start-Screen holt. So lassen sich neue oder korrigierte Wörter
+„Inhalte“ auf dem Start-Screen holt. So lassen sich neue oder korrigierte Wörter
 nachliefern, ohne das ganze Spiel neu herunterzuladen.
 
 - Jeder Pack steht mit Namen, Beschreibung, Größe und Zustand in der Liste, zum Beispiel
@@ -748,7 +752,7 @@ Sprechblase oben, deine Antwort tippst du unten in deine eigene. Es gibt **keine
 
 **Das Sprachmodell.** Ob eine frei formulierte Übersetzung richtig ist und was an einer
 falschen nicht stimmt, beurteilt ein Sprachmodell, das **auf diesem Rechner** läuft. Es
-kommt nicht mit dem Spiel, sondern wird einmal über „📚 Inhalte“ geholt („Sprachmodell für
+kommt nicht mit dem Spiel, sondern wird einmal über „Inhalte“ geholt („Sprachmodell für
 Bosskämpfe“, rund 4,6 GB). Beim Betreten des Bosskampfs startet es; bis es geladen ist,
 steht dort „Er erwacht …“. Nichts, was getippt wird, verlässt den Rechner.
 

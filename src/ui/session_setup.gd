@@ -1,7 +1,7 @@
 extends Control
 ## Session-Setup: vor dem Kampf wählen, welche Vokabeln geübt werden.
 ##
-## "▶ Spielen" im Startmenü öffnet diesen Screen (statt direkt in den Kampf zu
+## "Lernen" im Startmenü öffnet diesen Screen (statt direkt in den Kampf zu
 ## springen). Drei Filter, alle pro Profil in UserSettings persistiert und vom
 ## WaveRunner gelesen:
 ##   • Aufgabentypen (task_type)  — Checkboxen, standardmäßig alle aktiv

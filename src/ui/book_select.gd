@@ -1,5 +1,5 @@
 extends Control
-## Buchauswahl: der erste Schritt nach „▶ Spielen" (ADR 0006).
+## Buchauswahl: der erste Schritt nach „Lernen" (ADR 0006).
 ##
 ## Die Bücher stehen mit dem Rücken nach vorn in einem Regal (3D, `%World`). Unter dem
 ## Zeiger — oder mit ←/→ — wird ein Buch herausgezogen und gedreht, bis sein Cover zur

@@ -946,7 +946,7 @@ func _show_no_content() -> void:
 	_answer_input.visible = false
 	_fast_resolve_button.visible = false
 	_stats.hide_stats()
-	_end_label.text = "Keine spielbaren Aufgaben.\n\nFilter prüfen oder über „📚 Inhalte“\neinen Vokabel-Pack installieren.\n\n[Esc] zurück ins Menü"
+	_end_label.text = "Keine spielbaren Aufgaben.\n\nFilter prüfen oder über „Inhalte“\neinen Vokabel-Pack installieren.\n\n[Esc] zurück ins Menü"
 	_end_label.visible = true
 	push_warning("WaveRunner: keine spielbare Aufgabe im Pool — Welle nicht gestartet")
 

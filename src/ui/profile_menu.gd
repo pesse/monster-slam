@@ -2,8 +2,9 @@ extends Control
 ## Hauptmenü: Titel, wer spielt, und Einstieg ins Spiel. Gestartet wird in „Wer spielt?"
 ## (profile_pick, run/main_scene); „Profil wechseln" führt dorthin zurück.
 ##
-## Das Layout liegt in profile_menu.tscn (im Editor sichtbar); hier wird nur bedient und
-## angezeigt. Einstellungen (Profil, Standard-Schwierigkeit, Reset) liegen im
+## Das Layout liegt in profile_menu.tscn (im Editor sichtbar, Entwurf unter
+## assets/ui/main_menu/sources/); hier wird nur bedient und angezeigt. Hinter dem Menü
+## steht die 3D-Kulisse (menu_backdrop.tscn). Einstellungen (Profil, Standard-Schwierigkeit, Reset) liegen im
 ## settings_menu-Screen, der Lernstand im stats_screen-Screen.
 
 const SESSION_SETUP_SCENE := "res://scenes/ui/session_setup.tscn"
@@ -12,12 +13,17 @@ const STATS_SCENE := "res://scenes/ui/stats_screen.tscn"
 const SKILL_SCENE := "res://scenes/ui/skill_tree.tscn"
 const CONTENT_SCENE := "res://scenes/ui/content_manager.tscn"
 const PICK_SCENE := "res://scenes/ui/profile_pick.tscn"
-## „▶ Spielen" führt über die Karte (ADR 0006); das freie Zusammenstellen der Runde ist der
+## „Lernen" führt über die Karte (ADR 0006); das freie Zusammenstellen der Runde ist der
 ## unauffällige Expertenmodus darunter.
 const BOOKS_SCENE := "res://scenes/ui/book_select.tscn"
+## So lange blendet die Kulisse auf (s).
+const VEIL_FADE := 0.6
 
 @onready var _gold_label: Label = %GoldLabel
 @onready var _level_label: Label = %LevelLabel
+@onready var _xp_bar: ProgressBar = %XpBar
+@onready var _xp_label: Label = %XpLabel
+@onready var _points_label: Label = %PointsLabel
 @onready var _update_button: Button = %UpdateButton
 @onready var _content_button: Button = %ContentButton
 @onready var _play_button: Button = %PlayButton
@@ -40,7 +46,7 @@ func _ready() -> void:
 	PlayerLevel.changed.connect(func(_total_xp, _level): _refresh_level())
 	# Ausgegebene Punkte verändern dieselbe Zeile wie verdiente.
 	SkillBook.changed.connect(_refresh_level)
-	(%ProfileLabel as Label).text = "👤 %s" % UserSettings.display_name()
+	(%ProfileLabel as Label).text = UserSettings.display_name()
 	_refresh_gold()
 	_refresh_level()
 	_refresh_update_badge()
@@ -49,6 +55,19 @@ func _ready() -> void:
 	# Beide Kanäle still prüfen: das Abzeichen soll dastehen, ohne dass jemand nachsieht.
 	# Netzfehler bleiben in der Konsole (siehe UpdateService._fail / ContentService._fail).
 	ContentService.refresh()
+	_unveil()
+
+
+## Der erste Auftritt der Kulisse übersetzt ihre Shader und hält das Bild kurz an
+## (CLAUDE.md „Fallen"). Das Menü steht sofort; die Kulisse blendet danach auf, statt
+## halb gezeichnet zu ruckeln.
+func _unveil() -> void:
+	var veil := %Veil as ColorRect
+	await RenderingServer.frame_post_draw
+	await RenderingServer.frame_post_draw
+	if not is_inside_tree():
+		return
+	create_tween().tween_property(veil, "modulate:a", 0.0, VEIL_FADE)
 
 
 ## Der Goldstand des aktiven Profils. Er steht auf dem Start-Screen und nicht nur in der
@@ -57,20 +76,25 @@ func _refresh_gold() -> void:
 	_gold_label.text = "💰 %s" % Wallet.label()
 
 
-## Level, Stand im Level und OFFENE Skillpunkte. Leiser als der Goldstand (Hint): die
-## Entscheidung fällt nicht hier, sondern im Fähigkeiten-Screen. Gezeigt wird der offene
-## Stand (verdient minus ausgegeben, siehe SkillBook.available) und nicht der verdiente —
-## eine Zahl, die nach dem Ausgeben stehen bleibt, wäre eine Aufforderung ins Leere.
+## Level und Stand im Level auf der Plakette, darunter die OFFENEN Skillpunkte. Leiser als
+## der Goldstand (MenuNote): die Entscheidung fällt nicht hier, sondern im
+## Fähigkeiten-Screen. Gezeigt wird der offene Stand (verdient minus ausgegeben, siehe
+## SkillBook.available) und nicht der verdiente — eine Zahl, die nach dem Ausgeben stehen
+## bleibt, wäre eine Aufforderung ins Leere.
 func _refresh_level() -> void:
 	var progress := PlayerLevel.progress()
-	var text := "⭐ Level %d  ·  %d/%d XP" % [
-		int(progress["level"]), int(progress["xp_in_level"]), int(progress["xp_for_level_up"])]
+	var in_level := int(progress["xp_in_level"])
+	var for_up := int(progress["xp_for_level_up"])
+	_level_label.text = "Level %d" % int(progress["level"])
+	_xp_bar.max_value = maxi(for_up, 1)
+	_xp_bar.value = in_level
+	_xp_label.text = "%d / %d XP" % [in_level, for_up]
 	var points := SkillBook.available()
 	if SkillBook.unlimited_points:
-		text += "  ·  ∞ Skillpunkte (Debug)"
+		_points_label.text = "∞ Skillpunkte (Debug)"
 	elif points > 0:
-		text += "  ·  %d Skillpunkt%s offen" % [points, "" if points == 1 else "e"]
-	_level_label.text = text
+		_points_label.text = "%d Skillpunkt%s offen" % [points, "" if points == 1 else "e"]
+	_points_label.visible = SkillBook.unlimited_points or points > 0
 
 
 ## Das Abzeichen erscheint nur, wenn es etwas zu tun gibt. Ein Fehlschlag der Prüfung wird
@@ -104,4 +128,4 @@ func _refresh_play_gate() -> void:
 ## hilft das Update-Abzeichen, nicht dieses.
 func _refresh_content_badge() -> void:
 	var count := ContentService.attention_count()
-	_content_button.text = "📚 Inhalte (%d neu)" % count if count > 0 else "📚 Inhalte"
+	_content_button.text = "INHALTE (%d NEU)" % count if count > 0 else "INHALTE"

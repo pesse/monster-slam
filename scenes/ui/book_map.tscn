@@ -108,6 +108,6 @@ anchor_right = 0.5
 anchor_bottom = 0.5
 grow_horizontal = 2
 grow_vertical = 2
-text = "Dieses Buch hat noch keine Units — im Start-Screen unter „📚 Inhalte“ einen Vokabel-Pack installieren."
+text = "Dieses Buch hat noch keine Units — im Start-Screen unter „Inhalte“ einen Vokabel-Pack installieren."
 horizontal_alignment = 1
 autowrap_mode = 3
