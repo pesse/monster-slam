@@ -29,3 +29,5 @@ Alle zwölf Laufzeitbilder sind verlustfreie RGBA-WebP-Dateien mit echter Transp
 `export-assets.cjs` konvertiert die lokalen PNG-Quellen mit Sharp, schneidet das Icon-Atlas in Einzelbilder und vereinheitlicht die Button-Leinwände. `SHARP_MODULE` kann auf eine lokale Sharp-Installation zeigen. Ein anschließender Export nutzt ausschließlich `sources/` und benötigt keinen erneuten Bildgenerierungsaufruf.
 
 Geprüft: WebP-Dekodierung, Alphakanal mit transparenten und deckenden Pixeln für jedes Asset, identische Button-Abmessungen sowie visuelle Kontaktübersicht. Noch nicht in eine Godot-Szene eingebaut.
+`nAktueller Badge-Entwurf mit Goldbestand: concept/player-badge-gold.webp; Layout und dynamische Datenbindung siehe concept/player-badge-gold.md. Gilt für Hauptmenü und Bibliothek, nicht für Statistik/Skill-Tree.
+Aktuell freigegebener Spieler-Badge: ../player_badge/README.md enthält Assets, Godot-Vorlage und verbindliche Integrationsanweisungen zum Medaillon v6. Frühere rechteckige Badge-Entwürfe sind abgelöst.
