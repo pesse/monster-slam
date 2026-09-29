@@ -25,7 +25,7 @@ extends RefCounted
 ## Punkte setzt man in der Werkbank scenes/dev/map_lab.tscn, nicht von Hand.
 
 const ROOT := "res://assets/maps"
-## WebP zuerst: die PNGs daneben sind die Quellen, aus denen export_webp.py die Bilder macht.
+## WebP zuerst: die PNGs daneben sind die bearbeitbaren Quellen der Bilder.
 const EXTENSIONS := ["webp", "png", "jpg"]
 
 ## Geladene Bilder, über den Szenenwechsel hinaus gehalten: der Ressourcen-Cache von Godot
