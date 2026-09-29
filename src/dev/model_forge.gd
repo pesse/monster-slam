@@ -1598,7 +1598,7 @@ func _crane() -> Forge:
 	f.frustum(Vector3(-1.6, 0.24, 0), tip, 0.08, 0.06, 5, TIMBER_B, 0.0)
 	f.blob(tip + Vector3(0, -0.1, 0), 0.22, TIMBER_B, rng, 0.0)
 	f.frustum(tip + Vector3(0, -0.2, 0), Vector3(1.9, 2.2, 0), 0.025, 0.025, 4, NET, 0.0)
-	f.box(Vector3(1.9, 1.9, 0), Vector3(0.6, 0.6, 0.6), FENCE_A, 0.3)
+	f.box(Vector3(1.9, 1.9, 0), Vector3(0.6, 0.6, 0.6), TIMBER_A, 0.3)
 	return f
 
 
