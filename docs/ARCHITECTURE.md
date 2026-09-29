@@ -427,7 +427,7 @@ der umgekehrten Absicht: Gold ist Beute, Erfahrung ist Lernfortschritt.
 
 ## Karte und Laufanfrage (ADR 0006)
 
-Der Hauptweg ins Spiel: **Buchauswahl → Buchkarte → Gebietskarte → Kampf**. Das alte
+Der Hauptweg ins Spiel: **Bibliothek → Buchkarte → Gebietskarte → Kampf**. Das alte
 Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
 
 | Baustein | Wo | Aufgabe |
@@ -438,14 +438,26 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
 | `MapSelection` | `src/ui/map_selection.gd` | welches Buch, welche Unit gerade offen ist (überdauert den Szenenwechsel) |
 | `MapLayout` | `src/ui/map_layout.gd` | Bild und Punkte unter `assets/maps/<book>/` (`book.png`, `unit<n>.png`, `map.json`) |
 | `MapCanvas` | `src/ui/map_canvas.gd` | zeichnet eine Karte: Bild letterboxed in 16:9, Weg, Orte mit Stufe, Ring, Medaille |
-| Screens | `book_select`, `book_map`, `area_map` (`src/ui/` + `scenes/ui/`) | die drei Ebenen |
-| `Book3D` | `src/ui/book_3d.gd` + `scenes/ui/book_3d.tscn` | ein gebundenes Buch im 3D-Regal der Buchauswahl: Rücken nach vorn, ausgewählt herausgezogen und schräg gedreht, beim Öffnen schlägt der vordere Deckel am Falz auf. Das Cover ist eine 2D-Szene im SubViewport (Karte im `OrnateFrame` oben, Stand unten); die Doppelseite trägt die Buchkarte. `spread_view` liefert den Kamerastand, aus dem die Doppelseite das Bild so füllt wie die Buchkarte — die Buchauswahl fliegt die Kamera dorthin und blendet erst am Ende auf das flache Bild über |
+| Screens | `book_select` (die Bibliothek), `book_map`, `area_map` (`src/ui/` + `scenes/ui/`) | die drei Ebenen; die Bibliothek ist kein eigener Screen, sondern die dritte Seite von `profile_menu.tscn` |
+| Bibliothek | `scenes/ui/library_room.tscn` in `menu_backdrop.tscn` | der Raum im Turm der Menü-Kulisse: Lesepult, Regale, Kerzen, `%Eye` (Kamerastand), `%Books` (dort stellt `BookSelect` die Bücher auf) |
+| `Book3D` | `src/ui/book_3d.gd` + `scenes/ui/book_3d.tscn` | ein gebundenes Buch auf dem Lesepult: leicht schräg (`SLOT_ANGLE`, Rücken links sichtbar), ausgewählt vom Pult genommen — nach vorn, gerade zur Kamera, ein Stück zur Bildmitte (`TOWARD`), mit Glanz (`book_glow.gdshader`) und Stand auf dem Cover —, beim Öffnen schlägt der vordere Deckel am Falz auf. Das Cover ist eine 2D-Szene im SubViewport (Einband `assets/ui/library/`, Karte im `OrnateFrame`, darunter der Stand); die Doppelseite trägt die Buchkarte. `spread_view` liefert den Kamerastand, aus dem die Doppelseite das Bild so füllt wie die Buchkarte — die Bibliothek fliegt die Kamera dorthin und blendet erst am Ende auf das flache Bild über |
 | `BookMesh` | `src/ui/book_mesh.gd` | Profile des Einbands (gerundeter Rücken, Deckel mit Falz) und ihre Extrusion zu Meshes, je Buch nach seiner Dicke |
 | Werkbank | `scenes/dev/map_lab.tscn` | Punkte und Weg auf die Kartenbilder setzen, schreibt `map.json`; im Export ausgeschlossen |
 | `BattleTheme` | `src/battle/battle_theme.gd` + `assets/battle_themes/*.tres` | Farben von Boden und Licht und die Deko im Kampf, je Unit passend zur Gebietskarte; Zuordnung unter `themes` in `map.json` |
 | Werkbank | `scenes/dev/battle_theme_lab.tscn` | das Schlachtfeld in jedem Thema, ohne Kampf; `-- --shoot` legt Bilder unter `reports/battle_themes/` ab, `-- --specimens` Nahaufnahmen der Deko (braucht `GODOT_WINDOW=1`) |
 | Modellschmiede | `src/dev/model_forge.gd` | baut die eigenen Low-Poly-Modelle unter `assets/models/forge/` aus Grundformen; die `.glb` sind Ergebnis, geändert wird der Generator |
 
+- **Die Bibliothek liegt in der Menü-Kulisse.** `ProfileMenu` hat drei Seiten
+  (0 „Wer spielt?", 1 Hauptmenü, 2 Bibliothek); `MenuBackdrop.view_at(page)` führt die
+  Kamera von 1 nach 2 in den Turm (`%Library/%Eye`), und `_light_for` blendet Nebel,
+  Himmel und Sonne dabei nach innen. Für den Flug ins Buch übernimmt `BookSelect` die
+  Kamera (`hold_camera`) und gibt sie am Ende des Rückflugs zurück. Aus der Buchkarte
+  zurück (`MapSelection.to_shelf`) startet `profile_menu.tscn` direkt auf Seite 2.
+- **Gezielt wird auf den Platz in der Reihe** (`Book3D.hit`), nicht auf das
+  herausgenommene Buch — das steht groß vor den Nachbarn. `hit_body` gilt nur, solange
+  der Zeiger auf dem herausgenommenen Buch über keinem Platz steht. Nach dem Hereinfahren
+  ist kein Buch herausgenommen; erst eine echte Mausbewegung oder ←/→ wählt. Das Pult hat
+  `BookSelect.SLOTS` Plätze, mehr Bücher blättern die Pfeile (`slot_x`, jede Seite mittig).
 - **Kampf und Boss lesen ihren Bereich aus `RunRequest`, nie aus `UserSettings`.**
   `WaveRunner` (Aufgabenpool, Festungsstufe, Rücksprung), `SentenceSelector.pool_from_settings`
   und `BossFight` fragen dort. Ohne Level fällt `RunRequest` auf die gespeicherte Auswahl

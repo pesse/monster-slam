@@ -1,0 +1,195 @@
+[gd_scene load_steps=19 format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/forge/reading_desk.glb" id="1_desk"]
+[ext_resource type="PackedScene" path="res://assets/models/forge/bookcase.glb" id="2_case"]
+[ext_resource type="PackedScene" path="res://assets/models/forge/candles.glb" id="3_candles"]
+[ext_resource type="PackedScene" path="res://assets/models/props/wall.gltf" id="4_wall"]
+[ext_resource type="PackedScene" path="res://assets/models/props/wall_half.gltf" id="5_wall_half"]
+[ext_resource type="PackedScene" path="res://assets/models/props/pillar.gltf" id="6_pillar"]
+[ext_resource type="PackedScene" path="res://assets/models/props/torch_lit.gltf" id="7_torch"]
+[ext_resource type="PackedScene" path="res://assets/models/forge/pine.glb" id="8_pine"]
+[ext_resource type="PackedScene" path="res://assets/models/forge/pine_snow.glb" id="9_pine_snow"]
+
+[sub_resource type="StandardMaterial3D" id="floor_material"]
+albedo_color = Color(0.24, 0.15, 0.09, 1)
+roughness = 0.9
+
+[sub_resource type="PlaneMesh" id="floor"]
+material = SubResource("floor_material")
+size = Vector2(18, 12.5)
+
+[sub_resource type="StandardMaterial3D" id="flame_material"]
+shading_mode = 0
+albedo_color = Color(1, 0.72, 0.3, 1)
+
+[sub_resource type="SphereMesh" id="flame"]
+material = SubResource("flame_material")
+radius = 0.03
+height = 0.12
+radial_segments = 6
+rings = 3
+
+[sub_resource type="StandardMaterial3D" id="banner_material"]
+albedo_color = Color(0.16, 0.24, 0.52, 1)
+roughness = 0.95
+
+[sub_resource type="BoxMesh" id="banner"]
+material = SubResource("banner_material")
+size = Vector3(1.1, 2.4, 0.04)
+
+[sub_resource type="StandardMaterial3D" id="gold_material"]
+albedo_color = Color(0.86, 0.66, 0.26, 1)
+metallic = 0.6
+roughness = 0.4
+
+[sub_resource type="BoxMesh" id="diamond"]
+material = SubResource("gold_material")
+size = Vector3(0.42, 0.42, 0.03)
+
+[sub_resource type="StandardMaterial3D" id="core_material"]
+cull_mode = 1
+albedo_color = Color(0.2, 0.17, 0.15, 1)
+roughness = 1.0
+
+[sub_resource type="BoxMesh" id="core"]
+material = SubResource("core_material")
+size = Vector3(1.4, 5.9, 12)
+
+[node name="LibraryRoom" type="Node3D"]
+
+[node name="Eye" type="Marker3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 0.99863, 0.05234, 0, -0.05234, 0.99863, 0, 1.3, 5.2)
+
+[node name="Lamp" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 2.8)
+light_color = Color(1, 0.84, 0.62, 1)
+light_energy = 1.3
+omni_range = 8.0
+
+[node name="Room" type="Node3D" parent="."]
+
+[node name="Floor" type="MeshInstance3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, -1.14, 0.9)
+mesh = SubResource("floor")
+
+[node name="LeftWall0" parent="Room" instance=ExtResource("4_wall")]
+transform = Transform3D(0, 0, 1.5, 0, 1.5, 0, -1.5, 0, 0, -8.25, -1.15, -2.2)
+
+[node name="LeftWall1" parent="Room" instance=ExtResource("4_wall")]
+transform = Transform3D(0, 0, 1.5, 0, 1.5, 0, -1.5, 0, 0, -8.25, -1.15, 3.8)
+
+[node name="LeftCore" type="MeshInstance3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.25, 1.8, 0.8)
+mesh = SubResource("core")
+
+[node name="Wall0" parent="Room" instance=ExtResource("4_wall")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -4.5, -1.15, -5.2)
+
+[node name="Wall1" parent="Room" instance=ExtResource("5_wall_half")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -1.5, -1.15, -5.2)
+
+[node name="Sill" parent="Room" instance=ExtResource("4_wall")]
+transform = Transform3D(1.5, 0, 0, 0, 0.35, 0, 0, 0, 1.5, 4.5, -1.15, -5.2)
+
+[node name="Lintel" parent="Room" instance=ExtResource("4_wall")]
+transform = Transform3D(1.5, 0, 0, 0, 0.5, 0, 0, 0, 1.5, 4.5, 2.85, -5.2)
+
+[node name="Wall3" parent="Room" instance=ExtResource("4_wall")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 10.5, -1.15, -5.2)
+
+[node name="Case0" parent="Room" instance=ExtResource("2_case")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, -5.9, -1.15, -4.2)
+
+[node name="Desk" parent="Room" instance=ExtResource("1_desk")]
+
+[node name="Pillar" parent="Room" instance=ExtResource("6_pillar")]
+transform = Transform3D(0.6, 0, 0, 0, 1.5, 0, 0, 0, 0.6, 1.5, -1.15, -4.3)
+
+[node name="Case2" parent="Room" instance=ExtResource("2_case")]
+transform = Transform3D(0.513, 0, 1.41, 0, 1.5, 0, -1.41, 0, 0.513, -6.8, -1.15, 1.2)
+
+[node name="Banner" type="MeshInstance3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.6, 2.0, -4.42)
+mesh = SubResource("banner")
+
+[node name="Diamond" type="MeshInstance3D" parent="Room/Banner"]
+transform = Transform3D(0.707, -0.707, 0, 0.707, 0.707, 0, 0, 0, 1, 0, -0.2, 0.035)
+mesh = SubResource("diamond")
+
+[node name="TorchL" parent="Room" instance=ExtResource("7_torch")]
+transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, -3.8, 2.4, -4.5)
+
+[node name="TorchLLight" type="OmniLight3D" parent="Room/TorchL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0.4)
+light_color = Color(1, 0.62, 0.3, 1)
+light_energy = 1.6
+omni_range = 4.5
+
+[node name="TorchR" parent="Room" instance=ExtResource("7_torch")]
+transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, 0.6, 2.4, -4.5)
+
+[node name="TorchRLight" type="OmniLight3D" parent="Room/TorchR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0.4)
+light_color = Color(1, 0.62, 0.3, 1)
+light_energy = 1.6
+omni_range = 4.5
+
+[node name="CandlesL" parent="Room" instance=ExtResource("3_candles")]
+transform = Transform3D(2.2, 0, 0, 0, 2.2, 0, 0, 0, 2.2, -3.25, 0, -0.3)
+
+[node name="Flame0" type="MeshInstance3D" parent="Room/CandlesL"]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -0.08, 0.37, 0.02)
+mesh = SubResource("flame")
+
+[node name="Flame1" type="MeshInstance3D" parent="Room/CandlesL"]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0.06, 0.27, -0.04)
+mesh = SubResource("flame")
+
+[node name="Flame2" type="MeshInstance3D" parent="Room/CandlesL"]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0.1, 0.17, 0.08)
+mesh = SubResource("flame")
+
+[node name="Light" type="OmniLight3D" parent="Room/CandlesL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0.1)
+light_color = Color(1, 0.7, 0.4, 1)
+light_energy = 0.8
+omni_range = 2.5
+
+[node name="CandlesR" parent="Room" instance=ExtResource("3_candles")]
+transform = Transform3D(-2.2, 0, 0, 0, 2.2, 0, 0, 0, -2.2, 3.25, 0, -0.35)
+
+[node name="Flame0" type="MeshInstance3D" parent="Room/CandlesR"]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -0.08, 0.37, 0.02)
+mesh = SubResource("flame")
+
+[node name="Flame1" type="MeshInstance3D" parent="Room/CandlesR"]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0.06, 0.27, -0.04)
+mesh = SubResource("flame")
+
+[node name="Flame2" type="MeshInstance3D" parent="Room/CandlesR"]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0.1, 0.17, 0.08)
+mesh = SubResource("flame")
+
+[node name="Light" type="OmniLight3D" parent="Room/CandlesR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0.1)
+light_color = Color(1, 0.7, 0.4, 1)
+light_energy = 0.8
+omni_range = 2.5
+
+[node name="Outside" type="Node3D" parent="."]
+
+[node name="Pine0" parent="Outside" instance=ExtResource("8_pine")]
+transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, 3.6, -1.2, -17)
+
+[node name="Pine1" parent="Outside" instance=ExtResource("9_pine_snow")]
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 7.5, -1.2, -20)
+
+[node name="Pine2" parent="Outside" instance=ExtResource("8_pine")]
+transform = Transform3D(1.3, 0, 0, 0, 1.3, 0, 0, 0, 1.3, 2.0, -1.2, -24)
+
+[node name="Pine3" parent="Outside" instance=ExtResource("9_pine_snow")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 11.0, -1.2, -26)
+
+[node name="Books" type="Node3D" parent="."]
+unique_name_in_owner = true

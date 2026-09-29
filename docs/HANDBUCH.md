@@ -50,7 +50,7 @@ die Skillpunkte, die du noch nicht ausgegeben hast.
 
 Die Knöpfe links:
 
-- **„Lernen“** (golden) – zur Buchauswahl und von dort über die Landkarte des Buchs in ein
+- **„Lernen“** (golden) – in die Bibliothek und von dort über die Landkarte des Buchs in ein
   Level oder zum Boss einer Unit (Kapitel 10).
 - **„Fähigkeiten“** – Skillpunkte ausgeben (Kapitel 11).
 - **„Statistik“** – dein Lernstand (Kapitel 12).
@@ -447,12 +447,13 @@ aktuelle Stand steigen um denselben Betrag.
 
 „Lernen“ führt über drei Stufen in den Kampf:
 
-1. **Buchauswahl.** Die Bücher stehen mit dem Rücken nach vorn in einem Regal; je mehr
-   Units, desto dicker das Buch. Jede Sprache hat ihr eigenes Fach: oben Englisch, darunter
-   Latein (mit ↑/↓ wechselst du das Fach). Zeigt die Maus auf ein Buch (oder mit ←/→), wird es
-   herausgezogen und zeigt sein Cover: oben die Landkarte des Buchs im Goldrahmen,
-   darunter die Sprache (Englisch oder Latein) und der Stand – wie viele Wörter gemeistert
-   und wie viele Bosse besiegt sind. Latein hat noch keinen Bosskampf; das Cover sagt
+1. **Bibliothek.** Die Kamera fährt vom Hauptmenü in den Turm; dort stehen die Bücher
+   nebeneinander auf einem Lesepult, das Cover nach vorn. Je mehr Units, desto dicker das
+   Buch; erst Englisch, dann Latein. Passen nicht alle aufs Pult, blätterst du mit den
+   Pfeilen links und rechts. Zeigt die Maus auf den Platz eines Buchs (oder mit ←/→), wird
+   es vom Pult genommen: es kommt groß nach vorn, leuchtet golden und zeigt auf dem Cover
+   unter der Landkarte seinen Stand – wie viele Wörter gemeistert und wie viele Bosse
+   besiegt sind. Latein hat noch keinen Bosskampf; das Cover sagt
    „Noch kein Bosskampf“, und der Boss auf der Gebietskarte bleibt gesperrt.
    Die Festungsstufe steht nicht auf dem Cover, sie gilt je Unit (siehe Buchkarte). Ein
    Klick (oder Enter) schlägt das Buch auf; auf der Doppelseite liegt die Landkarte, und

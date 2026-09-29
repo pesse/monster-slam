@@ -59,7 +59,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_back_to_shelf()
 
 
-## Zurück ins Regal: die Buchauswahl fliegt aus dem offenen Buch heraus und schlägt es zu.
+## Zurück in die Bibliothek: sie fliegt aus dem offenen Buch heraus und schlägt es zu.
 func _back_to_shelf() -> void:
 	MapSelection.to_shelf = true
 	get_tree().change_scene_to_file(MapSelection.BOOKS_SCENE)

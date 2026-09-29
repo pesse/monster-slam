@@ -30,6 +30,9 @@ mitlernen lässt —, zunächst ohne Bosskampf.
 6. **Gemeinsames Regal, ein Fach je Sprache.** Englisch steht oben, jede weitere Sprache
    in einem Fach darunter (`BookSelect.shelf_rows`); das Cover nennt die Sprache
    (`ContentRegistry.book_language`). Eine Sprachwahl je Profil gibt es nicht.
+   *Nachtrag:* Seit der Bibliothek im Turm der Menü-Kulisse gibt es keine Fächer mehr,
+   sondern eine Reihe auf dem Lesepult; `shelf_rows` legt weiter die Reihenfolge fest
+   (Englisch zuerst, dann die übrigen Sprachen alphabetisch).
 
 ## Folgen
 

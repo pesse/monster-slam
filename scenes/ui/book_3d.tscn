@@ -1,7 +1,10 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://src/ui/book_3d.gd" id="1_book"]
 [ext_resource type="Script" path="res://src/ui/ornate_frame.gd" id="2_frame"]
+[ext_resource type="Shader" path="res://assets/shaders/book_glow.gdshader" id="9_glow"]
+[ext_resource type="Texture2D" path="res://assets/ui/library/cover_cloth.webp" id="10_cloth"]
+[ext_resource type="Texture2D" path="res://assets/ui/library/cover_corner.webp" id="11_corner"]
 
 [sub_resource type="StandardMaterial3D" id="paper"]
 albedo_color = Color(0.8, 0.75, 0.64, 1)
@@ -13,11 +16,20 @@ albedo_color = Color(0.85, 0.66, 0.3, 1)
 metallic = 0.6
 roughness = 0.4
 
+[sub_resource type="ShaderMaterial" id="glow"]
+shader = ExtResource("9_glow")
+
 [node name="Book3D" type="Node3D"]
 script = ExtResource("1_book")
 
 [node name="Body" type="Node3D" parent="."]
 unique_name_in_owner = true
+
+[node name="Glow" type="MeshInstance3D" parent="Body"]
+unique_name_in_owner = true
+visible = false
+material_override = SubResource("glow")
+cast_shadow = 0
 
 [node name="Back" type="MeshInstance3D" parent="Body"]
 unique_name_in_owner = true
@@ -68,21 +80,72 @@ unique_name_in_owner = true
 disable_3d = true
 size = Vector2i(264, 420)
 
-[node name="Paper" type="ColorRect" parent="Art"]
+[node name="Paper" type="TextureRect" parent="Art"]
 unique_name_in_owner = true
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.16, 0.33, 0.62, 1)
+texture = ExtResource("10_cloth")
+stretch_mode = 1
+
+[node name="CornerTop" type="TextureRect" parent="Art"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -64.0
+offset_bottom = 64.0
+grow_horizontal = 0
+texture = ExtResource("11_corner")
+expand_mode = 1
+
+[node name="CornerBottom" type="TextureRect" parent="Art"]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -64.0
+offset_top = -64.0
+grow_horizontal = 0
+grow_vertical = 0
+texture = ExtResource("11_corner")
+expand_mode = 1
+flip_v = true
+
+[node name="Head" type="VBoxContainer" parent="Art"]
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 0.22
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+grow_horizontal = 2
+theme_type_variation = &"Tight"
+alignment = 1
+
+[node name="Title" type="Label" parent="Art/Head"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"CoverTitle"
+text = "Buch"
+horizontal_alignment = 1
+text_overrun_behavior = 3
+
+[node name="Language" type="Label" parent="Art/Head"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"CoverNote"
+text = "Sprache"
+horizontal_alignment = 1
 
 [node name="Frame" type="Control" parent="Art"]
 anchors_preset = -1
+anchor_top = 0.23
 anchor_right = 1.0
-anchor_bottom = 0.5
+anchor_bottom = 0.61
 offset_left = 16.0
-offset_top = 16.0
 offset_right = -16.0
 grow_horizontal = 2
 script = ExtResource("2_frame")
@@ -101,51 +164,42 @@ grow_vertical = 2
 expand_mode = 1
 stretch_mode = 6
 
-[node name="Print" type="MarginContainer" parent="Art"]
-theme_type_variation = &"ScreenMargin"
+[node name="Stats" type="VBoxContainer" parent="Art"]
+unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0)
 anchors_preset = -1
-anchor_top = 0.5
+anchor_top = 0.63
 anchor_right = 1.0
-anchor_bottom = 1.0
+anchor_bottom = 0.87
+offset_left = 32.0
+offset_right = -32.0
 grow_horizontal = 2
-grow_vertical = 2
-
-[node name="Lines" type="VBoxContainer" parent="Art/Print"]
-theme_type_variation = &"Tight"
-layout_mode = 2
 alignment = 1
+theme_type_variation = &"Tight"
 
-[node name="Language" type="Label" parent="Art/Print/Lines"]
+[node name="Words" type="Label" parent="Art/Stats"]
 unique_name_in_owner = true
-theme_type_variation = &"Hint"
 layout_mode = 2
-text = "Sprache"
+theme_type_variation = &"CoverStat"
+text = "📖 0 / 0"
 horizontal_alignment = 1
 
-[node name="Title" type="Label" parent="Art/Print/Lines"]
-unique_name_in_owner = true
-theme_type_variation = &"Title"
+[node name="WordsNote" type="Label" parent="Art/Stats"]
 layout_mode = 2
-text = "Buch"
+theme_type_variation = &"CoverNote"
+text = "Wörter gemeistert"
 horizontal_alignment = 1
 
-[node name="Words" type="Label" parent="Art/Print/Lines"]
+[node name="Bar" type="ProgressBar" parent="Art/Stats"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
-text = "0 von 0 Wörtern gemeistert"
-horizontal_alignment = 1
-autowrap_mode = 3
-
-[node name="Bar" type="ProgressBar" parent="Art/Print/Lines"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 8)
-layout_mode = 2
+theme_type_variation = &"XpBar"
 show_percentage = false
 
-[node name="Crowns" type="Label" parent="Art/Print/Lines"]
+[node name="Crowns" type="Label" parent="Art/Stats"]
 unique_name_in_owner = true
-theme_type_variation = &"Accent"
 layout_mode = 2
-text = "👑 0 von 0 Bossen besiegt"
+theme_type_variation = &"CoverNote"
+text = "👑 0 / 0 Bosse besiegt"
 horizontal_alignment = 1
-autowrap_mode = 3

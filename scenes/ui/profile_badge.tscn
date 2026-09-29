@@ -1,0 +1,79 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://src/ui/profile_badge.gd" id="1_badge"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/profile.webp" id="2_bust"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/switch_profile.webp" id="3_switch"]
+
+[node name="ProfileBadge" type="PanelContainer"]
+custom_minimum_size = Vector2(352, 88)
+theme_type_variation = &"ProfilePlate"
+script = ExtResource("1_badge")
+
+[node name="Stack" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_type_variation = &"Tight"
+
+[node name="Top" type="HBoxContainer" parent="Stack"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ProfileIcon" type="TextureRect" parent="Stack/Top"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+texture = ExtResource("2_bust")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Who" type="VBoxContainer" parent="Stack/Top"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"Tight"
+
+[node name="ProfileLabel" type="Label" parent="Stack/Top/Who"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SectionTitle"
+text = "Spieler"
+
+[node name="LevelLabel" type="Label" parent="Stack/Top/Who"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Hint"
+text = "Level 1"
+
+[node name="XpBar" type="ProgressBar" parent="Stack/Top"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_type_variation = &"XpBar"
+show_percentage = false
+
+[node name="XpLabel" type="Label" parent="Stack/Top"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"Hint"
+text = "0 / 100 XP"
+horizontal_alignment = 2
+
+[node name="Link" type="HBoxContainer" parent="Stack"]
+layout_mode = 2
+theme_type_variation = &"Tight"
+
+[node name="Step" type="Control" parent="Stack/Link"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.27
+mouse_filter = 2
+
+[node name="SwitchButton" type="Button" parent="Stack/Link"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_type_variation = &"ProfileLink"
+text = "Profil wechseln"
+icon = ExtResource("3_switch")
+flat = true

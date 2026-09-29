@@ -7,7 +7,11 @@ extends Node
 ##     … -- --shoot --size=1920x1080     anderes Fenster (Bezugsgröße bleibt 1152×648)
 ##     … -- --shoot --backdrop           nur die Kulisse, ohne Menü
 ##     … -- --shoot --intro              „Wer spielt?" statt des Menüs
-##     … -- --shoot --intro --slide=0.5  mitten im Schieben (0 = „Wer spielt?", 1 = Menü)
+##     … -- --shoot --intro --slide=0.5  mitten im Schieben (0 = „Wer spielt?", 1 = Menü,
+##                                       2 = Bibliothek)
+##     … -- --shoot --library            die Bibliothek (kein Buch herausgenommen)
+##     … -- --shoot --library --book=<id> … mit diesem Buch herausgenommen
+##     … -- --shoot --to-library         schiebt wie „Lernen" in die Bibliothek
 ##     … -- --shoot --intro --to-menu    schiebt wie „Weiter" ins Menü (ohne Profilwechsel)
 ##
 ## Das Menü liest das aktive Profil nur (Name, Gold, Level); geschrieben wird nichts.
@@ -31,8 +35,22 @@ func _ready() -> void:
 	add_child(screen)
 	var slide := _arg("slide")
 	if screen is ProfileMenu and not slide.is_empty():
-		screen.get_node("%MenuPage").visible = true
+		for page in ["%Intro", "%MenuPage", "%Library"]:
+			screen.get_node(page).visible = true
+		if float(slide) > ProfileMenu.MENU:
+			(screen.get_node("%Library") as BookSelect).enter()
 		(screen as ProfileMenu).call("_show_page", float(slide))
+	if not _arg("book").is_empty():
+		MapSelection.book = _arg("book")
+	if screen is ProfileMenu and _has_arg("library"):
+		(screen as ProfileMenu).call("_open_library")
+		var library := screen.get_node("%Library") as BookSelect
+		var book := library.call("_book_of", MapSelection.book) as Book3D
+		if book != null:
+			library.call("_select", book.get_index())
+	if screen is ProfileMenu and _has_arg("to-library"):
+		get_tree().create_timer(0.5).timeout.connect(
+				func(): (screen as ProfileMenu).call("_open_library"))
 	if screen is ProfileMenu and _has_arg("to-menu"):
 		get_tree().create_timer(0.5).timeout.connect(
 				func(): (screen as ProfileMenu).call("_slide_to", ProfileMenu.MENU))
@@ -47,6 +65,10 @@ func _shoot() -> void:
 	DirAccess.make_dir_recursive_absolute(dir)
 	var img := get_viewport().get_texture().get_image()
 	var what := "backdrop" if _has_arg("backdrop") else ("intro" if _has_arg("intro") else "menu")
+	if _has_arg("library"):
+		what = "library"
+	if _has_arg("to-library"):
+		what += "_to_library"
 	if _has_arg("to-menu"):
 		what += "_to_menu"
 	if not _arg("slide").is_empty():

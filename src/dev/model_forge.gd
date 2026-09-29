@@ -107,6 +107,10 @@ func _initialize() -> void:
 	_export("fence", _fence())
 	_export("market_stall", _market_stall())
 	_export("sword", _sword())
+	# Bibliothek (scenes/ui/book_select.tscn) — kein Platz im BattleTheme.
+	_export("bookcase", _bookcase())
+	_export("candles", _candles())
+	_export("reading_desk", _reading_desk())
 	quit()
 
 
@@ -1953,6 +1957,98 @@ func _sword() -> Forge:
 		f.tri_out(lo[j], lo[k], hi[k], col, inside)
 		f.tri_out(lo[j], hi[k], hi[j], col, inside)
 		f.tri_out(hi[j], hi[k], tip, col, Vector3(0, y1, 0))
+	return f
+
+
+const CASE_A := Color(0.42, 0.25, 0.13)
+const CASE_B := Color(0.32, 0.18, 0.09)
+const SPINES := [
+	Color(0.55, 0.14, 0.12), Color(0.16, 0.26, 0.5), Color(0.2, 0.38, 0.22),
+	Color(0.5, 0.34, 0.16), Color(0.36, 0.2, 0.42), Color(0.7, 0.55, 0.3),
+	Color(0.26, 0.16, 0.1),
+]
+
+
+## Bücherregal: Rahmen, Rückwand, fünf Fächer voller Buchrücken in wechselnder Höhe und
+## Farbe, hier und da eine Lücke und ein schräg gelehntes Buch. Etwa 2.0 breit, 3.0 hoch,
+## 0.5 tief, vorn +z.
+func _bookcase() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(73)
+	var w := 2.0
+	var h := 3.0
+	var d := 0.5
+	var board := 0.08
+	f.box(Vector3(-w * 0.5 + board * 0.5, h * 0.5, 0), Vector3(board, h, d), CASE_A, 0.0)
+	f.box(Vector3(w * 0.5 - board * 0.5, h * 0.5, 0), Vector3(board, h, d), CASE_A, 0.0)
+	f.box(Vector3(0, h - board * 0.5, 0.02), Vector3(w + 0.12, board, d + 0.06), CASE_A, 0.0)
+	f.box(Vector3(0, board * 0.5, 0.02), Vector3(w + 0.06, board * 1.5, d + 0.04), CASE_B, 0.0)
+	f.box(Vector3(0, h * 0.5, -d * 0.5 + 0.02), Vector3(w - 0.1, h - 0.1, 0.04), CASE_B, 0.0)
+	var rows := 5
+	var inner := (h - 2.0 * board) / rows
+	for r in rows:
+		var floor_y := board * 1.5 + r * inner
+		if r > 0:
+			f.box(Vector3(0, floor_y - board * 0.25, 0), Vector3(w - 2.0 * board, board * 0.5, d - 0.04),
+					CASE_A, 0.0)
+		var x := -w * 0.5 + board + 0.03
+		var end := w * 0.5 - board - 0.03
+		while x < end - 0.06:
+			if rng.randf() < 0.08:
+				x += rng.randf_range(0.12, 0.3)
+				continue
+			var t := rng.randf_range(0.05, 0.1)
+			var bh := rng.randf_range(0.6, 0.9) * (inner - 0.08)
+			var col: Color = SPINES[rng.randi() % SPINES.size()]
+			if rng.randf() < 0.06 and x + bh < end:
+				# Ein gelehntes Buch: unten an seinem Platz, oben an den Nachbarn gelehnt.
+				var lean := rng.randf_range(0.35, 0.6)
+				var cx := x + sin(lean) * bh * 0.5 + t * 0.5
+				f.box(Vector3(cx, floor_y + cos(lean) * bh * 0.5, 0.02), Vector3(0.34, bh, t), col,
+						PI * 0.5, -lean)
+				x += sin(lean) * bh + t + 0.02
+				continue
+			f.box(Vector3(x + t * 0.5, floor_y + bh * 0.5, 0.03 + rng.randf_range(-0.02, 0.02)),
+					Vector3(t, bh, 0.34), col, 0.0)
+			x += t + rng.randf_range(0.0, 0.01)
+	return f
+
+
+const WAX_A := Color(0.95, 0.9, 0.78)
+const WAX_B := Color(0.86, 0.8, 0.66)
+const WICK := Color(0.12, 0.1, 0.08)
+
+
+## Drei Kerzen verschiedener Höhe auf einem Klecks Wachs; die Flamme setzt die Szene dazu
+## (leuchtend, das kann ein .glb ohne Material nicht). Die Dochte enden bei `candle_tops`.
+func _candles() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(79)
+	f.lump(Vector3(0, 0.0, 0), Vector3(0.2, 0.03, 0.16), 2, 7, rng, 0.0,
+			func(_m: Vector3, _n: Vector3) -> Color: return WAX_B, 0.0)
+	for top: Vector3 in CANDLE_TOPS:
+		var base := Vector3(top.x, 0.0, top.z)
+		f.frustum(base, top - Vector3(0, 0.02, 0), 0.045, 0.04, 7, WAX_A, rng.randf(), WAX_B)
+		f.frustum(top - Vector3(0, 0.025, 0), top + Vector3(0, 0.02, 0), 0.006, 0.004, 4, WICK)
+	return f
+
+
+## Wo die Dochte der drei Kerzen enden — dort sitzen in der Szene die Flammen.
+const CANDLE_TOPS := [Vector3(-0.08, 0.34, 0.02), Vector3(0.06, 0.24, -0.04), Vector3(0.1, 0.14, 0.08)]
+
+
+## Das Lesepult, auf dem die Bücher stehen: eine lange Platte mit Kante, Zarge und vier
+## Beinen. Etwa 7.2 breit, 1.5 tief; die Oberfläche liegt bei y = 0.
+func _reading_desk() -> Forge:
+	var f := Forge.new()
+	var w := 7.2
+	var d := 1.5
+	f.box(Vector3(0, -0.06, 0), Vector3(w, 0.12, d), CASE_A, 0.0)
+	f.box(Vector3(0, -0.14, d * 0.5 - 0.03), Vector3(w + 0.04, 0.06, 0.08), CASE_B, 0.0)
+	f.box(Vector3(0, -0.3, 0), Vector3(w - 0.3, 0.28, d - 0.2), CASE_B, 0.0)
+	for x in [-w * 0.5 + 0.2, w * 0.5 - 0.2]:
+		for z in [-d * 0.5 + 0.18, d * 0.5 - 0.18]:
+			f.box(Vector3(x, -0.6, z), Vector3(0.16, 1.1, 0.16), CASE_B, 0.0)
 	return f
 
 

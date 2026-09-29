@@ -3,6 +3,7 @@ extends GdUnitTestSuite
 ## laden (ADR 0006).
 
 const BOOKS_SCENE := preload("res://scenes/ui/book_select.tscn")
+const BACKDROP_SCENE := preload("res://scenes/ui/menu_backdrop.tscn")
 const BOOK_SCENE := preload("res://scenes/ui/book_map.tscn")
 const AREA_SCENE := preload("res://scenes/ui/area_map.tscn")
 
@@ -408,8 +409,8 @@ func test_the_binding_has_a_round_spine_and_a_groove() -> void:
 	assert_int(mesh.get_surface_count()).is_equal(1)
 
 
-## Je Sprache ein Regalfach: Englisch oben, die übrigen alphabetisch darunter; innerhalb
-## eines Fachs bleibt die Reihenfolge der Bücher.
+## Die Reihe auf dem Pult geht nach Sprache: Englisch zuerst, die übrigen alphabetisch
+## danach; innerhalb einer Sprache bleibt die Reihenfolge der Bücher.
 func test_each_language_gets_its_own_shelf_row() -> void:
 	var language := {"b1": "la", "a1": "en", "a2": "en", "c1": "fr"}
 	var rows: Array = load("res://src/ui/book_select.gd").shelf_rows(
@@ -429,35 +430,40 @@ func test_the_cover_names_the_language_and_a_missing_boss() -> void:
 	remove_child(book)
 
 
-## Im Regal zeigt das Buch den Rücken; ausgewählt kommt es nach vorn und zeigt das Cover.
+## Auf dem Pult steht das Buch leicht schräg; ausgewählt kommt es nach vorn, steht gerade,
+## rückt ein Stück zur Bildmitte und zeigt seinen Stand. Aufgeschlagen steht der Bund dort.
 func test_a_selected_book_comes_out_and_turns() -> void:
 	var book: Book3D = auto_free(load("res://scenes/ui/book_3d.tscn").instantiate())
 	add_child(book)
+	book.center_x = 1.0
 	book.fill("Buch", null, 0, {"units": 2, "done": 3, "total": 10, "crowns": 1})
-	assert_str((book.get_node("%Crowns") as Label).text).contains("1 von 2")
+	assert_str((book.get_node("%Crowns") as Label).text).contains("1 / 2")
 	var body := book.get_node("%Body") as Node3D
-	# Rücken (-X der Buchlage) zeigt zur Kamera (+Z).
-	assert_float((body.global_basis * Vector3.LEFT).z).is_equal_approx(1.0, 0.001)
+	var stats := book.get_node("%Stats") as Control
+	# Cover (+Z der Buchlage) um SLOT_ANGLE gedreht, der Stand verborgen.
+	assert_float((body.global_basis * Vector3.BACK).z).is_equal_approx(cos(deg_to_rad(Book3D.SLOT_ANGLE)), 0.001)
+	assert_float(stats.modulate.a).is_equal(0.0)
 	book.set_selected(true)
 	for i in 40:
 		book._process(0.02)
 	assert_float(book.lift).is_equal(1.0)
-	# Ausgewählt leicht schräg (Rücken bleibt sichtbar), beim Öffnen ganz zur Kamera.
-	assert_float((body.global_basis * Vector3.BACK).z).is_equal_approx(cos(deg_to_rad(Book3D.SHOWN_ANGLE)), 0.001)
-	assert_float(body.position.z).is_greater(Book3D.WIDTH * 0.5)
-	# Aufschlagen: gerade zur Kamera, der Deckel geht nach links auf, die Doppelseite liegt offen.
+	assert_float((body.global_basis * Vector3.BACK).z).is_equal_approx(1.0, 0.001)
+	assert_float(body.position.z).is_equal_approx(Book3D.PULL, 0.001)
+	assert_float(body.position.x).is_equal_approx(Book3D.TOWARD, 0.001)
+	assert_float(stats.modulate.a).is_equal(1.0)
+	# Aufschlagen: der Deckel geht nach links auf, der Bund steht in der Bildmitte.
 	book.open_book()
 	for i in 80:
 		book._process(0.02)
 	assert_bool(book.is_facing()).is_true()
 	assert_bool(book.is_spread_open()).is_true()
-	assert_float((body.global_basis * Vector3.BACK).z).is_equal_approx(1.0, 0.001)
 	var hinge := book.get_node("%Hinge") as Node3D
 	assert_float((hinge.global_basis * Vector3.RIGHT).x).is_equal_approx(-1.0, 0.001)
+	var bund := body.global_transform * Vector3(Book3D.hinge_x(), 0, 0)
+	assert_float(bund.x).is_equal_approx(book.center_x, 0.001)
 	# Der Blick ins Buch: mittig vor dem Bund, senkrecht auf die Doppelseite, so nah, dass die
 	# Karte an der knapperen Achse gerade randlos ist.
 	var view := book.spread_view(40.0, 16.0 / 9.0)
-	var bund := (book.get_node("%Body") as Node3D).global_transform * Vector3(Book3D.hinge_x(), 0, 0)
 	assert_float(view.origin.x).is_equal_approx(bund.x, 0.001)
 	assert_float(view.basis.z.z).is_equal_approx(1.0, 0.001)
 	var visible_height := 2.0 * (view.origin.z - bund.z - book.thickness * 0.5 + Book3D.BOARD) * tan(deg_to_rad(20.0))
@@ -473,13 +479,33 @@ func test_a_selected_book_comes_out_and_turns() -> void:
 	remove_child(book)
 
 
-## Ein Strahl von vorn trifft den Rücken im Regal, daneben nichts.
-func test_a_ray_hits_the_spine_in_the_shelf() -> void:
+## Gezielt wird auf den Platz in der Reihe: ein Strahl von vorn trifft das schräge Cover,
+## daneben nichts. Herausgenommen trifft `hit` weiter den Platz, `hit_body` das Buch vorn.
+func test_a_ray_hits_the_book_on_its_place() -> void:
 	var book: Book3D = auto_free(load("res://scenes/ui/book_3d.tscn").instantiate())
 	add_child(book)
-	assert_float(book.hit(Vector3(0, 0, 5), Vector3.FORWARD)).is_equal_approx(5.0 - Book3D.WIDTH * 0.5, 0.001)
+	var on_place := 5.0 - book.thickness * 0.5 / cos(deg_to_rad(Book3D.SLOT_ANGLE))
+	assert_float(book.hit(Vector3(0, 0, 5), Vector3.FORWARD)).is_equal_approx(on_place, 0.001)
 	assert_float(book.hit(Vector3(1, 0, 5), Vector3.FORWARD)).is_equal(INF)
+	book.set_selected(true)
+	for i in 40:
+		book._process(0.02)
+	assert_float(book.hit(Vector3(0, 0, 5), Vector3.FORWARD)).is_equal_approx(on_place, 0.001)
+	assert_float(book.hit_body(Vector3(0, 0, 5), Vector3.FORWARD)) \
+			.is_equal_approx(5.0 - Book3D.PULL - book.thickness * 0.5, 0.001)
 	remove_child(book)
+
+
+## Jede Seite der Reihe steht mittig auf dem Pult, auch eine letzte, nicht volle.
+func test_each_page_of_the_row_is_centered() -> void:
+	var slot_x := BookSelect.slot_x
+	var width := BookSelect.SLOT_WIDTH
+	assert_float(slot_x.call(0, 1)).is_equal_approx(0.0, 0.001)
+	assert_float(slot_x.call(0, 4) + slot_x.call(3, 4)).is_equal_approx(0.0, 0.001)
+	# Die zweite Seite beginnt eine Seitenbreite weiter; zwei Bücher darauf stehen um ihre Mitte.
+	var page := BookSelect.SLOTS * width
+	assert_float(slot_x.call(BookSelect.SLOTS, 2) - page).is_equal_approx(-width * 0.5, 0.001)
+	assert_float(slot_x.call(BookSelect.SLOTS + 1, 2) - page).is_equal_approx(width * 0.5, 0.001)
 
 
 # --- Screens ------------------------------------------------------------------
@@ -561,13 +587,22 @@ func test_every_area_image_has_a_point_for_every_level(do_skip := LanguageData.m
 						.is_true()
 
 
-func test_the_book_select_loads() -> void:
-	var screen: Control = auto_free(BOOKS_SCENE.instantiate())
+## Die Bibliothek stellt ihre Bücher in den Turm der Menü-Kulisse. Nach dem Hereinfahren
+## ist keines herausgenommen — das tut erst die Maus (oder ←/→).
+func test_the_library_fills_the_tower_and_takes_no_book_out() -> void:
+	var backdrop: MenuBackdrop = auto_free(BACKDROP_SCENE.instantiate())
+	add_child(backdrop)
+	var screen: BookSelect = auto_free(BOOKS_SCENE.instantiate())
 	add_child(screen)
+	screen.setup(backdrop)
+	screen.enter()
 	await get_tree().process_frame
-	var books := screen.get_node("%Books") as Node3D
+	var books := backdrop.library_books()
 	assert_int(books.get_child_count()).is_equal(ContentRegistry.all_books().size())
+	for book: Book3D in books.get_children():
+		assert_bool(book.selected).is_false()
 	remove_child(screen)
+	remove_child(backdrop)
 
 
 ## Mit Sprachdaten zeigt eine echte Unit ihre Level.

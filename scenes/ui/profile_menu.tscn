@@ -10,9 +10,9 @@
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/content.webp" id="8_content"]
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/settings.webp" id="9_settings"]
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/expert.webp" id="10_expert"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/profile.webp" id="11_profile"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/switch_profile.webp" id="12_switch"]
 [ext_resource type="PackedScene" path="res://scenes/ui/profile_pick.tscn" id="13_pick"]
+[ext_resource type="PackedScene" path="res://scenes/ui/profile_badge.tscn" id="14_badge"]
+[ext_resource type="PackedScene" path="res://scenes/ui/book_select.tscn" id="15_library"]
 
 [sub_resource type="Gradient" id="ShadeGradient"]
 colors = PackedColorArray(0.03, 0.04, 0.08, 0.6, 0.03, 0.04, 0.08, 0)
@@ -175,70 +175,9 @@ mouse_filter = 2
 [node name="Right" type="VBoxContainer" parent="Slide/MenuPage/Margin/Layout"]
 layout_mode = 2
 
-[node name="ProfilePlate" type="PanelContainer" parent="Slide/MenuPage/Margin/Layout/Right"]
-custom_minimum_size = Vector2(352, 88)
-layout_mode = 2
-theme_type_variation = &"ProfilePlate"
-
-[node name="Stack" type="VBoxContainer" parent="Slide/MenuPage/Margin/Layout/Right/ProfilePlate"]
-layout_mode = 2
-theme_type_variation = &"Tight"
-
-[node name="Top" type="HBoxContainer" parent="Slide/MenuPage/Margin/Layout/Right/ProfilePlate/Stack"]
-layout_mode = 2
-
-[node name="ProfileIcon" type="TextureRect" parent="Slide/MenuPage/Margin/Layout/Right/ProfilePlate/Stack/Top"]
-custom_minimum_size = Vector2(40, 40)
-layout_mode = 2
-texture = ExtResource("11_profile")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="Who" type="VBoxContainer" parent="Slide/MenuPage/Margin/Layout/Right/ProfilePlate/Stack/Top"]
-layout_mode = 2
-size_flags_vertical = 4
-theme_type_variation = &"Tight"
-
-[node name="ProfileLabel" type="Label" parent="Slide/MenuPage/Margin/Layout/Right/ProfilePlate/Stack/Top/Who"]
+[node name="ProfileBadge" parent="Slide/MenuPage/Margin/Layout/Right" instance=ExtResource("14_badge")]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"SectionTitle"
-text = "Spieler"
-
-[node name="LevelLabel" type="Label" parent="Slide/MenuPage/Margin/Layout/Right/ProfilePlate/Stack/Top/Who"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"Hint"
-text = "Level 1"
-
-[node name="Xp" type="VBoxContainer" parent="Slide/MenuPage/Margin/Layout/Right/ProfilePlate/Stack/Top"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-theme_type_variation = &"Tight"
-
-[node name="XpBar" type="ProgressBar" parent="Slide/MenuPage/Margin/Layout/Right/ProfilePlate/Stack/Top/Xp"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 12)
-layout_mode = 2
-theme_type_variation = &"XpBar"
-show_percentage = false
-
-[node name="XpLabel" type="Label" parent="Slide/MenuPage/Margin/Layout/Right/ProfilePlate/Stack/Top/Xp"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"Hint"
-text = "0 / 100 XP"
-horizontal_alignment = 2
-
-[node name="SwitchButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Right/ProfilePlate/Stack"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 8
-theme_type_variation = &"MenuLink"
-text = "Profil wechseln"
-icon = ExtResource("12_switch")
-flat = true
 
 [node name="GoldLabel" type="Label" parent="Slide/MenuPage/Margin/Layout/Right"]
 unique_name_in_owner = true
@@ -276,6 +215,13 @@ visible = false
 layout_mode = 2
 size_flags_horizontal = 8
 text = "⬆ Update verfügbar"
+
+[node name="Library" parent="Slide" instance=ExtResource("15_library")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchor_left = 2.0
+anchor_right = 3.0
 
 [node name="UpdateDialog" parent="." instance=ExtResource("2_update")]
 unique_name_in_owner = true

@@ -7,7 +7,7 @@ extends RefCounted
 ## im Deckel der Falz, eine kleine Rinne, an der der Deckel aufgeht. Die Profile tragen je
 ## Punkt, ob die Fläche dort glatt verläuft (Rundung, Rinne) oder eine Kante hat.
 
-## Punkte je Rundung: genug für eine glatte Kontur, wenig genug für viele Bücher im Regal.
+## Punkte je Rundung: genug für eine glatte Kontur, wenig genug für viele Bücher auf dem Pult.
 const ARC_STEPS := 10
 const GROOVE_STEPS := 6
 

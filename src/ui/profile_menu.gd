@@ -1,10 +1,12 @@
 class_name ProfileMenu
 extends Control
-## Start-Screen (run/main_scene) mit zwei Seiten vor derselben Kulisse: erst „Wer spielt?"
-## (profile_pick.tscn), dann das Hauptmenü. „Weiter" schiebt die Profilwahl nach links
-## hinaus und das Menü von rechts herein, die Kamera der Kulisse fährt mit; „Profil
-## wechseln" schiebt zurück. Wer aus einem anderen Screen hierher zurückkehrt, landet
-## gleich im Menü (`intro_done`).
+## Start-Screen (run/main_scene) mit drei Seiten in derselben Kulisse: „Wer spielt?"
+## (profile_pick.tscn), das Hauptmenü und die Bibliothek (book_select.tscn). „Weiter" schiebt
+## die Profilwahl nach links hinaus und das Menü von rechts herein, „Lernen" ebenso das Menü
+## und die Bibliothek; die Kamera der Kulisse fährt mit — zur Bibliothek durch die Mauer in
+## den Turm. „Zurück" und „Profil wechseln" schieben zurück. Wer aus einem anderen Screen
+## hierher zurückkehrt, landet gleich im Menü (`intro_done`), aus der Buchkarte in der
+## Bibliothek (MapSelection.to_shelf).
 ##
 ## Das Layout liegt in profile_menu.tscn (im Editor sichtbar, Entwurf unter
 ## assets/ui/main_menu/sources/); hier wird nur bedient und angezeigt. Hinter dem Menü
@@ -16,26 +18,26 @@ const SETTINGS_SCENE := "res://scenes/ui/settings_menu.tscn"
 const STATS_SCENE := "res://scenes/ui/stats_screen.tscn"
 const SKILL_SCENE := "res://scenes/ui/skill_tree.tscn"
 const CONTENT_SCENE := "res://scenes/ui/content_manager.tscn"
-## „Lernen" führt über die Karte (ADR 0006); das freie Zusammenstellen der Runde ist der
-## unauffällige Expertenmodus darunter.
-const BOOKS_SCENE := "res://scenes/ui/book_select.tscn"
 ## So lange blendet die Kulisse auf (s).
 const VEIL_FADE := 0.6
-## So lange schiebt die Seite (s).
+## So lange schiebt die Seite (s) zwischen „Wer spielt?" und Menü, und so lange zwischen
+## Menü und Bibliothek — dort ist der Weg weiter, durch die Mauer in den Turm.
 const SLIDE_TIME := 0.8
+const LIBRARY_SLIDE_TIME := 1.3
 ## So lange blendet der Schatten hinter den Menüknöpfen auf, wenn das Menü angekommen ist (s).
 const SHADE_FADE := 0.4
 const INTRO := 0.0
 const MENU := 1.0
+## „Lernen" führt über die Karte (ADR 0006); das freie Zusammenstellen der Runde ist der
+## unauffällige Expertenmodus darunter.
+const LIBRARY := 2.0
 
 ## Ob in diesem Programmlauf schon jemand „Wer spielt?" beantwortet hat. Statisch, weil
 ## jeder Rückweg aus Kampf, Karte oder Einstellungen diese Szene neu lädt.
 static var intro_done := false
 
 @onready var _gold_label: Label = %GoldLabel
-@onready var _level_label: Label = %LevelLabel
-@onready var _xp_bar: ProgressBar = %XpBar
-@onready var _xp_label: Label = %XpLabel
+@onready var _badge: ProfileBadge = %ProfileBadge
 @onready var _points_label: Label = %PointsLabel
 @onready var _update_button: Button = %UpdateButton
 @onready var _content_button: Button = %ContentButton
@@ -43,6 +45,7 @@ static var intro_done := false
 @onready var _play_hint: Label = %PlayHint
 @onready var _intro: ProfilePick = %Intro
 @onready var _menu_page: Control = %MenuPage
+@onready var _library: BookSelect = %Library
 @onready var _backdrop: MenuBackdrop = $Backdrop
 @onready var _shade: Control = %Shade
 
@@ -51,13 +54,16 @@ var _slide: Tween
 
 
 func _ready() -> void:
-	_play_button.pressed.connect(func(): get_tree().change_scene_to_file(BOOKS_SCENE))
+	_play_button.pressed.connect(_open_library)
+	_library.setup(_backdrop)
+	_library.back_requested.connect(func(): _slide_to(MENU))
+	_library.switch_requested.connect(_back_to_intro)
 	(%ExpertButton as Button).pressed.connect(
 			func(): get_tree().change_scene_to_file(SESSION_SETUP_SCENE))
 	(%SkillButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(SKILL_SCENE))
 	(%StatsButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(STATS_SCENE))
 	(%SettingsButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(SETTINGS_SCENE))
-	(%SwitchButton as Button).pressed.connect(_back_to_intro)
+	_badge.switch_pressed.connect(_back_to_intro)
 	_intro.picked.connect(_play_as)
 	_update_button.pressed.connect((%UpdateDialog as Control).open)
 	_content_button.pressed.connect(func(): get_tree().change_scene_to_file(CONTENT_SCENE))
@@ -67,7 +73,6 @@ func _ready() -> void:
 	PlayerLevel.changed.connect(func(_total_xp, _level): _refresh_level())
 	# Ausgegebene Punkte verändern dieselbe Zeile wie verdiente.
 	SkillBook.changed.connect(_refresh_level)
-	(%ProfileLabel as Label).text = UserSettings.display_name()
 	_refresh_gold()
 	_refresh_level()
 	_refresh_update_badge()
@@ -76,6 +81,15 @@ func _ready() -> void:
 	# Beide Kanäle still prüfen: das Abzeichen soll dastehen, ohne dass jemand nachsieht.
 	# Netzfehler bleiben in der Konsole (siehe UpdateService._fail / ContentService._fail).
 	ContentService.refresh()
+	if MapSelection.to_shelf:
+		MapSelection.to_shelf = false
+		_library.enter()
+		_show_page(LIBRARY)
+		_settle()
+		# Die Buchkarte deckt schon den Bildschirm; die Kulisse braucht keinen Schleier.
+		(%Veil as Control).visible = false
+		_library.return_from_book()
+		return
 	_show_page(MENU if intro_done else INTRO)
 	_settle()
 	_unveil()
@@ -88,7 +102,7 @@ func _play_as(id: String) -> void:
 	PlayerProgress.switch_to(id)
 	# Geldbörse, Erfahrung und Fähigkeiten schalten über
 	# UserSettings.active_profile_changed selbst um (siehe Wallet._ready / PlayerLevel._ready).
-	(%ProfileLabel as Label).text = UserSettings.display_name()
+	_badge.refresh()
 	_refresh_gold()
 	_refresh_level()
 	_slide_to(MENU)
@@ -99,24 +113,46 @@ func _back_to_intro() -> void:
 	_slide_to(INTRO)
 
 
+func _open_library() -> void:
+	# Die Bücher stehen, bevor die Seite hereinfährt — nichts baut sich im Bild auf.
+	_library.enter()
+	_slide_to(LIBRARY)
+
+
+func _pages() -> Array[Control]:
+	return [_intro, _menu_page, _library]
+
+
 func _slide_to(target: float) -> void:
 	if _slide != null:
 		_slide.kill()
-	# Beide Seiten stehen während der Fahrt; bedienbar ist keine, bis sie angekommen ist.
+	if _page >= LIBRARY - 0.01 and target < LIBRARY:
+		_library.leave()
+	# Alle Seiten auf dem Weg stehen während der Fahrt; bedienbar ist keine, bis sie
+	# angekommen ist.
 	get_viewport().gui_release_focus()
-	_intro.visible = true
-	_menu_page.visible = true
-	_intro.process_mode = Node.PROCESS_MODE_DISABLED
-	_menu_page.process_mode = Node.PROCESS_MODE_DISABLED
+	for i in _pages().size():
+		var page := _pages()[i]
+		page.visible = i >= floorf(minf(_page, target)) and i <= ceilf(maxf(_page, target))
+		page.process_mode = Node.PROCESS_MODE_DISABLED
 	# Der Schatten links hinter den Knöpfen endet mitten im Bild; mitgeschoben sähe er
 	# aus wie eine Kante. Er kommt erst, wenn das Menü steht (_settle).
 	_shade.modulate.a = 0.0
 	_slide = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
-	_slide.tween_method(_show_page, _page, target, SLIDE_TIME * absf(target - _page))
+	_slide.tween_method(_show_page, _page, target, _slide_time(_page, target))
 	_slide.tween_callback(_settle)
 
 
-## `page` 0 = „Wer spielt?", 1 = Menü. Über die Anker und nicht in Pixeln, damit eine
+## Wie lange die Fahrt von `from` nach `to` dauert: je Abschnitt seine eigene Zeit.
+static func _slide_time(from: float, to: float) -> float:
+	var low := minf(from, to)
+	var high := maxf(from, to)
+	var outside := maxf(0.0, minf(high, MENU) - low)
+	var inside := maxf(0.0, high - maxf(low, MENU))
+	return SLIDE_TIME * outside + LIBRARY_SLIDE_TIME * inside
+
+
+## `page` 0 = „Wer spielt?", 1 = Menü, 2 = Bibliothek. Über die Anker und nicht in Pixeln, damit eine
 ## Größenänderung des Fensters die Seiten nicht verrutscht.
 func _show_page(page: float) -> void:
 	_page = page
@@ -128,14 +164,13 @@ func _show_page(page: float) -> void:
 
 ## Die Seite außerhalb des Bildes ist aus — sonst fände die Tastatur dort Knöpfe.
 func _settle() -> void:
-	var on_intro := _page < 0.5
-	_intro.visible = on_intro
-	_menu_page.visible = not on_intro
-	_intro.process_mode = Node.PROCESS_MODE_INHERIT
-	_menu_page.process_mode = Node.PROCESS_MODE_INHERIT
-	if on_intro:
+	var at := roundi(_page)
+	for i in _pages().size():
+		_pages()[i].visible = i == at
+		_pages()[i].process_mode = Node.PROCESS_MODE_INHERIT
+	if at == INTRO:
 		_intro.focus_next()
-	elif _shade.modulate.a < 1.0:
+	elif at == MENU and _shade.modulate.a < 1.0:
 		create_tween().tween_property(_shade, "modulate:a", 1.0, SHADE_FADE)
 
 
@@ -157,19 +192,12 @@ func _refresh_gold() -> void:
 	_gold_label.text = "💰 %s" % Wallet.label()
 
 
-## Level und Stand im Level auf der Plakette, darunter die OFFENEN Skillpunkte. Leiser als
-## der Goldstand (MenuNote): die Entscheidung fällt nicht hier, sondern im
+## Unter der Plakette (ProfileBadge, sie zeigt Level und Stand selbst) die OFFENEN
+## Skillpunkte. Leiser als der Goldstand (MenuNote): die Entscheidung fällt nicht hier, sondern im
 ## Fähigkeiten-Screen. Gezeigt wird der offene Stand (verdient minus ausgegeben, siehe
 ## SkillBook.available) und nicht der verdiente — eine Zahl, die nach dem Ausgeben stehen
 ## bleibt, wäre eine Aufforderung ins Leere.
 func _refresh_level() -> void:
-	var progress := PlayerLevel.progress()
-	var in_level := int(progress["xp_in_level"])
-	var for_up := int(progress["xp_for_level_up"])
-	_level_label.text = "Level %d" % int(progress["level"])
-	_xp_bar.max_value = maxi(for_up, 1)
-	_xp_bar.value = in_level
-	_xp_label.text = "%d / %d XP" % [in_level, for_up]
 	var points := SkillBook.available()
 	if SkillBook.unlimited_points:
 		_points_label.text = "∞ Skillpunkte (Debug)"
