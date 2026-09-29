@@ -124,15 +124,28 @@ func _save() -> void:
 ## Lädt den Stand des aktuellen Profils. Keine Datei heißt „neues Profil": Level 1 ohne
 ## Erfahrung, kein Fehler.
 func load_level() -> void:
-	if not FileAccess.file_exists(_save_path()):
-		return
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(_save_path()))
+	total_xp = _read_total_xp(_save_path())
+	level = Experience.level_for(total_xp)
+
+
+## Level eines Profils, ohne dorthin umzuschalten — „Wer spielt?" zeigt es auf jeder
+## Kachel. Gerechnet wie beim Laden: aus der Erfahrung, nicht aus der Datei.
+func level_of(id: String) -> int:
+	if id == player_id:
+		return level
+	return Experience.level_for(_read_total_xp("%s/%s_level.json" % [SAVE_DIR, id]))
+
+
+## Keine Datei heißt „neues Profil": keine Erfahrung, kein Fehler.
+func _read_total_xp(path: String) -> int:
+	if not FileAccess.file_exists(path):
+		return 0
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	if not (parsed is Dictionary):
-		push_warning("PlayerLevel: ungültige Datei '%s'" % _save_path())
-		return
+		push_warning("PlayerLevel: ungültige Datei '%s'" % path)
+		return 0
 	var payload: Dictionary = parsed
 	# maxi(0, …): eine handgeschriebene negative Zahl wäre eine Schuld, die das Spiel
 	# nicht kennt. Das Level kommt aus der Erfahrung und nicht aus der Datei — ein von
 	# Hand hochgesetztes Level wäre sonst ein Level ohne Erfahrung dahinter.
-	total_xp = maxi(0, int(payload.get("total_xp", 0)))
-	level = Experience.level_for(total_xp)
+	return maxi(0, int(payload.get("total_xp", 0)))

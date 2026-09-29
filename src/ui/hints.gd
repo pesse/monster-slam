@@ -35,9 +35,14 @@ const META := &"hint"
 ## Wellenabschluss samt Schatzkiste hängt darin.
 const LAYER := 128
 
-## Abstand der Karte zum Mauszeiger. Weit genug, dass der Zeiger nicht auf dem Text steht,
-## nah genug, dass beides ein Blick ist.
-const GAP := Vector2(18, 18)
+## Abstand der Pfeilspitze zur Mausposition, wenn die Karte UNTER dem Zeiger hängt. Weiter
+## als darüber (`TIP_GAP_ABOVE`), weil das Bild des Mauszeigers von seiner Spitze nach unten
+## reicht — der Pfeil soll auf den Zeiger zeigen, nicht in ihm stecken.
+const TIP_GAP_BELOW := 22.0
+const TIP_GAP_ABOVE := 6.0
+## So weit links vom Zeiger beginnt die Karte: der Pfeil sitzt dann nahe ihrer linken Ecke,
+## und die Karte liegt rechts neben dem, worauf man gerade zeigt.
+const POINTER_LEAD := 32.0
 
 @onready var _card: HintCard = %Card
 
@@ -84,8 +89,9 @@ func attach(target: Control, title: String, body := "", note := "", list := []) 
 
 ## Eine Fläche, die ihre Treffer selbst sucht (`SkillGraph`): statt fester Zeilen hängt hier
 ## eine Funktion, die für einen Punkt IN der Fläche die Karte liefert — oder ein leeres
-## Dictionary für „hier ist nichts". Nur hier kann die Karte ein Bild tragen (`"image"`,
-## eine Texture2D) — ein fester Hinweis bleibt Text. Leer heißt wirklich nichts: gefragt wird dann nicht
+## Dictionary für „hier ist nichts". Nur hier kann die Karte Bilder tragen (`"image"` unter
+## der Überschrift, `"icon"` davor, Texture2D als Zeichen einer Listenzeile) und eine
+## farbige Unterzeile (`"subtitle"`, `"tint"`) — ein fester Hinweis bleibt Text. Leer heißt wirklich nichts: gefragt wird dann nicht
 ## beim Elternknoten weiter, denn die Fläche hat schon geantwortet.
 func attach_live(target: Control, provider: Callable) -> void:
 	target.set_meta(META, provider)
@@ -119,6 +125,13 @@ func probe(control: Control, at := Vector2.INF) -> void:
 	_show(_hint_under(control, point), point)
 
 
+## Die Karte für ein Control, das den Tastaturfokus bekommen hat — dieselbe wie unter der
+## Maus, auf seine Mitte gesetzt. Sie bleibt stehen, bis sich der Zeiger bewegt: `_look`
+## fragt nur nach, wenn sich unter ihm etwas geändert hat.
+func show_for(control: Control) -> void:
+	probe(control)
+
+
 func _look(forced: bool) -> void:
 	var view := get_viewport()
 	if view == null:
@@ -138,7 +151,9 @@ func _show(found: Dictionary, at: Vector2) -> void:
 		_card.hide()
 		return
 	_card.fill(str(found.get("title", "")), str(found.get("body", "")),
-			str(found.get("note", "")), found.get("list", []), found.get("image") as Texture2D)
+			str(found.get("note", "")), found.get("list", []), found.get("image") as Texture2D,
+			found.get("icon") as Texture2D, str(found.get("subtitle", "")),
+			found.get("tint", Color.WHITE) as Color)
 	_place(at)
 	_card.show()
 
@@ -163,8 +178,10 @@ func _hint_under(node: Node, at: Vector2) -> Dictionary:
 	return {}
 
 
-## Neben den Zeiger, aber nie über den Bildrand hinaus: am rechten oder unteren Rand klappt
-## die Karte auf die andere Seite des Zeigers. Eine halb abgeschnittene Auskunft ist keine.
+## Unter den Zeiger, der Pfeil auf seine Spitze — aber nie über den Bildrand hinaus: am
+## unteren Rand klappt die Karte über den Zeiger, am rechten rückt sie nach links, und der
+## Pfeil wandert auf ihrer Kante mit, sodass er weiter auf den Zeiger zeigt. Eine halb
+## abgeschnittene Auskunft ist keine.
 ##
 ## Gemessen wird gegen das BILD und nicht gegen einen Screen: die Karte hängt in einer
 ## eigenen Schicht und kennt keinen. Das ist zugleich der Fall, der im maximierten Fenster
@@ -172,9 +189,11 @@ func _hint_under(node: Node, at: Vector2) -> Dictionary:
 func _place(at: Vector2) -> void:
 	var room := get_viewport().get_visible_rect().size
 	var size := _card.size
-	var to := at + GAP
-	if to.x + size.x > room.x:
-		to.x = at.x - GAP.x - size.x
+	var reach := HintCard.pointer_reach()
+	var to := Vector2(at.x - POINTER_LEAD, at.y + TIP_GAP_BELOW + reach)
+	var below := true
 	if to.y + size.y > room.y:
-		to.y = at.y - GAP.y - size.y
+		to.y = at.y - TIP_GAP_ABOVE - reach - size.y
+		below = false
 	_card.position = to.clamp(Vector2.ZERO, (room - size).max(Vector2.ZERO))
+	_card.point_at(at.x - _card.position.x, below)

@@ -59,6 +59,7 @@ signal reward_collected(gold: int)
 ## weil es keine geöffnete Kiste ist — Wallet zählt die Kisten mit.
 signal consolation_collected(gold: int)
 
+const LINE_SCENE := preload("res://scenes/ui/record_row.tscn")
 ## Deltas der Schwierigkeitswahl, in Reihenfolge der Buttons in ChoiceRow (wave_stats.tscn).
 const CHOICE_DELTAS := [-2, -1, 0, 1, 2]
 ## So viele Aufgaben nennt die Sitzungsbilanz beim Namen; der Rest steht als Zahl da.
@@ -131,34 +132,35 @@ func show_stats(data: Dictionary) -> void:
 	for child in _lines.get_children():
 		_lines.remove_child(child)
 		child.queue_free()
-	_add_line("Richtig besiegt: %d von %d" % [int(data.get("correct", 0)), int(data.get("total", 0))])
-	_add_line("Durchgelassen: %d" % int(data.get("leaked", 0)))
-	_add_line("Genauigkeit: %d %%" % int(round(float(data.get("accuracy", 0.0)))))
+	_add_line("Richtig besiegt", "%d von %d" % [int(data.get("correct", 0)), int(data.get("total", 0))])
+	_add_line("Durchgelassen", str(int(data.get("leaked", 0))))
+	_add_line("Genauigkeit", "%d %%" % int(round(float(data.get("accuracy", 0.0)))))
 	# Keine Punkte (ein interner Wert, aus dem die Kiste rechnet) — dafür, was in dieser
 	# Sitzung gemeistert wurde, und nur wenn es etwas gibt. Die Zahl kommt aus der
 	# Sitzungsbilanz, damit Stufe 1 und Stufe 2 nicht zweierlei zählen.
 	var session_mastered := int((data.get("session", {}) as Dictionary).get("mastered", 0))
 	if session_mastered > 0:
-		_add_line("🏅 In dieser Sitzung gemeistert: %d" % session_mastered)
-	_add_line("Festung: %d HP" % int(data.get("fortress_health", 0)))
-	_add_line("Gemeisterte Aufgaben: %d  (Festungsstufe %d)" % [
-		int(data.get("mastered", 0)), int(data.get("fortress_tier", 0))])
-	_add_line("Schwierigkeit: %d / 5" % int(data.get("difficulty", 3)))
+		_add_line("In dieser Sitzung gemeistert", str(session_mastered), "🏅")
+	_add_line("Festung", "%d HP" % int(data.get("fortress_health", 0)))
+	_add_line("Gemeisterte Aufgaben", str(int(data.get("mastered", 0))), "",
+			"Festungsstufe %d" % int(data.get("fortress_tier", 0)))
+	_add_line("Schwierigkeit", "%d / 5" % int(data.get("difficulty", 3)))
 	# Erfahrung: der Zuwachs kommt aus der Welle, der Stand aus dem Profil (PlayerLevel)
 	# — dieselbe Aufteilung wie beim Gold. Verbucht ist er längst (WaveRunner._defeat);
 	# hier wird nur gelesen.
 	var progress := PlayerLevel.progress()
-	_add_line("Erfahrung: +%d XP  (Level %d, %d/%d)" % [
-		int(data.get("xp_gained", 0)), int(progress["level"]),
-		int(progress["xp_in_level"]), int(progress["xp_for_level_up"])])
+	_add_line("Erfahrung", "+%d XP" % int(data.get("xp_gained", 0)), "",
+			"Level %d, %d / %d XP bis Level %d" % [int(progress["level"]),
+			int(progress["xp_in_level"]), int(progress["xp_for_level_up"]),
+			int(progress["level"]) + 1])
 	# Der Aufstieg bekommt eine eigene Zeile, aber nur wenn es einen gab: eine
 	# Sichtbarkeits-Entscheidung ist hier erlaubt, solange sie VOR dem Anzeigen fällt
-	# (danach steht die Größe des Screens fest — siehe Kopf).
+	# (danach steht die Größe des Screens fest — siehe Kopf). Genannt wird der OFFENE Stand
+	# der Skillpunkte wie an der Plakette, nicht der verdiente.
 	var levels := int(data.get("levels_gained", 0))
 	if levels > 0:
-		_add_line("⭐ Level %d erreicht — %d Skillpunkt%s" % [
-			int(progress["level"]), PlayerLevel.skill_points(),
-			"" if PlayerLevel.skill_points() == 1 else "e"])
+		_add_line("Level %d erreicht" % int(progress["level"]), "", "⭐",
+				ProfileBadge.points_text(SkillBook.available(), SkillBook.unlimited_points))
 
 	# Kiste: die zweite Entscheidung über den Inhalt der Ergebnisseite (nach der
 	# Aufstiegs-Zeile), und wie jene fällt sie HIER — vor dem Anzeigen. Ab dann bleibt
@@ -184,7 +186,6 @@ func show_stats(data: Dictionary) -> void:
 	# Wellenstart die HP auch nie „retten": ein neuer Lauf beginnt über GameState.reset().
 	_diff_label.visible = _won
 	_choice_row.visible = _won
-	_start_button.visible = _won
 	_defeat_label.visible = not _won
 	# Die Bilanz ist die dritte Inhalts-Entscheidung, und auch sie fällt hier: sie liegt
 	# auf der noch unsichtbaren Stufe 2, zählt über den PageStack aber schon jetzt zur
@@ -214,6 +215,10 @@ func _goto_stage(next: Stage) -> void:
 	_stage = next
 	_result_page.visible = next == Stage.RESULT
 	_next_page.visible = next == Stage.NEXT
+	# Beide Stufen teilen die Fußzeile: links der Weg zurück, rechts der Weg weiter. Alle
+	# Knöpfe der Zeile sind gleich hoch — fehlt der Startknopf, wächst der Screen nicht.
+	_result_continue.visible = next == Stage.RESULT
+	_start_button.visible = next == Stage.NEXT and _won
 	_title.text = _title_for(next)
 	# Ergebnis-Titel einfärben (passt zu den grün/rot-Feedbackfarben des Spiels); die
 	# Folgestufe nimmt die Theme-Farbe zurück — sie ist kein Urteil über die Welle, und
@@ -232,10 +237,26 @@ func _title_for(stage_value: Stage) -> String:
 			else "Festung gefallen (Welle %d)" % _wave_number
 
 
-func _add_line(text: String) -> void:
-	var label := Label.new()
-	label.text = text
-	_lines.add_child(label)
+## Eine Zeile wie in den Rekorden der Statistik: Bezeichnung links, Wert rechts, dazwischen
+## die feine Linie. `hint` steht als Karte am Zeiger — die Maus ist am Wellenende frei.
+func _add_line(name_text: String, value_text: String, mark := "", hint := "") -> void:
+	if _lines.get_child_count() > 0:
+		var rule := HSeparator.new()
+		rule.theme_type_variation = &"StatRule"
+		_lines.add_child(rule)
+	var row := LINE_SCENE.instantiate() as StatRow
+	_lines.add_child(row)
+	row.setup(name_text, value_text, mark, hint)
+
+
+## Die Zeilen der Ergebnisseite als „Bezeichnung: Wert" — für Tests und die Werkbank.
+func line_texts() -> Array[String]:
+	var texts: Array[String] = []
+	for row in _lines.get_children():
+		if row is StatRow:
+			texts.append("%s: %s" % [(row.get_node("Name") as Label).text,
+					(row.get_node("Value") as Label).text])
+	return texts
 
 
 # --- Sitzungsbilanz -----------------------------------------------------------
@@ -313,10 +334,10 @@ func _on_choice_pressed(index: int) -> void:
 	_update_choice_highlight()
 
 
-## Markiert die gewählte Option (deaktivierter Button = optisch hervorgehoben).
+## Markiert die gewählte Option: die Knöpfe sind eine Gruppe, die gewählte steht gedrückt.
 func _update_choice_highlight() -> void:
 	for i in _choice_buttons.size():
-		(_choice_buttons[i] as Button).disabled = (i == _selected_choice)
+		(_choice_buttons[i] as Button).set_pressed_no_signal(i == _selected_choice)
 
 
 func _on_start_pressed() -> void:

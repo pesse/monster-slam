@@ -4,9 +4,10 @@ extends RefCounted
 ##
 ## Statisch, damit der Weg zurück aus dem Kampf wieder auf derselben Karte landet — die
 ## Screens wechseln über change_scene_to_file und behalten nichts. Nicht gespeichert: ein
-## Neustart beginnt bei der Buchauswahl.
+## Neustart beginnt mit „Wer spielt?“.
 
-const BOOKS_SCENE := "res://scenes/ui/book_select.tscn"
+## Die Bibliothek ist eine Seite des Start-Screens (ProfileMenu.LIBRARY).
+const BOOKS_SCENE := "res://scenes/ui/profile_menu.tscn"
 const BOOK_SCENE := "res://scenes/ui/book_map.tscn"
 const AREA_SCENE := "res://scenes/ui/area_map.tscn"
 
@@ -17,5 +18,6 @@ static var unit := 0
 static var zoom_in := false
 ## Kommt die Buchkarte gerade aus einer Gebietskarte? Dann kommt sie aus dieser Unit heraus.
 static var zoom_out := false
-## Geht es gerade von der Buchkarte zurück ins Regal? Dann beginnt die Buchauswahl im offenen Buch.
+## Geht es gerade von der Buchkarte zurück in die Bibliothek? Dann beginnt der Start-Screen
+## dort, im offenen Buch.
 static var to_shelf := false

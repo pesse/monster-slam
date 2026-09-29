@@ -1,27 +1,27 @@
 class_name CoinStrip
 extends VBoxContainer
-## Monats-Leiste: eine Münze je Tag des laufenden Monats — geübte Tage in Gold, verpasste
-## ausgegraut, heute mit Ring, die Tage danach als leere Plätze (Issue #6).
+## Monatsreihe der Statistik: ein Medaillon je Tag des laufenden Monats — auf geübten Tagen
+## liegt die Münze darauf, heute trägt einen leisen Ring, die Tage danach sind leere Plätze
+## (Issue #6, Entwurf `assets/ui/statistics/concept/statistics-v3.webp`).
 ##
-## Bewusst eine Leiste und kein Raster: ein Kalender zeigt vor allem die Lücken und liest
-## sich wie eine Buchhaltung. Die Leiste zeigt einen Vorrat, der wächst. Der Monat als
-## Rahmen (statt der letzten N Tage) gibt ihm ein Ziel: „18 von 30".
+## Eine Reihe und kein Wochenraster: ein Kalender zeigt vor allem die Lücken und liest sich
+## wie eine Buchhaltung. Die Reihe zeigt einen Vorrat, der wächst. Der Monat als Rahmen
+## (statt der letzten N Tage) gibt ihm ein Ziel: „4 von 30 Tagen geübt".
 ##
 ## Die Münzen sind MARKEN für geübte Tage und keine Währung — Gold als Währung liegt in
-## der Geldbörse (Wallet) und wird in Schatzkisten verdient. Die Leiste redet deshalb von
-## Tagen: zwei Dinge, die „Goldstück" heißen, wären eines zu viel.
+## der Geldbörse (Wallet) und wird in Schatzkisten verdient.
 ##
-## Das Layout liegt in coin_strip.tscn, die Münze in day_coin.tscn; hier wird nur
-## gerechnet und befüllt. Die Zustandsfolge und die Monatslänge stehen als statische
-## Funktionen, damit sie ohne Szene, Autoload und Systemuhr prüfbar sind
-## (siehe tests/coin_strip_test.gd).
+## Das Layout liegt in coin_strip.tscn, der Tag in stats_day.tscn; hier wird nur gerechnet
+## und befüllt. Die Zustandsfolge und die Monatslänge stehen als statische Funktionen,
+## damit sie ohne Szene, Autoload und Systemuhr prüfbar sind (siehe tests/coin_strip_test.gd).
 
-const COIN_SCENE := preload("res://scenes/ui/day_coin.tscn")
-## Wochentagskürzel in Godots Zählung (0 = Sonntag), für die Tooltips.
+const DAY_SCENE := preload("res://scenes/ui/stats_day.tscn")
+## Wochentagskürzel in Godots Zählung (0 = Sonntag), für die Karte am Zeiger.
 const WEEKDAYS := ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"]
 const MONTH_NAMES := ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli",
 		"August", "September", "Oktober", "November", "Dezember"]
 
+@onready var _month: Label = %Month
 @onready var _caption: Label = %Caption
 @onready var _coins: HBoxContainer = %Coins
 
@@ -51,12 +51,14 @@ func refresh() -> int:
 		var day_state: DayCoin.State = day_states[i]
 		if day_state == DayCoin.State.EARNED:
 			earned += 1
-		var coin := COIN_SCENE.instantiate() as DayCoin
-		_coins.add_child(coin)
-		coin.setup(day_state, day_index == today_index, date_label(day_index),
-				_state_text(day_state))
+		var day := DAY_SCENE.instantiate() as StatsDay
+		_coins.add_child(day)
+		var is_today := day_index == today_index
+		day.setup(day_state, is_today, i + 1, date_label(day_index),
+				state_text(day_state, is_today))
 
-	_caption.text = "%s · %d von %d Tagen" % [MONTH_NAMES[month - 1], earned, day_count]
+	_month.text = MONTH_NAMES[month - 1]
+	_caption.text = "•  %d von %d Tagen geübt" % [earned, day_count]
 	return earned
 
 
@@ -91,22 +93,25 @@ static func days_in_month(year: int, month: int) -> int:
 	return 30 if month in [4, 6, 9, 11] else 31
 
 
-## Datum eines lokalen Tagesindex als „Mo, 1.9.". Die Umrechnung ist die Umkehrung von
-## SessionLog.local_day: dessen Zeitzonen-Versatz fällt hier wieder heraus.
+## Datum eines lokalen Tagesindex als „Mo, 1. September". Die Umrechnung ist die Umkehrung
+## von SessionLog.local_day: dessen Zeitzonen-Versatz fällt hier wieder heraus.
 static func date_label(day_index: int) -> String:
 	var d := Time.get_datetime_dict_from_unix_time(day_index * 86400 + 43200)
-	return "%s, %d.%d." % [WEEKDAYS[int(d["weekday"])], int(d["day"]), int(d["month"])]
+	return "%s, %d. %s" % [WEEKDAYS[int(d["weekday"])], int(d["day"]),
+			MONTH_NAMES[int(d["month"]) - 1]]
 
 
 ## Der Stand eines Tages in Worten. Das DATUM steht nicht darin: es ist die Überschrift der
-## Karte am Zeiger (`DayCoin.setup`).
-static func _state_text(day_state: DayCoin.State) -> String:
+## Karte am Zeiger (`StatsDay.setup`).
+static func state_text(day_state: DayCoin.State, today := false) -> String:
+	var text: String
 	match day_state:
 		DayCoin.State.EARNED:
-			return "geübt"
+			text = "✓ Geübt"
 		DayCoin.State.OPEN:
-			return "heute wartet noch einer"
+			return "Heute — noch nicht geübt"
 		DayCoin.State.FUTURE:
-			return "noch nicht dran"
+			return "Kommt noch"
 		_:
-			return "nicht geübt"
+			text = "Nicht geübt"
+	return text + "  •  Heute" if today else text

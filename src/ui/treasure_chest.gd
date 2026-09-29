@@ -78,6 +78,9 @@ const COIN_MOUTH := Vector3(0.0, 0.62, 0.0)
 const COIN_RISE := Vector2(1.1, 2.4)
 const COIN_SPREAD := 2.0
 const COIN_TURNS := Vector2(1.5, 3.5)
+## So weit (Modell-Einheiten, auf dem Bild gemessen) fällt eine Münze unter die Kante:
+## eine Münze ist kein Punkt, sie muss GANZ draußen sein.
+const COIN_CLEARANCE := 0.4
 
 # --- Modell -------------------------------------------------------------------
 
@@ -253,11 +256,19 @@ func _cam_size() -> float:
 	return CAM_SIZE * (1.0 + 2.0 * STAGE_PAD.y)
 
 
-## Unter dieser Höhe ist eine Münze aus dem Bild gefallen. Aus dem Bildfeld gerechnet und
-## nicht als Konstante daneben: sonst hängen zwei Zahlen aneinander, von denen die eine
-## still falsch wird, wenn man an der anderen dreht.
-func _floor_y() -> float:
-	return CAM_HEIGHT - _cam_size() * 0.5 - 0.4
+## Auf dieser Höhe ist eine Münze über `x`/`z` aus dem Bild gefallen. Aus dem Bildfeld
+## gerechnet und nicht als Konstante daneben: sonst hängen zwei Zahlen aneinander, von
+## denen die eine still falsch wird, wenn man an der anderen dreht.
+##
+## Über die Bildachse der Kamera und nicht über die Welthöhe: die Kamera blickt schräg von
+## oben, ein Fall um Δy rückt im Bild also nur um Δy·cos(Neigung) weiter, und wo die Münze
+## vorn oder seitlich landet, verschiebt sie zusätzlich. Mit der Welthöhe allein blieben
+## gerade die weit gestreuten Münzen knapp über der Kante liegen.
+func _floor_y(x: float, z: float) -> float:
+	var up := Basis.from_euler(Vector3(deg_to_rad(CAM_PITCH), deg_to_rad(CAM_YAW), 0.0)).y
+	var goal := -_cam_size() * 0.5 - COIN_CLEARANCE
+	# Bildhöhe eines Punkts p: (p - Ziel)·up. Nach y aufgelöst.
+	return CAM_HEIGHT + (goal - up.x * x - up.z * z) / up.y
 
 
 ## Stellt eine Kiste der Güte `tier` mit `gold` Inhalt hin — geschlossen und wartend.
@@ -549,13 +560,16 @@ func _fly_coins_3d(count: int) -> void:
 				side * COIN_SPREAD,
 				rng.randf_range(COIN_RISE.x, COIN_RISE.y),
 				rng.randf_range(-0.3, 0.3))
-		var gone := Vector3(peak.x + side * COIN_SPREAD * 0.35, _floor_y(), peak.z)
+		var gone_x := peak.x + side * COIN_SPREAD * 0.35
+		var gone := Vector3(gone_x, _floor_y(gone_x, peak.z), peak.z)
 		var delay := step * float(i)
 		var tw := _new_tween()
 		tw.tween_property(coin, "position", peak, COIN_FLIGHT * 0.45) \
 				.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT).set_delay(delay)
 		tw.tween_property(coin, "position", gone, COIN_FLIGHT * 0.75) \
 				.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		# Unten angekommen ist sie nicht mehr im Flug — und nicht mehr im Bild.
+		tw.tween_callback(coin.queue_free)
 		var turn := Vector3(rng.randf_range(-0.5, 0.5), rng.randf_range(COIN_TURNS.x, COIN_TURNS.y), 0.0)
 		var spin := _new_tween()
 		spin.tween_property(coin, "rotation", coin.rotation + turn * TAU, COIN_FLIGHT * 1.2) \
@@ -591,6 +605,7 @@ func _fly_coins_2d(count: int) -> void:
 		var fade := _new_tween()
 		fade.tween_property(coin, "modulate:a", 0.0, COIN_FLIGHT * 0.4) \
 				.set_delay(step * float(i) + COIN_FLIGHT * 0.6)
+		fade.tween_callback(coin.queue_free)
 
 
 ## Ein Tween, den `present()` wieder loswird (siehe _tweens).

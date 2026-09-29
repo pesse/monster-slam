@@ -339,7 +339,7 @@ Der Weg einer neuen Datei:
    `python3 tools/packs/build_packs.py --config data/language/packs.yaml \
    --source language=data/language --source game=data --dry-run` (die beiden
    `--source` sind die `roots` der Konfiguration; ohne sie bricht der Lauf ab).
-4. **Holen** — der Spieler sieht den Pack unter „📚 Inhalte" mit Version und Größe,
+4. **Holen** — der Spieler sieht den Pack unter „Inhalte" mit Version und Größe,
    geschützte Packs erst nach Eingabe des Zugangscodes.
 
 Was das für Autoren heißt:

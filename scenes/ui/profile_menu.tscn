@@ -1,9 +1,29 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://src/ui/profile_menu.gd" id="1_menu"]
 [ext_resource type="PackedScene" path="res://scenes/ui/update_dialog.tscn" id="2_update"]
+[ext_resource type="PackedScene" path="res://scenes/ui/menu_backdrop.tscn" id="3_backdrop"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/logo.webp" id="4_logo"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/play.webp" id="5_play"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/skills.webp" id="6_skills"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/statistics.webp" id="7_stats"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/content.webp" id="8_content"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/settings.webp" id="9_settings"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/expert.webp" id="10_expert"]
+[ext_resource type="PackedScene" path="res://scenes/ui/profile_pick.tscn" id="13_pick"]
+[ext_resource type="PackedScene" path="res://scenes/ui/profile_badge.tscn" id="14_badge"]
+[ext_resource type="PackedScene" path="res://scenes/ui/book_select.tscn" id="15_library"]
+
+[sub_resource type="Gradient" id="ShadeGradient"]
+colors = PackedColorArray(0.03, 0.04, 0.08, 0.6, 0.03, 0.04, 0.08, 0)
+
+[sub_resource type="GradientTexture2D" id="ShadeTexture"]
+gradient = SubResource("ShadeGradient")
+width = 256
+height = 4
 
 [node name="ProfileMenu" type="Control"]
+texture_filter = 4
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -12,98 +32,181 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_menu")
 
-[node name="Margin" type="MarginContainer" parent="."]
-theme_type_variation = &"ScreenMargin"
+[node name="Backdrop" parent="." instance=ExtResource("3_backdrop")]
+
+[node name="Veil" type="ColorRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
+color = Color(0.03, 0.04, 0.08, 1)
 
-[node name="Root" type="VBoxContainer" parent="Margin"]
-theme_type_variation = &"ScreenStack"
-alignment = 1
-
-[node name="Title" type="Label" parent="Margin/Root"]
-theme_type_variation = &"Display"
-text = "Monster Slam"
-horizontal_alignment = 1
-
-[node name="GoldLabel" type="Label" parent="Margin/Root"]
-theme_type_variation = &"Accent"
+[node name="Slide" type="Control" parent="."]
 unique_name_in_owner = true
-text = "💰 0 Gold"
-horizontal_alignment = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
 
-[node name="LevelLabel" type="Label" parent="Margin/Root"]
-theme_type_variation = &"Hint"
+[node name="Intro" parent="Slide" instance=ExtResource("13_pick")]
 unique_name_in_owner = true
-text = "⭐ Level 1"
-horizontal_alignment = 1
+layout_mode = 1
 
-[node name="PickLabel" type="Label" parent="Margin/Root"]
-text = "Aktives Profil"
-horizontal_alignment = 1
-
-[node name="ProfileSelect" type="OptionButton" parent="Margin/Root"]
+[node name="MenuPage" type="Control" parent="Slide"]
 unique_name_in_owner = true
+layout_mode = 1
+anchor_left = 1.0
+anchor_right = 2.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
 
-[node name="NewRow" type="HBoxContainer" parent="Margin/Root"]
-
-[node name="NameInput" type="LineEdit" parent="Margin/Root/NewRow"]
+[node name="Shade" type="TextureRect" parent="Slide/MenuPage"]
 unique_name_in_owner = true
+layout_mode = 1
+anchor_right = 0.5
+anchor_bottom = 1.0
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("ShadeTexture")
+expand_mode = 1
+
+[node name="Margin" type="MarginContainer" parent="Slide/MenuPage"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"ScreenMargin"
+
+[node name="Layout" type="HBoxContainer" parent="Slide/MenuPage/Margin"]
+layout_mode = 2
+
+[node name="Left" type="VBoxContainer" parent="Slide/MenuPage/Margin/Layout"]
+layout_mode = 2
+
+[node name="Logo" type="TextureRect" parent="Slide/MenuPage/Margin/Layout/Left"]
+custom_minimum_size = Vector2(352, 168)
+layout_mode = 2
+texture = ExtResource("4_logo")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="PlayButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Left"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(352, 64)
+layout_mode = 2
+theme_type_variation = &"MainMenuPlay"
+text = "SPIELEN"
+icon = ExtResource("5_play")
+alignment = 0
+expand_icon = true
+
+[node name="SkillButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Left"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(352, 64)
+layout_mode = 2
+theme_type_variation = &"MainMenuButton"
+text = "FÄHIGKEITEN"
+icon = ExtResource("6_skills")
+alignment = 0
+expand_icon = true
+
+[node name="StatsButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Left"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(352, 64)
+layout_mode = 2
+theme_type_variation = &"MainMenuButton"
+text = "STATISTIK"
+icon = ExtResource("7_stats")
+alignment = 0
+expand_icon = true
+
+[node name="ContentButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Left"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(352, 64)
+layout_mode = 2
+theme_type_variation = &"MainMenuButton"
+text = "INHALTE"
+icon = ExtResource("8_content")
+alignment = 0
+expand_icon = true
+
+[node name="SettingsButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Left"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(352, 64)
+layout_mode = 2
+theme_type_variation = &"MainMenuButton"
+text = "EINSTELLUNGEN"
+icon = ExtResource("9_settings")
+alignment = 0
+expand_icon = true
+
+[node name="Fill" type="Control" parent="Slide/MenuPage/Margin/Layout/Left"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="ExpertButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Left"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"MenuLink"
+text = "Eigene Runde
+Expertenmodus"
+icon = ExtResource("10_expert")
+flat = true
+alignment = 0
+
+[node name="Fill" type="Control" parent="Slide/MenuPage/Margin/Layout"]
+layout_mode = 2
 size_flags_horizontal = 3
-placeholder_text = "Neuer Profilname"
+mouse_filter = 2
 
-[node name="AddButton" type="Button" parent="Margin/Root/NewRow"]
+[node name="Right" type="VBoxContainer" parent="Slide/MenuPage/Margin/Layout"]
+layout_mode = 2
+
+[node name="ProfileBadge" parent="Slide/MenuPage/Margin/Layout/Right" instance=ExtResource("14_badge")]
 unique_name_in_owner = true
-text = "Neues Profil"
+layout_mode = 2
 
-[node name="PlayRow" type="HBoxContainer" parent="Margin/Root"]
+[node name="Fill" type="Control" parent="Slide/MenuPage/Margin/Layout/Right"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
 
-[node name="PlayButton" type="Button" parent="Margin/Root/PlayRow"]
-unique_name_in_owner = true
-size_flags_horizontal = 3
-text = "▶ Spielen"
-
-[node name="PlayHint" type="Label" parent="Margin/Root"]
-theme_type_variation = &"Accent"
+[node name="PlayHint" type="Label" parent="Slide/MenuPage/Margin/Layout/Right"]
 unique_name_in_owner = true
 visible = false
-text = "Noch keine Vokabeln vorhanden — unten über „📚 Inhalte“ einen Vokabel-Pack installieren."
-horizontal_alignment = 1
+custom_minimum_size = Vector2(352, 0)
+layout_mode = 2
+theme_type_variation = &"MenuNote"
+text = "Noch keine Vokabeln vorhanden — links über „Inhalte“ einen Vokabel-Pack installieren."
+horizontal_alignment = 2
 autowrap_mode = 3
 
-[node name="NavRow" type="HBoxContainer" parent="Margin/Root"]
-
-[node name="SkillButton" type="Button" parent="Margin/Root/NavRow"]
-unique_name_in_owner = true
-size_flags_horizontal = 3
-text = "🌳 Fähigkeiten"
-
-[node name="StatsButton" type="Button" parent="Margin/Root/NavRow"]
-unique_name_in_owner = true
-size_flags_horizontal = 3
-text = "📊 Statistik"
-
-[node name="SettingsButton" type="Button" parent="Margin/Root"]
-unique_name_in_owner = true
-text = "⚙ Einstellungen"
-
-[node name="ContentButton" type="Button" parent="Margin/Root"]
-unique_name_in_owner = true
-text = "📚 Inhalte"
-
-[node name="ExpertButton" type="Button" parent="Margin/Root"]
-unique_name_in_owner = true
-size_flags_horizontal = 4
-theme_type_variation = &"Hint"
-text = "Expertenmodus: Runde frei zusammenstellen"
-flat = true
-
-[node name="UpdateButton" type="Button" parent="Margin/Root"]
+[node name="UpdateButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Right"]
 unique_name_in_owner = true
 visible = false
+layout_mode = 2
+size_flags_horizontal = 8
 text = "⬆ Update verfügbar"
+
+[node name="Library" parent="Slide" instance=ExtResource("15_library")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchor_left = 2.0
+anchor_right = 3.0
 
 [node name="UpdateDialog" parent="." instance=ExtResource("2_update")]
 unique_name_in_owner = true

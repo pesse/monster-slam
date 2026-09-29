@@ -169,7 +169,10 @@ func _card_text(screen: Control, id: String, part: String) -> String:
 
 func test_the_screen_finds_its_unique_names() -> void:
 	var screen := _screen()
-	assert_object(screen.get_node("%BackButton")).is_not_null()
+	assert_object(screen.get_node("%CloseButton")).is_not_null()
+	assert_object(screen.get_node("%ZoomInButton")).is_not_null()
+	assert_object(screen.get_node("%ZoomOutButton")).is_not_null()
+	assert_object(screen.get_node("%ZoomLabel")).is_not_null()
 	assert_object(screen.get_node("%PointsLabel")).is_not_null()
 	assert_object(screen.get_node("%Graph")).is_not_null()
 	assert_object(screen.get_node("%FitButton")).is_not_null()
@@ -415,7 +418,7 @@ func test_the_tools_explain_themselves() -> void:
 	var screen := _screen()
 	for name_and_word: Array in [["%FitButton", "einpassen"], ["%RespecButton", "Umlernen"]]:
 		var button := screen.get_node(str(name_and_word[0])) as Button
-		assert_str(button.text).is_not_empty()
+		assert_bool(not button.text.is_empty() or button.icon != null).is_true()
 		Hints.probe(button)
 		var card := _card(screen)
 		assert_bool(card.visible).override_failure_message(
@@ -575,7 +578,9 @@ func test_the_screen_fits_the_base_resolution() -> void:
 	var base := Vector2(
 			float(ProjectSettings.get_setting("display/window/size/viewport_width", 1152)),
 			float(ProjectSettings.get_setting("display/window/size/viewport_height", 648)))
-	var needed := (screen.get_node("Margin") as Control).get_combined_minimum_size()
+	var needed := (screen.get_node("%Layout") as Control).get_combined_minimum_size()
+	# Das Fenster hält 16 px Abstand zum Bildrand (Offsets in der Szene).
+	needed += Vector2(32, 32)
 	# Achsen einzeln: assert_vector(...).is_less_equal(...) vergleicht lexikografisch, zu
 	# hoch rutschte über die Breite durch.
 	assert_float(needed.x).is_less_equal(base.x)
@@ -653,3 +658,91 @@ func test_cancelling_the_forget_leaves_everything_alone() -> void:
 	_say_no(screen)
 	assert_array(Array(_book.unlocked)).is_equal(["s.root"])
 	assert_int(Wallet.gold).is_equal(1_000)
+
+
+# --- Fenster, Zoomknöpfe, Tastatur ---------------------------------------------
+
+## Im Menü hängt der Screen als Fenster: Schließen meldet sich beim Öffner, statt die
+## Szene zu wechseln. Escape tut dasselbe.
+func test_close_and_escape_tell_the_opener() -> void:
+	var screen := _screen()
+	await get_tree().process_frame
+	var calls := [0]
+	screen.connect("closed", func() -> void: calls[0] += 1)
+	(screen.get_node("%CloseButton") as BaseButton).pressed.emit()
+	assert_int(calls[0]).is_equal(1)
+	var esc := InputEventAction.new()
+	esc.action = "ui_cancel"
+	esc.pressed = true
+	screen._unhandled_input(esc)
+	assert_int(calls[0]).is_equal(2)
+
+
+## Die Knöpfe zoomen um die Mitte, die Anzeige nennt den Stand — eingepasst sind 100 %.
+## Erst hinaus: der kleine Prüfbaum steht eingepasst schon am größten Zoom.
+func test_the_zoom_buttons_and_their_label() -> void:
+	var screen := _screen()
+	for i in 3:
+		await get_tree().process_frame
+	var graph := _graph(screen)
+	var label := screen.get_node("%ZoomLabel") as Label
+	assert_str(label.text).is_equal("100 %")
+	var before := graph.zoom()
+	(screen.get_node("%ZoomOutButton") as Button).pressed.emit()
+	assert_float(graph.zoom()).is_less(before)
+	assert_str(label.text).is_equal("89 %")
+	(screen.get_node("%ZoomInButton") as Button).pressed.emit()
+	assert_float(graph.zoom()).is_equal_approx(before, 0.001)
+	assert_str(label.text).is_equal("100 %")
+
+
+## Eine echte Taste, wie sie ankommt — der Graph nimmt nur Tasten und Gamepad an.
+func _press(graph: SkillGraph, action: String) -> void:
+	var event := InputEventKey.new()
+	event.keycode = {"ui_up": KEY_UP, "ui_down": KEY_DOWN, "ui_left": KEY_LEFT,
+			"ui_right": KEY_RIGHT, "ui_accept": KEY_ENTER}[action]
+	event.pressed = true
+	graph._gui_input(event)
+
+
+## Pfeile wandern durchs Netz, Enter fragt wie ein Klick.
+func test_the_keyboard_walks_the_net() -> void:
+	_give_points(2)
+	var screen := _screen()
+	for i in 3:
+		await get_tree().process_frame
+	var graph := _graph(screen)
+	assert_str(graph.focused_id()).is_empty()
+	_press(graph, "ui_up")
+	var first := graph.focused_id()
+	assert_str(first).is_not_empty()
+	var seen := {first: true}
+	for action: String in ["ui_up", "ui_left", "ui_right", "ui_down", "ui_up"]:
+		_press(graph, action)
+		seen[graph.focused_id()] = true
+	assert_int(seen.size()).is_greater(1)
+	# Zurück auf die Wurzel und bestätigen: dieselbe Rückfrage wie beim Klick.
+	while graph.focused_id() != "s.root":
+		var before := graph.focused_id()
+		_press(graph, "ui_down")
+		if graph.focused_id() == before:
+			break
+	assert_str(graph.focused_id()).is_equal("s.root")
+	_press(graph, "ui_accept")
+	assert_bool(_dialog(screen).visible).is_true()
+
+
+## Die Karte eines Knotens: Baum und Zustand im Untertitel, Kosten und Vorstufe als Zeilen.
+func test_the_card_names_tree_state_and_facts() -> void:
+	_give_points(5)
+	var screen := _screen()
+	await get_tree().process_frame
+	assert_str(_card_text(screen, "s.left", "Subtitle")).contains("Prüfbaum").contains(
+			"Gesperrt")
+	var list := _move_to(screen, "s.left").get_node("%List") as GridContainer
+	var texts := ""
+	for child in list.get_children():
+		if child is Label:
+			texts += (child as Label).text + "|"
+	assert_str(texts).contains("Kosten").contains("1 Skillpunkt").contains(
+			"Voraussetzung").contains("Wurzel")

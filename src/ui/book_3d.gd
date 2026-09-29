@@ -1,18 +1,22 @@
 class_name Book3D
 extends Node3D
-## Ein Buch im Regal der Buchauswahl (ADR 0006), als gebundenes Buch: gerundeter Rücken,
-## Falz hinter dem Rücken, Deckel, die über den Buchblock stehen. Im Regal zeigt es den
-## Rücken mit seinem Titel; ausgewählt wird es herausgezogen und schräg zur Kamera gedreht;
-## geöffnet schlägt der vordere Deckel auf, und die Doppelseite trägt die Buchkarte — dort
-## taucht die Buchauswahl hinein.
+## Ein Buch auf dem Lesepult der Bibliothek (ADR 0006), als gebundenes Buch: gerundeter
+## Rücken, Falz hinter dem Rücken, Deckel, die über den Buchblock stehen. Es steht frontal,
+## ein wenig gedreht, sodass links der Rücken zu sehen ist. Ausgewählt wird es vom Pult
+## genommen: es kommt weit nach vorn in die Bildmitte, steht gerade zur Kamera, damit die
+## Schrift gut lesbar ist, und leuchtet golden (`%Glow`, book_glow.gdshader). Geöffnet
+## schlägt der vordere Deckel auf, und die Doppelseite trägt die Buchkarte — dort taucht die
+## Bibliothek hinein.
 ##
-## Das Cover ist eine kleine 2D-Szene in `%Art` (SubViewport): oben die Buchkarte im
-## verschnörkelten Rahmen (OrnateFrame), unten Titel und Stand, gedruckt in der Typografie
-## des Themes. Die Meshes baut BookMesh aus Profilen, je Buch nach seiner Dicke.
+## Das Cover ist eine kleine 2D-Szene in `%Art` (SubViewport): oben Titel und Sprache, in
+## der Mitte die Buchkarte im verschnörkelten Rahmen (OrnateFrame), unten der Stand
+## (`%Stats`: Wörter, Bosse). Der Stand ist nur am herausgenommenen Buch zu sehen, sein
+## Platz bleibt frei, damit das Cover nicht springt. Die Meshes baut BookMesh aus Profilen,
+## je Buch nach seiner Dicke.
 ##
-## Kanonische Lage in `%Body`: Cover nach +Z, Rücken nach -X. Im Regal ist `%Body` um 90°
-## gedreht, dann zeigt der Rücken nach +Z, zur Kamera. Der vordere Deckel hängt an
-## `%Hinge`, am Falz; um dessen y-Achse schlägt er auf.
+## Kanonische Lage in `%Body`: Cover nach +Z, Rücken nach -X. Auf dem Pult ist `%Body` um
+## SLOT_ANGLE gedreht. Der vordere Deckel hängt an `%Hinge`, am Falz; um dessen y-Achse
+## schlägt er auf.
 
 const WIDTH := 1.0
 const HEIGHT := 1.4
@@ -28,21 +32,18 @@ const GROOVE_DEPTH := 0.012
 const MIN_THICKNESS := 0.22
 const MAX_THICKNESS := 0.4
 const THICKNESS_PER_UNIT := 0.045
-## Abstand zwischen den Büchern im Regal.
-const GAP := 0.06
-## Wie weit ein ausgewähltes Buch über seinen Platz hinaus nach vorn kommt.
-const PULL_MARGIN := 0.15
-const LIFT := 0.12
-## Ausgewählt steht das Buch so schräg (Grad), dass Rücken und Dicke zu sehen bleiben; erst
-## beim Öffnen dreht es sich ganz zur Kamera.
-const SHOWN_ANGLE := 26.0
-## Ein ausgewähltes Buch rückt so weit zur Mitte des Regals.
-const TO_CENTER := 0.5
-const LIFT_TIME := 0.35
+## Wie weit ein ausgewähltes Buch nach vorn und nach oben kommt, wenn es vom Pult genommen
+## wird. Dabei rückt es um TOWARD des Wegs zur Bildmitte (`center_x`) und bleibt nah an
+## seinem Platz; erst beim Aufschlagen geht es ganz in die Mitte.
+const PULL := 1.8
+const TOWARD := 0.35
+const LIFT := 0.32
+## Auf seinem Platz steht das Buch so schräg (Grad), dass links Rücken und Dicke zu sehen
+## sind; erst beim Öffnen dreht es sich ganz zur Kamera.
+const SLOT_ANGLE := 16.0
+const LIFT_TIME := 0.3
 const OPEN_TIME := 0.55
-## Ab hier dreht sich ein Buch; bis dahin kommt es nur gerade aus seinem Platz.
-const TURN_START := 0.3
-## Zurück ins Regal geht es schneller als heraus.
+## Zurück auf den Platz geht es schneller als heraus.
 const RETURN_SPEED := 1.6
 ## Höhe der Goldbänder auf dem Rücken, von der Mitte aus, und ihre Breite.
 const BAND_Y := 0.58
@@ -50,17 +51,29 @@ const BAND_HEIGHT := 0.035
 ## Die Karte auf der Doppelseite: ihre Breite auf jeder Seite und der Abstand zum Bund.
 const SPREAD_HALF := 0.84
 const SPREAD_GUTTER := 0.01
-## Einbandfarben nach Position im Regal, damit Nachbarn sich unterscheiden.
+## Einbandfarben nach Position auf dem Pult, damit Nachbarn sich unterscheiden.
 const COLORS := [
 	Color(0.16, 0.33, 0.62), Color(0.62, 0.2, 0.22), Color(0.18, 0.46, 0.3),
 	Color(0.44, 0.27, 0.6), Color(0.74, 0.44, 0.14),
 ]
 const PAPER := Color(0.8, 0.75, 0.64)
+## Der Einband (grau, kachelbar) wird mit der Buchfarbe getönt. Grau dunkelt ab; so viel
+## heller wird die Farbe dafür angesetzt. Auf den Deckeln liegt er triplanar — BookMesh
+## erzeugt keine UVs —, eine Kachel je TILE Meter.
+const CLOTH := preload("res://assets/ui/library/cover_cloth.webp")
+const CLOTH_GAIN := 1.6
+const CLOTH_TILE := 0.35
+## Der Glanz hinter dem ausgewählten Buch, so viel größer als das Buch.
+const GLOW_MARGIN := 0.5
 
-## 0 = im Regal, 1 = vorn mit dem Cover zur Kamera.
+## 0 = auf seinem Platz, 1 = ausgewählt vorn.
 var lift := 0.0
 var selected := false
 var thickness := MIN_THICKNESS
+## Die Bildmitte (x im Raum des Elternknotens): dorthin rückt das Buch, wenn es vom Pult
+## genommen wird, und dort steht der Bund, wenn es aufgeschlagen ist — auch wenn die Reihe
+## geblättert ist. Die Bibliothek setzt es.
+var center_x := 0.0
 ## Vorn halten (beim Öffnen und Zurückkommen) und aufschlagen.
 var _held := false
 var _opening := false
@@ -73,6 +86,7 @@ var _texture: Texture2D
 var _cloth := StandardMaterial3D.new()
 var _left_map := StandardMaterial3D.new()
 var _right_map := StandardMaterial3D.new()
+var _glow_material: ShaderMaterial
 
 @onready var _body: Node3D = %Body
 @onready var _hinge: Node3D = %Hinge
@@ -85,6 +99,9 @@ func _ready() -> void:
 	cover.roughness = 0.9
 	(%CoverFace as MeshInstance3D).material_override = cover
 	_cloth.roughness = 0.75
+	_cloth.albedo_texture = CLOTH
+	_cloth.uv1_triplanar = true
+	_cloth.uv1_scale = Vector3.ONE / CLOTH_TILE
 	_cloth.cull_mode = BaseMaterial3D.CULL_DISABLED
 	for part: MeshInstance3D in [%Front, %Back, %Spine]:
 		part.material_override = _cloth
@@ -99,19 +116,23 @@ func _ready() -> void:
 	_right_map.uv1_offset = Vector3(0.5, 0.0, 0.0)
 	(%LeftMap as MeshInstance3D).material_override = _left_map
 	(%RightMap as MeshInstance3D).material_override = _right_map
+	# Eigene Kopie: jedes Buch leuchtet für sich (CLAUDE.md „Fallen", geteilte Ressourcen).
+	var glow := %Glow as MeshInstance3D
+	_glow_material = (glow.material_override as ShaderMaterial).duplicate()
+	glow.material_override = _glow_material
 	_shape()
 	_pose()
 	set_process(false)
 
 
-## Titel, Kartenbild (oder null), Platz im Regal und Stand aus BookSelect.stats, dazu
+## Titel, Kartenbild (oder null), Platz auf dem Pult und Stand aus BookSelect.stats, dazu
 ## `language` (Anzeigename der Sprache) und `bosses` (Units mit Boss; ohne Feld alle).
 func fill(title: String, texture: Texture2D, index: int, stats: Dictionary) -> void:
 	_texture = texture
 	thickness = thickness_for(int(stats.get("units", 0)))
 	var color: Color = COLORS[index % COLORS.size()]
-	_cloth.albedo_color = color
-	(%Paper as ColorRect).color = color.darkened(0.15)
+	_cloth.albedo_color = _gained(color)
+	(%Paper as TextureRect).self_modulate = _gained(color.darkened(0.15))
 	(%Map as TextureRect).texture = texture
 	_left_map.albedo_texture = texture
 	_right_map.albedo_texture = texture
@@ -120,14 +141,19 @@ func fill(title: String, texture: Texture2D, index: int, stats: Dictionary) -> v
 	(%SpineTitle as Label3D).text = title
 	var done := int(stats.get("done", 0))
 	var total := int(stats.get("total", 0))
-	(%Words as Label).text = "%d von %d Wörtern gemeistert" % [done, total]
+	(%Words as Label).text = "📖 %d / %d" % [done, total]
 	var bar := %Bar as ProgressBar
 	bar.max_value = maxi(total, 1)
 	bar.value = done
 	var bosses := int(stats.get("bosses", stats.get("units", 0)))
 	(%Crowns as Label).text = "Noch kein Bosskampf" if bosses == 0 \
-			else "👑 %d von %d Bossen besiegt" % [int(stats.get("crowns", 0)), bosses]
+			else "👑 %d / %d Bosse besiegt" % [int(stats.get("crowns", 0)), bosses]
 	_shape()
+
+
+## Die Farbe, heller angesetzt für den grauen Einband (CLOTH_GAIN); Alpha bleibt.
+static func _gained(color: Color) -> Color:
+	return Color(color.r * CLOTH_GAIN, color.g * CLOTH_GAIN, color.b * CLOTH_GAIN, color.a)
 
 
 func texture() -> Texture2D:
@@ -174,7 +200,7 @@ func is_facing() -> bool:
 	return lift >= 1.0 and _flat >= 1.0
 
 
-## Liegt die Doppelseite offen? Dann kann die Buchauswahl hineintauchen.
+## Liegt die Doppelseite offen? Dann kann die Bibliothek hineintauchen.
 func is_spread_open() -> bool:
 	return _open >= 1.0
 
@@ -185,14 +211,10 @@ func _process(delta: float) -> void:
 	# Solange der Deckel offen ist, bleibt das Buch vorn und gerade — erst zu, dann zurück.
 	var forward := _held or _open > 0.0
 	var goal := 1.0 if forward or selected else 0.0
-	# Ein anderes Buch ist noch gedreht draußen: erst nur gerade herausziehen, sonst
-	# schneiden sich die beiden Einbände.
-	var target := goal
-	if goal > 0.0 and not forward and _other_is_out():
-		target = minf(goal, TURN_START)
-	lift = move_toward(lift, target, step if target >= lift else step * RETURN_SPEED)
-	var flat_goal := 1.0 if forward else 0.0
-	_flat = move_toward(_flat, flat_goal, step * 2.0)
+	lift = move_toward(lift, goal, step if goal >= lift else step * RETURN_SPEED)
+	# Ausgewählt steht es ganz gerade, damit die Schrift auf dem Cover lesbar ist.
+	var flat_goal := 1.0 if forward or selected else 0.0
+	_flat = move_toward(_flat, flat_goal, step)
 	# Aufschlagen erst, wenn das Buch gerade vorn steht; zuschlagen sofort.
 	var open_goal := 0.0
 	if _opening:
@@ -203,39 +225,26 @@ func _process(delta: float) -> void:
 		set_process(false)
 
 
-func _other_is_out() -> bool:
-	for sibling in get_parent().get_children():
-		if sibling != self and sibling is Book3D and (sibling as Book3D).lift > TURN_START:
-			return true
-	return false
-
-
-## Erst ziehen, dann drehen: am Anfang kommt das Buch gerade heraus, das Drehen setzt ein,
-## wenn es die Nachbarn nicht mehr streift.
-static func pull_of(k: float) -> float:
-	return smoothstep(0.0, 0.65, k)
-
-
-static func turn_of(k: float) -> float:
-	return smoothstep(TURN_START, 1.0, k)
-
-
 ## Wo das Scharnier des vorderen Deckels liegt (x in der Buchlage).
 static func hinge_x() -> float:
 	return -WIDTH * 0.5 + BULGE
 
 
 func _pose() -> void:
-	var pull := pull_of(lift)
-	var turn := turn_of(lift)
+	var pull := smoothstep(0.0, 1.0, lift)
 	var opened := smoothstep(0.0, 1.0, _open)
-	var reach := WIDTH * 0.5 + thickness * 0.5 + PULL_MARGIN
-	# Beim Aufschlagen rückt der Bund in die Bildmitte: die Doppelseite steht mittig.
-	var center := lerpf(TO_CENTER * turn, 1.0, opened)
-	_body.position = Vector3(-position.x * center - hinge_x() * opened, LIFT * pull, reach * pull)
-	var angle := 90.0 * (1.0 - turn) + SHOWN_ANGLE * turn * (1.0 - _flat)
-	_body.rotation = Vector3(0.0, deg_to_rad(angle), 0.0)
+	# Vom Pult genommen rückt das Buch ein Stück zur Bildmitte; aufgeschlagen steht dort
+	# der Bund, die Doppelseite mittig.
+	var toward := lerpf(TOWARD, 1.0, opened) * pull
+	_body.position = Vector3((center_x - position.x) * toward - hinge_x() * opened,
+			LIFT * pull, PULL * pull)
+	_body.rotation = Vector3(0.0, deg_to_rad(SLOT_ANGLE * (1.0 - smoothstep(0.0, 1.0, _flat))), 0.0)
 	_hinge.rotation = Vector3(0.0, -PI * opened, 0.0)
+	# Glanz und Stand gehören zum ausgewählten Buch; aufgeschlagen tritt der Glanz zurück.
+	(%Stats as Control).modulate.a = smoothstep(0.5, 1.0, lift)
+	var glow := pull * (1.0 - opened)
+	_glow_material.set_shader_parameter("strength", glow)
+	(%Glow as MeshInstance3D).visible = glow > 0.0
 
 
 ## Baut die Meshes nach `thickness`. Jedes Buch bekommt eigene Meshes — geladene
@@ -262,6 +271,12 @@ func _shape() -> void:
 	pages.size = Vector3(WIDTH * 0.5 - OVERHANG - (hx - 0.02), HEIGHT - 2.0 * OVERHANG, t - 2.0 * BOARD)
 	(%Pages as MeshInstance3D).mesh = pages
 	(%Pages as MeshInstance3D).position = Vector3(hx - 0.02 + pages.size.x * 0.5, 0.0, 0.0)
+
+	# Der Glanz liegt hinter dem Buch und steht rundum über.
+	var glow_size := Vector2(WIDTH + GLOW_MARGIN, HEIGHT + GLOW_MARGIN)
+	_quad(%Glow, glow_size, Vector3(0.0, 0.0, -half - 0.02), false)
+	_glow_material.set_shader_parameter("quad_size", glow_size)
+	_glow_material.set_shader_parameter("book_size", Vector2(WIDTH, HEIGHT))
 
 	# Außen auf dem Deckel das Cover, vom Falz bis zur Kante; innen die linke Seite.
 	var flat_from := GROOVE_AT + GROOVE_WIDTH
@@ -306,14 +321,23 @@ func _quad(node: MeshInstance3D, size: Vector2, at: Vector3, inside: bool) -> vo
 
 # --- Treffer und Bildschirm -----------------------------------------------------
 
-## Wie weit der Strahl bis zu diesem Buch läuft, oder INF: getroffen ist sein Platz im
-## Regal oder der Körper, wo er gerade steht.
+## Wie weit der Strahl bis zu diesem Buch auf seinem Platz in der Reihe läuft, oder INF.
+## Gezielt wird immer auf den Platz, nicht auf das herausgenommene Buch: das steht groß vor
+## den Nachbarn und würde sie sonst verdecken.
 func hit(origin: Vector3, direction: Vector3) -> float:
+	var home := global_transform * Transform3D(Basis(Vector3.UP, deg_to_rad(SLOT_ANGLE)),
+			Vector3.ZERO)
+	return ray_box(home, _box(), origin, direction)
+
+
+## Wie weit der Strahl bis zum Körper läuft, wo er gerade steht (herausgenommen), oder INF.
+func hit_body(origin: Vector3, direction: Vector3) -> float:
+	return ray_box(_body.global_transform, _box(), origin, direction)
+
+
+func _box() -> AABB:
 	var t := thickness
-	var slot := AABB(Vector3(-t * 0.5, -HEIGHT * 0.5, -WIDTH * 0.5), Vector3(t, HEIGHT, WIDTH))
-	var body := AABB(Vector3(-WIDTH * 0.5, -HEIGHT * 0.5, -t * 0.5), Vector3(WIDTH, HEIGHT, t))
-	return minf(ray_box(global_transform, slot, origin, direction),
-			ray_box(_body.global_transform, body, origin, direction))
+	return AABB(Vector3(-WIDTH * 0.5, -HEIGHT * 0.5, -t * 0.5), Vector3(WIDTH, HEIGHT, t))
 
 
 ## Abstand entlang des Strahls bis zur Box `box` im Raum `frame`, oder INF.

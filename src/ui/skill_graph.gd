@@ -17,9 +17,12 @@ extends Control
 ## später Linien zwischen Bäumen dazukommen, ändert hier nur, welche `requires` gefunden
 ## werden, nicht die Art zu zeichnen.
 
-## Ein Knoten wurde angeklickt (leer: daneben geklickt). Was das bedeutet, entscheidet der
-## Screen — dieses Control lernt nichts.
+## Ein Knoten wurde angeklickt oder mit Enter bestätigt (leer: daneben geklickt). Was das
+## bedeutet, entscheidet der Screen — dieses Control lernt nichts.
 signal node_selected(id: String)
+
+## Zoom oder Ausschnitt haben sich geändert — für die Prozentanzeige der Werkzeugleiste.
+signal view_changed()
 
 const MIN_ZOOM := 0.35
 const MAX_ZOOM := 2.0
@@ -42,8 +45,44 @@ const EDGE_WIDTH_LEARNED := 4.0
 
 ## Deckkraft von Füllung und Rand des gemeinsamen Hofes. Bewusst schwach: er soll den
 ## Blick auf den Anfang lenken und nicht mit den Knoten darauf konkurrieren.
-const ROOT_HALO_FILL_ALPHA := 0.12
-const ROOT_HALO_RING_ALPHA := 0.35
+const ROOT_HALO_FILL_ALPHA := 0.05
+const ROOT_HALO_RING_ALPHA := 0.2
+
+## --- Medaillons (assets/ui/skill_tree/README.md) ---
+## Die Medaillon-Textur ist 256 px breit, ihr Ring reicht außen bis 111 px und innen bis
+## 90 px vom Mittelpunkt (gemessen mit `skill_tree_lab -- --medallion`). Gezeichnet wird sie
+## so groß, dass der Ring außen auf `SkillTree.NODE_RADIUS` liegt.
+const MEDALLION_OUTER := 111.0 / 128.0
+const MEDALLION_INNER := 90.0 / 128.0
+## Das Icon im Medaillon: 52 von 80 px, wie im Einbaupaket empfohlen.
+const ICON_SHARE := 52.0 / 80.0
+## Schloss statt Icon, etwas kleiner — es ist ein Zustand und kein Motiv.
+const LOCK_SHARE := 0.42
+## Haken unten rechts, 20 von 80 px.
+const CHECK_SHARE := 20.0 / 80.0
+
+## Die Ringfarbe kommt vom BAUM, der Zustand nur von ihrer Stärke: gedämpft für gesperrt
+## und zu teuer, hell für lernbar und gelernt. Gelernt tönt zusätzlich die Mitte, und der
+## Haken macht den Zustand eindeutig.
+const RING_BRIGHT := 1.3
+const RING_DIM := 0.55
+const LEARNED_TINT_ALPHA := 0.45
+## Das Icon eines zu teuren Knotens: da, aber zurückgenommen.
+const ICON_DIM := Color(0.6, 0.6, 0.65, 1)
+
+## Schrift im Netz wächst und schrumpft mit dem Zoom, aber nicht unter diesen Anteil ihrer
+## Größe im Theme. Eingepasst steht das Netz in der Grundauflösung bei rund 60 % — die Namen
+## wären dann 8 px hoch und nicht mehr zu lesen. Zwischen den Knoten ist Platz genug, dass
+## sie etwas größer sein dürfen als ihr Maßstab.
+const MIN_LABEL_SCALE := 0.8
+
+## Tastatur: ein Pfeil springt zum nächsten Knoten, der in dieser Richtung liegt. „In der
+## Richtung" heißt: höchstens 60° neben ihr (cos 60° = 0.5).
+const STEP_CONE := 0.5
+## So viel Rand bleibt, wenn ein angesprungener Knoten ins Bild geschoben wird.
+const FOCUS_PAD := 48.0
+## Ecken der Hof-Ellipse — rund genug, dass man keine sieht.
+const HALO_SEGMENTS := 72
 
 var _entries: Array = []
 var _unlocked: PackedStringArray = PackedStringArray()
@@ -69,12 +108,24 @@ var _dragging := false
 ## Der Knoten unter dem Zeiger — für den hellen Ring, an dem man sieht, was man trifft.
 var _hovered: String = ""
 
+## Der Knoten, auf dem die Tastatur steht, und ob sie zuletzt benutzt wurde. Der Ring dafür
+## erscheint erst nach dem ersten Pfeil: wer mit der Maus kommt, soll nicht einen
+## leuchtenden Knoten sehen, den er nie gewählt hat.
+var _focused: String = ""
+var _keyboard := false
+
+## Der Zoom nach dem letzten Einpassen — die 100 % der Prozentanzeige.
+var _fit_zoom: float = 1.0
+
 
 func _ready() -> void:
 	resized.connect(func() -> void:
 		if not _touched:
 			fit())
 	mouse_exited.connect(func() -> void: _set_hovered(""))
+	focus_exited.connect(func() -> void:
+		_keyboard = false
+		queue_redraw())
 
 
 ## Setzt den Inhalt: Knoten, Gelerntes und die offenen Punkte. Der Ausschnitt bleibt, wo
@@ -87,6 +138,8 @@ func setup(entries: Array, unlocked: PackedStringArray, points: int) -> void:
 	_places = SkillTree.layout(entries)
 	if not _places.has(_selected):
 		_selected = ""
+	if not _places.has(_focused):
+		_focused = ""
 	if not _touched:
 		fit()
 	queue_redraw()
@@ -115,20 +168,39 @@ func fit() -> void:
 	var box := SkillTree.bounds(_places)
 	if box.size.x <= 0.0 or box.size.y <= 0.0 or size.x <= 0.0 or size.y <= 0.0:
 		_zoom = 1.0
+		_fit_zoom = _zoom
 		_origin = size * 0.5
 		queue_redraw()
+		view_changed.emit()
 		return
 	var room := size - Vector2.ONE * FIT_PAD * 2.0
 	_zoom = clampf(minf(room.x / box.size.x, room.y / box.size.y), MIN_ZOOM, MAX_ZOOM)
+	_fit_zoom = _zoom
 	# Die Mitte des Netzes auf die Mitte der Fläche: `box` liegt nicht symmetrisch um den
 	# Ursprung, sobald ein Baum mehr Stufen hat als der andere.
 	_origin = size * 0.5 - box.get_center() * _zoom
 	queue_redraw()
+	view_changed.emit()
+
+
+## Zoomt um die Mitte der Fläche — für die Knöpfe −/+ der Werkzeugleiste.
+func zoom_by(factor: float) -> void:
+	_zoom_at(size * 0.5, factor)
+
+
+## Der Zoom in Prozent des eingepassten: „Einpassen" ist 100 %. Ein absoluter Wert sagte
+## dem Spieler nichts — das eingepasste Netz stünde je nach Fenster bei 60 oder 90 %.
+func zoom_percent() -> int:
+	return int(round(_zoom / maxf(_fit_zoom, 0.001) * 100.0))
 
 
 # --- Eingabe ------------------------------------------------------------------
 
 func _gui_input(event: InputEvent) -> void:
+	if event is InputEventKey or event is InputEventJoypadButton \
+			or event is InputEventJoypadMotion:
+		_on_key(event)
+		return
 	var button := event as InputEventMouseButton
 	if button != null:
 		_on_button(button)
@@ -141,6 +213,9 @@ func _gui_input(event: InputEvent) -> void:
 	if _pressed and not _dragging \
 			and _press_at.distance_to(motion.position) > DRAG_SLOP:
 		_dragging = true
+	if _keyboard:
+		_keyboard = false
+		queue_redraw()
 	if not _dragging:
 		_set_hovered(id_at(motion.position))
 		return
@@ -148,7 +223,96 @@ func _gui_input(event: InputEvent) -> void:
 	_touched = true
 	_origin += motion.relative
 	queue_redraw()
+	view_changed.emit()
 	accept_event()
+
+
+## Pfeile springen von Knoten zu Knoten, Enter bestätigt — dieselbe Aktion wie ein Klick.
+## Der erste Pfeil setzt nur auf: er wählt den Anfangsknoten, der der Mitte der Fläche am
+## nächsten liegt, statt schon irgendwohin zu springen.
+func _on_key(event: InputEvent) -> void:
+	for pair: Array in [["ui_left", Vector2.LEFT], ["ui_right", Vector2.RIGHT],
+			["ui_up", Vector2.UP], ["ui_down", Vector2.DOWN]]:
+		if event.is_action_pressed(str(pair[0]), true):
+			_keyboard = true
+			_set_focused(_step(pair[1]) if not _focused.is_empty() else _nearest(size * 0.5))
+			accept_event()
+			return
+	if event.is_action_pressed("ui_accept") and _keyboard and not _focused.is_empty():
+		select(_focused)
+		accept_event()
+
+
+## Der Knoten, auf dem die Tastatur steht (leer: keiner).
+func focused_id() -> String:
+	return _focused
+
+
+func _set_focused(id: String) -> void:
+	if id.is_empty():
+		return
+	_focused = id
+	_keep_in_view(id)
+	queue_redraw()
+
+
+## Der nächste Knoten von `_focused` aus in Richtung `dir`. Gewertet wird die Entfernung,
+## verlängert um die Abweichung von der Richtung — sonst gewänne ein naher Knoten schräg
+## daneben gegen den, der genau in der Richtung liegt. Gibt es keinen, bleibt es beim alten.
+func _step(dir: Vector2) -> String:
+	var from := screen_position(_focused)
+	var best := _focused
+	var best_score := INF
+	for id in _skill_ids():
+		if id == _focused:
+			continue
+		var offset := screen_position(id) - from
+		if offset.length() < 0.001:
+			continue
+		var along := offset.normalized().dot(dir)
+		if along < STEP_CONE:
+			continue
+		var score := offset.length() * (2.0 - along)
+		if score < best_score:
+			best_score = score
+			best = id
+	return best
+
+
+## Der Knoten, der `point` am nächsten liegt.
+func _nearest(point: Vector2) -> String:
+	var best := ""
+	var best_gap := INF
+	for id in _skill_ids():
+		var gap := screen_position(id).distance_to(point)
+		if gap < best_gap:
+			best_gap = gap
+			best = id
+	return best
+
+
+func _skill_ids() -> Array[String]:
+	var out: Array[String] = []
+	for id: String in _places:
+		if SkillTree.node_by_id(_entries, id).get("kind", "") == "skill":
+			out.append(id)
+	return out
+
+
+## Schiebt den Ausschnitt so weit, dass `id` mit etwas Rand im Bild liegt. Nur so weit wie
+## nötig: ein Sprung zum Nachbarn soll das Netz nicht jedes Mal neu zentrieren.
+func _keep_in_view(id: String) -> void:
+	var at := screen_position(id)
+	var pad := FOCUS_PAD + SkillTree.NODE_RADIUS * _zoom
+	var inner := Rect2(Vector2.ONE * pad, size - Vector2.ONE * pad * 2.0)
+	if inner.size.x <= 0.0 or inner.size.y <= 0.0 or inner.has_point(at):
+		return
+	var shift := Vector2(
+			clampf(at.x, inner.position.x, inner.end.x) - at.x,
+			clampf(at.y, inner.position.y, inner.end.y) - at.y)
+	_origin += shift
+	_touched = true
+	view_changed.emit()
 
 
 func _on_button(button: InputEventMouseButton) -> void:
@@ -212,6 +376,7 @@ func _zoom_at(point: Vector2, factor: float) -> void:
 	_origin = point - graph_point * after
 	_touched = true
 	queue_redraw()
+	view_changed.emit()
 
 
 ## Der aktuelle Zoomfaktor (für Anzeige und Test).
@@ -240,22 +405,37 @@ func id_at(point: Vector2) -> String:
 ## Das Feld, in dem der Name eines Baums steht. Gerechnet und nicht beim Zeichnen gemerkt:
 ## `id_at` darf nicht davon abhängen, dass vorher einmal gezeichnet wurde.
 func _title_rect(tree: Dictionary) -> Rect2:
-	var font_size := int(get_theme_font_size("font_size", "SectionTitle") * _zoom)
+	var font_size := int(get_theme_font_size("font_size", "SectionTitle") * _label_scale())
 	if font_size <= 0:
 		return Rect2()
 	var text := str(tree.get("name", ""))
 	var width := get_theme_default_font().get_string_size(
 			text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
 	# `draw_string` setzt den Text auf die GRUNDLINIE — das Feld liegt also darüber.
-	var at := _to_screen(_places.get(str(tree.get("id", "")), Vector2.ZERO))
-	return Rect2(at - Vector2(width * 0.5, float(font_size)),
+	var place: Vector2 = _places.get(str(tree.get("id", "")), Vector2.ZERO)
+	var at := _to_screen(place)
+	var box := Rect2(at - Vector2(width * 0.5, float(font_size)),
 			Vector2(width, float(font_size) * 1.3))
+	# Der Platz ist der innere Rand des Namens, nicht seine Mitte: das Feld rückt entlang
+	# der Achse seines Baums nach außen. Sonst wüchse ein langer Name — oder die
+	# Mindestschrift bei kleinem Zoom — zurück in die Knoten seines eigenen Baums.
+	var axis := place.normalized()
+	return Rect2(box.position + axis * box.size * 0.5, box.size)
 
 
 ## Wo ein Knoten gerade auf der Fläche liegt — die Umkehrung von `id_at`, gebraucht zum
 ## Zielen (und im Test zum Klicken).
+## Bei einem Baum ist das die Mitte seines Namens, nicht dessen Platz (der ist der innere Rand).
 func screen_position(id: String) -> Vector2:
+	var node := SkillTree.node_by_id(_entries, id)
+	if node.get("kind", "") == "tree":
+		return _title_rect(node).get_center()
 	return _to_screen(_places.get(id, Vector2.ZERO))
+
+
+## Maßstab der Schrift im Netz (siehe `MIN_LABEL_SCALE`).
+func _label_scale() -> float:
+	return maxf(_zoom, MIN_LABEL_SCALE)
 
 
 func _to_screen(point: Vector2) -> Vector2:
@@ -305,15 +485,20 @@ func _draw_tree(tree: Dictionary) -> void:
 ## wird als ERSTES gezeichnet, vor jedem Baum — sonst läge er über den Linien und Knoten
 ## des Baums, der vor ihm an der Reihe war.
 func _draw_root_halo() -> void:
-	var radius := SkillTree.root_halo_radius() * _zoom
+	var axes := SkillTree.root_halo_size() * _zoom
 	var at := _to_screen(Vector2.ZERO)
 	var tone := get_theme_color("font_color", "Hint")
 	var fill := tone
 	fill.a = ROOT_HALO_FILL_ALPHA
 	var ring := tone
 	ring.a = ROOT_HALO_RING_ALPHA
-	draw_circle(at, radius, fill)
-	draw_arc(at, radius, 0.0, TAU, 64, ring, 2.0 * _zoom, true)
+	# Eine Ellipse, weil das Netz gestreckt ist (`SkillTree.STRETCH`). Als Vieleck statt
+	# über eine skalierte Zeichnung: die verzöge auch die Strichstärke des Randes.
+	var outline := PackedVector2Array()
+	for i in HALO_SEGMENTS + 1:
+		outline.append(at + Vector2.from_angle(TAU * float(i) / HALO_SEGMENTS) * axes)
+	draw_colored_polygon(outline.slice(0, HALO_SEGMENTS), fill)
+	draw_polyline(outline, ring, 2.0 * _zoom, true)
 
 
 ## Eine Kante hat drei Helligkeiten: der begangene Weg (beide Enden gelernt), der offene
@@ -342,12 +527,12 @@ func _draw_tree_title(tree: Dictionary, color: Color) -> void:
 	var rect := _title_rect(tree)
 	if rect.size.x <= 0.0:
 		return
-	var font_size := int(get_theme_font_size("font_size", "SectionTitle") * _zoom)
-	var at := _to_screen(_places.get(str(tree.get("id", "")), Vector2.ZERO))
+	var font_size := int(get_theme_font_size("font_size", "SectionTitle") * _label_scale())
 	var tint := color
 	if str(tree.get("id", "")) == _hovered:
 		tint = color.lightened(0.35)
-	draw_string(get_theme_default_font(), Vector2(rect.position.x, at.y),
+	draw_string(get_theme_default_font(),
+			Vector2(rect.position.x, rect.position.y + float(font_size)),
 			str(tree.get("name", "")), HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, tint)
 
 
@@ -356,52 +541,69 @@ func _draw_node(node: Dictionary, color: Color) -> void:
 	var at := _to_screen(_places.get(id, Vector2.ZERO))
 	var radius := SkillTree.NODE_RADIUS * _zoom
 	var state := SkillTree.state_of(node, _unlocked, _points)
+	var bright := state == SkillTree.State.LEARNED or state == SkillTree.State.AVAILABLE
 
-	var fill := Color(0.09, 0.11, 0.16)
-	var ring := color.darkened(0.5)
-	var ring_width := 2.0
-	match state:
-		SkillTree.State.LEARNED:
-			fill = color.darkened(0.45)
-			ring = color
-			ring_width = 4.0
-		SkillTree.State.AVAILABLE:
-			ring = color
-			ring_width = 3.0
-		SkillTree.State.TOO_EXPENSIVE:
-			ring = color.darkened(0.3)
-		SkillTree.State.LOCKED:
-			fill = Color(0.07, 0.08, 0.11)
-			ring = Color(0.32, 0.34, 0.4)
+	# Das Medaillon: silbern, mit der Farbe des Baums überzogen — hell oder gedämpft.
+	var side := radius * 2.0 / MEDALLION_OUTER
+	var rect := Rect2(at - Vector2.ONE * side * 0.5, Vector2.ONE * side)
+	var ring := color * (RING_BRIGHT if bright else RING_DIM)
+	ring.a = 1.0
+	draw_texture_rect(SkillIcons.medallion(), rect, false, ring)
+	if state == SkillTree.State.LEARNED:
+		var tint := color
+		tint.a = LEARNED_TINT_ALPHA
+		draw_circle(at, side * 0.5 * MEDALLION_INNER, tint, true, -1.0, true)
 
-	draw_circle(at, radius, fill)
-	draw_arc(at, radius, 0.0, TAU, 40, ring, ring_width * _zoom, true)
-	if id == _selected or id == _hovered:
-		# Die Auswahl ist heller als das bloße Überfahren: beides ist ein Ring, damit der
-		# Knoten selbst nicht seine Farbe wechselt und dabei seinen Zustand verschweigt.
-		var alpha := 0.85 if id == _selected else 0.45
-		draw_arc(at, radius + 6.0 * _zoom, 0.0, TAU, 40, Color(1, 1, 1, alpha),
-				2.0 * _zoom, true)
+	if state == SkillTree.State.LOCKED:
+		var lock_side := side * LOCK_SHARE
+		draw_texture_rect(SkillIcons.lock(),
+				Rect2(at - Vector2.ONE * lock_side * 0.5, Vector2.ONE * lock_side), false)
+	else:
+		_draw_icon(node, at, side * ICON_SHARE,
+				ICON_DIM if state == SkillTree.State.TOO_EXPENSIVE else Color.WHITE)
 
-	var font := get_theme_default_font()
-	var icon_size := int(get_theme_font_size("font_size", "SkillIcon") * _zoom)
-	var icon := SkillTree.icon_of(node) if state != SkillTree.State.LOCKED else "🔒"
-	if icon_size > 0:
-		# Grundlinie statt Mitte: draw_string setzt den Text auf die Grundlinie, ein
-		# zentrierter Kreis braucht ihn rund ein Drittel der Größe tiefer.
-		draw_string(font, at - Vector2(radius, 0.0) + Vector2(0.0, icon_size * 0.35),
-				icon, HORIZONTAL_ALIGNMENT_CENTER, radius * 2.0, icon_size,
-				Color(0.95, 0.96, 1.0) if state != SkillTree.State.LOCKED
-				else Color(0.55, 0.58, 0.64))
+	# Der goldene Ring liegt ÜBER dem Zustand und ersetzt ihn nicht: wer zielt, soll weiter
+	# sehen, ob der Knoten gesperrt oder gelernt ist. Heller für den gewählten Knoten und
+	# den der Tastatur, schwächer fürs bloße Überfahren.
+	var ring_alpha := 0.0
+	if id == _hovered:
+		ring_alpha = 0.7
+	if id == _selected or (_keyboard and has_focus() and id == _focused):
+		ring_alpha = 1.0
+	if ring_alpha > 0.0:
+		draw_texture_rect(SkillIcons.focus_ring(), rect, false, Color(1, 1, 1, ring_alpha))
+
+	if state == SkillTree.State.LEARNED:
+		var check_side := side * CHECK_SHARE
+		var corner := at + Vector2.ONE * radius * 0.7
+		draw_texture_rect(SkillIcons.check(),
+				Rect2(corner - Vector2.ONE * check_side * 0.5, Vector2.ONE * check_side), false)
 
 	_draw_name(node, at, radius, state)
 	if state != SkillTree.State.LEARNED:
 		_draw_cost(node, at, radius, color)
 
 
+## Das Motiv im Medaillon — das Bild aus `SkillIcons`, sonst das Zeichen aus den Daten.
+func _draw_icon(node: Dictionary, at: Vector2, side: float, tone: Color) -> void:
+	var picture := SkillIcons.of(str(node.get("id", "")))
+	if picture != null:
+		draw_texture_rect(picture, Rect2(at - Vector2.ONE * side * 0.5, Vector2.ONE * side),
+				false, tone)
+		return
+	var icon_size := int(get_theme_font_size("font_size", "SkillIcon") * _zoom)
+	if icon_size <= 0:
+		return
+	# Grundlinie statt Mitte: draw_string setzt den Text auf die Grundlinie, ein
+	# zentrierter Kreis braucht ihn rund ein Drittel der Größe tiefer.
+	draw_string(get_theme_default_font(),
+			at - Vector2(side * 0.5, 0.0) + Vector2(0.0, icon_size * 0.35),
+			SkillTree.icon_of(node), HORIZONTAL_ALIGNMENT_CENTER, side, icon_size, tone)
+
+
 func _draw_name(node: Dictionary, at: Vector2, radius: float, state: SkillTree.State) -> void:
 	var font := get_theme_default_font()
-	var font_size := int(get_theme_font_size("font_size", "Hint") * _zoom)
+	var font_size := int(get_theme_font_size("font_size", "Hint") * _label_scale())
 	if font_size <= 0:
 		return
 	var text := str(node.get("name", ""))

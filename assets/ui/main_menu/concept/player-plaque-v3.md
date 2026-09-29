@@ -1,0 +1,5 @@
+# Kompakte Spielerplakette – alternative Richtung
+
+Vorschlag, noch nicht freigegeben: `player-plaque-v3.png`. Fast quadratische matte Plakette statt horizontalem Metallbanner. Name und Level im Kopf, Gold separat, XP in zurückhaltendem Blau darunter, Profilwechsel ohne angesetzten Tab. Zahlen sind Beispiele, dynamische Datenbindung bleibt erforderlich. Kein Badge in Statistik oder Skill-Tree.
+
+Mit eingebautem image_gen.imagegen erstellt. Prompt: one calm compact almost-square player plaque for low-poly fantasy game Monster Slam; matte navy surface, very thin steel-blue chamfered edge, no shine or ornate metal, no tabs; small purple low-poly bust by Sam and subdued Level 4; separate tiny gold coin with 1.250; small 166 / 400 XP with very thin blue progress line filled 41.5%; discreet Profil wechseln; flat typography, generous whitespace, hierarchy name then gold then XP; plain midnight navy background. Das generierte Charakterporträt ist ein Platzhalter für den tatsächlichen Profilavatar.

@@ -379,10 +379,58 @@ Erspielte.
   der Bildmitte, und eine Größenänderung beim Weiterblättern verschiebt die Knöpfe unter
   dem Zeiger. Dafür der `PageStack` plus die Regel, innerhalb einer Seite nur zu sperren
   und umzubeschriften statt ein- und auszublenden.
-- **Die Münzen der Tages-Leiste sind keine Währung.** Sie markieren geübte TAGE
-  (`CoinStrip`, `DayCoin`, Vorrat aus `SessionLog.played_day_count()`); Gold zählt in
-  Beträgen. Deshalb redet die Leiste von Tagen — zwei Dinge, die „Goldstück" heißen,
-  wären eines zu viel.
+- **Die Münzen der Monatsreihe sind keine Währung.** Sie markieren geübte TAGE
+  (`CoinStrip` rechnet die Zustände, `StatsDay` zeigt einen Tag; Vorrat aus
+  `SessionLog.played_day_count()`); Gold zählt in Beträgen. Deshalb redet die Reihe von
+  Tagen — zwei Dinge, die „Goldstück" heißen, wären eines zu viel. `DayCoin` ist nur noch
+  die gezeichnete Münze, die aus der Schatzkiste fliegt; ihr `State` bleibt das Maß für
+  beide.
+- **Die Statistik ist ein Fenster wie die Fähigkeiten** (`stats_screen.tscn`): dieselben
+  Schichten (Rahmen `GameWindow`, gekachelte Fläche, Titelband, Gelenke), dasselbe
+  Schließen-X, `closed` an `profile_menu._open_window`, das den Fokus an den Knopf
+  zurückgibt. Die Reiter sind drei Knöpfe `WindowTab` in einer `ButtonGroup` statt eines
+  `TabContainer` — dessen Reiter nähmen die Bilder des Fensterpakets nur über das ganze
+  Theme an. Alle Seiten liegen übereinander in `Pages`, das Fenster ändert beim Umschalten
+  seine Größe nicht. Den Tag unter dem Tastaturfokus erklärt `Hints.show_for`. Werkbank:
+  `scenes/dev/stats_lab.tscn -- --shoot [--tab=N] [--day=N] [--scroll=N] [--sizes]`.
+- **Inhalte und Einstellungen sind dasselbe Fenster** (`content_manager.tscn`,
+  `settings_menu.tscn`), die Einstellungen mit denselben Reitern. Knöpfe mit Text tragen
+  `WindowButton` (die Rahmen der Hauptmenü-Knöpfe, klein), eine Auswahl wie die
+  Standard-Schwierigkeit `ToolChoice` (Werkzeugrahmen, gedrückt golden) in einer
+  `ButtonGroup`. Abschnitte trennt `StatRule`, eine Pack-Zeile ist kein Kasten mehr. Die
+  Rückfrage zum Zurücksetzen ist ein `ConfirmDialog` im Fenster. Nach dem Schließen liest
+  das Menü Plakette und Spielbarkeit neu — Umbenennen und Installieren melden kein Signal.
+  Werkbank: `menu_lab -- --shoot --content | --settings[=1..3]`.
+- **Karten im Kampf sind kleine Fenster** (Wellenabschluss, Vokabel-Auflösung,
+  `ConfirmDialog`): derselbe Rahmen, dasselbe Titelband, aber so groß wie ihr Inhalt. Die
+  Wurzel ist ein `PanelContainer` mit `GameCard` (Fensterrahmen als `StyleBoxTexture`,
+  Innenabstand 0). Fläche und Gelenke kann er nicht als verankerte Kinder tragen — ein
+  `PanelContainer` zieht jedes Kind auf volle Größe —, deshalb zeichnet sie `WindowChrome`
+  selbst: `SURFACE` als erstes Kind der Karte (gekachelt, auf das Achteck innerhalb des
+  Rahmens beschnitten), `JOINTS` als erstes Kind des Titelbands. Knöpfe darin tragen
+  `WindowButton`, der eine Weg nach vorn `WindowPrimary` (dieselbe Größe, goldener Rahmen)
+  — `MainMenuPlay` ist für das Hauptmenü gemacht und in einer Karte viel zu groß. Ein
+  Symbol-Schalter (Ich-Sicht) ist `WindowToggle`: gewählt golden, nicht blasser. Alle drei
+  sind 9-Slice-Rahmen aus `assets/ui/main_menu/buttons/small/` (der Hauptmenü-Rahmen auf ¼,
+  `shrink_image.gd`), damit der Rand auf jeder Breite gleich dick bleibt — auch im Quadrat. Werkbank:
+  `wave_card_lab` schaltet mit ◀/▶ (Bild↑/Bild↓) durch alle Karten;
+  `-- --snap --card=result|opened|levelup|consolation|next|defeat|reveal|confirm [--size=WxH]`
+  speichert eine als Bild (`--snap`, weil der eingebettete `battle_theme_lab` auf `--shoot` hört).
+- **Bilder in der Größe, in der sie stehen.** Ein 9-Slice-Rahmen zeichnet seine Ränder in
+  Texturpixeln, ein stark verkleinertes Bild flimmert an feinen Kanten. Reiter
+  (`statistics/tabs/`) und Spieler-Medaillon (`player_badge/menu/`) liegen deshalb vorab
+  verkleinert vor, so dass sie bei 1920 × 1080 Pixel für Pixel stehen, mit Mipmaps für
+  die Bezugsgröße. Erzeugt mit `src/dev/shrink_image.gd` aus den Paketbildern.
+- **Festungsanzeige der Gebietskarte** nach `assets/ui/fortress/` (README dort): Namens-
+  und Fortschrittsrahmen, Medaillon, Stufenplakette, verkleinert unter `fortress/small/`
+  (Variationen `FortressName`, `FortressProgress`, `FortressBar`). Die Rahmen greifen
+  ineinander — `OverlapRow` schiebt jedes Teil um seinen Rand in das vorige, vorn liegt der
+  Namensrahmen (`z_index`). Statt des Burg-Bildes der Vorlage zeigt das Medaillon die Festung
+  der Stufe aus dem Kampf: `FortressModel` baut sie für `WaveRunner` und für
+  `src/dev/fortress_icons.gd`, das daraus `fortress/tiers/tier_<n>.webp` rendert
+  (`GODOT_WINDOW=1`). Ändert sich die Festung im Kampf, die Bilder neu rendern.
+  Schrift der Anzeige ist Fira Sans (OFL, `assets/fonts/`, Variationen `Fortress*`), näher am
+  Konzept als die Standardschrift.
 
 ## Erfahrung und Level (`src/progression/`)
 
@@ -393,7 +441,7 @@ der umgekehrten Absicht: Gold ist Beute, Erfahrung ist Lernfortschritt.
 |---|---|---|
 | `Experience` | `src/progression/experience.gd` | reine Rechnung: XP je Monster, Stufenkosten, Skillpunkte |
 | `PlayerLevel` (Autoload) | `src/progression/player_level.gd` | Gesamt-Erfahrung des Profils, Aufstieg, Persistenz |
-| Anzeige | `hud.tscn` (Level + Balken beim Namen), `wave_stats.gd` (Zuwachs der Welle), `profile_menu.gd` / `stats_screen.gd` (Stand + offene Skillpunkte) | — |
+| Anzeige | `hud.tscn` (Level + Balken beim Namen), `wave_stats.gd` (Zuwachs der Welle), `profile_badge.gd` (Level, Bogen im Level, Gold; Menü und Bibliothek) / `stats_screen.gd` (Stand + offene Skillpunkte) | — |
 
 - **10..15 XP je besiegtem Monster, aus seiner Schwierigkeit** — und zwar aus DERSELBEN,
   aus der auch Tempo und Punkte entstehen (`WaveGenerator`, das Netto-Maß `t - c` aus
@@ -427,7 +475,7 @@ der umgekehrten Absicht: Gold ist Beute, Erfahrung ist Lernfortschritt.
 
 ## Karte und Laufanfrage (ADR 0006)
 
-Der Hauptweg ins Spiel: **Buchauswahl → Buchkarte → Gebietskarte → Kampf**. Das alte
+Der Hauptweg ins Spiel: **Bibliothek → Buchkarte → Gebietskarte → Kampf**. Das alte
 Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
 
 | Baustein | Wo | Aufgabe |
@@ -438,19 +486,37 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
 | `MapSelection` | `src/ui/map_selection.gd` | welches Buch, welche Unit gerade offen ist (überdauert den Szenenwechsel) |
 | `MapLayout` | `src/ui/map_layout.gd` | Bild und Punkte unter `assets/maps/<book>/` (`book.png`, `unit<n>.png`, `map.json`) |
 | `MapCanvas` | `src/ui/map_canvas.gd` | zeichnet eine Karte: Bild letterboxed in 16:9, Weg, Orte mit Stufe, Ring, Medaille |
-| Screens | `book_select`, `book_map`, `area_map` (`src/ui/` + `scenes/ui/`) | die drei Ebenen |
-| `Book3D` | `src/ui/book_3d.gd` + `scenes/ui/book_3d.tscn` | ein gebundenes Buch im 3D-Regal der Buchauswahl: Rücken nach vorn, ausgewählt herausgezogen und schräg gedreht, beim Öffnen schlägt der vordere Deckel am Falz auf. Das Cover ist eine 2D-Szene im SubViewport (Karte im `OrnateFrame` oben, Stand unten); die Doppelseite trägt die Buchkarte. `spread_view` liefert den Kamerastand, aus dem die Doppelseite das Bild so füllt wie die Buchkarte — die Buchauswahl fliegt die Kamera dorthin und blendet erst am Ende auf das flache Bild über |
+| Screens | `book_select` (die Bibliothek), `book_map`, `area_map` (`src/ui/` + `scenes/ui/`) | die drei Ebenen; die Bibliothek ist kein eigener Screen, sondern die dritte Seite von `profile_menu.tscn` |
+| Bibliothek | `scenes/ui/library_room.tscn` in `menu_backdrop.tscn` | der Raum im Turm der Menü-Kulisse: Lesepult, Regale, Kerzen, `%Eye` (Kamerastand), `%Books` (dort stellt `BookSelect` die Bücher auf) |
+| `Book3D` | `src/ui/book_3d.gd` + `scenes/ui/book_3d.tscn` | ein gebundenes Buch auf dem Lesepult: leicht schräg (`SLOT_ANGLE`, Rücken links sichtbar), ausgewählt vom Pult genommen — nach vorn, gerade zur Kamera, ein Stück zur Bildmitte (`TOWARD`), mit Glanz (`book_glow.gdshader`) und Stand auf dem Cover —, beim Öffnen schlägt der vordere Deckel am Falz auf. Das Cover ist eine 2D-Szene im SubViewport (Einband `assets/ui/library/`, Karte im `OrnateFrame`, darunter der Stand); die Doppelseite trägt die Buchkarte. `spread_view` liefert den Kamerastand, aus dem die Doppelseite das Bild so füllt wie die Buchkarte — die Bibliothek fliegt die Kamera dorthin und blendet erst am Ende auf das flache Bild über |
 | `BookMesh` | `src/ui/book_mesh.gd` | Profile des Einbands (gerundeter Rücken, Deckel mit Falz) und ihre Extrusion zu Meshes, je Buch nach seiner Dicke |
 | Werkbank | `scenes/dev/map_lab.tscn` | Punkte und Weg auf die Kartenbilder setzen, schreibt `map.json`; im Export ausgeschlossen |
 | `BattleTheme` | `src/battle/battle_theme.gd` + `assets/battle_themes/*.tres` | Farben von Boden und Licht und die Deko im Kampf, je Unit passend zur Gebietskarte; Zuordnung unter `themes` in `map.json` |
 | Werkbank | `scenes/dev/battle_theme_lab.tscn` | das Schlachtfeld in jedem Thema, ohne Kampf; `-- --shoot` legt Bilder unter `reports/battle_themes/` ab, `-- --specimens` Nahaufnahmen der Deko (braucht `GODOT_WINDOW=1`) |
 | Modellschmiede | `src/dev/model_forge.gd` | baut die eigenen Low-Poly-Modelle unter `assets/models/forge/` aus Grundformen; die `.glb` sind Ergebnis, geändert wird der Generator |
 
+- **Die Bibliothek liegt in der Menü-Kulisse.** `ProfileMenu` hat drei Seiten
+  (0 „Wer spielt?", 1 Hauptmenü, 2 Bibliothek); `MenuBackdrop.view_at(page)` führt die
+  Kamera von 1 nach 2 in den Turm (`%Library/%Eye`), und `_light_for` blendet Nebel,
+  Himmel und Sonne dabei nach innen. Für den Flug ins Buch übernimmt `BookSelect` die
+  Kamera (`hold_camera`) und gibt sie am Ende des Rückflugs zurück. Aus der Buchkarte
+  zurück (`MapSelection.to_shelf`) startet `profile_menu.tscn` direkt auf Seite 2.
+- **Gezielt wird auf den Platz in der Reihe** (`Book3D.hit`), nicht auf das
+  herausgenommene Buch — das steht groß vor den Nachbarn. `hit_body` gilt nur, solange
+  der Zeiger auf dem herausgenommenen Buch über keinem Platz steht. Nach dem Hereinfahren
+  ist kein Buch herausgenommen; erst eine echte Mausbewegung oder ←/→ wählt. Das Pult hat
+  `BookSelect.SLOTS` Plätze, mehr Bücher blättern die Pfeile (`slot_x`, jede Seite mittig).
 - **Kampf und Boss lesen ihren Bereich aus `RunRequest`, nie aus `UserSettings`.**
   `WaveRunner` (Aufgabenpool, Festungsstufe, Rücksprung), `SentenceSelector.pool_from_settings`
   und `BossFight` fragen dort. Ohne Level fällt `RunRequest` auf die gespeicherte Auswahl
   zurück — das ist der Expertenmodus, der beim Öffnen `start_expert()` ruft. Ein Level
   spielt alle Aufgaben- und Wortarten seines Scopes und keine Tags.
+- **Ein Klick markiert, „Spielen" startet.** `MapLevel.toggle` führt die Auswahl der
+  Gebietskarte: Teile beliebig zusammen, Gesamt und Boss allein. `MapLevel.combine` macht
+  daraus EIN Level für `RunRequest` — mehrere Teile mit allen ihren Scopes, `keys` nennt
+  die Orte (Zoom hinein und zurück in ihre Mitte, Vorauswahl nach dem Kampf). Markiert
+  zeichnet `MapCanvas.set_selected`; der Knopf `%PlayButton` wird gesperrt statt
+  ausgeblendet.
 - **Nichts wird gesperrt, nichts als Abschluss gespeichert.** Die Stufe eines Levels ist
   `FortressTier.part_tiers` (Teil) bzw. `unit_tiers` (Gesamt) — dieselbe Zählregel und
   dieselben Schwellen wie die Festung. Gespeichert wird nur, was sich nicht ableiten
@@ -519,16 +585,33 @@ Start-Screen (`🌳 Fähigkeiten`), nicht am Kampf: gelernt wird zwischen den L�
 - **Gezeichnet statt gebaut** (`SkillGraph`, `_draw()`): drei Bäume mal vier Zuständen
   wären zwölf Theme-Variationen, und die Farbe eines Baums soll aus seiner JSON kommen
   (`color`) und nicht aus dem Theme. Der Screen zoomt mit dem Mausrad und lässt sich
-  ziehen; ein Kauf verschiebt den Ausschnitt nicht. Einpassen und Umlernen sitzen als
-  Zeichen (⛶, ↺) in der unteren rechten Ecke der Fläche und erklären sich über ihre Karte
-  am Zeiger (`Hints.attach`).
+  ziehen; ein Kauf verschiebt den Ausschnitt nicht. Zoom (−, Prozent, +), Einpassen und
+  „Alles umlernen" sitzen als Werkzeugleiste in der unteren rechten Ecke der Fläche und
+  erklären sich über ihre Karte am Zeiger (`Hints.attach`); 100 % ist der eingepasste
+  Zoom (`SkillGraph.zoom_percent`). Pfeiltasten springen von Knoten zu Knoten, Enter
+  wirkt wie ein Klick. Eine Karte zur Tastatur gibt es nicht: sie hängt an der Maus.
+- **Fenster statt Seite, Bilder aus `assets/ui/skill_tree/`.** Im Hauptmenü öffnet
+  `ProfileMenu` den Screen als Overlay (`closed` → wegnehmen, Fokus zurück auf den
+  Knopf); allein gestartet geht Schließen zurück ins Menü. Das Fenster ist geschichtet
+  nach `assets/ui/windows/README.md`: Rahmen (`GameWindow`), gekachelte Materialebene,
+  Titelband (`WindowTitleBar`) mit Kopfzeile und Schließen-X, Inhalt (`WindowContent`),
+  darüber die zwei Anschlussplatten. Die Werkzeugknöpfe tragen `ToolButton`. Jeder Knoten ist ein Medaillon (`medallions/available.webp`, in der
+  Baumfarbe moduliert — hell wenn lernbar oder gelernt, gedämpft sonst), darauf das Bild
+  aus `SkillIcons` (Zuordnung `skill_icons.json`, fehlt eins, steht das Zeichen aus der
+  JSON), gesperrt ein Schloss statt des Bilds, gelernt eine in der Baumfarbe getönte Mitte
+  und ein Haken. `SkillIcons` hält die Texturen fest: in `_draw` geladen und von niemandem
+  gehalten, würde jede im nächsten Bild neu angelegt und weiß gezeichnet. Das Netz ist
+  gestreckt (`SkillTree.STRETCH`), damit es das Breitformat füllt; die Schrift im Netz
+  schrumpft nicht unter `SkillGraph.MIN_LABEL_SCALE`. Abgleich mit dem Entwurf:
+  `scenes/dev/skill_tree_lab.tscn`.
 - **Die Auskunft steht am Zeiger, die Entscheidung in einem Dialog.** Der Screen ist nur
   das Netz; eine Tafel am Bildrand gibt es nicht. Erklärt wird über `Hints` — dieselbe
   Karte wie im ganzen Spiel, sofort und am Bildrand auf die andere Seite geklappt. Weil
   der Graph seine Treffer selbst sucht, hängt er dort als *lebende* Auskunft
   (`attach_live`) und antwortet über `SkillTree._hint_at(local)`, statt jede Mausbewegung
   zu melden.
-  Über einem Knoten trägt sie Zeichen, Name, Wirkung und Zustandszeile
+  Über einem Knoten trägt sie Bild, Name, „Baum · Zustand" (`SkillTree.state_name`),
+  Wirkung, Kosten und Voraussetzungen als Tabelle und die Zustandszeile
   (`SkillTree.state_label`), über dem NAMEN eines Baums dessen Stand
   (`SkillTree.tree_status`: „2/5 gelernt · +2 HP je besiegtem Monster"). Ein Klick auf
   einen lernbaren Knoten öffnet `ConfirmDialog`, und erst dessen Bestätigung bucht — ein
@@ -579,7 +662,7 @@ Der Späherblick (`first_person`, 5 Punkte) schaltet für den **Wellenkampf** ei
 Kamera frei; die Äste darunter heben nur das Lauftempo (`walk_speed`, Anteile auf
 `FirstPersonView.BASE_SPEED`). Der Bosskampf bleibt, wie er ist.
 
-- **Wahl und Freischaltung sind getrennt.** Der Schalter „👁" auf der Gebietskarte (links neben der Festung)
+- **Wahl und Freischaltung sind getrennt.** Der Ich-Sicht-Schalter auf der Gebietskarte (unten rechts vor „Spielen")
   setzt nur einen Wunsch in `RunRequest`; `RunRequest.first_person()` gilt erst mit
   gelerntem Knoten und nur für ein Level. Kein zweiter Merker: wer den Knoten verlernt,
   steht wieder auf der Festung. Der Wunsch hält bis zum Programmende, nicht im Profil.
@@ -588,7 +671,7 @@ Kamera frei; die Äste darunter heben nur das Lauftempo (`walk_speed`, Anteile a
   dort das SkillBook des Profils unbegrenzt Punkte (`SkillBook.unlimited_points`, nur das
   Autoload setzt es); gespeichert wird auch dann nur die Liste der Knoten. Ebenso kostet
   dort nichts Gold (`Wallet.unlimited_gold`: `spend` und `can_afford` gehen immer, nichts
-  wird abgezogen, verdient und gespeichert wird das echte Gold). Tests am Autoload
+  wird abgezogen, verdient und gespeichert wird das echte Gold; angezeigt wird 999.999.999). Tests am Autoload
   schalten beides ab.
 - **Der Kampf ist derselbe.** `WaveRunner` baut Boden, Deko und Festung wie immer für die
   Iso-Kamera (die bleibt in der Szene, nur nicht aktiv) und setzt `FirstPersonView`
@@ -730,7 +813,7 @@ Zeile JSON.
   vollschreibt, schaltet man ab, und dann hilft es niemandem. Geschrieben wird sofort und
   mit `flush()` — der Absturz, den die Spur erklären soll, kündigt sich nicht an.
 - **Abschaltbar, Vorgabe an** (`UserSettings.trace_enabled`, geräteweit wie die Lautstärke).
-  Der Zugang ist der Reiter „Protokoll" im Einstellungs-Screen: Pfad, Ordner öffnen, leeren.
+  Der Zugang ist der Reiter „Protokoll" im Einstellungs-Fenster: Pfad, Ordner öffnen, leeren.
   Eine Aufzeichnung, die man erst einschalten muss, ist beim Fehler von gestern leer.
 - **Die Spur bleibt auf dem Rechner.** Sie enthält getippte Kindertexte und Lemmata aus
   geschütztem Material — anders als der Melde-Rückkanal, der nur Ids kennt. Das ist der
@@ -853,8 +936,16 @@ leer, ist der Kanal aus.
 
 Godots eigener Tooltip ist im ganzen Spiel abgelöst: er erscheint verzögert, bleibt stehen,
 wo er aufgegangen ist, und bringt die Typografie der Engine mit. Die Karte hängt am
-Mauszeiger, kommt aus dem Theme und trägt vier Teile — Überschrift, Text, Liste, Nachsatz —,
-von denen leere nicht erscheinen. Die Liste ist eine Tabelle (Zeichen | Bezeichnung | Wert),
+Mauszeiger, kommt aus dem Theme (Variation `HintCard`: goldener Rahmen und Pfeil aus
+`assets/ui/tooltip/` als Theme-Stylebox/-Icon; die Füllung `HintCard/colors/fill` zeichnet
+die Karte selbst entlang der Goldkontur, `HintCard.fill_outline`/`pointer_outline` — ein
+Rechteck darunter stäche an den abgeschrägten Ecken und neben dem Pfeil dunkelblau heraus) und trägt vier Teile —
+Überschrift, Text, Liste, Nachsatz —, von denen leere nicht erscheinen. Dazu kann eine
+lebende Auskunft Kopfbild (`icon`), Untertitel (`subtitle`, in `tint` gefärbt) und in der
+ersten Listenspalte Texturen statt Zeichen liefern; mit Bild oder Untertitel trennt eine
+Linie den Kopf vom Text. Der Pfeil zeigt auf den Zeiger: die Karte steht darunter, am
+unteren Rand klappt sie darüber, am rechten rückt sie ein, und der Pfeil wandert auf ihrer
+Kante mit (`Hints._place`, `HintCard.point_at`). An einem Knoten ausgerichtet wird sie nie. Die Liste ist eine Tabelle (Zeichen | Bezeichnung | Wert),
 kein Text mit „·" dazwischen: eine Aufzählung liest man Zeile für Zeile, und die Werte stehen
 rechtsbündig untereinander (die Wortzeilen der Statistik: je Richtung und je Zusatzaufgabe
 eine Reihe). Umbrechen darf nur die Bezeichnung.

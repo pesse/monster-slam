@@ -4,8 +4,10 @@ extends Control
 ##
 ## Jeder Ort zeigt die Stufe 0..4 seines Levels aus der Meisterung (FortressTier), der Boss
 ## seine Medaille aus den gezählten Siegen (BossRecord). Alle Level sind frei wählbar; nur
-## ein Boss ohne Sätze ist gesperrt und sagt warum. Ein Klick setzt das Level in
-## RunRequest und startet den Kampf — der kommt über RunRequest.return_scene hierher zurück.
+## ein Boss ohne Sätze ist gesperrt und sagt warum. Ein Klick markiert einen Ort
+## (MapLevel.toggle): mehrere Teile zusammen, Gesamt und Boss allein. „Spielen" unten
+## rechts setzt die Auswahl als ein Level in RunRequest (MapLevel.combine) und startet den
+## Kampf — der kommt über RunRequest.return_scene hierher zurück.
 
 const BATTLE_SCENE := "res://scenes/battle/battle.tscn"
 const BOSS_SCENE := "res://scenes/battle/boss_fight.tscn"
@@ -14,18 +16,30 @@ const BossFight := preload("res://src/battle/boss_fight.gd")
 @onready var _canvas: MapCanvas = %Canvas
 @onready var _title: Label = %Title
 @onready var _book: Label = %Book
-## Festungsanzeige und daneben der Schalter für die Ich-Sicht: blenden zusammen ein.
-@onready var _fortress: Control = %BottomRight
-@onready var _fortress_title: Label = %FortressTitle
+## Ein Schild unten in der Mitte (Vorlage `assets/ui/fortress/`): links der Ort (Buch,
+## Unit), dann der Weg zur nächsten Stufe, rechts das Medaillon mit der Festung, wie sie im
+## Kampf steht (Bilder aus `src/dev/fortress_icons.gd`), und ihrer Stufe. Der Ort steht mit
+## dem Bild da; Festung, Medaillon und unten rechts Ich-Sicht und „Spielen" blenden erst
+## nach der Rechnung ein — ausgeblendet, nicht versteckt, damit das Schild seine Größe
+## behält. Der Balken ist breiter als jede Zeile darunter, deshalb ändert auch der Text
+## die Breite nicht.
+@onready var _fortress: Control = %Fortress
+@onready var _medal: Control = %Medal
+@onready var _actions: Control = %BottomRight
 @onready var _fortress_bar: ProgressBar = %FortressBar
-@onready var _fortress_next: Label = %FortressNext
+@onready var _fortress_image: TextureRect = %FortressImage
+@onready var _fortress_level: Label = %FortressLevel
+@onready var _play: Button = %PlayButton
 
 var _levels: Array = []
+## Die markierten Orte (Schlüssel aus MapLevel.levels_for), in Spielreihenfolge.
+var _selected: Array = []
 
 
 func _ready() -> void:
 	(%BackButton as Button).pressed.connect(_back)
-	_canvas.node_selected.connect(_on_level_selected)
+	_canvas.node_selected.connect(_on_level_clicked)
+	_play.pressed.connect(_start)
 	# Die Level sitzen klein auf den Plätzen des Bildes und wachsen unter dem Zeiger; das
 	# Bild zeigt seinen Weg selbst, die Hinweiskarte sagt, was ein Ort ist.
 	_canvas.node_radius = MapCanvas.AREA_NODE_RADIUS
@@ -52,28 +66,39 @@ func _ready() -> void:
 	elif MapSelection.zoom_out:
 		# Aus dem Kampf zurück: die Karte kommt aus dem Level heraus, das gespielt wurde.
 		MapSelection.zoom_out = false
-		var layout := MapLayout.data(MapSelection.book)
-		_canvas.zoom_back_to(MapLayout.area_points(layout, MapSelection.unit)
-				.get(str(RunRequest.level().get("key", "")), Vector2.INF))
+		var points := MapLayout.area_points(MapLayout.data(MapSelection.book), MapSelection.unit)
+		_canvas.zoom_back_to(MapCanvas.centroid(played_keys().map(
+				func(k): return points.get(str(k), Vector2.INF))))
 		await _canvas.zoom_finished
 	_fill()
 	_canvas.appear()
-	create_tween().tween_property(_fortress, "modulate:a", 1.0, MapCanvas.APPEAR_TIME)
+	for part: Control in [_fortress, _medal, _actions]:
+		create_tween().tween_property(part, "modulate:a", 1.0, MapCanvas.APPEAR_TIME)
 
 
 ## Der Schalter für die Ich-Sicht (nur das Auge, links an der Festungsanzeige und so hoch
 ## wie sie) steht nur da, wenn der Späherblick gelernt ist (im Debug-Build immer,
 ## RunRequest.first_person_selectable) — vor dem ersten Bild entschieden, damit die Ecke
 ## nicht nachträglich wächst. Er gilt für die
-## Wellenkämpfe; der Boss bleibt, wie er ist (RunRequest.first_person).
+## Wellenkämpfe; ist der Boss markiert, ist er gesperrt (RunRequest.first_person).
 func _setup_first_person_toggle() -> void:
 	var toggle := %FirstPersonToggle as Button
 	toggle.visible = RunRequest.first_person_selectable()
 	toggle.button_pressed = RunRequest.wants_first_person()
 	toggle.toggled.connect(RunRequest.want_first_person)
-	Hints.attach(toggle, "Ich-Sicht",
-			"Du stehst selbst auf dem Feld: WASD zum Laufen, die Maus zum Umsehen, Enter öffnet die Eingabe.",
-			"Getroffen wird nur ein Monster, das du gerade siehst. Der Boss bleibt, wie er ist.")
+	_lock_first_person(false)
+
+
+## Sperrt den Schalter, solange der Boss markiert ist — der Bosskampf hat keine Ich-Sicht.
+## Gesperrt, nicht versteckt: die Ecke behält ihre Größe.
+func _lock_first_person(locked: bool) -> void:
+	var toggle := %FirstPersonToggle as Button
+	toggle.disabled = locked
+	if locked:
+		Hints.attach(toggle, "Ich-Sicht", "Im Bosskampf gibt es keine Ich-Sicht.")
+	else:
+		Hints.attach(toggle, "Ich-Sicht",
+				"Du stehst selbst auf dem Feld: WASD zum Laufen, die Maus zum Umsehen, Enter öffnet die Eingabe.")
 
 
 ## Der Kopf weicht den Orten aus, bevor er zu sehen ist — die Größen stehen erst nach
@@ -82,8 +107,9 @@ func _place_header() -> void:
 	var header: Control = %Header
 	header.modulate.a = 0.0
 	await get_tree().process_frame
+	# Der Weg zurück steht unten links neben dem Schild; nach oben nur, wenn dort ein Ort liegt.
 	_canvas.place_header(header, MapLayout.area_points(MapLayout.data(MapSelection.book),
-			MapSelection.unit).values())
+			MapSelection.unit).values(), true)
 	header.modulate.a = 1.0
 
 
@@ -92,7 +118,8 @@ func _place_header() -> void:
 func _show_image() -> void:
 	_book.text = ContentRegistry.book_label(MapSelection.book)
 	_title.text = "Unit %d" % MapSelection.unit
-	_fortress.modulate.a = 0.0
+	for part: Control in [_fortress, _medal, _actions]:
+		part.modulate.a = 0.0
 	_canvas.setup(MapLayout.unit_texture(MapSelection.book, MapSelection.unit), [], [], hint_lines)
 
 
@@ -106,14 +133,42 @@ func _fill() -> void:
 	var units := FortressTier.unit_tiers(lexemes, mastered)
 	var parts := FortressTier.part_tiers(lexemes, mastered, ContentRegistry.part_of)
 	var fortress := fortress_state(units.get("%s/%d" % [book, unit], {}))
-	_fortress_title.text = str(fortress["title"])
 	_fortress_bar.value = float(fortress["share"])
-	_fortress_next.text = str(fortress["next"])
+	(%Before as Label).text = str(fortress["before"])
+	(%Count as Label).text = str(fortress["count"])
+	(%After as Label).text = str(fortress["after"])
+	_fortress_level.text = str(fortress["tier"])
+	_fortress_image.texture = fortress_image(int(fortress["tier"]))
 	var wins := int(BossRecord.wins(UserSettings.active_profile()).get("%s/%d" % [book, unit], 0))
-	_canvas.setup(MapLayout.unit_texture(book, unit),
-			nodes_for(_levels, units, parts, wins, has_boss_sentences(book, unit),
-				MapLayout.area_points(layout, unit)),
-			MapLayout.area_path(layout, unit), hint_lines)
+	var nodes := nodes_for(_levels, units, parts, wins, has_boss_sentences(book, unit),
+			MapLayout.area_points(layout, unit))
+	_canvas.setup(MapLayout.unit_texture(book, unit), nodes, MapLayout.area_path(layout, unit),
+			hint_lines)
+	_select(_initial_selection(nodes))
+
+
+## Was markiert ist, wenn die Karte aufgeht: die Auswahl des letzten Laufs, wenn er in
+## dieser Unit war — so spielt „Spielen" nach dem Kampf dasselbe noch einmal. Sonst nichts.
+func _initial_selection(nodes: Array) -> Array:
+	if not RunRequest.is_level():
+		return []
+	var last := RunRequest.level()
+	if str(last.get("book", "")) != MapSelection.book or int(last.get("unit", 0)) != MapSelection.unit:
+		return []
+	var open := {}
+	for node in nodes:
+		if not bool(node.get("disabled", false)):
+			open[str(node["key"])] = true
+	return played_keys().filter(func(k): return open.has(str(k)))
+
+
+## Die Orte, die der letzte Lauf gespielt hat (MapLevel.combine: `keys`, ältere nur `key`).
+static func played_keys() -> Array:
+	var last := RunRequest.level()
+	if last.has("keys"):
+		return Array(last["keys"])
+	var key := str(last.get("key", ""))
+	return [] if key.is_empty() else [key]
 
 
 ## Wie viele Teil-Level die Unit zeigt: so viele, wie der Inhalt hat, oder — wenn die Karte
@@ -158,17 +213,18 @@ static func nodes_for(levels: Array, units: Dictionary, parts: Dictionary, wins:
 	return out
 
 
-## Die Festung in der Ecke: sie gilt für die ganze Unit, in jedem ihrer Level dieselbe —
+## Die Festung im Schild: sie gilt für die ganze Unit, in jedem ihrer Level dieselbe —
 ## deshalb steht sie dort und nicht an den Orten. `share` ist der Weg von der erreichten
-## zur nächsten Stufe (0..1), auf der höchsten Stufe voll.
+## zur nächsten Stufe (0..1), auf der höchsten Stufe voll. Die Zeile unter dem Balken in
+## drei Stücken, damit die Zahl golden stehen kann: „Noch" · `count` · „Wörter bis Stufe 2".
 static func fortress_state(group: Dictionary) -> Dictionary:
 	var done := int(group.get("done", 0))
 	var total := int(group.get("total", 0))
 	var tier := int(group.get("tier", 0))
-	var title := "Festung · Stufe %d" % tier
 	var next := FortressTier.next_threshold(done, total)
 	if next.is_empty():
-		return {"title": title, "next": "Höchste Stufe" if total > 0 else "", "share": 1.0 if total > 0 else 0.0}
+		return {"tier": tier, "before": "Höchste Stufe" if total > 0 else "", "count": "",
+				"after": "", "share": 1.0 if total > 0 else 0.0}
 	var needed := int(next["needed"])
 	var from := 0
 	if tier > 0:
@@ -176,10 +232,18 @@ static func fortress_state(group: Dictionary) -> Dictionary:
 		from = (int(FortressTier.THRESHOLDS_PERCENT[tier - 1]) * total + 99) / 100
 	var span := maxi(1, done + needed - from)
 	return {
-		"title": title,
-		"next": "noch %d %s bis Stufe %d" % [needed, "Wort" if needed == 1 else "Wörter", int(next["tier"])],
+		"tier": tier,
+		"before": "Noch",
+		"count": str(needed),
+		"after": "%s bis Stufe %d" % ["Wort" if needed == 1 else "Wörter", int(next["tier"])],
 		"share": clampf(float(done - from) / float(span), 0.0, 1.0),
 	}
+
+
+## Das Bild der Festung einer Stufe (72 px, so groß wie im Medaillon); über der höchsten die
+## höchste.
+static func fortress_image(tier: int) -> Texture2D:
+	return load("res://assets/ui/fortress/tiers/tier_%d.webp" % clampi(tier, 0, FortressTier.THRESHOLDS_PERCENT.size())) as Texture2D
 
 
 ## Die Karte am Zeiger für ein Level.
@@ -231,6 +295,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
 		_back()
+	elif event.is_action_pressed("ui_accept") and not _play.disabled:
+		get_viewport().set_input_as_handled()
+		_start()
 
 
 ## Zurück zur Buchkarte, als Zoom heraus — die Umkehrung des Wegs herein.
@@ -243,21 +310,40 @@ func _back() -> void:
 	get_tree().change_scene_to_file(MapSelection.BOOK_SCENE)
 
 
-func _on_level_selected(key: String) -> void:
-	for level in _levels:
-		if str(level["key"]) != key:
-			continue
-		if _canvas.is_zooming():
-			return
-		RunRequest.start_level(level)
-		# Hinein ins Level, wie von der Buch- in die Gebietskarte; der Kampf setzt fort.
-		_canvas.zoom_into(key)
-		_fade_out_hud()
-		await _canvas.zoom_finished
-		await _present_dark()
-		var boss := str(level["kind"]) == MapLevel.KIND_BOSS
-		get_tree().change_scene_to_file(BOSS_SCENE if boss else BATTLE_SCENE)
+func _on_level_clicked(key: String) -> void:
+	if _canvas.is_zooming():
 		return
+	_select(MapLevel.toggle(_levels, _selected, key))
+
+
+## Markiert `keys` auf der Karte und stellt „Spielen" danach: gesperrt ohne Auswahl, die
+## Karte am Knopf sagt, was gespielt wird. Der Knopf bleibt dabei stehen, wie er ist.
+func _select(keys: Array) -> void:
+	_selected = keys
+	_canvas.set_selected(keys)
+	var level := MapLevel.combine(_levels, keys)
+	_play.disabled = level.is_empty()
+	_lock_first_person(not level.is_empty() and str(level["kind"]) == MapLevel.KIND_BOSS)
+	if level.is_empty():
+		Hints.attach(_play, "Spielen", "Wähle auf der Karte, was du spielen willst.",
+				"Mehrere Teile lassen sich zusammen markieren; Gesamt und Boss stehen allein.")
+	else:
+		Hints.attach(_play, "Spielen", "Unit %d · %s" % [MapSelection.unit, str(level["label"])])
+
+
+func _start() -> void:
+	var level := MapLevel.combine(_levels, _selected)
+	if level.is_empty() or _canvas.is_zooming():
+		return
+	RunRequest.start_level(level)
+	# Hinein ins Level, wie von der Buch- in die Gebietskarte; der Kampf setzt fort.
+	_play.disabled = true
+	_canvas.zoom_into_all(level["keys"])
+	_fade_out_hud()
+	await _canvas.zoom_finished
+	await _present_dark()
+	var boss := str(level["kind"]) == MapLevel.KIND_BOSS
+	get_tree().change_scene_to_file(BOSS_SCENE if boss else BATTLE_SCENE)
 
 
 ## Kopfleiste und Schatten gehen mit der Karte ins Dunkel: der Kampf lädt und wärmt danach

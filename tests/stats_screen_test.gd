@@ -214,28 +214,93 @@ func test_the_detail_names_what_it_compares_against() -> void:
 			_accuracy({"baseline_kind": "previous"}))["detail"])).contains("Sitzung davor")
 
 
-## Die Szene muss sich bauen lassen und ihre drei Listen über die eindeutigen Namen
-## finden — genau das geht in einer handgeschriebenen .tscn leicht schief.
+## Die Unterzeile nennt, WELCHE Sitzung gemeint ist — die Kopfzahl trägt nur die Quote.
+func test_the_subline_names_the_session() -> void:
+	assert_str(str(STATS_SCREEN.accuracy_lines(_accuracy())["which"])).is_equal("Letzte Sitzung")
+	assert_str(str(STATS_SCREEN.accuracy_lines(_accuracy({"live": true}))["which"])).is_equal("Diese Sitzung")
+	assert_str(str(STATS_SCREEN.accuracy_lines(_accuracy())["title"])).not_contains("Sitzung")
+
+
+## Die Szene muss sich bauen lassen und ihre Listen über die eindeutigen Namen finden —
+## genau das geht in einer handgeschriebenen .tscn leicht schief.
 func test_scene_builds_and_finds_its_lists() -> void:
 	var screen: Control = auto_free(STATS_SCENE.instantiate())
 	add_child(screen)
-	assert_object(screen.get_node("%StatLines")).is_not_null()
-	assert_object(screen.get_node("%WantedList")).is_not_null()
-	assert_object(screen.get_node("%FreshList")).is_not_null()
-	assert_object(screen.get_node("%ComebackList")).is_not_null()
-	assert_object(screen.get_node("%TaskList")).is_not_null()
-	assert_object(screen.get_node("%RecordList")).is_not_null()
-	assert_object(screen.get_node("%BackButton")).is_not_null()
-	# Vier Kennzahlen-Zeilen füllt _refresh_numbers beim Betreten (Gold zuerst, dann
-	# Level), drei Lebenszeitwerte _refresh_totals — die Gesamt-Genauigkeit steht dort
-	# und nicht mehr oben (Issue #13).
-	assert_int(screen.get_node("%StatLines").get_child_count()).is_equal(4)
-	assert_int(screen.get_node("%TotalLines").get_child_count()).is_equal(3)
+	for list in ["%WantedList", "%FreshList", "%ComebackList", "%TaskList", "%RecordList",
+			"%CloseButton", "%CoinStrip", "%XpBar"]:
+		assert_object(screen.get_node(list)).override_failure_message(list).is_not_null()
+	# Vier Lebenszeitwerte füllt _refresh_totals — die Gesamt-Genauigkeit steht dort und
+	# nicht mehr oben (Issue #13).
+	assert_int(screen.get_node("%TotalLines").get_child_count()).is_equal(4)
 	# Die Wort-Serie erklärt sich zusätzlich am Zeiger — ohne Karte verwechselt man sie mit der
 	# Tages-Serie und der Serie ohne Durchlass. Ohne MOUSE_FILTER_PASS käme die Karte nie.
-	var streak := screen.get_node("%TotalLines").get_child(2) as Label
+	var streak := screen.get_node("%TotalLines").get_child(3) as Label
 	assert_str(streak.text).starts_with("Längste Wort-Serie")
 	assert_str(str(Hints.hint_of(streak).get("body", ""))).contains("einzelne Aufgabe")
 	assert_int(streak.mouse_filter).is_equal(Control.MOUSE_FILTER_PASS)
 	assert_str((screen.get_node("%AccuracyLabel") as Label).text).is_not_empty()
+	remove_child(screen)
+
+
+## Level, Gold und Punkte kommen aus den Autoloads — die Zahlen stehen also, wie sie dort
+## stehen, und der Balken zeigt den Anteil im Level.
+func test_the_numbers_follow_level_and_wallet() -> void:
+	var screen: Control = auto_free(STATS_SCENE.instantiate())
+	add_child(screen)
+	var progress := PlayerLevel.progress()
+	assert_str((screen.get_node("%LevelLabel") as Label).text).is_equal(
+			"Level %d" % int(progress["level"]))
+	assert_str((screen.get_node("%XpLabel") as Label).text).is_equal("%d / %d XP" % [
+			int(progress["xp_in_level"]), int(progress["xp_for_level_up"])])
+	assert_float((screen.get_node("%XpBar") as ProgressBar).value).is_between(0.0, 1.0)
+	assert_str((screen.get_node("%GoldValue") as Label).text).is_equal(Wallet.digits())
+	assert_str((screen.get_node("%PointsValue") as Label).text).is_equal(str(SkillBook.available()))
+	assert_str((screen.get_node("%DueValue") as Label).text).is_equal(str(PlayerProgress.due_count()))
+	remove_child(screen)
+
+
+## Ein Reiter zeigt seine Seite und nur sie; das Fenster bleibt dabei gleich groß.
+func test_the_tabs_switch_pages() -> void:
+	var screen: Control = auto_free(STATS_SCENE.instantiate())
+	add_child(screen)
+	var overview := screen.get_node("%OverviewPage") as Control
+	var progress := screen.get_node("%ProgressPage") as Control
+	var tasks := screen.get_node("%TaskPage") as Control
+	assert_bool(overview.visible).is_true()
+	assert_bool(progress.visible or tasks.visible).is_false()
+	var before := (screen.get_node("%Window") as Control).size
+	(screen.get_node("%ProgressTab") as Button).button_pressed = true
+	assert_bool(progress.visible).is_true()
+	assert_bool(overview.visible or tasks.visible).is_false()
+	assert_bool((screen.get_node("%OverviewTab") as Button).button_pressed).is_false()
+	(screen.get_node("%TaskTab") as Button).button_pressed = true
+	assert_bool(tasks.visible).is_true()
+	assert_bool(progress.visible).is_false()
+	assert_vector((screen.get_node("%Window") as Control).size).is_equal(before)
+	remove_child(screen)
+
+
+## Schließen-X und Escape melden `closed` — das Menü nimmt das Fenster dann weg.
+func test_close_and_escape_tell_the_opener() -> void:
+	var screen: Control = auto_free(STATS_SCENE.instantiate())
+	add_child(screen)
+	var count := [0]
+	screen.connect("closed", func() -> void: count[0] += 1)
+	(screen.get_node("%CloseButton") as BaseButton).pressed.emit()
+	var esc := InputEventAction.new()
+	esc.action = "ui_cancel"
+	esc.pressed = true
+	screen._unhandled_input(esc)
+	assert_int(count[0]).is_equal(2)
+	assert_str(str(Hints.hint_of(screen.get_node("%CloseButton")).get("note", ""))).is_equal("Esc")
+	remove_child(screen)
+
+
+## Das Fenster passt in die Bezugsgröße: Kopf und Reiter stehen, der Rest scrollt.
+func test_the_window_fits_the_reference_size() -> void:
+	var screen: Control = auto_free(STATS_SCENE.instantiate())
+	add_child(screen)
+	var need := (screen.get_node("%Layout") as Control).get_combined_minimum_size() + Vector2(32, 32)
+	assert_float(need.x).is_less_equal(1152.0)
+	assert_float(need.y).is_less_equal(648.0)
 	remove_child(screen)

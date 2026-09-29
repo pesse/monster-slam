@@ -1,0 +1,23 @@
+{
+  "skill.armor.root": "res://assets/ui/skill_tree/icons/bulwark_palisade.webp",
+  "skill.armor.stone": "res://assets/ui/skill_tree/icons/bulwark_wall.webp",
+  "skill.armor.gate": "res://assets/ui/skill_tree/icons/bulwark_gate.webp",
+  "skill.armor.bastion": "res://assets/ui/skill_tree/icons/bulwark_bastion.webp",
+  "skill.armor.portcullis": "res://assets/ui/skill_tree/icons/bulwark_portcullis.webp",
+  "skill.heal.root": "res://assets/ui/skill_tree/icons/healing_bandage.webp",
+  "skill.heal.care": "res://assets/ui/skill_tree/icons/healing_staff.webp",
+  "skill.heal.rite": "res://assets/ui/skill_tree/icons/healing_ritual.webp",
+  "skill.heal.ward": "res://assets/ui/skill_tree/icons/healing_tent.webp",
+  "skill.heal.bless": "res://assets/ui/skill_tree/icons/healing_dove.webp",
+  "skill.scout.root": "res://assets/ui/skill_tree/icons/scout_eye.webp",
+  "skill.scout.boots": "res://assets/ui/skill_tree/icons/scout_boots.webp",
+  "skill.scout.light": "res://assets/ui/skill_tree/icons/scout_feather.webp",
+  "skill.scout.sprint": "res://assets/ui/skill_tree/icons/scout_winged_boots.webp",
+  "skill.scout.charge": "res://assets/ui/skill_tree/icons/scout_charge.webp",
+  "skill.scout.bow": "res://assets/ui/skill_tree/icons/scout_bow.webp",
+  "skill.time.root": "res://assets/ui/skill_tree/icons/time_hourglass.webp",
+  "skill.time.long": "res://assets/ui/skill_tree/icons/time_wind.webp",
+  "skill.time.deep": "res://assets/ui/skill_tree/icons/time_web.webp",
+  "skill.time.still": "res://assets/ui/skill_tree/icons/time_pause.webp",
+  "skill.time.rift": "res://assets/ui/skill_tree/icons/time_rift.webp"
+}

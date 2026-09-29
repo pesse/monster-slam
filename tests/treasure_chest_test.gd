@@ -322,6 +322,26 @@ func test_the_coin_arc_stays_in_the_picture() -> void:
 
 ## Gefallen wird unter die Kante des Bildfelds: eine Münze, die im Bild liegen bleibt,
 ## wäre kein Fund mehr, sondern Müll auf dem Tisch.
+## Gemessen wird auf dem BILD, nicht an der Welthöhe: die Kamera blickt schräg, und gerade
+## die weit gestreuten Münzen blieben sonst knapp über der Kante liegen.
 func test_the_coins_fall_out_of_the_picture() -> void:
-	var bottom := TreasureChest.CAM_HEIGHT - _chest._cam_size() * 0.5
-	assert_float(_chest._floor_y()).is_less(bottom)
+	_chest.size = Vector2(220, 170)
+	var cam := _chest.get_node("%Cam") as Camera3D
+	var view := _chest.get_node("%View") as SubViewport
+	var reach := TreasureChest.COIN_SPREAD * 0.5 * 1.35
+	for x: float in [-reach, 0.0, reach]:
+		for z: float in [-0.45, 0.45]:
+			var at := cam.unproject_position(Vector3(x, _chest._floor_y(x, z), z))
+			assert_float(at.y).override_failure_message(
+					"Münze bei x=%s z=%s landet auf %s, im Bild bis %s" % [x, z, at, view.size]) \
+					.is_greater(float(view.size.y))
+
+
+## Eine gelandete Münze wird weggeräumt: aus dem Bild ist sie ohnehin, und eine liegen
+## gebliebene zählte weiter als „im Flug".
+func test_landed_coins_are_freed() -> void:
+	_chest.present(ChestReward.Tier.GOLD, 3)
+	_chest.begin_hold()
+	_chest.hold(TreasureChest.HOLD_TIME)
+	await await_millis(int((TreasureChest.COIN_FLIGHT * 1.2 + TreasureChest.COIN_STAGGER_TOTAL) * 1000.0) + 300)
+	assert_int(_chest.coins_in_flight()).is_equal(0)

@@ -1,0 +1,12 @@
+[gd_resource type="StyleBoxTexture" load_steps=2 format=3]
+[ext_resource type="Texture2D" path="res://assets/ui/fortress/textures/name_panel.webp" id="1"]
+[resource]
+texture = ExtResource("1")
+texture_margin_left = 55.0
+texture_margin_right = 55.0
+texture_margin_top = 24.0
+texture_margin_bottom = 24.0
+content_margin_left = 63.0
+content_margin_right = 63.0
+content_margin_top = 32.0
+content_margin_bottom = 32.0

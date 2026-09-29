@@ -44,7 +44,7 @@ func test_statistics_and_chest_share_the_first_stage() -> void:
 	assert_bool(_visible("NextPage")).is_false()
 	# Zahlen links, Kiste rechts — beides ist das Ergebnis derselben Welle. Sieben Zeilen
 	# ohne Aufstieg und ohne Meisterung in der Sitzung (die bringen je eine weitere).
-	assert_int((_stats.get_node("%Lines") as VBoxContainer).get_child_count()).is_equal(7)
+	assert_int(_stats.line_texts().size()).is_equal(7)
 	assert_bool(_visible("Reward")).is_true()
 
 
@@ -52,11 +52,10 @@ func test_statistics_and_chest_share_the_first_stage() -> void:
 ## Feier, und ohne Aufstieg gibt es nichts zu feiern. Entschieden wird das in show_stats
 ## — vor dem Anzeigen, denn ab dann steht die Größe des Screens fest.
 func test_the_level_up_line_appears_only_after_a_level_up() -> void:
-	var lines := _stats.get_node("%Lines") as VBoxContainer
 	_stats.show_stats(_wave_data({"xp_gained": 40, "levels_gained": 0}))
-	var without := lines.get_child_count()
+	var without: int = _stats.line_texts().size()
 	_stats.show_stats(_wave_data({"xp_gained": 40, "levels_gained": 1}))
-	assert_int(lines.get_child_count()).is_equal(without + 1)
+	assert_int(_stats.line_texts().size()).is_equal(without + 1)
 
 
 ## Solange die Kiste zu ist, sind Weiter und Menü GESPERRT (nicht ausgeblendet — ein
@@ -64,14 +63,13 @@ func test_the_level_up_line_appears_only_after_a_level_up() -> void:
 ## Punkte sind ein interner Wert (aus ihnen rechnet die Kiste) und stehen nirgends. Was
 ## der Spieler sehen soll, ist, was er gelernt hat — und nur, wenn es etwas gibt.
 func test_the_result_shows_session_masteries_instead_of_points() -> void:
-	var lines := _stats.get_node("%Lines") as VBoxContainer
 	_stats.show_stats(_wave_data({"session": _balance(0)}))
-	var without := lines.get_child_count()
-	for line in lines.get_children():
-		assert_str((line as Label).text).not_contains("Punkte").not_contains("gemeistert:")
+	var without: int = _stats.line_texts().size()
+	for line in _stats.line_texts():
+		assert_str(line).not_contains("Punkte").not_contains("gemeistert:")
 	_stats.show_stats(_wave_data({"session": _balance(2)}))
-	assert_int(lines.get_child_count()).is_equal(without + 1)
-	var texts := lines.get_children().map(func(l): return (l as Label).text)
+	assert_int(_stats.line_texts().size()).is_equal(without + 1)
+	var texts: Array = _stats.line_texts()
 	assert_array(texts.filter(func(t): return str(t).contains("In dieser Sitzung gemeistert: 2"))).has_size(1)
 
 
@@ -229,3 +227,16 @@ func test_a_full_list_needs_no_overflow_line() -> void:
 	_stats.show_stats(_wave_data({"session": _balance(4)}))
 	assert_int(_balance_texts().size()).is_equal(3 + 4)
 	assert_str(str(_balance_texts().back())).not_contains("weitere")
+
+
+## Zurück und Weiter stehen auf beiden Stufen in einer Zeile: links zurück, rechts weiter.
+func test_back_and_forward_share_one_row() -> void:
+	_stats.show_stats(_wave_data())
+	var back := _button("MenuButton")
+	assert_object(back.get_parent()).is_same(_button("ResultContinue").get_parent())
+	assert_bool(_visible("ResultContinue")).is_true()
+	assert_bool(_visible("StartButton")).is_false()
+	_button("ResultContinue").pressed.emit()
+	assert_object(back.get_parent()).is_same(_button("StartButton").get_parent())
+	assert_bool(_visible("ResultContinue")).is_false()
+	assert_bool(_visible("StartButton")).is_true()

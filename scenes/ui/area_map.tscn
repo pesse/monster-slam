@@ -1,7 +1,14 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://src/ui/area_map.gd" id="1_screen"]
 [ext_resource type="Script" path="res://src/ui/map_canvas.gd" id="2_canvas"]
+[ext_resource type="Texture2D" path="res://assets/ui/library/back.webp" id="3_back"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/play.webp" id="4_play"]
+[ext_resource type="Texture2D" path="res://assets/ui/skill_tree/icons/scout_eye.webp" id="5_eye"]
+[ext_resource type="Script" path="res://src/ui/overlap_row.gd" id="6_overlap"]
+[ext_resource type="Texture2D" path="res://assets/ui/fortress/small/medallion.webp" id="7_medal"]
+[ext_resource type="Texture2D" path="res://assets/ui/fortress/tiers/tier_0.webp" id="8_tier"]
+[ext_resource type="Texture2D" path="res://assets/ui/fortress/small/level_plate.webp" id="9_plate"]
 
 [sub_resource type="Gradient" id="shade_g"]
 colors = PackedColorArray(0, 0, 0, 0.6, 0, 0, 0, 0)
@@ -73,32 +80,140 @@ mouse_filter = 2
 
 [node name="BackButton" type="Button" parent="Hud/Corners/Header"]
 unique_name_in_owner = true
-theme_type_variation = &"MapButton"
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_vertical = 4
-text = "◀ Buchkarte"
+focus_mode = 0
+theme_type_variation = &"WindowButton"
+text = "Buchkarte"
+icon = ExtResource("3_back")
 
-[node name="Banner" type="PanelContainer" parent="Hud/Corners/Header"]
-theme_type_variation = &"MapBanner"
-layout_mode = 2
-mouse_filter = 2
-
-[node name="Lines" type="VBoxContainer" parent="Hud/Corners/Header/Banner"]
-theme_type_variation = &"Tight"
-layout_mode = 2
-mouse_filter = 2
-
-[node name="Book" type="Label" parent="Hud/Corners/Header/Banner/Lines"]
+[node name="Plate" type="Container" parent="Hud/Corners"]
 unique_name_in_owner = true
-theme_type_variation = &"Caption"
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+script = ExtResource("6_overlap")
+
+[node name="NamePanel" type="PanelContainer" parent="Hud/Corners/Plate"]
+z_index = 1
 layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"FortressName"
+
+[node name="Place" type="VBoxContainer" parent="Hud/Corners/Plate/NamePanel"]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_type_variation = &"Tight"
+
+[node name="Book" type="Label" parent="Hud/Corners/Plate/NamePanel/Place"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"FortressBook"
 text = "Buch"
 
-[node name="Title" type="Label" parent="Hud/Corners/Header/Banner/Lines"]
+[node name="Title" type="Label" parent="Hud/Corners/Plate/NamePanel/Place"]
 unique_name_in_owner = true
-theme_type_variation = &"Title"
 layout_mode = 2
+theme_type_variation = &"FortressTitle"
 text = "Unit"
+
+[node name="Fortress" type="PanelContainer" parent="Hud/Corners/Plate"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"FortressProgress"
+
+[node name="Lines" type="VBoxContainer" parent="Hud/Corners/Plate/Fortress"]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_type_variation = &"Tight"
+
+[node name="FortressBar" type="ProgressBar" parent="Hud/Corners/Plate/Fortress/Lines"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(176, 12)
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"FortressBar"
+max_value = 1.0
+show_percentage = false
+
+[node name="FortressNext" type="HBoxContainer" parent="Hud/Corners/Plate/Fortress/Lines"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"Tight"
+
+[node name="Before" type="Label" parent="Hud/Corners/Plate/Fortress/Lines/FortressNext"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"FortressLine"
+text = "Noch"
+
+[node name="Count" type="Label" parent="Hud/Corners/Plate/Fortress/Lines/FortressNext"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"FortressCount"
+text = "0"
+
+[node name="After" type="Label" parent="Hud/Corners/Plate/Fortress/Lines/FortressNext"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"FortressLine"
+text = "Wörter bis Stufe 1"
+
+[node name="Medal" type="Control" parent="Hud/Corners/Plate"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(96, 108)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Ring" type="TextureRect" parent="Hud/Corners/Plate/Medal"]
+layout_mode = 0
+offset_right = 96.0
+offset_bottom = 96.0
+mouse_filter = 2
+texture = ExtResource("7_medal")
+
+[node name="FortressImage" type="TextureRect" parent="Hud/Corners/Plate/Medal"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 12.0
+offset_top = 8.0
+offset_right = 84.0
+offset_bottom = 80.0
+mouse_filter = 2
+texture = ExtResource("8_tier")
+
+[node name="LevelPlate" type="TextureRect" parent="Hud/Corners/Plate/Medal"]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 72.0
+offset_right = 72.0
+offset_bottom = 108.0
+mouse_filter = 2
+texture = ExtResource("9_plate")
+
+[node name="FortressLevel" type="Label" parent="Hud/Corners/Plate/Medal/LevelPlate"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"FortressLevel"
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="BottomRight" type="HBoxContainer" parent="Hud/Corners"]
 unique_name_in_owner = true
@@ -115,49 +230,25 @@ mouse_filter = 2
 [node name="FirstPersonToggle" type="Button" parent="Hud/Corners/BottomRight"]
 unique_name_in_owner = true
 visible = false
-theme_type_variation = &"MapButton"
-layout_mode = 2
-focus_mode = 0
-toggle_mode = true
-text = "👁"
-
-[node name="Fortress" type="PanelContainer" parent="Hud/Corners/BottomRight"]
-unique_name_in_owner = true
-theme_type_variation = &"MapBanner"
-layout_mode = 2
-mouse_filter = 2
-
-[node name="Row" type="HBoxContainer" parent="Hud/Corners/BottomRight/Fortress"]
-layout_mode = 2
-mouse_filter = 2
-
-[node name="Icon" type="Label" parent="Hud/Corners/BottomRight/Fortress/Row"]
-theme_type_variation = &"SkillIcon"
+custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 size_flags_vertical = 4
-text = "🏰"
+focus_mode = 0
+theme_type_variation = &"WindowToggle"
+toggle_mode = true
+icon = ExtResource("5_eye")
+icon_alignment = 1
+expand_icon = true
 
-[node name="Lines" type="VBoxContainer" parent="Hud/Corners/BottomRight/Fortress/Row"]
-theme_type_variation = &"Tight"
-layout_mode = 2
-mouse_filter = 2
-
-[node name="FortressTitle" type="Label" parent="Hud/Corners/BottomRight/Fortress/Row/Lines"]
+[node name="PlayButton" type="Button" parent="Hud/Corners/BottomRight"]
 unique_name_in_owner = true
-theme_type_variation = &"SectionTitle"
+custom_minimum_size = Vector2(200, 48)
 layout_mode = 2
-text = "Festung · Stufe 0"
-
-[node name="FortressBar" type="ProgressBar" parent="Hud/Corners/BottomRight/Fortress/Row/Lines"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(200, 8)
-layout_mode = 2
-mouse_filter = 2
-max_value = 1.0
-show_percentage = false
-
-[node name="FortressNext" type="Label" parent="Hud/Corners/BottomRight/Fortress/Row/Lines"]
-unique_name_in_owner = true
-theme_type_variation = &"Caption"
-layout_mode = 2
-text = "noch 0 Wörter bis Stufe 1"
+size_flags_vertical = 4
+focus_mode = 0
+theme_type_variation = &"WindowPrimary"
+disabled = true
+text = "Spielen"
+icon = ExtResource("4_play")
+icon_alignment = 2
+expand_icon = true

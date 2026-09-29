@@ -81,20 +81,31 @@ func can_afford(amount: int) -> bool:
 	return unlimited_gold or gold >= amount
 
 
+## Was der Debug-Build als eigenen Stand zeigt: eine Zahl, die wie Gold aussieht und in
+## jede Plakette passt — kein „∞". Nur Anzeige; gerechnet wird mit `unlimited_gold`.
+const DEBUG_SHOWN := 999_999_999
+
+
 ## Goldstand als Text mit Tausenderpunkten: „1.240 Gold". Steht hier und nicht in jedem
 ## Screen, damit die Währung überall gleich aussieht. Ohne Betrag der eigene Stand —
-## im Debug-Build „∞ Gold (Debug)".
+## im Debug-Build „999.999.999 Gold (Debug)".
 func label(amount := -1) -> String:
 	if amount < 0 and unlimited_gold:
-		return "∞ Gold (Debug)"
-	var value := amount if amount >= 0 else gold
-	var digits := str(value)
+		return "%s Gold (Debug)" % digits()
+	return "%s Gold" % digits(amount)
+
+
+## Nur die Zahl mit Tausenderpunkten — für Stellen, an denen das Gold schon als Münze
+## dasteht (die Plakette im Menü). Im Debug-Build „999.999.999".
+func digits(amount := -1) -> String:
+	var value := amount if amount >= 0 else (DEBUG_SHOWN if unlimited_gold else gold)
+	var text := str(value)
 	var out := ""
-	for i in digits.length():
-		if i > 0 and (digits.length() - i) % 3 == 0:
+	for i in text.length():
+		if i > 0 and (text.length() - i) % 3 == 0:
 			out += "."
-		out += digits[i]
-	return "%s Gold" % out
+		out += text[i]
+	return out
 
 
 ## Speichert den Stand und wechselt zum Profil `id` (lädt dessen Geldbörse).

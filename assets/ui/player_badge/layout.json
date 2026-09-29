@@ -1,0 +1,17 @@
+{
+  "design_canvas": [1536, 1024],
+  "suggested_control_size": [460, 307],
+  "visible_bounds_approx": [50, 158, 1415, 688],
+  "xp_ring": {"center": [1133,480], "radius": 278, "width": 34, "start_degrees": -90, "direction": "counterclockwise", "color": "#43bafa"},
+  "avatar_rect": [932,284,400,400],
+  "switch_icon_rect": [106,388,150,150],
+  "switch_hit_rect": [50,330,270,245],
+  "level_overlay_position": [1010,650],
+  "name": {"baseline": [340,485], "width": 440, "font_size": 72},
+  "gold": {"baseline": [335,715], "width": 440, "font_size": 76, "align": "right", "test_value": "999.999"},
+  "level": {"baseline": [1040,785], "width": 180, "font_size": 100, "align": "center", "test_value": "99"},
+  "signal": "profile_switch_requested",
+  "update_method": "set_profile(display_name, current_level, current_gold, current_xp, required_xp)",
+  "show_in": ["main_menu", "library"],
+  "hide_in": ["statistics", "skill_tree"]
+}

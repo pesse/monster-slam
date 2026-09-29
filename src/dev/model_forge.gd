@@ -103,6 +103,14 @@ func _initialize() -> void:
 	_export("aqueduct", _aqueduct(), 0.8)
 	_export("tholos", _tholos())
 	_export("sky_boulder", _sky_boulder())
+	# Kulisse des Hauptmenüs (scenes/ui/menu_backdrop.tscn) — kein Platz im BattleTheme.
+	_export("fence", _fence())
+	_export("market_stall", _market_stall())
+	_export("sword", _sword())
+	# Bibliothek (scenes/ui/book_select.tscn) — kein Platz im BattleTheme.
+	_export("bookcase", _bookcase())
+	_export("candles", _candles())
+	_export("reading_desk", _reading_desk())
 	quit()
 
 
@@ -1856,6 +1864,191 @@ func _flower_tuft() -> Forge:
 		var top := Vector3(cos(a) * r, rng.randf_range(0.5, 0.75), sin(a) * r)
 		f.frustum(Vector3(top.x * 0.4, 0, top.z * 0.4), top, 0.015, 0.012, 3, FLOWER_LEAF, 0.0)
 		f.blob(top, 0.09, PETAL_PINK if k % 2 == 0 else PETAL_WHITE, rng, 0.0)
+const FENCE_A := Color(0.55, 0.36, 0.20)
+const FENCE_B := Color(0.44, 0.28, 0.15)
+
+
+## Holzzaun: drei Pfosten mit Spitze, zwei Latten, alles ein wenig schief. Etwa 2.4 lang
+## (entlang x) und 1.2 hoch — mehrere nebeneinander, Pfosten an Pfosten.
+func _fence() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(61)
+	for x in [-1.1, 0.0, 1.1]:
+		var h := rng.randf_range(1.0, 1.15)
+		f.box(Vector3(x, h * 0.5, 0), Vector3(0.14, h, 0.14), FENCE_B, rng.randf_range(-0.15, 0.15))
+		f.cone_cap(Vector3(x, h, 0), 0.1, 0.14, 4, FENCE_B, PI / 4.0 + rng.randf_range(-0.2, 0.2))
+	for y in [0.42, 0.82]:
+		f.box(Vector3(0, y + rng.randf_range(-0.03, 0.03), 0.09), Vector3(2.45, 0.13, 0.05),
+				FENCE_A, rng.randf_range(-0.02, 0.02), rng.randf_range(-0.04, 0.04))
+	return f
+
+
+const STALL_CLOTH_A := Color(0.93, 0.83, 0.56)
+const STALL_CLOTH_B := Color(0.85, 0.72, 0.42)
+const APPLE := Color(0.75, 0.18, 0.14)
+const PUMPKIN := Color(0.88, 0.50, 0.16)
+
+
+## Marktstand: Theke vorn (+z), vier Pfosten, ein nach vorn fallendes Stoffdach mit
+## gezacktem Saum, auf der Theke Kisten und Obst. Etwa 2.6 breit, 2.7 hoch.
+func _market_stall() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(67)
+	var back_h := 2.6
+	var front_h := 2.15
+	for p: Vector3 in [Vector3(-1.2, 0, 0.75), Vector3(1.2, 0, 0.75)]:
+		f.box(p + Vector3(0, front_h * 0.5, 0), Vector3(0.13, front_h, 0.13), FENCE_B, 0.0)
+	for p: Vector3 in [Vector3(-1.2, 0, -0.75), Vector3(1.2, 0, -0.75)]:
+		f.box(p + Vector3(0, back_h * 0.5, 0), Vector3(0.13, back_h, 0.13), FENCE_B, 0.0)
+	# Theke mit überstehendem Brett
+	f.box(Vector3(0, 0.45, 0.62), Vector3(2.3, 0.9, 0.5), FENCE_A, 0.0)
+	f.box(Vector3(0, 0.93, 0.62), Vector3(2.5, 0.07, 0.62), FENCE_B, 0.0)
+	# Dach: eine schräge Stoffbahn, vorn und hinten über die Pfosten hinaus
+	var back := Vector3(0, back_h + 0.05, -1.0)
+	var front := Vector3(0, front_h + 0.05, 1.15)
+	var slope := front - back
+	var tilt := atan2(-slope.y, slope.z)
+	f.box((back + front) * 0.5, Vector3(2.8, 0.05, slope.length()), STALL_CLOTH_A, 0.0, -tilt)
+	# Saum vorn: Zacken im Wechsel der zwei Stofftöne
+	var teeth := 9
+	for i in teeth:
+		var x0 := -1.4 + 2.8 * i / teeth
+		var x1 := -1.4 + 2.8 * (i + 1) / teeth
+		var y := front.y - 0.02
+		var z := front.z + 0.01
+		f.blade(Vector3(x0, y, z), Vector3(x1, y, z), Vector3((x0 + x1) * 0.5, y - 0.28, z + 0.02),
+				STALL_CLOTH_B if i % 2 == 0 else STALL_CLOTH_A)
+	# Ware
+	f.box(Vector3(-0.75, 1.1, 0.6), Vector3(0.5, 0.28, 0.4), FENCE_A, 0.15)
+	for k in 5:
+		f.blob(Vector3(-0.85 + 0.1 * k, 1.28, 0.55 + rng.randf_range(-0.08, 0.08)), 0.08, APPLE, rng, 0.0)
+	f.lump(Vector3(0.2, 1.1, 0.62), Vector3(0.2, 0.15, 0.2), 3, 6, rng, 0.08,
+			func(_m: Vector3, _n: Vector3) -> Color: return PUMPKIN)
+	f.box(Vector3(0.8, 1.06, 0.58), Vector3(0.45, 0.2, 0.35), FENCE_B, -0.2)
+	return f
+
+
+const BLADE_A := Color(0.80, 0.83, 0.88)
+const BLADE_B := Color(0.62, 0.66, 0.72)
+const HILT := Color(0.78, 0.60, 0.25)
+const GRIP := Color(0.36, 0.22, 0.12)
+
+
+## Kurzschwert für die Hand eines Skeletts (handslot): Griff am Ursprung, Klinge nach +y.
+## Etwa 0.9 lang.
+func _sword() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(71)
+	f.frustum(Vector3(0, -0.12, 0), Vector3(0, 0.1, 0), 0.028, 0.028, 5, GRIP)
+	f.blob(Vector3(0, -0.15, 0), 0.045, HILT, rng, 0.0)
+	f.box(Vector3(0, 0.12, 0), Vector3(0.28, 0.045, 0.06), HILT, 0.0)
+	# Klinge mit Rautenquerschnitt: Schneiden in x, Grat in z
+	var w := 0.055
+	var t := 0.014
+	var y0 := 0.145
+	var y1 := 0.7
+	var tip := Vector3(0, 0.85, 0)
+	var lo := [Vector3(w, y0, 0), Vector3(0, y0, t), Vector3(-w, y0, 0), Vector3(0, y0, -t)]
+	var hi := [Vector3(w * 0.85, y1, 0), Vector3(0, y1, t), Vector3(-w * 0.85, y1, 0), Vector3(0, y1, -t)]
+	for j in 4:
+		var k := (j + 1) % 4
+		var col := BLADE_A if j % 2 == 0 else BLADE_B
+		var inside := Vector3(0, (y0 + y1) * 0.5, 0)
+		f.tri_out(lo[j], lo[k], hi[k], col, inside)
+		f.tri_out(lo[j], hi[k], hi[j], col, inside)
+		f.tri_out(hi[j], hi[k], tip, col, Vector3(0, y1, 0))
+	return f
+
+
+const CASE_A := Color(0.42, 0.25, 0.13)
+const CASE_B := Color(0.32, 0.18, 0.09)
+const SPINES := [
+	Color(0.55, 0.14, 0.12), Color(0.16, 0.26, 0.5), Color(0.2, 0.38, 0.22),
+	Color(0.5, 0.34, 0.16), Color(0.36, 0.2, 0.42), Color(0.7, 0.55, 0.3),
+	Color(0.26, 0.16, 0.1),
+]
+
+
+## Bücherregal: Rahmen, Rückwand, fünf Fächer voller Buchrücken in wechselnder Höhe und
+## Farbe, hier und da eine Lücke und ein schräg gelehntes Buch. Etwa 2.0 breit, 3.0 hoch,
+## 0.5 tief, vorn +z.
+func _bookcase() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(73)
+	var w := 2.0
+	var h := 3.0
+	var d := 0.5
+	var board := 0.08
+	f.box(Vector3(-w * 0.5 + board * 0.5, h * 0.5, 0), Vector3(board, h, d), CASE_A, 0.0)
+	f.box(Vector3(w * 0.5 - board * 0.5, h * 0.5, 0), Vector3(board, h, d), CASE_A, 0.0)
+	f.box(Vector3(0, h - board * 0.5, 0.02), Vector3(w + 0.12, board, d + 0.06), CASE_A, 0.0)
+	f.box(Vector3(0, board * 0.5, 0.02), Vector3(w + 0.06, board * 1.5, d + 0.04), CASE_B, 0.0)
+	f.box(Vector3(0, h * 0.5, -d * 0.5 + 0.02), Vector3(w - 0.1, h - 0.1, 0.04), CASE_B, 0.0)
+	var rows := 5
+	var inner := (h - 2.0 * board) / rows
+	for r in rows:
+		var floor_y := board * 1.5 + r * inner
+		if r > 0:
+			f.box(Vector3(0, floor_y - board * 0.25, 0), Vector3(w - 2.0 * board, board * 0.5, d - 0.04),
+					CASE_A, 0.0)
+		var x := -w * 0.5 + board + 0.03
+		var end := w * 0.5 - board - 0.03
+		while x < end - 0.06:
+			if rng.randf() < 0.08:
+				x += rng.randf_range(0.12, 0.3)
+				continue
+			var t := rng.randf_range(0.05, 0.1)
+			var bh := rng.randf_range(0.6, 0.9) * (inner - 0.08)
+			var col: Color = SPINES[rng.randi() % SPINES.size()]
+			if rng.randf() < 0.06 and x + bh < end:
+				# Ein gelehntes Buch: unten an seinem Platz, oben an den Nachbarn gelehnt.
+				var lean := rng.randf_range(0.35, 0.6)
+				var cx := x + sin(lean) * bh * 0.5 + t * 0.5
+				f.box(Vector3(cx, floor_y + cos(lean) * bh * 0.5, 0.02), Vector3(0.34, bh, t), col,
+						PI * 0.5, -lean)
+				x += sin(lean) * bh + t + 0.02
+				continue
+			f.box(Vector3(x + t * 0.5, floor_y + bh * 0.5, 0.03 + rng.randf_range(-0.02, 0.02)),
+					Vector3(t, bh, 0.34), col, 0.0)
+			x += t + rng.randf_range(0.0, 0.01)
+	return f
+
+
+const WAX_A := Color(0.95, 0.9, 0.78)
+const WAX_B := Color(0.86, 0.8, 0.66)
+const WICK := Color(0.12, 0.1, 0.08)
+
+
+## Drei Kerzen verschiedener Höhe auf einem Klecks Wachs; die Flamme setzt die Szene dazu
+## (leuchtend, das kann ein .glb ohne Material nicht). Die Dochte enden bei `candle_tops`.
+func _candles() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(79)
+	f.lump(Vector3(0, 0.0, 0), Vector3(0.2, 0.03, 0.16), 2, 7, rng, 0.0,
+			func(_m: Vector3, _n: Vector3) -> Color: return WAX_B, 0.0)
+	for top: Vector3 in CANDLE_TOPS:
+		var base := Vector3(top.x, 0.0, top.z)
+		f.frustum(base, top - Vector3(0, 0.02, 0), 0.045, 0.04, 7, WAX_A, rng.randf(), WAX_B)
+		f.frustum(top - Vector3(0, 0.025, 0), top + Vector3(0, 0.02, 0), 0.006, 0.004, 4, WICK)
+	return f
+
+
+## Wo die Dochte der drei Kerzen enden — dort sitzen in der Szene die Flammen.
+const CANDLE_TOPS := [Vector3(-0.08, 0.34, 0.02), Vector3(0.06, 0.24, -0.04), Vector3(0.1, 0.14, 0.08)]
+
+
+## Das Lesepult, auf dem die Bücher stehen: eine lange Platte mit Kante, Zarge und vier
+## Beinen. Etwa 7.2 breit, 1.5 tief; die Oberfläche liegt bei y = 0.
+func _reading_desk() -> Forge:
+	var f := Forge.new()
+	var w := 7.2
+	var d := 1.5
+	f.box(Vector3(0, -0.06, 0), Vector3(w, 0.12, d), CASE_A, 0.0)
+	f.box(Vector3(0, -0.14, d * 0.5 - 0.03), Vector3(w + 0.04, 0.06, 0.08), CASE_B, 0.0)
+	f.box(Vector3(0, -0.3, 0), Vector3(w - 0.3, 0.28, d - 0.2), CASE_B, 0.0)
+	for x in [-w * 0.5 + 0.2, w * 0.5 - 0.2]:
+		for z in [-d * 0.5 + 0.18, d * 0.5 - 0.18]:
+			f.box(Vector3(x, -0.6, z), Vector3(0.16, 1.1, 0.16), CASE_B, 0.0)
 	return f
 
 
@@ -2007,10 +2200,10 @@ class Forge:
 			tri_out(lo[j], hi[k], hi[j], side_col, inside)
 			tri_out(top_c, hi[j], hi[k], col, top_c - Vector3(0, 1, 0))
 
-	## Quader um `center`, um die Hochachse gedreht.
-	func box(center: Vector3, size: Vector3, col: Color, yaw: float) -> void:
+	## Quader um `center`, um die Hochachse gedreht und danach um seine x-Achse gekippt.
+	func box(center: Vector3, size: Vector3, col: Color, yaw: float, tilt := 0.0) -> void:
 		var h := size * 0.5
-		var basis := Basis(Vector3.UP, yaw)
+		var basis := Basis(Vector3.UP, yaw) * Basis(Vector3.RIGHT, tilt)
 		var p := func(x: float, y: float, z: float) -> Vector3:
 			return center + basis * Vector3(x * h.x, y * h.y, z * h.z)
 		var faces := [

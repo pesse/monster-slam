@@ -1,11 +1,21 @@
 extends Control
 ## Inhalte-Verwaltung: zeigt die verfügbaren Content-Packs, ihren Zustand und holt sie.
 ##
+## Öffnet als Fenster über dem Hauptmenü wie Statistik und Fähigkeiten
+## (`profile_menu._open_window`): derselbe Rahmen, dasselbe Titelband, dasselbe
+## Schließen-X, Escape schließt.
+##
 ## Das Layout liegt in content_manager.tscn, eine Zeile in content_pack_row.tscn; hier wird
 ## nur bedient und angezeigt. Die Zeilen entstehen zur Laufzeit aus der Vorlage, weil ihre
 ## Anzahl aus dem Verzeichnis kommt.
 
 const PROFILE_SCENE := "res://scenes/ui/profile_menu.tscn"
+## So lange blendet das Fenster auf (s) — wie Statistik und Fähigkeiten.
+const FADE_IN := 0.15
+
+## Das Fenster will zu. Wer es geöffnet hat, nimmt es weg; hängt niemand daran (der Screen
+## läuft allein, etwa aus dem Editor), geht es zurück ins Startmenü.
+signal closed()
 
 ## Vorlage einer Pack-Zeile, im Editor gesetzt (siehe content_manager.tscn).
 @export var row_template: PackedScene
@@ -15,7 +25,7 @@ const PROFILE_SCENE := "res://scenes/ui/profile_menu.tscn"
 @onready var _install: Button = %InstallButton
 @onready var _adopt: Button = %AdoptButton
 @onready var _refresh: Button = %RefreshButton
-@onready var _model_panel: PanelContainer = %Model
+@onready var _model_panel: Control = %Model
 @onready var _model_button: Button = %ModelButton
 @onready var _model_remove: Button = %ModelRemoveButton
 @onready var _model_hint: Label = %ModelHint
@@ -28,9 +38,8 @@ var _preselected := false
 
 
 func _ready() -> void:
-	(%BackButton as Button).pressed.connect(
-		func(): get_tree().change_scene_to_file(PROFILE_SCENE)
-	)
+	(%CloseButton as BaseButton).pressed.connect(close)
+	Hints.attach(%CloseButton as Control, "Schließen", "", "Esc")
 	_refresh.pressed.connect(func(): ContentService.refresh())
 	_install.pressed.connect(_on_install)
 	_adopt.pressed.connect(func(): ContentService.install_many(ContentService.needs_adopt, true))
@@ -44,6 +53,24 @@ func _ready() -> void:
 		ContentService.refresh()
 	if not ModelService.available():
 		ModelService.refresh()
+	modulate.a = 0.0
+	create_tween().tween_property(self, "modulate:a", 1.0, FADE_IN)
+	_refresh.grab_focus.call_deferred()
+
+
+## Schließt das Fenster: meldet es dem, der es geöffnet hat (das Menü nimmt es weg), oder
+## geht allein zurück ins Startmenü.
+func close() -> void:
+	if closed.get_connections().is_empty():
+		get_tree().change_scene_to_file(PROFILE_SCENE)
+		return
+	closed.emit()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		get_viewport().set_input_as_handled()
+		close()
 
 
 func _on_install() -> void:
@@ -77,6 +104,11 @@ func _render() -> void:
 	for child in _packs.get_children():
 		child.queue_free()
 	for pack in ContentService.packs:
+		# Die alten Zeilen sind erst am Frame-Ende weg — gezählt wird deshalb die Liste.
+		if pack != ContentService.packs[0]:
+			var rule := HSeparator.new()
+			rule.theme_type_variation = &"StatRule"
+			_packs.add_child(rule)
 		var row := row_template.instantiate()
 		_packs.add_child(row)
 		row.setup(pack, bool(_selected.get(pack.id, false)))
@@ -84,8 +116,7 @@ func _render() -> void:
 		row.redeem_requested.connect(func(code): ContentService.redeem(code))
 		row.forget_requested.connect(ContentService.forget_code.bind(pack.id))
 
-	var count := _packs.get_child_count()
-	_install.visible = count > 0
+	_install.visible = not ContentService.packs.is_empty()
 
 
 func _on_row_selection(row: Node) -> void:

@@ -1,9 +1,14 @@
 extends Control
 ## Der Fähigkeitsbaum-Screen: das Netz aller Bäume, der Punktestand und der Ausbau.
 ##
-## Vom Start-Screen aus erreichbar (profile_menu), neben Statistik und Einstellungen.
+## Ein FENSTER über dem Start-Screen (profile_menu), kein eigener Screen: das Menü öffnet es
+## als Overlay, der Hintergrund bleibt stehen und nimmt keine Eingaben an. ✕ oder Escape
+## schließt (`closed`), das Menü gibt den Fokus an seinen Knopf zurück. Entwurf:
+## assets/ui/skill_tree/concept/ — dort steht auch, worin die Umsetzung vom Bild abweicht.
+##
 ## Unter der Kopfzeile nichts als das gezeichnete Netz (`SkillGraph`, zoombar mit dem
 ## Mausrad) — es gibt keine Tafel am Rand mehr, die daneben dasselbe noch einmal erklärt.
+## Unten links die Legende, unten rechts die Werkzeuge (−, Zoom, +, Einpassen, Umlernen).
 ##
 ## Alles, was zu einem Knoten zu sagen ist, steht am ZEIGER: die Karte aus `Hints` folgt
 ## der Maus, ohne Verzögerung, und trägt Name, Wirkung und Zustand. Über dem NAMEN eines
@@ -21,10 +26,20 @@ extends Control
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 
+## So lange blendet das Fenster auf (s).
+const FADE_IN := 0.15
+
+## Das Fenster will zu. Wer es geöffnet hat, nimmt es weg; hängt niemand daran (der Screen
+## läuft allein, etwa aus dem Editor), geht es zurück ins Startmenü.
+signal closed()
+
 @onready var _graph: SkillGraph = %Graph
 @onready var _points_label: Label = %PointsLabel
 @onready var _empty_hint: Label = %EmptyHint
 @onready var _fit_button: Button = %FitButton
+@onready var _zoom_in: Button = %ZoomInButton
+@onready var _zoom_out: Button = %ZoomOutButton
+@onready var _zoom_label: Label = %ZoomLabel
 @onready var _respec_button: Button = %RespecButton
 @onready var _confirm: ConfirmDialog = %Confirm
 
@@ -43,9 +58,12 @@ var _pending: Dictionary = {}
 func _ready() -> void:
 	if book == null:
 		book = SkillBook
-	(%BackButton as Button).pressed.connect(func() -> void:
-			get_tree().change_scene_to_file(MENU_SCENE))
+	(%CloseButton as BaseButton).pressed.connect(close)
 	_fit_button.pressed.connect(func() -> void: _graph.fit())
+	_zoom_in.pressed.connect(func() -> void: _graph.zoom_by(SkillGraph.ZOOM_STEP))
+	_zoom_out.pressed.connect(func() -> void: _graph.zoom_by(1.0 / SkillGraph.ZOOM_STEP))
+	_graph.view_changed.connect(func() -> void:
+			_zoom_label.text = "%d %%" % _graph.zoom_percent())
 	_respec_button.pressed.connect(_on_respec_pressed)
 	_graph.node_selected.connect(_on_node_selected)
 	_confirm.confirmed.connect(_on_confirmed)
@@ -54,6 +72,9 @@ func _ready() -> void:
 	# bei jeder Bewegung nach, was an diesem Punkt zu sagen ist.
 	Hints.attach_live(_graph, _hint_at)
 	Hints.attach(_fit_button, "Ansicht einpassen", "Mausrad zoomt, Ziehen verschiebt")
+	Hints.attach(_zoom_in, "Näher heran")
+	Hints.attach(_zoom_out, "Weiter weg")
+	Hints.attach(%CloseButton as Control, "Schließen", "", "Esc")
 	# Beide Stände hängen am Signal, statt nachzufragen: das Gelernte ändert sich hier,
 	# das Gold beim Umlernen — und der Umlern-Knopf trägt beides in seinem Tooltip.
 	book.changed.connect(_rebuild)
@@ -61,6 +82,27 @@ func _ready() -> void:
 			_refresh_respec()
 			Hints.refresh())
 	_rebuild()
+	modulate.a = 0.0
+	create_tween().tween_property(self, "modulate:a", 1.0, FADE_IN)
+	# Pfeile und Enter gehen sofort ans Netz — ohne dass erst jemand hineinklicken muss.
+	_graph.grab_focus.call_deferred()
+
+
+## Schließt das Fenster: meldet es dem, der es geöffnet hat (das Menü nimmt es weg), oder
+## geht allein zurück ins Startmenü.
+func close() -> void:
+	if closed.get_connections().is_empty():
+		get_tree().change_scene_to_file(MENU_SCENE)
+		return
+	closed.emit()
+
+
+## Escape schließt — außer eine Rückfrage ist offen: die fängt die Taste selbst
+## (`ConfirmDialog._input`), und hier kommt dann nichts mehr an.
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		get_viewport().set_input_as_handled()
+		close()
 
 
 ## Trägt den ganzen Stand neu ein. Ein gelernter Knoten verschiebt die Zustände seines
@@ -82,12 +124,13 @@ func _rebuild() -> void:
 
 
 func _refresh_points(points: int) -> void:
+	# Der Stern steht als Bild davor (PointsIcon).
 	if bool(book.get("unlimited_points")):
-		_points_label.text = "⭐ ∞ Skillpunkte (Debug)"
+		_points_label.text = "∞ Skillpunkte (Debug)"
 	elif points > 0:
-		_points_label.text = "⭐ %d Skillpunkt%s" % [points, "" if points == 1 else "e"]
+		_points_label.text = "%d Skillpunkt%s" % [points, "" if points == 1 else "e"]
 	else:
-		_points_label.text = "⭐ 0 — jedes Level bringt einen"
+		_points_label.text = "0 — jedes Level bringt einen"
 
 
 # --- Die Auskunft am Zeiger ---------------------------------------------------
@@ -111,16 +154,44 @@ func _hint_at(local: Vector2) -> Dictionary:
 	if node.is_empty():
 		return {}
 	var id := str(node.get("id", ""))
-	var note := SkillTree.tree_status(entries, book.unlocked, id) \
-			if str(node.get("kind", "")) == "tree" \
-			else SkillTree.state_label(entries, node, book.unlocked, book.available())
+	if str(node.get("kind", "")) == "tree":
+		return {
+			"title": str(node.get("name", "")),
+			"body": str(node.get("description", "")),
+			"note": SkillTree.tree_status(entries, book.unlocked, id),
+		}
+	var points: int = book.available()
+	var note := SkillTree.state_label(entries, node, book.unlocked, points)
 	if book.is_unlocked(id):
 		note += " · " + _forget_note(id)
+	var tree := SkillTree.node_by_id(entries, str(node.get("tree", "")))
+	var state := SkillTree.state_of(node, book.unlocked, points)
+	var picture := SkillIcons.of(id)
 	return {
-		"title": "%s %s" % [SkillTree.icon_of(node), str(node.get("name", ""))],
+		# Ohne Bild trägt der Name das Zeichen aus den Daten, wie im Netz selbst.
+		"title": str(node.get("name", "")) if picture != null \
+				else "%s %s" % [SkillTree.icon_of(node), str(node.get("name", ""))],
+		"icon": picture,
+		"subtitle": "%s · %s" % [str(tree.get("name", "")), SkillTree.state_name(state)],
+		"tint": SkillTree.color_of(tree),
 		"body": str(node.get("description", "")),
+		"list": _facts(entries, node),
 		"note": note,
 	}
+
+
+## Kosten und Voraussetzungen als Zeilen der Karte, jede mit ihrem Zeichen: Stern für den
+## Preis, Haken für eine erfüllte Vorstufe, Schloss für eine fehlende.
+func _facts(entries: Array, node: Dictionary) -> Array:
+	var cost := SkillTree.cost(node)
+	var rows: Array = [[SkillIcons.skill_point(), "Kosten",
+			"%d Skillpunkt%s" % [cost, "" if cost == 1 else "e"]]]
+	for required in node.get("requires", []):
+		var id := str(required)
+		var name := str(SkillTree.node_by_id(entries, id).get("name", id))
+		rows.append([SkillIcons.check() if book.is_unlocked(id) else SkillIcons.lock(),
+				"Voraussetzung", name])
+	return rows
 
 
 ## Die zweite Hälfte der Zeile an einem gelernten Knoten: was das Verlernen kostet, oder

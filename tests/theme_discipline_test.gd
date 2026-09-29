@@ -48,7 +48,6 @@ const ALLOWED := {
 	"res://src/battle/wave_runner.gd": "Combo-Zahlen, zur Laufzeit skaliert",
 	"res://src/ui/reveal_card.gd": "Wortart-Farbe kommt aus WordTypePalette, nicht aus dem Theme",
 	"res://src/ui/wave_stats.gd": "Sieg/Niederlage-Farbe zur Laufzeit",
-	"res://src/ui/settings_menu.gd": "separation 0 klebt Meldungs-Kopf und -Kommentar zusammen",
 }
 
 
@@ -129,7 +128,9 @@ func test_theme_declares_the_role_variations() -> void:
 			"SectionButton", "RowButton", "SkillIcon", "ScreenMargin", "ScrollGutter",
 			"ScreenStack",
 			"SectionStack", "Tight", "HudPanel", "BossBubble", "PlayerBubble", "BubbleText",
-			"BubbleTitle", "BubbleAccent", "BubbleHint", "Shout", "BossHp", "ActionButton"]:
+			"BubbleTitle", "BubbleAccent", "BubbleHint", "Shout", "BossHp", "ActionButton",
+			"GameWindow", "WindowTitle", "HintCard", "HintRule", "HintSubtitle", "WindowTab",
+			"StatHeadline", "StatRule", "StatDivider"]:
 		assert_str(theme.get_type_variation_base(role)).override_failure_message(
 				"Variation fehlt im Theme: " + role).is_not_empty()
 
@@ -144,6 +145,9 @@ func test_scenes_reference_only_declared_variations() -> void:
 	declared.append_array(theme.get_type_variation_list("BoxContainer"))
 	declared.append_array(theme.get_type_variation_list("PanelContainer"))
 	declared.append_array(theme.get_type_variation_list("ProgressBar"))
+	declared.append_array(theme.get_type_variation_list("FlowContainer"))
+	declared.append_array(theme.get_type_variation_list("HSeparator"))
+	declared.append_array(theme.get_type_variation_list("VSeparator"))
 	var files: Array = []
 	_collect("res://scenes", ".tscn", files)
 	var unknown: Array = []

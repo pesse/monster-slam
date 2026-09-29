@@ -1,0 +1,332 @@
+{
+  "version": 1,
+  "format": "lossless WebP RGBA",
+  "assets": {
+    "icons/scout_eye": {
+      "path": "res://assets/ui/skill_tree/icons/scout_eye.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated icon; 256 px canvas, <=208 px motif.",
+      "sha256": "bd9b84f256aac3e3e0912338c07984331c1ad6c7aa772e69c01ea9f033682846"
+    },
+    "icons/scout_boots": {
+      "path": "res://assets/ui/skill_tree/icons/scout_boots.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated icon; 256 px canvas, <=208 px motif.",
+      "sha256": "0a5b12d97cd28247a8655657355c437be094f9ddf37b8629dfa85ff3923053b4"
+    },
+    "icons/scout_feather": {
+      "path": "res://assets/ui/skill_tree/icons/scout_feather.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated icon; 256 px canvas, <=208 px motif.",
+      "sha256": "334c61252177acdbcdafdcfbc073edaf7eef50cc5a62ea126bfd70bde435bd20"
+    },
+    "icons/scout_winged_boots": {
+      "path": "res://assets/ui/skill_tree/icons/scout_winged_boots.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated icon; 256 px canvas, <=208 px motif.",
+      "sha256": "554d9932b89bf7fd6e6301f06a71b674049c677283f897393a0b71bc60079f08"
+    },
+    "icons/scout_charge": {
+      "path": "res://assets/ui/skill_tree/icons/scout_charge.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated icon; 256 px canvas, <=208 px motif.",
+      "sha256": "8388bb86802a11d052b93b8bd97ea5262865bf05e0342a059a052259e0e0412c"
+    },
+    "icons/scout_bow": {
+      "path": "res://assets/ui/skill_tree/icons/scout_bow.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated icon; 256 px canvas, <=208 px motif.",
+      "sha256": "775e979493492070796391f2dbb14a7c4efb2a89f23edabe701fa4ebd60d6ef9"
+    },
+    "icons/healing_bandage": {
+      "path": "res://assets/ui/skill_tree/icons/healing_bandage.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated icon; 256 px canvas, <=208 px motif.",
+      "sha256": "b7741c7386ff560d242172f00281a8ad98d92c1f4fc5a24d8b8e1e81ff06aafb"
+    },
+    "icons/healing_staff": {
+      "path": "res://assets/ui/skill_tree/icons/healing_staff.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated icon; 256 px canvas, <=208 px motif.",
+      "sha256": "3279b063333f2f239911b4864465f069f2acfec0611275c7ae58f61cc4473b95"
+    },
+    "icons/healing_ritual": {
+      "path": "res://assets/ui/skill_tree/icons/healing_ritual.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated icon; 256 px canvas, <=208 px motif.",
+      "sha256": "8007f5e488010720a39ca342942d84e620fde60eab3751786ee330ca74b2a64a"
+    },
+    "icons/healing_tent": {
+      "path": "res://assets/ui/skill_tree/icons/healing_tent.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated icon; 256 px canvas, <=208 px motif.",
+      "sha256": "b619980d2313533091765fbc218962004bef5f51056ac12b2149e8a29ae9dfa2"
+    },
+    "icons/healing_dove": {
+      "path": "res://assets/ui/skill_tree/icons/healing_dove.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated icon; 256 px canvas, <=208 px motif.",
+      "sha256": "988629f085ebde859fd8e81c57f3b16a5b9ccb194c04eba44896fa6104ff9075"
+    },
+    "icons/skill_point": {
+      "path": "res://assets/ui/skill_tree/icons/skill_point.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated icon; 256 px canvas, <=208 px motif.",
+      "sha256": "6500a5617590ea02b5b088bc99759677794473961d5bcea0a8a5794a3b0c614c"
+    },
+    "icons/bulwark_palisade": {
+      "path": "res://assets/ui/skill_tree/icons/bulwark_palisade.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated icon; 256 px canvas, <=208 px motif.",
+      "sha256": "32098067e5e406db3e9571a60b7cf2dd9a1e91c78fa618238e4d53f2fb6a8c0a"
+    },
+    "icons/bulwark_wall": {
+      "path": "res://assets/ui/skill_tree/icons/bulwark_wall.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated icon; 256 px canvas, <=208 px motif.",
+      "sha256": "7d4fcc7e5461d34f55a28644137d07cf1475f936d6e39787b7715cc95d1d1f8f"
+    },
+    "icons/bulwark_gate": {
+      "path": "res://assets/ui/skill_tree/icons/bulwark_gate.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated icon; 256 px canvas, <=208 px motif.",
+      "sha256": "ec899c6695d610b1e3380da025f5b30a93c67a3d9ff10aa4bbe46acce01cc6a7"
+    },
+    "icons/bulwark_bastion": {
+      "path": "res://assets/ui/skill_tree/icons/bulwark_bastion.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated icon; 256 px canvas, <=208 px motif.",
+      "sha256": "f81b569f87ac9d1dfd854a404c49d72feb974c8fa832fe01e2c157c3b7d408d3"
+    },
+    "icons/bulwark_portcullis": {
+      "path": "res://assets/ui/skill_tree/icons/bulwark_portcullis.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated icon; 256 px canvas, <=208 px motif.",
+      "sha256": "84b9fad843967d453ae0aab88cfdf54f2a4ad4592c2d848338e7068431e2f927"
+    },
+    "icons/defense_shield": {
+      "path": "res://assets/ui/skill_tree/icons/defense_shield.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated icon; 256 px canvas, <=208 px motif.",
+      "sha256": "bd847ac99250ff09050bb994bf84c8f88ff2dd8b628fd7ceeea09dd2cdf579ed"
+    },
+    "icons/time_hourglass": {
+      "path": "res://assets/ui/skill_tree/icons/time_hourglass.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated icon; 256 px canvas, <=208 px motif.",
+      "sha256": "81baf4ac2f9c50ace393fd209083bcdae4bfc31950d41e6fb726e08a1e0f9405"
+    },
+    "icons/time_wind": {
+      "path": "res://assets/ui/skill_tree/icons/time_wind.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated icon; 256 px canvas, <=208 px motif.",
+      "sha256": "3d791f399f4fd1278e75d3a6dcde19dff5c50e09984d92fbeca7ca6a085aa2ed"
+    },
+    "icons/time_web": {
+      "path": "res://assets/ui/skill_tree/icons/time_web.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated icon; 256 px canvas, <=208 px motif.",
+      "sha256": "9bdc440810152814018967904b5957855eb656646bfeb42aef1e42216f26692d"
+    },
+    "icons/time_pause": {
+      "path": "res://assets/ui/skill_tree/icons/time_pause.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated icon; 256 px canvas, <=208 px motif.",
+      "sha256": "e1c61bc64be4c94b1b2fd8f4a1ab76eca88a022aaa8f46448e492ff17441984b"
+    },
+    "icons/time_rift": {
+      "path": "res://assets/ui/skill_tree/icons/time_rift.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated icon; 256 px canvas, <=208 px motif.",
+      "sha256": "1306cf67e5d64b8b28e2a2a53712f800db4c91b14ceb9fdb5f15977423ee33b5"
+    },
+    "icons/reset": {
+      "path": "res://assets/ui/skill_tree/icons/reset.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated icon; 256 px canvas, <=208 px motif.",
+      "sha256": "5d11d7a54bc91ae4758e4d688df656e6b260bde6b06f2509291faa0749ebbf61"
+    },
+    "medallions/locked": {
+      "path": "res://assets/ui/skill_tree/medallions/locked.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "256 px aligned canvas; 224 px outer motif; stack at same rect.",
+      "sha256": "ef7d82a83e618f98ce1a28eac40efa1bbf9402f76cb5f55ca0667bd6c39eb3f0"
+    },
+    "medallions/available": {
+      "path": "res://assets/ui/skill_tree/medallions/available.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "256 px aligned canvas; 224 px outer motif; stack at same rect.",
+      "sha256": "e1a91bc3c25d30630571b919ec1a19445c8dddf9fd5e0350f5541874307550c7"
+    },
+    "medallions/learned": {
+      "path": "res://assets/ui/skill_tree/medallions/learned.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "256 px aligned canvas; 224 px outer motif; stack at same rect.",
+      "sha256": "7e99627e24fdde18bee0e8fb77f27e8bccb3aa7ccd9d28fcb8decbabb5b7bb6a"
+    },
+    "medallions/focus_ring": {
+      "path": "res://assets/ui/skill_tree/medallions/focus_ring.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "256 px aligned canvas; 224 px outer motif; stack at same rect.",
+      "sha256": "860264b1b7bfacedc3749a234827adfdcd0cd4cb130838b361b5f0c065cc3536"
+    },
+    "status/check": {
+      "path": "res://assets/ui/skill_tree/status/check.webp",
+      "width": 64,
+      "height": 64,
+      "notes": "Separate overlay, never baked into skill icon.",
+      "sha256": "f801d4bd07f4dee4a605ee162bdbe29c4eea66345e638f0c50d178c07ddc754d"
+    },
+    "status/lock": {
+      "path": "res://assets/ui/skill_tree/status/lock.webp",
+      "width": 64,
+      "height": 64,
+      "notes": "Separate overlay, never baked into skill icon.",
+      "sha256": "fe5b7f614290f4ae4cefcb476f23934163b321a95e4535945de175d92eea21e8"
+    }
+  },
+  "skill_icons": {
+    "skill.armor.root": {
+      "name": "Holzpalisade",
+      "tree": "tree.bulwark",
+      "path": "res://assets/ui/skill_tree/icons/bulwark_palisade.webp"
+    },
+    "skill.armor.stone": {
+      "name": "Steinwall",
+      "tree": "tree.bulwark",
+      "path": "res://assets/ui/skill_tree/icons/bulwark_wall.webp"
+    },
+    "skill.armor.gate": {
+      "name": "Eisentor",
+      "tree": "tree.bulwark",
+      "path": "res://assets/ui/skill_tree/icons/bulwark_gate.webp"
+    },
+    "skill.armor.bastion": {
+      "name": "Bastion",
+      "tree": "tree.bulwark",
+      "path": "res://assets/ui/skill_tree/icons/bulwark_bastion.webp"
+    },
+    "skill.armor.portcullis": {
+      "name": "Fallgitter",
+      "tree": "tree.bulwark",
+      "path": "res://assets/ui/skill_tree/icons/bulwark_portcullis.webp"
+    },
+    "skill.heal.root": {
+      "name": "Verband",
+      "tree": "tree.healing",
+      "path": "res://assets/ui/skill_tree/icons/healing_bandage.webp"
+    },
+    "skill.heal.care": {
+      "name": "Feldscher",
+      "tree": "tree.healing",
+      "path": "res://assets/ui/skill_tree/icons/healing_staff.webp"
+    },
+    "skill.heal.rite": {
+      "name": "Heilritual",
+      "tree": "tree.healing",
+      "path": "res://assets/ui/skill_tree/icons/healing_ritual.webp"
+    },
+    "skill.heal.ward": {
+      "name": "Lazarett",
+      "tree": "tree.healing",
+      "path": "res://assets/ui/skill_tree/icons/healing_tent.webp"
+    },
+    "skill.heal.bless": {
+      "name": "Segen der Ahnen",
+      "tree": "tree.healing",
+      "path": "res://assets/ui/skill_tree/icons/healing_dove.webp"
+    },
+    "skill.scout.root": {
+      "name": "Späherblick",
+      "tree": "tree.scout",
+      "path": "res://assets/ui/skill_tree/icons/scout_eye.webp"
+    },
+    "skill.scout.boots": {
+      "name": "Leichte Stiefel",
+      "tree": "tree.scout",
+      "path": "res://assets/ui/skill_tree/icons/scout_boots.webp"
+    },
+    "skill.scout.light": {
+      "name": "Leichtfuß",
+      "tree": "tree.scout",
+      "path": "res://assets/ui/skill_tree/icons/scout_feather.webp"
+    },
+    "skill.scout.sprint": {
+      "name": "Siebenmeilenstiefel",
+      "tree": "tree.scout",
+      "path": "res://assets/ui/skill_tree/icons/scout_winged_boots.webp"
+    },
+    "skill.scout.charge": {
+      "name": "Sturmangriff",
+      "tree": "tree.scout",
+      "path": "res://assets/ui/skill_tree/icons/scout_charge.webp"
+    },
+    "skill.scout.bow": {
+      "name": "Langbogen",
+      "tree": "tree.scout",
+      "path": "res://assets/ui/skill_tree/icons/scout_bow.webp"
+    },
+    "skill.time.root": {
+      "name": "Atempause",
+      "tree": "tree.timeweaver",
+      "path": "res://assets/ui/skill_tree/icons/time_hourglass.webp"
+    },
+    "skill.time.long": {
+      "name": "Langer Atem",
+      "tree": "tree.timeweaver",
+      "path": "res://assets/ui/skill_tree/icons/time_wind.webp"
+    },
+    "skill.time.deep": {
+      "name": "Zähe Zeit",
+      "tree": "tree.timeweaver",
+      "path": "res://assets/ui/skill_tree/icons/time_web.webp"
+    },
+    "skill.time.still": {
+      "name": "Stillstand",
+      "tree": "tree.timeweaver",
+      "path": "res://assets/ui/skill_tree/icons/time_pause.webp"
+    },
+    "skill.time.rift": {
+      "name": "Zeitriss",
+      "tree": "tree.timeweaver",
+      "path": "res://assets/ui/skill_tree/icons/time_rift.webp"
+    }
+  },
+  "tree_colors": {
+    "tree.bulwark": "#7fa8d8",
+    "tree.healing": "#5fd08a",
+    "tree.scout": "#8fcf7a",
+    "tree.timeweaver": "#b38ce6"
+  },
+  "reuse": {
+    "tooltip": "res://assets/ui/tooltip/manifest.json"
+  }
+}

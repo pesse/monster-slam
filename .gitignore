@@ -45,3 +45,8 @@ raw/
 # (assets/maps/export_webp.py), die PNGs bleiben beim Bildprozess.
 assets/maps/**/*.png
 assets/maps/**/*.png.import
+
+# Prüfprojekte und Logs der Design-Pakete (nur lokal)
+assets/ui/**/preview/test_project/
+assets/ui/**/preview/runtime/
+assets/ui/**/preview/*.log

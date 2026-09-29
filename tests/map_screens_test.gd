@@ -3,6 +3,7 @@ extends GdUnitTestSuite
 ## laden (ADR 0006).
 
 const BOOKS_SCENE := preload("res://scenes/ui/book_select.tscn")
+const BACKDROP_SCENE := preload("res://scenes/ui/menu_backdrop.tscn")
 const BOOK_SCENE := preload("res://scenes/ui/book_map.tscn")
 const AREA_SCENE := preload("res://scenes/ui/area_map.tscn")
 
@@ -137,6 +138,30 @@ func test_the_header_moves_down_when_a_node_lies_under_it() -> void:
 	assert_float(header.position.y).is_equal(0.0)
 	canvas.place_header(header, [Vector2(0.05, 0.05), Vector2(0.8, 0.8)])
 	assert_float(header.position.y).is_equal_approx(540.0 - 80.0, 0.5)
+	remove_child(parent)
+
+
+## Mit `prefer_bottom` (Gebietskarte) steht der Kopf unten links und rückt nur nach oben,
+## wenn unten ein Ort liegt und oben keiner.
+func test_a_bottom_header_moves_up_only_when_a_node_lies_under_it() -> void:
+	var parent: Control = auto_free(Control.new())
+	add_child(parent)
+	parent.size = Vector2(1104, 540)
+	var canvas := MapCanvas.new()
+	parent.add_child(canvas)
+	canvas.size = parent.size
+	canvas.node_radius = MapCanvas.AREA_NODE_RADIUS
+	canvas.hover_radius = MapCanvas.NODE_RADIUS
+	for case in [[[Vector2(0.8, 0.8)], 540.0 - 80.0],
+			[[Vector2(0.05, 0.05), Vector2(0.05, 0.95)], 540.0 - 80.0],
+			[[Vector2(0.05, 0.95)], 0.0]]:
+		var header := Control.new()
+		parent.add_child(header)
+		header.custom_minimum_size = Vector2(300, 80)
+		header.size = header.custom_minimum_size
+		canvas.place_header(header, case[0], true)
+		assert_float(header.position.y).is_equal_approx(case[1], 0.5)
+		header.free()
 	remove_child(parent)
 
 
@@ -316,13 +341,24 @@ func test_level_hints_speak_of_stars_and_never_of_the_fortress() -> void:
 func test_the_fortress_badge_fills_from_one_tier_to_the_next() -> void:
 	# 10 Wörter: Stufe 1 ab 1, Stufe 2 ab 4 — mit 2 ist ein Drittel des Wegs geschafft.
 	var state := AreaMap.fortress_state({"tier": 1, "done": 2, "total": 10})
-	assert_str(str(state["title"])).is_equal("Festung · Stufe 1")
-	assert_str(str(state["next"])).is_equal("noch 2 Wörter bis Stufe 2")
+	assert_int(int(state["tier"])).is_equal(1)
+	assert_str("%s %s %s" % [state["before"], state["count"], state["after"]]).is_equal(
+			"Noch 2 Wörter bis Stufe 2")
 	assert_float(float(state["share"])).is_equal_approx(1.0 / 3.0, 0.001)
 	var top := AreaMap.fortress_state({"tier": 4, "done": 10, "total": 10})
-	assert_str(str(top["next"])).is_equal("Höchste Stufe")
+	assert_str(str(top["before"])).is_equal("Höchste Stufe")
+	assert_str(str(top["count"])).is_empty()
 	assert_float(float(top["share"])).is_equal(1.0)
-	assert_str(str(AreaMap.fortress_state({})["title"])).contains("Stufe 0")
+	assert_int(int(AreaMap.fortress_state({})["tier"])).is_equal(0)
+
+
+## Jede Stufe hat ihr Bild im Medaillon, gerendert aus derselben Festung wie im Kampf.
+func test_every_fortress_tier_has_its_image() -> void:
+	for tier in FortressTier.THRESHOLDS_PERCENT.size() + 1:
+		var image := AreaMap.fortress_image(tier)
+		assert_object(image).override_failure_message("Stufe %d ohne Bild" % tier).is_not_null()
+		assert_int(image.get_width()).is_equal(72)
+	assert_object(AreaMap.fortress_image(99)).is_same(AreaMap.fortress_image(4))
 
 
 func test_unit_images_load_ahead_and_stay_the_same_instance() -> void:
@@ -408,8 +444,8 @@ func test_the_binding_has_a_round_spine_and_a_groove() -> void:
 	assert_int(mesh.get_surface_count()).is_equal(1)
 
 
-## Je Sprache ein Regalfach: Englisch oben, die übrigen alphabetisch darunter; innerhalb
-## eines Fachs bleibt die Reihenfolge der Bücher.
+## Die Reihe auf dem Pult geht nach Sprache: Englisch zuerst, die übrigen alphabetisch
+## danach; innerhalb einer Sprache bleibt die Reihenfolge der Bücher.
 func test_each_language_gets_its_own_shelf_row() -> void:
 	var language := {"b1": "la", "a1": "en", "a2": "en", "c1": "fr"}
 	var rows: Array = load("res://src/ui/book_select.gd").shelf_rows(
@@ -429,35 +465,40 @@ func test_the_cover_names_the_language_and_a_missing_boss() -> void:
 	remove_child(book)
 
 
-## Im Regal zeigt das Buch den Rücken; ausgewählt kommt es nach vorn und zeigt das Cover.
+## Auf dem Pult steht das Buch leicht schräg; ausgewählt kommt es nach vorn, steht gerade,
+## rückt ein Stück zur Bildmitte und zeigt seinen Stand. Aufgeschlagen steht der Bund dort.
 func test_a_selected_book_comes_out_and_turns() -> void:
 	var book: Book3D = auto_free(load("res://scenes/ui/book_3d.tscn").instantiate())
 	add_child(book)
+	book.center_x = 1.0
 	book.fill("Buch", null, 0, {"units": 2, "done": 3, "total": 10, "crowns": 1})
-	assert_str((book.get_node("%Crowns") as Label).text).contains("1 von 2")
+	assert_str((book.get_node("%Crowns") as Label).text).contains("1 / 2")
 	var body := book.get_node("%Body") as Node3D
-	# Rücken (-X der Buchlage) zeigt zur Kamera (+Z).
-	assert_float((body.global_basis * Vector3.LEFT).z).is_equal_approx(1.0, 0.001)
+	var stats := book.get_node("%Stats") as Control
+	# Cover (+Z der Buchlage) um SLOT_ANGLE gedreht, der Stand verborgen.
+	assert_float((body.global_basis * Vector3.BACK).z).is_equal_approx(cos(deg_to_rad(Book3D.SLOT_ANGLE)), 0.001)
+	assert_float(stats.modulate.a).is_equal(0.0)
 	book.set_selected(true)
 	for i in 40:
 		book._process(0.02)
 	assert_float(book.lift).is_equal(1.0)
-	# Ausgewählt leicht schräg (Rücken bleibt sichtbar), beim Öffnen ganz zur Kamera.
-	assert_float((body.global_basis * Vector3.BACK).z).is_equal_approx(cos(deg_to_rad(Book3D.SHOWN_ANGLE)), 0.001)
-	assert_float(body.position.z).is_greater(Book3D.WIDTH * 0.5)
-	# Aufschlagen: gerade zur Kamera, der Deckel geht nach links auf, die Doppelseite liegt offen.
+	assert_float((body.global_basis * Vector3.BACK).z).is_equal_approx(1.0, 0.001)
+	assert_float(body.position.z).is_equal_approx(Book3D.PULL, 0.001)
+	assert_float(body.position.x).is_equal_approx(Book3D.TOWARD, 0.001)
+	assert_float(stats.modulate.a).is_equal(1.0)
+	# Aufschlagen: der Deckel geht nach links auf, der Bund steht in der Bildmitte.
 	book.open_book()
 	for i in 80:
 		book._process(0.02)
 	assert_bool(book.is_facing()).is_true()
 	assert_bool(book.is_spread_open()).is_true()
-	assert_float((body.global_basis * Vector3.BACK).z).is_equal_approx(1.0, 0.001)
 	var hinge := book.get_node("%Hinge") as Node3D
 	assert_float((hinge.global_basis * Vector3.RIGHT).x).is_equal_approx(-1.0, 0.001)
+	var bund := body.global_transform * Vector3(Book3D.hinge_x(), 0, 0)
+	assert_float(bund.x).is_equal_approx(book.center_x, 0.001)
 	# Der Blick ins Buch: mittig vor dem Bund, senkrecht auf die Doppelseite, so nah, dass die
 	# Karte an der knapperen Achse gerade randlos ist.
 	var view := book.spread_view(40.0, 16.0 / 9.0)
-	var bund := (book.get_node("%Body") as Node3D).global_transform * Vector3(Book3D.hinge_x(), 0, 0)
 	assert_float(view.origin.x).is_equal_approx(bund.x, 0.001)
 	assert_float(view.basis.z.z).is_equal_approx(1.0, 0.001)
 	var visible_height := 2.0 * (view.origin.z - bund.z - book.thickness * 0.5 + Book3D.BOARD) * tan(deg_to_rad(20.0))
@@ -473,13 +514,33 @@ func test_a_selected_book_comes_out_and_turns() -> void:
 	remove_child(book)
 
 
-## Ein Strahl von vorn trifft den Rücken im Regal, daneben nichts.
-func test_a_ray_hits_the_spine_in_the_shelf() -> void:
+## Gezielt wird auf den Platz in der Reihe: ein Strahl von vorn trifft das schräge Cover,
+## daneben nichts. Herausgenommen trifft `hit` weiter den Platz, `hit_body` das Buch vorn.
+func test_a_ray_hits_the_book_on_its_place() -> void:
 	var book: Book3D = auto_free(load("res://scenes/ui/book_3d.tscn").instantiate())
 	add_child(book)
-	assert_float(book.hit(Vector3(0, 0, 5), Vector3.FORWARD)).is_equal_approx(5.0 - Book3D.WIDTH * 0.5, 0.001)
+	var on_place := 5.0 - book.thickness * 0.5 / cos(deg_to_rad(Book3D.SLOT_ANGLE))
+	assert_float(book.hit(Vector3(0, 0, 5), Vector3.FORWARD)).is_equal_approx(on_place, 0.001)
 	assert_float(book.hit(Vector3(1, 0, 5), Vector3.FORWARD)).is_equal(INF)
+	book.set_selected(true)
+	for i in 40:
+		book._process(0.02)
+	assert_float(book.hit(Vector3(0, 0, 5), Vector3.FORWARD)).is_equal_approx(on_place, 0.001)
+	assert_float(book.hit_body(Vector3(0, 0, 5), Vector3.FORWARD)) \
+			.is_equal_approx(5.0 - Book3D.PULL - book.thickness * 0.5, 0.001)
 	remove_child(book)
+
+
+## Jede Seite der Reihe steht mittig auf dem Pult, auch eine letzte, nicht volle.
+func test_each_page_of_the_row_is_centered() -> void:
+	var slot_x := BookSelect.slot_x
+	var width := BookSelect.SLOT_WIDTH
+	assert_float(slot_x.call(0, 1)).is_equal_approx(0.0, 0.001)
+	assert_float(slot_x.call(0, 4) + slot_x.call(3, 4)).is_equal_approx(0.0, 0.001)
+	# Die zweite Seite beginnt eine Seitenbreite weiter; zwei Bücher darauf stehen um ihre Mitte.
+	var page := BookSelect.SLOTS * width
+	assert_float(slot_x.call(BookSelect.SLOTS, 2) - page).is_equal_approx(-width * 0.5, 0.001)
+	assert_float(slot_x.call(BookSelect.SLOTS + 1, 2) - page).is_equal_approx(width * 0.5, 0.001)
 
 
 # --- Screens ------------------------------------------------------------------
@@ -561,13 +622,22 @@ func test_every_area_image_has_a_point_for_every_level(do_skip := LanguageData.m
 						.is_true()
 
 
-func test_the_book_select_loads() -> void:
-	var screen: Control = auto_free(BOOKS_SCENE.instantiate())
+## Die Bibliothek stellt ihre Bücher in den Turm der Menü-Kulisse. Nach dem Hereinfahren
+## ist keines herausgenommen — das tut erst die Maus (oder ←/→).
+func test_the_library_fills_the_tower_and_takes_no_book_out() -> void:
+	var backdrop: MenuBackdrop = auto_free(BACKDROP_SCENE.instantiate())
+	add_child(backdrop)
+	var screen: BookSelect = auto_free(BOOKS_SCENE.instantiate())
 	add_child(screen)
+	screen.setup(backdrop)
+	screen.enter()
 	await get_tree().process_frame
-	var books := screen.get_node("%Books") as Node3D
+	var books := backdrop.library_books()
 	assert_int(books.get_child_count()).is_equal(ContentRegistry.all_books().size())
+	for book: Book3D in books.get_children():
+		assert_bool(book.selected).is_false()
 	remove_child(screen)
+	remove_child(backdrop)
 
 
 ## Mit Sprachdaten zeigt eine echte Unit ihre Level.
@@ -606,24 +676,88 @@ func test_every_real_level_is_playable(do_skip := LanguageData.missing(), skip_r
 							"%s/%s %s: nichts spielbar" % [book, unit, level["key"]]).is_true()
 
 
-## Der Ich-Sicht-Schalter ist ein Symbol direkt links neben der Festungs-Anzeige, gleich hoch.
-func test_first_person_toggle_sits_left_of_the_fortress_at_its_height() -> void:
+## Ort und Festung sind EIN Schild unten in der Mitte; unten rechts stehen nur der
+## Ich-Sicht-Schalter und „Spielen", gleich hoch, der Schalter direkt davor.
+func test_place_and_fortress_share_one_plate_and_the_toggle_sits_before_play() -> void:
 	MapSelection.book = "zz-kein-buch"
 	MapSelection.unit = 1
 	var area: Control = auto_free(AREA_SCENE.instantiate())
 	add_child(area)
 	await get_tree().process_frame
 	await get_tree().process_frame
+	var plate := area.get_node("%Plate") as Control
+	assert_bool(plate.is_ancestor_of(area.get_node("%Title"))).is_true()
+	assert_bool(plate.is_ancestor_of(area.get_node("%FortressBar"))).is_true()
+	var p := plate.get_global_rect()
+	assert_float(p.get_center().x).is_equal_approx(area.get_global_rect().get_center().x, 1.0)
 	var toggle := area.get_node("%FirstPersonToggle") as Button
-	var fortress := area.get_node("%BottomRight/Fortress") as Control
+	var play := area.get_node("%PlayButton") as Control
 	# Der Testlauf ist ein Debug-Build: der Schalter steht immer da.
 	assert_bool(toggle.visible).is_true()
-	assert_object(toggle.get_parent()).is_same(fortress.get_parent())
-	assert_int(toggle.get_index()).is_equal(fortress.get_index() - 1)
+	assert_object(toggle.get_parent()).is_same(play.get_parent())
+	assert_int(play.get_index()).is_equal(toggle.get_index() + 1)
 	var t := toggle.get_global_rect()
-	var f := fortress.get_global_rect()
-	assert_float(t.size.y).is_equal_approx(f.size.y, 0.5)
-	assert_float(t.position.y).is_equal_approx(f.position.y, 0.5)
-	assert_float(t.end.x).is_less_equal(f.position.x)
-	assert_float(f.position.x - t.end.x).is_less_equal(8.0)
+	var r := play.get_global_rect()
+	assert_float(t.size.y).is_equal_approx(r.size.y, 0.5)
+	assert_float(t.position.y).is_equal_approx(r.position.y, 0.5)
+	assert_float(r.position.x - t.end.x).is_less_equal(8.0)
+	# Das Schild in der Mitte und die Knöpfe rechts überdecken sich nicht.
+	assert_float(p.end.x).is_less_equal(t.position.x)
 	remove_child(area)
+
+
+## Ein Klick markiert nur; „Spielen" ganz unten rechts ist ohne Auswahl gesperrt und
+## startet erst mit einer.
+func test_a_click_marks_and_play_sits_right_of_the_fortress() -> void:
+	MapSelection.book = "zz-kein-buch"
+	MapSelection.unit = 1
+	var area: AreaMap = auto_free(AREA_SCENE.instantiate())
+	add_child(area)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var play := area.get_node("%PlayButton") as Button
+	assert_object(play.get_parent()).is_same(area.get_node("%BottomRight"))
+	assert_int(play.get_index()).is_equal(play.get_parent().get_child_count() - 1)
+	assert_bool(play.disabled).is_true()
+	area._levels = MapLevel.levels_for("zz-kein-buch", 1, 4)
+	area._on_level_clicked("t2")
+	area._on_level_clicked("t3")
+	var canvas := area.get_node("%Canvas") as MapCanvas
+	assert_bool(canvas.is_selected("t2")).is_true()
+	assert_bool(canvas.is_selected("t3")).is_true()
+	assert_bool(play.disabled).is_false()
+	assert_bool(RunRequest.is_level()).is_false()
+	assert_str(str(Hints.hint_of(play).get("body", ""))).contains("Teil 2 + 3")
+	area._on_level_clicked("all")
+	assert_bool(canvas.is_selected("t2")).is_false()
+	assert_bool(canvas.is_selected("all")).is_true()
+	area._on_level_clicked("all")
+	assert_bool(play.disabled).is_true()
+	remove_child(area)
+
+
+## Der Bosskampf hat keine Ich-Sicht: ist der Boss markiert, ist der Schalter gesperrt —
+## nicht versteckt, die Ecke behält ihre Größe.
+func test_the_first_person_toggle_is_locked_for_the_boss() -> void:
+	MapSelection.book = "zz-kein-buch"
+	MapSelection.unit = 1
+	var area: AreaMap = auto_free(AREA_SCENE.instantiate())
+	add_child(area)
+	await get_tree().process_frame
+	var toggle := area.get_node("%FirstPersonToggle") as Button
+	area._levels = MapLevel.levels_for("zz-kein-buch", 1, 4)
+	assert_bool(toggle.disabled).is_false()
+	area._select(["boss"])
+	assert_bool(toggle.disabled).is_true()
+	assert_bool(toggle.visible).is_true()
+	area._select(["t1"])
+	assert_bool(toggle.disabled).is_false()
+	remove_child(area)
+
+
+## Nach dem Kampf steht die gespielte Auswahl wieder markiert da.
+func test_the_last_run_comes_back_marked() -> void:
+	RunRequest.start_level(MapLevel.combine(MapLevel.levels_for("zz-kein-buch", 1, 4), ["t2", "t3"]))
+	assert_array(AreaMap.played_keys()).is_equal(["t2", "t3"])
+	RunRequest.start_level({"book": "b", "unit": 1, "key": "t1"})
+	assert_array(AreaMap.played_keys()).is_equal(["t1"])

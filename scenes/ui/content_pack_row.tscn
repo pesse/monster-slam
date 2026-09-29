@@ -2,47 +2,59 @@
 
 [ext_resource type="Script" path="res://src/ui/content_pack_row.gd" id="1_row"]
 
-[node name="ContentPackRow" type="PanelContainer"]
+[node name="ContentPackRow" type="VBoxContainer"]
+theme_type_variation = &"Tight"
 script = ExtResource("1_row")
 
-[node name="Margin" type="MarginContainer" parent="."]
+[node name="Head" type="HBoxContainer" parent="."]
+layout_mode = 2
 
-[node name="Root" type="VBoxContainer" parent="Margin"]
-theme_type_variation = &"Tight"
-
-[node name="Head" type="HBoxContainer" parent="Margin/Root"]
-
-[node name="Select" type="CheckBox" parent="Margin/Root/Head"]
+[node name="Select" type="CheckBox" parent="Head"]
 unique_name_in_owner = true
+layout_mode = 2
 
-[node name="Name" type="Label" parent="Margin/Root/Head"]
+[node name="Name" type="Label" parent="Head"]
 unique_name_in_owner = true
+layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"StatSubline"
 text = "Pack"
 
-[node name="State" type="Label" parent="Margin/Root/Head"]
+[node name="State" type="Label" parent="Head"]
 unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatNumber"
 text = "Zustand"
 
-[node name="Info" type="Label" parent="Margin/Root"]
-theme_type_variation = &"Caption"
+[node name="Info" type="Label" parent="."]
 unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Caption"
 autowrap_mode = 3
 
-[node name="CodeRow" type="HBoxContainer" parent="Margin/Root"]
+[node name="CodeRow" type="HBoxContainer" parent="."]
 unique_name_in_owner = true
 visible = false
+layout_mode = 2
 
-[node name="CodeInput" type="LineEdit" parent="Margin/Root/CodeRow"]
+[node name="CodeInput" type="LineEdit" parent="CodeRow"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "Zugangscode"
 
-[node name="RedeemButton" type="Button" parent="Margin/Root/CodeRow"]
+[node name="RedeemButton" type="Button" parent="CodeRow"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 44)
+layout_mode = 2
+theme_type_variation = &"WindowButton"
 text = "Einlösen"
 
-[node name="ForgetButton" type="Button" parent="Margin/Root/CodeRow"]
+[node name="ForgetButton" type="Button" parent="CodeRow"]
 unique_name_in_owner = true
 visible = false
+custom_minimum_size = Vector2(200, 44)
+layout_mode = 2
+theme_type_variation = &"WindowButton"
 text = "Code verwerfen"

@@ -1,47 +1,10 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://src/ui/book_select.gd" id="1_screen"]
-
-[sub_resource type="Gradient" id="glow_g"]
-colors = PackedColorArray(1, 0.72, 0.38, 0.2, 1, 0.72, 0.38, 0)
-
-[sub_resource type="GradientTexture2D" id="glow"]
-gradient = SubResource("glow_g")
-width = 256
-height = 256
-fill = 1
-fill_from = Vector2(0.5, 0.45)
-fill_to = Vector2(0.5, 1.05)
-
-[sub_resource type="Environment" id="env"]
-background_mode = 1
-background_color = Color(0, 0, 0, 0)
-ambient_light_source = 2
-ambient_light_color = Color(0.55, 0.5, 0.48, 1)
-ambient_light_energy = 0.6
-
-[sub_resource type="StandardMaterial3D" id="wood_dark"]
-albedo_color = Color(0.2, 0.12, 0.07, 1)
-roughness = 0.9
-
-[sub_resource type="StandardMaterial3D" id="wood"]
-albedo_color = Color(0.42, 0.26, 0.14, 1)
-roughness = 0.8
-
-[sub_resource type="BoxMesh" id="back"]
-material = SubResource("wood_dark")
-size = Vector3(2.6, 1.8, 0.05)
-
-[sub_resource type="BoxMesh" id="plank"]
-material = SubResource("wood")
-size = Vector3(2.6, 0.1, 1.3)
-
-[sub_resource type="BoxMesh" id="side"]
-material = SubResource("wood")
-size = Vector3(0.1, 1.76, 1.3)
-
-[sub_resource type="World3D" id="world"]
-environment = SubResource("env")
+[ext_resource type="PackedScene" path="res://scenes/ui/profile_badge.tscn" id="2_badge"]
+[ext_resource type="Texture2D" path="res://assets/ui/library/back.webp" id="3_back"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/play.webp" id="4_next"]
+[ext_resource type="Texture2D" path="res://assets/ui/library/title.webp" id="5_title"]
 
 [node name="BookSelect" type="Control"]
 layout_mode = 3
@@ -50,19 +13,20 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 script = ExtResource("1_screen")
 
-[node name="Backdrop" type="ColorRect" parent="."]
+[node name="Stage" type="Control" parent="."]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 2
-color = Color(0.05, 0.06, 0.1, 1)
 
-[node name="Glow" type="TextureRect" parent="."]
+[node name="Ui" type="Control" parent="."]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -70,118 +34,101 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-texture = SubResource("glow")
+
+[node name="BackButton" type="Button" parent="Ui"]
+unique_name_in_owner = true
+layout_mode = 1
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 200.0
+offset_bottom = 72.0
+focus_mode = 0
+theme_type_variation = &"IntroSmallButton"
+text = "Zurück"
+icon = ExtResource("3_back")
+
+[node name="Heading" type="VBoxContainer" parent="Ui"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -160.0
+offset_top = 16.0
+offset_right = 160.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_type_variation = &"Tight"
+
+[node name="Title" type="TextureRect" parent="Ui/Heading"]
+custom_minimum_size = Vector2(320, 80)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("5_title")
 expand_mode = 1
+stretch_mode = 5
 
-[node name="Stage" type="SubViewportContainer" parent="."]
+[node name="ProfileBadge" parent="Ui" instance=ExtResource("2_badge")]
 unique_name_in_owner = true
 layout_mode = 1
-anchors_preset = 15
+anchors_preset = -1
+anchor_left = 1.0
 anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-stretch = true
+offset_left = -301.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = 160.0
+grow_horizontal = 0
 
-[node name="World" type="SubViewport" parent="Stage"]
+[node name="PrevButton" type="Button" parent="Ui"]
 unique_name_in_owner = true
-own_world_3d = true
-world_3d = SubResource("world")
-transparent_bg = true
-handle_input_locally = false
-msaa_3d = 2
-size = Vector2i(1152, 648)
-render_target_update_mode = 4
-
-[node name="Camera" type="Camera3D" parent="Stage/World"]
-unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 0.99939, 0.0348995, 0, -0.0348995, 0.99939, 0, 0.95, 3.8)
-fov = 40.0
-
-[node name="Sun" type="DirectionalLight3D" parent="Stage/World"]
-transform = Transform3D(0.906308, -0.271654, 0.323744, 0, 0.766044, 0.642788, -0.422618, -0.582563, 0.694272, 0, 3, 3)
-light_energy = 0.7
-shadow_enabled = true
-
-[node name="Lamp" type="OmniLight3D" parent="Stage/World"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 1.6)
-light_color = Color(1, 0.82, 0.6, 1)
-light_energy = 1.2
-omni_range = 5.0
-
-[node name="Shelf" type="Node3D" parent="Stage/World"]
-
-[node name="ShelfBack" type="MeshInstance3D" parent="Stage/World/Shelf"]
-unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.78, -0.625)
-mesh = SubResource("back")
-
-[node name="ShelfFloor" type="MeshInstance3D" parent="Stage/World/Shelf"]
-unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
-mesh = SubResource("plank")
-
-[node name="ShelfTop" type="MeshInstance3D" parent="Stage/World/Shelf"]
-unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.61, 0)
-mesh = SubResource("plank")
-
-[node name="ShelfLeft" type="MeshInstance3D" parent="Stage/World/Shelf"]
-unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 0.78, 0)
-mesh = SubResource("side")
-
-[node name="ShelfRight" type="MeshInstance3D" parent="Stage/World/Shelf"]
-unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, 0.78, 0)
-mesh = SubResource("side")
-
-[node name="Books" type="Node3D" parent="Stage/World"]
-unique_name_in_owner = true
-
-[node name="Margin" type="MarginContainer" parent="."]
-unique_name_in_owner = true
-theme_type_variation = &"ScreenMargin"
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
+anchors_preset = -1
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 24.0
+offset_top = -32.0
+offset_right = 88.0
+offset_bottom = 64.0
+focus_mode = 0
+theme_type_variation = &"LibraryArrow"
+icon = ExtResource("3_back")
+icon_alignment = 1
+expand_icon = true
 
-[node name="Root" type="VBoxContainer" parent="Margin"]
-theme_type_variation = &"ScreenStack"
-layout_mode = 2
-mouse_filter = 2
-
-[node name="Header" type="HBoxContainer" parent="Margin/Root"]
-layout_mode = 2
-mouse_filter = 2
-
-[node name="BackButton" type="Button" parent="Margin/Root/Header"]
+[node name="NextButton" type="Button" parent="Ui"]
 unique_name_in_owner = true
-theme_type_variation = &"MapButton"
-layout_mode = 2
-size_flags_vertical = 4
-text = "◀ Menü"
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -88.0
+offset_top = -32.0
+offset_right = -24.0
+offset_bottom = 64.0
+grow_horizontal = 0
+focus_mode = 0
+theme_type_variation = &"LibraryArrow"
+icon = ExtResource("4_next")
+icon_alignment = 1
+expand_icon = true
 
-[node name="Banner" type="PanelContainer" parent="Margin/Root/Header"]
-theme_type_variation = &"MapBanner"
-layout_mode = 2
-mouse_filter = 2
-
-[node name="Title" type="Label" parent="Margin/Root/Header/Banner"]
-theme_type_variation = &"Title"
-layout_mode = 2
-text = "Welches Buch?"
-
-[node name="EmptyHint" type="Label" parent="Margin/Root"]
+[node name="EmptyHint" type="Label" parent="Ui"]
 unique_name_in_owner = true
 visible = false
-theme_type_variation = &"Hint"
-layout_mode = 2
-text = "Noch kein Buch vorhanden — im Start-Screen unter „📚 Inhalte“ einen Vokabel-Pack installieren."
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -72.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_vertical = 0
+theme_type_variation = &"MenuNote"
+text = "Noch kein Buch vorhanden — im Hauptmenü unter „Inhalte“ einen Vokabel-Pack installieren."
 horizontal_alignment = 1
 autowrap_mode = 3
 
@@ -190,6 +137,7 @@ unique_name_in_owner = true
 visible = false
 clip_contents = true
 layout_mode = 0
+mouse_filter = 2
 
 [node name="Image" type="TextureRect" parent="Dive"]
 unique_name_in_owner = true

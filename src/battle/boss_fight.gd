@@ -66,7 +66,7 @@ const WON_SHOUT := "SIEG!"
 const HIT_SHOUT_TINT := Color(1.0, 0.86, 0.3)
 const MISS_SHOUT_TINT := Color(0.65, 0.85, 1.0)
 const EMPTY_POOL_TEXT := "Für den Satzmeister passt kein Satz zu deiner Auswahl. Wähle eine Unit mit Sätzen oder im Expertenmodus mehr Units aus."
-const NO_MODEL_NOTE := "Ohne Sprachmodell zählt nur, was als Lösung hinterlegt ist. Das Modell gibt es unter „📚 Inhalte“."
+const NO_MODEL_NOTE := "Ohne Sprachmodell zählt nur, was als Lösung hinterlegt ist. Das Modell gibt es unter „Inhalte“."
 const MODEL_NOTE := "Das Sprachmodell läuft auf diesem Rechner; nichts verlässt ihn."
 const FAILED_MODEL_NOTE := "Das Sprachmodell ließ sich nicht starten — es zählt nur, was als Lösung hinterlegt ist."
 

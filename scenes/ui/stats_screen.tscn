@@ -1,8 +1,23 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=18 format=3]
 
-[ext_resource type="Script" path="res://src/ui/stats_screen.gd" id="1_stats"]
-[ext_resource type="PackedScene" path="res://scenes/ui/coin_strip.tscn" id="2_coins"]
-[ext_resource type="Script" path="res://src/ui/stats_chart.gd" id="3_chart"]
+[ext_resource type="Script" path="res://src/ui/stats_screen.gd" id="1_r"]
+[ext_resource type="Script" path="res://src/ui/stats_chart.gd" id="2_r"]
+[ext_resource type="PackedScene" path="res://scenes/ui/coin_strip.tscn" id="3_r"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/window_surface.webp" id="4_r"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/close.webp" id="5_r"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/close_hover.webp" id="6_r"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/close_pressed.webp" id="7_r"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/title_joint_left.webp" id="8_r"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/title_joint_right.webp" id="9_r"]
+[ext_resource type="Texture2D" path="res://assets/ui/skill_tree/medallions/available.webp" id="10_r"]
+[ext_resource type="Texture2D" path="res://assets/ui/statistics/icons/records_trophy.webp" id="11_r"]
+[ext_resource type="Texture2D" path="res://assets/ui/statistics/icons/streak_flame.webp" id="12_r"]
+[ext_resource type="Texture2D" path="res://assets/ui/statistics/icons/correct_check.webp" id="13_r"]
+[ext_resource type="Texture2D" path="res://assets/ui/skill_tree/icons/skill_point.webp" id="14_r"]
+[ext_resource type="Texture2D" path="res://assets/ui/statistics/icons/gold_coins.webp" id="15_r"]
+[ext_resource type="Texture2D" path="res://assets/ui/statistics/icons/treasure_chest.webp" id="16_r"]
+
+[sub_resource type="ButtonGroup" id="tab_group"]
 
 [node name="StatsScreen" type="Control"]
 layout_mode = 3
@@ -11,238 +26,878 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_stats")
+script = ExtResource("1_r")
 
-[node name="Margin" type="MarginContainer" parent="."]
-theme_type_variation = &"ScreenMargin"
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.03, 0.06, 0.6)
+
+[node name="Window" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+
+[node name="Frame" type="PanelContainer" parent="Window"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"GameWindow"
+
+[node name="Surface" type="TextureRect" parent="Window"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 9.0
+offset_top = 9.0
+offset_right = -9.0
+offset_bottom = -9.0
+mouse_filter = 2
+texture = ExtResource("4_r")
+expand_mode = 1
+stretch_mode = 1
+
+[node name="Layout" type="VBoxContainer" parent="Window"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Root" type="VBoxContainer" parent="Margin"]
+[node name="TitleBar" type="PanelContainer" parent="Window/Layout"]
+layout_mode = 2
+theme_type_variation = &"WindowTitleBar"
+
+[node name="Header" type="HBoxContainer" parent="Window/Layout/TitleBar"]
+layout_mode = 2
 theme_type_variation = &"ScreenStack"
 
-[node name="Header" type="HBoxContainer" parent="Margin/Root"]
+[node name="TitleIcon" type="TextureRect" parent="Window/Layout/TitleBar/Header"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("11_r")
+expand_mode = 1
+stretch_mode = 5
 
-[node name="BackButton" type="Button" parent="Margin/Root/Header"]
-unique_name_in_owner = true
-text = "← Zurück"
-
-[node name="Title" type="Label" parent="Margin/Root/Header"]
-theme_type_variation = &"Title"
+[node name="Title" type="Label" parent="Window/Layout/TitleBar/Header"]
+layout_mode = 2
+theme_type_variation = &"WindowTitle"
+text = "STATISTIK"
 size_flags_horizontal = 3
-text = "Statistik"
-horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="Tabs" type="TabContainer" parent="Margin/Root"]
+[node name="CloseButton" type="TextureButton" parent="Window/Layout/TitleBar/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 4
+texture_filter = 4
+texture_normal = ExtResource("5_r")
+texture_pressed = ExtResource("7_r")
+texture_hover = ExtResource("6_r")
+texture_focused = ExtResource("6_r")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Content" type="MarginContainer" parent="Window/Layout"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_type_variation = &"WindowContent"
+
+[node name="Body" type="VBoxContainer" parent="Window/Layout/Content"]
+layout_mode = 2
+
+[node name="Tabs" type="HBoxContainer" parent="Window/Layout/Content/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="OverviewTab" type="Button" parent="Window/Layout/Content/Body/Tabs"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(144, 40)
+layout_mode = 2
+theme_type_variation = &"WindowTab"
+toggle_mode = true
+button_group = SubResource("tab_group")
+text = "Überblick"
+button_pressed = true
+
+[node name="ProgressTab" type="Button" parent="Window/Layout/Content/Body/Tabs"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(144, 40)
+layout_mode = 2
+theme_type_variation = &"WindowTab"
+toggle_mode = true
+button_group = SubResource("tab_group")
+text = "Fortschritt"
+
+[node name="TaskTab" type="Button" parent="Window/Layout/Content/Body/Tabs"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(144, 40)
+layout_mode = 2
+theme_type_variation = &"WindowTab"
+toggle_mode = true
+button_group = SubResource("tab_group")
+text = "Aufgaben"
+
+[node name="TabRule" type="HSeparator" parent="Window/Layout/Content/Body"]
+layout_mode = 2
+theme_type_variation = &"StatRule"
+
+[node name="Pages" type="Control" parent="Window/Layout/Content/Body"]
+layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Überblick" type="ScrollContainer" parent="Margin/Root/Tabs"]
+[node name="OverviewPage" type="ScrollContainer" parent="Window/Layout/Content/Body/Pages"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
 
-[node name="Gutter" type="MarginContainer" parent="Margin/Root/Tabs/Überblick"]
+[node name="Gutter" type="MarginContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_type_variation = &"ScrollGutter"
+
+[node name="Overview" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter"]
+layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Overview" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter"]
-theme_type_variation = &"SectionStack"
+[node name="TopRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview"]
+layout_mode = 2
+theme_type_variation = &"StatColumns"
+
+[node name="StreakCard" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TopRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ScreenStack"
+
+[node name="StreakMedal" type="Control" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TopRow/StreakCard"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+
+[node name="Base" type="TextureRect" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TopRow/StreakCard/StreakMedal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("10_r")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Icon" type="TextureRect" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TopRow/StreakCard/StreakMedal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 14.0
+offset_top = 14.0
+offset_right = -14.0
+offset_bottom = -14.0
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("12_r")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="StreakText" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TopRow/StreakCard"]
+layout_mode = 2
+theme_type_variation = &"Tight"
+size_flags_horizontal = 3
+size_flags_vertical = 4
+
+[node name="StreakLabel" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TopRow/StreakCard/StreakText"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatHeadline"
+text = "0 Tage"
+
+[node name="StreakSub" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TopRow/StreakCard/StreakText"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatSubline"
+text = "in Folge"
+
+[node name="StreakNote" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TopRow/StreakCard/StreakText"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Hint"
+text = "Heute fehlt noch"
+autowrap_mode = 3
+
+[node name="TopDivider" type="VSeparator" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TopRow"]
+layout_mode = 2
+theme_type_variation = &"StatDivider"
+
+[node name="AccuracyCard" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TopRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ScreenStack"
+
+[node name="AccuracyMedal" type="Control" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TopRow/AccuracyCard"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+
+[node name="Base" type="TextureRect" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TopRow/AccuracyCard/AccuracyMedal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("10_r")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Icon" type="TextureRect" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TopRow/AccuracyCard/AccuracyMedal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 14.0
+offset_top = 14.0
+offset_right = -14.0
+offset_bottom = -14.0
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("13_r")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="AccuracyText" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TopRow/AccuracyCard"]
+layout_mode = 2
+theme_type_variation = &"Tight"
+size_flags_horizontal = 3
+size_flags_vertical = 4
+
+[node name="AccuracyLabel" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TopRow/AccuracyCard/AccuracyText"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatHeadline"
+text = "Noch keine Sitzung"
+
+[node name="AccuracyWhich" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TopRow/AccuracyCard/AccuracyText"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatSubline"
+text = "Letzte Sitzung"
+
+[node name="AccuracyTrend" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TopRow/AccuracyCard/AccuracyText"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Hint"
+text = ""
+autowrap_mode = 3
+
+[node name="MonthRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview"]
+layout_mode = 2
+theme_type_variation = &"StatRule"
+
+[node name="CoinStrip" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview" instance=ExtResource("3_r")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="BottomRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview"]
+layout_mode = 2
+theme_type_variation = &"StatRule"
+
+[node name="BottomRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview"]
+layout_mode = 2
+theme_type_variation = &"StatColumns"
+
+[node name="ProgressColumn" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow"]
+layout_mode = 2
+theme_type_variation = &"ScreenStack"
 size_flags_horizontal = 3
 
-[node name="StreakSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter/Overview"]
+[node name="ProgressTitle" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/ProgressColumn"]
+layout_mode = 2
+theme_type_variation = &"StatHeading"
+text = "Dein Fortschritt"
+
+[node name="LevelRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/ProgressColumn"]
+layout_mode = 2
+theme_type_variation = &"ScreenStack"
+
+[node name="LevelMedal" type="Control" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/ProgressColumn/LevelRow"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+
+[node name="Base" type="TextureRect" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/ProgressColumn/LevelRow/LevelMedal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("10_r")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Icon" type="TextureRect" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/ProgressColumn/LevelRow/LevelMedal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 18.0
+offset_top = 18.0
+offset_right = -18.0
+offset_bottom = -18.0
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("14_r")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LevelText" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/ProgressColumn/LevelRow"]
+layout_mode = 2
 theme_type_variation = &"Tight"
+size_flags_horizontal = 3
+size_flags_vertical = 4
 
-[node name="StreakLabel" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/StreakSection"]
-theme_type_variation = &"SectionTitle"
+[node name="LevelLabel" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/ProgressColumn/LevelRow/LevelText"]
 unique_name_in_owner = true
-text = "🔥 0 Tage in Folge geübt"
+layout_mode = 2
+theme_type_variation = &"StatGold"
+text = "Level 1"
 
-[node name="CoinLabel" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/StreakSection"]
-theme_type_variation = &"Accent"
+[node name="XpRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/ProgressColumn/LevelRow/LevelText"]
+layout_mode = 2
+theme_type_variation = &"ScreenStack"
+
+[node name="XpBar" type="ProgressBar" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/ProgressColumn/LevelRow/LevelText/XpRow"]
 unique_name_in_owner = true
-autowrap_mode = 3
-text = "🪙 An 0 Tagen geübt"
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_type_variation = &"XpBar"
+max_value = 1.0
+step = 0.0
+show_percentage = false
 
-[node name="CoinStrip" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/StreakSection" instance=ExtResource("2_coins")]
+[node name="XpLabel" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/ProgressColumn/LevelRow/LevelText/XpRow"]
 unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatSubline"
+text = "0 / 100 XP"
 
-[node name="AccuracySection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter/Overview"]
-theme_type_variation = &"Tight"
-
-[node name="AccuracyLabel" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/AccuracySection"]
-theme_type_variation = &"SectionTitle"
+[node name="XpTotal" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/ProgressColumn/LevelRow/LevelText"]
 unique_name_in_owner = true
-text = "✅ Genauigkeit: noch keine Sitzung"
-
-[node name="AccuracyTrend" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/AccuracySection"]
+layout_mode = 2
 theme_type_variation = &"Hint"
+text = "Insgesamt 0 XP"
+
+[node name="ProgressRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/ProgressColumn"]
+layout_mode = 2
+theme_type_variation = &"StatRule"
+
+[node name="StatLines" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/ProgressColumn"]
 unique_name_in_owner = true
-autowrap_mode = 3
-
-[node name="StatLines" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter/Overview"]
+layout_mode = 2
 theme_type_variation = &"Tight"
+
+[node name="GoldRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/ProgressColumn/StatLines"]
 unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"ScreenStack"
 
-[node name="RecordSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter/Overview"]
+[node name="GoldIcon" type="TextureRect" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/ProgressColumn/StatLines/GoldRow"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("15_r")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="GoldValue" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/ProgressColumn/StatLines/GoldRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatNumber"
+text = "0"
+custom_minimum_size = Vector2(48, 0)
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="GoldText" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/ProgressColumn/StatLines/GoldRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatSubline"
+text = "Gold"
+vertical_alignment = 1
+
+[node name="ChestsRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/ProgressColumn/StatLines"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"ScreenStack"
+
+[node name="ChestsIcon" type="TextureRect" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/ProgressColumn/StatLines/ChestsRow"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("16_r")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ChestsValue" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/ProgressColumn/StatLines/ChestsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatNumber"
+text = "0"
+custom_minimum_size = Vector2(48, 0)
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="ChestsText" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/ProgressColumn/StatLines/ChestsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatSubline"
+text = "Schatzkisten geöffnet"
+vertical_alignment = 1
+
+[node name="PointsRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/ProgressColumn/StatLines"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"ScreenStack"
+
+[node name="PointsIcon" type="TextureRect" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/ProgressColumn/StatLines/PointsRow"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("14_r")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="PointsValue" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/ProgressColumn/StatLines/PointsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatNumber"
+text = "0"
+custom_minimum_size = Vector2(48, 0)
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="PointsText" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/ProgressColumn/StatLines/PointsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatSubline"
+text = "Skillpunkte offen"
+vertical_alignment = 1
+
+[node name="BottomDivider" type="VSeparator" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow"]
+layout_mode = 2
+theme_type_variation = &"StatDivider"
+
+[node name="RecordColumn" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow"]
+layout_mode = 2
+theme_type_variation = &"ScreenStack"
+size_flags_horizontal = 3
+
+[node name="RecordTitle" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/RecordColumn"]
+layout_mode = 2
+theme_type_variation = &"StatHeading"
+text = "Rekorde"
+
+[node name="RecordRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/RecordColumn"]
+layout_mode = 2
+theme_type_variation = &"ScreenStack"
+
+[node name="RecordMedal" type="Control" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/RecordColumn/RecordRow"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+
+[node name="Base" type="TextureRect" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/RecordColumn/RecordRow/RecordMedal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("10_r")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Icon" type="TextureRect" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/RecordColumn/RecordRow/RecordMedal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 14.0
+offset_top = 14.0
+offset_right = -14.0
+offset_bottom = -14.0
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("11_r")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="RecordList" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/RecordColumn/RecordRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Tight"
+size_flags_horizontal = 3
+size_flags_vertical = 4
+
+[node name="RecordRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/RecordColumn"]
+layout_mode = 2
+theme_type_variation = &"StatRule"
+
+[node name="Footer" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/RecordColumn"]
+layout_mode = 2
+theme_type_variation = &"ScreenStack"
+
+[node name="Mastered" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/RecordColumn/Footer"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_type_variation = &"Tight"
 
-[node name="RecordTitle" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/RecordSection"]
-theme_type_variation = &"SectionTitle"
-text = "🏆 Rekorde"
+[node name="MasteredText" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/RecordColumn/Footer/Mastered"]
+layout_mode = 2
+theme_type_variation = &"StatSubline"
+text = "Gemeisterte Aufgaben:"
+vertical_alignment = 1
 
-[node name="RecordHint" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/RecordSection"]
+[node name="MasteredValue" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/RecordColumn/Footer/Mastered"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatNumber"
+text = "0"
+vertical_alignment = 1
+
+[node name="FooterDivider" type="VSeparator" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/RecordColumn/Footer"]
+layout_mode = 2
+theme_type_variation = &"StatDivider"
+
+[node name="Due" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/RecordColumn/Footer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"Tight"
+
+[node name="DueText" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/RecordColumn/Footer/Due"]
+layout_mode = 2
+theme_type_variation = &"StatSubline"
+text = "Heute fällig:"
+vertical_alignment = 1
+
+[node name="DueValue" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/RecordColumn/Footer/Due"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatNumber"
+text = "0"
+vertical_alignment = 1
+
+[node name="CurveRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview"]
+layout_mode = 2
+theme_type_variation = &"StatRule"
+
+[node name="CurveSection" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview"]
+layout_mode = 2
+theme_type_variation = &"Tight"
+
+[node name="CurveTitle" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/CurveSection"]
+layout_mode = 2
+theme_type_variation = &"StatHeading"
+text = "Lernkurve"
+
+[node name="CurveHint" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/CurveSection"]
+layout_mode = 2
 theme_type_variation = &"Hint"
-autowrap_mode = 3
-text = "Bestwerte über alle Läufe — kein Lernziel, nur zum Angeben."
-
-[node name="RecordList" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/RecordSection"]
-theme_type_variation = &"Tight"
-unique_name_in_owner = true
-
-[node name="CurveSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter/Overview"]
-theme_type_variation = &"Tight"
-
-[node name="CurveTitle" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/CurveSection"]
-theme_type_variation = &"SectionTitle"
-text = "📈 Lernkurve"
-
-[node name="CurveHint" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/CurveSection"]
-theme_type_variation = &"Hint"
-autowrap_mode = 3
 text = "Gemeisterte Aufgaben, aufgesammelt über die Wochen — diese Linie geht nicht zurück."
+autowrap_mode = 3
 
-[node name="Curve" type="Control" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/CurveSection"]
+[node name="Curve" type="Control" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/CurveSection"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
-script = ExtResource("3_chart")
+script = ExtResource("2_r")
 
-[node name="CurveCaption" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/CurveSection"]
-theme_type_variation = &"Hint"
+[node name="CurveCaption" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/CurveSection"]
 unique_name_in_owner = true
-autowrap_mode = 3
-
-[node name="FreshSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter/Overview"]
-theme_type_variation = &"Tight"
-
-[node name="FreshTitle" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/FreshSection"]
-theme_type_variation = &"SectionTitle"
-text = "🌱 Frisch gemeistert"
-
-[node name="FreshHint" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/FreshSection"]
+layout_mode = 2
 theme_type_variation = &"Hint"
+text = ""
 autowrap_mode = 3
+
+[node name="ListRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview"]
+layout_mode = 2
+theme_type_variation = &"StatRule"
+
+[node name="ListRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview"]
+layout_mode = 2
+theme_type_variation = &"StatColumns"
+
+[node name="FreshSection" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/ListRow"]
+layout_mode = 2
+theme_type_variation = &"Tight"
+size_flags_horizontal = 3
+
+[node name="FreshTitle" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/ListRow/FreshSection"]
+layout_mode = 2
+theme_type_variation = &"StatHeading"
+text = "Frisch gemeistert"
+
+[node name="FreshHint" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/ListRow/FreshSection"]
+layout_mode = 2
+theme_type_variation = &"Hint"
 text = "Diese Wörter sitzen seit dieser Woche."
-
-[node name="FreshList" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/FreshSection"]
-theme_type_variation = &"Tight"
-unique_name_in_owner = true
-
-[node name="ComebackSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter/Overview"]
-theme_type_variation = &"Tight"
-
-[node name="ComebackTitle" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/ComebackSection"]
-theme_type_variation = &"SectionTitle"
-text = "🏅 Comeback"
-
-[node name="ComebackHint" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/ComebackSection"]
-theme_type_variation = &"Hint"
 autowrap_mode = 3
-text = "Dreimal entwischt oder öfter — und jetzt sitzen sie doch."
 
-[node name="ComebackList" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/ComebackSection"]
-theme_type_variation = &"Tight"
+[node name="FreshList" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/ListRow/FreshSection"]
 unique_name_in_owner = true
-
-[node name="WantedSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter/Overview"]
+layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="WantedTitle" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/WantedSection"]
-theme_type_variation = &"SectionTitle"
-text = "🎯 Fahndungsliste"
+[node name="ComebackDivider" type="VSeparator" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/ListRow"]
+layout_mode = 2
+theme_type_variation = &"StatDivider"
 
-[node name="WantedHint" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/WantedSection"]
+[node name="ComebackSection" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/ListRow"]
+layout_mode = 2
+theme_type_variation = &"Tight"
+size_flags_horizontal = 3
+
+[node name="ComebackTitle" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/ListRow/ComebackSection"]
+layout_mode = 2
+theme_type_variation = &"StatHeading"
+text = "Comeback"
+
+[node name="ComebackHint" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/ListRow/ComebackSection"]
+layout_mode = 2
+theme_type_variation = &"Hint"
+text = "Dreimal entwischt oder öfter — und jetzt sitzen sie doch."
+autowrap_mode = 3
+
+[node name="ComebackList" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/ListRow/ComebackSection"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Tight"
+
+[node name="WantedRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview"]
+layout_mode = 2
+theme_type_variation = &"StatRule"
+
+[node name="WantedSection" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview"]
+layout_mode = 2
+theme_type_variation = &"Tight"
+size_flags_horizontal = 3
+
+[node name="WantedTitle" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/WantedSection"]
+layout_mode = 2
+theme_type_variation = &"StatHeading"
+text = "Fahndungsliste"
+
+[node name="WantedHint" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/WantedSection"]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Diese Wörter sind dir schon entwischt — hol sie dir zurück."
 autowrap_mode = 3
 
-[node name="WantedList" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/WantedSection"]
-theme_type_variation = &"Tight"
+[node name="WantedList" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/WantedSection"]
 unique_name_in_owner = true
-
-[node name="TotalSection" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter/Overview"]
+layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="TotalTitle" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/TotalSection"]
-theme_type_variation = &"SectionTitle"
-text = "📊 Insgesamt"
+[node name="TotalRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview"]
+layout_mode = 2
+theme_type_variation = &"StatRule"
 
-[node name="TotalHint" type="Label" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/TotalSection"]
+[node name="TotalSection" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview"]
+layout_mode = 2
+theme_type_variation = &"Tight"
+
+[node name="TotalTitle" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TotalSection"]
+layout_mode = 2
+theme_type_variation = &"StatHeading"
+text = "Insgesamt"
+
+[node name="TotalHint" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TotalSection"]
+layout_mode = 2
 theme_type_variation = &"Hint"
-autowrap_mode = 3
 text = "Alles seit dem ersten Lauf. Die Genauigkeit hier sinkt, wenn du schwere Wörter übst — das ist gewollt."
+autowrap_mode = 3
 
-[node name="TotalLines" type="VBoxContainer" parent="Margin/Root/Tabs/Überblick/Gutter/Overview/TotalSection"]
-theme_type_variation = &"Tight"
+[node name="TotalLines" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TotalSection"]
 unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Tight"
 
-[node name="Fortschritt" type="ScrollContainer" parent="Margin/Root/Tabs"]
+[node name="ProgressPage" type="ScrollContainer" parent="Window/Layout/Content/Body/Pages"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
 
-[node name="Gutter" type="MarginContainer" parent="Margin/Root/Tabs/Fortschritt"]
-theme_type_variation = &"ScrollGutter"
+[node name="Gutter" type="MarginContainer" parent="Window/Layout/Content/Body/Pages/ProgressPage"]
+layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"ScrollGutter"
 
-[node name="Progress" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt/Gutter"]
+[node name="Progress" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter"]
+layout_mode = 2
 theme_type_variation = &"SectionStack"
 size_flags_horizontal = 3
 
-[node name="Legend" type="Label" parent="Margin/Root/Tabs/Fortschritt/Gutter/Progress"]
+[node name="Legend" type="Label" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress"]
+layout_mode = 2
 theme_type_variation = &"Hint"
-autowrap_mode = 3
 text = "Klick auf eine Zeile zeigt ihre Wörter.  ✓ das Wort sitzt in beiden Übersetzungsrichtungen  ·  ★ eine weitere Aufgabe dazu sitzt (Form, Gegenteil, Synonym, Verwechslung)  ·  ☆ die gibt es, sie sitzt noch nicht. Zeigt der Mauszeiger auf ein Wort, stehen die Einzelstände da."
+autowrap_mode = 3
 
-[node name="UnitSection" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt/Gutter/Progress"]
+[node name="UnitSection" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress"]
+layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="UnitTitle" type="Label" parent="Margin/Root/Tabs/Fortschritt/Gutter/Progress/UnitSection"]
-theme_type_variation = &"SectionTitle"
-text = "📚 Nach Unit"
+[node name="UnitTitle" type="Label" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress/UnitSection"]
+layout_mode = 2
+theme_type_variation = &"StatHeading"
+text = "Nach Unit"
 
-[node name="UnitHint" type="Label" parent="Margin/Root/Tabs/Fortschritt/Gutter/Progress/UnitSection"]
+[node name="UnitHint" type="Label" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress/UnitSection"]
+layout_mode = 2
 theme_type_variation = &"Hint"
-autowrap_mode = 3
 text = "Ein Wort zählt als gemeistert, wenn du es in beide Richtungen sicher übersetzt."
-
-[node name="UnitList" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt/Gutter/Progress/UnitSection"]
-theme_type_variation = &"Tight"
-unique_name_in_owner = true
-
-[node name="TagSection" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt/Gutter/Progress"]
-theme_type_variation = &"Tight"
-
-[node name="TagTitle" type="Label" parent="Margin/Root/Tabs/Fortschritt/Gutter/Progress/TagSection"]
-theme_type_variation = &"SectionTitle"
-text = "🏷️ Nach Thema"
-
-[node name="TagList" type="VBoxContainer" parent="Margin/Root/Tabs/Fortschritt/Gutter/Progress/TagSection"]
-theme_type_variation = &"Tight"
-unique_name_in_owner = true
-
-[node name="Aufgaben" type="ScrollContainer" parent="Margin/Root/Tabs"]
-
-[node name="Gutter" type="MarginContainer" parent="Margin/Root/Tabs/Aufgaben"]
-theme_type_variation = &"ScrollGutter"
-size_flags_horizontal = 3
-
-[node name="TaskSection" type="VBoxContainer" parent="Margin/Root/Tabs/Aufgaben/Gutter"]
-theme_type_variation = &"Tight"
-size_flags_horizontal = 3
-
-[node name="TaskHint" type="Label" parent="Margin/Root/Tabs/Aufgaben/Gutter/TaskSection"]
-theme_type_variation = &"Hint"
 autowrap_mode = 3
-text = "Eine Zeile je Aufgabe: beide Übersetzungsrichtungen getrennt, dazu Formen, Gegenteile, Synonyme und Verwechslungen. Ein Wort steht hier also mehrfach — als Wort steht es im Reiter „Fortschritt“."
 
-[node name="TaskList" type="VBoxContainer" parent="Margin/Root/Tabs/Aufgaben/Gutter/TaskSection"]
-theme_type_variation = &"Tight"
+[node name="UnitList" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress/UnitSection"]
 unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Tight"
+
+[node name="TagSection" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress"]
+layout_mode = 2
+theme_type_variation = &"Tight"
+
+[node name="TagTitle" type="Label" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress/TagSection"]
+layout_mode = 2
+theme_type_variation = &"StatHeading"
+text = "Nach Thema"
+
+[node name="TagList" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress/TagSection"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Tight"
+
+[node name="TaskPage" type="ScrollContainer" parent="Window/Layout/Content/Body/Pages"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="Gutter" type="MarginContainer" parent="Window/Layout/Content/Body/Pages/TaskPage"]
+layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"ScrollGutter"
+
+[node name="TaskSection" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/TaskPage/Gutter"]
+layout_mode = 2
+theme_type_variation = &"Tight"
+size_flags_horizontal = 3
+
+[node name="TaskHint" type="Label" parent="Window/Layout/Content/Body/Pages/TaskPage/Gutter/TaskSection"]
+layout_mode = 2
+theme_type_variation = &"Hint"
+text = "Eine Zeile je Aufgabe: beide Übersetzungsrichtungen getrennt, dazu Formen, Gegenteile, Synonyme und Verwechslungen. Ein Wort steht hier also mehrfach — als Wort steht es im Reiter „Fortschritt“."
+autowrap_mode = 3
+
+[node name="TaskList" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/TaskPage/Gutter/TaskSection"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Tight"
+size_flags_horizontal = 3
+
+[node name="JointLeft" type="TextureRect" parent="Window"]
+layout_mode = 0
+offset_top = 51.0
+offset_right = 24.0
+offset_bottom = 75.0
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("8_r")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="JointRight" type="TextureRect" parent="Window"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -24.0
+offset_top = 51.0
+offset_bottom = 75.0
+grow_horizontal = 0
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("9_r")
+expand_mode = 1
+stretch_mode = 5

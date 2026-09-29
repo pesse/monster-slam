@@ -1,4 +1,4 @@
-extends PanelContainer
+extends VBoxContainer
 ## Eine Zeile in der Inhalte-Verwaltung. Vorlage für den Content-Manager, der sie je Pack
 ## instanziiert (siehe content_manager.gd).
 

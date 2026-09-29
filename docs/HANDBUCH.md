@@ -34,34 +34,47 @@ die wissen wollen, was im Spiel passiert und warum es sich so verhält.
 
 ## 1. Der Start-Screen
 
-Oben stehen dein Gold („💰 … Gold“) und dein Level („⭐ Level …“ mit dem Stand deiner
-Erfahrung). Hast du Skillpunkte, die du noch nicht ausgegeben hast, steht das in derselben
-Zeile.
+Das Spiel beginnt mit **„Wer spielt?“**: eine Kachel je Profil mit Name und Level, wer
+zuletzt gespielt hat, ist vorgewählt (golden, „✓ Ausgewählt“). Ein Klick auf eine andere
+Kachel wählt sie aus, **„Weiter“** (oder Enter) spielt damit: die Profilwahl schiebt sich
+nach links aus dem Bild, das Hauptmenü kommt von rechts, und der Blick wandert durch
+dasselbe Lager mit (Kapitel 2).
 
-Die Knöpfe:
+Hinter dem Menü steht ein Lager am Waldrand mit einem Skelett in roter Kapuze – das Bild
+bewegt sich leise, und ab und zu geht das Skelett hinüber zum Marktstand, schaut sich um
+und kommt zurück (manchmal bis ins Bild von „Wer spielt?“). Spielen kann man dort nichts.
 
-- **„▶ Spielen“** – zur Buchauswahl und von dort über die Landkarte des Buchs in ein
+Rechts oben steht deine Plakette: rechts dein Bild im Ring, unten darauf dein Level. Der
+blaue Bogen um das Bild zeigt, wie weit du im Level bist; am Zeiger steht es genau
+(„166 / 400 XP bis Level 5“), darunter, wie viele Skillpunkte du noch ausgeben kannst. Links daneben stehen dein Name und dein Gold, ganz links der
+Pfeil **„Profil wechseln“** (zurück zu „Wer spielt?“). Dieselbe Plakette steht in der
+Bibliothek.
+
+Die Knöpfe links:
+
+- **„Spielen“** (golden) – in die Bibliothek und von dort über die Landkarte des Buchs in ein
   Level oder zum Boss einer Unit (Kapitel 10).
-- **„🌳 Fähigkeiten“** – Skillpunkte ausgeben (Kapitel 11).
-- **„📊 Statistik“** – dein Lernstand (Kapitel 12).
-- **„⚙ Einstellungen“** – Profil, Tempo, Protokoll, Melden (Kapitel 13).
-- **„📚 Inhalte“** – Vokabel-Packs holen (Kapitel 15). Gibt es etwas Neues, steht die
-  Zahl dahinter, zum Beispiel „📚 Inhalte (2 neu)“.
-- **„⬆ Update auf …“** – erscheint nur, wenn es eine neue Fassung des Spiels gibt
-  (Kapitel 16).
+- **„Fähigkeiten“** – Skillpunkte ausgeben (Kapitel 11).
+- **„Statistik“** – dein Lernstand (Kapitel 12).
+- **„Inhalte“** – Vokabel-Packs holen (Kapitel 15). Gibt es etwas Neues, steht die
+  Zahl dahinter, zum Beispiel „Inhalte (2 neu)“.
+- **„Einstellungen“** – Profil, Tempo, Protokoll, Melden (Kapitel 13).
 
-Unter den Knöpfen steht klein **„Expertenmodus: Runde frei zusammenstellen“**. Er führt
-zu „Runde vorbereiten“, wo man selbst auswählt, was geübt wird (Kapitel 3).
+Rechts unten erscheint **„⬆ Update auf …“** nur, wenn es eine neue Fassung des Spiels gibt
+(Kapitel 16).
 
-**Warum ist „▶ Spielen“ grau?** Dann sind noch keine Vokabeln da. Das Spiel selbst bringt
-keine mit; sie kommen als Pack über „📚 Inhalte“. Der Hinweis unter dem Knopf sagt das
-auch.
+Links unten steht klein **„Eigene Runde – Expertenmodus“**. Er führt zu „Runde
+vorbereiten“, wo man selbst auswählt, was geübt wird (Kapitel 3).
+
+**Warum ist „Spielen“ grau?** Dann sind noch keine Vokabeln da. Das Spiel selbst bringt
+keine mit; sie kommen als Pack über „Inhalte“. Der Hinweis rechts unten sagt das auch.
 
 ## 2. Profile
 
-Mehrere Kinder können an einem Rechner spielen, jedes mit eigenem Profil. Auf dem
-Start-Screen wählst du unter „Aktives Profil“ aus, wer spielt. Ein neues Profil legst du
-an, indem du einen Namen in „Neuer Profilname“ tippst und „Neues Profil“ drückst.
+Mehrere Kinder können an einem Rechner spielen, jedes mit eigenem Profil. Beim Start fragt
+das Spiel „Wer spielt?“, du klickst auf deine Kachel und dann auf „Weiter“. Ein neues Profil legst du dort
+an, indem du einen Namen in „Neuer Profilname“ tippst und „Neues Profil“ drückst – danach
+spielst du gleich damit. Vom Start-Screen kommst du mit „Profil wechseln“ zurück.
 
 Zu einem Profil gehört alles, was man sich erspielt: der Lernstand jedes Wortes, Gold,
 Erfahrung und Level, die gelernten Fähigkeiten, die Auswahl, was geübt wird, die
@@ -71,8 +84,8 @@ den Einstellungen.
 ## 3. Expertenmodus: „Runde vorbereiten“
 
 Der normale Weg ins Spiel führt über die Landkarte (Kapitel 10). Wer selbst zusammenstellen
-will, was geübt wird, nimmt auf dem Start-Screen den kleinen Knopf „Expertenmodus: Runde
-frei zusammenstellen“. Dann kommt der Screen „Runde vorbereiten“. Hier legst du fest,
+will, was geübt wird, nimmt auf dem Start-Screen den kleinen Knopf „Eigene Runde –
+Expertenmodus“ links unten. Dann kommt der Screen „Runde vorbereiten“. Hier legst du fest,
 welche Wörter in den Kampf kommen. Alle Bereiche sind zugeklappt; ein Klick auf die Überschrift klappt
 sie auf.
 
@@ -181,10 +194,11 @@ Dasselbe Wort steht nie zweimal gleichzeitig auf dem Feld.
 
 ### Ich-Sicht
 
-Hast du den **Späherblick** gelernt (Kapitel 11), steht auf der Gebietskarte links neben
-der Festungs-Anzeige unten rechts der Schalter **👁**. Ist er gedrückt, stehst du im
-Wellenkampf selbst auf dem Feld, statt von oben daraufzusehen. Der Bosskampf bleibt, wie
-er ist.
+Hast du den **Späherblick** gelernt (Kapitel 11), steht auf der Gebietskarte unten rechts
+vor „Spielen“ der Schalter mit dem Auge des Späherblicks. Ist er gedrückt, stehst du im
+Wellenkampf selbst auf dem Feld, statt von oben daraufzusehen. Der Schalter leuchtet dann
+golden. Den Bosskampf gibt es nur von oben: ist der Boss markiert, ist der Schalter
+gesperrt.
 
 - **Laufen:** W, A, S, D (oder die Pfeiltasten). Mit der Maus siehst du dich um.
 - **Antworten:** **Enter** öffnet das Eingabefeld, du tippst, und das zweite **Enter**
@@ -315,7 +329,7 @@ drei Sekunden je Karte.
 
 Danach kannst du mit „◀“ und „▶“ blättern. „Alle anzeigen“ nimmt auch die Wörter dazu,
 die du richtig hattest. Das geht schon während des Durchlaufs: die richtigen kommen dann
-hinten dran, der Durchlauf zeigt aber erst alle durchgelassenen zu Ende. Mit „✔ Weiter“ geht es zur Statistik. Hast du nichts
+hinten dran, der Durchlauf zeigt aber erst alle durchgelassenen zu Ende. Mit „Weiter ▸“ geht es zur Statistik. Hast du nichts
 durchgelassen, siehst du gleich alle Karten zum Durchblättern.
 
 Ist dort ein Wort falsch, kannst du es mit „⚑ Melden“ melden (Kapitel 14).
@@ -364,7 +378,7 @@ Aufgaben du im Lauf neu gemeistert hast. Mit „↺“ markierte Wörter hast du
 
 Darunter wählst du die **Schwierigkeit der nächsten Welle**, im Vergleich zu der eben
 gespielten: „Viel leichter“, „Leichter“, „Gleich“, „Schwieriger“, „Viel schwieriger“.
-Vorausgewählt ist „Gleich“. Mit „▶ Nächste Welle rufen“ geht es weiter, mit „⟵ Zurück zum
+Vorausgewählt ist „Gleich“. Mit „Nächste Welle“ geht es weiter, mit „⟵ Zurück zum
 Menü“ endet der Lauf.
 
 Jede neue Welle bringt ein Monster mehr als die vorige.
@@ -434,14 +448,15 @@ aktuelle Stand steigen um denselben Betrag.
 
 ### Die Landkarte
 
-„▶ Spielen“ führt über drei Stufen in den Kampf:
+„Spielen“ führt über drei Stufen in den Kampf:
 
-1. **Buchauswahl.** Die Bücher stehen mit dem Rücken nach vorn in einem Regal; je mehr
-   Units, desto dicker das Buch. Jede Sprache hat ihr eigenes Fach: oben Englisch, darunter
-   Latein (mit ↑/↓ wechselst du das Fach). Zeigt die Maus auf ein Buch (oder mit ←/→), wird es
-   herausgezogen und zeigt sein Cover: oben die Landkarte des Buchs im Goldrahmen,
-   darunter die Sprache (Englisch oder Latein) und der Stand – wie viele Wörter gemeistert
-   und wie viele Bosse besiegt sind. Latein hat noch keinen Bosskampf; das Cover sagt
+1. **Bibliothek.** Die Kamera fährt vom Hauptmenü in den Turm; dort stehen die Bücher
+   nebeneinander auf einem Lesepult, das Cover nach vorn. Je mehr Units, desto dicker das
+   Buch; erst Englisch, dann Latein. Passen nicht alle aufs Pult, blätterst du mit den
+   Pfeilen links und rechts. Zeigt die Maus auf den Platz eines Buchs (oder mit ←/→), wird
+   es vom Pult genommen: es kommt groß nach vorn, leuchtet golden und zeigt auf dem Cover
+   unter der Landkarte seinen Stand – wie viele Wörter gemeistert und wie viele Bosse
+   besiegt sind. Latein hat noch keinen Bosskampf; das Cover sagt
    „Noch kein Bosskampf“, und der Boss auf der Gebietskarte bleibt gesperrt.
    Die Festungsstufe steht nicht auf dem Cover, sie gilt je Unit (siehe Buchkarte). Ein
    Klick (oder Enter) schlägt das Buch auf; auf der Doppelseite liegt die Landkarte, und
@@ -459,6 +474,18 @@ aktuelle Stand steigen um denselben Betrag.
    Hat eine Unit wenige Wörter, gibt es weniger Teile; bei nur einem Teil fehlt „Gesamt“.
    Im Lateinbuch hat jede Unit sechs Teile, einen je Lektion. Eine Lektion, deren Wörter
    noch fehlen, steht grau auf der Karte und lässt sich nicht spielen.
+
+   Unten in der Mitte steht ein Schild: links Buch und Unit, daneben der Balken bis zur
+   nächsten Festungsstufe mit den Wörtern, die noch fehlen, rechts im Medaillon die
+   Festung dieser Unit, so wie sie im Kampf steht, und darunter ihre Stufe. Unten links
+   geht es zurück zur Buchkarte; liegt dort ein Ort, rückt der Knopf nach oben.
+
+   **Auswählen und spielen.** Ein Klick auf einen Ort markiert ihn (er wird größer und
+   bekommt einen goldenen Ring), ein zweiter Klick nimmt die Markierung wieder weg. Teile
+   lassen sich beliebig zusammen markieren – etwa nur Teil 2 und 3; dann kommen die Wörter
+   beider Teile in den Kampf. „Gesamt“ und der Boss stehen allein: wer sie markiert, hebt
+   die übrige Auswahl auf. Los geht es mit **„Spielen“** (golden) unten rechts (oder Enter); ohne
+   Auswahl ist der Knopf grau. Nach dem Kampf ist das zuletzt Gespielte wieder markiert.
 
 **Alles ist offen.** Jedes Level lässt sich jederzeit spielen; der Weg auf der Karte schlägt
 nur eine Reihenfolge vor. Ein Level läuft wie ein Kampf aus dem Expertenmodus – Welle auf
@@ -480,9 +507,16 @@ Reihen. Spielen lässt sich trotzdem alles.
 
 ## 11. Fähigkeiten
 
-Über „🌳 Fähigkeiten“ auf dem Start-Screen gibst du deine Skillpunkte aus. Gelernt wird
-zwischen den Läufen, nicht im Kampf. Oben steht, wie viele Punkte du offen hast („⭐ …
-Skillpunkte“ oder „⭐ 0 — jedes Level bringt einen“).
+Über „Fähigkeiten“ im Hauptmenü gibst du deine Skillpunkte aus. Gelernt wird zwischen
+den Läufen, nicht im Kampf. Die Fähigkeiten öffnen sich als Fenster über dem Menü; „✕“
+oben rechts oder Esc schließt es. Oben rechts steht neben dem Stern, wie viele Punkte du
+offen hast („… Skillpunkte“ oder „0 — jedes Level bringt einen“).
+
+Jede Fähigkeit ist eine runde Plakette in der Farbe ihres Baums. Hell heißt: gelernt oder
+jetzt lernbar. Gedämpft heißt: noch nicht dran. Ein Schloss steht darauf, wenn erst eine
+andere Fähigkeit gelernt werden muss; fehlen nur die Punkte, bleibt das Bild zu sehen.
+Gelernte Plaketten sind in der Mitte getönt und tragen einen Haken. Die kleine Zahl oben
+rechts ist der Preis in Skillpunkten. Unten links erklärt eine Legende die Zeichen.
 
 ### Die vier Bäume
 
@@ -503,13 +537,17 @@ Alle Wirkungen zählen zusammen: zwei Knoten, die je 1 HP mehr heilen, heilen zu
 
 ### Bedienung
 
-- **Ansehen:** Fährst du mit der Maus über einen Knoten, steht am Zeiger, was er tut und
-  wie sein Zustand ist: „✓ Gelernt“, „Klicken zum Lernen · 1 P.“, „2 Skillpunkte nötig“
+- **Ansehen:** Fährst du mit der Maus über einen Knoten, zeigt eine Karte mit Pfeil auf
+  den Zeiger: Bild und Name, Baum und Zustand, was er tut, was er kostet und was vorher
+  gelernt sein muss, und darunter die Zustandszeile: „✓ Gelernt“, „Klicken zum Lernen · 1 P.“, „2 Skillpunkte nötig“
   oder zum Beispiel „🔒 braucht Verband“, wenn erst ein anderer Knoten dran ist. Über dem
   Namen eines Baums steht, wie weit er ausgebaut ist, zum Beispiel „2/5 gelernt · +2 HP
   je besiegtem Monster“.
-- **Zoomen und Verschieben:** Mausrad zoomt, Ziehen mit der Maus verschiebt das Netz. Das
-  Zeichen **„⛶“** unten rechts passt die Ansicht wieder ein. Nach einem Kauf bleibt die
+- **Zoomen und Verschieben:** Mausrad oder die Knöpfe **„−“** und **„+“** unten rechts
+  zoomen, Ziehen mit der Maus verschiebt das Netz. Die Zahl dazwischen zeigt den Zoom;
+  100 % ist die eingepasste Ansicht. Das Zeichen **„⛶“** passt die Ansicht wieder ein.
+- **Mit der Tastatur:** Die Pfeiltasten springen von Fähigkeit zu Fähigkeit, Enter wirkt
+  wie ein Klick. Nach einem Kauf bleibt die
   Ansicht, wo sie war.
 - **Lernen:** Ein Klick auf einen lernbaren Knoten öffnet eine Rückfrage („„…“ lernen?“)
   mit den Kosten. Erst „Lernen“ bucht. Voreingestellt ist „Abbrechen“, damit ein
@@ -520,7 +558,7 @@ Alle Wirkungen zählen zusammen: zwei Knoten, die je 1 HP mehr heilen, heilen zu
   wegfällt. Hängen gelernte Knoten an ihm, fallen sie mit weg; die Rückfrage nennt jeden
   davon beim Namen. Reicht das Gold nicht, öffnet der Klick nichts, und am Zeiger steht,
   was es kosten würde.
-- **Alles umlernen:** Das Zeichen **„↺“** unten rechts setzt alle Bäume zurück. Du
+- **Alles umlernen:** Der Knopf mit dem Rückwärtspfeil **„↺“** unten rechts setzt alle Bäume zurück. Du
   bekommst alle Punkte zurück und zahlst **25 Gold je ausgegebenem Skillpunkt**. Einzeln
   verlernen ist also günstiger. Ist nichts gelernt oder reicht das Gold nicht, ist das
   Zeichen grau, und am Zeiger steht der Grund.
@@ -530,27 +568,34 @@ verloren ist er aber nie: mit Gold lässt er sich zurückholen.
 
 ## 12. Die Statistik
 
-„📊 Statistik“ auf dem Start-Screen hat drei Reiter.
+„Statistik“ im Hauptmenü öffnet ein Fenster über dem Menü. Oben rechts schließt „✕“ es
+wieder, oder du drückst **Esc**. Das Fenster hat drei Reiter. Kopf und Reiter bleiben
+stehen, der Inhalt darunter lässt sich scrollen.
 
 ### Reiter „Überblick“
 
-- **„🔥 … Tage in Folge geübt“** – deine Tages-Serie.
-- **„🪙 An … Tagen geübt“** und die **Monatsleiste**: eine Münze für jeden Tag des Monats.
-  Gold heißt „geübt“, grau „nicht geübt“, der heutige Tag hat einen Ring. **Diese Münzen
-  sind kein Gold**, sie zählen nur Tage, an denen du gespielt hast. Mit der Maus über
-  einer Münze siehst du das Datum.
-- **„✅ Genauigkeit“** – wie viele Antworten gesessen haben, verglichen mit den Tagen
-  davor.
-- Gold und Zahl der geöffneten Schatzkisten, Level und Skillpunkte, gemeisterte Aufgaben
-  und wie viele Aufgaben heute zur Wiederholung fällig sind.
-- **„🏆 Rekorde“** – Bestwerte über alle Läufe, „kein Lernziel, nur zum Angeben“.
-- **„📈 Lernkurve“** – die gemeisterten Aufgaben über die letzten Wochen. Diese Linie
+- **Flamme: „… Tage in Folge“** – deine Tages-Serie. Darunter steht, ob heute schon
+  dabei ist. Der laufende Tag reißt die Serie nicht, erst ein ganzer Tag ohne Lauf.
+- **Haken: „… % richtig“** – wie viele Antworten in der letzten Sitzung gesessen haben,
+  verglichen mit den Tagen davor.
+- **Die Monatsreihe**: ein Medaillon für jeden Tag des Monats. Auf einem Tag, an dem du
+  geübt hast, liegt eine goldene Münze, und seine Zahl ist golden. Der heutige Tag hat
+  einen leisen Ring, die Tage danach sind blasser. **Diese Münzen sind kein Gold**, sie
+  zählen nur Tage, an denen du gespielt hast. Zeigt die Maus auf einen Tag (oder springst
+  du mit der Tastatur hin), siehst du Datum und Stand.
+- **„Dein Fortschritt“** – dein Level, der Balken bis zum nächsten Level und alle XP
+  zusammen. Darunter Gold, geöffnete Schatzkisten und Skillpunkte, die du noch ausgeben
+  kannst.
+- **„Rekorde“** – Bestwerte über alle Läufe, kein Lernziel, nur zum Angeben. Darunter
+  gemeisterte Aufgaben und wie viele Aufgaben heute zur Wiederholung fällig sind.
+- **„Lernkurve“** – die gemeisterten Aufgaben über die letzten Wochen. Diese Linie
   geht nicht zurück.
-- **„🌱 Frisch gemeistert“** – was seit dieser Woche sitzt.
-- **„🏅 Comeback“** – Wörter, die dir mindestens dreimal entwischt sind und jetzt sitzen.
-- **„🎯 Fahndungsliste“** – Wörter, die dir entwischt sind. Hol sie dir zurück!
-- **„📊 Insgesamt“** – alles seit dem ersten Lauf. Diese Genauigkeit sinkt, wenn du
-  schwere Wörter übst. Das ist gewollt und kein Rückschritt.
+- **„Frisch gemeistert“** – was seit dieser Woche sitzt.
+- **„Comeback“** – Wörter, die dir mindestens dreimal entwischt sind und jetzt sitzen.
+- **„Fahndungsliste“** – Wörter, die dir entwischt sind. Hol sie dir zurück!
+- **„Insgesamt“** – alles seit dem ersten Lauf, auch an wie vielen Tagen du geübt hast.
+  Diese Genauigkeit sinkt, wenn du schwere Wörter übst. Das ist gewollt und kein
+  Rückschritt.
 
 ### Reiter „Fortschritt“: gezählt werden Wörter
 
@@ -587,12 +632,15 @@ Richtung sitzt.
 
 ## 13. Einstellungen
 
-„⚙ Einstellungen“ hat drei Reiter.
+„Einstellungen“ im Hauptmenü öffnet ein Fenster über dem Menü; „✕“ oben rechts oder
+**Esc** schließt es wieder. Das Fenster hat drei Reiter.
 
 ### Reiter „Profil“
 
-- **„Aktives Profil“** wählen und mit **„Umbenennen“** einen neuen Namen geben.
-- **„Standard-Schwierigkeit“** (1 bis 5): damit beginnt die erste Welle jedes Laufs.
+- **„Profilname“**: dem Profil, das gerade spielt, mit **„Umbenennen“** einen neuen Namen
+  geben. Wer spielt, wählst du nicht hier, sondern mit „Profil wechseln“ im Start-Screen.
+- **„Standard-Schwierigkeit“** (1 bis 5): damit beginnt die erste Welle jedes Laufs. Die
+  gewählte Stufe steht gedrückt und golden.
 - **„Grund-Geschwindigkeit“** (50 % bis 150 %): macht alle Monster langsamer oder
   schneller, unabhängig von der Schwierigkeit. Gut für Kinder, die noch langsam tippen
   oder lesen.
@@ -639,8 +687,9 @@ Ist ein Wort im Spiel falsch oder unklar, kann man es melden, damit es korrigier
 ## 15. Inhalte: Vokabel-Packs
 
 Das Spiel selbst enthält keine Vokabeln. Sie kommen als **Packs**, die man über
-„📚 Inhalte“ auf dem Start-Screen holt. So lassen sich neue oder korrigierte Wörter
-nachliefern, ohne das ganze Spiel neu herunterzuladen.
+„Inhalte“ auf dem Start-Screen holt. So lassen sich neue oder korrigierte Wörter
+nachliefern, ohne das ganze Spiel neu herunterzuladen. „Inhalte“ öffnet ein Fenster über
+dem Menü; „✕“ oder **Esc** schließt es.
 
 - Jeder Pack steht mit Namen, Beschreibung, Größe und Zustand in der Liste, zum Beispiel
   „Installiert“, „Nicht installiert“, „Update verfügbar“ oder „Inhalt veraltet“.
@@ -681,7 +730,7 @@ Zum Beispiel:
 
 - die Schatzkiste und der Knopf „⏩“,
 - jeder Knoten, jeder Baumname und die Zeichen „⛶“ und „↺“ im Fähigkeiten-Screen,
-- Zeilen und Wörter in der Statistik, die Münzen der Monatsleiste,
+- Zeilen und Wörter in der Statistik, die Tage der Monatsreihe,
 - die Knöpfe im Reiter „Protokoll“.
 
 Auch das graue „↺“ im Fähigkeiten-Screen sagt am Zeiger, warum es gerade nicht geht.
@@ -743,7 +792,7 @@ Sprechblase oben, deine Antwort tippst du unten in deine eigene. Es gibt **keine
 
 **Das Sprachmodell.** Ob eine frei formulierte Übersetzung richtig ist und was an einer
 falschen nicht stimmt, beurteilt ein Sprachmodell, das **auf diesem Rechner** läuft. Es
-kommt nicht mit dem Spiel, sondern wird einmal über „📚 Inhalte“ geholt („Sprachmodell für
+kommt nicht mit dem Spiel, sondern wird einmal über „Inhalte“ geholt („Sprachmodell für
 Bosskämpfe“, rund 4,6 GB). Beim Betreten des Bosskampfs startet es; bis es geladen ist,
 steht dort „Er erwacht …“. Nichts, was getippt wird, verlässt den Rechner.
 

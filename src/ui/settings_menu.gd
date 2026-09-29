@@ -1,6 +1,11 @@
 extends Control
-## Einstellungs-Screen (Profil, Standard-Schwierigkeit, Grund-Geschwindigkeit, Reset,
-## Melden).
+## Einstellungs-Fenster (Profilname, Standard-Schwierigkeit, Grund-Geschwindigkeit, Reset,
+## Melden, Protokoll).
+##
+## Öffnet als Fenster über dem Hauptmenü wie Statistik und Fähigkeiten
+## (`profile_menu._open_window`): derselbe Rahmen, dasselbe Titelband, dasselbe
+## Schließen-X, Escape schließt. Die Reiter sind Knöpfe über gestapelten Seiten wie in der
+## Statistik (dort steht, warum kein `TabContainer`) — das Fenster behält seine Größe.
 ##
 ## Statistik und Wortliste sind hier ausgezogen und liegen im eigenen Statistik-Screen
 ## (stats_screen, Issue #5) — sie hingen zwischen Profilauswahl, Reset und Melde-Token.
@@ -16,22 +21,30 @@ extends Control
 ## sichtbar; die Liste der Meldungen darunter erscheint erst mit hinterlegtem Token —
 ## ohne Rückkanal gibt es auch nichts zu melden.
 ##
+## Welches Profil spielt, entscheidet „Wer spielt?" (profile_pick) — hier wird das aktive
+## Profil nur umbenannt.
+##
 ## Ausgelagert aus dem Start-Screen (profile_menu). Das Layout liegt in settings_menu.tscn
 ## (im Editor sichtbar); hier wird nur bedient und angezeigt. Einstellungen liegen in
 ## UserSettings, der Fortschritt (Reset) in PlayerProgress.
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
+## So lange blendet das Fenster auf (s) — wie Statistik und Fähigkeiten.
+const FADE_IN := 0.15
 const TRACE_ROW_SCENE := preload("res://scenes/ui/trace_row.tscn")
 ## So viele Ereignisse zeigt der Reiter. Mehr liest niemand am Bildschirm; wer mehr will,
 ## öffnet die Datei.
 const TRACE_SHOWN := 200
 
-@onready var _profile_select: OptionButton = %ProfileSelect
+## Das Fenster will zu. Wer es geöffnet hat, nimmt es weg; hängt niemand daran (der Screen
+## läuft allein, etwa aus dem Editor), geht es zurück ins Startmenü.
+signal closed()
+
 @onready var _rename_input: LineEdit = %RenameInput
 @onready var _diff_buttons: Array = %DiffRow.get_children()
 @onready var _speed_slider: HSlider = %SpeedSlider
 @onready var _speed_label: Label = %SpeedLabel
-@onready var _reset_confirm: ConfirmationDialog = %ResetDialog
+@onready var _reset_confirm: ConfirmDialog = %ResetDialog
 @onready var _flag_list: VBoxContainer = %FlagList
 @onready var _flag_scroll: ScrollContainer = %FlagScroll
 @onready var _token_input: LineEdit = %TokenInput
@@ -44,18 +57,31 @@ const TRACE_SHOWN := 200
 @onready var _trace_open: Button = %TraceOpen
 @onready var _trace_clear: Button = %TraceClear
 @onready var _trace_list: VBoxContainer = %TraceList
+## Reiter → Seite, in der Reihenfolge der Knöpfe.
+@onready var _pages := {
+	%ProfileTab: %ProfilePage,
+	%ReportTab: %ReportPage,
+	%TraceTab: %TracePage,
+}
 
 
 func _ready() -> void:
-	(%BackButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(MENU_SCENE))
-	_profile_select.item_selected.connect(_on_profile_selected)
+	(%CloseButton as BaseButton).pressed.connect(close)
+	Hints.attach(%CloseButton as Control, "Schließen", "", "Esc")
+	for tab: Button in _pages:
+		tab.toggled.connect(func(on: bool) -> void:
+			if on:
+				_show_page(tab))
 	_rename_input.text_submitted.connect(func(_t): _on_rename_profile())
 	(%RenameButton as Button).pressed.connect(_on_rename_profile)
 	# Standard-Schwierigkeits-Buttons 1..5 (Reihenfolge in DiffRow = Stufe i+1).
 	for i in _diff_buttons.size():
 		(_diff_buttons[i] as Button).pressed.connect(_on_difficulty_pressed.bind(i + 1))
 	_speed_slider.value_changed.connect(_on_speed_changed)
-	(%ResetButton as Button).pressed.connect(func(): _reset_confirm.popup_centered())
+	(%ResetButton as Button).pressed.connect(func(): _reset_confirm.ask(
+			"Fortschritt zurücksetzen?",
+			"Der Lernstand aller Wörter dieses Profils geht verloren. Gold, Erfahrung und "
+			+ "Fähigkeiten bleiben.", "Zurücksetzen"))
 	_reset_confirm.confirmed.connect(_on_reset_confirmed)
 	_token_button.pressed.connect(_on_token_submit)
 	_token_input.text_submitted.connect(func(_t): _on_token_submit())
@@ -72,36 +98,51 @@ func _ready() -> void:
 	Hints.attach(_trace_open, "Ordner öffnen", "zeigt die Protokolldatei im Dateimanager")
 	Hints.attach(_trace_clear, "Protokoll leeren", "löscht beide Dateien; das laufende Spiel schreibt danach neu")
 	_refresh()
+	modulate.a = 0.0
+	create_tween().tween_property(self, "modulate:a", 1.0, FADE_IN)
+	(%ProfileTab as Control).grab_focus.call_deferred()
 
 
-## Baut Profil-Auswahl, Schwierigkeits-Hervorhebung, Tempo und Melde-Reiter neu auf.
+## Schließt das Fenster: meldet es dem, der es geöffnet hat (das Menü nimmt es weg), oder
+## geht allein zurück ins Startmenü.
+func close() -> void:
+	if closed.get_connections().is_empty():
+		get_tree().change_scene_to_file(MENU_SCENE)
+		return
+	closed.emit()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	# Die Rückfrage fängt ihr Escape selbst (`ConfirmDialog._input`) und kommt hier nicht an.
+	if event.is_action_pressed("ui_cancel"):
+		get_viewport().set_input_as_handled()
+		close()
+
+
+func _show_page(tab: Button) -> void:
+	for each: Button in _pages:
+		(_pages[each] as Control).visible = each == tab
+
+
+## Baut Profilname, Schwierigkeits-Hervorhebung, Tempo und Melde-Reiter neu auf.
 func _refresh() -> void:
-	_refresh_profiles()
+	_refresh_name()
 	_refresh_difficulty()
 	_refresh_speed()
 	_refresh_report()
 	_refresh_trace()
 
 
-func _refresh_profiles() -> void:
-	_profile_select.clear()
-	var active := UserSettings.active_profile()
-	var profiles := UserSettings.profiles()
-	for i in profiles.size():
-		# Anzeigename im Dropdown, player_id als Metadaten (für die Auswahl-Rückabbildung).
-		_profile_select.add_item(UserSettings.display_name(profiles[i]))
-		_profile_select.set_item_metadata(i, profiles[i])
-		if profiles[i] == active:
-			_profile_select.select(i)
-	# Umbenennen-Feld mit dem aktuellen Anzeigenamen vorbelegen.
+## Umbenennen-Feld mit dem aktuellen Anzeigenamen vorbelegen.
+func _refresh_name() -> void:
 	_rename_input.text = UserSettings.display_name()
 
 
 func _refresh_difficulty() -> void:
 	var current := UserSettings.default_difficulty()
 	for i in _diff_buttons.size():
-		# Gewählte Stufe optisch hervorheben (deaktivierter Button = markiert, wie in WaveStats).
-		(_diff_buttons[i] as Button).disabled = (i + 1 == current)
+		# Die Knöpfe sind eine Gruppe: die gewählte Stufe steht gedrückt.
+		(_diff_buttons[i] as Button).set_pressed_no_signal(i + 1 == current)
 
 
 ## Slider auf die Grund-Geschwindigkeit des aktiven Profils setzen (ohne value_changed
@@ -113,7 +154,7 @@ func _refresh_speed() -> void:
 
 
 func _update_speed_label(value: float) -> void:
-	_speed_label.text = "Grund-Geschwindigkeit: %d %%" % int(round(value * 100.0))
+	_speed_label.text = "%d %%" % int(round(value * 100.0))
 
 
 ## Reiter „Melden": Zustand des Rückkanals oben, die eigenen Meldungen darunter.
@@ -173,33 +214,34 @@ func _refresh_flags() -> void:
 	var flagged := ContentRegistry.flagged_lexemes()
 	if flagged.is_empty():
 		var empty := Label.new()
+		empty.theme_type_variation = &"Caption"
 		empty.text = "Keine Meldungen."
 		_flag_list.add_child(empty)
 		return
 	for entry in flagged:
+		# Die alten Zeilen sind erst am Frame-Ende weg — gezählt wird deshalb die Liste.
+		if entry != flagged[0]:
+			var rule := HSeparator.new()
+			rule.theme_type_variation = &"StatRule"
+			_flag_list.add_child(rule)
 		var box := VBoxContainer.new()
-		box.add_theme_constant_override("separation", 0)
+		box.theme_type_variation = &"Tight"
 		_flag_list.add_child(box)
 		var type_key := String(entry.get("type", ""))
 		var type_label := String(WordTypePalette.LABELS.get(type_key, type_key))
 		var header := Label.new()
+		header.theme_type_variation = &"StatSubline"
 		header.text = "%s → %s  ·  %s" % [
 			str(entry.get("lemma_de", "")), Lexeme.foreign(entry), type_label]
 		box.add_child(header)
 		var flag: Dictionary = entry.get("flag", {})
 		var comment := Label.new()
+		comment.theme_type_variation = &"Caption"
 		# Der Haken sagt, was beim Content-Autor angekommen ist — offen heißt: geht noch raus.
 		var mark := "✔" if bool(flag.get("sent", false)) else "⚑"
 		comment.text = "%s %s" % [mark, str(flag.get("comment", ""))]
 		comment.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		box.add_child(comment)
-
-
-func _on_profile_selected(index: int) -> void:
-	var id := str(_profile_select.get_item_metadata(index))
-	UserSettings.set_active_profile(id)
-	PlayerProgress.switch_to(id)
-	_refresh()
 
 
 func _on_rename_profile() -> void:

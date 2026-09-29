@@ -1,0 +1,102 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://src/ui/profile_badge.gd" id="1_badge"]
+[ext_resource type="Texture2D" path="res://assets/ui/player_badge/menu/avatar.webp" id="2_bust"]
+[ext_resource type="Texture2D" path="res://assets/ui/player_badge/menu/switch_profile.webp" id="3_switch"]
+[ext_resource type="Texture2D" path="res://assets/ui/player_badge/menu/level_overlay.webp" id="4_level"]
+
+[node name="ProfileBadge" type="Control"]
+custom_minimum_size = Vector2(277, 136)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 276.8
+offset_bottom = 136.0
+mouse_filter = 2
+texture_filter = 4
+script = ExtResource("1_badge")
+
+[node name="Medallion" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 161.6
+offset_top = 8.8
+offset_right = 272.0
+offset_bottom = 119.2
+
+[node name="Avatar" type="TextureRect" parent="."]
+layout_mode = 0
+offset_left = 176.4
+offset_top = 24.8
+offset_right = 256.4
+offset_bottom = 104.8
+mouse_filter = 2
+texture = ExtResource("2_bust")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LevelPlate" type="TextureRect" parent="."]
+layout_mode = 0
+offset_left = 192.0
+offset_top = 98.0
+offset_right = 242.0
+offset_bottom = 138.0
+mouse_filter = 2
+texture = ExtResource("4_level")
+expand_mode = 1
+
+[node name="LevelLabel" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 196.0
+offset_top = 101.6
+offset_right = 236.0
+offset_bottom = 133.6
+theme_type_variation = &"BadgeLevel"
+text = "1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Plates" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 54.4
+offset_top = 40.0
+offset_right = 156.8
+offset_bottom = 120.0
+
+[node name="ProfileLabel" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 57.6
+offset_top = 41.6
+offset_right = 145.6
+offset_bottom = 73.6
+theme_type_variation = &"BadgeName"
+text = "Spieler"
+vertical_alignment = 1
+text_overrun_behavior = 3
+
+[node name="GoldLabel" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 50.0
+offset_top = 85.0
+offset_right = 150.0
+offset_bottom = 117.0
+theme_type_variation = &"BadgeGold"
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+text_overrun_behavior = 1
+
+[node name="SwitchButton" type="Button" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 3.2
+offset_top = 36.8
+offset_right = 51.2
+offset_bottom = 81.6
+theme_type_variation = &"BadgeSwitch"
+icon = ExtResource("3_switch")
+icon_alignment = 1
+expand_icon = true

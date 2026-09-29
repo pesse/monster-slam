@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://src/ui/confirm_dialog.gd" id="1_confirm"]
+[ext_resource type="Script" path="res://src/ui/window_chrome.gd" id="2_chrome"]
 
 [node name="ConfirmDialog" type="Control"]
 layout_mode = 3
@@ -9,49 +10,86 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 0
 script = ExtResource("1_confirm")
 
 [node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 0.65)
+color = Color(0.02, 0.03, 0.06, 0.6)
 
 [node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Panel" type="PanelContainer" parent="Center"]
-custom_minimum_size = Vector2(460, 0)
+custom_minimum_size = Vector2(520, 0)
+layout_mode = 2
+theme_type_variation = &"GameCard"
 
-[node name="Root" type="VBoxContainer" parent="Center/Panel"]
+[node name="Surface" type="Control" parent="Center/Panel"]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("2_chrome")
+
+[node name="Layout" type="VBoxContainer" parent="Center/Panel"]
+layout_mode = 2
+
+[node name="TitleBar" type="PanelContainer" parent="Center/Panel/Layout"]
+layout_mode = 2
+theme_type_variation = &"WindowTitleBar"
+
+[node name="Joints" type="Control" parent="Center/Panel/Layout/TitleBar"]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("2_chrome")
+part = 1
+
+[node name="Title" type="Label" parent="Center/Panel/Layout/TitleBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_type_variation = &"WindowTitle"
+text = "Wirklich?"
+vertical_alignment = 1
+
+[node name="Content" type="MarginContainer" parent="Center/Panel/Layout"]
+layout_mode = 2
+theme_type_variation = &"WindowContent"
+
+[node name="Root" type="VBoxContainer" parent="Center/Panel/Layout/Content"]
+layout_mode = 2
 theme_type_variation = &"ScreenStack"
 
-[node name="Title" type="Label" parent="Center/Panel/Root"]
-theme_type_variation = &"SectionTitle"
+[node name="Body" type="Label" parent="Center/Panel/Layout/Content/Root"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(428, 0)
-text = "Wirklich?"
-autowrap_mode = 3
-
-[node name="Body" type="Label" parent="Center/Panel/Root"]
-theme_type_variation = &"Hint"
-unique_name_in_owner = true
-custom_minimum_size = Vector2(428, 0)
+custom_minimum_size = Vector2(472, 0)
+layout_mode = 2
+theme_type_variation = &"StatSubline"
 text = "."
 autowrap_mode = 3
 
-[node name="Buttons" type="HBoxContainer" parent="Center/Panel/Root"]
+[node name="Buttons" type="HBoxContainer" parent="Center/Panel/Layout/Content/Root"]
+layout_mode = 2
 alignment = 2
 
-[node name="CancelButton" type="Button" parent="Center/Panel/Root/Buttons"]
+[node name="CancelButton" type="Button" parent="Center/Panel/Layout/Content/Root/Buttons"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 44)
+layout_mode = 2
+theme_type_variation = &"WindowButton"
 text = "Abbrechen"
 
-[node name="ActionButton" type="Button" parent="Center/Panel/Root/Buttons"]
+[node name="ActionButton" type="Button" parent="Center/Panel/Layout/Content/Root/Buttons"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 44)
+layout_mode = 2
+theme_type_variation = &"WindowPrimary"
 text = "Ja"

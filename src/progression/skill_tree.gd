@@ -87,7 +87,16 @@ const MAX_FAN := PI * 70.0 / 180.0
 ## Linien zusammen, dort liegen bei mehreren Bäumen auch die Namen der Nachbarn — außen
 ## ist nichts. Der Abstand nimmt zusätzlich mit, dass unter jedem Knoten sein eigener Name
 ## hängt (`SkillGraph._draw_name`).
-const TITLE_GAP := 56.0
+const TITLE_GAP := 32.0
+
+## Streckung des Netzes je Achse. Der Kreis passt nicht auf den Bildschirm: die Fläche ist
+## 16:9, ein rundes Netz ließe beim Einpassen links und rechts die Hälfte leer und würde
+## dafür auf halbe Größe verkleinert. Waagerecht etwas weiter, senkrecht enger — wie im
+## Entwurf (assets/ui/skill_tree/concept/). Gestreckt werden nur die PLÄTZE, nicht die
+## Knoten: ein Kreis bleibt ein Kreis, nur der Abstand zwischen zwei Stufen wird senkrecht
+## kürzer. Unter 0.85 senkrecht rückt der Name unter einem Knoten an den Knoten der
+## nächsten Stufe heran — nachsehen mit scenes/dev/skill_tree_lab.tscn.
+const STRETCH := Vector2(1.25, 0.85)
 
 
 ## Die Effekt-Schlüssel, die es gibt. Steht hier und nicht verstreut in den Anwendern,
@@ -223,6 +232,20 @@ static func state_label(entries: Array, node: Dictionary, unlocked: PackedString
 	return "🔒 braucht %s" % missing_requirement(entries, node, unlocked)
 
 
+## Der Zustand in einem Wort, wie er in der Unterzeile der Karte neben dem Zweig steht
+## („Späher · Lernbar"). Die ganze Zeile mit Preis oder fehlender Vorstufe ist
+## `state_label`.
+static func state_name(state: State) -> String:
+	match state:
+		State.LEARNED:
+			return "Gelernt"
+		State.AVAILABLE:
+			return "Lernbar"
+		State.TOO_EXPENSIVE:
+			return "Zu teuer"
+	return "Gesperrt"
+
+
 ## Summe der Kosten aller gelernten Knoten. Gerechnet und nicht gespeichert — aus
 ## demselben Grund, aus dem PlayerLevel nur die Gesamt-Erfahrung sichert: ein zweiter
 ## Zähler könnte abweichen, und dann wäre nicht zu sagen, welcher stimmt.
@@ -337,20 +360,25 @@ static func layout(entries: Array) -> Dictionary:
 				var steps := maxi(1, int(node.get("tier", 1))) - 1
 				var radius := ANCHOR_RADIUS + float(steps) * TIER_STEP
 				reach = maxf(reach, radius)
-				out[str(node.get("id", ""))] = Vector2.from_angle(base + spread) * radius
-		out[tree_id] = Vector2.from_angle(base) * (reach + NODE_RADIUS + TITLE_GAP)
+				out[str(node.get("id", ""))] = Vector2.from_angle(base + spread) * radius * STRETCH
+		# Der Abstand des Namens wird NICHT gestaucht: er ist Luft über einem Knoten, und
+		# ein Knoten ist rund. Nur der Platz des Knotens, über dem er hängt, ist gestreckt.
+		var axis := Vector2.from_angle(base)
+		out[tree_id] = axis * reach * STRETCH + axis * (NODE_RADIUS + TITLE_GAP)
 	return out
 
 
-## Radius des gemeinsamen Hofes um die Mitte. EIN Hof für alle Bäume: die Anfangspunkte
-## sind getrennt, aber sie liegen alle auf demselben Abstand zur Mitte, und was sie
-## verbindet, ist der Anfang selbst. Ein Hof je Baum hätte dreimal dasselbe gesagt.
+## Halbachsen des gemeinsamen Hofes um die Mitte. EIN Hof für alle Bäume: die
+## Anfangspunkte sind getrennt, aber sie liegen alle auf demselben Abstand zur Mitte, und
+## was sie verbindet, ist der Anfang selbst. Ein Hof je Baum hätte dreimal dasselbe gesagt.
+## Eine Ellipse und kein Kreis, weil das Netz gestreckt ist (`STRETCH`): die Anfangsknoten
+## liegen waagerecht weiter außen als senkrecht.
 ##
-## Der Radius steht hier und nicht im Screen, weil er eine Bedingung an das Layout ist:
+## Die Größe steht hier und nicht im Screen, weil er eine Bedingung an das Layout ist:
 ## kein Knoten außer den Anfangsknoten darf hineinragen
 ## (tests/skill_graph_layout_test.gd).
-static func root_halo_radius() -> float:
-	return ANCHOR_RADIUS + NODE_RADIUS + ROOT_HALO_PAD
+static func root_halo_size() -> Vector2:
+	return ANCHOR_RADIUS * STRETCH + Vector2.ONE * (NODE_RADIUS + ROOT_HALO_PAD)
 
 
 ## Das Rechteck, in dem alle Knoten liegen — mit dem Knotenradius als Rand, damit ein

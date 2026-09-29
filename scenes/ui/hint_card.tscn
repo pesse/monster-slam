@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://src/ui/hint_card.gd" id="1_hint_card"]
 
 [node name="HintCard" type="PanelContainer"]
+theme_type_variation = &"HintCard"
 mouse_filter = 2
 script = ExtResource("1_hint_card")
 
@@ -10,11 +11,42 @@ script = ExtResource("1_hint_card")
 theme_type_variation = &"Tight"
 mouse_filter = 2
 
-[node name="Title" type="Label" parent="Root"]
+[node name="Head" type="HBoxContainer" parent="Root"]
+mouse_filter = 2
+
+[node name="Icon" type="TextureRect" parent="Root/Head"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(40, 40)
+mouse_filter = 2
+texture_filter = 4
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Titles" type="VBoxContainer" parent="Root/Head"]
+theme_type_variation = &"Tight"
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="Root/Head/Titles"]
 theme_type_variation = &"SectionTitle"
 unique_name_in_owner = true
 text = "Name"
 autowrap_mode = 3
+
+[node name="Subtitle" type="Label" parent="Root/Head/Titles"]
+theme_type_variation = &"HintSubtitle"
+unique_name_in_owner = true
+visible = false
+text = "Zweig · Zustand"
+autowrap_mode = 3
+
+[node name="Rule" type="HSeparator" parent="Root"]
+theme_type_variation = &"HintRule"
+unique_name_in_owner = true
+visible = false
+mouse_filter = 2
 
 [node name="Image" type="TextureRect" parent="Root"]
 unique_name_in_owner = true

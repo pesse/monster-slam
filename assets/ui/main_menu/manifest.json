@@ -1,0 +1,77 @@
+{
+  "format": "lossless WebP RGBA",
+  "assets": {
+    "buttons/button_normal": {
+      "file": "buttons/button_normal.webp",
+      "width": 1040,
+      "height": 192,
+      "notes": "Gemeinsamer Quellausschnitt und identische 1040×192-Leinwand. Ohne Text/Icons."
+    },
+    "buttons/button_highlighted": {
+      "file": "buttons/button_highlighted.webp",
+      "width": 1040,
+      "height": 192,
+      "notes": "Gemeinsamer Quellausschnitt und identische 1040×192-Leinwand. Ohne Text/Icons."
+    },
+    "logo": {
+      "file": "logo.webp",
+      "width": 1216,
+      "height": 593,
+      "notes": "Logo mit transparenter Umgebung."
+    },
+    "panels/profile_panel": {
+      "file": "panels/profile_panel.webp",
+      "width": 1016,
+      "height": 253,
+      "notes": "Leere Profilplakette mit Tab rechts unten; Inhalt separat zeichnen."
+    },
+    "icons/play": {
+      "file": "icons/play.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "256×256, zentriert, für Anzeige mit 40–64 px."
+    },
+    "icons/skills": {
+      "file": "icons/skills.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "256×256, zentriert, für Anzeige mit 40–64 px."
+    },
+    "icons/statistics": {
+      "file": "icons/statistics.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "256×256, zentriert, für Anzeige mit 40–64 px."
+    },
+    "icons/content": {
+      "file": "icons/content.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "256×256, zentriert, für Anzeige mit 40–64 px."
+    },
+    "icons/settings": {
+      "file": "icons/settings.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "256×256, zentriert, für Anzeige mit 40–64 px."
+    },
+    "icons/expert": {
+      "file": "icons/expert.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "256×256, zentriert, für Anzeige mit 40–64 px."
+    },
+    "icons/profile": {
+      "file": "icons/profile.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "256×256, zentriert, für Anzeige mit 40–64 px."
+    },
+    "icons/switch_profile": {
+      "file": "icons/switch_profile.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "256×256, zentriert, für Anzeige mit 40–64 px."
+    }
+  }
+}

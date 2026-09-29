@@ -1,0 +1,192 @@
+{
+  "format": "lossless WebP RGBA",
+  "panel": {
+    "texture": "window_panel_compact.webp",
+    "source_size": [
+      256,
+      256
+    ],
+    "slice": [
+      32,
+      32,
+      32,
+      32
+    ],
+    "content_padding": 26,
+    "recommended_minimum": [
+      280,
+      180
+    ],
+    "edge_profile": "constant straight strips; material separate",
+    "rim_px": 8,
+    "chamfer_px": 16
+  },
+  "large": {
+    "texture": "window_panel.webp",
+    "source_size": [
+      512,
+      512
+    ],
+    "slice": [
+      64,
+      64,
+      64,
+      64
+    ],
+    "content_padding": 48
+  },
+  "tabs": {
+    "textures": [
+      "tab_normal.webp",
+      "tab_highlighted.webp"
+    ],
+    "source_size": [
+      520,
+      96
+    ],
+    "slice": [
+      28,
+      28,
+      28,
+      28
+    ],
+    "content_padding": 16
+  },
+  "title_bar": {
+    "texture": "title_bar.webp",
+    "source_size": [
+      512,
+      64
+    ],
+    "slice": [
+      32,
+      8,
+      32,
+      8
+    ],
+    "fixed_height": 64,
+    "horizontal_only": true,
+    "recommended_width": [
+      800,
+      1100
+    ],
+    "content_padding": [
+      24,
+      12,
+      24,
+      12
+    ],
+    "icon_box": [
+      40,
+      40
+    ],
+    "icon_title_gap": 12,
+    "divider_y": 62,
+    "right_group": {
+      "close_box": [
+        40,
+        40
+      ],
+      "right_inset": 12,
+      "points_close_gap": 20,
+      "reserved_width": 230
+    },
+    "joints": {
+      "left": "title_joint_left.webp",
+      "right": "title_joint_right.webp",
+      "source_size": [
+        24,
+        24
+      ],
+      "position_left": [
+        0,
+        51
+      ],
+      "position_right": [
+        "width-24",
+        51
+      ],
+      "slice": null
+    }
+  },
+  "close": {
+    "textures": [
+      "close.webp",
+      "close_hover.webp",
+      "close_pressed.webp"
+    ],
+    "source_size": [
+      128,
+      128
+    ],
+    "visible_size": [
+      96,
+      96
+    ],
+    "display_size": [
+      32,
+      40
+    ],
+    "slice": null,
+    "shared_alpha": true
+  },
+  "tool_buttons": {
+    "textures": [
+      "tool_button_normal.webp",
+      "tool_button_hover.webp",
+      "tool_button_pressed.webp",
+      "tool_button_disabled.webp"
+    ],
+    "source_size": [
+      44,
+      44
+    ],
+    "display_size": [
+      44,
+      44
+    ],
+    "slice": [
+      8,
+      8,
+      8,
+      8
+    ],
+    "content_padding": 7,
+    "rim_px": 2
+  },
+  "preview": {
+    "base_resolution": [
+      1152,
+      648
+    ],
+    "ui_scale_at_1920": 1.6666666666666667,
+    "files": [
+      "preview/skill-tree-window-1152x648.png",
+      "preview/skill-tree-window-1920x1080.png",
+      "preview/concept-header-comparison.png"
+    ],
+    "renderer": "Sharp nine-slice composition, not in-engine"
+  },
+  "revision": 2,
+  "surface": {
+    "texture": "window_surface.webp",
+    "source_size": [
+      512,
+      512
+    ],
+    "repeat": true,
+    "slice": null,
+    "alpha": 190,
+    "clip": "inside panel metal, inset 9px, chamfer 11px",
+    "header_opacity": 0.48,
+    "header_clip": "inside face; y=10..59"
+  },
+  "layer_order": [
+    "panel",
+    "surface clipped to inner face",
+    "title_bar at 0,0",
+    "optional surface clipped to header face",
+    "title joints at y=51",
+    "game icons and labels"
+  ]
+}

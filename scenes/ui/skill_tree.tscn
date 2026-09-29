@@ -1,8 +1,20 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://src/ui/skill_tree.gd" id="1_skills"]
 [ext_resource type="Script" path="res://src/ui/skill_graph.gd" id="2_graph"]
 [ext_resource type="PackedScene" path="res://scenes/ui/confirm_dialog.tscn" id="3_confirm"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/skills.webp" id="4_book"]
+[ext_resource type="Texture2D" path="res://assets/ui/skill_tree/icons/skill_point.webp" id="5_star"]
+[ext_resource type="Texture2D" path="res://assets/ui/skill_tree/status/check.webp" id="6_check"]
+[ext_resource type="Texture2D" path="res://assets/ui/skill_tree/medallions/available.webp" id="7_ring"]
+[ext_resource type="Texture2D" path="res://assets/ui/skill_tree/status/lock.webp" id="8_lock"]
+[ext_resource type="Texture2D" path="res://assets/ui/skill_tree/icons/reset.webp" id="9_reset"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/window_surface.webp" id="10_surface"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/close.webp" id="11_close"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/close_hover.webp" id="12_close_hover"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/close_pressed.webp" id="13_close_pressed"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/title_joint_left.webp" id="14_joint_left"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/title_joint_right.webp" id="15_joint_right"]
 
 [node name="SkillTreeScreen" type="Control"]
 layout_mode = 3
@@ -13,84 +25,314 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_skills")
 
-[node name="Margin" type="MarginContainer" parent="."]
-theme_type_variation = &"ScreenMargin"
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.03, 0.06, 0.6)
+
+[node name="Window" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Frame" type="PanelContainer" parent="Window"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"GameWindow"
+
+[node name="Surface" type="TextureRect" parent="Window"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 9.0
+offset_top = 9.0
+offset_right = -9.0
+offset_bottom = -9.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("10_surface")
+expand_mode = 1
+stretch_mode = 1
+
+[node name="Layout" type="VBoxContainer" parent="Window"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Root" type="VBoxContainer" parent="Margin"]
+[node name="TitleBar" type="PanelContainer" parent="Window/Layout"]
+layout_mode = 2
+theme_type_variation = &"WindowTitleBar"
+
+[node name="Header" type="HBoxContainer" parent="Window/Layout/TitleBar"]
+layout_mode = 2
 theme_type_variation = &"ScreenStack"
 
-[node name="Header" type="HBoxContainer" parent="Margin/Root"]
+[node name="BookIcon" type="TextureRect" parent="Window/Layout/TitleBar/Header"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+texture_filter = 4
+texture = ExtResource("4_book")
+expand_mode = 1
+stretch_mode = 5
 
-[node name="BackButton" type="Button" parent="Margin/Root/Header"]
-unique_name_in_owner = true
-text = "← Zurück"
-
-[node name="Title" type="Label" parent="Margin/Root/Header"]
-theme_type_variation = &"Title"
+[node name="Title" type="Label" parent="Window/Layout/TitleBar/Header"]
+layout_mode = 2
 size_flags_horizontal = 3
-text = "Fähigkeiten"
-horizontal_alignment = 1
-
-[node name="PointsLabel" type="Label" parent="Margin/Root/Header"]
-theme_type_variation = &"Accent"
-unique_name_in_owner = true
-text = "Keine offenen Skillpunkte"
+theme_type_variation = &"WindowTitle"
+text = "FÄHIGKEITEN"
 vertical_alignment = 1
 
-[node name="GraphPanel" type="PanelContainer" parent="Margin/Root"]
-size_flags_horizontal = 3
+[node name="Points" type="HBoxContainer" parent="Window/Layout/TitleBar/Header"]
+layout_mode = 2
+theme_type_variation = &"Tight"
+
+[node name="PointsIcon" type="TextureRect" parent="Window/Layout/TitleBar/Header/Points"]
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+size_flags_vertical = 4
+texture_filter = 4
+texture = ExtResource("5_star")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="PointsLabel" type="Label" parent="Window/Layout/TitleBar/Header/Points"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Accent"
+text = "0 Skillpunkte"
+vertical_alignment = 1
+
+[node name="CloseButton" type="TextureButton" parent="Window/Layout/TitleBar/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 4
+texture_filter = 4
+texture_normal = ExtResource("11_close")
+texture_pressed = ExtResource("13_close_pressed")
+texture_hover = ExtResource("12_close_hover")
+texture_focused = ExtResource("12_close_hover")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Content" type="MarginContainer" parent="Window/Layout"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_type_variation = &"WindowContent"
+
+[node name="GraphArea" type="Control" parent="Window/Layout/Content"]
+custom_minimum_size = Vector2(360, 260)
+layout_mode = 2
 size_flags_vertical = 3
 
-[node name="GraphArea" type="Control" parent="Margin/Root/GraphPanel"]
-custom_minimum_size = Vector2(360, 260)
-
-[node name="Graph" type="Control" parent="Margin/Root/GraphPanel/GraphArea"]
+[node name="Graph" type="Control" parent="Window/Layout/Content/GraphArea"]
 unique_name_in_owner = true
 clip_contents = true
+layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+focus_mode = 2
+texture_filter = 4
 script = ExtResource("2_graph")
 
-[node name="EmptyHint" type="Label" parent="Margin/Root/GraphPanel/GraphArea"]
-theme_type_variation = &"Hint"
+[node name="EmptyHint" type="Label" parent="Window/Layout/Content/GraphArea"]
 unique_name_in_owner = true
 visible = false
+layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-text = "Noch keine Fähigkeitsbäume vorhanden — im Start-Screen unter „📚 Inhalte“ einen Pack installieren."
+theme_type_variation = &"Hint"
+text = "Noch keine Fähigkeitsbäume vorhanden — im Start-Screen unter „Inhalte“ einen Pack installieren."
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 3
 
-[node name="Tools" type="HBoxContainer" parent="Margin/Root/GraphPanel/GraphArea"]
+[node name="Legend" type="HBoxContainer" parent="Window/Layout/Content/GraphArea"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -24.0
+grow_vertical = 0
+mouse_filter = 2
+theme_type_variation = &"SectionStack"
+
+[node name="Learned" type="HBoxContainer" parent="Window/Layout/Content/GraphArea/Legend"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"Tight"
+
+[node name="LearnedIcon" type="TextureRect" parent="Window/Layout/Content/GraphArea/Legend/Learned"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("6_check")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LearnedLabel" type="Label" parent="Window/Layout/Content/GraphArea/Legend/Learned"]
+layout_mode = 2
+theme_type_variation = &"Caption"
+text = "Gelernt"
+
+[node name="Open" type="HBoxContainer" parent="Window/Layout/Content/GraphArea/Legend"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"Tight"
+
+[node name="OpenIcon" type="TextureRect" parent="Window/Layout/Content/GraphArea/Legend/Open"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("7_ring")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="OpenLabel" type="Label" parent="Window/Layout/Content/GraphArea/Legend/Open"]
+layout_mode = 2
+theme_type_variation = &"Caption"
+text = "Lernbar"
+
+[node name="Locked" type="HBoxContainer" parent="Window/Layout/Content/GraphArea/Legend"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"Tight"
+
+[node name="LockedIcon" type="TextureRect" parent="Window/Layout/Content/GraphArea/Legend/Locked"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("8_lock")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LockedLabel" type="Label" parent="Window/Layout/Content/GraphArea/Legend/Locked"]
+layout_mode = 2
+theme_type_variation = &"Caption"
+text = "Gesperrt"
+
+[node name="Tools" type="VBoxContainer" parent="Window/Layout/Content/GraphArea"]
+layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -104.0
-offset_top = -48.0
+offset_left = -260.0
+offset_top = -96.0
 grow_horizontal = 0
 grow_vertical = 0
+theme_type_variation = &"Tight"
 
-[node name="FitButton" type="Button" parent="Margin/Root/GraphPanel/GraphArea/Tools"]
+[node name="Buttons" type="HBoxContainer" parent="Window/Layout/Content/GraphArea/Tools"]
+layout_mode = 2
+size_flags_horizontal = 8
+
+[node name="ZoomOutButton" type="Button" parent="Window/Layout/Content/GraphArea/Tools/Buttons"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+theme_type_variation = &"ToolButton"
+text = "−"
+
+[node name="ZoomLabel" type="Label" parent="Window/Layout/Content/GraphArea/Tools/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(56, 0)
+layout_mode = 2
+text = "100 %"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ZoomInButton" type="Button" parent="Window/Layout/Content/GraphArea/Tools/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+theme_type_variation = &"ToolButton"
+text = "+"
+
+[node name="FitButton" type="Button" parent="Window/Layout/Content/GraphArea/Tools/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+theme_type_variation = &"ToolButton"
 text = "⛶"
 
-[node name="RespecButton" type="Button" parent="Margin/Root/GraphPanel/GraphArea/Tools"]
+[node name="RespecButton" type="Button" parent="Window/Layout/Content/GraphArea/Tools/Buttons"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+theme_type_variation = &"ToolButton"
 disabled = true
-text = "↺"
+icon = ExtResource("9_reset")
+icon_alignment = 1
+expand_icon = true
+
+[node name="Help" type="Label" parent="Window/Layout/Content/GraphArea/Tools"]
+layout_mode = 2
+theme_type_variation = &"Caption"
+text = "Mausrad: Zoom · Ziehen: Verschieben"
+horizontal_alignment = 2
+
+[node name="Action" type="Label" parent="Window/Layout/Content/GraphArea/Tools"]
+layout_mode = 2
+theme_type_variation = &"Accent"
+text = "Klick: Lernen / Verlernen"
+horizontal_alignment = 2
+
+[node name="JointLeft" type="TextureRect" parent="Window"]
+layout_mode = 0
+offset_top = 51.0
+offset_right = 24.0
+offset_bottom = 75.0
+mouse_filter = 2
+texture = ExtResource("14_joint_left")
+
+[node name="JointRight" type="TextureRect" parent="Window"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -24.0
+offset_top = 51.0
+offset_bottom = 75.0
+grow_horizontal = 0
+mouse_filter = 2
+texture = ExtResource("15_joint_right")
 
 [node name="Confirm" parent="." instance=ExtResource("3_confirm")]
 unique_name_in_owner = true

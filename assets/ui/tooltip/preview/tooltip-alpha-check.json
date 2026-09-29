@@ -1,0 +1,45 @@
+{
+  "frame_center_alpha": 0,
+  "checks": [
+    {
+      "file": "frame.webp",
+      "width": 256,
+      "height": 256,
+      "visible_pixels": 3089,
+      "dark_matte_pixels": 0,
+      "lossless": true
+    },
+    {
+      "file": "pointer_up.webp",
+      "width": 64,
+      "height": 36,
+      "visible_pixels": 264,
+      "dark_matte_pixels": 0,
+      "lossless": true
+    },
+    {
+      "file": "pointer_right.webp",
+      "width": 36,
+      "height": 64,
+      "visible_pixels": 264,
+      "dark_matte_pixels": 0,
+      "lossless": true
+    },
+    {
+      "file": "pointer_down.webp",
+      "width": 64,
+      "height": 36,
+      "visible_pixels": 264,
+      "dark_matte_pixels": 0,
+      "lossless": true
+    },
+    {
+      "file": "pointer_left.webp",
+      "width": 36,
+      "height": 64,
+      "visible_pixels": 264,
+      "dark_matte_pixels": 0,
+      "lossless": true
+    }
+  ]
+}

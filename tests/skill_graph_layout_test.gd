@@ -213,16 +213,24 @@ func test_the_bounds_hold_every_node_with_its_radius() -> void:
 ## Knoten ganz außerhalb. Sonst sähe es aus, als gehörte eine zweite Stufe noch zum
 ## Anfang — und beim vierten Baum fällt so etwas zuerst auf.
 func test_the_shared_halo_holds_exactly_the_starting_nodes() -> void:
-	var halo := SkillTree.root_halo_radius()
+	var halo := SkillTree.root_halo_size()
+	var r := SkillTree.NODE_RADIUS
 	for count in [1, 2, 3, 4, 6]:
 		var places := _skill_places(_forest(count))
 		for id: String in places:
-			var reach: float = (places[id] as Vector2).length()
+			var at: Vector2 = places[id]
+			# Der Hof ist eine Ellipse. Ganz drin heißt: der Mittelpunkt liegt in der um den
+			# Knotenradius verkleinerten Ellipse; ganz draußen: außerhalb der vergrößerten.
 			if id.ends_with(".root"):
-				assert_float(reach + SkillTree.NODE_RADIUS).override_failure_message(
+				assert_float(_ellipse(at, halo - Vector2.ONE * r)).override_failure_message(
 						"Bei %d Bäumen ragt '%s' aus dem Hof heraus" % [count, id]
-				).is_less_equal(halo)
+				).is_less_equal(1.0)
 			else:
-				assert_float(reach - SkillTree.NODE_RADIUS).override_failure_message(
+				assert_float(_ellipse(at, halo + Vector2.ONE * r)).override_failure_message(
 						"Bei %d Bäumen ragt '%s' in den Hof hinein" % [count, id]
-				).is_greater(halo)
+				).is_greater(1.0)
+
+
+## Wo `at` zur Ellipse mit den Halbachsen `axes` liegt: unter 1 drin, über 1 draußen.
+static func _ellipse(at: Vector2, axes: Vector2) -> float:
+	return pow(at.x / axes.x, 2.0) + pow(at.y / axes.y, 2.0)

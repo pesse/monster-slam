@@ -71,6 +71,12 @@ const PATH_COLOR := Color(0.98, 0.92, 0.75, 0.85)
 const SHADOW := Color(0, 0, 0, 0.45)
 const PLATE := Color(0.05, 0.06, 0.08, 0.72)
 
+## Ring um einen markierten Ort (`set_selected`).
+const SELECTED_COLOR := Color(1.0, 0.8, 0.2)
+## So weit wächst ein markierter Ort zur Hover-Größe (0..1): sichtbar größer, ohne dass
+## mehrere markierte Nachbarn ineinanderlaufen.
+const SELECTED_GROW := 0.5
+
 ## Größe der Orte; alles am Ort (Ring, Punkte, Schrift) wächst und schrumpft mit.
 var node_radius := NODE_RADIUS
 ## Den gestrichelten Weg auch über ein Bild zeichnen? Die Gebietskarten zeigen ihren Weg
@@ -91,6 +97,8 @@ var _nodes: Array = []
 var _path: Array = []
 var _centers: Array = []
 var _hovered := -1
+## Die markierten Orte (Schlüssel → true): sie bleiben groß und tragen einen goldenen Ring.
+var _selected := {}
 ## Je Ort, wie weit er zur Hover-Größe gewachsen ist (0..1).
 var _grow: Array = []
 ## Zoom der ganzen Karte um `_focus` (Anteil des Bildes); während des Zooms ruht die Maus.
@@ -113,7 +121,14 @@ func _ready() -> void:
 ## Fährt in den Ort `key` hinein und blendet aus; danach kommt `zoom_finished`. Für den
 ## Wechsel in die nächste Karte — die Karte selbst bleibt dabei stehen, wie sie ist.
 func zoom_into(key: String) -> void:
-	_focus = _pos_of(key, _focus)
+	zoom_into_all([key])
+
+
+## Wie `zoom_into`, in die Mitte mehrerer Orte — für eine Auswahl aus mehreren Teilen.
+func zoom_into_all(keys: Array) -> void:
+	var at := centroid(keys.map(func(k): return _pos_of(str(k), Vector2.INF)))
+	if at.is_finite():
+		_focus = at
 	_start_zoom(1.0, ZOOM_IN, 1.0, 0.0, ZOOM_IN_TIME, Tween.EASE_IN)
 
 
@@ -155,6 +170,32 @@ func appear_scale(i: int) -> float:
 	# Ease-out-back: kurz über das Ziel hinaus und zurück — ein Aufspringen, kein Einblenden.
 	var c := 1.70158
 	return 1.0 + (c + 1.0) * pow(x - 1.0, 3.0) + c * pow(x - 1.0, 2.0)
+
+
+## Die Mitte der endlichen Punkte in `points`, ohne einen davon Vector2.INF.
+static func centroid(points: Array) -> Vector2:
+	var sum := Vector2.ZERO
+	var count := 0
+	for at in points:
+		if at is Vector2 and (at as Vector2).is_finite():
+			sum += at
+			count += 1
+	return sum / float(count) if count > 0 else Vector2.INF
+
+
+## Markiert die Orte `keys` (die übrigen nicht mehr); die Markierung überdauert ein neues
+## `setup`.
+func set_selected(keys: Array) -> void:
+	_selected.clear()
+	for key in keys:
+		_selected[str(key)] = true
+	if hover_radius > node_radius:
+		set_process(true)
+	queue_redraw()
+
+
+func is_selected(key: String) -> bool:
+	return _selected.has(key)
 
 
 func is_zooming() -> bool:
@@ -270,14 +311,19 @@ func covers(rect: Rect2, points: Array) -> bool:
 	return false
 
 
-## Stellt den Kopf eines Screens (`header`, oben links in seinem Eltern-Control) nach unten
-## links, wenn oben ein Ort darunter läge und unten keiner. Vor dem Einblenden aufrufen,
-## nach einem Frame Layout: danach bleibt der Kopf, wo er ist.
-func place_header(header: Control, points: Array) -> void:
+## Stellt den Kopf eines Screens (`header`, oben links in seinem Eltern-Control) in die
+## Ecke, in der kein Ort darunter liegt. `prefer_bottom` sagt, welche Ecke er nimmt, wenn
+## beide frei oder beide belegt sind: sonst oben links, mit `prefer_bottom` unten links —
+## die andere Ecke nur, wenn die bevorzugte belegt ist und sie nicht. Vor dem Einblenden
+## aufrufen, nach einem Frame Layout: danach bleibt der Kopf, wo er ist.
+func place_header(header: Control, points: Array, prefer_bottom := false) -> void:
 	var top := header.get_global_rect()
 	var parent := header.get_parent() as Control
 	var bottom := Rect2(Vector2(top.position.x, parent.get_global_rect().end.y - top.size.y), top.size)
-	if covers(top, points) and not covers(bottom, points):
+	var down := covers(top, points) and not covers(bottom, points)
+	if prefer_bottom:
+		down = not (covers(bottom, points) and not covers(top, points))
+	if down:
 		header.grow_vertical = Control.GROW_DIRECTION_BEGIN
 		header.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_MINSIZE)
 
@@ -357,7 +403,11 @@ func _process(delta: float) -> void:
 			_appear_t = -1.0
 		moving = true
 	for i in _grow.size():
-		var target := 1.0 if i == _hovered else 0.0
+		var target := 0.0
+		if i == _hovered:
+			target = 1.0
+		elif _selected.has(str(_nodes[i]["key"])):
+			target = SELECTED_GROW
 		var now := move_toward(float(_grow[i]), target, delta / HOVER_TIME)
 		_grow[i] = now
 		moving = moving or now != target
@@ -496,7 +546,10 @@ func _draw_node(i: int) -> void:
 		var share := float(done) / float(total)
 		draw_arc(at, r, -PI * 0.5, -PI * 0.5 + TAU * share, 48,
 				get_theme_color("font_color", "Accent"), ring, true)
-	if i == _hovered and not disabled:
+	if _selected.has(str(node["key"])) and not disabled:
+		draw_arc(at, r + 6.0 * k, 0.0, TAU, 48, SHADOW, 6.0, true)
+		draw_arc(at, r + 6.0 * k, 0.0, TAU, 48, SELECTED_COLOR, 3.5, true)
+	elif i == _hovered and not disabled:
 		draw_arc(at, r + 6.0 * k, 0.0, TAU, 48, Color(1, 1, 1, 0.8), 2.0, true)
 
 	var font := get_theme_default_font()

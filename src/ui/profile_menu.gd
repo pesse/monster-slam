@@ -1,112 +1,198 @@
+class_name ProfileMenu
 extends Control
-## Start-Screen (run/main_scene): Titel, aktive Profilauswahl und Einstieg ins Spiel.
+## Start-Screen (run/main_scene) mit drei Seiten in derselben Kulisse: „Wer spielt?"
+## (profile_pick.tscn), das Hauptmenü und die Bibliothek (book_select.tscn). „Weiter" schiebt
+## die Profilwahl nach links hinaus und das Menü von rechts herein, „Spielen" ebenso das Menü
+## und die Bibliothek; die Kamera der Kulisse fährt mit — zur Bibliothek durch die Mauer in
+## den Turm. „Zurück" und „Profil wechseln" schieben zurück. Wer aus einem anderen Screen
+## hierher zurückkehrt, landet gleich im Menü (`intro_done`), aus der Buchkarte in der
+## Bibliothek (MapSelection.to_shelf).
 ##
-## Das Layout liegt in profile_menu.tscn (im Editor sichtbar); hier wird nur bedient und
-## angezeigt. Einstellungen (Profil, Standard-Schwierigkeit, Reset) liegen im
-## settings_menu-Screen, der Lernstand im stats_screen-Screen.
+## Das Layout liegt in profile_menu.tscn (im Editor sichtbar, Entwurf unter
+## assets/ui/main_menu/sources/); hier wird nur bedient und angezeigt. Hinter dem Menü
+## steht die 3D-Kulisse (menu_backdrop.tscn). Einstellungen (Profil, Standard-Schwierigkeit, Reset) liegen im
+## Einstellungs-Fenster (settings_menu), der Lernstand im Statistik-Fenster (stats_screen).
 
 const SESSION_SETUP_SCENE := "res://scenes/ui/session_setup.tscn"
 const SETTINGS_SCENE := "res://scenes/ui/settings_menu.tscn"
 const STATS_SCENE := "res://scenes/ui/stats_screen.tscn"
 const SKILL_SCENE := "res://scenes/ui/skill_tree.tscn"
 const CONTENT_SCENE := "res://scenes/ui/content_manager.tscn"
-## „▶ Spielen" führt über die Karte (ADR 0006); das freie Zusammenstellen der Runde ist der
+## So lange blendet die Kulisse auf (s).
+const VEIL_FADE := 0.6
+## So lange schiebt die Seite (s) zwischen „Wer spielt?" und Menü, und so lange zwischen
+## Menü und Bibliothek — dort ist der Weg weiter, durch die Mauer in den Turm.
+const SLIDE_TIME := 0.8
+const LIBRARY_SLIDE_TIME := 1.3
+## So lange blendet der Schatten hinter den Menüknöpfen auf, wenn das Menü angekommen ist (s).
+const SHADE_FADE := 0.4
+const INTRO := 0.0
+const MENU := 1.0
+## „Spielen" führt über die Karte (ADR 0006); das freie Zusammenstellen der Runde ist der
 ## unauffällige Expertenmodus darunter.
-const BOOKS_SCENE := "res://scenes/ui/book_select.tscn"
+const LIBRARY := 2.0
 
-@onready var _gold_label: Label = %GoldLabel
-@onready var _level_label: Label = %LevelLabel
-@onready var _profile_select: OptionButton = %ProfileSelect
-@onready var _name_input: LineEdit = %NameInput
+## Ob in diesem Programmlauf schon jemand „Wer spielt?" beantwortet hat. Statisch, weil
+## jeder Rückweg aus Kampf, Karte oder Einstellungen diese Szene neu lädt.
+static var intro_done := false
+
+@onready var _badge: ProfileBadge = %ProfileBadge
 @onready var _update_button: Button = %UpdateButton
 @onready var _content_button: Button = %ContentButton
 @onready var _play_button: Button = %PlayButton
 @onready var _play_hint: Label = %PlayHint
+@onready var _intro: ProfilePick = %Intro
+@onready var _menu_page: Control = %MenuPage
+@onready var _library: BookSelect = %Library
+@onready var _backdrop: MenuBackdrop = $Backdrop
+@onready var _shade: Control = %Shade
+
+var _page := MENU
+var _slide: Tween
 
 
 func _ready() -> void:
-	_play_button.pressed.connect(func(): get_tree().change_scene_to_file(BOOKS_SCENE))
+	_play_button.pressed.connect(_open_library)
+	_library.setup(_backdrop)
+	_library.back_requested.connect(func(): _slide_to(MENU))
+	_library.switch_requested.connect(_back_to_intro)
 	(%ExpertButton as Button).pressed.connect(
 			func(): get_tree().change_scene_to_file(SESSION_SETUP_SCENE))
-	(%SkillButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(SKILL_SCENE))
-	(%StatsButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(STATS_SCENE))
-	(%SettingsButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(SETTINGS_SCENE))
-	_profile_select.item_selected.connect(_on_profile_selected)
-	_name_input.text_submitted.connect(func(_t): _on_create_profile())
-	(%AddButton as Button).pressed.connect(_on_create_profile)
+	(%SkillButton as Button).pressed.connect(_open_skills)
+	(%StatsButton as Button).pressed.connect(_open_window.bind(STATS_SCENE, %StatsButton))
+	(%SettingsButton as Button).pressed.connect(_open_window.bind(SETTINGS_SCENE, %SettingsButton))
+	_badge.switch_pressed.connect(_back_to_intro)
+	_intro.picked.connect(_play_as)
 	_update_button.pressed.connect((%UpdateDialog as Control).open)
-	_content_button.pressed.connect(func(): get_tree().change_scene_to_file(CONTENT_SCENE))
+	_content_button.pressed.connect(_open_window.bind(CONTENT_SCENE, _content_button))
 	UpdateService.changed.connect(_refresh_update_badge)
 	ContentService.changed.connect(_refresh_content_badge)
-	Wallet.changed.connect(func(_gold): _refresh_gold())
-	PlayerLevel.changed.connect(func(_total_xp, _level): _refresh_level())
-	# Ausgegebene Punkte verändern dieselbe Zeile wie verdiente.
-	SkillBook.changed.connect(_refresh_level)
-	_refresh_profiles()
-	_refresh_gold()
-	_refresh_level()
 	_refresh_update_badge()
 	_refresh_content_badge()
 	_refresh_play_gate()
 	# Beide Kanäle still prüfen: das Abzeichen soll dastehen, ohne dass jemand nachsieht.
 	# Netzfehler bleiben in der Konsole (siehe UpdateService._fail / ContentService._fail).
 	ContentService.refresh()
-
-
-func _refresh_profiles() -> void:
-	_profile_select.clear()
-	var active := UserSettings.active_profile()
-	var profiles := UserSettings.profiles()
-	for i in profiles.size():
-		# Anzeigename im Dropdown, player_id als Metadaten (für die Auswahl-Rückabbildung).
-		_profile_select.add_item(UserSettings.display_name(profiles[i]))
-		_profile_select.set_item_metadata(i, profiles[i])
-		if profiles[i] == active:
-			_profile_select.select(i)
-
-
-func _on_profile_selected(index: int) -> void:
-	var id := str(_profile_select.get_item_metadata(index))
-	UserSettings.set_active_profile(id)
-	PlayerProgress.switch_to(id)
-	# Geldbörse und Erfahrung schalten über UserSettings.active_profile_changed selbst um
-	# (siehe Wallet._ready / PlayerLevel._ready); hier muss nur die Anzeige nachziehen.
-	# Die Level-Zeile zieht dabei von selbst nach — PlayerLevel.switch_to meldet den neuen
-	# Stand über `changed`, die Geldbörse tut das beim Wechsel nicht.
-	_refresh_gold()
-
-
-func _on_create_profile() -> void:
-	var id := UserSettings.create_profile(_name_input.text)
-	if id.is_empty():
+	if MapSelection.to_shelf:
+		MapSelection.to_shelf = false
+		_library.enter()
+		_show_page(LIBRARY)
+		_settle()
+		# Die Buchkarte deckt schon den Bildschirm; die Kulisse braucht keinen Schleier.
+		(%Veil as Control).visible = false
+		_library.return_from_book()
 		return
-	_name_input.clear()
+	_show_page(MENU if intro_done else INTRO)
+	_settle()
+	_unveil()
+
+
+## Schaltet auf das Profil `id` und schiebt ins Menü.
+func _play_as(id: String) -> void:
+	intro_done = true
 	UserSettings.set_active_profile(id)
 	PlayerProgress.switch_to(id)
-	_refresh_profiles()
-	_refresh_gold()
+	# Geldbörse, Erfahrung und Fähigkeiten schalten über
+	# UserSettings.active_profile_changed selbst um (siehe Wallet._ready / PlayerLevel._ready).
+	_badge.refresh()
+	_slide_to(MENU)
 
 
-## Der Goldstand des aktiven Profils. Er steht auf dem Start-Screen und nicht nur in der
-## Statistik: Gold wird ausgegeben, und der Laden wird von hier aus erreichbar sein.
-func _refresh_gold() -> void:
-	_gold_label.text = "💰 %s" % Wallet.label()
+## Fähigkeiten, Statistik, Inhalte und Einstellungen öffnen als Fenster über dem Menü, nicht
+## als eigener Screen: die Kulisse bleibt stehen. Beim Schließen geht der Fokus an den Knopf
+## zurück, von dem es kam.
+func _open_skills() -> void:
+	_open_window(SKILL_SCENE, %SkillButton)
 
 
-## Level, Stand im Level und OFFENE Skillpunkte. Leiser als der Goldstand (Hint): die
-## Entscheidung fällt nicht hier, sondern im Fähigkeiten-Screen. Gezeigt wird der offene
-## Stand (verdient minus ausgegeben, siehe SkillBook.available) und nicht der verdiente —
-## eine Zahl, die nach dem Ausgeben stehen bleibt, wäre eine Aufforderung ins Leere.
-func _refresh_level() -> void:
-	var progress := PlayerLevel.progress()
-	var text := "⭐ Level %d  ·  %d/%d XP" % [
-		int(progress["level"]), int(progress["xp_in_level"]), int(progress["xp_for_level_up"])]
-	var points := SkillBook.available()
-	if SkillBook.unlimited_points:
-		text += "  ·  ∞ Skillpunkte (Debug)"
-	elif points > 0:
-		text += "  ·  %d Skillpunkt%s offen" % [points, "" if points == 1 else "e"]
-	_level_label.text = text
+func _open_window(path: String, opener: Control) -> void:
+	var window := (load(path) as PackedScene).instantiate()
+	add_child(window)
+	window.connect("closed", func() -> void:
+		window.queue_free()
+		# Was das Fenster geändert haben kann und kein Signal meldet: der Profilname
+		# (Einstellungen) und ob es nach einer Installation etwas zu spielen gibt (Inhalte).
+		_badge.refresh()
+		_refresh_play_gate()
+		opener.grab_focus())
+
+
+func _back_to_intro() -> void:
+	_intro.refresh()
+	_slide_to(INTRO)
+
+
+func _open_library() -> void:
+	# Die Bücher stehen, bevor die Seite hereinfährt — nichts baut sich im Bild auf.
+	_library.enter()
+	_slide_to(LIBRARY)
+
+
+func _pages() -> Array[Control]:
+	return [_intro, _menu_page, _library]
+
+
+func _slide_to(target: float) -> void:
+	if _slide != null:
+		_slide.kill()
+	if _page >= LIBRARY - 0.01 and target < LIBRARY:
+		_library.leave()
+	# Alle Seiten auf dem Weg stehen während der Fahrt; bedienbar ist keine, bis sie
+	# angekommen ist.
+	get_viewport().gui_release_focus()
+	for i in _pages().size():
+		var page := _pages()[i]
+		page.visible = i >= floorf(minf(_page, target)) and i <= ceilf(maxf(_page, target))
+		page.process_mode = Node.PROCESS_MODE_DISABLED
+	# Der Schatten links hinter den Knöpfen endet mitten im Bild; mitgeschoben sähe er
+	# aus wie eine Kante. Er kommt erst, wenn das Menü steht (_settle).
+	_shade.modulate.a = 0.0
+	_slide = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	_slide.tween_method(_show_page, _page, target, _slide_time(_page, target))
+	_slide.tween_callback(_settle)
+
+
+## Wie lange die Fahrt von `from` nach `to` dauert: je Abschnitt seine eigene Zeit.
+static func _slide_time(from: float, to: float) -> float:
+	var low := minf(from, to)
+	var high := maxf(from, to)
+	var outside := maxf(0.0, minf(high, MENU) - low)
+	var inside := maxf(0.0, high - maxf(low, MENU))
+	return SLIDE_TIME * outside + LIBRARY_SLIDE_TIME * inside
+
+
+## `page` 0 = „Wer spielt?", 1 = Menü, 2 = Bibliothek. Über die Anker und nicht in Pixeln, damit eine
+## Größenänderung des Fensters die Seiten nicht verrutscht.
+func _show_page(page: float) -> void:
+	_page = page
+	var slide := %Slide as Control
+	slide.anchor_left = -page
+	slide.anchor_right = 1.0 - page
+	_backdrop.page = page
+
+
+## Die Seite außerhalb des Bildes ist aus — sonst fände die Tastatur dort Knöpfe.
+func _settle() -> void:
+	var at := roundi(_page)
+	for i in _pages().size():
+		_pages()[i].visible = i == at
+		_pages()[i].process_mode = Node.PROCESS_MODE_INHERIT
+	if at == INTRO:
+		_intro.focus_next()
+	elif at == MENU and _shade.modulate.a < 1.0:
+		create_tween().tween_property(_shade, "modulate:a", 1.0, SHADE_FADE)
+
+
+## Der erste Auftritt der Kulisse übersetzt ihre Shader und hält das Bild kurz an
+## (CLAUDE.md „Fallen"). Das Menü steht sofort; die Kulisse blendet danach auf, statt
+## halb gezeichnet zu ruckeln.
+func _unveil() -> void:
+	var veil := %Veil as ColorRect
+	await RenderingServer.frame_post_draw
+	await RenderingServer.frame_post_draw
+	if not is_inside_tree():
+		return
+	create_tween().tween_property(veil, "modulate:a", 0.0, VEIL_FADE)
 
 
 ## Das Abzeichen erscheint nur, wenn es etwas zu tun gibt. Ein Fehlschlag der Prüfung wird
@@ -140,4 +226,4 @@ func _refresh_play_gate() -> void:
 ## hilft das Update-Abzeichen, nicht dieses.
 func _refresh_content_badge() -> void:
 	var count := ContentService.attention_count()
-	_content_button.text = "📚 Inhalte (%d neu)" % count if count > 0 else "📚 Inhalte"
+	_content_button.text = "INHALTE (%d NEU)" % count if count > 0 else "INHALTE"
