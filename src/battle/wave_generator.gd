@@ -5,7 +5,7 @@ extends RefCounted
 ## Ablauf (siehe docs/ARCHITECTURE.md, "Nutzung im Spiel"):
 ##   1. Kandidaten aus dem Wave-Pool erzeugen: task_definitions × passende Lexeme
 ##      (allowed_types / requires_relation / requires_form), gefiltert nach
-##      task_types/direction/difficulty_max und den Lexem-tags.
+##      task_types/direction und den Lexem-tags.
 ##   2. Fällige (SpacedRepetition) bevorzugen, dann neue, dann beliebige.
 ##   3. Aufgabe über TaskResolver auflösen (prompt + accepted_answers).
 ##   4. monster_task_rules mappt (task_type, direction) -> monster_type + Basiswerte.
@@ -30,16 +30,6 @@ const REFERENCE_SPEED := 35.0
 const SPEED_SENSITIVITY := 0.3
 ## Obergrenze der difficulty-Skala für die Normalisierung auf 0..1.
 const DIFFICULTY_MAX := 5
-
-## Aufgabenarten, die der Schwierigkeitsriegel (`difficulty_max`) NIE aus dem Pool nimmt.
-## Die Übersetzung ist das Fundament des Lernstands — ein WORT gilt erst als gemeistert,
-## wenn beide Richtungen sitzen (Lexeme.mastery_directions). Auf Stufe 1
-## fiel `def.translate.en_de` (difficulty 2) heraus; damit war kein Wort je zu meistern,
-## jeder Fortschrittsbalken stand dauerhaft auf „0 von N" und jedes Wort auf „0 %",
-## während „Gemeisterte Aufgaben" im Überblick weiterstieg — ein Widerspruch, der wie ein
-## Rechenfehler der Statistik aussieht und keiner war. Der Riegel staffelt die
-## ZUSATZaufgaben (Formen, Relationen), nicht die Lernrichtung.
-const CORE_TASK_TYPES := ["translate"]
 
 ## Referenz-Punktzahl bei neutraler Schwierigkeit (Netto-Können e = 0). Wie beim Tempo
 ## ist die Schwierigkeit die einzige Quelle — es gibt keine per-Regel-Punkte mehr.
@@ -89,13 +79,12 @@ func _confidence_prior(source: Dictionary) -> float:
 ## überhaupt etwas spielbar ist (has_playable, Menü-Knöpfe). Getrennte Pools hier hießen:
 ## der Knopf gibt frei, wo die Welle nichts findet — oder umgekehrt.
 ## Semantik der LEEREN Auswahl: keine Einschränkung (siehe _candidates()).
-static func pool_from_settings(difficulty: int) -> Dictionary:
+static func pool_from_settings() -> Dictionary:
 	return {
 		"task_types": Array(UserSettings.selected_task_types()),
 		"lexeme_types": Array(UserSettings.selected_lexeme_types()),
 		"scope": Array(UserSettings.selected_scope()),
 		"tags": Array(UserSettings.selected_tags()),
-		"difficulty_max": clampi(difficulty, 1, 5),
 	}
 
 
@@ -200,13 +189,12 @@ func _candidates(pool: Dictionary, limit: int = 0) -> Array:
 	var scope: Array = pool.get("scope", []) # leer -> alle Bücher/Units
 	var lexeme_types: Array = pool.get("lexeme_types", []) # leer -> alle Wortarten
 	var direction := str(pool.get("direction", "")) # "" = beliebige Richtung
-	var difficulty_max: int = int(pool.get("difficulty_max", 0)) # 0 = kein Limit
 	var lexemes := ContentRegistry.lexemes_scoped(scope, tags) # leerer scope/tags -> alle Lexeme
 	if not lexeme_types.is_empty():
 		lexemes = lexemes.filter(func(lx): return str(lx.get("type", "")) in lexeme_types)
 	var result: Array = []
 	for definition in ContentRegistry.task_definitions.values():
-		if not definition_allowed(definition, task_types, direction, difficulty_max):
+		if not definition_allowed(definition, task_types, direction):
 			continue
 		_expand(definition, lexemes, result, limit)
 		if limit > 0 and result.size() >= limit:
@@ -218,18 +206,20 @@ func _candidates(pool: Dictionary, limit: int = 0) -> Array:
 ## die Regel für sich prüfbar bleibt — dieselbe Begründung wie bei
 ## PlayerProgress.mastered_lexemes_in und StatsScreen.unit_rows.
 ##
-## Leere `task_types` und leere `direction` heißen „keine Einschränkung", `difficulty_max`
-## 0 heißt „kein Limit". Der Schwierigkeitsriegel lässt CORE_TASK_TYPES unberührt.
+## Leere `task_types` und leere `direction` heißen „keine Einschränkung".
+##
+## Die Wellen-Schwierigkeit filtert hier bewusst NICHT: ein Riegel über die `difficulty`
+## der Definition nahm auf niedrigen Stufen ganze Aufgabenarten (Formen, Relationen) aus
+## dem Pool, ohne dass der Spieler es sehen konnte. Die `difficulty` bleibt das `t` in
+## `t - c` und wirkt nur über Tempo, Punkte und Erfahrung.
 static func definition_allowed(definition: Dictionary, task_types: Array,
-		direction: String, difficulty_max: int) -> bool:
+		direction: String) -> bool:
 	var task_type := str(definition.get("task_type", ""))
 	if not task_types.is_empty() and not (task_type in task_types):
 		return false
 	if direction != "" and str(definition.get("direction", "")) != direction:
 		return false
-	if task_type in CORE_TASK_TYPES:
-		return true
-	return difficulty_max <= 0 or int(definition.get("difficulty", 1)) <= difficulty_max
+	return true
 
 
 ## Verbindet eine Definition mit allen kompatiblen Lexemen und hängt die Kandidaten an.

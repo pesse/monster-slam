@@ -119,13 +119,11 @@ Was eine höhere Stufe ändert:
 
 - Die Monster laufen schneller.
 - Eine Welle hat mehr Monster, und sie kommen dichter hintereinander.
-- Zusatzaufgaben kommen dazu. Auf Stufe 1 gibt es nur Übersetzungen; Wortformen,
-  Gegenteile, Synonyme und Verwechslungen kommen erst auf höheren Stufen dazu.
 - Monster bringen mehr Punkte, und damit mehr Gold.
 
-**Übersetzen in beide Richtungen ist auf jeder Stufe dabei**, auch auf Stufe 1. Warum:
-ein Wort gilt erst als gemeistert, wenn es in beide Richtungen sitzt (Kapitel 12). Fiele
-eine Richtung weg, könnte man es nie meistern.
+**Welche Aufgaben kommen, hängt nicht von der Stufe ab.** Übersetzungen in beide
+Richtungen, Wortformen, Gegenteile, Synonyme und Verwechslungen sind auf jeder Stufe
+dabei, soweit die Vokabeln sie hergeben.
 
 Unabhängig von der Stufe steht in den Einstellungen die **Grund-Geschwindigkeit**
 (Kapitel 13). Sie macht alles langsamer oder schneller, zum Beispiel für Kinder, die noch

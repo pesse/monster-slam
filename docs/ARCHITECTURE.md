@@ -278,9 +278,9 @@ steigt. Das sieht aus wie ein Rechenfehler der Statistik und war noch nie einer 
 Rechnung hält `tests/mastered_lexemes_test.gd`). Gesucht wird deshalb im Weg der Richtung
 in den Pool:
 
-- **Der Schwierigkeitsriegel** (`difficulty_max`) darf keine Lernrichtung wegnehmen —
-  `translate` steht in `WaveGenerator.CORE_TASK_TYPES` und ist ausgenommen
-  (`definition_allowed()`); der Riegel staffelt nur die Zusatzaufgaben.
+- **Ein Filter nach Schwierigkeit** darf keine Lernrichtung wegnehmen. Der frühere Riegel
+  (`difficulty_max`) nahm auf Stufe 1 en→de heraus; er ist inzwischen ganz entfallen,
+  `definition_allowed()` filtert nur noch nach Auswahl und Richtung.
 - **Geteilte deutsche Prompts** in einer Unit machen de→en zur Ratefrage
   (Regel und Ausnahmen: `docs/ADDING_CONTENT.md`).
 - **`excluded_task_types`** muss den Nenner mitnehmen (`PlayerProgress.masterable()`),

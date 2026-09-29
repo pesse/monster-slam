@@ -190,11 +190,9 @@ unmögliche Kombinationen (z. B. Adjektiv konjugieren).
 `requires_relation` (opposite/synonym) bzw. `requires_form` (conjugation/tense): nur Lexeme,
 die die Relation/Form besitzen, werden zu Kandidaten; die Enumeration expandiert über die
 tatsächlich vorhandenen Relationen/Formen.
-`difficulty`: Basis-Schwierigkeit der Aufgaben-*Art*; der Wave-`difficulty_max` schaltet damit
-Aufgabentypen frei/aus — **außer `translate`** (`WaveGenerator.CORE_TASK_TYPES`): ein Wort gilt
-erst mit beiden Richtungen als gemeistert, der Riegel darf also keine davon wegnehmen. Die
-`difficulty` von en→de bleibt trotzdem 2: sie ist das `t` im Netto-Maß `t - c` und trägt
-Tempo, Punkte und Erfahrung. (\*`fill_gap`/`sentence` sind vorerst zurückgestellt.)
+`difficulty`: Basis-Schwierigkeit der Aufgaben-*Art*. Sie ist das `t` im Netto-Maß `t - c`
+und trägt Tempo, Punkte und Erfahrung — sie schaltet **keine** Aufgabentypen frei oder aus;
+die Wellen-Schwierigkeit filtert den Pool nicht. (\*`fill_gap`/`sentence` sind vorerst zurückgestellt.)
 
 Der Fortschritt wird pro **`learnable_id`** geführt (Task-Typ + Richtung + Lexeme/Form/Relation,
 z. B. `translate:de_to_en:lex.en.cat`, `opposite:lex.en.big:lex.en.small`,
@@ -245,14 +243,15 @@ Bosse verwenden ganze Sätze; die Bewertung erfolgt semantisch (siehe
   "name": "Tiefer Wald",
   "time_pressure": "medium",
   "spawns": [
-	{ "count": 8, "interval": 2.0, "task_pool": { "task_types": ["translate"], "tags": ["animals"], "difficulty_max": 2 } }
+	{ "count": 8, "interval": 2.0, "task_pool": { "task_types": ["translate"], "tags": ["animals"] } }
   ]
 }
 ```
 `time_pressure`: `none` | `low` | `medium` | `high`. Ein Spawn nennt **kein** Monster mehr —
 der `WaveGenerator` wählt aus dem `task_pool` eine (bevorzugt in dieser Welle noch nicht gezeigte, darin fällige/neue) Aufgabe und leitet
 das Monster über die `monster_task_rules` ab. `task_pool`-Felder (alle optional):
-`task_types` (Liste), `direction`, `tags` (Lexem-Tags), `difficulty_max` (0 = kein Limit).
+`task_types` (Liste), `direction`, `tags` (Lexem-Tags). Ein `difficulty_max` wird nicht mehr
+ausgewertet.
 Eine Boss-Welle nutzt statt `spawns` das Feld `"boss": "<boss-id>"`.
 
 ## Zauber hinzufügen → `data/spells/…json`

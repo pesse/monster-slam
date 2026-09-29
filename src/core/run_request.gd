@@ -90,15 +90,14 @@ static func tags() -> Array:
 
 ## Der Aufgaben-Pool des Wellenkampfs. Ein Level spielt alle Aufgaben- und Wortarten
 ## seines Bereichs; der Expertenmodus die Auswahl des Profils (WaveGenerator).
-static func task_pool(difficulty: int) -> Dictionary:
+static func task_pool() -> Dictionary:
 	if not is_level():
-		return WaveGenerator.pool_from_settings(difficulty)
+		return WaveGenerator.pool_from_settings()
 	return {
 		"task_types": [],
 		"lexeme_types": [],
 		"scope": scope(),
 		"tags": [],
-		"difficulty_max": clampi(difficulty, 1, 5),
 	}
 
 

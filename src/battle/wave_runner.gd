@@ -925,7 +925,7 @@ func _generate_wave(difficulty: int, wave_number: int) -> Array:
 		# Aufgabentypen, Wortarten, Scope und Tags kommen aus der Profil-Auswahl
 		# (Session-Setup); leere Auswahl heißt dort "alle". Dieselbe Funktion fragen die
 		# Menüs für ihre Verfügbarkeitsprüfung — Pool und Sperre dürfen nicht auseinanderlaufen.
-		"task_pool": RunRequest.task_pool(difficulty),
+		"task_pool": RunRequest.task_pool(),
 	}]
 
 

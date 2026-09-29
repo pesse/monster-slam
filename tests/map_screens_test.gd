@@ -602,7 +602,7 @@ func test_every_real_level_is_playable(do_skip := LanguageData.missing(), skip_r
 					assert_bool(AreaMap.has_boss_sentences(book, int(unit))).override_failure_message(
 							"%s/%s: Boss ohne Sätze" % [book, unit]).is_true()
 				else:
-					assert_bool(generator.has_playable(RunRequest.task_pool(3))).override_failure_message(
+					assert_bool(generator.has_playable(RunRequest.task_pool())).override_failure_message(
 							"%s/%s %s: nichts spielbar" % [book, unit, level["key"]]).is_true()
 
 

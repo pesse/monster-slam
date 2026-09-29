@@ -91,7 +91,7 @@ func _ready() -> void:
 ## Der Bosskampf hat sein eigenes Tor: er braucht Sätze, und die fehlen einer Unit, für die
 ## noch keine erzeugt sind, auch wenn ihre Vokabeln spielbar sind.
 func _refresh_start_gate() -> void:
-	var pool := WaveGenerator.pool_from_settings(UserSettings.default_difficulty())
+	var pool := WaveGenerator.pool_from_settings()
 	var playable := _generator.has_playable(pool)
 	var boss_playable := has_boss_sentences()
 	_start_button.disabled = not playable

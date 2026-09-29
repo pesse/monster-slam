@@ -12,12 +12,11 @@ func _level() -> Dictionary:
 
 func test_a_level_plays_its_scope_without_filters() -> void:
 	RunRequest.start_level(_level())
-	var pool := RunRequest.task_pool(3)
+	var pool := RunRequest.task_pool()
 	assert_array(pool["scope"]).is_equal(["access4/2/2"])
 	assert_array(pool["tags"]).is_empty()
 	assert_array(pool["task_types"]).is_empty()
 	assert_array(pool["lexeme_types"]).is_empty()
-	assert_int(int(pool["difficulty_max"])).is_equal(3)
 	assert_array(RunRequest.tags()).is_empty()
 
 
@@ -32,7 +31,7 @@ func test_expert_mode_reads_the_profile_selection() -> void:
 	assert_bool(RunRequest.is_level()).is_false()
 	assert_str(RunRequest.return_scene()).is_equal(RunRequest.MENU_SCENE)
 	assert_str(RunRequest.unit_key()).is_empty()
-	assert_dict(RunRequest.task_pool(2)).is_equal(WaveGenerator.pool_from_settings(2))
+	assert_dict(RunRequest.task_pool()).is_equal(WaveGenerator.pool_from_settings())
 	assert_array(RunRequest.scope()).is_equal(Array(UserSettings.selected_scope()))
 
 
