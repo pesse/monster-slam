@@ -36,9 +36,7 @@ const LIBRARY := 2.0
 ## jeder Rückweg aus Kampf, Karte oder Einstellungen diese Szene neu lädt.
 static var intro_done := false
 
-@onready var _gold_label: Label = %GoldLabel
 @onready var _badge: ProfileBadge = %ProfileBadge
-@onready var _points_label: Label = %PointsLabel
 @onready var _update_button: Button = %UpdateButton
 @onready var _content_button: Button = %ContentButton
 @onready var _play_button: Button = %PlayButton
@@ -60,7 +58,7 @@ func _ready() -> void:
 	_library.switch_requested.connect(_back_to_intro)
 	(%ExpertButton as Button).pressed.connect(
 			func(): get_tree().change_scene_to_file(SESSION_SETUP_SCENE))
-	(%SkillButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(SKILL_SCENE))
+	(%SkillButton as Button).pressed.connect(_open_skills)
 	(%StatsButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(STATS_SCENE))
 	(%SettingsButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(SETTINGS_SCENE))
 	_badge.switch_pressed.connect(_back_to_intro)
@@ -69,12 +67,6 @@ func _ready() -> void:
 	_content_button.pressed.connect(func(): get_tree().change_scene_to_file(CONTENT_SCENE))
 	UpdateService.changed.connect(_refresh_update_badge)
 	ContentService.changed.connect(_refresh_content_badge)
-	Wallet.changed.connect(func(_gold): _refresh_gold())
-	PlayerLevel.changed.connect(func(_total_xp, _level): _refresh_level())
-	# Ausgegebene Punkte verändern dieselbe Zeile wie verdiente.
-	SkillBook.changed.connect(_refresh_level)
-	_refresh_gold()
-	_refresh_level()
 	_refresh_update_badge()
 	_refresh_content_badge()
 	_refresh_play_gate()
@@ -103,9 +95,17 @@ func _play_as(id: String) -> void:
 	# Geldbörse, Erfahrung und Fähigkeiten schalten über
 	# UserSettings.active_profile_changed selbst um (siehe Wallet._ready / PlayerLevel._ready).
 	_badge.refresh()
-	_refresh_gold()
-	_refresh_level()
 	_slide_to(MENU)
+
+
+## Die Fähigkeiten öffnen als Fenster über dem Menü, nicht als eigener Screen: die Kulisse
+## bleibt stehen. Beim Schließen geht der Fokus an den Knopf zurück, von dem es kam.
+func _open_skills() -> void:
+	var window := (load(SKILL_SCENE) as PackedScene).instantiate()
+	add_child(window)
+	window.connect("closed", func() -> void:
+		window.queue_free()
+		(%SkillButton as Button).grab_focus())
 
 
 func _back_to_intro() -> void:
@@ -184,26 +184,6 @@ func _unveil() -> void:
 	if not is_inside_tree():
 		return
 	create_tween().tween_property(veil, "modulate:a", 0.0, VEIL_FADE)
-
-
-## Der Goldstand des aktiven Profils. Er steht auf dem Start-Screen und nicht nur in der
-## Statistik: Gold wird ausgegeben, und der Laden wird von hier aus erreichbar sein.
-func _refresh_gold() -> void:
-	_gold_label.text = "💰 %s" % Wallet.label()
-
-
-## Unter der Plakette (ProfileBadge, sie zeigt Level und Stand selbst) die OFFENEN
-## Skillpunkte. Leiser als der Goldstand (MenuNote): die Entscheidung fällt nicht hier, sondern im
-## Fähigkeiten-Screen. Gezeigt wird der offene Stand (verdient minus ausgegeben, siehe
-## SkillBook.available) und nicht der verdiente — eine Zahl, die nach dem Ausgeben stehen
-## bleibt, wäre eine Aufforderung ins Leere.
-func _refresh_level() -> void:
-	var points := SkillBook.available()
-	if SkillBook.unlimited_points:
-		_points_label.text = "∞ Skillpunkte (Debug)"
-	elif points > 0:
-		_points_label.text = "%d Skillpunkt%s offen" % [points, "" if points == 1 else "e"]
-	_points_label.visible = SkillBook.unlimited_points or points > 0
 
 
 ## Das Abzeichen erscheint nur, wenn es etwas zu tun gibt. Ein Fehlschlag der Prüfung wird

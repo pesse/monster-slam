@@ -43,10 +43,11 @@ dasselbe Lager mit (Kapitel 2).
 Hinter dem Menü steht ein Lager am Waldrand mit einem Skelett in roter Kapuze – das Bild
 bewegt sich leise, spielen kann man dort nichts.
 
-Rechts oben steht deine Plakette: dein Name, dein Level und ein Balken mit dem Stand deiner
-Erfahrung („166 / 400 XP“), darunter der Knopf **„Profil wechseln“** (zurück zu „Wer
-spielt?“). Unter der Plakette stehen dein Gold („💰 … Gold“) und – falls du welche hast –
-die Skillpunkte, die du noch nicht ausgegeben hast.
+Rechts oben steht deine Plakette: rechts dein Bild im Ring, unten darauf dein Level. Der
+blaue Bogen um das Bild zeigt, wie weit du im Level bist; am Zeiger steht es genau
+(„166 / 400 XP bis Level 5“). Links daneben stehen dein Name und dein Gold, ganz links der
+Pfeil **„Profil wechseln“** (zurück zu „Wer spielt?“). Dieselbe Plakette steht in der
+Bibliothek.
 
 Die Knöpfe links:
 
@@ -492,9 +493,16 @@ Reihen. Spielen lässt sich trotzdem alles.
 
 ## 11. Fähigkeiten
 
-Über „🌳 Fähigkeiten“ auf dem Start-Screen gibst du deine Skillpunkte aus. Gelernt wird
-zwischen den Läufen, nicht im Kampf. Oben steht, wie viele Punkte du offen hast („⭐ …
-Skillpunkte“ oder „⭐ 0 — jedes Level bringt einen“).
+Über „Fähigkeiten“ im Hauptmenü gibst du deine Skillpunkte aus. Gelernt wird zwischen
+den Läufen, nicht im Kampf. Die Fähigkeiten öffnen sich als Fenster über dem Menü; „✕“
+oben rechts oder Esc schließt es. Oben rechts steht neben dem Stern, wie viele Punkte du
+offen hast („… Skillpunkte“ oder „0 — jedes Level bringt einen“).
+
+Jede Fähigkeit ist eine runde Plakette in der Farbe ihres Baums. Hell heißt: gelernt oder
+jetzt lernbar. Gedämpft heißt: noch nicht dran. Ein Schloss steht darauf, wenn erst eine
+andere Fähigkeit gelernt werden muss; fehlen nur die Punkte, bleibt das Bild zu sehen.
+Gelernte Plaketten sind in der Mitte getönt und tragen einen Haken. Die kleine Zahl oben
+rechts ist der Preis in Skillpunkten. Unten links erklärt eine Legende die Zeichen.
 
 ### Die vier Bäume
 
@@ -515,13 +523,17 @@ Alle Wirkungen zählen zusammen: zwei Knoten, die je 1 HP mehr heilen, heilen zu
 
 ### Bedienung
 
-- **Ansehen:** Fährst du mit der Maus über einen Knoten, steht am Zeiger, was er tut und
-  wie sein Zustand ist: „✓ Gelernt“, „Klicken zum Lernen · 1 P.“, „2 Skillpunkte nötig“
+- **Ansehen:** Fährst du mit der Maus über einen Knoten, zeigt eine Karte mit Pfeil auf
+  den Zeiger: Bild und Name, Baum und Zustand, was er tut, was er kostet und was vorher
+  gelernt sein muss, und darunter die Zustandszeile: „✓ Gelernt“, „Klicken zum Lernen · 1 P.“, „2 Skillpunkte nötig“
   oder zum Beispiel „🔒 braucht Verband“, wenn erst ein anderer Knoten dran ist. Über dem
   Namen eines Baums steht, wie weit er ausgebaut ist, zum Beispiel „2/5 gelernt · +2 HP
   je besiegtem Monster“.
-- **Zoomen und Verschieben:** Mausrad zoomt, Ziehen mit der Maus verschiebt das Netz. Das
-  Zeichen **„⛶“** unten rechts passt die Ansicht wieder ein. Nach einem Kauf bleibt die
+- **Zoomen und Verschieben:** Mausrad oder die Knöpfe **„−“** und **„+“** unten rechts
+  zoomen, Ziehen mit der Maus verschiebt das Netz. Die Zahl dazwischen zeigt den Zoom;
+  100 % ist die eingepasste Ansicht. Das Zeichen **„⛶“** passt die Ansicht wieder ein.
+- **Mit der Tastatur:** Die Pfeiltasten springen von Fähigkeit zu Fähigkeit, Enter wirkt
+  wie ein Klick. Nach einem Kauf bleibt die
   Ansicht, wo sie war.
 - **Lernen:** Ein Klick auf einen lernbaren Knoten öffnet eine Rückfrage („„…“ lernen?“)
   mit den Kosten. Erst „Lernen“ bucht. Voreingestellt ist „Abbrechen“, damit ein
@@ -532,7 +544,7 @@ Alle Wirkungen zählen zusammen: zwei Knoten, die je 1 HP mehr heilen, heilen zu
   wegfällt. Hängen gelernte Knoten an ihm, fallen sie mit weg; die Rückfrage nennt jeden
   davon beim Namen. Reicht das Gold nicht, öffnet der Klick nichts, und am Zeiger steht,
   was es kosten würde.
-- **Alles umlernen:** Das Zeichen **„↺“** unten rechts setzt alle Bäume zurück. Du
+- **Alles umlernen:** Der Knopf mit dem Rückwärtspfeil **„↺“** unten rechts setzt alle Bäume zurück. Du
   bekommst alle Punkte zurück und zahlst **25 Gold je ausgegebenem Skillpunkt**. Einzeln
   verlernen ist also günstiger. Ist nichts gelernt oder reicht das Gold nicht, ist das
   Zeichen grau, und am Zeiger steht der Grund.

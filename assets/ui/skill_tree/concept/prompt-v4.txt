@@ -1,0 +1,1 @@
+Built-in image_gen.imagegen edit of skill-tree-v3.webp: Remove only the entire top-right player profile badge including avatar, name, level, XP and profile switch with its border. Fill with matching header texture. Preserve separate skill point counter, close X and all tree content and interactions. User correction: no profile badge in either statistics or skill tree.

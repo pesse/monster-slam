@@ -291,6 +291,41 @@ func test_the_card_stays_inside_the_screen() -> void:
 		assert_float(card.position.y + card.size.y).is_less_equal(room.y)
 
 
+## Der Pfeil zeigt auf den Zeiger — unter ihm von oben, am unteren Rand umgeklappt von
+## unten, und am rechten Rand wandert er auf der Kante mit, statt in der Mitte zu bleiben.
+func test_the_pointer_points_at_the_mouse() -> void:
+	Hints.attach(_root, "Titel", "Ein Text, der ein paar Zeilen breit werden darf.")
+	var room := get_viewport().get_visible_rect().size
+	for at: Vector2 in [Vector2(200, 100), Vector2(200, room.y - 10),
+			Vector2(room.x - 30, 100)]:
+		var card := _move_to(_root, at)
+		var tip := card.position + card.pointer_tip()
+		assert_float(tip.x).override_failure_message(
+				"bei %s zeigt der Pfeil auf x=%.0f" % [at, tip.x]).is_equal_approx(at.x, 1.0)
+		var below := at.y < room.y / 2
+		# Die Spitze steht knapp neben dem Zeiger und nie auf ihm: sonst deckt sie ihn zu.
+		if below:
+			assert_float(tip.y).is_between(at.y + 1.0, at.y + 32.0)
+		else:
+			assert_float(tip.y).is_between(at.y - 32.0, at.y - 1.0)
+
+
+## Kopf der Karte: Bild, Untertitel und Linie erscheinen nur, wenn es sie gibt — die
+## schlichten Karten der übrigen Screens bleiben, wie sie waren.
+func test_icon_and_subtitle_only_when_given() -> void:
+	Hints.attach(_root, "Titel", "Text")
+	var card := _over(_root)
+	assert_bool((card.get_node("%Icon") as Control).visible).is_false()
+	assert_bool((card.get_node("%Subtitle") as Control).visible).is_false()
+	Hints.attach_live(_root, func(_at: Vector2) -> Dictionary:
+		return {"title": "Titel", "body": "Text", "subtitle": "Zweig · Zustand",
+				"icon": PlaceholderTexture2D.new(), "tint": Color.GREEN})
+	card = _over(_root)
+	assert_bool((card.get_node("%Icon") as Control).visible).is_true()
+	assert_str(_text(card, "Subtitle")).is_equal("Zweig · Zustand")
+	assert_bool((card.get_node("%Rule") as Control).visible).is_true()
+
+
 ## Sie folgt dem Zeiger, statt an einer festen Stelle zu kleben.
 func test_the_card_follows_the_pointer() -> void:
 	Hints.attach(_root, "Titel", "Text")

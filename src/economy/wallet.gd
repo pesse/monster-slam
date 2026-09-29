@@ -87,14 +87,22 @@ func can_afford(amount: int) -> bool:
 func label(amount := -1) -> String:
 	if amount < 0 and unlimited_gold:
 		return "∞ Gold (Debug)"
+	return "%s Gold" % digits(amount)
+
+
+## Nur die Zahl mit Tausenderpunkten — für Stellen, an denen das Gold schon als Münze
+## dasteht (die Plakette im Menü). Im Debug-Build „∞".
+func digits(amount := -1) -> String:
+	if amount < 0 and unlimited_gold:
+		return "∞"
 	var value := amount if amount >= 0 else gold
-	var digits := str(value)
+	var text := str(value)
 	var out := ""
-	for i in digits.length():
-		if i > 0 and (digits.length() - i) % 3 == 0:
+	for i in text.length():
+		if i > 0 and (text.length() - i) % 3 == 0:
 			out += "."
-		out += digits[i]
-	return "%s Gold" % out
+		out += text[i]
+	return out
 
 
 ## Speichert den Stand und wechselt zum Profil `id` (lädt dessen Geldbörse).

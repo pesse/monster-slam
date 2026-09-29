@@ -179,21 +179,6 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="GoldLabel" type="Label" parent="Slide/MenuPage/Margin/Layout/Right"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"MenuAccent"
-text = "💰 0 Gold"
-horizontal_alignment = 2
-
-[node name="PointsLabel" type="Label" parent="Slide/MenuPage/Margin/Layout/Right"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-theme_type_variation = &"MenuNote"
-text = "1 Skillpunkt offen"
-horizontal_alignment = 2
-
 [node name="Fill" type="Control" parent="Slide/MenuPage/Margin/Layout/Right"]
 layout_mode = 2
 size_flags_vertical = 3

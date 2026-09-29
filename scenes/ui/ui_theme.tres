@@ -5,6 +5,15 @@
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/panels/profile_panel.webp" id="profile_plate_tex"]
 [ext_resource type="Texture2D" path="res://assets/ui/windows/window_panel_compact.webp" id="card_tex"]
 [ext_resource type="Texture2D" path="res://assets/ui/windows/tab_highlighted.webp" id="card_gold_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/window_panel_compact.webp" id="window_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/title_bar.webp" id="title_bar_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/tool_button_normal.webp" id="tool_normal_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/tool_button_hover.webp" id="tool_hover_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/tool_button_pressed.webp" id="tool_pressed_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/tool_button_disabled.webp" id="tool_disabled_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/skill_tree/tooltip/frame.webp" id="hint_frame_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/skill_tree/tooltip/pointer_up.webp" id="hint_pointer_up"]
+[ext_resource type="Texture2D" path="res://assets/ui/skill_tree/tooltip/pointer_down.webp" id="hint_pointer_down"]
 
 [sub_resource type="StyleBoxFlat" id="btn_disabled"]
 content_margin_left = 12.0
@@ -507,6 +516,8 @@ corner_radius_top_right = 24
 corner_radius_bottom_right = 24
 corner_radius_bottom_left = 24
 
+[sub_resource type="StyleBoxEmpty" id="menu_btn_focus"]
+
 [sub_resource type="StyleBoxTexture" id="menu_btn_normal"]
 content_margin_left = 24.0
 content_margin_right = 24.0
@@ -587,6 +598,96 @@ texture_margin_left = 28.0
 texture_margin_top = 28.0
 texture_margin_right = 28.0
 texture_margin_bottom = 28.0
+
+[sub_resource type="StyleBoxTexture" id="game_window"]
+content_margin_left = 24.0
+content_margin_top = 24.0
+content_margin_right = 24.0
+content_margin_bottom = 24.0
+texture = ExtResource("window_tex")
+texture_margin_left = 32.0
+texture_margin_top = 32.0
+texture_margin_right = 32.0
+texture_margin_bottom = 32.0
+
+[sub_resource type="StyleBoxTexture" id="window_title_bar"]
+content_margin_left = 24.0
+content_margin_top = 12.0
+content_margin_right = 16.0
+content_margin_bottom = 12.0
+texture = ExtResource("title_bar_tex")
+texture_margin_left = 32.0
+texture_margin_top = 8.0
+texture_margin_right = 32.0
+texture_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxTexture" id="tool_button_normal"]
+content_margin_left = 7.0
+content_margin_top = 7.0
+content_margin_right = 7.0
+content_margin_bottom = 7.0
+texture = ExtResource("tool_normal_tex")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxTexture" id="tool_button_hover"]
+content_margin_left = 7.0
+content_margin_top = 7.0
+content_margin_right = 7.0
+content_margin_bottom = 7.0
+texture = ExtResource("tool_hover_tex")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxTexture" id="tool_button_pressed"]
+content_margin_left = 7.0
+content_margin_top = 7.0
+content_margin_right = 7.0
+content_margin_bottom = 7.0
+texture = ExtResource("tool_pressed_tex")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxTexture" id="tool_button_disabled"]
+content_margin_left = 7.0
+content_margin_top = 7.0
+content_margin_right = 7.0
+content_margin_bottom = 7.0
+texture = ExtResource("tool_disabled_tex")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="hint_fill"]
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
+bg_color = Color(0.063, 0.102, 0.173, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+corner_detail = 1
+
+[sub_resource type="StyleBoxTexture" id="hint_frame"]
+texture = ExtResource("hint_frame_tex")
+texture_margin_left = 24.0
+texture_margin_top = 24.0
+texture_margin_right = 24.0
+texture_margin_bottom = 24.0
+draw_center = false
+
+[sub_resource type="StyleBoxLine" id="hint_rule"]
+color = Color(0.85, 0.7, 0.35, 0.45)
+thickness = 1
 
 [resource]
 default_font_size = 18
@@ -731,7 +832,7 @@ MapButton/styles/pressed = SubResource("map_button_pressed")
 MainMenuButton/base_type = &"Button"
 MainMenuButton/colors/font_color = Color(0.94, 0.95, 0.98, 1)
 MainMenuButton/colors/font_hover_color = Color(1, 0.86, 0.45, 1)
-MainMenuButton/colors/font_focus_color = Color(1, 0.86, 0.45, 1)
+MainMenuButton/colors/font_focus_color = Color(0.94, 0.95, 0.98, 1)
 MainMenuButton/colors/font_pressed_color = Color(1, 0.86, 0.45, 1)
 MainMenuButton/colors/font_hover_pressed_color = Color(1, 0.86, 0.45, 1)
 MainMenuButton/colors/font_disabled_color = Color(0.62, 0.64, 0.7, 1)
@@ -746,7 +847,7 @@ MainMenuButton/styles/hover = SubResource("menu_btn_hover")
 MainMenuButton/styles/pressed = SubResource("menu_btn_pressed")
 MainMenuButton/styles/hover_pressed = SubResource("menu_btn_pressed")
 MainMenuButton/styles/disabled = SubResource("menu_btn_disabled")
-MainMenuButton/styles/focus = SubResource("menu_btn_hover")
+MainMenuButton/styles/focus = SubResource("menu_btn_focus")
 MainMenuPlay/base_type = &"MainMenuButton"
 MainMenuPlay/colors/font_color = Color(1, 0.84, 0.4, 1)
 MainMenuPlay/colors/font_hover_color = Color(1, 0.93, 0.62, 1)
@@ -785,6 +886,26 @@ MenuNote/colors/font_color = Color(0.94, 0.95, 0.98, 1)
 MenuNote/colors/font_outline_color = Color(0.06, 0.07, 0.12, 1)
 MenuNote/constants/outline_size = 6
 MenuNote/font_sizes/font_size = 14
+BadgeGold/base_type = &"Label"
+BadgeGold/colors/font_color = Color(0.96, 0.8, 0.41, 1)
+BadgeGold/colors/font_outline_color = Color(0.06, 0.07, 0.12, 1)
+BadgeGold/constants/outline_size = 4
+BadgeGold/fonts/font = SubResource("menu_font")
+BadgeGold/font_sizes/font_size = 16
+BadgeLevel/base_type = &"Label"
+BadgeLevel/colors/font_color = Color(0.93, 0.94, 0.98, 1)
+BadgeLevel/colors/font_outline_color = Color(0.06, 0.07, 0.12, 1)
+BadgeLevel/constants/outline_size = 4
+BadgeLevel/fonts/font = SubResource("menu_font")
+BadgeLevel/font_sizes/font_size = 20
+BadgeName/base_type = &"Label"
+BadgeName/colors/font_color = Color(0.93, 0.94, 0.98, 1)
+BadgeName/colors/font_outline_color = Color(0.06, 0.07, 0.12, 1)
+BadgeName/constants/outline_size = 4
+BadgeName/fonts/font = SubResource("menu_font")
+BadgeName/font_sizes/font_size = 15
+BadgeSwitch/base_type = &"ProfileLink"
+BadgeSwitch/constants/icon_max_width = 32
 ProfilePlate/base_type = &"PanelContainer"
 ProfilePlate/styles/panel = SubResource("profile_plate")
 XpBar/base_type = &"ProgressBar"
@@ -845,3 +966,37 @@ LibraryArrow/styles/pressed = SubResource("card_selected")
 LibraryArrow/styles/hover_pressed = SubResource("card_selected")
 LibraryArrow/styles/disabled = SubResource("card_normal")
 LibraryArrow/styles/focus = SubResource("menu_link")
+GameWindow/base_type = &"PanelContainer"
+GameWindow/styles/panel = SubResource("game_window")
+ToolButton/base_type = &"Button"
+ToolButton/constants/icon_max_width = 24
+ToolButton/styles/disabled = SubResource("tool_button_disabled")
+ToolButton/styles/focus = SubResource("tool_button_hover")
+ToolButton/styles/hover = SubResource("tool_button_hover")
+ToolButton/styles/hover_pressed = SubResource("tool_button_pressed")
+ToolButton/styles/normal = SubResource("tool_button_normal")
+ToolButton/styles/pressed = SubResource("tool_button_pressed")
+WindowContent/base_type = &"MarginContainer"
+WindowContent/constants/margin_bottom = 24
+WindowContent/constants/margin_left = 24
+WindowContent/constants/margin_right = 24
+WindowContent/constants/margin_top = 8
+WindowTitleBar/base_type = &"PanelContainer"
+WindowTitleBar/styles/panel = SubResource("window_title_bar")
+WindowTitle/base_type = &"Label"
+WindowTitle/colors/font_color = Color(0.92, 0.94, 0.98, 1)
+WindowTitle/colors/font_outline_color = Color(0.06, 0.07, 0.12, 1)
+WindowTitle/constants/outline_size = 6
+WindowTitle/fonts/font = SubResource("menu_font")
+WindowTitle/font_sizes/font_size = 28
+HintCard/base_type = &"PanelContainer"
+HintCard/icons/pointer_down = ExtResource("hint_pointer_down")
+HintCard/icons/pointer_up = ExtResource("hint_pointer_up")
+HintCard/styles/frame = SubResource("hint_frame")
+HintCard/styles/panel = SubResource("hint_fill")
+HintRule/base_type = &"HSeparator"
+HintRule/constants/separation = 8
+HintRule/styles/separator = SubResource("hint_rule")
+HintSubtitle/base_type = &"Label"
+HintSubtitle/colors/font_color = Color(1, 1, 1, 1)
+HintSubtitle/font_sizes/font_size = 14

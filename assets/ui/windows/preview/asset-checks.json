@@ -1,0 +1,92 @@
+{
+  "revision": 2,
+  "checks": [
+    {
+      "file": "window_panel_compact.webp",
+      "width": 256,
+      "height": 256,
+      "alpha": true,
+      "lossless": true
+    },
+    {
+      "file": "title_bar.webp",
+      "width": 512,
+      "height": 64,
+      "alpha": true,
+      "lossless": true
+    },
+    {
+      "file": "title_joint_left.webp",
+      "width": 24,
+      "height": 24,
+      "alpha": true,
+      "lossless": true
+    },
+    {
+      "file": "title_joint_right.webp",
+      "width": 24,
+      "height": 24,
+      "alpha": true,
+      "lossless": true
+    },
+    {
+      "file": "window_surface.webp",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "lossless": true
+    },
+    {
+      "file": "close.webp",
+      "width": 128,
+      "height": 128,
+      "alpha": true,
+      "lossless": true
+    },
+    {
+      "file": "close_hover.webp",
+      "width": 128,
+      "height": 128,
+      "alpha": true,
+      "lossless": true
+    },
+    {
+      "file": "close_pressed.webp",
+      "width": 128,
+      "height": 128,
+      "alpha": true,
+      "lossless": true
+    },
+    {
+      "file": "tool_button_normal.webp",
+      "width": 44,
+      "height": 44,
+      "alpha": true,
+      "lossless": true
+    },
+    {
+      "file": "tool_button_hover.webp",
+      "width": 44,
+      "height": 44,
+      "alpha": true,
+      "lossless": true
+    },
+    {
+      "file": "tool_button_pressed.webp",
+      "width": 44,
+      "height": 44,
+      "alpha": true,
+      "lossless": true
+    },
+    {
+      "file": "tool_button_disabled.webp",
+      "width": 44,
+      "height": 44,
+      "alpha": true,
+      "lossless": true
+    }
+  ],
+  "straight_edges_pixel_identical": true,
+  "close_alpha_identical": true,
+  "material_separate": true
+}

@@ -393,7 +393,7 @@ der umgekehrten Absicht: Gold ist Beute, Erfahrung ist Lernfortschritt.
 |---|---|---|
 | `Experience` | `src/progression/experience.gd` | reine Rechnung: XP je Monster, Stufenkosten, Skillpunkte |
 | `PlayerLevel` (Autoload) | `src/progression/player_level.gd` | Gesamt-Erfahrung des Profils, Aufstieg, Persistenz |
-| Anzeige | `hud.tscn` (Level + Balken beim Namen), `wave_stats.gd` (Zuwachs der Welle), `profile_menu.gd` / `stats_screen.gd` (Stand + offene Skillpunkte) | — |
+| Anzeige | `hud.tscn` (Level + Balken beim Namen), `wave_stats.gd` (Zuwachs der Welle), `profile_badge.gd` (Level, Bogen im Level, Gold; Menü und Bibliothek) / `stats_screen.gd` (Stand + offene Skillpunkte) | — |
 
 - **10..15 XP je besiegtem Monster, aus seiner Schwierigkeit** — und zwar aus DERSELBEN,
   aus der auch Tempo und Punkte entstehen (`WaveGenerator`, das Netto-Maß `t - c` aus
@@ -531,16 +531,33 @@ Start-Screen (`🌳 Fähigkeiten`), nicht am Kampf: gelernt wird zwischen den L�
 - **Gezeichnet statt gebaut** (`SkillGraph`, `_draw()`): drei Bäume mal vier Zuständen
   wären zwölf Theme-Variationen, und die Farbe eines Baums soll aus seiner JSON kommen
   (`color`) und nicht aus dem Theme. Der Screen zoomt mit dem Mausrad und lässt sich
-  ziehen; ein Kauf verschiebt den Ausschnitt nicht. Einpassen und Umlernen sitzen als
-  Zeichen (⛶, ↺) in der unteren rechten Ecke der Fläche und erklären sich über ihre Karte
-  am Zeiger (`Hints.attach`).
+  ziehen; ein Kauf verschiebt den Ausschnitt nicht. Zoom (−, Prozent, +), Einpassen und
+  „Alles umlernen" sitzen als Werkzeugleiste in der unteren rechten Ecke der Fläche und
+  erklären sich über ihre Karte am Zeiger (`Hints.attach`); 100 % ist der eingepasste
+  Zoom (`SkillGraph.zoom_percent`). Pfeiltasten springen von Knoten zu Knoten, Enter
+  wirkt wie ein Klick. Eine Karte zur Tastatur gibt es nicht: sie hängt an der Maus.
+- **Fenster statt Seite, Bilder aus `assets/ui/skill_tree/`.** Im Hauptmenü öffnet
+  `ProfileMenu` den Screen als Overlay (`closed` → wegnehmen, Fokus zurück auf den
+  Knopf); allein gestartet geht Schließen zurück ins Menü. Das Fenster ist geschichtet
+  nach `assets/ui/windows/README.md`: Rahmen (`GameWindow`), gekachelte Materialebene,
+  Titelband (`WindowTitleBar`) mit Kopfzeile und Schließen-X, Inhalt (`WindowContent`),
+  darüber die zwei Anschlussplatten. Die Werkzeugknöpfe tragen `ToolButton`. Jeder Knoten ist ein Medaillon (`medallions/available.webp`, in der
+  Baumfarbe moduliert — hell wenn lernbar oder gelernt, gedämpft sonst), darauf das Bild
+  aus `SkillIcons` (Zuordnung `skill_icons.json`, fehlt eins, steht das Zeichen aus der
+  JSON), gesperrt ein Schloss statt des Bilds, gelernt eine in der Baumfarbe getönte Mitte
+  und ein Haken. `SkillIcons` hält die Texturen fest: in `_draw` geladen und von niemandem
+  gehalten, würde jede im nächsten Bild neu angelegt und weiß gezeichnet. Das Netz ist
+  gestreckt (`SkillTree.STRETCH`), damit es das Breitformat füllt; die Schrift im Netz
+  schrumpft nicht unter `SkillGraph.MIN_LABEL_SCALE`. Abgleich mit dem Entwurf:
+  `scenes/dev/skill_tree_lab.tscn`.
 - **Die Auskunft steht am Zeiger, die Entscheidung in einem Dialog.** Der Screen ist nur
   das Netz; eine Tafel am Bildrand gibt es nicht. Erklärt wird über `Hints` — dieselbe
   Karte wie im ganzen Spiel, sofort und am Bildrand auf die andere Seite geklappt. Weil
   der Graph seine Treffer selbst sucht, hängt er dort als *lebende* Auskunft
   (`attach_live`) und antwortet über `SkillTree._hint_at(local)`, statt jede Mausbewegung
   zu melden.
-  Über einem Knoten trägt sie Zeichen, Name, Wirkung und Zustandszeile
+  Über einem Knoten trägt sie Bild, Name, „Baum · Zustand" (`SkillTree.state_name`),
+  Wirkung, Kosten und Voraussetzungen als Tabelle und die Zustandszeile
   (`SkillTree.state_label`), über dem NAMEN eines Baums dessen Stand
   (`SkillTree.tree_status`: „2/5 gelernt · +2 HP je besiegtem Monster"). Ein Klick auf
   einen lernbaren Knoten öffnet `ConfirmDialog`, und erst dessen Bestätigung bucht — ein
@@ -865,8 +882,14 @@ leer, ist der Kanal aus.
 
 Godots eigener Tooltip ist im ganzen Spiel abgelöst: er erscheint verzögert, bleibt stehen,
 wo er aufgegangen ist, und bringt die Typografie der Engine mit. Die Karte hängt am
-Mauszeiger, kommt aus dem Theme und trägt vier Teile — Überschrift, Text, Liste, Nachsatz —,
-von denen leere nicht erscheinen. Die Liste ist eine Tabelle (Zeichen | Bezeichnung | Wert),
+Mauszeiger, kommt aus dem Theme (Variation `HintCard`: deckende Füllung, darüber der
+goldene Rahmen und ein Pfeil, beide als Theme-Stylebox/-Icon) und trägt vier Teile —
+Überschrift, Text, Liste, Nachsatz —, von denen leere nicht erscheinen. Dazu kann eine
+lebende Auskunft Kopfbild (`icon`), Untertitel (`subtitle`, in `tint` gefärbt) und in der
+ersten Listenspalte Texturen statt Zeichen liefern; mit Bild oder Untertitel trennt eine
+Linie den Kopf vom Text. Der Pfeil zeigt auf den Zeiger: die Karte steht darunter, am
+unteren Rand klappt sie darüber, am rechten rückt sie ein, und der Pfeil wandert auf ihrer
+Kante mit (`Hints._place`, `HintCard.point_at`). An einem Knoten ausgerichtet wird sie nie. Die Liste ist eine Tabelle (Zeichen | Bezeichnung | Wert),
 kein Text mit „·" dazwischen: eine Aufzählung liest man Zeile für Zeile, und die Werte stehen
 rechtsbündig untereinander (die Wortzeilen der Statistik: je Richtung und je Zusatzaufgabe
 eine Reihe). Umbrechen darf nur die Bezeichnung.

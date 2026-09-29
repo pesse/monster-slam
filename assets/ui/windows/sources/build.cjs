@@ -1,5 +1,5 @@
 const fs=require('node:fs'),path=require('node:path');
-const sharp=require(process.env.SHARP_MODULE||'C:/Users/SamuelNitsche/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/sharp');
+const sharp=require(process.env.SHARP_MODULE||'sharp');
 const root=path.resolve(__dirname,'..');
 function write(name,text){fs.mkdirSync(path.dirname(path.join(root,name)),{recursive:true});fs.writeFileSync(path.join(root,name),text);}
 function textureStyle(file,margin,scale,padding,center=true){return `[gd_resource type="StyleBoxTexture" load_steps=2 format=3]\n\n[ext_resource type="Texture2D" path="res://assets/ui/${file}" id="1"]\n\n[resource]\ntexture = ExtResource("1")\ntexture_margin_left = ${margin}.0\ntexture_margin_top = ${margin}.0\ntexture_margin_right = ${margin}.0\ntexture_margin_bottom = ${margin}.0\naxis_stretch_horizontal = 0\naxis_stretch_vertical = 0\naxis_stretch_mode = 0\ndraw_center = ${center}\ncontent_margin_left = ${padding}.0\ncontent_margin_top = ${padding}.0\ncontent_margin_right = ${padding}.0\ncontent_margin_bottom = ${padding}.0\n` .replace('axis_stretch_mode = 0\n','') + `\n`;}

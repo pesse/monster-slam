@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://assets/ui/player_badge/player_badge.gd" id="1"]
+
+[node name="PlayerBadge" type="Control"]
+custom_minimum_size = Vector2(460, 307)
+offset_right = 460.0
+offset_bottom = 307.0
+mouse_filter = 1
+script = ExtResource("1")
