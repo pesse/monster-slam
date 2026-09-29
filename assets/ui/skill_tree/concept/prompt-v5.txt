@@ -1,1 +1,0 @@
-Built-in image_gen.imagegen edit of skill-tree-v4.webp. Replace header counter with exact text '995 Skillpunkte', keep preceding gold star. Right align group before close X with comfortable spacing. Remove infinity and Debug. Restore old counter area with matching header texture. Preserve all other content. No profile badge.

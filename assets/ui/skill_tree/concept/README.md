@@ -49,7 +49,7 @@ Diese Punkte stehen über dem Bild und den Abschnitten oben.
 skill-tree-v5.webp: freigegebener Entwurf. Frühere Varianten sind gelöscht.
 
 
-Mit eingebautem Imagegen erstellt; Bearbeitungsprompts in prompt-v3.txt. Verlustfreie WebP-Dateien. Noch keine Spielintegration und keine interaktive Kaufimplementierung. Konzeptverzeichnis ist durch .gdignore vom Godot-Import ausgeschlossen. Wiederverwendbare Fenster-Styles liegen unter assets/ui/windows/.
+Mit eingebautem Imagegen erstellt. Verlustfreie WebP-Dateien. Noch keine Spielintegration und keine interaktive Kaufimplementierung. Konzeptverzeichnis ist durch .gdignore vom Godot-Import ausgeschlossen. Wiederverwendbare Fenster-Styles liegen unter assets/ui/windows/.
 
 
-Kopfzeile: Stern und 995 Skillpunkte rechtsbündig vor dem Schließen-X. 995 ist der Konzept-Beispielwert; im Spiel aktuellen Punktestand dynamisch anzeigen. Mit eingebautem Imagegen bearbeitet; Prompt: prompt-v5.txt im Konzeptordner.
+Kopfzeile: Stern und 995 Skillpunkte rechtsbündig vor dem Schließen-X. 995 ist der Konzept-Beispielwert; im Spiel aktuellen Punktestand dynamisch anzeigen. Mit eingebautem Imagegen bearbeitet.
