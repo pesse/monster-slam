@@ -1,0 +1,52 @@
+{
+  "format": "lossless WebP RGBA",
+  "panel": {
+    "texture": "window_panel_compact.webp",
+    "source_size": [
+      256,
+      256
+    ],
+    "slice": [
+      32,
+      32,
+      32,
+      32
+    ],
+    "content_padding": 26,
+    "recommended_minimum": [
+      280,
+      180
+    ]
+  },
+  "large": {
+    "texture": "window_panel.webp",
+    "source_size": [
+      512,
+      512
+    ],
+    "slice": [
+      64,
+      64,
+      64,
+      64
+    ],
+    "content_padding": 48
+  },
+  "tabs": {
+    "textures": [
+      "tab_normal.webp",
+      "tab_highlighted.webp"
+    ],
+    "source_size": [
+      520,
+      96
+    ],
+    "slice": [
+      28,
+      28,
+      28,
+      28
+    ],
+    "content_padding": 16
+  }
+}

@@ -109,7 +109,7 @@ transform = Transform3D(0.344, 0, 0.290, 0, 0.450, 0, -0.290, 0, 0.344, 4.4, 0.0
 transform = Transform3D(0.181, 0, 0.356, 0, 0.400, 0, -0.356, 0, 0.181, 5.2, 0.0, -4.0)
 
 [node name="Pine0" parent="Scenery" instance=ExtResource("3_pine")]
-transform = Transform3D(1.000, 0, 0.000, 0, 1.000, 0, -0.000, 0, 1.000, -6.0, 0.0, -1.0)
+transform = Transform3D(1.000, 0, 0.000, 0, 1.000, 0, -0.000, 0, 1.000, -9.6, 0.0, 0.8)
 
 [node name="Pine1" parent="Scenery" instance=ExtResource("4_pine_sno")]
 transform = Transform3D(0.559, 0, 0.705, 0, 0.900, 0, -0.705, 0, 0.559, -4.8, 0.0, -7.5)
@@ -136,7 +136,7 @@ transform = Transform3D(1.000, 0, 0.017, 0, 1.000, 0, -0.017, 0, 1.000, 1.5, 0.0
 transform = Transform3D(0.608, 0, 0.794, 0, 1.000, 0, -0.794, 0, 0.608, 10.5, 0.0, -4.5)
 
 [node name="Pine9" parent="Scenery" instance=ExtResource("4_pine_sno")]
-transform = Transform3D(-0.268, 0, 1.067, 0, 1.100, 0, -1.067, 0, -0.268, -6.8, 0.0, 3.6)
+transform = Transform3D(-0.268, 0, 1.067, 0, 1.100, 0, -1.067, 0, -0.268, -9.8, 0.0, 3.4)
 
 [node name="Pine10" parent="Scenery" instance=ExtResource("4_pine_sno")]
 transform = Transform3D(-0.911, 0, 0.412, 0, 1.000, 0, -0.412, 0, -0.911, 6.6, 0.0, 3.4)
@@ -158,6 +158,9 @@ transform = Transform3D(0.714, 0, 0.965, 0, 1.200, 0, -0.965, 0, 0.714, -3, 0.0,
 
 [node name="Pine16" parent="Scenery" instance=ExtResource("3_pine")]
 transform = Transform3D(-0.364, 0, 1.352, 0, 1.400, 0, -1.352, 0, -0.364, 15, 0.0, -20)
+
+[node name="Pine17" parent="Scenery" instance=ExtResource("4_pine_sno")]
+transform = Transform3D(0.866, 0, 0.5, 0, 1.000, 0, -0.5, 0, 0.866, -8.2, 0.0, -5.2)
 
 [node name="Rock0" parent="Scenery" instance=ExtResource("5_boulder_")]
 transform = Transform3D(1.400, 0, 0.000, 0, 1.400, 0, -0.000, 0, 1.400, -2.6, 0.0, 4.2)

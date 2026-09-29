@@ -1,0 +1,41 @@
+[gd_resource type="Theme" load_steps=5 format=3]
+
+[ext_resource type="StyleBox" path="res://assets/ui/windows/styles/window.tres" id="panel"]
+[ext_resource type="StyleBox" path="res://assets/ui/windows/styles/tab_normal.tres" id="normal"]
+[ext_resource type="StyleBox" path="res://assets/ui/windows/styles/tab_highlighted.tres" id="active"]
+
+[sub_resource type="StyleBoxFlat" id="focus"]
+draw_center = false
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.86, 0.5, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_left = 4
+corner_radius_bottom_right = 4
+
+[resource]
+default_font_size = 18
+Label/colors/font_color = Color(0.902, 0.918, 0.953, 1)
+PanelContainer/styles/panel = ExtResource("panel")
+Panel/styles/panel = ExtResource("panel")
+Button/styles/normal = ExtResource("normal")
+Button/styles/hover = ExtResource("active")
+Button/styles/pressed = ExtResource("active")
+Button/styles/focus = SubResource("focus")
+Button/colors/font_color = Color(0.902, 0.918, 0.953, 1)
+Button/colors/font_hover_color = Color(1, 0.88, 0.62, 1)
+Button/colors/font_pressed_color = Color(1, 0.88, 0.62, 1)
+TabContainer/styles/panel = ExtResource("panel")
+TabContainer/styles/tab_selected = ExtResource("active")
+TabContainer/styles/tab_unselected = ExtResource("normal")
+TabContainer/styles/tab_hovered = ExtResource("active")
+TabContainer/styles/tab_focus = SubResource("focus")
+TabContainer/colors/font_selected_color = Color(1, 0.88, 0.62, 1)
+TabContainer/colors/font_unselected_color = Color(0.902, 0.918, 0.953, 1)
+TabBar/styles/tab_selected = ExtResource("active")
+TabBar/styles/tab_unselected = ExtResource("normal")
+TabBar/styles/tab_hovered = ExtResource("active")
+TabBar/styles/tab_focus = SubResource("focus")

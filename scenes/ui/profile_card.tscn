@@ -1,0 +1,61 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://src/ui/profile_card.gd" id="1_card"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/profile.webp" id="2_bust"]
+[ext_resource type="Shader" path="res://assets/shaders/silver.gdshader" id="3_silver"]
+
+[sub_resource type="ShaderMaterial" id="Silver"]
+shader = ExtResource("3_silver")
+
+[node name="ProfileCard" type="Button"]
+custom_minimum_size = Vector2(200, 224)
+theme_type_variation = &"IntroCard"
+toggle_mode = true
+script = ExtResource("1_card")
+
+[node name="Stack" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"Tight"
+alignment = 1
+
+[node name="Bust" type="TextureRect" parent="Stack"]
+unique_name_in_owner = true
+material = SubResource("Silver")
+custom_minimum_size = Vector2(0, 96)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("2_bust")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"IntroCardName"
+text = "Spieler"
+horizontal_alignment = 1
+text_overrun_behavior = 3
+
+[node name="LevelLabel" type="Label" parent="Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"IntroCardNote"
+text = "Level 1"
+horizontal_alignment = 1
+
+[node name="Selected" type="Label" parent="Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"IntroSelected"
+text = "✓ Ausgewählt"
+horizontal_alignment = 1

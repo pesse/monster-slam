@@ -1,6 +1,10 @@
+class_name ProfileMenu
 extends Control
-## Hauptmenü: Titel, wer spielt, und Einstieg ins Spiel. Gestartet wird in „Wer spielt?"
-## (profile_pick, run/main_scene); „Profil wechseln" führt dorthin zurück.
+## Start-Screen (run/main_scene) mit zwei Seiten vor derselben Kulisse: erst „Wer spielt?"
+## (profile_pick.tscn), dann das Hauptmenü. „Weiter" schiebt die Profilwahl nach links
+## hinaus und das Menü von rechts herein, die Kamera der Kulisse fährt mit; „Profil
+## wechseln" schiebt zurück. Wer aus einem anderen Screen hierher zurückkehrt, landet
+## gleich im Menü (`intro_done`).
 ##
 ## Das Layout liegt in profile_menu.tscn (im Editor sichtbar, Entwurf unter
 ## assets/ui/main_menu/sources/); hier wird nur bedient und angezeigt. Hinter dem Menü
@@ -12,12 +16,21 @@ const SETTINGS_SCENE := "res://scenes/ui/settings_menu.tscn"
 const STATS_SCENE := "res://scenes/ui/stats_screen.tscn"
 const SKILL_SCENE := "res://scenes/ui/skill_tree.tscn"
 const CONTENT_SCENE := "res://scenes/ui/content_manager.tscn"
-const PICK_SCENE := "res://scenes/ui/profile_pick.tscn"
 ## „Lernen" führt über die Karte (ADR 0006); das freie Zusammenstellen der Runde ist der
 ## unauffällige Expertenmodus darunter.
 const BOOKS_SCENE := "res://scenes/ui/book_select.tscn"
 ## So lange blendet die Kulisse auf (s).
 const VEIL_FADE := 0.6
+## So lange schiebt die Seite (s).
+const SLIDE_TIME := 0.8
+## So lange blendet der Schatten hinter den Menüknöpfen auf, wenn das Menü angekommen ist (s).
+const SHADE_FADE := 0.4
+const INTRO := 0.0
+const MENU := 1.0
+
+## Ob in diesem Programmlauf schon jemand „Wer spielt?" beantwortet hat. Statisch, weil
+## jeder Rückweg aus Kampf, Karte oder Einstellungen diese Szene neu lädt.
+static var intro_done := false
 
 @onready var _gold_label: Label = %GoldLabel
 @onready var _level_label: Label = %LevelLabel
@@ -28,6 +41,13 @@ const VEIL_FADE := 0.6
 @onready var _content_button: Button = %ContentButton
 @onready var _play_button: Button = %PlayButton
 @onready var _play_hint: Label = %PlayHint
+@onready var _intro: ProfilePick = %Intro
+@onready var _menu_page: Control = %MenuPage
+@onready var _backdrop: MenuBackdrop = $Backdrop
+@onready var _shade: Control = %Shade
+
+var _page := MENU
+var _slide: Tween
 
 
 func _ready() -> void:
@@ -37,7 +57,8 @@ func _ready() -> void:
 	(%SkillButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(SKILL_SCENE))
 	(%StatsButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(STATS_SCENE))
 	(%SettingsButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(SETTINGS_SCENE))
-	(%SwitchButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(PICK_SCENE))
+	(%SwitchButton as Button).pressed.connect(_back_to_intro)
+	_intro.picked.connect(_play_as)
 	_update_button.pressed.connect((%UpdateDialog as Control).open)
 	_content_button.pressed.connect(func(): get_tree().change_scene_to_file(CONTENT_SCENE))
 	UpdateService.changed.connect(_refresh_update_badge)
@@ -55,7 +76,67 @@ func _ready() -> void:
 	# Beide Kanäle still prüfen: das Abzeichen soll dastehen, ohne dass jemand nachsieht.
 	# Netzfehler bleiben in der Konsole (siehe UpdateService._fail / ContentService._fail).
 	ContentService.refresh()
+	_show_page(MENU if intro_done else INTRO)
+	_settle()
 	_unveil()
+
+
+## Schaltet auf das Profil `id` und schiebt ins Menü.
+func _play_as(id: String) -> void:
+	intro_done = true
+	UserSettings.set_active_profile(id)
+	PlayerProgress.switch_to(id)
+	# Geldbörse, Erfahrung und Fähigkeiten schalten über
+	# UserSettings.active_profile_changed selbst um (siehe Wallet._ready / PlayerLevel._ready).
+	(%ProfileLabel as Label).text = UserSettings.display_name()
+	_refresh_gold()
+	_refresh_level()
+	_slide_to(MENU)
+
+
+func _back_to_intro() -> void:
+	_intro.refresh()
+	_slide_to(INTRO)
+
+
+func _slide_to(target: float) -> void:
+	if _slide != null:
+		_slide.kill()
+	# Beide Seiten stehen während der Fahrt; bedienbar ist keine, bis sie angekommen ist.
+	get_viewport().gui_release_focus()
+	_intro.visible = true
+	_menu_page.visible = true
+	_intro.process_mode = Node.PROCESS_MODE_DISABLED
+	_menu_page.process_mode = Node.PROCESS_MODE_DISABLED
+	# Der Schatten links hinter den Knöpfen endet mitten im Bild; mitgeschoben sähe er
+	# aus wie eine Kante. Er kommt erst, wenn das Menü steht (_settle).
+	_shade.modulate.a = 0.0
+	_slide = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	_slide.tween_method(_show_page, _page, target, SLIDE_TIME * absf(target - _page))
+	_slide.tween_callback(_settle)
+
+
+## `page` 0 = „Wer spielt?", 1 = Menü. Über die Anker und nicht in Pixeln, damit eine
+## Größenänderung des Fensters die Seiten nicht verrutscht.
+func _show_page(page: float) -> void:
+	_page = page
+	var slide := %Slide as Control
+	slide.anchor_left = -page
+	slide.anchor_right = 1.0 - page
+	_backdrop.page = page
+
+
+## Die Seite außerhalb des Bildes ist aus — sonst fände die Tastatur dort Knöpfe.
+func _settle() -> void:
+	var on_intro := _page < 0.5
+	_intro.visible = on_intro
+	_menu_page.visible = not on_intro
+	_intro.process_mode = Node.PROCESS_MODE_INHERIT
+	_menu_page.process_mode = Node.PROCESS_MODE_INHERIT
+	if on_intro:
+		_intro.focus_next()
+	elif _shade.modulate.a < 1.0:
+		create_tween().tween_property(_shade, "modulate:a", 1.0, SHADE_FADE)
 
 
 ## Der erste Auftritt der Kulisse übersetzt ihre Shader und hält das Bild kurz an

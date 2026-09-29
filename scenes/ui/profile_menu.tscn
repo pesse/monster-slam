@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://src/ui/profile_menu.gd" id="1_menu"]
 [ext_resource type="PackedScene" path="res://scenes/ui/update_dialog.tscn" id="2_update"]
@@ -12,6 +12,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/expert.webp" id="10_expert"]
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/profile.webp" id="11_profile"]
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/switch_profile.webp" id="12_switch"]
+[ext_resource type="PackedScene" path="res://scenes/ui/profile_pick.tscn" id="13_pick"]
 
 [sub_resource type="Gradient" id="ShadeGradient"]
 colors = PackedColorArray(0.03, 0.04, 0.08, 0.6, 0.03, 0.04, 0.08, 0)
@@ -44,7 +45,32 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.03, 0.04, 0.08, 1)
 
-[node name="Shade" type="TextureRect" parent="."]
+[node name="Slide" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Intro" parent="Slide" instance=ExtResource("13_pick")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="MenuPage" type="Control" parent="Slide"]
+unique_name_in_owner = true
+layout_mode = 1
+anchor_left = 1.0
+anchor_right = 2.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Shade" type="TextureRect" parent="Slide/MenuPage"]
+unique_name_in_owner = true
 layout_mode = 1
 anchor_right = 0.5
 anchor_bottom = 1.0
@@ -53,7 +79,7 @@ mouse_filter = 2
 texture = SubResource("ShadeTexture")
 expand_mode = 1
 
-[node name="Margin" type="MarginContainer" parent="."]
+[node name="Margin" type="MarginContainer" parent="Slide/MenuPage"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -62,20 +88,20 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_type_variation = &"ScreenMargin"
 
-[node name="Layout" type="HBoxContainer" parent="Margin"]
+[node name="Layout" type="HBoxContainer" parent="Slide/MenuPage/Margin"]
 layout_mode = 2
 
-[node name="Left" type="VBoxContainer" parent="Margin/Layout"]
+[node name="Left" type="VBoxContainer" parent="Slide/MenuPage/Margin/Layout"]
 layout_mode = 2
 
-[node name="Logo" type="TextureRect" parent="Margin/Layout/Left"]
+[node name="Logo" type="TextureRect" parent="Slide/MenuPage/Margin/Layout/Left"]
 custom_minimum_size = Vector2(352, 168)
 layout_mode = 2
 texture = ExtResource("4_logo")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="PlayButton" type="Button" parent="Margin/Layout/Left"]
+[node name="PlayButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Left"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(352, 64)
 layout_mode = 2
@@ -85,7 +111,7 @@ icon = ExtResource("5_play")
 alignment = 0
 expand_icon = true
 
-[node name="SkillButton" type="Button" parent="Margin/Layout/Left"]
+[node name="SkillButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Left"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(352, 64)
 layout_mode = 2
@@ -95,7 +121,7 @@ icon = ExtResource("6_skills")
 alignment = 0
 expand_icon = true
 
-[node name="StatsButton" type="Button" parent="Margin/Layout/Left"]
+[node name="StatsButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Left"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(352, 64)
 layout_mode = 2
@@ -105,7 +131,7 @@ icon = ExtResource("7_stats")
 alignment = 0
 expand_icon = true
 
-[node name="ContentButton" type="Button" parent="Margin/Layout/Left"]
+[node name="ContentButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Left"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(352, 64)
 layout_mode = 2
@@ -115,7 +141,7 @@ icon = ExtResource("8_content")
 alignment = 0
 expand_icon = true
 
-[node name="SettingsButton" type="Button" parent="Margin/Layout/Left"]
+[node name="SettingsButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Left"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(352, 64)
 layout_mode = 2
@@ -125,12 +151,12 @@ icon = ExtResource("9_settings")
 alignment = 0
 expand_icon = true
 
-[node name="Fill" type="Control" parent="Margin/Layout/Left"]
+[node name="Fill" type="Control" parent="Slide/MenuPage/Margin/Layout/Left"]
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
 
-[node name="ExpertButton" type="Button" parent="Margin/Layout/Left"]
+[node name="ExpertButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Left"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 0
@@ -141,71 +167,71 @@ icon = ExtResource("10_expert")
 flat = true
 alignment = 0
 
-[node name="Fill" type="Control" parent="Margin/Layout"]
+[node name="Fill" type="Control" parent="Slide/MenuPage/Margin/Layout"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="Right" type="VBoxContainer" parent="Margin/Layout"]
+[node name="Right" type="VBoxContainer" parent="Slide/MenuPage/Margin/Layout"]
 layout_mode = 2
 
-[node name="ProfilePlate" type="PanelContainer" parent="Margin/Layout/Right"]
+[node name="ProfilePlate" type="PanelContainer" parent="Slide/MenuPage/Margin/Layout/Right"]
 custom_minimum_size = Vector2(352, 88)
 layout_mode = 2
 theme_type_variation = &"ProfilePlate"
 
-[node name="Stack" type="VBoxContainer" parent="Margin/Layout/Right/ProfilePlate"]
+[node name="Stack" type="VBoxContainer" parent="Slide/MenuPage/Margin/Layout/Right/ProfilePlate"]
 layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="Top" type="HBoxContainer" parent="Margin/Layout/Right/ProfilePlate/Stack"]
+[node name="Top" type="HBoxContainer" parent="Slide/MenuPage/Margin/Layout/Right/ProfilePlate/Stack"]
 layout_mode = 2
 
-[node name="ProfileIcon" type="TextureRect" parent="Margin/Layout/Right/ProfilePlate/Stack/Top"]
+[node name="ProfileIcon" type="TextureRect" parent="Slide/MenuPage/Margin/Layout/Right/ProfilePlate/Stack/Top"]
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
 texture = ExtResource("11_profile")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Who" type="VBoxContainer" parent="Margin/Layout/Right/ProfilePlate/Stack/Top"]
+[node name="Who" type="VBoxContainer" parent="Slide/MenuPage/Margin/Layout/Right/ProfilePlate/Stack/Top"]
 layout_mode = 2
 size_flags_vertical = 4
 theme_type_variation = &"Tight"
 
-[node name="ProfileLabel" type="Label" parent="Margin/Layout/Right/ProfilePlate/Stack/Top/Who"]
+[node name="ProfileLabel" type="Label" parent="Slide/MenuPage/Margin/Layout/Right/ProfilePlate/Stack/Top/Who"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SectionTitle"
 text = "Spieler"
 
-[node name="LevelLabel" type="Label" parent="Margin/Layout/Right/ProfilePlate/Stack/Top/Who"]
+[node name="LevelLabel" type="Label" parent="Slide/MenuPage/Margin/Layout/Right/ProfilePlate/Stack/Top/Who"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Level 1"
 
-[node name="Xp" type="VBoxContainer" parent="Margin/Layout/Right/ProfilePlate/Stack/Top"]
+[node name="Xp" type="VBoxContainer" parent="Slide/MenuPage/Margin/Layout/Right/ProfilePlate/Stack/Top"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 theme_type_variation = &"Tight"
 
-[node name="XpBar" type="ProgressBar" parent="Margin/Layout/Right/ProfilePlate/Stack/Top/Xp"]
+[node name="XpBar" type="ProgressBar" parent="Slide/MenuPage/Margin/Layout/Right/ProfilePlate/Stack/Top/Xp"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 12)
 layout_mode = 2
 theme_type_variation = &"XpBar"
 show_percentage = false
 
-[node name="XpLabel" type="Label" parent="Margin/Layout/Right/ProfilePlate/Stack/Top/Xp"]
+[node name="XpLabel" type="Label" parent="Slide/MenuPage/Margin/Layout/Right/ProfilePlate/Stack/Top/Xp"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "0 / 100 XP"
 horizontal_alignment = 2
 
-[node name="SwitchButton" type="Button" parent="Margin/Layout/Right/ProfilePlate/Stack"]
+[node name="SwitchButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Right/ProfilePlate/Stack"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 8
@@ -214,14 +240,14 @@ text = "Profil wechseln"
 icon = ExtResource("12_switch")
 flat = true
 
-[node name="GoldLabel" type="Label" parent="Margin/Layout/Right"]
+[node name="GoldLabel" type="Label" parent="Slide/MenuPage/Margin/Layout/Right"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"MenuAccent"
 text = "💰 0 Gold"
 horizontal_alignment = 2
 
-[node name="PointsLabel" type="Label" parent="Margin/Layout/Right"]
+[node name="PointsLabel" type="Label" parent="Slide/MenuPage/Margin/Layout/Right"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -229,12 +255,12 @@ theme_type_variation = &"MenuNote"
 text = "1 Skillpunkt offen"
 horizontal_alignment = 2
 
-[node name="Fill" type="Control" parent="Margin/Layout/Right"]
+[node name="Fill" type="Control" parent="Slide/MenuPage/Margin/Layout/Right"]
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
 
-[node name="PlayHint" type="Label" parent="Margin/Layout/Right"]
+[node name="PlayHint" type="Label" parent="Slide/MenuPage/Margin/Layout/Right"]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(352, 0)
@@ -244,7 +270,7 @@ text = "Noch keine Vokabeln vorhanden — links über „Inhalte“ einen Vokabe
 horizontal_alignment = 2
 autowrap_mode = 3
 
-[node name="UpdateButton" type="Button" parent="Margin/Layout/Right"]
+[node name="UpdateButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Right"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2

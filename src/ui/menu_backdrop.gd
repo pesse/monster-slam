@@ -3,6 +3,9 @@ extends Node3D
 ## Die Kulisse hinter dem Hauptmenü (scenes/ui/menu_backdrop.tscn): ein Lager am Waldrand,
 ## davor ein Skelett mit roter Kapuze, das auf der Stelle steht und atmet.
 ##
+## „Wer spielt?" und das Hauptmenü stehen vor derselben Kulisse: schiebt profile_menu die
+## Seite weiter, fährt die Kamera mit (`page`), vom Waldrand links hinüber zum Skelett.
+##
 ## Die Kulisse spielt nur vor und weiß nichts vom Menü. Aufgebaut ist sie im Editor; hier
 ## kommt nur dazu, was die gekauften Modelle nicht mitbringen: die Idle-Schleife, das
 ## Schwert in der Hand und die Farbe der Kapuze. Ab und zu schaut es sich um (Idle_B).
@@ -24,6 +27,12 @@ const LOOK_MAX := 13.0
 ## Wie weit die Kamera schwebt (m) und wie langsam (s je Schwingung).
 const SWAY := Vector3(0.12, 0.05, 0.0)
 const SWAY_PERIOD := 11.0
+
+## Wo die Kamera für „Wer spielt?" steht, gemessen an ihrem Platz fürs Hauptmenü: so weit
+## links, dass das Skelett außerhalb des Bildes bleibt — die Profilwahl hat keine Figur.
+@export var intro_offset := Vector3(-4.5, 0.0, 0.0)
+## 0 = „Wer spielt?", 1 = Hauptmenü, dazwischen die Fahrt.
+var page := 1.0
 
 @onready var _model: Node3D = %Model
 @onready var _camera: Camera3D = %Camera
@@ -53,7 +62,8 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_time += delta
 	var phase := TAU * _time / SWAY_PERIOD
-	_camera.position = _camera_home + Vector3(sin(phase) * SWAY.x, sin(phase * 2.0) * SWAY.y, 0.0)
+	_camera.position = _camera_home + intro_offset * (1.0 - page) \
+			+ Vector3(sin(phase) * SWAY.x, sin(phase * 2.0) * SWAY.y, 0.0)
 	_look_left -= delta
 	if _look_left <= 0.0:
 		_look_left = _rng.randf_range(LOOK_MIN, LOOK_MAX)

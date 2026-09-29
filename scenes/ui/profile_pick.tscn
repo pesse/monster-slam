@@ -1,49 +1,105 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://src/ui/profile_pick.gd" id="1_pick"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/logo.webp" id="2_logo"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/play.webp" id="3_play"]
+
+[sub_resource type="Gradient" id="VignetteGradient"]
+colors = PackedColorArray(0.03, 0.04, 0.08, 0.55, 0.03, 0.04, 0.08, 0)
+
+[sub_resource type="GradientTexture2D" id="VignetteTexture"]
+gradient = SubResource("VignetteGradient")
+fill = 1
+fill_from = Vector2(0.5, 0.55)
+fill_to = Vector2(1, 0.55)
 
 [node name="ProfilePick" type="Control"]
+texture_filter = 4
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 script = ExtResource("1_pick")
 
-[node name="Margin" type="MarginContainer" parent="."]
-theme_type_variation = &"ScreenMargin"
+[node name="Vignette" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("VignetteTexture")
+expand_mode = 1
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"ScreenMargin"
 
 [node name="Root" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+mouse_filter = 2
 theme_type_variation = &"ScreenStack"
 alignment = 1
 
-[node name="Title" type="Label" parent="Margin/Root"]
-theme_type_variation = &"Display"
-text = "Monster Slam"
-horizontal_alignment = 1
+[node name="Logo" type="TextureRect" parent="Margin/Root"]
+custom_minimum_size = Vector2(0, 128)
+layout_mode = 2
+texture = ExtResource("2_logo")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Question" type="Label" parent="Margin/Root"]
-theme_type_variation = &"Title"
+layout_mode = 2
+theme_type_variation = &"IntroHeading"
 text = "Wer spielt?"
 horizontal_alignment = 1
 
 [node name="Profiles" type="HFlowContainer" parent="Margin/Root"]
 unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"IntroCards"
 alignment = 1
 
+[node name="NextButton" type="Button" parent="Margin/Root"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(352, 64)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_type_variation = &"MainMenuPlay"
+text = "WEITER"
+icon = ExtResource("3_play")
+icon_alignment = 2
+expand_icon = true
+
 [node name="NewRow" type="HBoxContainer" parent="Margin/Root"]
+layout_mode = 2
 size_flags_horizontal = 4
 
 [node name="NameInput" type="LineEdit" parent="Margin/Root/NewRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(320, 0)
+custom_minimum_size = Vector2(320, 44)
+layout_mode = 2
 placeholder_text = "Neuer Profilname"
 
 [node name="AddButton" type="Button" parent="Margin/Root/NewRow"]
 unique_name_in_owner = true
-text = "Neues Profil"
+custom_minimum_size = Vector2(200, 44)
+layout_mode = 2
+theme_type_variation = &"IntroSmallButton"
+text = "+ Neues Profil"
+
+[node name="Help" type="Label" parent="Margin/Root"]
+layout_mode = 2
+theme_type_variation = &"MenuNote"
+text = "Profil wählen und ins Abenteuer starten"
+horizontal_alignment = 1

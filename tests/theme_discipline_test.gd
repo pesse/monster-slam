@@ -144,6 +144,7 @@ func test_scenes_reference_only_declared_variations() -> void:
 	declared.append_array(theme.get_type_variation_list("BoxContainer"))
 	declared.append_array(theme.get_type_variation_list("PanelContainer"))
 	declared.append_array(theme.get_type_variation_list("ProgressBar"))
+	declared.append_array(theme.get_type_variation_list("FlowContainer"))
 	var files: Array = []
 	_collect("res://scenes", ".tscn", files)
 	var unknown: Array = []

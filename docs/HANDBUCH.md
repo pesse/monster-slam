@@ -34,8 +34,11 @@ die wissen wollen, was im Spiel passiert und warum es sich so verhält.
 
 ## 1. Der Start-Screen
 
-Das Spiel beginnt mit **„Wer spielt?“**: ein Knopf je Profil, wer zuletzt gespielt hat, ist
-vorgewählt. Ein Klick – und du bist im Start-Screen dieses Profils (Kapitel 2).
+Das Spiel beginnt mit **„Wer spielt?“**: eine Kachel je Profil mit Name und Level, wer
+zuletzt gespielt hat, ist vorgewählt (golden, „✓ Ausgewählt“). Ein Klick auf eine andere
+Kachel wählt sie aus, **„Weiter“** (oder Enter) spielt damit: die Profilwahl schiebt sich
+nach links aus dem Bild, das Hauptmenü kommt von rechts, und der Blick wandert durch
+dasselbe Lager mit (Kapitel 2).
 
 Hinter dem Menü steht ein Lager am Waldrand mit einem Skelett in roter Kapuze – das Bild
 bewegt sich leise, spielen kann man dort nichts.
@@ -67,7 +70,7 @@ keine mit; sie kommen als Pack über „Inhalte“. Der Hinweis rechts unten sag
 ## 2. Profile
 
 Mehrere Kinder können an einem Rechner spielen, jedes mit eigenem Profil. Beim Start fragt
-das Spiel „Wer spielt?“, und du klickst auf deinen Namen. Ein neues Profil legst du dort
+das Spiel „Wer spielt?“, du klickst auf deine Kachel und dann auf „Weiter“. Ein neues Profil legst du dort
 an, indem du einen Namen in „Neuer Profilname“ tippst und „Neues Profil“ drückst – danach
 spielst du gleich damit. Vom Start-Screen kommst du mit „Profil wechseln“ zurück.
 

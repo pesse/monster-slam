@@ -3,6 +3,8 @@
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/button_normal.webp" id="menu_btn_tex"]
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/button_highlighted.webp" id="menu_btn_gold_tex"]
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/panels/profile_panel.webp" id="profile_plate_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/window_panel_compact.webp" id="card_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/tab_highlighted.webp" id="card_gold_tex"]
 
 [sub_resource type="StyleBoxFlat" id="btn_disabled"]
 content_margin_left = 12.0
@@ -552,6 +554,40 @@ corner_radius_bottom_left = 5
 
 [sub_resource type="StyleBoxEmpty" id="menu_link"]
 
+[sub_resource type="StyleBoxTexture" id="card_normal"]
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
+texture = ExtResource("card_tex")
+texture_margin_left = 32.0
+texture_margin_top = 32.0
+texture_margin_right = 32.0
+texture_margin_bottom = 32.0
+
+[sub_resource type="StyleBoxTexture" id="card_hover"]
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
+texture = ExtResource("card_tex")
+texture_margin_left = 32.0
+texture_margin_top = 32.0
+texture_margin_right = 32.0
+texture_margin_bottom = 32.0
+modulate_color = Color(1.3, 1.3, 1.35, 1)
+
+[sub_resource type="StyleBoxTexture" id="card_selected"]
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
+texture = ExtResource("card_gold_tex")
+texture_margin_left = 28.0
+texture_margin_top = 28.0
+texture_margin_right = 28.0
+texture_margin_bottom = 28.0
+
 [resource]
 default_font_size = 18
 Button/colors/font_color = Color(0.92, 0.94, 0.98, 1)
@@ -745,3 +781,35 @@ ProfilePlate/base_type = &"PanelContainer"
 ProfilePlate/styles/panel = SubResource("profile_plate")
 XpBar/base_type = &"ProgressBar"
 XpBar/styles/fill = SubResource("xp_fill")
+IntroCard/base_type = &"Button"
+IntroCard/styles/normal = SubResource("card_normal")
+IntroCard/styles/hover = SubResource("card_hover")
+IntroCard/styles/pressed = SubResource("card_selected")
+IntroCard/styles/hover_pressed = SubResource("card_selected")
+IntroCard/styles/focus = SubResource("menu_link")
+IntroHeading/base_type = &"Label"
+IntroHeading/colors/font_color = Color(1, 0.86, 0.5, 1)
+IntroHeading/colors/font_outline_color = Color(0.2, 0.1, 0.02, 1)
+IntroHeading/constants/outline_size = 8
+IntroHeading/fonts/font = SubResource("menu_font")
+IntroHeading/font_sizes/font_size = 32
+IntroCardName/base_type = &"Label"
+IntroCardName/colors/font_color = Color(0.94, 0.95, 0.98, 1)
+IntroCardName/colors/font_outline_color = Color(0.06, 0.07, 0.12, 1)
+IntroCardName/constants/outline_size = 6
+IntroCardName/fonts/font = SubResource("menu_font")
+IntroCardName/font_sizes/font_size = 24
+IntroCardNote/base_type = &"Label"
+IntroCardNote/colors/font_color = Color(0.94, 0.86, 0.66, 1)
+IntroCardNote/colors/font_outline_color = Color(0.06, 0.07, 0.12, 1)
+IntroCardNote/constants/outline_size = 4
+IntroCardNote/font_sizes/font_size = 16
+IntroSelected/base_type = &"IntroCardNote"
+IntroSelected/colors/font_color = Color(1, 0.84, 0.4, 1)
+IntroSelected/fonts/font = SubResource("menu_font")
+IntroSmallButton/base_type = &"MainMenuButton"
+IntroSmallButton/font_sizes/font_size = 18
+IntroSmallButton/constants/icon_max_width = 24
+IntroCards/base_type = &"FlowContainer"
+IntroCards/constants/h_separation = 24
+IntroCards/constants/v_separation = 16
