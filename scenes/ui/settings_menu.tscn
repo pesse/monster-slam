@@ -38,11 +38,8 @@ size_flags_vertical = 3
 
 [node name="Profil" type="VBoxContainer" parent="Margin/Root/Tabs"]
 
-[node name="PickLabel" type="Label" parent="Margin/Root/Tabs/Profil"]
-text = "Aktives Profil"
-
-[node name="ProfileSelect" type="OptionButton" parent="Margin/Root/Tabs/Profil"]
-unique_name_in_owner = true
+[node name="NameLabel" type="Label" parent="Margin/Root/Tabs/Profil"]
+text = "Profilname"
 
 [node name="RenameRow" type="HBoxContainer" parent="Margin/Root/Tabs/Profil"]
 

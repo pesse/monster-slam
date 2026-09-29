@@ -1,0 +1,49 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/ui/profile_pick.gd" id="1_pick"]
+
+[node name="ProfilePick" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_pick")
+
+[node name="Margin" type="MarginContainer" parent="."]
+theme_type_variation = &"ScreenMargin"
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Root" type="VBoxContainer" parent="Margin"]
+theme_type_variation = &"ScreenStack"
+alignment = 1
+
+[node name="Title" type="Label" parent="Margin/Root"]
+theme_type_variation = &"Display"
+text = "Monster Slam"
+horizontal_alignment = 1
+
+[node name="Question" type="Label" parent="Margin/Root"]
+theme_type_variation = &"Title"
+text = "Wer spielt?"
+horizontal_alignment = 1
+
+[node name="Profiles" type="HFlowContainer" parent="Margin/Root"]
+unique_name_in_owner = true
+alignment = 1
+
+[node name="NewRow" type="HBoxContainer" parent="Margin/Root"]
+size_flags_horizontal = 4
+
+[node name="NameInput" type="LineEdit" parent="Margin/Root/NewRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 0)
+placeholder_text = "Neuer Profilname"
+
+[node name="AddButton" type="Button" parent="Margin/Root/NewRow"]
+unique_name_in_owner = true
+text = "Neues Profil"

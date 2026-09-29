@@ -1,5 +1,5 @@
 extends Control
-## Einstellungs-Screen (Profil, Standard-Schwierigkeit, Grund-Geschwindigkeit, Reset,
+## Einstellungs-Screen (Profilname, Standard-Schwierigkeit, Grund-Geschwindigkeit, Reset,
 ## Melden).
 ##
 ## Statistik und Wortliste sind hier ausgezogen und liegen im eigenen Statistik-Screen
@@ -16,6 +16,9 @@ extends Control
 ## sichtbar; die Liste der Meldungen darunter erscheint erst mit hinterlegtem Token —
 ## ohne Rückkanal gibt es auch nichts zu melden.
 ##
+## Welches Profil spielt, entscheidet „Wer spielt?" (profile_pick) — hier wird das aktive
+## Profil nur umbenannt.
+##
 ## Ausgelagert aus dem Start-Screen (profile_menu). Das Layout liegt in settings_menu.tscn
 ## (im Editor sichtbar); hier wird nur bedient und angezeigt. Einstellungen liegen in
 ## UserSettings, der Fortschritt (Reset) in PlayerProgress.
@@ -26,7 +29,6 @@ const TRACE_ROW_SCENE := preload("res://scenes/ui/trace_row.tscn")
 ## öffnet die Datei.
 const TRACE_SHOWN := 200
 
-@onready var _profile_select: OptionButton = %ProfileSelect
 @onready var _rename_input: LineEdit = %RenameInput
 @onready var _diff_buttons: Array = %DiffRow.get_children()
 @onready var _speed_slider: HSlider = %SpeedSlider
@@ -48,7 +50,6 @@ const TRACE_SHOWN := 200
 
 func _ready() -> void:
 	(%BackButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(MENU_SCENE))
-	_profile_select.item_selected.connect(_on_profile_selected)
 	_rename_input.text_submitted.connect(func(_t): _on_rename_profile())
 	(%RenameButton as Button).pressed.connect(_on_rename_profile)
 	# Standard-Schwierigkeits-Buttons 1..5 (Reihenfolge in DiffRow = Stufe i+1).
@@ -74,26 +75,17 @@ func _ready() -> void:
 	_refresh()
 
 
-## Baut Profil-Auswahl, Schwierigkeits-Hervorhebung, Tempo und Melde-Reiter neu auf.
+## Baut Profilname, Schwierigkeits-Hervorhebung, Tempo und Melde-Reiter neu auf.
 func _refresh() -> void:
-	_refresh_profiles()
+	_refresh_name()
 	_refresh_difficulty()
 	_refresh_speed()
 	_refresh_report()
 	_refresh_trace()
 
 
-func _refresh_profiles() -> void:
-	_profile_select.clear()
-	var active := UserSettings.active_profile()
-	var profiles := UserSettings.profiles()
-	for i in profiles.size():
-		# Anzeigename im Dropdown, player_id als Metadaten (für die Auswahl-Rückabbildung).
-		_profile_select.add_item(UserSettings.display_name(profiles[i]))
-		_profile_select.set_item_metadata(i, profiles[i])
-		if profiles[i] == active:
-			_profile_select.select(i)
-	# Umbenennen-Feld mit dem aktuellen Anzeigenamen vorbelegen.
+## Umbenennen-Feld mit dem aktuellen Anzeigenamen vorbelegen.
+func _refresh_name() -> void:
 	_rename_input.text = UserSettings.display_name()
 
 
@@ -193,13 +185,6 @@ func _refresh_flags() -> void:
 		comment.text = "%s %s" % [mark, str(flag.get("comment", ""))]
 		comment.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		box.add_child(comment)
-
-
-func _on_profile_selected(index: int) -> void:
-	var id := str(_profile_select.get_item_metadata(index))
-	UserSettings.set_active_profile(id)
-	PlayerProgress.switch_to(id)
-	_refresh()
 
 
 func _on_rename_profile() -> void:

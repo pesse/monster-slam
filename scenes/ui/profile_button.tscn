@@ -1,0 +1,7 @@
+[gd_scene format=3]
+
+[node name="ProfileButton" type="Button"]
+custom_minimum_size = Vector2(200, 96)
+theme_type_variation = &"SectionButton"
+text = "Spieler"
+text_overrun_behavior = 3

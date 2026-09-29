@@ -28,6 +28,17 @@ theme_type_variation = &"Display"
 text = "Monster Slam"
 horizontal_alignment = 1
 
+[node name="ProfileRow" type="HBoxContainer" parent="Margin/Root"]
+alignment = 1
+
+[node name="ProfileLabel" type="Label" parent="Margin/Root/ProfileRow"]
+unique_name_in_owner = true
+text = "👤 Spieler"
+
+[node name="SwitchButton" type="Button" parent="Margin/Root/ProfileRow"]
+unique_name_in_owner = true
+text = "Profil wechseln"
+
 [node name="GoldLabel" type="Label" parent="Margin/Root"]
 theme_type_variation = &"Accent"
 unique_name_in_owner = true
@@ -39,24 +50,6 @@ theme_type_variation = &"Hint"
 unique_name_in_owner = true
 text = "⭐ Level 1"
 horizontal_alignment = 1
-
-[node name="PickLabel" type="Label" parent="Margin/Root"]
-text = "Aktives Profil"
-horizontal_alignment = 1
-
-[node name="ProfileSelect" type="OptionButton" parent="Margin/Root"]
-unique_name_in_owner = true
-
-[node name="NewRow" type="HBoxContainer" parent="Margin/Root"]
-
-[node name="NameInput" type="LineEdit" parent="Margin/Root/NewRow"]
-unique_name_in_owner = true
-size_flags_horizontal = 3
-placeholder_text = "Neuer Profilname"
-
-[node name="AddButton" type="Button" parent="Margin/Root/NewRow"]
-unique_name_in_owner = true
-text = "Neues Profil"
 
 [node name="PlayRow" type="HBoxContainer" parent="Margin/Root"]
 

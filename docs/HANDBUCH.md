@@ -34,9 +34,12 @@ die wissen wollen, was im Spiel passiert und warum es sich so verhält.
 
 ## 1. Der Start-Screen
 
-Oben stehen dein Gold („💰 … Gold“) und dein Level („⭐ Level …“ mit dem Stand deiner
-Erfahrung). Hast du Skillpunkte, die du noch nicht ausgegeben hast, steht das in derselben
-Zeile.
+Das Spiel beginnt mit **„Wer spielt?“**: ein Knopf je Profil, wer zuletzt gespielt hat, ist
+vorgewählt. Ein Klick – und du bist im Start-Screen dieses Profils (Kapitel 2).
+
+Oben stehen dein Name mit dem Knopf **„Profil wechseln“** (zurück zu „Wer spielt?“), dein
+Gold („💰 … Gold“) und dein Level („⭐ Level …“ mit dem Stand deiner Erfahrung). Hast du
+Skillpunkte, die du noch nicht ausgegeben hast, steht das in derselben Zeile.
 
 Die Knöpfe:
 
@@ -59,9 +62,10 @@ auch.
 
 ## 2. Profile
 
-Mehrere Kinder können an einem Rechner spielen, jedes mit eigenem Profil. Auf dem
-Start-Screen wählst du unter „Aktives Profil“ aus, wer spielt. Ein neues Profil legst du
-an, indem du einen Namen in „Neuer Profilname“ tippst und „Neues Profil“ drückst.
+Mehrere Kinder können an einem Rechner spielen, jedes mit eigenem Profil. Beim Start fragt
+das Spiel „Wer spielt?“, und du klickst auf deinen Namen. Ein neues Profil legst du dort
+an, indem du einen Namen in „Neuer Profilname“ tippst und „Neues Profil“ drückst – danach
+spielst du gleich damit. Vom Start-Screen kommst du mit „Profil wechseln“ zurück.
 
 Zu einem Profil gehört alles, was man sich erspielt: der Lernstand jedes Wortes, Gold,
 Erfahrung und Level, die gelernten Fähigkeiten, die Auswahl, was geübt wird, die
@@ -591,7 +595,8 @@ Richtung sitzt.
 
 ### Reiter „Profil“
 
-- **„Aktives Profil“** wählen und mit **„Umbenennen“** einen neuen Namen geben.
+- **„Profilname“**: dem Profil, das gerade spielt, mit **„Umbenennen“** einen neuen Namen
+  geben. Wer spielt, wählst du nicht hier, sondern mit „Profil wechseln“ im Start-Screen.
 - **„Standard-Schwierigkeit“** (1 bis 5): damit beginnt die erste Welle jedes Laufs.
 - **„Grund-Geschwindigkeit“** (50 % bis 150 %): macht alle Monster langsamer oder
   schneller, unabhängig von der Schwierigkeit. Gut für Kinder, die noch langsam tippen
