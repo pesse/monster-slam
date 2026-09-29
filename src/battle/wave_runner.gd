@@ -343,9 +343,14 @@ static func _terrain_point(x: float, z: float, noise: FastNoiseLite) -> Vector3:
 	return Vector3(x, terrain_height(x, z, noise), z)
 
 
+## Halbe Breite des flachen Bodens.
+const FLAT_HALF_X := 9.0 * FORTRESS_GROW
+
+
 static func terrain_height(x: float, z: float, noise: FastNoiseLite) -> float:
-	# Innenfeld flach halten (bis knapp hinter den Spawn); nur außerhalb sanfte Hügel.
-	var edge := maxf(absf(x) - 9.0, -z + SPAWN_Z)
+	# Innenfeld flach halten (bis knapp hinter den Spawn); nur außerhalb sanfte Hügel. So
+	# breit wie die Festung, sonst stünden ihre Ecktürme am Hang.
+	var edge := maxf(absf(x) - FLAT_HALF_X, -z + SPAWN_Z)
 	if edge <= 0.0:
 		return 0.0
 	var n := noise.get_noise_2d(x, z) * 0.5 + 0.5
@@ -405,7 +410,7 @@ func _decorate() -> void:
 	add_child(d)
 
 	var z_back := SPAWN_Z - 2.0    # bis knapp hinter den Spawn
-	var z_front := GOAL_Z - 2.0    # bis kurz vor die Festung
+	var z_front := GOAL_Z - 2.0 * FORTRESS_GROW    # bis kurz vor die Festung
 
 	# Bäume nur an den Seitenstreifen (|x| groß), damit die Bahn frei bleibt
 	for i in _rng.randi_range(8, 14):
@@ -446,9 +451,12 @@ func _decorate() -> void:
 ## Das Innenfeld: Bahn plus Festung im Vollausbau (Kirche und Nebengebäude liegen am
 ## weitesten hinten). Hier steht keine Streudeko — es ist die Fläche, auf der gespielt
 ## wird, und der Boden darunter ist flach (siehe terrain_height).
-const FIELD_HALF_X := 11.0
+## Breite und Tiefe wachsen mit der Festung (FortressModel.grow), damit die Streudeko auch
+## um eine größere Burg herum Platz lässt.
+const FORTRESS_GROW := FortressModel.SCALE / FortressModel.LAYOUT_SCALE
+const FIELD_HALF_X := 11.0 * FORTRESS_GROW
 const FIELD_Z_BACK := SPAWN_Z - 3.0
-const FIELD_Z_FRONT := GOAL_Z + 11.0
+const FIELD_Z_FRONT := GOAL_Z + 11.0 * FORTRESS_GROW
 ## Zugabe in Bildeinheiten um den Bildstreifen des Innenfelds: die Modelle sind breiter
 ## und höher als der Punkt, an dem sie stehen.
 const FIELD_CLEARANCE := 4.0
@@ -567,7 +575,7 @@ func _rebuild_fortress(tier: int) -> void:
 	if is_instance_valid(_fortress):
 		_fortress.queue_free()
 	_spawn_fortress(tier)
-	_spawn_explosion(Vector3(0.0, 1.5, GOAL_Z + 2.0), Color(1.0, 0.9, 0.4), 2.0)
+	_spawn_explosion(Vector3(0.0, 1.5, GOAL_Z + 2.0 * FORTRESS_GROW), Color(1.0, 0.9, 0.4), 2.0)
 
 
 ## „Cutscene" beim Festungsausbau (nach gewonnener Welle, vor der Statistik): die
@@ -584,7 +592,7 @@ func _play_upgrade_cutscene(tier: int, bonus: int) -> void:
 		# Aus der Ich-Sicht fährt keine Kamera: Blitz und Banner stehen, solange die Fahrt
 		# der Iso-Kamera dauern würde.
 		_fp.shake(Vector2.ZERO)
-		_spawn_explosion(Vector3(0.0, 2.0, GOAL_Z + 2.0), Color(1.0, 0.85, 0.3), 3.0)
+		_spawn_explosion(Vector3(0.0, 2.0, GOAL_Z + 2.0 * FORTRESS_GROW), Color(1.0, 0.85, 0.3), 3.0)
 		_show_upgrade_banner(tier, bonus)
 		await get_tree().create_timer(2.4).timeout
 		_cutscene = false
@@ -594,17 +602,17 @@ func _play_upgrade_cutscene(tier: int, bonus: int) -> void:
 	var pivot_base := pivot.position
 	var size_base := _camera.size
 	# Ziel: Festungsmitte im Bild, deutlich herangezoomt (kleinere ortho-Größe = näher).
-	var focus := Vector3(0.0, pivot_base.y, GOAL_Z + 3.0)
+	var focus := Vector3(0.0, pivot_base.y, GOAL_Z + 3.0 * FORTRESS_GROW)
 
 	# Festlicher goldener Blitz an der Festung + Banner.
-	_spawn_explosion(Vector3(0.0, 2.0, GOAL_Z + 2.0), Color(1.0, 0.85, 0.3), 3.0)
+	_spawn_explosion(Vector3(0.0, 2.0, GOAL_Z + 2.0 * FORTRESS_GROW), Color(1.0, 0.85, 0.3), 3.0)
 	_show_upgrade_banner(tier, bonus)
 
 	# Heranfahren + kräftig hineinzoomen.
 	var tw_in := create_tween()
 	tw_in.set_parallel(true)
 	tw_in.tween_property(pivot, "position", focus, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tw_in.tween_property(_camera, "size", size_base * 0.42, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw_in.tween_property(_camera, "size", size_base * minf(0.42 * FORTRESS_GROW, 1.0), 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	await tw_in.finished
 	await get_tree().create_timer(1.1).timeout
 

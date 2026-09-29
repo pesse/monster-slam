@@ -15,7 +15,7 @@ extends SceneTree
 ## Platz (Baum, Fels, Gras, Wahrzeichen) gleich, egal welches Modell dort steht. Zum
 ## Vergleich bei Skalierung 1: tree.glb ist 7.3 hoch (Bäume stehen bei ~1), rock.glb ein
 ## Kieselhaufen von 1.1 Breite (Felsen bei ~2.3), grass.glb 1.0 hoch (Gras bei ~1.6),
-## pillar.gltf 4.0 (Wahrzeichen bei ~0.9). Die Burg ist 4.0 hoch (im Kampf ×3).
+## pillar.gltf 4.0 (Wahrzeichen bei ~0.9). Die Burg ist 4.0 hoch (im Kampf × FortressModel.SCALE).
 
 const OUT := "res://assets/models/forge"
 

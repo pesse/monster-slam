@@ -21,6 +21,8 @@ extends Node3D
 ##         „+XP", Monster, Meister-Feier) und gibt ihn in ms aus; --warm wärmt vorher vor
 ##         wie der Kampf (FxWarmup). Ein Lauf je Messung — ein zweiter Effekt im selben Lauf
 ##         wäre schon warm.
+##     … -- --monsters [--tier=<0..4>]
+##         Stellt Monster vor die Mauer — Größenvergleich mit der Festung (Vorgabe Vollausbau).
 ##     … -- --fps [--theme=<name>] [--windowed]
 ##         Misst im Vollbild und ohne VSync die mittlere Bildzeit mit allem an, jeweils ohne
 ##         eine Zutat (MSAA, Wolken, Teilchen, Wind, Schatten, Glow) und ohne alles — die
@@ -365,11 +367,25 @@ func _build_decor(noise: FastNoiseLite, theme: BattleTheme) -> void:
 		var x := (1.0 if i % 2 == 0 else -1.0) * rng.randf_range(9.5, 12.5)
 		var z := rng.randf_range(WaveRunnerScript.SPAWN_Z, WaveRunnerScript.GOAL_Z - 2.0)
 		_place_from(theme, "landmarks" if i == 5 else "props" if i % 4 == 0 else "trees", x, z, noise, rng)
-	_place("hexagon/building_castle_blue.gltf", 0.0, WaveRunnerScript.GOAL_Z + 3.5, noise, 0.0,
-			WaveRunnerScript.FORTRESS_SCALE)
-	for x: float in [-6.0, 0.0, 6.0]:
-		_place("hexagon/wall_straight.gltf", x, WaveRunnerScript.GOAL_Z, noise, WaveRunnerScript.WALL_YAW,
-				WaveRunnerScript.FORTRESS_SCALE)
+	# Die Festung, wie sie im Kampf steht (FortressModel), im Vollausbau oder --tier=<0..4>.
+	var tier := int(_arg("tier")) if not _arg("tier").is_empty() else 4
+	FortressModel.build(_decor, tier, WaveRunnerScript.GOAL_Z,
+			func(x: float, z: float) -> float: return WaveRunnerScript.terrain_height(x, z, noise))
+	if _has_arg("monsters"):
+		_place_monsters()
+
+
+## Zum Größenvergleich: drei Monster kurz vor der Mauer und eines weiter vorn auf der Bahn.
+func _place_monsters() -> void:
+	var defs := FxWarmup.monster_defs()
+	var spots := [Vector3(-4.0, 0.0, WaveRunnerScript.GOAL_Z - 1.5), Vector3(0.5, 0.0, WaveRunnerScript.GOAL_Z - 2.0),
+			Vector3(4.5, 0.0, WaveRunnerScript.GOAL_Z - 1.5), Vector3(-1.0, 0.0, WaveRunnerScript.GOAL_Z - 10.0)]
+	for i in spots.size():
+		var monster := FxWarmup.MONSTER_SCENE.instantiate() as Monster
+		monster.setup(defs[i % defs.size()], {"prompt": "house"}, 1000.0, 0.0)
+		monster.position = spots[i]
+		_decor.add_child(monster)
+		monster.halt()
 
 
 ## Eines der Modelle des Platzes `slot` im Thema, in der Größe des Platzes.
