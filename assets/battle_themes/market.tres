@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="BattleTheme" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/battle/battle_theme.gd" id="1_theme"]
+
+[resource]
+script = ExtResource("1_theme")
+light_from = "forum"
+ground_texture = "flagstone"
+ground_texture_strength = 0.8
+ground_low = Color(0.92, 0.84, 0.68, 1)
+ground_high = Color(0.98, 0.9, 0.74, 1)
+hill = Color(0.86, 0.8, 0.7, 1)
+trees = Array[String](["forge/cypress.glb", "forge/stone_pine.glb", "forge/roman_house.glb", "forge/roman_house.glb"])
+rocks = Array[String](["forge/marble_rubble.glb"])
+grass = Array[String]([])
+props = Array[String](["forge/market_stall.glb", "forge/amphorae.glb", "props/crates_stacked.gltf"])
+landmarks = Array[String](["forge/market_stall.glb", "forge/statue.glb", "forge/temple.glb", "forge/fountain.glb"])

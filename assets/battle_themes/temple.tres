@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="BattleTheme" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/battle/battle_theme.gd" id="1_theme"]
+
+[resource]
+script = ExtResource("1_theme")
+light_from = "sky_ruins"
+ground_texture = "flagstone"
+ground_texture_strength = 0.7
+ground_low = Color(0.68, 0.6, 0.42, 1)
+ground_high = Color(0.78, 0.68, 0.48, 1)
+hill = Color(0.54, 0.5, 0.52, 1)
+trees = Array[String](["forge/cypress.glb", "forge/olive.glb", "forge/floating_rock.glb"])
+rocks = Array[String](["forge/sky_boulder.glb"])
+grass = Array[String](["forge/dry_grass.glb"])
+props = Array[String]([])
+landmarks = Array[String](["forge/tholos.glb", "forge/marble_column.glb"])

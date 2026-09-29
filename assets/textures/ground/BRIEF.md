@@ -150,6 +150,38 @@ Spiegelung, keine Pfützen mit hellem Rand. Thema: Feuchtgebiet.
 > puddles, flat even overcast lighting, no cast shadows, low contrast, average mid-gray, no
 > objects, no text.
 
+### `flagstone.png`
+
+Römisches Pflaster eines Forums: rechteckige und leicht unregelmäßige Steinplatten
+(60–160 Pixel, also 0,5–1,2 m), in versetzten Reihen verlegt, Kanten abgerundet und
+abgetreten, die Oberfläche fein porös wie Travertin. Die Fugen schmal (4–8 Pixel) und nur
+sanft dunkler, mit etwas Staub darin, nicht schwarz. Die Platten leicht unterschiedlich
+hell, damit eine ruhige Fleckung entsteht; keine einzelne Platte mit Riss oder Fleck, die
+auffällt, keine Inschrift, kein Muster aus farbigen Steinen. Das Spiel färbt sie warm
+beige. Themen: Forum, Markt, Hafen, Himmelsruinen.
+
+> Seamless tileable photorealistic ground texture, delit albedo map, grayscale, top-down
+> orthographic view, ancient roman forum pavement, worn rectangular travertine flagstones
+> 0.5–1.2 m laid in staggered rows, rounded worn edges, finely porous surface, narrow soft
+> joints only slightly darker with a little dust, stones vary slightly in brightness, no
+> single standout crack or stain, no inscriptions, no mosaic, flat even overcast lighting,
+> no cast shadows, low contrast, average mid-gray, no objects, no text.
+
+### `autumn_leaves.png`
+
+Herbstlaub im Mischwald: eine geschlossene Decke aus flach liegenden, breiten Blättern
+(Ahorn, Buche, Eiche; 25–70 Pixel), dicht übereinander, dazwischen kaum Erde. Die Blätter
+unterschiedlich hell, damit sie zu Laubhaufen von 80–150 Pixeln verschmelzen; **kein
+einzelnes großes Blatt**, das man im Muster wiederfindet (das war der Fehler der ersten
+`forest_floor`). Das Spiel färbt sie orange-rot. Themen: Herbstwald, Weinberg.
+
+> Seamless tileable photorealistic ground texture, delit albedo map, grayscale, top-down
+> orthographic view, autumn forest floor fully covered with flat lying broad fallen leaves
+> of maple, beech and oak 25–70 px, densely overlapping, very little soil visible, leaves
+> vary in brightness and merge into soft leaf piles 80–150 px, no single large standout
+> leaf, flat even overcast lighting, no cast shadows, low contrast, average mid-gray, no
+> objects, no text.
+
 ## Stand
 
 **Neu bestellt 2026-09-28: alle fünf realistisch** (Vorgaben oben). Die erste, handgemalte
@@ -168,6 +200,8 @@ bleibt im Spiel, bis die neue Datei sie ersetzt (gleicher Dateiname, einfach
 | `gravel.png` | erstellt (realistisch), 2026-09-29 |
 | `eucalyptus_litter.png` | erstellt (realistisch), 2026-09-29 |
 | `marsh.png` | erstellt (realistisch), 2026-09-29 |
+| `flagstone.png` | erstellt (realistisch), 2026-09-29 |
+| `autumn_leaves.png` | erstellt (realistisch), 2026-09-29 |
 
 Neue Texturen werden hier als eigener Abschnitt unter „Die Texturen" bestellt und in
 diese Tabelle eingetragen.

@@ -10,3 +10,5 @@
 | `gravel.png` | OpenAI `image_gen` (integriertes Bildmodell; genaue Modellbezeichnung vom Werkzeug nicht ausgewiesen), nachbearbeitet mit Python, Pillow und NumPy | 2026-09-29 | Keine fremde Vorlage und kein Foto übernommen |
 | `eucalyptus_litter.png` | OpenAI `image_gen` (integriertes Bildmodell; genaue Modellbezeichnung vom Werkzeug nicht ausgewiesen), nachbearbeitet mit Python, Pillow und NumPy | 2026-09-29 | Keine fremde Vorlage und kein Foto übernommen |
 | `marsh.png` | OpenAI `image_gen` (integriertes Bildmodell; genaue Modellbezeichnung vom Werkzeug nicht ausgewiesen), nachbearbeitet mit Python, Pillow und NumPy | 2026-09-29 | Keine fremde Vorlage und kein Foto übernommen |
+| `flagstone.png` | OpenAI `image_gen` (integriertes Bildmodell; genaue Modellbezeichnung vom Werkzeug nicht ausgewiesen), nachbearbeitet mit Python, Pillow und NumPy | 2026-09-29 | Keine fremde Vorlage und kein Foto übernommen |
+| `autumn_leaves.png` | OpenAI `image_gen` (integriertes Bildmodell; genaue Modellbezeichnung vom Werkzeug nicht ausgewiesen), nachbearbeitet mit Python, Pillow und NumPy | 2026-09-29 | Keine fremde Vorlage und kein Foto übernommen |

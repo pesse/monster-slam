@@ -2094,11 +2094,38 @@
     }
   },
   "themes": {
-    "1": "meadow",
-    "2": "forest",
-    "3": "ice",
-    "4": "mediterranean",
-    "5": "desert",
-    "6": "mountain"
+    "1": {
+      "default": "spring_grove",
+      "t3": "roman_village",
+      "all": "meadow"
+    },
+    "2": {
+      "default": "autumn_forest",
+      "t2": "vineyard",
+      "t3": "vineyard"
+    },
+    "3": {
+      "default": "snowforest",
+      "t3": "mountain_hut",
+      "t5": "ice",
+      "t6": "ice"
+    },
+    "4": {
+      "default": "forum",
+      "t2": "harbour",
+      "t3": "market"
+    },
+    "5": {
+      "default": "desert",
+      "t2": "caravan_camp",
+      "t3": "oasis",
+      "t4": "caravan_camp",
+      "t5": "canyon",
+      "t6": "canyon"
+    },
+    "6": {
+      "default": "sky_ruins",
+      "t5": "temple"
+    }
   }
 }

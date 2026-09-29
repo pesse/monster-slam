@@ -75,6 +75,34 @@ func _initialize() -> void:
 	_export("surfboards", _surfboards())
 	_export("canoe", _canoe())
 	_export("net_rack", _net_rack())
+	# Latein — Rom: Forum, Markt, Hafen
+	_export("stone_pine", _stone_pine())
+	_export("roman_house", _roman_house())
+	_export("statue", _statue())
+	_export("triumphal_arch", _triumphal_arch())
+	_export("temple", _temple())
+	_export("amphorae", _amphorae(), 1.8)
+	_export("marble_rubble", _marble_rubble())
+	_export("fountain", _fountain(), 1.5)
+	_export("roman_boat", _roman_boat())
+	_export("crane", _crane())
+	_export("harbour_basin", _harbour_basin())
+	# … Dörfer der Jahreszeiten: Frühling, Herbst, Eis, Wüste
+	_export("flower_tuft", _flower_tuft(), 1.3)
+	_export("autumn_red", _round_tree(293, AUTUMN_BARK, AUTUMN_RED_A, AUTUMN_RED_B, 1.1))
+	_export("autumn_orange", _round_tree(307, AUTUMN_BARK, AUTUMN_ORANGE_A, AUTUMN_ORANGE_B, 1.0))
+	_export("autumn_yellow", _round_tree(311, AUTUMN_BARK, AUTUMN_YELLOW_A, AUTUMN_YELLOW_B, 0.95))
+	_export("vine_row", _vine_row(), 1.6)
+	_export("log_cabin", _log_cabin())
+	_export("woodpile", _woodpile())
+	_export("nomad_tent", _nomad_tent())
+	_export("clay_house", _clay_house())
+	_export("oasis_pond", _oasis_pond(), 1.8)
+	# … Himmelsruinen
+	_export("floating_rock", _floating_rock(), 1.5)
+	_export("aqueduct", _aqueduct(), 0.8)
+	_export("tholos", _tholos())
+	_export("sky_boulder", _sky_boulder())
 	quit()
 
 
@@ -1231,46 +1259,54 @@ const CANOE_INSIDE := Color(0.46, 0.33, 0.22)
 ## Querhölzer und ein Paddel darin. Etwa 3.2 lang und 0.5 hoch.
 func _canoe() -> Forge:
 	var f := Forge.new()
-	var n := 10
-	var sides := 6
 	var half := 1.6
-	var outer: Array = []
-	var inner: Array = []
-	for i in n + 1:
-		var x := -half + 2.0 * half * i / n
-		var q := 1.0 - (x / half) * (x / half)
-		var w := 0.45 * q
-		var d := 0.4 * (0.7 + 0.3 * q)
-		var rim := 0.42 + 0.12 * (1.0 - q)
-		var o: Array[Vector3] = []
-		var inn: Array[Vector3] = []
-		for j in sides + 1:
-			var ang := PI * j / sides
-			o.append(Vector3(x, rim - d * sin(ang), w * cos(ang)))
-			inn.append(Vector3(x, rim - 0.85 * d * sin(ang), 0.85 * w * cos(ang)))
-		outer.append(o)
-		inner.append(inn)
-	for i in n:
-		var x := -half + 2.0 * half * (i + 0.5) / n
-		var axis := Vector3(x, 0.3, 0)
-		for j in sides:
-			var col := CANOE_A if j < 1 or j >= sides - 1 else CANOE_B
-			f.tri_out(outer[i][j], outer[i + 1][j], outer[i + 1][j + 1], col, axis)
-			f.tri_out(outer[i][j], outer[i + 1][j + 1], outer[i][j + 1], col, axis)
-			# Innen zeigt die Fläche zur Achse: `inside` ist ihr Spiegelpunkt jenseits der Wand.
-			var c: Vector3 = (inner[i][j] + inner[i + 1][j + 1]) * 0.5
-			f.tri_out(inner[i][j], inner[i + 1][j], inner[i + 1][j + 1], CANOE_INSIDE, c * 2.0 - axis)
-			f.tri_out(inner[i][j], inner[i + 1][j + 1], inner[i][j + 1], CANOE_INSIDE, c * 2.0 - axis)
-		for j: int in [0, sides]:
-			var c2: Vector3 = (outer[i][j] + inner[i + 1][j]) * 0.5
-			f.tri_out(outer[i][j], outer[i + 1][j], inner[i + 1][j], CANOE_A, c2 - Vector3(0, 1, 0))
-			f.tri_out(outer[i][j], inner[i + 1][j], inner[i][j], CANOE_A, c2 - Vector3(0, 1, 0))
+	_hull(f, half, 0.45, 0.4, 0.12, CANOE_A, CANOE_B, CANOE_INSIDE)
 	for x: float in [-0.55, 0.55]:
 		var q := 1.0 - (x / half) * (x / half)
 		f.box(Vector3(x, 0.38, 0), Vector3(0.12, 0.05, 0.85 * 0.45 * q * 2.0), TIMBER_A, 0.0)
 	f.box(Vector3(0.1, 0.2, 0.05), Vector3(1.3, 0.04, 0.08), TIMBER_A, 0.15)
 	f.box(Vector3(0.8, 0.2, 0.15), Vector3(0.36, 0.04, 0.18), TIMBER_A, 0.15)
 	return f
+
+
+## Offener Rumpf entlang x von -`half` bis `half`: `beam` halbe Breite und `depth` Tiefe
+## mittschiffs, zu den Enden spitz; `sheer` hebt Bug und Heck an. Außen `col_a` am
+## Dollbord, sonst `col_b`, innen `col_in`. `at` verschiebt den ganzen Rumpf.
+func _hull(f: Forge, half: float, beam: float, depth: float, sheer: float, col_a: Color,
+		col_b: Color, col_in: Color, at := Vector3.ZERO) -> void:
+	var n := 10
+	var sides := 6
+	var outer: Array = []
+	var inner: Array = []
+	for i in n + 1:
+		var x := -half + 2.0 * half * i / n
+		var q := 1.0 - (x / half) * (x / half)
+		var w := beam * q
+		var d := depth * (0.7 + 0.3 * q)
+		var rim := depth + 0.02 + sheer * (1.0 - q)
+		var o: Array[Vector3] = []
+		var inn: Array[Vector3] = []
+		for j in sides + 1:
+			var ang := PI * j / sides
+			o.append(at + Vector3(x, rim - d * sin(ang), w * cos(ang)))
+			inn.append(at + Vector3(x, rim - 0.85 * d * sin(ang), 0.85 * w * cos(ang)))
+		outer.append(o)
+		inner.append(inn)
+	for i in n:
+		var x := -half + 2.0 * half * (i + 0.5) / n
+		var axis := at + Vector3(x, depth * 0.75, 0)
+		for j in sides:
+			var col := col_a if j < 1 or j >= sides - 1 else col_b
+			f.tri_out(outer[i][j], outer[i + 1][j], outer[i + 1][j + 1], col, axis)
+			f.tri_out(outer[i][j], outer[i + 1][j + 1], outer[i][j + 1], col, axis)
+			# Innen zeigt die Fläche zur Achse: `inside` ist ihr Spiegelpunkt jenseits der Wand.
+			var c: Vector3 = (inner[i][j] + inner[i + 1][j + 1]) * 0.5
+			f.tri_out(inner[i][j], inner[i + 1][j], inner[i + 1][j + 1], col_in, c * 2.0 - axis)
+			f.tri_out(inner[i][j], inner[i + 1][j + 1], inner[i][j + 1], col_in, c * 2.0 - axis)
+		for j: int in [0, sides]:
+			var c2: Vector3 = (outer[i][j] + inner[i + 1][j]) * 0.5
+			f.tri_out(outer[i][j], outer[i + 1][j], inner[i + 1][j], col_a, c2 - Vector3(0, 1, 0))
+			f.tri_out(outer[i][j], inner[i + 1][j], inner[i][j], col_a, c2 - Vector3(0, 1, 0))
 
 
 const NET := Color(0.32, 0.34, 0.30)
@@ -1288,6 +1324,538 @@ func _net_rack() -> Forge:
 			Vector3(-0.9, 0.6, 0.15), NET)
 	for k in 5:
 		f.blob(Vector3(-0.8 + 0.4 * k, 1.8, 0.1), 0.08, FLOAT, rng, 0.0)
+	return f
+
+
+# --- Latein: Rom, Dörfer der Jahreszeiten, Himmelsruinen ------------------------------
+
+const TRAV_A := Color(0.84, 0.78, 0.66)
+const TRAV_B := Color(0.74, 0.68, 0.56)
+const TRAV_DARK := Color(0.62, 0.56, 0.46)
+const PLASTER_A := Color(0.90, 0.83, 0.70)
+const PLASTER_B := Color(0.80, 0.72, 0.58)
+const TILE_A := Color(0.72, 0.36, 0.22)
+const TILE_B := Color(0.60, 0.28, 0.17)
+const STATUE_A := Color(0.90, 0.88, 0.84)
+const STATUE_B := Color(0.78, 0.76, 0.72)
+const WATER_A := Color(0.30, 0.56, 0.70)
+const WATER_B := Color(0.46, 0.70, 0.80)
+
+
+## Halbrunder Bogen in der x-y-Ebene, `c` die Mitte der Kämpferlinie, `depth` tief entlang
+## z: Keilsteine zwischen `r_in` und `r_out`, abwechselnd `col_a` und `col_b`. Die Zwickel
+## bis zur Oberkante `c.y + r_out` füllt `spandrel` — so steht der Bogen in einer Wand.
+## `stones` gerade, damit die Fuge im Scheitel liegt und die Zwickel sauber teilen.
+func _arch(f: Forge, c: Vector3, r_in: float, r_out: float, depth: float, col_a: Color,
+		col_b: Color, spandrel: Color, stones := 8) -> void:
+	var dz := Vector3(0, 0, depth * 0.5)
+	for i in stones:
+		var a0 := PI * i / stones
+		var a1 := PI * (i + 1) / stones
+		var d0 := Vector3(cos(a0), sin(a0), 0)
+		var d1 := Vector3(cos(a1), sin(a1), 0)
+		var i0 := c + d0 * r_in
+		var i1 := c + d1 * r_in
+		var o0 := c + d0 * r_out
+		var o1 := c + d1 * r_out
+		var mid := c + (d0 + d1).normalized() * (r_in + r_out) * 0.5
+		var col := col_a if i % 2 == 0 else col_b
+		for s: Vector3 in [dz, -dz]:
+			f.tri_out(i0 + s, i1 + s, o1 + s, col, mid)
+			f.tri_out(i0 + s, o1 + s, o0 + s, col, mid)
+		f.tri_out(i0 + dz, i1 + dz, i1 - dz, col, mid)
+		f.tri_out(i0 + dz, i1 - dz, i0 - dz, col, mid)
+		f.tri_out(o0 + dz, o1 + dz, o1 - dz, col, mid)
+		f.tri_out(o0 + dz, o1 - dz, o0 - dz, col, mid)
+		var corner := c + Vector3(r_out if i < stones / 2 else -r_out, r_out, 0)
+		f.tri_out(corner + dz, o0 + dz, o1 + dz, spandrel, c)
+		f.tri_out(corner - dz, o0 - dz, o1 - dz, spandrel, c)
+
+
+const UMBRELLA_BARK := Color(0.48, 0.33, 0.24)
+const UMBRELLA_A := Color(0.21, 0.35, 0.17)
+const UMBRELLA_B := Color(0.15, 0.27, 0.12)
+
+
+## Pinie: hoher, leicht geneigter Stamm, oben ein flacher Schirm aus Nadelpolstern — der
+## Baum Roms über Mauern und Plätzen. Etwa 6.5 hoch.
+func _stone_pine() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(211)
+	var knee := Vector3(0.35, 2.6, 0.1)
+	var fork := Vector3(0.2, 4.6, 0.25)
+	f.frustum(Vector3.ZERO, knee, 0.32, 0.25, 6, UMBRELLA_BARK, 0.0)
+	f.frustum(knee, fork, 0.25, 0.18, 6, UMBRELLA_BARK, 0.3)
+	for arm: Vector3 in [Vector3(-1.1, 5.3, 0.3), Vector3(1.2, 5.4, -0.2), Vector3(0.1, 5.5, -1.0)]:
+		f.frustum(fork, arm, 0.14, 0.08, 5, UMBRELLA_BARK, 0.0)
+	var paint := func(_m: Vector3, n: Vector3) -> Color:
+		return UMBRELLA_A if n.y > 0.2 and rng.randf() < 0.7 else UMBRELLA_B
+	for pad: Array in [[Vector3(0.1, 5.8, 0), Vector3(2.4, 0.55, 2.2)],
+			[Vector3(-1.3, 5.6, 0.4), Vector3(1.3, 0.45, 1.2)],
+			[Vector3(1.4, 5.7, -0.3), Vector3(1.3, 0.45, 1.3)],
+			[Vector3(0.2, 5.5, -1.3), Vector3(1.2, 0.4, 1.1)]]:
+		f.lump(pad[0], pad[1], 3, 9, rng, 0.12, paint)
+	return f
+
+
+## Römisches Wohnhaus: verputzter Kasten unter flachem Ziegeldach in Bahnen, ein niedriger
+## Anbau daneben, dunkle Tür mit Sturz und kleine hohe Fenster. Etwa 3.5 hoch.
+func _roman_house() -> Forge:
+	var f := Forge.new()
+	f.box(Vector3(0, 1.3, 0), Vector3(3.6, 2.6, 2.8), PLASTER_A, 0.0)
+	_gable(f, Vector3(0, 2.6, 0), 1.95, 1.6, 0.8, TILE_A, TILE_B, PLASTER_B, 8)
+	f.box(Vector3(2.6, 0.9, 0.4), Vector3(1.8, 1.8, 2.0), PLASTER_B, 0.0)
+	_gable(f, Vector3(2.6, 1.8, 0.4), 1.0, 1.15, 0.5, TILE_B, TILE_A, PLASTER_A, 4)
+	f.box(Vector3(-0.6, 0.8, 1.42), Vector3(0.8, 1.6, 0.04), DOOR, 0.0)
+	f.box(Vector3(-0.6, 1.66, 1.45), Vector3(1.0, 0.12, 0.1), TRAV_B, 0.0)
+	for x in [0.5, 1.2]:
+		f.box(Vector3(x, 1.9, 1.42), Vector3(0.36, 0.42, 0.04), DOOR, 0.0)
+	f.box(Vector3(2.9, 0.7, 1.42), Vector3(0.5, 0.5, 0.04), DOOR, 0.0)
+	return f
+
+
+## Marmorstandbild auf Stufensockel: eine Gestalt in Toga, den rechten Arm erhoben, der
+## linke hält den Faltenwurf. Etwa 4 hoch.
+func _statue() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(223)
+	f.box(Vector3(0, 0.25, 0), Vector3(1.6, 0.5, 1.6), TRAV_B, 0.0)
+	f.box(Vector3(0, 1.0, 0), Vector3(1.1, 1.0, 1.1), TRAV_A, 0.0)
+	f.box(Vector3(0, 1.56, 0), Vector3(1.3, 0.12, 1.3), TRAV_B, 0.0)
+	var y := 1.62
+	var marble := func(_m: Vector3, n: Vector3) -> Color:
+		return STATUE_A if n.y > -0.2 else STATUE_B
+	f.frustum(Vector3(0, y, 0), Vector3(0, y + 1.3, 0), 0.42, 0.3, 8, STATUE_A, 0.2, STATUE_B)
+	f.lump(Vector3(0, y + 1.5, 0), Vector3(0.36, 0.34, 0.26), 3, 7, rng, 0.05, marble)
+	f.lump(Vector3(0, y + 2.0, 0.02), Vector3(0.17, 0.2, 0.17), 3, 6, rng, 0.04, marble)
+	f.frustum(Vector3(0.32, y + 1.62, 0), Vector3(0.62, y + 2.35, 0.12), 0.09, 0.07, 5, STATUE_A)
+	f.frustum(Vector3(-0.33, y + 1.6, 0), Vector3(-0.42, y + 0.95, 0.12), 0.1, 0.08, 5, STATUE_B)
+	f.frustum(Vector3(-0.3, y + 1.55, 0.05), Vector3(-0.32, y + 0.55, 0.2), 0.16, 0.26, 5, STATUE_B, 0.3)
+	return f
+
+
+## Triumphbogen: zwei Pfeiler mit vorgesetzten Halbsäulen, dazwischen der Bogen aus
+## Keilsteinen, darüber die Attika zwischen zwei Gesimsen. Etwa 5 hoch, 4.4 breit.
+func _triumphal_arch() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(227)
+	var depth := 1.6
+	var r_in := 1.1
+	var r_out := 1.5
+	var spring := 2.2
+	var top := spring + r_out
+	for side: float in [-1.0, 1.0]:
+		f.box(Vector3(side * (r_in + 0.55), top * 0.5, 0), Vector3(1.1, top, depth), TRAV_A, 0.0)
+		f.box(Vector3(side * (r_in + 0.55), 0.15, 0), Vector3(1.4, 0.3, depth + 0.6), TRAV_DARK, 0.0)
+		for z: float in [depth * 0.5 + 0.12, -depth * 0.5 - 0.12]:
+			f.drum(Vector3(side * (r_in + 0.8), 0.3, z), 0.16, top - 0.3, 8, TRAV_B, rng, 0.0)
+	_arch(f, Vector3(0, spring, 0), r_in, r_out, depth, TRAV_B, TRAV_A, TRAV_A)
+	var w := 2.0 * (r_in + 1.1)
+	f.box(Vector3(0, top + 0.12, 0), Vector3(w + 0.3, 0.24, depth + 0.5), TRAV_DARK, 0.0)
+	f.box(Vector3(0, top + 0.74, 0), Vector3(w, 1.0, depth), TRAV_A, 0.0)
+	f.box(Vector3(0, top + 1.3, 0), Vector3(w + 0.2, 0.14, depth + 0.2), TRAV_DARK, 0.0)
+	return f
+
+
+## Tempel mit Säulenvorhalle nach +x: Podium mit Treppe, vier Säulen, Gebälk, flaches
+## Ziegeldach mit Giebeldreieck; dahinter die geschlossene Cella. Etwa 4.6 hoch.
+func _temple() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(229)
+	f.box(Vector3(0, 0.4, 0), Vector3(5.2, 0.8, 3.6), TRAV_B, 0.0)
+	for k in 3:
+		var h := 0.8 * (3 - k) / 3.0
+		f.box(Vector3(2.75 + 0.3 * k, h * 0.5, 0), Vector3(0.3, h, 2.4), TRAV_A, 0.0)
+	for z: float in [-1.35, -0.45, 0.45, 1.35]:
+		f.drum(Vector3(2.0, 0.8, z), 0.22, 2.6, 10, STATUE_A, rng, 0.0, STATUE_B)
+	f.box(Vector3(-0.7, 2.1, 0), Vector3(3.6, 2.6, 3.0), PLASTER_A, 0.0)
+	f.box(Vector3(1.1, 1.5, 0), Vector3(0.05, 1.8, 0.9), DOOR, 0.0)
+	f.box(Vector3(0, 3.55, 0), Vector3(5.1, 0.3, 3.5), TRAV_A, 0.0)
+	_gable(f, Vector3(0, 3.7, 0), 2.65, 1.85, 0.9, TILE_A, TILE_B, TRAV_A, 10)
+	return f
+
+
+const AMPHORA_A := Color(0.72, 0.42, 0.26)
+const AMPHORA_B := Color(0.62, 0.34, 0.20)
+
+
+## Amphoren: drei stehende an einem Holzgestell, eine liegende davor. Etwa 1.1 hoch.
+func _amphorae() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(233)
+	for k in 3:
+		_amphora(f, Vector3(-0.5 + 0.5 * k, 0, rng.randf_range(-0.06, 0.06)), Vector3.UP, 1.0 - 0.08 * k)
+	_amphora(f, Vector3(-0.35, 0.2, 0.55), Vector3(1, 0.08, 0.2).normalized(), 0.9)
+	for x in [-0.8, 0.8]:
+		f.box(Vector3(x, 0.4, -0.25), Vector3(0.08, 0.8, 0.08), TIMBER_B, 0.0)
+	f.box(Vector3(0, 0.62, -0.25), Vector3(1.7, 0.06, 0.06), TIMBER_A, 0.0)
+	return f
+
+
+## Eine Amphora ab `base` entlang `axis`, `s` hoch: Fuß, bauchiger Körper, Hals, zwei
+## Henkel.
+func _amphora(f: Forge, base: Vector3, axis: Vector3, s: float) -> void:
+	var prof := [[0.0, 0.03], [0.12, 0.13], [0.45, 0.22], [0.7, 0.19], [0.8, 0.08], [0.98, 0.065],
+			[1.04, 0.09]]
+	for i in prof.size() - 1:
+		var a: Array = prof[i]
+		var b: Array = prof[i + 1]
+		f.frustum(base + axis * a[0] * s, base + axis * b[0] * s, a[1] * s, b[1] * s, 8,
+				AMPHORA_A, 0.0, AMPHORA_B)
+	var side := axis.cross(Vector3.FORWARD if absf(axis.dot(Vector3.FORWARD)) < 0.9 else Vector3.RIGHT).normalized()
+	for k: float in [-1.0, 1.0]:
+		f.frustum(base + (axis * 0.94 + side * k * 0.07) * s, base + (axis * 0.72 + side * k * 0.17) * s,
+				0.025 * s, 0.025 * s, 4, AMPHORA_B)
+
+
+## Bauschutt vom Forum: ein behauener Quader mit Gesims, eine liegende Säulentrommel, ein
+## paar Brocken. Etwa 1.1 breit — steht im Platz der Felsen (~2.3).
+func _marble_rubble() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(239)
+	f.box(Vector3(-0.15, 0.16, 0), Vector3(0.62, 0.32, 0.42), TRAV_B, 0.3)
+	f.box(Vector3(-0.15, 0.36, 0), Vector3(0.68, 0.08, 0.48), TRAV_DARK, 0.3)
+	f.frustum(Vector3(0.25, 0.14, -0.15), Vector3(0.45, 0.14, 0.3), 0.14, 0.14, 10, STATUE_A, 0.0, STATUE_B)
+	for k in 3:
+		var p := Vector3(rng.randf_range(-0.5, 0.5), 0, rng.randf_range(0.25, 0.45))
+		var sz := rng.randf_range(0.08, 0.14)
+		f.box(p + Vector3(0, sz * 0.5, 0), Vector3(sz * 1.4, sz, sz), TRAV_B, rng.randf_range(0.0, 1.5))
+	return f
+
+
+## Brunnen: achteckiges Becken mit Wasser, in der Mitte ein Pfeiler mit Schale, aus der
+## es in vier Strahlen fällt. Etwa 1.7 hoch, 2.2 breit.
+func _fountain() -> Forge:
+	var f := Forge.new()
+	f.frustum(Vector3.ZERO, Vector3(0, 0.42, 0), 0.95, 0.95, 8, WATER_A, PI / 8.0)
+	for k in 8:
+		var a := TAU * k / 8.0
+		var p := Vector3(cos(a), 0, sin(a)) * 1.0
+		f.box(p + Vector3(0, 0.3, 0), Vector3(0.86, 0.6, 0.16), TRAV_A if k % 2 == 0 else TRAV_B, -(a + PI / 2.0))
+	f.frustum(Vector3.ZERO, Vector3(0, 1.1, 0), 0.2, 0.14, 8, TRAV_B, 0.0)
+	f.frustum(Vector3(0, 1.1, 0), Vector3(0, 1.3, 0), 0.2, 0.5, 8, TRAV_A, 0.0)
+	f.frustum(Vector3(0, 1.26, 0), Vector3(0, 1.31, 0), 0.44, 0.44, 8, WATER_B, 0.0)
+	f.frustum(Vector3(0, 1.3, 0), Vector3(0, 1.6, 0), 0.07, 0.04, 6, TRAV_B, 0.0)
+	for k in 4:
+		var a := TAU * k / 4.0 + PI / 4.0
+		var d := Vector3(cos(a), 0, sin(a))
+		var side := Vector3(-d.z, 0, d.x) * 0.06
+		f.blade(d * 0.5 + Vector3(0, 1.3, 0) - side, d * 0.5 + Vector3(0, 1.3, 0) + side, d * 0.72 + Vector3(0, 0.42, 0), WATER_B)
+	return f
+
+
+const HULL_A := Color(0.36, 0.24, 0.15)
+const HULL_B := Color(0.46, 0.31, 0.19)
+const SAIL := Color(0.90, 0.84, 0.70)
+
+
+## Römisches Ruderboot: hochgezogener Rumpf, der Bug in einem geschwungenen Steven, je Seite
+## drei Riemen und ein kurzer Mast mit gerefftem Segel. Etwa 3.6 lang.
+func _roman_boat() -> Forge:
+	var f := Forge.new()
+	_hull(f, 1.8, 0.62, 0.5, 0.3, HULL_A, HULL_B, TIMBER_B)
+	f.frustum(Vector3(1.7, 0.7, 0), Vector3(2.0, 1.25, 0), 0.07, 0.05, 5, HULL_A, 0.0)
+	f.frustum(Vector3(2.0, 1.25, 0), Vector3(1.85, 1.5, 0), 0.05, 0.03, 5, HULL_A, 0.0)
+	f.frustum(Vector3(-1.7, 0.7, 0), Vector3(-1.95, 1.05, 0), 0.07, 0.05, 5, HULL_A, 0.0)
+	for x: float in [-0.7, 0.0, 0.7]:
+		for side: float in [-1.0, 1.0]:
+			f.frustum(Vector3(x, 0.52, side * 0.45), Vector3(x - 0.25, 0.05, side * 1.45), 0.03, 0.03, 4, TIMBER_A)
+			f.box(Vector3(x - 0.26, 0.05, side * 1.5), Vector3(0.3, 0.02, 0.12), TIMBER_A, 0.4)
+	f.frustum(Vector3(0.3, 0.2, 0), Vector3(0.3, 2.2, 0), 0.05, 0.04, 5, TIMBER_B, 0.0)
+	f.frustum(Vector3(0.3, 2.0, -0.9), Vector3(0.3, 2.0, 0.9), 0.1, 0.1, 6, SAIL, 0.0)
+	return f
+
+
+## Tretradkran am Hafen: ein Ausleger aus zwei Balken mit Stütze, oben die Rolle, am Seil
+## eine Kiste; unten das große Tretrad. Etwa 5.8 hoch.
+func _crane() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(251)
+	f.box(Vector3(0, 0.12, 0), Vector3(3.4, 0.24, 2.0), TIMBER_B, 0.0)
+	var hub := Vector3(-0.6, 1.5, 0)
+	var r := 1.25
+	var n := 14
+	for side: float in [-0.45, 0.45]:
+		for k in n:
+			var a0 := TAU * k / n
+			var a1 := TAU * (k + 1) / n
+			var p0 := hub + Vector3(cos(a0) * r, sin(a0) * r, side)
+			var p1 := hub + Vector3(cos(a1) * r, sin(a1) * r, side)
+			f.frustum(p0, p1, 0.06, 0.06, 4, TIMBER_A, 0.0)
+		for k in 4:
+			var a := TAU * k / 4.0 + 0.3
+			f.frustum(hub + Vector3(0, 0, side), hub + Vector3(cos(a) * r, sin(a) * r, side), 0.05, 0.05, 4, TIMBER_B, 0.0)
+	for k in n:
+		var a := TAU * (k + 0.5) / n
+		var p := hub + Vector3(cos(a) * r, sin(a) * r, 0)
+		f.frustum(p - Vector3(0, 0, 0.45), p + Vector3(0, 0, 0.45), 0.04, 0.04, 4, TIMBER_B, 0.0)
+	f.frustum(hub - Vector3(0, 0, 0.8), hub + Vector3(0, 0, 0.8), 0.09, 0.09, 6, TIMBER_B, 0.0)
+	for z: float in [-0.8, 0.8]:
+		f.frustum(Vector3(-0.6, 0.24, z), hub + Vector3(0, 0, z), 0.09, 0.08, 5, TIMBER_B, 0.0)
+	var tip := Vector3(1.9, 5.8, 0)
+	for z: float in [-0.55, 0.55]:
+		f.frustum(Vector3(0.6, 0.24, z), tip, 0.12, 0.08, 5, TIMBER_A, 0.0)
+	f.frustum(Vector3(-1.6, 0.24, 0), tip, 0.08, 0.06, 5, TIMBER_B, 0.0)
+	f.blob(tip + Vector3(0, -0.1, 0), 0.22, TIMBER_B, rng, 0.0)
+	f.frustum(tip + Vector3(0, -0.2, 0), Vector3(1.9, 2.2, 0), 0.025, 0.025, 4, NET, 0.0)
+	f.box(Vector3(1.9, 1.9, 0), Vector3(0.6, 0.6, 0.6), FENCE_A, 0.3)
+	return f
+
+
+## Hafenbecken im Pflaster: eine Wasserfläche mit Kaimauer ringsum, Pollern und einem
+## festgemachten Ruderboot. Etwa 7 lang, 3.6 breit, flach — das Wasser liegt knapp unter
+## der Kante.
+func _harbour_basin() -> Forge:
+	var f := Forge.new()
+	f.box(Vector3(0, -0.1, 0), Vector3(6.4, 0.3, 3.0), WATER_A, 0.0)
+	for e: Array in [[Vector3(0, 0.12, 1.65), Vector3(7.0, 0.3, 0.3)], [Vector3(0, 0.12, -1.65), Vector3(7.0, 0.3, 0.3)],
+			[Vector3(3.35, 0.12, 0), Vector3(0.3, 0.3, 3.0)], [Vector3(-3.35, 0.12, 0), Vector3(0.3, 0.3, 3.0)]]:
+		f.box(e[0], e[1], TRAV_B, 0.0)
+	for x: float in [-2.2, 0.0, 2.2]:
+		f.frustum(Vector3(x, 0.27, 1.65), Vector3(x, 0.6, 1.65), 0.1, 0.09, 6, TRAV_DARK, 0.0)
+	_hull(f, 1.8, 0.62, 0.5, 0.3, HULL_A, HULL_B, TIMBER_B, Vector3(0.6, -0.3, 0.3))
+	return f
+
+
+const AUTUMN_BARK := Color(0.36, 0.30, 0.26)
+const AUTUMN_RED_A := Color(0.70, 0.22, 0.14)
+const AUTUMN_RED_B := Color(0.58, 0.16, 0.10)
+const AUTUMN_ORANGE_A := Color(0.86, 0.46, 0.14)
+const AUTUMN_ORANGE_B := Color(0.74, 0.36, 0.10)
+const AUTUMN_YELLOW_A := Color(0.88, 0.70, 0.22)
+const AUTUMN_YELLOW_B := Color(0.76, 0.58, 0.14)
+const VINE_A := Color(0.80, 0.58, 0.18)
+const VINE_B := Color(0.66, 0.30, 0.14)
+const VINE_GREEN := Color(0.46, 0.50, 0.18)
+const GRAPE := Color(0.32, 0.16, 0.30)
+
+
+## Rebzeile im Herbst: drei Pfähle mit Draht, sechs Stöcke mit Laub in Gelb und Rot,
+## darunter dunkle Trauben. Etwa 1.8 hoch, 4 lang.
+func _vine_row() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(257)
+	for x: float in [-2.0, 0.0, 2.0]:
+		f.box(Vector3(x, 0.9, 0), Vector3(0.12, 1.8, 0.12), TIMBER_B, rng.randf_range(-0.1, 0.1))
+	f.box(Vector3(0, 1.55, 0), Vector3(4.1, 0.03, 0.03), STEEL_B, 0.0)
+	var paint := func(_m: Vector3, _n: Vector3) -> Color:
+		var r := rng.randf()
+		return VINE_A if r < 0.45 else (VINE_B if r < 0.8 else VINE_GREEN)
+	for k in 6:
+		var x := -1.7 + 0.68 * k
+		f.frustum(Vector3(x, 0, 0), Vector3(x + 0.1, 0.85, 0), 0.06, 0.05, 4, DEAD_A, 0.0)
+		f.lump(Vector3(x + rng.randf_range(-0.1, 0.1), 1.25, 0), Vector3(0.5, 0.45, 0.35), 3, 6, rng, 0.2, paint)
+		for g in 2:
+			var side := -1.0 if g == 0 else 1.0
+			f.blob(Vector3(x + rng.randf_range(-0.25, 0.25), 0.88, side * 0.3), 0.1, GRAPE, rng, 0.0)
+	return f
+
+
+const LOG_A := Color(0.46, 0.31, 0.19)
+const LOG_B := Color(0.38, 0.25, 0.15)
+const SNOW_SHADE := Color(0.58, 0.62, 0.68)
+const WARM_WINDOW := Color(0.95, 0.72, 0.36)
+
+
+## Berghütte: Wände aus liegenden Stämmen, verschneites Satteldach, Steinschornstein, ein
+## warm erleuchtetes Fenster. Etwa 4.1 hoch.
+func _log_cabin() -> Forge:
+	var f := Forge.new()
+	var logs := 7
+	for i in logs:
+		var y := 0.18 + 0.3 * i
+		var col := LOG_A if i % 2 == 0 else LOG_B
+		for z: float in [1.3, -1.3]:
+			f.frustum(Vector3(-1.95, y, z), Vector3(1.95, y, z), 0.17, 0.17, 6, col, 0.0)
+		for x: float in [1.7, -1.7]:
+			f.frustum(Vector3(x, y + 0.15, -1.55), Vector3(x, y + 0.15, 1.55), 0.17, 0.17, 6, col, 0.0)
+	f.box(Vector3(0, 1.1, 0), Vector3(3.3, 2.1, 2.5), LOG_B, 0.0)
+	var eave := 0.18 + 0.3 * logs
+	_gable(f, Vector3(0, eave, 0), 2.2, 1.85, 1.3, SNOW, SNOW_SHADE, LOG_A)
+	f.box(Vector3(1.0, eave + 1.2, -0.5), Vector3(0.45, 1.3, 0.45), BOULDER_A, 0.0)
+	f.box(Vector3(-0.5, 0.85, 1.48), Vector3(0.8, 1.5, 0.05), DOOR, 0.0)
+	f.box(Vector3(0.9, 1.3, 1.48), Vector3(0.6, 0.5, 0.05), WARM_WINDOW, 0.0)
+	return f
+
+
+## Holzstoß neben der Hütte: drei Lagen Scheite, oben Schnee. Etwa 1 hoch.
+func _woodpile() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(263)
+	for row in 3:
+		for k in 4 - row:
+			var x := -0.54 + 0.36 * k + 0.18 * row
+			var y := 0.17 + 0.3 * row
+			f.frustum(Vector3(x, y, -0.5), Vector3(x, y, 0.5), 0.16, 0.16, 6,
+					LOG_A if (k + row) % 2 == 0 else LOG_B, rng.randf())
+	f.box(Vector3(0, 0.95, 0), Vector3(0.5, 0.06, 1.05), SNOW, 0.0)
+	return f
+
+
+const TENT_A := Color(0.46, 0.30, 0.22)
+const TENT_B := Color(0.86, 0.76, 0.58)
+const RUG := Color(0.66, 0.20, 0.16)
+
+
+## Zelt einer Karawane: flaches, gestreiftes Tuchdach auf Stangen, hinten und an den Seiten
+## geschlossen, vorn offen mit Teppich. Etwa 2.4 hoch, 4 breit.
+func _nomad_tent() -> Forge:
+	var f := Forge.new()
+	for x: float in [-1.8, 0.0, 1.8]:
+		f.box(Vector3(x, 1.0, 1.2), Vector3(0.1, 2.0, 0.1), TIMBER_B, 0.0)
+	_gable(f, Vector3(0, 1.9, 0.3), 2.0, 1.0, 0.5, TENT_A, TENT_B, TENT_B, 6)
+	f.box(Vector3(0, 0.95, -0.68), Vector3(4.0, 1.9, 0.04), TENT_A, 0.0)
+	for x: float in [-1.98, 1.98]:
+		f.box(Vector3(x, 0.95, -0.2), Vector3(0.04, 1.9, 1.0), TENT_B, 0.0)
+	f.box(Vector3(0, 0.02, 0.9), Vector3(2.0, 0.04, 1.3), RUG, 0.0)
+	return f
+
+
+const ADOBE_A := Color(0.80, 0.62, 0.42)
+const ADOBE_B := Color(0.70, 0.52, 0.34)
+
+
+## Lehmhaus: flach gedeckter Kubus mit Brüstung und kleinem Aufbau, Balkenköpfe ragen aus
+## der Wand, dunkler Eingang. Etwa 3.6 hoch.
+func _clay_house() -> Forge:
+	var f := Forge.new()
+	f.box(Vector3(0, 1.2, 0), Vector3(3.0, 2.4, 2.6), ADOBE_A, 0.0)
+	for e: Array in [[Vector3(0, 2.55, 1.25), Vector3(3.0, 0.3, 0.1)], [Vector3(0, 2.55, -1.25), Vector3(3.0, 0.3, 0.1)],
+			[Vector3(1.45, 2.55, 0), Vector3(0.1, 0.3, 2.6)], [Vector3(-1.45, 2.55, 0), Vector3(0.1, 0.3, 2.6)]]:
+		f.box(e[0], e[1], ADOBE_B, 0.0)
+	f.box(Vector3(-0.7, 3.0, -0.4), Vector3(1.3, 1.2, 1.3), ADOBE_B, 0.0)
+	for x: float in [-1.1, -0.4, 0.3, 1.0]:
+		f.box(Vector3(x, 2.2, 1.4), Vector3(0.12, 0.12, 0.3), TIMBER_B, 0.0)
+	f.box(Vector3(0.5, 0.8, 1.31), Vector3(0.8, 1.6, 0.04), DOOR, 0.0)
+	f.box(Vector3(-0.8, 1.5, 1.31), Vector3(0.4, 0.4, 0.04), DOOR, 0.0)
+	return f
+
+
+## Wasserstelle der Oase: flacher Teich mit Steinrand und zwei Schilfbüscheln. Etwa 3.2
+## breit, flach.
+func _oasis_pond() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(271)
+	f.frustum(Vector3(0, -0.2, 0), Vector3(0, 0.06, 0), 1.5, 1.45, 10, WATER_A, 0.0)
+	for k in 14:
+		var a := TAU * k / 14.0 + rng.randf_range(-0.1, 0.1)
+		var r := 1.5 + rng.randf_range(-0.05, 0.1)
+		f.blob(Vector3(cos(a) * r, 0.08, sin(a) * r), rng.randf_range(0.16, 0.26), SANDSTONE[k % 3], rng, 0.0)
+	for at: Vector3 in [Vector3(1.2, 0, 0.7), Vector3(-0.9, 0, -1.1)]:
+		for k in 9:
+			var yaw := TAU * k / 9.0
+			var out := Vector3(cos(yaw), 0, sin(yaw))
+			var side := Vector3(-out.z, 0, out.x) * 0.05
+			var tip := at + out * 0.25 + Vector3(0, rng.randf_range(0.8, 1.2), 0)
+			f.blade(at - side, at + side, tip, REED_A if k % 2 == 0 else REED_B)
+	return f
+
+
+const SKY_ROCK_A := Color(0.36, 0.34, 0.38)
+const SKY_ROCK_B := Color(0.28, 0.27, 0.31)
+const SKY_SOIL := Color(0.54, 0.48, 0.32)
+const EMBER := Color(0.98, 0.70, 0.30)
+
+
+## Schwebende Scholle: ein umgekehrter Felskegel über dem Boden, oben Erde mit einem
+## Säulenstumpf und einer Zypresse; in Rissen glimmt es. Darunter zwei kleine Brocken.
+## Etwa 5 hoch, die Unterseite 1 über dem Boden.
+func _floating_rock() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(277)
+	var top := 3.4
+	f.frustum(Vector3(0, 1.0, 0), Vector3(0, top, 0), 0.2, 1.6, 7, SKY_ROCK_A, 0.3, SKY_ROCK_B)
+	f.frustum(Vector3(0, top - 0.02, 0), Vector3(0, top + 0.14, 0), 1.64, 1.5, 7, SKY_SOIL, 0.3)
+	for k in 3:
+		var a := TAU * k / 3.0 + 0.5
+		var d := Vector3(cos(a), 0, sin(a))
+		var side := Vector3(-d.z, 0, d.x) * 0.04
+		var hi := d * 1.47 + Vector3(0, top - 0.25, 0)
+		f.blade(hi - side, hi + side, d * 0.75 + Vector3(0, top - 1.5, 0), EMBER)
+	f.drum(Vector3(0.4, top + 0.14, 0.2), 0.34, 1.4, 10, MARBLE_A, rng, 0.35, MARBLE_B)
+	f.frustum(Vector3(-0.7, top + 0.14, -0.4), Vector3(-0.7, top + 0.5, -0.4), 0.08, 0.07, 5, CYPRESS_TRUNK, 0.0)
+	f.lump(Vector3(-0.7, top + 1.3, -0.4), Vector3(0.3, 0.9, 0.3), 4, 6, rng, 0.1,
+			func(_m: Vector3, _n: Vector3) -> Color: return CYPRESS_A if rng.randf() < 0.5 else CYPRESS_B)
+	f.blob(Vector3(1.9, 1.5, 0.7), 0.4, SKY_ROCK_A, rng, 0.0)
+	f.blob(Vector3(-1.6, 0.9, -0.9), 0.28, SKY_ROCK_B, rng, 0.0)
+	return f
+
+
+## Stück Aquädukt: drei Bögen auf vier Pfeilern, oben die Rinne mit ihren Wangen. Etwa 4.5
+## hoch, 8 lang.
+func _aqueduct() -> Forge:
+	var f := Forge.new()
+	var r_in := 0.9
+	var r_out := 1.2
+	var spring := 2.6
+	var span := 2.0 * r_in + 0.7
+	var depth := 1.0
+	var top := spring + r_out
+	for i in 4:
+		f.box(Vector3((i - 1.5) * span, top * 0.5, 0), Vector3(0.7, top, depth), TRAV_A if i % 2 == 0 else TRAV_B, 0.0)
+	for i in 3:
+		_arch(f, Vector3((i - 1.0) * span, spring, 0), r_in, r_out, depth, TRAV_B, TRAV_A, TRAV_A)
+	var length := 3.0 * span + 0.7
+	f.box(Vector3(0, top + 0.15, 0), Vector3(length, 0.3, depth + 0.1), TRAV_DARK, 0.0)
+	for z: float in [-0.42, 0.42]:
+		f.box(Vector3(0, top + 0.5, z), Vector3(length, 0.4, 0.16), TRAV_B, 0.0)
+	return f
+
+
+## Rundtempel: runder Stufensockel, acht Säulen im Kreis um die Cella, Gebälkring, flache
+## Kuppel mit Laterne. Etwa 4.8 hoch.
+func _tholos() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(281)
+	f.frustum(Vector3.ZERO, Vector3(0, 0.3, 0), 2.2, 2.2, 16, TRAV_B, 0.0, TRAV_DARK)
+	f.frustum(Vector3(0, 0.3, 0), Vector3(0, 0.6, 0), 1.95, 1.95, 16, TRAV_A, 0.0, TRAV_B)
+	for k in 8:
+		var a := TAU * k / 8.0
+		f.drum(Vector3(cos(a) * 1.6, 0.6, sin(a) * 1.6), 0.18, 2.4, 8, STATUE_A, rng, 0.0, STATUE_B)
+	f.frustum(Vector3(0, 0.6, 0), Vector3(0, 3.0, 0), 0.95, 0.95, 10, PLASTER_A, 0.0, PLASTER_B)
+	f.frustum(Vector3(0, 3.0, 0), Vector3(0, 3.35, 0), 1.95, 1.95, 16, TRAV_A, 0.0, TRAV_B)
+	f.lump(Vector3(0, 3.35, 0), Vector3(1.75, 1.0, 1.75), 4, 12, rng, 0.0,
+			func(_m: Vector3, n: Vector3) -> Color: return STATUE_A if n.y > 0.7 else STATUE_B, 0.0)
+	f.drum(Vector3(0, 4.3, 0), 0.25, 0.45, 8, TRAV_A, rng, 0.0, TRAV_B)
+	return f
+
+
+## Dunkler Fels der Himmelsinseln mit glimmendem Riss. Etwa 0.5 hoch und 1 breit, wie
+## die Findlinge.
+func _sky_boulder() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(283)
+	var paint := func(_m: Vector3, n: Vector3) -> Color:
+		if n.y < 0.3 and rng.randf() < 0.1:
+			return EMBER
+		return SKY_ROCK_A if rng.randf() < 0.5 else SKY_ROCK_B
+	f.lump(Vector3(0, 0.14, 0), Vector3(0.48, 0.45, 0.42), 4, 6, rng, 0.3, paint, -0.14)
+	f.lump(Vector3(-0.42, 0.06, 0.32), Vector3(0.2, 0.2, 0.18), 3, 5, rng, 0.2, paint, -0.06)
+	return f
+
+
+const FLOWER_LEAF := Color(0.30, 0.50, 0.18)
+const PETAL_PINK := Color(0.92, 0.56, 0.68)
+const PETAL_WHITE := Color(0.94, 0.92, 0.86)
+
+
+## Blumenbüschel der Frühlingswiese: Blätter als Halme, darüber rosa und weiße Blüten.
+## Etwa 0.8 hoch (Gras steht bei ~1.6).
+func _flower_tuft() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(289)
+	for k in 11:
+		var a := TAU * k / 11.0 + rng.randf_range(-0.2, 0.2)
+		var d := Vector3(cos(a), 0, sin(a))
+		var foot := d * rng.randf_range(0.0, 0.2)
+		var side := Vector3(-d.z, 0, d.x) * 0.06
+		f.blade(foot - side, foot + side, foot + d * 0.25 + Vector3(0, rng.randf_range(0.3, 0.5), 0), FLOWER_LEAF)
+	for k in 6:
+		var a := TAU * k / 6.0 + rng.randf_range(-0.3, 0.3)
+		var r := rng.randf_range(0.1, 0.3)
+		var top := Vector3(cos(a) * r, rng.randf_range(0.5, 0.75), sin(a) * r)
+		f.frustum(Vector3(top.x * 0.4, 0, top.z * 0.4), top, 0.015, 0.012, 3, FLOWER_LEAF, 0.0)
+		f.blob(top, 0.09, PETAL_PINK if k % 2 == 0 else PETAL_WHITE, rng, 0.0)
 	return f
 
 
