@@ -109,15 +109,6 @@ text = "2 Sekunden auf die Kiste drücken"
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="ResultContinue" type="Button" parent="Layout/Content/Root/Pages/ResultPage"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(240, 44)
-layout_mode = 2
-size_flags_horizontal = 4
-focus_mode = 0
-theme_type_variation = &"WindowButton"
-text = "Weiter ▸"
-
 [node name="NextPage" type="VBoxContainer" parent="Layout/Content/Root/Pages"]
 unique_name_in_owner = true
 visible = false
@@ -222,23 +213,41 @@ toggle_mode = true
 button_group = SubResource("choice_group")
 text = "Viel schwieriger"
 
-[node name="StartButton" type="Button" parent="Layout/Content/Root/Pages/NextPage/Decision"]
+[node name="Footer" type="HBoxContainer" parent="Layout/Content/Root"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+
+[node name="MenuButton" type="Button" parent="Layout/Content/Root/Footer"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 44)
+layout_mode = 2
+size_flags_vertical = 4
+focus_mode = 0
+theme_type_variation = &"WindowButton"
+text = "⟵ Zurück zum Menü"
+
+[node name="Spacer" type="Control" parent="Layout/Content/Root/Footer"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="ResultContinue" type="Button" parent="Layout/Content/Root/Footer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 44)
+layout_mode = 2
+size_flags_vertical = 4
+focus_mode = 0
+theme_type_variation = &"WindowButton"
+text = "Weiter ▸"
+
+[node name="StartButton" type="Button" parent="Layout/Content/Root/Footer"]
+unique_name_in_owner = true
+visible = false
 custom_minimum_size = Vector2(352, 64)
 layout_mode = 2
-size_flags_horizontal = 4
 focus_mode = 0
 theme_type_variation = &"MainMenuPlay"
 text = "NÄCHSTE WELLE"
 icon = ExtResource("5_play")
 icon_alignment = 2
 expand_icon = true
-
-[node name="MenuButton" type="Button" parent="Layout/Content/Root"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(240, 44)
-layout_mode = 2
-size_flags_horizontal = 4
-focus_mode = 0
-theme_type_variation = &"WindowButton"
-text = "⟵ Zurück zum Menü"

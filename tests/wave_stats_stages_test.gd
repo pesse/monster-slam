@@ -227,3 +227,16 @@ func test_a_full_list_needs_no_overflow_line() -> void:
 	_stats.show_stats(_wave_data({"session": _balance(4)}))
 	assert_int(_balance_texts().size()).is_equal(3 + 4)
 	assert_str(str(_balance_texts().back())).not_contains("weitere")
+
+
+## Zurück und Weiter stehen auf beiden Stufen in einer Zeile: links zurück, rechts weiter.
+func test_back_and_forward_share_one_row() -> void:
+	_stats.show_stats(_wave_data())
+	var back := _button("MenuButton")
+	assert_object(back.get_parent()).is_same(_button("ResultContinue").get_parent())
+	assert_bool(_visible("ResultContinue")).is_true()
+	assert_bool(_visible("StartButton")).is_false()
+	_button("ResultContinue").pressed.emit()
+	assert_object(back.get_parent()).is_same(_button("StartButton").get_parent())
+	assert_bool(_visible("ResultContinue")).is_false()
+	assert_bool(_visible("StartButton")).is_true()

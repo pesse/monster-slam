@@ -186,7 +186,6 @@ func show_stats(data: Dictionary) -> void:
 	# Wellenstart die HP auch nie „retten": ein neuer Lauf beginnt über GameState.reset().
 	_diff_label.visible = _won
 	_choice_row.visible = _won
-	_start_button.visible = _won
 	_defeat_label.visible = not _won
 	# Die Bilanz ist die dritte Inhalts-Entscheidung, und auch sie fällt hier: sie liegt
 	# auf der noch unsichtbaren Stufe 2, zählt über den PageStack aber schon jetzt zur
@@ -216,6 +215,10 @@ func _goto_stage(next: Stage) -> void:
 	_stage = next
 	_result_page.visible = next == Stage.RESULT
 	_next_page.visible = next == Stage.NEXT
+	# Beide Stufen teilen die Fußzeile: links der Weg zurück, rechts der Weg weiter. Die
+	# Zeile hat die Höhe des Startknopfs, auch wenn er fehlt — der Screen wächst nicht.
+	_result_continue.visible = next == Stage.RESULT
+	_start_button.visible = next == Stage.NEXT and _won
 	_title.text = _title_for(next)
 	# Ergebnis-Titel einfärben (passt zu den grün/rot-Feedbackfarben des Spiels); die
 	# Folgestufe nimmt die Theme-Farbe zurück — sie ist kein Urteil über die Welle, und
