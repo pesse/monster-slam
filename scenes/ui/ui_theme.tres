@@ -11,9 +11,9 @@
 [ext_resource type="Texture2D" path="res://assets/ui/windows/tool_button_hover.webp" id="tool_hover_tex"]
 [ext_resource type="Texture2D" path="res://assets/ui/windows/tool_button_pressed.webp" id="tool_pressed_tex"]
 [ext_resource type="Texture2D" path="res://assets/ui/windows/tool_button_disabled.webp" id="tool_disabled_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/skill_tree/tooltip/frame.webp" id="hint_frame_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/skill_tree/tooltip/pointer_up.webp" id="hint_pointer_up"]
-[ext_resource type="Texture2D" path="res://assets/ui/skill_tree/tooltip/pointer_down.webp" id="hint_pointer_down"]
+[ext_resource type="Texture2D" path="res://assets/ui/tooltip/frame.webp" id="hint_frame_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/tooltip/pointer_up.webp" id="hint_pointer_up"]
+[ext_resource type="Texture2D" path="res://assets/ui/tooltip/pointer_down.webp" id="hint_pointer_down"]
 [ext_resource type="Texture2D" path="res://assets/ui/statistics/tabs/tab_normal.webp" id="tab_tex"]
 [ext_resource type="Texture2D" path="res://assets/ui/statistics/tabs/tab_highlighted.webp" id="tab_gold_tex"]
 
@@ -667,17 +667,11 @@ texture_margin_top = 8.0
 texture_margin_right = 8.0
 texture_margin_bottom = 8.0
 
-[sub_resource type="StyleBoxFlat" id="hint_fill"]
+[sub_resource type="StyleBoxEmpty" id="hint_fill"]
 content_margin_left = 16.0
 content_margin_top = 16.0
 content_margin_right = 16.0
 content_margin_bottom = 16.0
-bg_color = Color(0.063, 0.102, 0.173, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-corner_detail = 1
 
 [sub_resource type="StyleBoxTexture" id="hint_frame"]
 texture = ExtResource("hint_frame_tex")
@@ -1035,6 +1029,7 @@ WindowTitle/constants/outline_size = 6
 WindowTitle/fonts/font = SubResource("menu_font")
 WindowTitle/font_sizes/font_size = 28
 HintCard/base_type = &"PanelContainer"
+HintCard/colors/fill = Color(0.063, 0.102, 0.173, 1)
 HintCard/icons/pointer_down = ExtResource("hint_pointer_down")
 HintCard/icons/pointer_up = ExtResource("hint_pointer_up")
 HintCard/styles/frame = SubResource("hint_frame")

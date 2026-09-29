@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "format": "lossless WebP RGBA",
+  "slice": [
+    24,
+    24,
+    24,
+    24
+  ],
+  "assets": {
+    "frame": {
+      "path": "res://assets/ui/tooltip/frame.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Gold contour only; interior/exterior alpha=0. Nine-slice 24px unchanged.",
+      "sha256": "8b2742daaf2f4b620f9fa61d190491c7ea06a3c3ab310abd4770d2b694f6d5ef"
+    },
+    "pointer_up": {
+      "path": "res://assets/ui/tooltip/pointer_up.webp",
+      "width": 64,
+      "height": 36,
+      "notes": "Gold contour only; transparent triangle interior and exterior; original dimensions unchanged.",
+      "sha256": "d09f54564602bc4f6ef9a269dd402a2f068aefff204c8e1a23d626ad2433b46c"
+    },
+    "pointer_right": {
+      "path": "res://assets/ui/tooltip/pointer_right.webp",
+      "width": 36,
+      "height": 64,
+      "notes": "Gold contour only; transparent triangle interior and exterior; original dimensions unchanged.",
+      "sha256": "5ec576f377f7ec756289ea9b858a2dfbae3aa5ce50ffaf5d2c5454034e5cae74"
+    },
+    "pointer_down": {
+      "path": "res://assets/ui/tooltip/pointer_down.webp",
+      "width": 64,
+      "height": 36,
+      "notes": "Gold contour only; transparent triangle interior and exterior; original dimensions unchanged.",
+      "sha256": "6de396501bfd95eb48ddfa8ba7c4aec8e357cf868fd0db136b9344588d5a268d"
+    },
+    "pointer_left": {
+      "path": "res://assets/ui/tooltip/pointer_left.webp",
+      "width": 36,
+      "height": 64,
+      "notes": "Gold contour only; transparent triangle interior and exterior; original dimensions unchanged.",
+      "sha256": "2f3388ce2af5869afda354b721f38523829f4418ac7a63bfe5692551c96db013"
+    }
+  }
+}

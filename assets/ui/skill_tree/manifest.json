@@ -211,41 +211,6 @@
       "height": 64,
       "notes": "Separate overlay, never baked into skill icon.",
       "sha256": "fe5b7f614290f4ae4cefcb476f23934163b321a95e4535945de175d92eea21e8"
-    },
-    "tooltip/frame": {
-      "path": "res://assets/ui/skill_tree/tooltip/frame.webp",
-      "width": 256,
-      "height": 256,
-      "notes": "Nine-slice 24px. Use frame_only.tres above opaque fill.",
-      "sha256": "49cac5139d2b51ff19b31fd5335ba73fdcc54af5e4e637483a6d2e5812b21f5b"
-    },
-    "tooltip/pointer_up": {
-      "path": "res://assets/ui/skill_tree/tooltip/pointer_up.webp",
-      "width": 64,
-      "height": 36,
-      "notes": "Separate rotatable tooltip pointer; opaque fill beneath required, see tooltip_shell.tscn.",
-      "sha256": "0729f11106c71d605270e40fafa5442ec69aae7e332d9cf017c922965f4dd50c"
-    },
-    "tooltip/pointer_right": {
-      "path": "res://assets/ui/skill_tree/tooltip/pointer_right.webp",
-      "width": 36,
-      "height": 64,
-      "notes": "Separate rotatable tooltip pointer; opaque fill beneath required, see tooltip_shell.tscn.",
-      "sha256": "37b603c3b6f994c19d82ae6edc622d1e1ae44ab5bef15dc9e2b4c41e52ac2be3"
-    },
-    "tooltip/pointer_down": {
-      "path": "res://assets/ui/skill_tree/tooltip/pointer_down.webp",
-      "width": 64,
-      "height": 36,
-      "notes": "Separate rotatable tooltip pointer; opaque fill beneath required, see tooltip_shell.tscn.",
-      "sha256": "01f3377090b3210636020b8309634633c3523d6ca1fd22d74b4678468d5b47bd"
-    },
-    "tooltip/pointer_left": {
-      "path": "res://assets/ui/skill_tree/tooltip/pointer_left.webp",
-      "width": 36,
-      "height": 64,
-      "notes": "Separate rotatable tooltip pointer; opaque fill beneath required, see tooltip_shell.tscn.",
-      "sha256": "33a236f55cea9f8062eb5876d76ea3be8d636d5c50bdf70a2bfc6e12d4533284"
     }
   },
   "skill_icons": {
@@ -360,5 +325,8 @@
     "tree.healing": "#5fd08a",
     "tree.scout": "#8fcf7a",
     "tree.timeweaver": "#b38ce6"
+  },
+  "reuse": {
+    "tooltip": "res://assets/ui/tooltip/manifest.json"
   }
 }

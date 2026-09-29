@@ -17,10 +17,13 @@ extends PanelContainer
 ## ist, und bringt die Typografie der Engine mit — diese Karte erscheint sofort, folgt dem
 ## Zeiger und kommt aus dem Theme.
 ##
-## Aussehen (assets/ui/skill_tree/tooltip/): eine deckende Füllung (`panel`), darüber der
-## Rahmen (`frame`, ein eigener Theme-Eintrag von `HintCard`) und ein Pfeil, der auf den
-## Mauszeiger zeigt. Wo er sitzt, entscheidet `Hints` (`point_at`) — die Karte weiß nicht,
-## wo die Maus ist.
+## Aussehen (assets/ui/tooltip/): Rahmen und Pfeil sind nur die goldene Kontur, innen und
+## außen durchsichtig. Die Füllung (`fill`, eine Farbe von `HintCard` im Theme) zeichnet die
+## Karte selbst, als Fläche genau innerhalb dieser Kontur: abgeschrägte Ecken wie der Rahmen,
+## der Pfeil entlang der Mitte seiner Schenkel. Eine rechteckige oder gerundete Füllung stand
+## an den Ecken und unter dem Pfeil als dunkelblaue Zacke über das Gold hinaus. `panel` trägt
+## nur noch den Innenabstand. Wo der Pfeil sitzt, entscheidet `Hints` (`point_at`) — die
+## Karte weiß nicht, wo die Maus ist.
 
 ## So breit wie ihr Text, höchstens so breit: gut ein Viertel der Grundauflösung (1152).
 ## Darüber wird aus einer Auskunft am Zeiger ein Absatz quer über das Bild.
@@ -37,6 +40,18 @@ const POINTER_SIZE := Vector2(40, 22)
 const POINTER_INSET := 8.0
 ## Näher als so an eine Ecke kommt der Pfeil nicht: die Ecken des Rahmens sind abgeschrägt.
 const POINTER_MARGIN := 24.0
+## Die Kontur in den Texturen (`frame.webp` 256², `pointer_up.webp` 64 × 36; gemessen an
+## den Pixeln). Der Rahmen steht mit seinen 24-px-Rändern 1:1 auf dem Bild, seine Goldlinie
+## liegt an der Außenkante und schrägt die Ecke auf 11 px ab. Die Füllung folgt der MITTE
+## der Linie — dort deckt das Gold ihre harte Kante.
+const FRAME_LINE := 1.0
+const FRAME_CHAMFER := 11.0
+## Pfeil, Mitte der Schenkel: Spitze und die beiden Enden, in Texturpixeln von `pointer_up`.
+## `pointer_down` ist dasselbe Bild gespiegelt.
+const POINTER_TEXTURE := Vector2(64, 36)
+const POINTER_APEX := Vector2(31.5, 3.5)
+const POINTER_ARM_LEFT := Vector2(4.0, 27.5)
+const POINTER_ARM_RIGHT := Vector2(59.0, 27.5)
 ## Kantenlänge eines Zeichens in der Liste, wenn es ein Bild ist.
 const LIST_ICON := 20.0
 
@@ -225,24 +240,45 @@ func pointer_tip() -> Vector2:
 	return Vector2(_pointer_x, -pointer_reach() if _pointer_up else size.y + pointer_reach())
 
 
-## Der Rahmen liegt über der Füllung (die zeichnet `PanelContainer` selbst) und unter dem
-## Inhalt — Kinder werden nach dem Elternknoten gezeichnet. Die halbdurchsichtige Mitte der
-## Rahmentextur bleibt weg (`draw_center = false` im Theme): die Füllung ist deckend.
-##
-## Der Pfeil kommt zuletzt: erst eine Dreiecksfläche in der Farbe der Füllung, dann die
-## Textur darüber. Sein Fuß reicht in die Karte und deckt die Randlinie dort ab.
+## Erst die Füllung innerhalb der Kontur, dann der Rahmen, dann unter dem Pfeil noch einmal
+## die Füllung — sie deckt die Randlinie zwischen seinen Schenkeln, sonst liefe sie quer unter
+## dem Pfeil durch —, zuletzt der Pfeil. Alles vor dem Inhalt: Kinder werden nach dem
+## Elternknoten gezeichnet.
 func _draw() -> void:
+	var color := get_theme_color("fill")
+	draw_colored_polygon(fill_outline(size), color)
 	draw_style_box(get_theme_stylebox("frame"), Rect2(Vector2.ZERO, size))
 	if is_nan(_pointer_x):
 		return
+	draw_colored_polygon(pointer_outline(), color)
 	var texture := get_theme_icon("pointer_up" if _pointer_up else "pointer_down")
-	var half := POINTER_SIZE.x * 0.5
-	var tip := pointer_tip()
-	var base_y := POINTER_INSET if _pointer_up else size.y - POINTER_INSET
-	var fill := get_theme_stylebox("panel") as StyleBoxFlat
-	if fill != null:
-		draw_colored_polygon(PackedVector2Array([
-				Vector2(_pointer_x - half, base_y), tip, Vector2(_pointer_x + half, base_y)]),
-				fill.bg_color)
-	var top := tip.y if _pointer_up else base_y
-	draw_texture_rect(texture, Rect2(Vector2(_pointer_x - half, top), POINTER_SIZE), false)
+	var top := pointer_tip().y if _pointer_up else size.y - POINTER_INSET
+	draw_texture_rect(texture, Rect2(Vector2(_pointer_x - POINTER_SIZE.x * 0.5, top),
+			POINTER_SIZE), false)
+
+
+## Die Fläche der Karte ohne Pfeil: ein Rechteck mit abgeschrägten Ecken auf der Mitte der
+## Goldlinie. Statisch, damit der Test die Ecken prüfen kann.
+static func fill_outline(card: Vector2) -> PackedVector2Array:
+	var a := FRAME_LINE
+	var c := FRAME_CHAMFER
+	return PackedVector2Array([
+		Vector2(a + c, a), Vector2(card.x - a - c, a), Vector2(card.x - a, a + c),
+		Vector2(card.x - a, card.y - a - c), Vector2(card.x - a - c, card.y - a),
+		Vector2(a + c, card.y - a), Vector2(a, card.y - a - c), Vector2(a, a + c),
+	])
+
+
+## Die Fläche unter dem Pfeil, in Kartenkoordinaten: das Dreieck aus Spitze und den Enden
+## der Schenkel, auf der Mitte der Goldlinie — also nirgends außerhalb des Pfeils.
+func pointer_outline() -> PackedVector2Array:
+	var scale := POINTER_SIZE / POINTER_TEXTURE
+	var origin := Vector2(_pointer_x - POINTER_SIZE.x * 0.5, pointer_tip().y)
+	var out := PackedVector2Array()
+	for point in [POINTER_ARM_LEFT, POINTER_APEX, POINTER_ARM_RIGHT]:
+		var p: Vector2 = point * scale
+		if not _pointer_up:
+			origin = Vector2(origin.x, size.y - POINTER_INSET)
+			p.y = POINTER_SIZE.y - p.y
+		out.append(origin + p)
+	return out

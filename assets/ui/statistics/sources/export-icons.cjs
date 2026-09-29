@@ -17,7 +17,7 @@ for(let i=0;i<6;i++){
  manifest.icons[names[i]]={path:'res://assets/ui/statistics/icons/'+names[i]+'.webp',width:256,height:256};
  layers.push({input:await sharp(icon).resize(128,128).png().toBuffer(),left:32+(i%3)*220,top:24+Math.floor(i/3)*190});
 }
-manifest.reuse={level_star:'res://assets/ui/skill_tree/icons/skill_point.webp',medallion:'res://assets/ui/skill_tree/medallions/available.webp',hover_ring:'res://assets/ui/skill_tree/medallions/focus_ring.webp',tooltip:'res://assets/ui/skill_tree/tooltip/tooltip_shell.tscn'};
+manifest.reuse={level_star:'res://assets/ui/skill_tree/icons/skill_point.webp',medallion:'res://assets/ui/skill_tree/medallions/available.webp',hover_ring:'res://assets/ui/skill_tree/medallions/focus_ring.webp',tooltip:'res://assets/ui/tooltip/tooltip_shell.tscn'};
 fs.writeFileSync(path.join(root,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');
 const labels=names.map((n,i)=>`<text x="${24+(i%3)*220}" y="${177+Math.floor(i/3)*190}">${n}</text>`).join('');
 layers.push({input:Buffer.from(`<svg width="660" height="390"><g fill="#e8e8e8" font-family="sans-serif" font-size="16">${labels}</g></svg>`),left:0,top:0});

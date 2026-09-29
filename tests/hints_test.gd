@@ -351,3 +351,25 @@ func test_the_layer_lies_above_the_scenes() -> void:
 			if state.get_node_property_name(i, p) == &"layer":
 				assert_int(int(state.get_node_property_value(i, p))).is_less(Hints.LAYER)
 	assert_int(Hints.LAYER).is_greater(1)
+
+
+## Die Füllung liegt innerhalb der goldenen Kontur: abgeschrägt wie der Rahmen, der Pfeil
+## nie breiter oder höher als seine Schenkel. Eine rechteckige Füllung stand an den Ecken
+## als dunkelblaue Zacke über das Gold hinaus.
+func test_the_fill_stays_inside_the_gold_line() -> void:
+	var card_size := Vector2(200, 100)
+	var outline := HintCard.fill_outline(card_size)
+	for point in outline:
+		# Innerhalb der Karte und diesseits der 45°-Schräge, die an der Außenkante bei 11 px
+		# beginnt (x + y ≥ 11 in jeder Ecke).
+		var corner := Vector2(minf(point.x, card_size.x - point.x), minf(point.y, card_size.y - point.y))
+		assert_bool(corner.x >= 0.0 and corner.y >= 0.0).is_true()
+		assert_float(corner.x + corner.y).is_greater_equal(HintCard.FRAME_CHAMFER)
+	var card := Hints.card()
+	card.fill("Titel", "Text")
+	card.point_at(card.size.x * 0.5, true)
+	var tip := card.pointer_tip()
+	for point in card.pointer_outline():
+		assert_float(point.y).is_greater_equal(tip.y)
+		assert_float(absf(point.x - tip.x)).is_less_equal(HintCard.POINTER_SIZE.x * 0.5)
+	card.hide()

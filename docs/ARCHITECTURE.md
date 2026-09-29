@@ -897,8 +897,10 @@ leer, ist der Kanal aus.
 
 Godots eigener Tooltip ist im ganzen Spiel abgelöst: er erscheint verzögert, bleibt stehen,
 wo er aufgegangen ist, und bringt die Typografie der Engine mit. Die Karte hängt am
-Mauszeiger, kommt aus dem Theme (Variation `HintCard`: deckende Füllung, darüber der
-goldene Rahmen und ein Pfeil, beide als Theme-Stylebox/-Icon) und trägt vier Teile —
+Mauszeiger, kommt aus dem Theme (Variation `HintCard`: goldener Rahmen und Pfeil aus
+`assets/ui/tooltip/` als Theme-Stylebox/-Icon; die Füllung `HintCard/colors/fill` zeichnet
+die Karte selbst entlang der Goldkontur, `HintCard.fill_outline`/`pointer_outline` — ein
+Rechteck darunter stäche an den abgeschrägten Ecken und neben dem Pfeil dunkelblau heraus) und trägt vier Teile —
 Überschrift, Text, Liste, Nachsatz —, von denen leere nicht erscheinen. Dazu kann eine
 lebende Auskunft Kopfbild (`icon`), Untertitel (`subtitle`, in `tint` gefärbt) und in der
 ersten Listenspalte Texturen statt Zeichen liefern; mit Bild oder Untertitel trennt eine

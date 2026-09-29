@@ -10,6 +10,8 @@ extends Node
 ##                                         auf dem Knoten (Bildname bekommt die Id dazu)
 ##     … -- --shoot --hint=skill.scout.bow --dy=-400   Maus darüber/darunter versetzt, um
 ##                                         das Umklappen am Rand zu sehen
+##     … -- --shoot --hint=… --card=4   nur die Hinweiskarte, vierfach vergrößert (Pixel
+##                                         einzeln sichtbar — für Kanten und Pfeil)
 ##     … -- --medallion                  misst den Ring von medallions/available.webp
 ##
 ## Der Screen bekommt ein eigenes Buch mit dem Lernstand des Entwurfs (Späher ausgebaut bis
@@ -81,6 +83,15 @@ func _shoot(screen: Node) -> void:
 	DirAccess.make_dir_recursive_absolute(dir)
 	var img := get_viewport().get_texture().get_image()
 	var tag := "" if hint.is_empty() else "_" + hint.get_slice(".", 2)
+	if not _arg("card").is_empty() and not hint.is_empty():
+		# Auf Fensterpixel umrechnen: das Bild hat die Fenstergröße, die Karte Bezugsmaße.
+		var to_px := get_viewport().get_final_transform()
+		var rect := (to_px * Hints.card().get_global_rect()).grow(32.0 * to_px.get_scale().x)
+		rect = rect.intersection(Rect2(Vector2.ZERO, img.get_size()))
+		img = img.get_region(Rect2i(rect))
+		var zoom := int(_arg("card"))
+		img.resize(img.get_width() * zoom, img.get_height() * zoom, Image.INTERPOLATE_NEAREST)
+		tag += "_card"
 	var file := "%s/skill_tree_%dx%d%s.png" % [dir, img.get_width(), img.get_height(), tag]
 	img.save_png(file)
 	print("skill_tree_lab: ", file)

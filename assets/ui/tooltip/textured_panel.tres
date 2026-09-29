@@ -1,6 +1,6 @@
 [gd_resource type="StyleBoxTexture" load_steps=2 format=3]
 
-[ext_resource type="Texture2D" path="res://assets/ui/skill_tree/tooltip/frame.webp" id="1"]
+[ext_resource type="Texture2D" path="res://assets/ui/tooltip/frame.webp" id="1"]
 
 [resource]
 texture = ExtResource("1")

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b2tpiwyh2hwk6"
-path="res://.godot/imported/pointer_down.webp-b00f74d2f388da5fa0bfaa79455f66a4.ctex"
+uid="uid://cpdwaupsjjhld"
+path="res://.godot/imported/frame.webp-8136dc0010653c8fd93ad977f624f94e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/skill_tree/tooltip/pointer_down.webp"
-dest_files=["res://.godot/imported/pointer_down.webp-b00f74d2f388da5fa0bfaa79455f66a4.ctex"]
+source_file="res://assets/ui/tooltip/frame.webp"
+dest_files=["res://.godot/imported/frame.webp-8136dc0010653c8fd93ad977f624f94e.ctex"]
 
 [params]
 

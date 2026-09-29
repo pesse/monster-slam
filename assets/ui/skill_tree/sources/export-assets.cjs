@@ -3,7 +3,7 @@ const sharp=require(process.env.SHARP_MODULE||'sharp');
 const root=path.resolve(__dirname,'..');
 const generated=process.argv[2];
 const clear={r:0,g:0,b:0,alpha:0};
-const files={scout:'exec-e9eaa750-477d-4bae-9139-8e849ccb1f27.png',healing:'exec-d5b41bf4-a222-4495-8116-b3cb6cad190a.png',bulwark:'exec-69d38014-f55c-491a-a98d-24cba0217626.png',time:'exec-34fe8707-f728-44ce-89ed-b57a85a3b2af.png',medallions:'exec-4ea95b24-f891-4f82-9f1c-9fda69794701.png',tooltip:'exec-06fe49de-9826-4d97-b637-b7f352eba45d.png',pointer:'exec-49689c04-050b-45bb-8bae-6631e566ba3c.png'};
+const files={scout:'exec-e9eaa750-477d-4bae-9139-8e849ccb1f27.png',healing:'exec-d5b41bf4-a222-4495-8116-b3cb6cad190a.png',bulwark:'exec-69d38014-f55c-491a-a98d-24cba0217626.png',time:'exec-34fe8707-f728-44ce-89ed-b57a85a3b2af.png',medallions:'exec-4ea95b24-f891-4f82-9f1c-9fda69794701.png'};
 const grid={
  scout:['scout_eye','scout_boots','scout_feather','scout_winged_boots','scout_charge','scout_bow'],
  healing:['healing_bandage','healing_staff','healing_ritual','healing_tent','healing_dove','skill_point'],
@@ -46,27 +46,19 @@ async function centered(input,width,height,innerW,innerH,threshold=32){
  const resized=await sharp(input).extract(b).resize(innerW,innerH,{fit:'contain',background:clear}).png().toBuffer();
  return sharp({create:{width,height,channels:4,background:clear}}).composite([{input:resized,left:Math.floor((width-innerW)/2),top:Math.floor((height-innerH)/2)}]);
 }
-function style(texture,slice,drawCenter){return `[gd_resource type="StyleBoxTexture" load_steps=2 format=3]\n\n[ext_resource type="Texture2D" path="res://assets/ui/skill_tree/${texture}.webp" id="1"]\n\n[resource]\ntexture = ExtResource("1")\ntexture_margin_left = ${slice}.0\ntexture_margin_top = ${slice}.0\ntexture_margin_right = ${slice}.0\ntexture_margin_bottom = ${slice}.0\ncontent_margin_left = 18.0\ncontent_margin_top = 16.0\ncontent_margin_right = 18.0\ncontent_margin_bottom = 16.0\naxis_stretch_horizontal = 0\naxis_stretch_vertical = 0\ndraw_center = ${drawCenter}\n`;}
 (async()=>{
  for(const [key,file]of Object.entries(files)){const target=path.join(__dirname,key+'.png');if(!fs.existsSync(target)){if(!generated)throw Error('Missing '+target);fs.copyFileSync(path.join(generated,file),target);}}
  for(const [group,names]of Object.entries(grid))for(let i=0;i<names.length;i++)await save('icons/'+names[i],await centered(await cell(group,i),256,256,208,208), 'Isolated icon; 256 px canvas, <=208 px motif.');
  const states=['locked','available','learned','focus_ring'];
  for(let i=0;i<4;i++)await save('medallions/'+states[i],await centered(await cell('medallions',i),256,256,224,224,128),'256 px aligned canvas; 224 px outer motif; stack at same rect.');
  for(const [i,name]of [[4,'check'],[5,'lock']])await save('status/'+name,await centered(await cell('medallions',i),64,64,56,56),'Separate overlay, never baked into skill icon.');
- const tooltip=path.join(__dirname,'tooltip.png');
- // Ignore extremely faint exterior halo pixels when finding the panel rectangle.
- await save('tooltip/frame',sharp(tooltip).extract(await bounds(tooltip,160)).resize(256,256),'Nine-slice 24px. Use frame_only.tres above opaque fill.');
- const pointer=path.join(__dirname,'pointer.png');
- const tip=await (await centered(pointer,64,36,60,32,64)).png().toBuffer();
- for(const [name,angle]of [['up',0],['right',90],['down',180],['left',270]])await save('tooltip/pointer_'+name,sharp(tip).rotate(angle),'Separate rotatable tooltip pointer; opaque fill beneath required, see tooltip_shell.tscn.');
- write('tooltip/frame_only.tres',style('tooltip/frame',24,false));
- write('tooltip/textured_panel.tres',style('tooltip/frame',24,true));
  const dataDir=path.resolve(root,'../../..','data/skills');
  for(const f of fs.readdirSync(dataDir).filter(x=>x.endsWith('.json')))for(const entry of JSON.parse(fs.readFileSync(path.join(dataDir,f),'utf8'))){
   if(entry.kind==='tree')manifest.tree_colors[entry.id]=entry.color;
   if(entry.kind==='skill'){if(!idMap[entry.id])throw Error('Missing mapping '+entry.id);manifest.skill_icons[entry.id]={name:entry.name,tree:entry.tree,path:manifest.assets['icons/'+idMap[entry.id]].path};}
  }
  if(Object.keys(manifest.skill_icons).length!==21)throw Error('Expected 21 skills');
+ manifest.reuse={tooltip:'res://assets/ui/tooltip/manifest.json'};
  write('manifest.json',JSON.stringify(manifest,null,2)+'\n');
  write('skill_icons.json',JSON.stringify(Object.fromEntries(Object.entries(manifest.skill_icons).map(([id,value])=>[id,value.path])),null,2)+'\n');
  console.log('Exported '+Object.keys(manifest.assets).length+' WebP assets; mapped all 21 skill IDs.');
