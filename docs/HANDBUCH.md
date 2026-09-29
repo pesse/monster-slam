@@ -41,7 +41,8 @@ nach links aus dem Bild, das Hauptmenü kommt von rechts, und der Blick wandert 
 dasselbe Lager mit (Kapitel 2).
 
 Hinter dem Menü steht ein Lager am Waldrand mit einem Skelett in roter Kapuze – das Bild
-bewegt sich leise, spielen kann man dort nichts.
+bewegt sich leise, und ab und zu geht das Skelett hinüber zum Marktstand, schaut sich um
+und kommt zurück (manchmal bis ins Bild von „Wer spielt?“). Spielen kann man dort nichts.
 
 Rechts oben steht deine Plakette: rechts dein Bild im Ring, unten darauf dein Level. Der
 blaue Bogen um das Bild zeigt, wie weit du im Level bist; am Zeiger steht es genau
