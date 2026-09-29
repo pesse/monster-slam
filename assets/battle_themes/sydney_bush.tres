@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_theme")
-ground_texture = "forest_floor"
+ground_texture = "eucalyptus_litter"
 ground_texture_strength = 0.8
 ground_low = Color(0.4, 0.44, 0.22, 1)
 ground_high = Color(0.58, 0.58, 0.3, 1)

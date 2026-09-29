@@ -165,9 +165,9 @@ bleibt im Spiel, bis die neue Datei sie ersetzt (gleicher Dateiname, einfach
 | `sand.png` | neu bestellt (realistisch) |
 | `dry_earth.png` | neu bestellt (realistisch) |
 | `snow.png` | neu bestellt (realistisch) |
-| `gravel.png` | bestellt 2026-09-29 (Access 4, Outback) — bis dahin `dry_earth` |
-| `eucalyptus_litter.png` | bestellt 2026-09-29 (Access 4, Busch) — bis dahin `forest_floor` |
-| `marsh.png` | bestellt 2026-09-29 (Access 4, Feuchtgebiet) — bis dahin `grass` |
+| `gravel.png` | erstellt (realistisch), 2026-09-29 |
+| `eucalyptus_litter.png` | erstellt (realistisch), 2026-09-29 |
+| `marsh.png` | erstellt (realistisch), 2026-09-29 |
 
 Neue Texturen werden hier als eigener Abschnitt unter „Die Texturen" bestellt und in
 diese Tabelle eingetragen.

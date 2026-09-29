@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_theme")
-ground_texture = "dry_earth"
+ground_texture = "gravel"
 ground_low = Color(0.72, 0.32, 0.16, 1)
 ground_high = Color(0.84, 0.44, 0.22, 1)
 hill = Color(0.62, 0.24, 0.14, 1)
