@@ -141,6 +141,30 @@ func test_the_header_moves_down_when_a_node_lies_under_it() -> void:
 	remove_child(parent)
 
 
+## Mit `prefer_bottom` (Gebietskarte) steht der Kopf unten links und rückt nur nach oben,
+## wenn unten ein Ort liegt und oben keiner.
+func test_a_bottom_header_moves_up_only_when_a_node_lies_under_it() -> void:
+	var parent: Control = auto_free(Control.new())
+	add_child(parent)
+	parent.size = Vector2(1104, 540)
+	var canvas := MapCanvas.new()
+	parent.add_child(canvas)
+	canvas.size = parent.size
+	canvas.node_radius = MapCanvas.AREA_NODE_RADIUS
+	canvas.hover_radius = MapCanvas.NODE_RADIUS
+	for case in [[[Vector2(0.8, 0.8)], 540.0 - 80.0],
+			[[Vector2(0.05, 0.05), Vector2(0.05, 0.95)], 540.0 - 80.0],
+			[[Vector2(0.05, 0.95)], 0.0]]:
+		var header := Control.new()
+		parent.add_child(header)
+		header.custom_minimum_size = Vector2(300, 80)
+		header.size = header.custom_minimum_size
+		canvas.place_header(header, case[0], true)
+		assert_float(header.position.y).is_equal_approx(case[1], 0.5)
+		header.free()
+	remove_child(parent)
+
+
 ## Unten ist auch belegt: dann bleibt der Kopf oben — unten wäre nichts gewonnen.
 func test_the_header_stays_when_both_corners_are_taken() -> void:
 	var parent: Control = auto_free(Control.new())
@@ -698,6 +722,25 @@ func test_a_click_marks_and_play_sits_right_of_the_fortress() -> void:
 	assert_bool(canvas.is_selected("all")).is_true()
 	area._on_level_clicked("all")
 	assert_bool(play.disabled).is_true()
+	remove_child(area)
+
+
+## Der Bosskampf hat keine Ich-Sicht: ist der Boss markiert, ist der Schalter gesperrt —
+## nicht versteckt, die Ecke behält ihre Größe.
+func test_the_first_person_toggle_is_locked_for_the_boss() -> void:
+	MapSelection.book = "zz-kein-buch"
+	MapSelection.unit = 1
+	var area: AreaMap = auto_free(AREA_SCENE.instantiate())
+	add_child(area)
+	await get_tree().process_frame
+	var toggle := area.get_node("%FirstPersonToggle") as Button
+	area._levels = MapLevel.levels_for("zz-kein-buch", 1, 4)
+	assert_bool(toggle.disabled).is_false()
+	area._select(["boss"])
+	assert_bool(toggle.disabled).is_true()
+	assert_bool(toggle.visible).is_true()
+	area._select(["t1"])
+	assert_bool(toggle.disabled).is_false()
 	remove_child(area)
 
 

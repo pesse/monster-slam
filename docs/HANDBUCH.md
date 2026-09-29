@@ -195,8 +195,9 @@ Dasselbe Wort steht nie zweimal gleichzeitig auf dem Feld.
 
 Hast du den **Späherblick** gelernt (Kapitel 11), steht auf der Gebietskarte unten rechts
 vor „Spielen“ der Schalter mit dem Auge des Späherblicks. Ist er gedrückt, stehst du im
-Wellenkampf selbst auf dem Feld, statt von oben daraufzusehen. Der Bosskampf bleibt, wie
-er ist.
+Wellenkampf selbst auf dem Feld, statt von oben daraufzusehen. Der Schalter leuchtet dann
+golden. Den Bosskampf gibt es nur von oben: ist der Boss markiert, ist der Schalter
+gesperrt.
 
 - **Laufen:** W, A, S, D (oder die Pfeiltasten). Mit der Maus siehst du dich um.
 - **Antworten:** **Enter** öffnet das Eingabefeld, du tippst, und das zweite **Enter**
@@ -474,7 +475,8 @@ aktuelle Stand steigen um denselben Betrag.
    noch fehlen, steht grau auf der Karte und lässt sich nicht spielen.
 
    Unten in der Mitte steht ein Schild: links Buch und Unit, rechts die Festungsstufe
-   dieser Unit mit ihrem Balken und dem, was bis zur nächsten Stufe fehlt.
+   dieser Unit mit ihrem Balken und dem, was bis zur nächsten Stufe fehlt. Unten links
+   geht es zurück zur Buchkarte; liegt dort ein Ort, rückt der Knopf nach oben.
 
    **Auswählen und spielen.** Ein Klick auf einen Ort markiert ihn (er wird größer und
    bekommt einen goldenen Ring), ein zweiter Klick nimmt die Markierung wieder weg. Teile

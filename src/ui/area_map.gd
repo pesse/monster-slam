@@ -12,9 +12,6 @@ extends Control
 const BATTLE_SCENE := "res://scenes/battle/battle.tscn"
 const BOSS_SCENE := "res://scenes/battle/boss_fight.tscn"
 const BossFight := preload("res://src/battle/boss_fight.gd")
-## Die Zeile unter der Karte eines Ortes: was ein Klick tut.
-const NOTE_PART := "Klick markiert den Teil — mehrere Teile spielst du zusammen."
-const NOTE_ALONE := "Klick markiert ihn — er wird allein gespielt."
 
 @onready var _canvas: MapCanvas = %Canvas
 @onready var _title: Label = %Title
@@ -79,15 +76,25 @@ func _ready() -> void:
 ## wie sie) steht nur da, wenn der Späherblick gelernt ist (im Debug-Build immer,
 ## RunRequest.first_person_selectable) — vor dem ersten Bild entschieden, damit die Ecke
 ## nicht nachträglich wächst. Er gilt für die
-## Wellenkämpfe; der Boss bleibt, wie er ist (RunRequest.first_person).
+## Wellenkämpfe; ist der Boss markiert, ist er gesperrt (RunRequest.first_person).
 func _setup_first_person_toggle() -> void:
 	var toggle := %FirstPersonToggle as Button
 	toggle.visible = RunRequest.first_person_selectable()
 	toggle.button_pressed = RunRequest.wants_first_person()
 	toggle.toggled.connect(RunRequest.want_first_person)
-	Hints.attach(toggle, "Ich-Sicht",
-			"Du stehst selbst auf dem Feld: WASD zum Laufen, die Maus zum Umsehen, Enter öffnet die Eingabe.",
-			"Getroffen wird nur ein Monster, das du gerade siehst. Der Boss bleibt, wie er ist.")
+	_lock_first_person(false)
+
+
+## Sperrt den Schalter, solange der Boss markiert ist — der Bosskampf hat keine Ich-Sicht.
+## Gesperrt, nicht versteckt: die Ecke behält ihre Größe.
+func _lock_first_person(locked: bool) -> void:
+	var toggle := %FirstPersonToggle as Button
+	toggle.disabled = locked
+	if locked:
+		Hints.attach(toggle, "Ich-Sicht", "Im Bosskampf gibt es keine Ich-Sicht.")
+	else:
+		Hints.attach(toggle, "Ich-Sicht",
+				"Du stehst selbst auf dem Feld: WASD zum Laufen, die Maus zum Umsehen, Enter öffnet die Eingabe.")
 
 
 ## Der Kopf weicht den Orten aus, bevor er zu sehen ist — die Größen stehen erst nach
@@ -96,8 +103,9 @@ func _place_header() -> void:
 	var header: Control = %Header
 	header.modulate.a = 0.0
 	await get_tree().process_frame
+	# Der Weg zurück steht unten links neben dem Schild; nach oben nur, wenn dort ein Ort liegt.
 	_canvas.place_header(header, MapLayout.area_points(MapLayout.data(MapSelection.book),
-			MapSelection.unit).values())
+			MapSelection.unit).values(), true)
 	header.modulate.a = 1.0
 
 
@@ -239,7 +247,7 @@ static func hint_lines(node: Dictionary) -> Dictionary:
 			if medal < BossRecord.MEDAL_WINS.size():
 				body += " (%s ab %d Siegen)" % [BossRecord.MEDAL_NAMES[medal + 1],
 						int(BossRecord.MEDAL_WINS[medal])]
-		return {"title": title, "body": body, "note": NOTE_ALONE}
+		return {"title": title, "body": body}
 	var done := int(node.get("done", 0))
 	var total := int(node.get("total", 0))
 	if bool(node.get("disabled", false)):
@@ -255,8 +263,7 @@ static func hint_lines(node: Dictionary) -> Dictionary:
 				int(node.get("tier", 0)), FortressTier.MAX_TIER, done, total]
 		body += "\nAlle Sterne." if next.is_empty() else "\nNoch %d %s bis zum %d. Stern" % [
 				needed, "Wort" if needed == 1 else "Wörter", int(next["tier"])]
-	var whole := str(node.get("kind", "")) == MapLevel.KIND_ALL
-	return {"title": title, "body": body, "note": NOTE_ALONE if whole else NOTE_PART}
+	return {"title": title, "body": body}
 
 
 ## Gibt die Unit dem Satzmeister mindestens einen Satz?
@@ -300,6 +307,7 @@ func _select(keys: Array) -> void:
 	_canvas.set_selected(keys)
 	var level := MapLevel.combine(_levels, keys)
 	_play.disabled = level.is_empty()
+	_lock_first_person(not level.is_empty() and str(level["kind"]) == MapLevel.KIND_BOSS)
 	if level.is_empty():
 		Hints.attach(_play, "Spielen", "Wähle auf der Karte, was du spielen willst.",
 				"Mehrere Teile lassen sich zusammen markieren; Gesamt und Boss stehen allein.")

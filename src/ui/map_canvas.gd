@@ -183,8 +183,8 @@ static func centroid(points: Array) -> Vector2:
 	return sum / float(count) if count > 0 else Vector2.INF
 
 
-## Markiert die Orte `keys` (die übrigen nicht mehr). Was ein Klick markiert, sagt der
-## Screen; die Markierung überdauert ein neues `setup`.
+## Markiert die Orte `keys` (die übrigen nicht mehr); die Markierung überdauert ein neues
+## `setup`.
 func set_selected(keys: Array) -> void:
 	_selected.clear()
 	for key in keys:
@@ -311,14 +311,19 @@ func covers(rect: Rect2, points: Array) -> bool:
 	return false
 
 
-## Stellt den Kopf eines Screens (`header`, oben links in seinem Eltern-Control) nach unten
-## links, wenn oben ein Ort darunter läge und unten keiner. Vor dem Einblenden aufrufen,
-## nach einem Frame Layout: danach bleibt der Kopf, wo er ist.
-func place_header(header: Control, points: Array) -> void:
+## Stellt den Kopf eines Screens (`header`, oben links in seinem Eltern-Control) in die
+## Ecke, in der kein Ort darunter liegt. `prefer_bottom` sagt, welche Ecke er nimmt, wenn
+## beide frei oder beide belegt sind: sonst oben links, mit `prefer_bottom` unten links —
+## die andere Ecke nur, wenn die bevorzugte belegt ist und sie nicht. Vor dem Einblenden
+## aufrufen, nach einem Frame Layout: danach bleibt der Kopf, wo er ist.
+func place_header(header: Control, points: Array, prefer_bottom := false) -> void:
 	var top := header.get_global_rect()
 	var parent := header.get_parent() as Control
 	var bottom := Rect2(Vector2(top.position.x, parent.get_global_rect().end.y - top.size.y), top.size)
-	if covers(top, points) and not covers(bottom, points):
+	var down := covers(top, points) and not covers(bottom, points)
+	if prefer_bottom:
+		down = not (covers(bottom, points) and not covers(top, points))
+	if down:
 		header.grow_vertical = Control.GROW_DIRECTION_BEGIN
 		header.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_MINSIZE)
 

@@ -409,7 +409,10 @@ Erspielte.
   selbst: `SURFACE` als erstes Kind der Karte (gekachelt, auf das Achteck innerhalb des
   Rahmens beschnitten), `JOINTS` als erstes Kind des Titelbands. Knöpfe darin tragen
   `WindowButton`, der eine Weg nach vorn `WindowPrimary` (dieselbe Größe, goldener Rahmen)
-  — `MainMenuPlay` ist für das Hauptmenü gemacht und in einer Karte viel zu groß. Werkbank:
+  — `MainMenuPlay` ist für das Hauptmenü gemacht und in einer Karte viel zu groß. Ein
+  Symbol-Schalter (Ich-Sicht) ist `WindowToggle`: gewählt golden, nicht blasser. Alle drei
+  sind 9-Slice-Rahmen aus `assets/ui/main_menu/buttons/small/` (der Hauptmenü-Rahmen auf ¼,
+  `shrink_image.gd`), damit der Rand auf jeder Breite gleich dick bleibt — auch im Quadrat. Werkbank:
   `wave_card_lab` schaltet mit ◀/▶ (Bild↑/Bild↓) durch alle Karten;
   `-- --snap --card=result|opened|levelup|consolation|next|defeat|reveal|confirm [--size=WxH]`
   speichert eine als Bild (`--snap`, weil der eingebettete `battle_theme_lab` auf `--shoot` hört).

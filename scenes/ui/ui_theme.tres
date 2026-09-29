@@ -16,6 +16,8 @@
 [ext_resource type="Texture2D" path="res://assets/ui/tooltip/pointer_down.webp" id="hint_pointer_down"]
 [ext_resource type="Texture2D" path="res://assets/ui/statistics/tabs/tab_normal.webp" id="tab_tex"]
 [ext_resource type="Texture2D" path="res://assets/ui/statistics/tabs/tab_highlighted.webp" id="tab_gold_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/small/button_normal.webp" id="win_btn_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/buttons/small/button_highlighted.webp" id="win_btn_gold_tex"]
 
 [sub_resource type="StyleBoxFlat" id="btn_disabled"]
 content_margin_left = 12.0
@@ -489,6 +491,122 @@ content_margin_right = 24.0
 texture = ExtResource("menu_btn_gold_tex")
 modulate_color = Color(1.2, 1.12, 1, 1)
 
+[sub_resource type="StyleBoxTexture" id="win_btn_normal"]
+content_margin_left = 24.0
+content_margin_top = 0.0
+content_margin_right = 24.0
+content_margin_bottom = 0.0
+texture = ExtResource("win_btn_tex")
+texture_margin_left = 16.0
+texture_margin_top = 14.0
+texture_margin_right = 16.0
+texture_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxTexture" id="win_btn_hover"]
+content_margin_left = 24.0
+content_margin_top = 0.0
+content_margin_right = 24.0
+content_margin_bottom = 0.0
+texture = ExtResource("win_btn_gold_tex")
+texture_margin_left = 16.0
+texture_margin_top = 14.0
+texture_margin_right = 16.0
+texture_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxTexture" id="win_btn_pressed"]
+content_margin_left = 24.0
+content_margin_top = 0.0
+content_margin_right = 24.0
+content_margin_bottom = 0.0
+texture = ExtResource("win_btn_gold_tex")
+texture_margin_left = 16.0
+texture_margin_top = 14.0
+texture_margin_right = 16.0
+texture_margin_bottom = 14.0
+modulate_color = Color(0.82, 0.78, 0.72, 1)
+
+[sub_resource type="StyleBoxTexture" id="win_btn_disabled"]
+content_margin_left = 24.0
+content_margin_top = 0.0
+content_margin_right = 24.0
+content_margin_bottom = 0.0
+texture = ExtResource("win_btn_tex")
+texture_margin_left = 16.0
+texture_margin_top = 14.0
+texture_margin_right = 16.0
+texture_margin_bottom = 14.0
+modulate_color = Color(0.55, 0.55, 0.6, 0.85)
+
+[sub_resource type="StyleBoxTexture" id="win_primary_hover"]
+content_margin_left = 24.0
+content_margin_top = 0.0
+content_margin_right = 24.0
+content_margin_bottom = 0.0
+texture = ExtResource("win_btn_gold_tex")
+texture_margin_left = 16.0
+texture_margin_top = 14.0
+texture_margin_right = 16.0
+texture_margin_bottom = 14.0
+modulate_color = Color(1.2, 1.12, 1, 1)
+
+[sub_resource type="StyleBoxTexture" id="win_toggle_normal"]
+content_margin_left = 8.0
+content_margin_top = 4.0
+content_margin_right = 8.0
+content_margin_bottom = 4.0
+texture = ExtResource("win_btn_tex")
+texture_margin_left = 16.0
+texture_margin_top = 14.0
+texture_margin_right = 16.0
+texture_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxTexture" id="win_toggle_hover"]
+content_margin_left = 8.0
+content_margin_top = 4.0
+content_margin_right = 8.0
+content_margin_bottom = 4.0
+texture = ExtResource("win_btn_tex")
+texture_margin_left = 16.0
+texture_margin_top = 14.0
+texture_margin_right = 16.0
+texture_margin_bottom = 14.0
+modulate_color = Color(1.25, 1.25, 1.3, 1)
+
+[sub_resource type="StyleBoxTexture" id="win_toggle_pressed"]
+content_margin_left = 8.0
+content_margin_top = 4.0
+content_margin_right = 8.0
+content_margin_bottom = 4.0
+texture = ExtResource("win_btn_gold_tex")
+texture_margin_left = 16.0
+texture_margin_top = 14.0
+texture_margin_right = 16.0
+texture_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxTexture" id="win_toggle_hover_pressed"]
+content_margin_left = 8.0
+content_margin_top = 4.0
+content_margin_right = 8.0
+content_margin_bottom = 4.0
+texture = ExtResource("win_btn_gold_tex")
+texture_margin_left = 16.0
+texture_margin_top = 14.0
+texture_margin_right = 16.0
+texture_margin_bottom = 14.0
+modulate_color = Color(1.2, 1.12, 1, 1)
+
+[sub_resource type="StyleBoxTexture" id="win_toggle_disabled"]
+content_margin_left = 8.0
+content_margin_top = 4.0
+content_margin_right = 8.0
+content_margin_bottom = 4.0
+texture = ExtResource("win_btn_tex")
+texture_margin_left = 16.0
+texture_margin_top = 14.0
+texture_margin_right = 16.0
+texture_margin_bottom = 14.0
+modulate_color = Color(0.55, 0.55, 0.6, 0.85)
+
 [sub_resource type="FontVariation" id="menu_font"]
 variation_embolden = 0.9
 
@@ -931,13 +1049,25 @@ IntroSmallButton/base_type = &"MainMenuButton"
 IntroSmallButton/font_sizes/font_size = 18
 IntroSmallButton/constants/icon_max_width = 24
 WindowButton/base_type = &"IntroSmallButton"
+WindowButton/styles/normal = SubResource("win_btn_normal")
+WindowButton/styles/hover = SubResource("win_btn_hover")
+WindowButton/styles/pressed = SubResource("win_btn_pressed")
+WindowButton/styles/hover_pressed = SubResource("win_btn_pressed")
+WindowButton/styles/disabled = SubResource("win_btn_disabled")
+WindowToggle/base_type = &"WindowButton"
+WindowToggle/constants/icon_max_width = 30
+WindowToggle/styles/normal = SubResource("win_toggle_normal")
+WindowToggle/styles/hover = SubResource("win_toggle_hover")
+WindowToggle/styles/pressed = SubResource("win_toggle_pressed")
+WindowToggle/styles/hover_pressed = SubResource("win_toggle_hover_pressed")
+WindowToggle/styles/disabled = SubResource("win_toggle_disabled")
 WindowPrimary/base_type = &"WindowButton"
 WindowPrimary/colors/font_color = Color(1, 0.84, 0.4, 1)
 WindowPrimary/colors/font_hover_color = Color(1, 0.93, 0.62, 1)
 WindowPrimary/colors/font_focus_color = Color(1, 0.93, 0.62, 1)
 WindowPrimary/colors/font_outline_color = Color(0.2, 0.1, 0.02, 1)
-WindowPrimary/styles/normal = SubResource("menu_btn_hover")
-WindowPrimary/styles/hover = SubResource("menu_play_hover")
+WindowPrimary/styles/normal = SubResource("win_btn_hover")
+WindowPrimary/styles/hover = SubResource("win_primary_hover")
 IntroCards/base_type = &"FlowContainer"
 IntroCards/constants/h_separation = 24
 IntroCards/constants/v_separation = 16
