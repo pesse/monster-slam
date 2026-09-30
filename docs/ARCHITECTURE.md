@@ -740,6 +740,14 @@ Kamera frei; die Äste darunter heben nur das Lauftempo (`walk_speed`, Anteile a
   bleibt „im Bild". Sind Bogen und Sturmangriff gelernt, wechselt Tab
   (`FirstPersonView.weapons`, `switch_weapon`); die Wahl gilt bis zum Beenden, gespeichert
   wird sie nicht. Pfeil und Spur sind im Vorwärmen (`FxWarmup`).
+- **Explosionspfeil** (`explosive_arrow`, `FirstPersonView.explodes_for`/`explosive`) ist
+  keine Waffe, sondern ein anderes Bild für den Bogentreffer: `WaveRunner._blast` statt
+  `_burst`. `Blast` (`src/fx/blast.gd`) schichtet Blitz, Feuerball, Druckwelle, Funken, Glut
+  in der Wortfarbe und Rauch aus eigenen Shadern (`fireball`, `shockwave`, `spark`,
+  `smoke`), alles gerechnet und ohne Textur, und weich statt Low-Poly. Nachbarn im Umkreis
+  `BLAST_FLINCH_RADIUS` zucken (`Monster.flinch`, nur der Körper). Gebucht, getroffen und
+  gespurt wird genau wie ohne. Glühender Pfeil und `Blast` sind im Vorwärmen, sobald der
+  Skill gelernt ist.
 - **Gelaufen wird nach der Wanduhr**, nicht mit `delta`: weder Zeitlupe noch der Zeitraffer
   von „Schnell auflösen" sollen den Spieler mitnehmen, und `Engine.time_scale` gehört
   SlowMotion. Die Maus ist nur im laufenden Kampf gefangen (`FirstPersonView.set_active`)

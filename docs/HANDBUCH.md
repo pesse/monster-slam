@@ -226,6 +226,10 @@ gesperrt.
   dahinter im Boden stecken. Wie stark der Bogen gespannt ist, verrät nichts über die
   Antwort. Hast du Bogen und Sturmangriff gelernt, wechselst du mit **Tab** zwischen
   beiden. Das Spiel merkt sich deine Wahl, bis du es beendest.
+- **Explosionspfeil:** Nach dem Langbogen kannst du den **Explosionspfeil** lernen. Deine
+  Pfeile glühen dann an der Spitze, und ein Treffer explodiert in einem Feuerball: Rauch
+  steigt auf, Funken und Glut in der Farbe der Wortart fliegen, und Monster in der Nähe
+  zucken zusammen. Besiegt wird trotzdem nur das Monster, dessen Wort du richtig getippt hast.
 - **Maus freigeben:** Auch beim Laufen ist der Mauszeiger da, solange du **Alt** gedrückt
   hältst. Nach der Welle ist er von selbst wieder da.
 
@@ -529,14 +533,14 @@ rechts ist der Preis in Skillpunkten. Unten links erklärt eine Legende die Zeic
 Jeder Baum hat einen eigenen Anfangsknoten und verzweigt sich danach in zwei Äste. Man
 baut einen Ast aus und kann den anderen liegen lassen. Knoten der ersten und zweiten
 Stufe kosten 1 Skillpunkt, die der dritten 2. Im Späher kosten der Anfang, der
-Sturmangriff und der Langbogen je 5.
+Sturmangriff und der Langbogen je 5, der Explosionspfeil danach 3.
 
 | Baum | Was er tut |
 |---|---|
 | **Genesung** | Jedes besiegte Monster heilt die Festung um mehr HP. |
 | **Bollwerk** | Die Festung bekommt Rüstung. Ein Ast vergrößert den Vorrat, der andere setzt ihn zu jeder Welle ein Stück instand. |
 | **Zeitwandler** | Die Zeitlupe beim Tippen hält länger nach (ein Ast) oder wird noch tiefer (der andere Ast). |
-| **Späher** | Der Anfang, der **Späherblick**, schaltet die Ich-Sicht frei (Kapitel 5). Beide Äste danach machen dich darin schneller, am Ende des einen warten der **Sturmangriff** und der **Langbogen**. |
+| **Späher** | Der Anfang, der **Späherblick**, schaltet die Ich-Sicht frei (Kapitel 5). Beide Äste danach machen dich darin schneller, am Ende des einen warten der **Sturmangriff** und der **Langbogen**, nach dem Langbogen der **Explosionspfeil**. |
 
 Alle Wirkungen zählen zusammen: zwei Knoten, die je 1 HP mehr heilen, heilen zusammen
 2 HP mehr.

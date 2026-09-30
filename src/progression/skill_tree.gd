@@ -114,6 +114,7 @@ const EFFECT_KEYS: Array[String] = [
 	"walk_speed",
 	"charge",
 	"bow",
+	"explosive_arrow",
 ]
 
 
@@ -473,6 +474,8 @@ static func effect_label(key: String, value: float) -> String:
 			return "Sturmangriff bei jedem Treffer"
 		"bow":
 			return "Bogen in der Ich-Sicht"
+		"explosive_arrow":
+			return "Pfeile explodieren beim Treffer"
 	return ""
 
 

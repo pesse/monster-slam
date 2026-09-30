@@ -106,5 +106,22 @@
 		"effects": {
 			"bow": 1
 		}
+	},
+	{
+		"id": "skill.scout.blast",
+		"kind": "skill",
+		"tree": "tree.scout",
+		"name": "Explosionspfeil",
+		"icon": "🔥",
+		"description": "Dein Pfeil explodiert beim Treffer in einem Feuerball: Rauch steigt auf, Funken und Trümmer fliegen, und die Monster daneben zucken zusammen. Besiegt wird trotzdem nur, was du richtig beantwortest.",
+		"cost": 3,
+		"tier": 4,
+		"branch": 2,
+		"requires": [
+			"skill.scout.bow"
+		],
+		"effects": {
+			"explosive_arrow": 1
+		}
 	}
 ]

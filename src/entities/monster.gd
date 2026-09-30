@@ -33,6 +33,10 @@ const PLATE_GROUP := &"word_plate"
 var _speed: float = 2.0
 var _target_z: float = 0.0
 var _done: bool = false
+## Was sichtbar ist — das Modell oder der Platzhalter. `flinch` wackelt nur daran, damit
+## Position, Schild und Bahn unberührt bleiben.
+var _body: Node3D
+var _flinch: Tween = null
 
 ## Wortart-Outline: Inverted-Hull-Shader, Farbe je Wortart (siehe WordTypePalette).
 const OUTLINE_SHADER := preload("res://assets/shaders/monster_outline.gdshader")
@@ -95,6 +99,7 @@ func _apply_model() -> void:
 	if path == "" or not ResourceLoader.exists(path):
 		# Kein Modell -> Platzhalter-Kapsel behält die Wortart-Outline (Konsistenz).
 		_apply_outline(_placeholder, color, 1.0)
+		_body = _placeholder
 		return
 	var packed: PackedScene = load(path)
 	var inst := packed.instantiate() as Node3D
@@ -102,6 +107,7 @@ func _apply_model() -> void:
 	inst.scale = Vector3.ONE * model_scale
 	inst.rotation_degrees.y = float(monster_def.get("model_yaw", 0.0))
 	add_child(inst)
+	_body = inst
 	_placeholder.visible = false
 	_apply_outline(inst, color, model_scale)
 	_setup_animation(inst)
@@ -163,6 +169,34 @@ func head_height() -> float:
 ## Platzen kommt später (Sturmangriff in der Ich-Sicht).
 func halt() -> void:
 	_done = true
+
+
+## Neben einer Explosion (Blast) bei `from`: der Körper duckt sich, kippt vom Knall weg und
+## federt zurück. Nur das Bild — Position, Tempo und Aufgabe bleiben, wie sie sind.
+func flinch(from: Vector3) -> void:
+	if _body == null:
+		return
+	var away := global_position - from
+	away.y = 0.0
+	var axis := Vector3.UP.cross(away.normalized()) if away.length_squared() > 0.0001 \
+			else Vector3.RIGHT
+	# Die Achse in den Rahmen des Monsters: der Körper hängt darunter.
+	axis = (global_basis.inverse() * axis).normalized()
+	var rest := _body.transform
+	if _flinch != null and _flinch.is_valid():
+		_flinch.kill()
+	_flinch = create_tween()
+	_flinch.tween_method(func(t: float) -> void: _lean(rest, axis, t), 0.0, 1.0, 0.55)
+
+
+## Ein Schlag, der ausschwingt: kippt bis ~20° und staucht, dann gedämpft zurück.
+func _lean(rest: Transform3D, axis: Vector3, t: float) -> void:
+	# (1 - t): am Ende genau wieder in Ruhe, nicht nur fast.
+	var swing := sin(t * PI * 2.5) * exp(-t * 4.0) * (1.0 - t)
+	var squash := 1.0 - 0.18 * swing
+	var basis := Basis(axis, deg_to_rad(22.0) * swing) \
+			* Basis.from_scale(Vector3(1.0 / sqrt(squash), squash, 1.0 / sqrt(squash)))
+	_body.transform = Transform3D(basis * rest.basis, rest.origin)
 
 
 func _physics_process(delta: float) -> void:

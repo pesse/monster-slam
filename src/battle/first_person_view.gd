@@ -76,6 +76,12 @@ static func bows_for(bonuses: Dictionary) -> bool:
 	return float(bonuses.get("bow", 0.0)) > 0.0
 
 
+## Der Explosionspfeil ist gelernt: ein Treffer mit dem Bogen platzt als Feuerball (Blast).
+## Nur das Bild — besiegt wird dasselbe Monster wie ohne.
+static func explodes_for(bonuses: Dictionary) -> bool:
+	return float(bonuses.get("explosive_arrow", 0.0)) > 0.0
+
+
 ## Die gelernten Waffen, in der Reihenfolge, in der Tab sie durchgeht.
 static func weapons_for(bonuses: Dictionary) -> Array[int]:
 	var out: Array[int] = []
@@ -191,6 +197,8 @@ var weapon := Weapon.NONE:
 		weapon = value
 		if _bow != null:
 			_bow.visible = weapon == Weapon.BOW
+## Explosionspfeil gelernt (explodes_for): ein Treffer mit dem Bogen platzt als Blast.
+var explosive := false
 ## Begehbare Fläche in x/z.
 var bounds := Rect2(-10.0, -25.0, 20.0, 30.0)
 
@@ -312,6 +320,7 @@ func _fly(from: Vector3, to: Vector3, lift: float = ARROW_LIFT, speed: float = A
 		longest: float = ARROW_MAX_TIME) -> Arrow:
 	var arrow := Arrow.new()
 	arrow.trail = true
+	arrow.glowing = explosive
 	arrow.scale = Vector3.ONE * ARROW_SCALE
 	get_parent().add_child(arrow)
 	arrow.global_position = from

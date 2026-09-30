@@ -28,6 +28,10 @@ extends Node3D
 ##     … -- --bow
 ##         Die Ich-Sicht mit dem Bogen: gesenkt, gespannt, ein Treffer und ein Fehlschuss im
 ##         Flug, als reports/battle_themes/bow_<schritt>.png.
+##     … -- --blast
+##         Der Explosionspfeil (Blast) aus der Ich-Sicht auf ein Monster mit zwei Nachbarn,
+##         in Schritten nach dem Aufprall, als reports/battle_themes/blast_<ms>.png. Jeder
+##         Schritt ist ein eigener Knall — das Speichern eines Bilds dauert länger als der.
 ##     … -- --hitches [--warm]
 ##         Misst den längsten Frame beim ERSTEN Auftritt jedes Kampfeffekts (Explosion,
 ##         „+XP", Monster, Meister-Feier) und gibt ihn in ms aus; --warm wärmt vorher vor
@@ -150,6 +154,8 @@ func _ready() -> void:
 		_set_first_person(true)
 	if _has_arg("bow"):
 		_shoot_bow.call_deferred()
+	elif _has_arg("blast"):
+		_shoot_blast.call_deferred()
 	elif _has_arg("hud"):
 		_shoot_hud.call_deferred()
 	elif _has_arg("plates"):
@@ -243,7 +249,7 @@ func _fill_controls() -> void:
 	%MenuToggle.toggled.connect(func(on: bool) -> void:
 		%Menu.visible = on
 		%MenuToggle.text = "Regler ▾" if on else "Regler ▸")
-	var batch := ["shoot", "specimens", "bow", "hitches", "fps", "fortress"].any(_has_arg)
+	var batch := ["shoot", "specimens", "bow", "blast", "hitches", "fps", "fortress"].any(_has_arg)
 	%MenuToggle.visible = not batch
 
 
@@ -578,6 +584,44 @@ func _shoot_hud() -> void:
 	get_tree().quit()
 
 
+func _shoot_blast() -> void:
+	var dir := ProjectSettings.globalize_path(SHOT_DIR)
+	DirAccess.make_dir_recursive_absolute(dir)
+	var view := (load("res://scenes/battle/first_person_view.tscn") as PackedScene).instantiate() as FirstPersonView
+	view.position = Vector3(0.0, 0.0, _goal() - 2.0)
+	add_child(view)
+	var at := Vector3(1.0, 0.0, _goal() - 14.0)
+	var types := WordTypePalette.COLORS.keys()
+	var neighbours: Array[Monster] = []
+	for x: float in [-3.5, 4.5]:
+		var monster := FxWarmup.MONSTER_SCENE.instantiate() as Monster
+		monster.setup(FxWarmup.monster_defs()[0], {"prompt": "house",
+				"lexeme_type": types.pick_random()}, 1000.0, 0.0)
+		monster.screen_sized_label = true
+		monster.position = at + Vector3(x, 0.0, -1.0)
+		add_child(monster)
+		monster.halt()
+		neighbours.append(monster)
+	await FxWarmup.run(self, view.camera.global_position - view.camera.global_basis.z * 6.0,
+			[], [Blast.new()])
+	await get_tree().create_timer(1.0).timeout
+	for ms: int in [40, 120, 250, 450, 800, 1300, 2000]:
+		var fx := Blast.new()
+		fx.setup(WordTypePalette.color_for(str(types[0])))
+		fx.position = at
+		add_child(fx)
+		for monster in neighbours:
+			monster.flinch(at)
+		await get_tree().create_timer(ms / 1000.0).timeout
+		await RenderingServer.frame_post_draw
+		var path := "%s/blast_%04d.png" % [dir, ms]
+		get_viewport().get_texture().get_image().save_png(path)
+		print("battle_theme_lab: ", path)
+		fx.queue_free()
+		await get_tree().create_timer(0.8).timeout
+	get_tree().quit()
+
+
 func _shoot_bow() -> void:
 	var dir := ProjectSettings.globalize_path(SHOT_DIR)
 	DirAccess.make_dir_recursive_absolute(dir)
@@ -724,7 +768,8 @@ func _measure_hitches() -> void:
 		var t0 := Time.get_ticks_usec()
 		celebration.warm_up()
 		await FxWarmup.run(self, at, FxWarmup.monster_defs(),
-				[WaveRunnerScript.xp_label(FxWarmup.GLYPHS), WaveRunnerScript.form_label(FxWarmup.GLYPHS)])
+				[WaveRunnerScript.xp_label(FxWarmup.GLYPHS), WaveRunnerScript.form_label(FxWarmup.GLYPHS),
+				Blast.new()])
 		celebration.cool_down()
 		print("hitches: Vorwärmen %.1f ms" % ((Time.get_ticks_usec() - t0) / 1000.0))
 		await _worst_frame(func() -> void: pass, 60)
@@ -733,6 +778,11 @@ func _measure_hitches() -> void:
 			var fx := Explosion.new()
 			fx.setup(Color(0.7, 1.0, 0.4), 1.5)
 			fx.position = at
+			add_child(fx),
+		"Blast": func() -> void:
+			var fx := Blast.new()
+			fx.setup(Color(0.7, 1.0, 0.4))
+			fx.position = at - Vector3(0.0, 1.0, 0.0)
 			add_child(fx),
 		"+XP": func() -> void:
 			var label := WaveRunnerScript.xp_label("+12 XP")

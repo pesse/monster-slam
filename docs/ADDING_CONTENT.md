@@ -304,12 +304,14 @@ Eine Datei je Baum. Der erste Eintrag ist der Baum-Kopf, die übrigen sind seine
   `armor_regen` (Instandsetzung je Wellenstart), `max_health`, `slow_hold_ms`, `slow_factor` (negativ = tiefere Zeitlupe),
   `first_person` (> 0 schaltet die Ich-Sicht frei), `walk_speed` (Anteil auf das Lauftempo der Ich-Sicht) und
   `charge` (> 0: Sturmangriff bei jedem Treffer in der Ich-Sicht) und `bow` (> 0: Bogen in
-  der Ich-Sicht; mit `charge` zusammen wechselt Tab). Ein neuer
+  der Ich-Sicht; mit `charge` zusammen wechselt Tab) und `explosive_arrow` (> 0: ein
+  Bogentreffer platzt als Feuerball mit Rauch, nur das Bild). Ein neuer
   Schlüssel braucht einen Eintrag dort **und** ein `apply_skills`, das ihn liest.
 
 Die Beträge sind reine Balance und ohne Code-Änderung justierbar. Was sich nicht ändern
 darf, ohne den Screen anzufassen: dass ein Baum sich verzweigt — `tests/skill_data_test.gd`
-besteht darauf, dass jede Stufe eines Baums irgendwo zwei Äste nebeneinander hat.
+besteht darauf, dass jeder Baum irgendwo eine Stufe mit zwei Ästen nebeneinander hat.
+Einzelne Stufen dürfen einen einzigen Knoten tragen.
 
 ## Neue Mechanik hinzufügen
 Neues System als eigenes Script/Szene anlegen, das relevante `EventBus`-Signale

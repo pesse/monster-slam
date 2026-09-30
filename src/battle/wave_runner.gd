@@ -72,6 +72,9 @@ var _underway := 0
 ## Woran ein Fehlschuss vorbeizielt: die Körpermitte, wie beim Blick (_in_view). Ein
 ## Treffer geht in den Kopf (Monster.head_height).
 const ARROW_AIM_Y := 1.2
+## Explosionspfeil: so groß der Knall (Blast), und bis hierhin zucken die Nachbarn.
+const BLAST_SCALE := 1.0
+const BLAST_FLINCH_RADIUS := 5.0
 
 @onready var _monsters: Node3D = $Monsters
 @onready var _camera: Camera3D = $CameraPivot/Camera3D
@@ -185,6 +188,12 @@ func _warm_up() -> void:
 		var arrow := Arrow.new()
 		arrow.trail = true
 		extras.append(arrow)
+		if _fp.explosive:
+			var ember := Arrow.new()
+			ember.trail = true
+			ember.glowing = true
+			extras.append(ember)
+			extras.append(Blast.new())
 	await FxWarmup.run(self, at, FxWarmup.monster_defs(), extras, _fp != null)
 	_celebration.cool_down()
 
@@ -1077,6 +1086,7 @@ func _setup_first_person(bonuses: Dictionary) -> void:
 	_fp = FIRST_PERSON_SCENE.instantiate() as FirstPersonView
 	_fp.speed = FirstPersonView.speed_for(bonuses)
 	_fp.weapons = FirstPersonView.weapons_for(bonuses)
+	_fp.explosive = FirstPersonView.explodes_for(bonuses)
 	_fp.bounds = Rect2(-FIELD_HALF_X + 1.0, SPAWN_Z - 1.0,
 			2.0 * (FIELD_HALF_X - 1.0), GOAL_Z - 1.5 - (SPAWN_Z - 1.0))
 	_fp.position = Vector3(0.0, 0.0, GOAL_Z - 2.0)
@@ -1227,8 +1237,12 @@ func _defeat_by_arrow(monster: Monster) -> void:
 	await _fp.shoot_at(monster.global_position + Vector3(0.0, monster.head_height(), 0.0))
 	_underway -= 1
 	if is_instance_valid(monster):
-		_shake(0.3)
-		_burst(monster, 2.0)
+		if _fp.explosive:
+			_shake(0.7)
+			_blast(monster)
+		else:
+			_shake(0.3)
+			_burst(monster, 2.0)
 	_check_end()
 
 
@@ -1253,6 +1267,25 @@ func _wrong_feedback() -> void:
 ## Das Bild zum Treffer: Explosion, Klang, „+XP" und das Monster geht.
 func _burst(monster: Monster, size: float = 1.5) -> void:
 	_spawn_explosion(monster.position + Vector3(0.0, 1.0, 0.0), Color(0.7, 1.0, 0.4), size)
+	_leave(monster)
+
+
+## Das Bild zum Treffer mit dem Explosionspfeil: Feuerball, Rauch und Trümmer in der
+## Wortfarbe, und wer daneben steht, zuckt zusammen — nur das Bild, besiegt ist allein
+## das getroffene Monster.
+func _blast(monster: Monster) -> void:
+	var fx := Blast.new()
+	fx.setup(monster.word_color(), BLAST_SCALE)
+	fx.position = monster.position
+	add_child(fx)
+	for other in _active:
+		if other.position.distance_to(monster.position) <= BLAST_FLINCH_RADIUS:
+			other.flinch(monster.global_position)
+	_leave(monster)
+
+
+## Was jeder Treffer nach seinem Knall tut: Klang, „+XP" und das Monster geht.
+func _leave(monster: Monster) -> void:
 	# Hier und nicht in _spawn_explosion(): denselben Effekt nutzen auch der Festungsausbau
 	# und der Aufschlag eines durchgelassenen Monsters — die klingen nicht gleich.
 	Sfx.play(&"monster_kill")

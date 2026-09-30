@@ -107,6 +107,16 @@ func test_bow_needs_its_node() -> void:
 	assert_str(SkillTree.effect_label("bow", 1.0)).is_not_empty()
 
 
+## Der Explosionspfeil ist ein eigener Knoten und keine Waffe: Tab geht weiter nur Bogen
+## und Sturmangriff durch.
+func test_the_explosive_arrow_needs_its_node() -> void:
+	assert_bool(FirstPersonView.explodes_for({})).is_false()
+	assert_bool(FirstPersonView.explodes_for({"bow": 1.0, "explosive_arrow": 1.0})).is_true()
+	assert_array(FirstPersonView.weapons_for({"bow": 1.0, "explosive_arrow": 1.0})) \
+			.is_equal([FirstPersonView.Weapon.BOW])
+	assert_str(SkillTree.effect_label("explosive_arrow", 1.0)).is_not_empty()
+
+
 ## Tab geht nur die gelernten Waffen durch; ohne zwei bleibt es bei der einen.
 func test_tab_cycles_the_learned_weapons() -> void:
 	var both := FirstPersonView.weapons_for({"bow": 1.0, "charge": 1.0})
