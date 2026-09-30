@@ -128,7 +128,7 @@ func _on_manifest(result: int, code: int, _headers: PackedStringArray, body: Pac
 		return
 
 	version = offered
-	notes = str(manifest.get("notes", ""))
+	notes = ReleaseNotes.compose(manifest, SemVer.app_version())
 	_entry = entry
 	_set_state(State.AVAILABLE)
 

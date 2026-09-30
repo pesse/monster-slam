@@ -155,6 +155,10 @@ An `https://github.com/pesse/monster-slam/releases/latest/download/latest.json`:
   "version": "0.2.0",
   "notes": "…Release-Beschreibung…",
   "pub_date": "2026-09-01T10:00:00Z",
+  "history": [
+    { "version": "0.2.0", "pub_date": "…", "notes": "…" },
+    { "version": "0.1.1", "pub_date": "…", "notes": "…" }
+  ],
   "platforms": {
     "windows-x86_64": {
       "url": "https://…/MonsterSlam-0.2.0.exe",
@@ -164,6 +168,11 @@ An `https://github.com/pesse/monster-slam/releases/latest/download/latest.json`:
   }
 }
 ```
+
+`history` (ab dem ersten Release nach 0.18.0) trägt die Releases der letzten 7 Tage
+vor diesem, mindestens 3, neuester zuerst (`tools/release/release_history.sh`). Der
+Dialog zeigt daraus alle, die neuer sind als die installierte Fassung
+(`ReleaseNotes.compose`); liegt sie weiter zurück, verweist er auf die Release-Seite. `notes` bleibt für ältere Clients stehen.
 
 Verifiziert wird mit `Crypto.verify(HashingContext.HASH_SHA256, hash, sig, key)`
 gegen einen **öffentlichen RSA-Schlüssel im Projekt** (`res://keys/release.pub`).

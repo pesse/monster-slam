@@ -1,8 +1,9 @@
 name: Release
 
 # Baut, signiert und veröffentlicht eine Windows-Fassung; Auslöser ist ein in GitHub
-# publiziertes Release. Die Release-Beschreibung landet als `notes` in latest.json und
-# damit im Update-Dialog des Spiels.
+# publiziertes Release. Die Release-Beschreibung landet als `notes` in latest.json, die der
+# letzten 7 Tage (mindestens 3 Releases) als `history` — der Update-Dialog zeigt alle, die
+# neuer sind als die installierte Fassung. Deshalb Release-Notes kurz halten.
 #
 # Der Release-Tag ist die einzige Quelle der App-Version — das verhindert vergessene oder
 # abweichende Bumps in project.godot.
@@ -126,6 +127,8 @@ jobs:
           SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
           TAG: ${{ github.event.release.tag_name }}
           NOTES: ${{ github.event.release.body }}
+          PUBLISHED: ${{ github.event.release.published_at }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ needs.build.outputs.version }}
           EXE: ${{ needs.build.outputs.exe }}
         run: |
@@ -138,8 +141,11 @@ jobs:
           trap 'rm -f "$KEY"' EXIT
           printf '%s' "$SIGNING_KEY" > "$KEY"
           printf '%s' "$NOTES" > notes.md
+          gh api --paginate "repos/${{ github.repository }}/releases?per_page=100" --jq '.[]' \
+            | jq -s . > releases.json
+          bash tools/release/release_history.sh releases.json "$TAG" "$PUBLISHED" notes.md history.json
           URL="${{ github.server_url }}/${{ github.repository }}/releases/download/${TAG}/$(basename "$EXE")"
-          bash tools/release/make_latest_json.sh "$EXE" "$VERSION" notes.md "$KEY" "$URL" latest.json
+          bash tools/release/make_latest_json.sh "$EXE" "$VERSION" notes.md "$KEY" "$URL" latest.json history.json
 
       - name: An das Release hängen
         shell: bash
