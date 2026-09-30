@@ -19,9 +19,177 @@ current = true
 
 [node name="UI" type="CanvasLayer" parent="."]
 
-[node name="Name" type="Label" parent="UI"]
-offset_left = 16.0
-offset_top = 16.0
-offset_right = 416.0
-offset_bottom = 56.0
-theme_type_variation = &"Display"
+[node name="Margin" type="MarginContainer" parent="UI"]
+theme_type_variation = &"ScreenMargin"
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Root" type="VBoxContainer" parent="UI/Margin"]
+theme_type_variation = &"ScreenStack"
+mouse_filter = 2
+
+[node name="MenuToggle" type="Button" parent="UI/Margin/Root"]
+unique_name_in_owner = true
+size_flags_horizontal = 0
+focus_mode = 0
+toggle_mode = true
+text = "Regler ▸"
+
+[node name="Menu" type="PanelContainer" parent="UI/Margin/Root"]
+unique_name_in_owner = true
+visible = false
+size_flags_horizontal = 0
+
+[node name="Items" type="VBoxContainer" parent="UI/Margin/Root/Menu"]
+theme_type_variation = &"Tight"
+
+[node name="Name" type="Label" parent="UI/Margin/Root/Menu/Items"]
+unique_name_in_owner = true
+theme_type_variation = &"SectionTitle"
+
+[node name="Grid" type="GridContainer" parent="UI/Margin/Root/Menu/Items"]
+columns = 4
+
+[node name="ThemeCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Grid"]
+theme_type_variation = &"Hint"
+text = "Thema"
+
+[node name="ThemeSelect" type="OptionButton" parent="UI/Margin/Root/Menu/Items/Grid"]
+unique_name_in_owner = true
+focus_mode = 0
+
+[node name="TierCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Grid"]
+theme_type_variation = &"Hint"
+text = "Stufe"
+
+[node name="TierSelect" type="OptionButton" parent="UI/Margin/Root/Menu/Items/Grid"]
+unique_name_in_owner = true
+focus_mode = 0
+
+[node name="ViewCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Grid"]
+theme_type_variation = &"Hint"
+text = "Sicht"
+
+[node name="ViewSelect" type="OptionButton" parent="UI/Margin/Root/Menu/Items/Grid"]
+unique_name_in_owner = true
+focus_mode = 0
+
+[node name="ScaleCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Grid"]
+theme_type_variation = &"Hint"
+text = "Festungsgröße"
+
+[node name="ScaleSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Grid"]
+unique_name_in_owner = true
+min_value = 1.0
+max_value = 10.0
+step = 0.25
+allow_greater = true
+allow_lesser = true
+
+[node name="GoalCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Grid"]
+theme_type_variation = &"Hint"
+text = "Festungsfront z"
+
+[node name="GoalSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Grid"]
+unique_name_in_owner = true
+min_value = -40.0
+max_value = 60.0
+step = 0.5
+allow_greater = true
+allow_lesser = true
+
+[node name="SpawnCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Grid"]
+theme_type_variation = &"Hint"
+text = "Spawn z"
+
+[node name="SpawnSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Grid"]
+unique_name_in_owner = true
+min_value = -120.0
+max_value = 0.0
+step = 0.5
+allow_greater = true
+allow_lesser = true
+
+[node name="LaneCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Grid"]
+theme_type_variation = &"Hint"
+text = "Bahnbreite ±x"
+
+[node name="LaneSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Grid"]
+unique_name_in_owner = true
+min_value = 1.0
+max_value = 30.0
+step = 0.5
+allow_greater = true
+allow_lesser = true
+
+[node name="SpeedCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Grid"]
+theme_type_variation = &"Hint"
+text = "Monstertempo"
+
+[node name="SpeedSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Grid"]
+unique_name_in_owner = true
+min_value = 5.0
+max_value = 150.0
+step = 1.0
+allow_greater = true
+allow_lesser = true
+
+[node name="View2Caption" type="Label" parent="UI/Margin/Root/Menu/Items/Grid"]
+theme_type_variation = &"Hint"
+text = "Bildmitte z"
+
+[node name="ViewSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Grid"]
+unique_name_in_owner = true
+min_value = -80.0
+max_value = 40.0
+step = 0.5
+allow_greater = true
+allow_lesser = true
+
+[node name="SizeCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Grid"]
+theme_type_variation = &"Hint"
+text = "Ausschnitt"
+
+[node name="SizeSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Grid"]
+unique_name_in_owner = true
+min_value = 10.0
+max_value = 80.0
+step = 1.0
+allow_greater = true
+allow_lesser = true
+
+[node name="PitchCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Grid"]
+theme_type_variation = &"Hint"
+text = "Neigung °"
+
+[node name="PitchSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Grid"]
+unique_name_in_owner = true
+min_value = 10.0
+max_value = 89.0
+step = 1.0
+allow_greater = true
+allow_lesser = true
+
+[node name="LaneLength" type="Label" parent="UI/Margin/Root/Menu/Items/Grid"]
+unique_name_in_owner = true
+theme_type_variation = &"Hint"
+
+[node name="Buttons" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items"]
+
+[node name="SpawnButton" type="Button" parent="UI/Margin/Root/Menu/Items/Buttons"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "Monster spawnen"
+
+[node name="CopyButton" type="Button" parent="UI/Margin/Root/Menu/Items/Buttons"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "Werte kopieren"
+
+[node name="Keys" type="Label" parent="UI/Margin/Root/Menu/Items"]
+theme_type_variation = &"Hint"
+text = "←/→ Thema · 0–4 Stufe · V Sicht · M Monster · R Regler
+Ich-Sicht: WASD und Maus, Alt gibt die Maus frei"
