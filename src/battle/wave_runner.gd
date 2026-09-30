@@ -410,7 +410,9 @@ func _decorate() -> void:
 	add_child(d)
 
 	var z_back := SPAWN_Z - 2.0    # bis knapp hinter den Spawn
-	var z_front := GOAL_Z - 2.0 * FORTRESS_GROW    # bis kurz vor die Festung
+	# Bis kurz vor die Festung. Ihre Ecktürme ragen weiter vor als die Mauer, und mehr, je
+	# größer sie steht — ein Baum am Seitenstreifen stünde sonst im Turm.
+	var z_front := GOAL_Z - 3.0 * FORTRESS_GROW
 
 	# Bäume nur an den Seitenstreifen (|x| groß), damit die Bahn frei bleibt
 	for i in _rng.randi_range(8, 14):

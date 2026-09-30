@@ -365,7 +365,9 @@ func _build_decor(noise: FastNoiseLite, theme: BattleTheme) -> void:
 		_place_from(theme, "grass" if i % 4 != 0 else "rocks", x, z, noise, rng)
 	for i in 12:
 		var x := (1.0 if i % 2 == 0 else -1.0) * rng.randf_range(9.5, 12.5)
-		var z := rng.randf_range(WaveRunnerScript.SPAWN_Z, WaveRunnerScript.GOAL_Z - 2.0)
+		# Wie im Kampf (_decorate): Abstand zu den Ecktürmen, der mit der Festung wächst.
+		var z := rng.randf_range(WaveRunnerScript.SPAWN_Z,
+				WaveRunnerScript.GOAL_Z - 3.0 * WaveRunnerScript.FORTRESS_GROW)
 		_place_from(theme, "landmarks" if i == 5 else "props" if i % 4 == 0 else "trees", x, z, noise, rng)
 	# Die Festung, wie sie im Kampf steht (FortressModel), im Vollausbau oder --tier=<0..4>.
 	var tier := int(_arg("tier")) if not _arg("tier").is_empty() else 4

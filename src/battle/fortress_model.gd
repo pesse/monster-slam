@@ -9,7 +9,7 @@ extends RefCounted
 ## die Karte dieselbe Festung, die im Kampf steht.
 
 const HEX_DIR := "res://assets/models/hexagon"
-const SCALE := 4.0
+const SCALE := 5.0
 ## Maßstab, für den die Abstände in `build` gesetzt sind. Bei einem anderen SCALE wachsen sie
 ## mit (`grow`), so dass die Festung als Ganzes größer wird und nicht auseinanderfällt.
 const LAYOUT_SCALE := 3.0
