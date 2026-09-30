@@ -620,9 +620,10 @@ Start-Screen (`🌳 Fähigkeiten`), nicht am Kampf: gelernt wird zwischen den L�
   der Graph seine Treffer selbst sucht, hängt er dort als *lebende* Auskunft
   (`attach_live`) und antwortet über `SkillTree._hint_at(local)`, statt jede Mausbewegung
   zu melden.
-  Über einem Knoten trägt sie Bild, Name, „Baum · Zustand" (`SkillTree.state_name`),
-  Wirkung, Kosten und Voraussetzungen als Tabelle und die Zustandszeile
-  (`SkillTree.state_label`), über dem NAMEN eines Baums dessen Stand
+  Über einem Knoten trägt sie Bild, Name, „Baum · Zustand" (`SkillTree.state_name`), rechts
+  im Kopf den Preis eines Klicks als Zeichen (`prices`: Stern und Skillpunkte, gelernt
+  Münzen und das Gold fürs Verlernen), die Wirkung und die Voraussetzungen als Tabelle.
+  Einen Nachsatz gibt es nur, wenn das Gold fürs Verlernen fehlt. Über dem NAMEN eines Baums steht dessen Stand
   (`SkillTree.tree_status`: „2/5 gelernt · +2 HP je besiegtem Monster"). Ein Klick auf
   einen lernbaren Knoten öffnet `ConfirmDialog`, und erst dessen Bestätigung bucht — ein
   ausgegebener Punkt kommt nur gegen Gold zurück, das soll ein einzelner Klick nicht
@@ -659,7 +660,7 @@ Start-Screen (`🌳 Fähigkeiten`), nicht am Kampf: gelernt wird zwischen den L�
   immer günstiger als alles.
 - **Kleinere Regeln des Screens**: der Ausschnitt gehört dem Spieler (`setup()` passt nur
   ein, solange niemand gezoomt oder geschoben hat; zurück über ⛶); ein gesperrter Knoten
-  nennt seine Vorstufe beim Namen (`state_label`), weil an einem Knoten mehrere Linien
+  nennt seine Vorstufe beim Namen (Zeile „Voraussetzung" mit Schloss), weil an einem Knoten mehrere Linien
   hängen; der Dialog fokussiert ABBRECHEN; `SkillGraph.select()` meldet jeden Klick, auch
   auf den gewählten Knoten, damit ein abgebrochener Antrag neu gestellt werden kann.
   Schriftgrößen liest `_draw()` aus dem Theme (`SkillIcon`, `SectionTitle`, `Hint`,

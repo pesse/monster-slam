@@ -153,7 +153,7 @@ func _show(found: Dictionary, at: Vector2) -> void:
 	_card.fill(str(found.get("title", "")), str(found.get("body", "")),
 			str(found.get("note", "")), found.get("list", []), found.get("image") as Texture2D,
 			found.get("icon") as Texture2D, str(found.get("subtitle", "")),
-			found.get("tint", Color.WHITE) as Color)
+			found.get("tint", Color.WHITE) as Color, found.get("prices", []))
 	_place(at)
 	_card.show()
 

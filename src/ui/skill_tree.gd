@@ -21,7 +21,7 @@ extends Control
 ##
 ## Die REGELN stehen woanders: `SkillTree` in src/progression/ (statisch) rechnet Stufen,
 ## Voraussetzungen, Kosten, Plätze und Boni — bis hin zu den Zeilen, die in der Karte
-## stehen (`state_label`, `tree_status`); `SkillBook` hält das Gelernte. Dieser Screen weiß
+## stehen (`state_name`, `tree_status`); `SkillBook` hält das Gelernte. Dieser Screen weiß
 ## von beiden nur, was er zum Anzeigen braucht, und entscheidet nichts selbst.
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
@@ -161,9 +161,15 @@ func _hint_at(local: Vector2) -> Dictionary:
 			"note": SkillTree.tree_status(entries, book.unlocked, id),
 		}
 	var points: int = book.available()
-	var note := SkillTree.state_label(entries, node, book.unlocked, points)
+	# Was ein Klick kostet, steht als Zeichen im Kopf: ungelernt die Skillpunkte, gelernt
+	# das Gold fürs Verlernen. Einen Satz gibt es nur noch, wenn das Gold nicht reicht —
+	# Zustand und Vorstufe sagen Unterzeile und Liste schon.
+	var prices: Array = [[SkillIcons.skill_point(), str(SkillTree.cost(node))]]
+	var note := ""
 	if book.is_unlocked(id):
-		note += " · " + _forget_note(id)
+		var forget: int = book.forget_cost(id)
+		prices = [[SkillIcons.gold(), Wallet.digits(forget)]]
+		note = _forget_note(id)
 	var tree := SkillTree.node_by_id(entries, str(node.get("tree", "")))
 	var state := SkillTree.state_of(node, book.unlocked, points)
 	var picture := SkillIcons.of(id)
@@ -177,15 +183,14 @@ func _hint_at(local: Vector2) -> Dictionary:
 		"body": str(node.get("description", "")),
 		"list": _facts(entries, node),
 		"note": note,
+		"prices": prices,
 	}
 
 
-## Kosten und Voraussetzungen als Zeilen der Karte, jede mit ihrem Zeichen: Stern für den
-## Preis, Haken für eine erfüllte Vorstufe, Schloss für eine fehlende.
+## Die Voraussetzungen als Zeilen der Karte, jede mit ihrem Zeichen: Haken für eine
+## erfüllte Vorstufe, Schloss für eine fehlende. Der Preis steht im Kopf (`prices`).
 func _facts(entries: Array, node: Dictionary) -> Array:
-	var cost := SkillTree.cost(node)
-	var rows: Array = [[SkillIcons.skill_point(), "Kosten",
-			"%d Skillpunkt%s" % [cost, "" if cost == 1 else "e"]]]
+	var rows: Array = []
 	for required in node.get("requires", []):
 		var id := str(required)
 		var name := str(SkillTree.node_by_id(entries, id).get("name", id))
@@ -194,13 +199,12 @@ func _facts(entries: Array, node: Dictionary) -> Array:
 	return rows
 
 
-## Die zweite Hälfte der Zeile an einem gelernten Knoten: was das Verlernen kostet, oder
-## warum es gerade nicht geht. Der Preis steht hier und nicht in `state_label`, weil er am
-## Gold hängt, und das kennen die Regeln nicht.
+## Der Nachsatz an einem gelernten Knoten: nur, wenn das Gold fürs Verlernen nicht
+## reicht — sonst sagt der Preis im Kopf alles.
 func _forget_note(id: String) -> String:
 	var cost: int = book.forget_cost(id)
 	if Wallet.can_afford(cost):
-		return "Klicken zum Verlernen · %s" % Wallet.label(cost)
+		return ""
 	return "Verlernen kostet %s — du hast %s" % [Wallet.label(cost), Wallet.label()]
 
 

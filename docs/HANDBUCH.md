@@ -548,9 +548,10 @@ Alle Wirkungen zählen zusammen: zwei Knoten, die je 1 HP mehr heilen, heilen zu
 ### Bedienung
 
 - **Ansehen:** Fährst du mit der Maus über einen Knoten, zeigt eine Karte mit Pfeil auf
-  den Zeiger: Bild und Name, Baum und Zustand, was er tut, was er kostet und was vorher
-  gelernt sein muss, und darunter die Zustandszeile: „✓ Gelernt“, „Klicken zum Lernen · 1 P.“, „2 Skillpunkte nötig“
-  oder zum Beispiel „🔒 braucht Verband“, wenn erst ein anderer Knoten dran ist. Über dem
+  den Zeiger: Bild und Name, Baum und Zustand, was er tut und was vorher gelernt sein
+  muss (mit Haken oder Schloss). Rechts oben steht, was ein Klick kostet: ein Stern mit
+  den Skillpunkten fürs Lernen, bei einem gelernten Knoten Münzen mit dem Gold fürs
+  Verlernen. Reicht das Gold nicht, sagt es ein Satz darunter. Über dem
   Namen eines Baums steht, wie weit er ausgebaut ist, zum Beispiel „2/5 gelernt · +2 HP
   je besiegtem Monster“.
 - **Zoomen und Verschieben:** Mausrad oder die Knöpfe **„−“** und **„+“** unten rechts

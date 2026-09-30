@@ -63,6 +63,11 @@ static func skill_point() -> Texture2D:
 	return _texture(DIR + "icons/skill_point.webp")
 
 
+## Gold, wie in der Statistik: der Preis fürs Verlernen.
+static func gold() -> Texture2D:
+	return _texture("res://assets/ui/statistics/icons/gold_coins.webp")
+
+
 static func _texture(path: String) -> Texture2D:
 	if not _textures.has(path):
 		_textures[path] = load(path) as Texture2D

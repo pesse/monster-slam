@@ -62,11 +62,16 @@ const LOCK_SHARE := 0.42
 const CHECK_SHARE := 20.0 / 80.0
 
 ## Die Ringfarbe kommt vom BAUM, der Zustand nur von ihrer Stärke: gedämpft für gesperrt
-## und zu teuer, hell für lernbar und gelernt. Gelernt tönt zusätzlich die Mitte, und der
-## Haken macht den Zustand eindeutig.
+## und zu teuer, hell für lernbar und gelernt. Gelernt tönt zusätzlich die Mitte, als
+## Verlauf: am Ring kräftig, zur Mitte hin schwach — der Knoten hebt sich ab, und das Icon
+## steht trotzdem frei. Der Haken macht den Zustand eindeutig.
 const RING_BRIGHT := 1.3
 const RING_DIM := 0.55
-const LEARNED_TINT_ALPHA := 0.45
+const LEARNED_TINT_EDGE := 0.6
+const LEARNED_TINT_CENTRE := 0.0
+## Ab hier (Anteil des Radius) steigt der Verlauf erst an: nur ein Saum am Ring, sonst
+## verdeckte das Icon den Übergang und es sähe wieder wie eine Fläche aus.
+const LEARNED_TINT_START := 0.55
 ## Das Icon eines zu teuren Knotens: da, aber zurückgenommen.
 const ICON_DIM := Color(0.6, 0.6, 0.65, 1)
 
@@ -83,6 +88,9 @@ const STEP_CONE := 0.5
 const FOCUS_PAD := 48.0
 ## Ecken der Hof-Ellipse — rund genug, dass man keine sieht.
 const HALO_SEGMENTS := 72
+
+## Der Verlauf der Tönung, weiß und einmal gebaut; die Baumfarbe kommt als modulate dazu.
+static var _learned_tint: GradientTexture2D = null
 
 var _entries: Array = []
 var _unlocked: PackedStringArray = PackedStringArray()
@@ -501,6 +509,26 @@ func _draw_root_halo() -> void:
 	draw_polyline(outline, ring, 2.0 * _zoom, true)
 
 
+## Radial: innen LEARNED_TINT_CENTRE bis LEARNED_TINT_START, dann steigend bis
+## LEARNED_TINT_EDGE am Rand, dahinter nichts — die
+## Ecken des Rechtecks bleiben leer (ohne den letzten Punkt füllte der Verlauf sie mit).
+static func _learned_tint_texture() -> GradientTexture2D:
+	if _learned_tint == null:
+		var gradient := Gradient.new()
+		gradient.set_color(0, Color(1.0, 1.0, 1.0, LEARNED_TINT_CENTRE))
+		gradient.set_color(1, Color(1.0, 1.0, 1.0, 0.0))
+		gradient.add_point(LEARNED_TINT_START, Color(1.0, 1.0, 1.0, LEARNED_TINT_CENTRE))
+		gradient.add_point(0.96, Color(1.0, 1.0, 1.0, LEARNED_TINT_EDGE))
+		_learned_tint = GradientTexture2D.new()
+		_learned_tint.gradient = gradient
+		_learned_tint.fill = GradientTexture2D.FILL_RADIAL
+		_learned_tint.fill_from = Vector2(0.5, 0.5)
+		_learned_tint.fill_to = Vector2(1.0, 0.5)
+		_learned_tint.width = 128
+		_learned_tint.height = 128
+	return _learned_tint
+
+
 ## Eine Kante hat drei Helligkeiten: der begangene Weg (beide Enden gelernt), der offene
 ## (die Vorstufe ist da) und der noch verschlossene. Damit sieht man den Ast, an dem man
 ## gerade baut, ohne ihn zu suchen.
@@ -550,9 +578,11 @@ func _draw_node(node: Dictionary, color: Color) -> void:
 	ring.a = 1.0
 	draw_texture_rect(SkillIcons.medallion(), rect, false, ring)
 	if state == SkillTree.State.LEARNED:
+		var inner := side * MEDALLION_INNER
 		var tint := color
-		tint.a = LEARNED_TINT_ALPHA
-		draw_circle(at, side * 0.5 * MEDALLION_INNER, tint, true, -1.0, true)
+		tint.a = 1.0
+		draw_texture_rect(_learned_tint_texture(),
+				Rect2(at - Vector2.ONE * inner * 0.5, Vector2.ONE * inner), false, tint)
 
 	if state == SkillTree.State.LOCKED:
 		var lock_side := side * LOCK_SHARE

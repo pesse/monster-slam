@@ -216,26 +216,9 @@ static func state_of(node: Dictionary, unlocked: PackedStringArray, points_left:
 	return State.AVAILABLE
 
 
-## Die Zustandszeile eines Knotens, wie sie im Tooltip und im Bestätigungs-Dialog steht.
-## Sie gehört zu den REGELN und nicht zur Darstellung: dass ein gesperrter Knoten seine
-## fehlende Vorstufe BEIM NAMEN nennt, ist eine Entscheidung über das Spiel und nicht über
-## das Aussehen — im Netz hängt an einem Knoten mehr als eine Linie, und ein bloßes
-## „gesperrt" sagt nicht, welche zuerst dran ist.
-static func state_label(entries: Array, node: Dictionary, unlocked: PackedStringArray,
-		points_left: int) -> String:
-	match state_of(node, unlocked, points_left):
-		State.LEARNED:
-			return "✓ Gelernt"
-		State.AVAILABLE:
-			return "Klicken zum Lernen · %d P." % cost(node)
-		State.TOO_EXPENSIVE:
-			return "%d Skillpunkte nötig" % cost(node)
-	return "🔒 braucht %s" % missing_requirement(entries, node, unlocked)
-
-
 ## Der Zustand in einem Wort, wie er in der Unterzeile der Karte neben dem Zweig steht
-## („Späher · Lernbar"). Die ganze Zeile mit Preis oder fehlender Vorstufe ist
-## `state_label`.
+## („Späher · Lernbar"). Der Preis steht als Zeichen im Kopf der Karte, die fehlende
+## Vorstufe beim Namen in ihrer Liste (`missing_requirement`).
 static func state_name(state: State) -> String:
 	match state:
 		State.LEARNED:

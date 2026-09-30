@@ -126,7 +126,7 @@ func test_theme_declares_the_role_variations() -> void:
 			"ScreenStack",
 			"SectionStack", "Tight", "HudPanel", "BossBubble", "PlayerBubble", "BubbleText",
 			"BubbleTitle", "BubbleAccent", "BubbleHint", "Shout", "BossHp", "ActionButton",
-			"GameWindow", "WindowTitle", "HintCard", "HintRule", "HintSubtitle", "WindowTab",
+			"GameWindow", "WindowTitle", "HintCard", "HintRule", "HintSubtitle", "HintNote", "WindowTab",
 			"StatHeadline", "StatRule", "StatDivider"]:
 		assert_str(theme.get_type_variation_base(role)).override_failure_message(
 				"Variation fehlt im Theme: " + role).is_not_empty()

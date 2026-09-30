@@ -165,6 +165,15 @@ func _card_text(screen: Control, id: String, part: String) -> String:
 	return (_move_to(screen, id).get_node("%" + part) as Label).text
 
 
+## Die Preise im Kopf der Karte als [Zeichen, Zahl].
+func _card_prices(screen: Control, id: String) -> Array:
+	var out: Array = []
+	for item in _move_to(screen, id).get_node("%Prices").get_children():
+		out.append([(item.get_node("Mark") as TextureRect).texture,
+				(item.get_node("Value") as Label).text])
+	return out
+
+
 # --- Aufbau ------------------------------------------------------------------
 
 func test_the_screen_finds_its_unique_names() -> void:
@@ -216,7 +225,8 @@ func test_the_card_appears_without_delay() -> void:
 	assert_bool(card.visible).is_true()
 	assert_str((card.get_node("%Title") as Label).text).contains("Wurzel").contains("🌱")
 	assert_str((card.get_node("%Body") as Label).text).contains("Fängt an")
-	assert_str((card.get_node("%Note") as Label).text).contains("Lernen")
+	assert_str((card.get_node("%Subtitle") as Label).text).contains("Lernbar")
+	assert_bool((card.get_node("%Prices") as Control).visible).is_true()
 
 
 ## Und sie folgt dem Zeiger, statt an einer festen Stelle zu kleben.
@@ -278,11 +288,13 @@ func test_the_card_goes_away_beside_the_net_and_while_dragging() -> void:
 	assert_bool(_card(screen).visible).is_false()
 
 
-## Ohne Punkte ist die Wurzel zu teuer — aber nicht gesperrt: sie braucht nichts.
+## Ohne Punkte ist die Wurzel zu teuer — aber nicht gesperrt: sie braucht nichts. Der
+## Preis steht als Stern und Zahl im Kopf.
 func test_without_points_the_card_names_the_price() -> void:
 	var screen := _screen()
 	await get_tree().process_frame
-	assert_str(_card_text(screen, "s.root", "Note")).contains("1 Skillpunkt")
+	assert_str(_card_text(screen, "s.root", "Subtitle")).contains("Zu teuer")
+	assert_array(_card_prices(screen, "s.root")).is_equal([[SkillIcons.skill_point(), "1"]])
 
 
 ## Ein gesperrter Knoten nennt seine Vorstufe BEIM NAMEN. Im Netz hängt an einem Knoten
@@ -291,7 +303,10 @@ func test_a_locked_node_names_its_requirement() -> void:
 	_give_points(5)
 	var screen := _screen()
 	await get_tree().process_frame
-	assert_str(_card_text(screen, "s.left", "Note")).contains("🔒").contains("Wurzel")
+	var list := _move_to(screen, "s.left").get_node("%List") as GridContainer
+	var cells := list.get_children()
+	assert_object((cells[0] as TextureRect).texture).is_equal(SkillIcons.lock())
+	assert_str((cells[2] as Label).text).is_equal("Wurzel")
 
 
 func test_a_learned_node_says_so() -> void:
@@ -299,8 +314,8 @@ func test_a_learned_node_says_so() -> void:
 	var screen := _screen()
 	await get_tree().process_frame
 	_learn(screen, "s.root")
-	assert_str(_card_text(screen, "s.root", "Note")).contains("Gelernt")
-	assert_str(_card_text(screen, "s.left", "Note")).contains("Lernen")
+	assert_str(_card_text(screen, "s.root", "Subtitle")).contains("Gelernt")
+	assert_str(_card_text(screen, "s.left", "Subtitle")).contains("Lernbar")
 
 
 ## Über dem NAMEN eines Baums steht sein Stand — das, was früher am rechten Bildrand
@@ -604,17 +619,19 @@ func test_the_dialog_fits_the_base_resolution() -> void:
 
 # --- Verlernen ---------------------------------------------------------------
 
-## Die Karte eines gelernten Knotens nennt den Preis fürs Verlernen — oder, ohne Gold,
-## warum es nicht geht.
+## Die Karte eines gelernten Knotens nennt den Preis fürs Verlernen als Münzen im Kopf —
+## und ohne Gold im Nachsatz, warum es nicht geht.
 func test_a_learned_node_names_the_price_of_forgetting() -> void:
 	_give_points(2)
 	var screen := _screen()
 	await get_tree().process_frame
 	_learn(screen, "s.root")
+	assert_array(_card_prices(screen, "s.root")).is_equal(
+			[[SkillIcons.gold(), Wallet.digits(SkillTree.FORGET_GOLD_PER_NODE)]])
 	assert_str(_card_text(screen, "s.root", "Note")).contains("Verlernen kostet")
 	Wallet.gold = 1_000
-	assert_str(_card_text(screen, "s.root", "Note")).contains("Klicken zum Verlernen") \
-			.contains(Wallet.label(SkillTree.FORGET_GOLD_PER_NODE))
+	var card := _move_to(screen, "s.root")
+	assert_bool((card.get_node("%Note") as Label).visible).is_false()
 
 
 ## Ein Klick auf einen gelernten Knoten fragt — und nennt die Äste, die mitfallen.
@@ -744,5 +761,5 @@ func test_the_card_names_tree_state_and_facts() -> void:
 	for child in list.get_children():
 		if child is Label:
 			texts += (child as Label).text + "|"
-	assert_str(texts).contains("Kosten").contains("1 Skillpunkt").contains(
-			"Voraussetzung").contains("Wurzel")
+	assert_str(texts).contains("Voraussetzung").contains("Wurzel")
+	assert_str(texts).not_contains("Kosten")
