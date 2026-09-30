@@ -172,10 +172,11 @@ func show_stats(data: Dictionary) -> void:
 	_chest_row.visible = _chest_gold > 0
 	if consolation > 0:
 		_chest_name.text = CONSOLATION_TITLE
-		_reward_line.text = "+%s" % Wallet.label(consolation)
+		_show_reward_gold(consolation)
 	else:
 		_chest_name.text = str(chest.get("name", ChestReward.TIER_NAMES[0]))
 		_reward_line.text = CHEST_HINT
+		_reward_line.theme_type_variation = &"StatGoldNote"
 	_chest.present(int(chest.get("tier", ChestReward.Tier.WOOD)), _chest_gold)
 	_update_reward_gate()
 	if consolation > 0:
@@ -310,6 +311,13 @@ func _add_balance_line(text: String) -> void:
 
 # --- Belohnung ----------------------------------------------------------------
 
+## Der Betrag steht groß, der Hinweis davor klein: in der großen Schrift bräche er dreizeilig
+## um, und die Karte spränge beim Öffnen in der Höhe.
+func _show_reward_gold(gold: int) -> void:
+	_reward_line.text = "+%s" % Wallet.label(gold)
+	_reward_line.theme_type_variation = &"StatGold"
+
+
 ## Solange eine ungeöffnete Kiste dasteht, führt kein Weg an ihr vorbei: Weiter und Menü
 ## sind GESPERRT, nicht ausgeblendet. Das Gold soll niemand aus Versehen liegen lassen
 ## (zwei Sekunden Drücken sind kein Hindernis, ein weggeklickter Fund ist einer) — und
@@ -321,7 +329,7 @@ func _update_reward_gate() -> void:
 
 
 func _on_chest_opened(gold: int) -> void:
-	_reward_line.text = "+%s" % Wallet.label(gold)
+	_show_reward_gold(gold)
 	_update_reward_gate()
 	# Verbucht wird im WaveRunner, nicht hier: der Screen meldet nur.
 	reward_collected.emit(gold)
