@@ -23,6 +23,18 @@
 [ext_resource type="Texture2D" path="res://assets/ui/fortress/small/name_panel.webp" id="fort_name_tex"]
 [ext_resource type="Texture2D" path="res://assets/ui/fortress/small/progress_panel.webp" id="fort_progress_tex"]
 [ext_resource type="Texture2D" path="res://assets/ui/fortress/small/progress_track.webp" id="fort_track_tex"]
+[ext_resource type="Script" path="res://src/ui/frame_style.gd" id="frame_style"]
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/frames/fortress.webp" id="hud_fortress_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/frames/encounter.webp" id="hud_encounter_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/frames/name.webp" id="hud_name_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/frames/answer.webp" id="hud_answer_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/frames/answer_closed.webp" id="hud_answer_closed_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/frames/word_plate_rim.webp" id="hud_word_plate_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/frames/legend.webp" id="hud_legend_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/frames/round_button.webp" id="hud_round_button_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/frames/round_button_hover.webp" id="hud_round_button_hover_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/frames/round_button_pressed.webp" id="hud_round_button_pressed_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/frames/round_button_disabled.webp" id="hud_round_button_disabled_tex"]
 
 [sub_resource type="StyleBoxFlat" id="btn_disabled"]
 content_margin_left = 12.0
@@ -848,6 +860,235 @@ color = Color(0.45, 0.55, 0.75, 0.3)
 thickness = 1
 vertical = true
 
+[sub_resource type="StyleBox" id="hud_fortress"]
+script = ExtResource("frame_style")
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+texture = ExtResource("hud_fortress_tex")
+slice_left = 40.0
+slice_top = 14.0
+slice_right = 40.0
+slice_bottom = 14.0
+scale = 0.6
+
+[sub_resource type="StyleBox" id="hud_name"]
+script = ExtResource("frame_style")
+content_margin_left = 24.0
+content_margin_top = 4.0
+content_margin_right = 24.0
+content_margin_bottom = 4.0
+texture = ExtResource("hud_name_tex")
+slice_left = 40.0
+slice_top = 12.0
+slice_right = 40.0
+slice_bottom = 12.0
+scale = 0.52
+
+[sub_resource type="StyleBox" id="hud_encounter"]
+script = ExtResource("frame_style")
+content_margin_left = 24.0
+content_margin_top = 0.0
+content_margin_right = 24.0
+content_margin_bottom = 0.0
+texture = ExtResource("hud_encounter_tex")
+slice_left = 42.0
+slice_top = 49.0
+slice_right = 42.0
+slice_bottom = 49.0
+scale = 0.694
+
+[sub_resource type="StyleBox" id="hud_answer"]
+script = ExtResource("frame_style")
+content_margin_left = 24.0
+content_margin_top = 8.0
+content_margin_right = 120.0
+content_margin_bottom = 8.0
+texture = ExtResource("hud_answer_tex")
+slice_left = 28.0
+slice_top = 14.0
+slice_right = 28.0
+slice_bottom = 14.0
+scale = 0.705
+
+[sub_resource type="StyleBox" id="hud_answer_closed"]
+script = ExtResource("frame_style")
+content_margin_left = 24.0
+content_margin_top = 8.0
+content_margin_right = 120.0
+content_margin_bottom = 8.0
+texture = ExtResource("hud_answer_closed_tex")
+slice_left = 28.0
+slice_top = 14.0
+slice_right = 28.0
+slice_bottom = 14.0
+scale = 0.705
+
+[sub_resource type="StyleBox" id="hud_legend"]
+script = ExtResource("frame_style")
+content_margin_left = 24.0
+content_margin_top = 0.0
+content_margin_right = 24.0
+content_margin_bottom = 0.0
+texture = ExtResource("hud_legend_tex")
+slice_left = 30.0
+slice_top = 10.0
+slice_right = 30.0
+slice_bottom = 10.0
+scale = 0.654
+
+[sub_resource type="StyleBox" id="hud_round"]
+script = ExtResource("frame_style")
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+texture = ExtResource("hud_round_button_tex")
+slice_left = 0.0
+slice_top = 0.0
+slice_right = 0.0
+slice_bottom = 0.0
+scale = 0.453
+
+[sub_resource type="StyleBox" id="hud_round_hover"]
+script = ExtResource("frame_style")
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+texture = ExtResource("hud_round_button_hover_tex")
+slice_left = 0.0
+slice_top = 0.0
+slice_right = 0.0
+slice_bottom = 0.0
+scale = 0.453
+
+[sub_resource type="StyleBox" id="hud_round_pressed"]
+script = ExtResource("frame_style")
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+texture = ExtResource("hud_round_button_pressed_tex")
+slice_left = 0.0
+slice_top = 0.0
+slice_right = 0.0
+slice_bottom = 0.0
+scale = 0.453
+
+[sub_resource type="StyleBox" id="hud_round_disabled"]
+script = ExtResource("frame_style")
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+texture = ExtResource("hud_round_button_disabled_tex")
+slice_left = 0.0
+slice_top = 0.0
+slice_right = 0.0
+slice_bottom = 0.0
+scale = 0.453
+
+[sub_resource type="StyleBoxEmpty" id="hud_none"]
+
+[sub_resource type="StyleBoxFlat" id="hud_disc"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.05, 0.09, 0.2, 1)
+corner_radius_top_left = 40
+corner_radius_top_right = 40
+corner_radius_bottom_right = 40
+corner_radius_bottom_left = 40
+
+[sub_resource type="StyleBoxFlat" id="hud_track"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.03, 0.05, 0.12, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.35, 0.42, 0.58, 0.8)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="hud_fill_blue"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.33, 0.64, 0.95, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="hud_fill_hp"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.3, 0.82, 0.36, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="hud_fill_hp_warn"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 0.78, 0.25, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="hud_fill_hp_low"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.95, 0.3, 0.28, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBox" id="hud_word_plate"]
+script = ExtResource("frame_style")
+content_margin_left = 24.0
+content_margin_top = 4.0
+content_margin_right = 24.0
+content_margin_bottom = 4.0
+texture = ExtResource("hud_word_plate_tex")
+slice_left = 36.0
+slice_top = 8.0
+slice_right = 36.0
+slice_bottom = 8.0
+scale = 0.625
+
+[sub_resource type="StyleBox" id="hud_word_plate_large"]
+script = ExtResource("frame_style")
+content_margin_left = 40.0
+content_margin_top = 8.0
+content_margin_right = 40.0
+content_margin_bottom = 8.0
+texture = ExtResource("hud_word_plate_tex")
+slice_left = 36.0
+slice_top = 8.0
+slice_right = 36.0
+slice_bottom = 8.0
+scale = 1.0
+
 [resource]
 default_font_size = 18
 Button/colors/font_color = Color(0.92, 0.94, 0.98, 1)
@@ -1262,3 +1503,63 @@ StatDivider/constants/separation = 24
 StatDivider/styles/separator = SubResource("stat_divider")
 StatColumns/base_type = &"BoxContainer"
 StatColumns/constants/separation = 0
+HudText/base_type = &"Label"
+HudText/colors/font_color = Color(0.92, 0.94, 0.98, 1)
+HudText/colors/font_outline_color = Color(0.02, 0.03, 0.08, 0.9)
+HudText/constants/outline_size = 4
+HudText/fonts/font = ExtResource("fira_semibold")
+HudText/font_sizes/font_size = 14
+HudTitle/base_type = &"HudText"
+HudTitle/fonts/font = ExtResource("fira_bold")
+HudTitle/font_sizes/font_size = 18
+HudName/base_type = &"HudText"
+HudName/font_sizes/font_size = 16
+HudLevel/base_type = &"HudText"
+HudLevel/fonts/font = ExtResource("fira_bold")
+HudLevel/font_sizes/font_size = 16
+HudStack/base_type = &"BoxContainer"
+HudStack/constants/separation = 0
+HudLegendRow/base_type = &"BoxContainer"
+HudLegendRow/constants/separation = 16
+HudFortress/base_type = &"PanelContainer"
+HudFortress/styles/panel = SubResource("hud_fortress")
+HudNamePlate/base_type = &"PanelContainer"
+HudNamePlate/styles/panel = SubResource("hud_name")
+HudEncounter/base_type = &"PanelContainer"
+HudEncounter/styles/panel = SubResource("hud_encounter")
+HudLegend/base_type = &"PanelContainer"
+HudLegend/styles/panel = SubResource("hud_legend")
+HudDisc/base_type = &"PanelContainer"
+HudDisc/styles/panel = SubResource("hud_disc")
+HudKey/base_type = &"PanelContainer"
+HudKey/styles/panel = SubResource("tool_button_normal")
+HudAnswer/base_type = &"LineEdit"
+HudAnswer/styles/normal = SubResource("hud_answer")
+HudAnswer/styles/focus = SubResource("hud_none")
+HudAnswer/styles/read_only = SubResource("hud_answer_closed")
+HudRound/base_type = &"Button"
+HudRound/constants/icon_max_width = 28
+HudRound/styles/normal = SubResource("hud_round")
+HudRound/styles/hover = SubResource("hud_round_hover")
+HudRound/styles/pressed = SubResource("hud_round_pressed")
+HudRound/styles/hover_pressed = SubResource("hud_round_pressed")
+HudRound/styles/disabled = SubResource("hud_round_disabled")
+HudRound/styles/focus = SubResource("hud_none")
+HudBar/base_type = &"ProgressBar"
+HudBar/styles/background = SubResource("hud_track")
+HudBar/styles/fill = SubResource("hud_fill_blue")
+HudHp/base_type = &"HudBar"
+HudHp/styles/fill = SubResource("hud_fill_hp")
+HudHpWarn/base_type = &"HudBar"
+HudHpWarn/styles/fill = SubResource("hud_fill_hp_warn")
+HudHpLow/base_type = &"HudBar"
+HudHpLow/styles/fill = SubResource("hud_fill_hp_low")
+HudWordPlate/base_type = &"PanelContainer"
+HudWordPlate/styles/panel = SubResource("hud_word_plate")
+HudWordPlateLarge/base_type = &"PanelContainer"
+HudWordPlateLarge/styles/panel = SubResource("hud_word_plate_large")
+HudPlateText/base_type = &"HudText"
+HudPlateText/font_sizes/font_size = 18
+HudPlateTextLarge/base_type = &"HudText"
+HudPlateTextLarge/constants/outline_size = 6
+HudPlateTextLarge/font_sizes/font_size = 28

@@ -1,7 +1,7 @@
 class_name Monster
 extends Node3D
-## Ein normales Monster in 3D: trägt eine aufgelöste Aufgabe (schwebendes Label3D
-## mit dem Prompt) und bewegt sich entlang +Z auf die Festung zu. Präsentation +
+## Ein normales Monster in 3D: trägt eine aufgelöste Aufgabe (den Prompt zeigt sein
+## Wortschild, siehe WordPlates) und bewegt sich entlang +Z auf die Festung zu. Präsentation +
 ## Bewegung; Kampf-/Wellenlogik liegt im WaveRunner. Das Monster kennt die Aufgabe
 ## nur als { prompt, accepted_answers, learnable_id, ... } (siehe TaskResolver).
 
@@ -23,11 +23,12 @@ var xp: int = Experience.MONSTER_XP_MIN
 ## Zeitpunkt des Spawns (ms) für die Antwortzeit-Messung; vom WaveRunner gesetzt.
 var spawned_at_ms: int = 0
 
-## Ich-Sicht: das Schild hat eine feste Größe im Bild statt in der Welt — sonst ist ein
-## Prompt am Spawn unlesbar klein und direkt vor der Nase riesig. Vor add_child setzen.
+## Ich-Sicht: das Wortschild steht in der größeren Ausführung — dort muss es auf jede
+## Entfernung lesbar sein. Vor add_child setzen.
 var screen_sized_label := false
-## Bildgröße des Schilds in der Ich-Sicht (Label3D.fixed_size rechnet damit je Bildhöhe).
-const SCREEN_LABEL_PIXEL_SIZE := 0.0009
+
+## Die Gruppe, aus der WordPlates die Schilder baut.
+const PLATE_GROUP := &"word_plate"
 
 var _speed: float = 2.0
 var _target_z: float = 0.0
@@ -40,7 +41,7 @@ const OUTLINE_GLOW_STRENGTH := 1.0  # Emission-Faktor; genau 1.0 => kein Kanal-C
                                     # Outline-Farbe == Legenden-Farbe. Der Glow-Halo kommt
                                     # aus dem WorldEnvironment (niedrige HDR-Schwelle).
 
-@onready var _label: Label3D = $Label
+@onready var _plate_anchor: Marker3D = $PlateAnchor
 @onready var _placeholder: MeshInstance3D = $Placeholder
 
 
@@ -57,11 +58,31 @@ func setup(def: Dictionary, task_data: Dictionary, target_z: float, speed_units:
 
 
 func _ready() -> void:
-	_label.text = str(task.get("prompt", "?"))
-	if screen_sized_label:
-		_label.fixed_size = true
-		_label.pixel_size = SCREEN_LABEL_PIXEL_SIZE
+	add_to_group(PLATE_GROUP)
 	_apply_model()
+
+
+## Was auf dem Wortschild steht.
+func prompt() -> String:
+	return str(task.get("prompt", "?"))
+
+
+## Die Farbe der Wortart, wie die Outline am Modell (WordTypePalette).
+func word_color() -> Color:
+	return WordTypePalette.color_for(str(task.get("lexeme_type", "")))
+
+
+## Der Punkt über dem Kopf, auf den der Zipfel des Wortschilds zeigt.
+func plate_anchor() -> Vector3:
+	return _plate_anchor.global_position
+
+
+## Im Bild heißt: der Körper oder das Schild über ihm. Aus der Nähe ist das Schild über
+## dem Bildrand, von weit weg der Körper hinter dem Schild zu klein, um zu zählen. Danach
+## trifft eine Antwort in der Ich-Sicht (WaveRunner._hittable) und steht ein Wortschild.
+func in_view(camera: Camera3D) -> bool:
+	return FirstPersonView.sees(camera, global_position + Vector3(0.0, 1.2, 0.0)) \
+			or FirstPersonView.sees(camera, plate_anchor())
 
 
 ## Lädt das 3D-Modell aus dem "model"-Feld (GLTF/GLB/scn). Fehlt es oder existiert

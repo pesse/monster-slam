@@ -1,162 +1,329 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://src/ui/hud.gd" id="1_hud"]
-
-[sub_resource type="StyleBoxFlat" id="XpFill"]
-bg_color = Color(1, 0.8, 0.25, 1)
-corner_radius_top_left = 5
-corner_radius_top_right = 5
-corner_radius_bottom_right = 5
-corner_radius_bottom_left = 5
-
-[sub_resource type="StyleBoxFlat" id="ArmorFill"]
-bg_color = Color(0.72, 0.76, 0.82, 1)
-corner_radius_top_left = 3
-corner_radius_top_right = 3
-corner_radius_bottom_right = 3
-corner_radius_bottom_left = 3
-
-[sub_resource type="StyleBoxFlat" id="HpFill"]
-bg_color = Color(0.3, 1, 0.45, 1)
-corner_radius_top_left = 5
-corner_radius_top_right = 5
-corner_radius_bottom_right = 5
-corner_radius_bottom_left = 5
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/icons/castle.webp" id="2_castle"]
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/icons/armor.webp" id="3_armor"]
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/icons/heart.webp" id="4_heart"]
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/icons/swords.webp" id="5_swords"]
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/icons/skull.webp" id="6_skull"]
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/icons/mastered_book.webp" id="7_book"]
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/icons/portrait_ring.webp" id="8_ring"]
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/icons/level_badge.webp" id="9_badge"]
+[ext_resource type="Texture2D" path="res://assets/ui/player_badge/menu/avatar.webp" id="10_avatar"]
+[ext_resource type="Script" path="res://src/ui/xp_ring.gd" id="11_xp"]
 
 [node name="HUD" type="Control"]
+texture_filter = 4
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
 script = ExtResource("1_hud")
 
-[node name="Margin" type="MarginContainer" parent="."]
-anchor_right = 1.0
+[node name="Plates" type="VBoxContainer" parent="." groups=["word_plate_keep_clear"]]
+offset_left = 84.0
+offset_top = 16.0
+offset_right = 450.0
+offset_bottom = 108.0
 mouse_filter = 2
-theme_override_constants/margin_left = 10
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 10
-theme_override_constants/margin_bottom = 10
-
-[node name="Row" type="HBoxContainer" parent="Margin"]
-mouse_filter = 2
-theme_override_constants/separation = 0
-
-[node name="PlayerPanel" type="PanelContainer" parent="Margin/Row"]
-mouse_filter = 2
-theme_type_variation = &"HudPanel"
-
-[node name="PlayerBox" type="HBoxContainer" parent="Margin/Row/PlayerPanel"]
-alignment = 1
-
-[node name="PlayerName" type="Label" parent="Margin/Row/PlayerPanel/PlayerBox"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(130, 0)
-text = "👤 Spieler"
-vertical_alignment = 1
-clip_text = true
-text_overrun_behavior = 3
-
-[node name="LevelText" type="Label" parent="Margin/Row/PlayerPanel/PlayerBox"]
-unique_name_in_owner = true
-text = "⭐ 1"
-vertical_alignment = 1
-
-[node name="XpBar" type="ProgressBar" parent="Margin/Row/PlayerPanel/PlayerBox"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(80, 14)
-size_flags_vertical = 4
-theme_override_styles/fill = SubResource("XpFill")
-show_percentage = false
-
-[node name="XpText" type="Label" parent="Margin/Row/PlayerPanel/PlayerBox"]
-unique_name_in_owner = true
-text = "0/100"
-vertical_alignment = 1
-
-[node name="Spacer1" type="Control" parent="Margin/Row"]
-custom_minimum_size = Vector2(8, 0)
-size_flags_horizontal = 3
-mouse_filter = 2
-
-[node name="LifePanel" type="PanelContainer" parent="Margin/Row"]
-mouse_filter = 2
-theme_type_variation = &"HudPanel"
-
-[node name="LifeBox" type="HBoxContainer" parent="Margin/Row/LifePanel"]
-alignment = 1
-
-[node name="LifeCaption" type="Label" parent="Margin/Row/LifePanel/LifeBox"]
-text = "🏰"
-vertical_alignment = 1
-
-[node name="Bars" type="VBoxContainer" parent="Margin/Row/LifePanel/LifeBox"]
-size_flags_vertical = 4
 theme_type_variation = &"Tight"
 
-[node name="ArmorBar" type="ProgressBar" parent="Margin/Row/LifePanel/LifeBox/Bars"]
+[node name="FortressPanel" type="PanelContainer" parent="Plates"]
 unique_name_in_owner = true
-visible = false
-custom_minimum_size = Vector2(130, 6)
-theme_override_styles/fill = SubResource("ArmorFill")
-show_percentage = false
+custom_minimum_size = Vector2(366, 60)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 2
+theme_type_variation = &"HudFortress"
 
-[node name="HpBar" type="ProgressBar" parent="Margin/Row/LifePanel/LifeBox/Bars"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(130, 20)
-theme_override_styles/fill = SubResource("HpFill")
-show_percentage = false
-
-[node name="HpText" type="Label" parent="Margin/Row/LifePanel/LifeBox"]
-unique_name_in_owner = true
-text = "100/100"
-vertical_alignment = 1
-
-[node name="Spacer2" type="Control" parent="Margin/Row"]
-custom_minimum_size = Vector2(8, 0)
-size_flags_horizontal = 3
+[node name="FortressRow" type="HBoxContainer" parent="Plates/FortressPanel"]
+layout_mode = 2
 mouse_filter = 2
 
-[node name="WavePanel" type="PanelContainer" parent="Margin/Row"]
-mouse_filter = 2
-theme_type_variation = &"HudPanel"
-
-[node name="WaveBox" type="HBoxContainer" parent="Margin/Row/WavePanel"]
-alignment = 1
-
-[node name="WaveCaption" type="Label" parent="Margin/Row/WavePanel/WaveBox"]
-text = "⚔"
-vertical_alignment = 1
-
-[node name="WaveBar" type="ProgressBar" parent="Margin/Row/WavePanel/WaveBox"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(130, 20)
+[node name="Castle" type="TextureRect" parent="Plates/FortressPanel/FortressRow"]
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
 size_flags_vertical = 4
-show_percentage = false
+mouse_filter = 2
+texture = ExtResource("2_castle")
+expand_mode = 1
+stretch_mode = 5
 
-[node name="WaveText" type="Label" parent="Margin/Row/WavePanel/WaveBox"]
-unique_name_in_owner = true
-text = "0/0"
-vertical_alignment = 1
-
-[node name="Spacer3" type="Control" parent="Margin/Row"]
-custom_minimum_size = Vector2(8, 0)
+[node name="Bars" type="VBoxContainer" parent="Plates/FortressPanel/FortressRow"]
+layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 4
 mouse_filter = 2
+theme_type_variation = &"Tight"
 
-[node name="StatsPanel" type="PanelContainer" parent="Margin/Row"]
-mouse_filter = 2
-theme_type_variation = &"HudPanel"
-
-[node name="StatsBox" type="HBoxContainer" parent="Margin/Row/StatsPanel"]
-alignment = 1
-
-[node name="Kills" type="Label" parent="Margin/Row/StatsPanel/StatsBox"]
-unique_name_in_owner = true
-text = "💀 0"
-vertical_alignment = 1
-
-[node name="Mastered" type="Label" parent="Margin/Row/StatsPanel/StatsBox"]
+[node name="ArmorRow" type="HBoxContainer" parent="Plates/FortressPanel/FortressRow/Bars"]
 unique_name_in_owner = true
 visible = false
-text = "🏅 0"
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ArmorIcon" type="TextureRect" parent="Plates/FortressPanel/FortressRow/Bars/ArmorRow"]
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("3_armor")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ArmorCaption" type="Label" parent="Plates/FortressPanel/FortressRow/Bars/ArmorRow"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+theme_type_variation = &"HudText"
+text = "Rüstung"
 vertical_alignment = 1
+
+[node name="ArmorBar" type="ProgressBar" parent="Plates/FortressPanel/FortressRow/Bars/ArmorRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+theme_type_variation = &"HudBar"
+show_percentage = false
+
+[node name="ArmorText" type="Label" parent="Plates/FortressPanel/FortressRow/Bars/ArmorRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+theme_type_variation = &"HudText"
+text = "0 / 0"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="HpRow" type="HBoxContainer" parent="Plates/FortressPanel/FortressRow/Bars"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="HpIcon" type="TextureRect" parent="Plates/FortressPanel/FortressRow/Bars/HpRow"]
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("4_heart")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="HpCaption" type="Label" parent="Plates/FortressPanel/FortressRow/Bars/HpRow"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+theme_type_variation = &"HudText"
+text = "HP"
+vertical_alignment = 1
+
+[node name="HpBar" type="ProgressBar" parent="Plates/FortressPanel/FortressRow/Bars/HpRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+theme_type_variation = &"HudHp"
+show_percentage = false
+
+[node name="HpText" type="Label" parent="Plates/FortressPanel/FortressRow/Bars/HpRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+theme_type_variation = &"HudText"
+text = "100 / 100"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="NamePanel" type="PanelContainer" parent="Plates"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 2
+theme_type_variation = &"HudNamePlate"
+
+[node name="PlayerName" type="Label" parent="Plates/NamePanel"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudName"
+text = "Spieler"
+vertical_alignment = 1
+text_overrun_behavior = 3
+
+[node name="Portrait" type="Control" parent="." groups=["word_plate_keep_clear"]]
+offset_left = 12.0
+offset_top = 16.0
+offset_right = 92.0
+offset_bottom = 96.0
+mouse_filter = 2
+
+[node name="Disc" type="PanelContainer" parent="Portrait"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = -12.0
+mouse_filter = 2
+theme_type_variation = &"HudDisc"
+
+[node name="Avatar" type="TextureRect" parent="Portrait/Disc"]
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("10_avatar")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Ring" type="TextureRect" parent="Portrait"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = ExtResource("8_ring")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="XpRing" type="Control" parent="Portrait"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("11_xp")
+
+[node name="LevelBadge" type="TextureRect" parent="Portrait"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -15.0
+offset_top = -18.0
+offset_right = 15.0
+offset_bottom = 17.0
+mouse_filter = 2
+texture = ExtResource("9_badge")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LevelText" type="Label" parent="Portrait/LevelBadge"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -3.0
+theme_type_variation = &"HudLevel"
+text = "1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="EncounterPanel" type="PanelContainer" parent="." groups=["word_plate_keep_clear"]]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 68)
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -336.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 84.0
+grow_horizontal = 0
+mouse_filter = 2
+theme_type_variation = &"HudEncounter"
+
+[node name="Rows" type="VBoxContainer" parent="EncounterPanel"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"HudStack"
+
+[node name="WaveRow" type="HBoxContainer" parent="EncounterPanel/Rows"]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Swords" type="TextureRect" parent="EncounterPanel/Rows/WaveRow"]
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("5_swords")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="WaveTitle" type="Label" parent="EncounterPanel/Rows/WaveRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudTitle"
+text = "Welle 1"
+vertical_alignment = 1
+
+[node name="WaveBar" type="ProgressBar" parent="EncounterPanel/Rows/WaveRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+theme_type_variation = &"HudBar"
+show_percentage = false
+
+[node name="WaveText" type="Label" parent="EncounterPanel/Rows/WaveRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudText"
+text = "0 / 0"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="TallyRow" type="HBoxContainer" parent="EncounterPanel/Rows"]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Skull" type="TextureRect" parent="EncounterPanel/Rows/TallyRow"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("6_skull")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Kills" type="Label" parent="EncounterPanel/Rows/TallyRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HudText"
+text = "0 besiegt"
+vertical_alignment = 1
+
+[node name="Book" type="TextureRect" parent="EncounterPanel/Rows/TallyRow"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("7_book")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Mastered" type="Label" parent="EncounterPanel/Rows/TallyRow"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"HudText"
+text = "0 gemeistert"
+vertical_alignment = 1
+
+[node name="TallyEnd" type="Control" parent="EncounterPanel/Rows/TallyRow"]
+custom_minimum_size = Vector2(16, 0)
+layout_mode = 2
+mouse_filter = 2

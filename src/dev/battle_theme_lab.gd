@@ -38,6 +38,14 @@ extends Node3D
 ##     … -- --fortress
 ##         Jede Festungsstufe in beiden Sichten (Ich-Sicht vor der Mauer, zur Festung
 ##         gedreht) als reports/battle_themes/fortress_<stufe>_<sicht>.png.
+##     … -- --hud [--theme=<name>]
+##         Das Kampf-HUD (Kopfleiste, Antwortfeld, Legende, Auflösen-Knopf) über dem ersten
+##         Thema mit Beispielwerten: voll (Rüstung, Meisterungen) und schmal (ohne beides,
+##         langer Name, geschlossene Eingabe der Ich-Sicht), als
+##         reports/battle_themes/hud_<fall>.png. Werte stehen nur im Speicher.
+##     … -- --plates
+##         Sieben Monster dicht beieinander auf der Bahn, in beiden Sichten — die Wortschilder
+##         dürfen sich nicht überdecken — als reports/battle_themes/plates_<sicht>.png.
 ##     … -- --fps [--theme=<name>] [--windowed]
 ##         Misst im Vollbild und ohne VSync die mittlere Bildzeit mit allem an, jeweils ohne
 ##         eine Zutat (MSAA, Wolken, Teilchen, Wind, Schatten, Glow) und ohne alles — die
@@ -114,6 +122,10 @@ func _ready() -> void:
 	_normal_bias = _sun.shadow_normal_bias
 	_shadow_blur = _sun.shadow_blur
 	add_child(Wind.new())
+	# Die Wortschilder wie im Kampf, unter den Reglern.
+	var plates := (load("res://scenes/ui/word_plates.tscn") as PackedScene).instantiate()
+	$UI.add_child(plates)
+	$UI.move_child(plates, 0)
 	_sun_cycle = SunCycle.new()
 	_sun_cycle.sun = _sun
 	_sun_cycle.noon_yaw = SunCycle.yaw_of(_pivot)
@@ -138,6 +150,10 @@ func _ready() -> void:
 		_set_first_person(true)
 	if _has_arg("bow"):
 		_shoot_bow.call_deferred()
+	elif _has_arg("hud"):
+		_shoot_hud.call_deferred()
+	elif _has_arg("plates"):
+		_shoot_plates.call_deferred()
 	elif _has_arg("fps"):
 		_measure_fps.call_deferred()
 	elif _has_arg("hitches"):
@@ -242,7 +258,8 @@ func _spawn_monster() -> void:
 		_walkers = Node3D.new()
 		add_child(_walkers)
 	var monster := FxWarmup.MONSTER_SCENE.instantiate() as Monster
-	monster.setup(defs.pick_random(), {"prompt": "house"}, _goal() + 1000.0,
+	monster.setup(defs.pick_random(), {"prompt": "house",
+			"lexeme_type": WordTypePalette.COLORS.keys().pick_random()}, _goal() + 1000.0,
 			_monster_speed)
 	monster.screen_sized_label = _fp != null
 	monster.position = Vector3(randf_range(-_lane_half, _lane_half), 0.0, WaveRunnerScript.SPAWN_Z)
@@ -473,6 +490,91 @@ func _shoot_fortress() -> void:
 			var path := "%s/fortress_%d_%s.png" % [dir, tier, "first" if first else "iso"]
 			get_viewport().get_texture().get_image().save_png(path)
 			print("battle_theme_lab: ", path)
+	get_tree().quit()
+
+
+func _shoot_plates() -> void:
+	var dir := ProjectSettings.globalize_path(SHOT_DIR)
+	DirAccess.make_dir_recursive_absolute(dir)
+	$UI/Margin.visible = false
+	var defs := FxWarmup.monster_defs()
+	# Platzhalter verschiedener Länge, keine Vokabeln.
+	var prompts := ["Wort", "Platzhalter", "ein langer Platzhaltertext", "abc", "noch ein Wort",
+			"Beispiel", "zwei Wörter"]
+	var mid := (WaveRunnerScript.SPAWN_Z + _goal()) / 2.0
+	var spots := [Vector3(-1.0, 0.0, mid), Vector3(0.5, 0.0, mid + 0.8), Vector3(1.5, 0.0, mid - 1.0),
+			Vector3(-2.5, 0.0, mid + 2.0), Vector3(3.0, 0.0, mid + 0.3), Vector3(0.0, 0.0, mid - 2.5),
+			Vector3(-0.5, 0.0, mid + 4.0)]
+	for view in ["iso", "first"]:
+		_set_first_person(view == "first")
+		if _fp != null:
+			_fp.position = Vector3(0.0, 0.0, mid - 12.0)
+			_fp.call("_set_yaw", PI)
+		var group := Node3D.new()
+		add_child(group)
+		for i in spots.size():
+			var monster := FxWarmup.MONSTER_SCENE.instantiate() as Monster
+			var types := WordTypePalette.COLORS.keys()
+			monster.setup(defs[i % defs.size()], {"prompt": prompts[i],
+					"lexeme_type": types[i % types.size()]}, 1000.0, 0.0)
+			monster.screen_sized_label = _fp != null
+			monster.position = spots[i]
+			group.add_child(monster)
+			monster.halt()
+		# Die Schilder gleiten an ihren Platz; eine halbe Sekunde reicht.
+		for i in 30:
+			await get_tree().process_frame
+		await RenderingServer.frame_post_draw
+		var path := "%s/plates_%s.png" % [dir, view]
+		get_viewport().get_texture().get_image().save_png(path)
+		print("battle_theme_lab: ", path)
+		group.free()
+	get_tree().quit()
+
+
+func _shoot_hud() -> void:
+	var dir := ProjectSettings.globalize_path(SHOT_DIR)
+	DirAccess.make_dir_recursive_absolute(dir)
+	$UI/Margin.visible = false
+	var cases := {
+		"full": {"name": "Samuel Nitsche", "armor": 100, "mastered": true, "closed": false},
+		"bare": {"name": "Bartholomäus-Maximilian von Hohenstein", "armor": 0,
+				"mastered": false, "closed": true},
+	}
+	for case in cases:
+		var c: Dictionary = cases[case]
+		GameState.reset()
+		GameState.fortress_max_health = 100
+		GameState.fortress_health = 80
+		GameState.fortress_armor_max = int(c["armor"])
+		GameState.fortress_armor = int(c["armor"] * 0.6)
+		GameState.wave_number = 3
+		GameState.wave_total = 20
+		GameState.wave_resolved = 12
+		GameState.monsters_defeated = 24
+		var pieces: Array[Node] = []
+		for path in ["res://scenes/ui/hud.tscn", "res://scenes/ui/answer_input.tscn",
+				"res://scenes/ui/word_type_legend.tscn", "res://scenes/ui/fast_resolve_button.tscn"]:
+			var piece := (load(path) as PackedScene).instantiate()
+			$UI.add_child(piece)
+			pieces.append(piece)
+		var hud := pieces[0] as Control
+		hud.call("set_player_name", str(c["name"]))
+		(hud.get_node("%XpRing") as XpRing).ratio = 0.6
+		(hud.get_node("%LevelText") as Label).text = "4"
+		(hud.get_node("%Book") as Control).visible = bool(c["mastered"])
+		(hud.get_node("%Mastered") as Control).visible = bool(c["mastered"])
+		(hud.get_node("%Mastered") as Label).text = "8 gemeistert"
+		pieces[1].set("gated", bool(c["closed"]))
+		for i in 3:
+			await RenderingServer.frame_post_draw
+		var path := "%s/hud_%s.png" % [dir, case]
+		get_viewport().get_texture().get_image().save_png(path)
+		print("battle_theme_lab: ", path)
+		for piece in pieces:
+			piece.queue_free()
+		await get_tree().process_frame
+	GameState.reset()
 	get_tree().quit()
 
 

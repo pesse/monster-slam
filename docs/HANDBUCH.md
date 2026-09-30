@@ -153,19 +153,25 @@ langsam tippen.
   Genitiv und Genus („m“, „f“, „n“ — oder „maskulin“ …), bei Verben das Perfekt. Die
   Längenstriche (ā, ē …) musst du nie tippen; nach einer Übersetzung zeigt die Auflösung
   die Lexikonform mit, etwa den Genitiv und das Genus.
-- **Der farbige Rand** eines Monsters zeigt die Wortart. Die Legende am unteren Bildrand
-  sagt, welche Farbe was bedeutet (zum Beispiel Nomen, Verb, Adjektiv). Das hilft, wenn
-  ein Wort mehrere Bedeutungen hat.
-- **Die Kopfleiste** oben:
-  - „👤“ mit deinem Namen, dazu „⭐“ mit deinem Level und ein Balken für die Erfahrung bis
-    zum nächsten Level.
-  - „🏰“ mit dem Lebensbalken der Festung und den HP (zum Beispiel „100/100“). Der Balken
-    ist grün, wird gelb, wenn es knapp wird, und rot, wenn es brenzlig ist.
-  - Hast du Rüstung (Kapitel 11), liegt ein zweiter Streifen über dem Lebensbalken.
-  - „⚔“ mit dem Fortschritt der Welle: wie viele Monster erledigt sind, von wie vielen.
-  - „💀“ – besiegte Monster in diesem Lauf.
-  - „🏅“ – wie viele Aufgaben du **in dieser Sitzung gemeistert** hast. Das Zeichen
-    erscheint erst, wenn es die erste gibt.
+- **Der farbige Rand** eines Monsters und seines Wortschilds zeigt die Wortart, auch die
+  Schrift auf dem Schild hat diese Farbe. Die Legende am unteren Bildrand sagt, welche
+  Farbe was bedeutet (zum Beispiel Nomen, Verb, Adjektiv). Das hilft, wenn ein Wort
+  mehrere Bedeutungen hat.
+- **Die Wortschilder** stehen über den Köpfen. Drängen sich mehrere Monster, rücken die
+  Schilder zur Seite, eine dünne Linie zeigt dann auf das Monster.
+- **Die Kopfleiste** oben links:
+  - Dein Bild im Ring. Die kleine Plakette darunter zeigt dein Level, der blaue Bogen im
+    Ring die Erfahrung bis zum nächsten Level.
+  - Daneben die Festung mit ihren **HP** (zum Beispiel „80 / 100“). Der Balken ist grün,
+    wird gelb, wenn es knapp wird, und rot, wenn es brenzlig ist.
+  - Hast du Rüstung (Kapitel 11), steht darüber eine zweite Zeile **Rüstung**.
+  - Unter der Festung steht dein Name.
+- **Oben rechts:**
+  - Die **Welle** mit ihrer Nummer und dem Fortschritt: wie viele Monster erledigt sind,
+    von wie vielen.
+  - Darunter die **besiegten** Monster in diesem Lauf und mit dem goldenen Buch, wie viele
+    Aufgaben du **in dieser Sitzung gemeistert** hast. Das Buch erscheint erst, wenn es
+    die erste gibt.
 
 ### Was du tust
 
@@ -203,7 +209,7 @@ gesperrt.
 - **Laufen:** W, A, S, D (oder die Pfeiltasten). Mit der Maus siehst du dich um.
 - **Antworten:** **Enter** öffnet das Eingabefeld, du tippst, und das zweite **Enter**
   schickt ab und schließt es wieder. **Escape** schließt das Feld, ohne abzuschicken.
-  Solange das Feld offen ist, stehst du still, und der Mauszeiger ist da, etwa für „⏩“.
+  Solange das Feld offen ist, stehst du still, und der Mauszeiger ist da, etwa für den Vorspul-Knopf.
 - **Zeitlupe:** Sie beginnt, sobald du mit Enter das Feld öffnest, und hält, bis du
   abschickst oder das Feld schließt. Wie lange du tippst, spielt dabei keine Rolle. Der
   Zeitwandler-Ast für die Nachwirkung bringt hier deshalb nichts, der für die Tiefe schon.
@@ -284,7 +290,7 @@ und die sicheren Wörter werden zum Tempo-Training.
 
 ## 6. „Schnell auflösen“
 
-Neben dem Eingabefeld steht der Knopf **„⏩“**. Er ist für den Moment, in dem du die
+Neben dem Eingabefeld steht der runde Knopf mit den **zwei Pfeilen** (Vorspulen). Er ist für den Moment, in dem du die
 Wörter auf dem Feld gerade einfach nicht weißt und nicht warten willst, bis alle
 Monster angekommen sind.
 
@@ -728,7 +734,7 @@ damit sie nicht abgeschnitten wird.
 
 Zum Beispiel:
 
-- die Schatzkiste und der Knopf „⏩“,
+- die Schatzkiste,
 - jeder Knoten, jeder Baumname und die Zeichen „⛶“ und „↺“ im Fähigkeiten-Screen,
 - Zeilen und Wörter in der Statistik, die Tage der Monatsreihe,
 - die Knöpfe im Reiter „Protokoll“.

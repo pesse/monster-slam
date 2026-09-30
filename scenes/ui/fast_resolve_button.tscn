@@ -1,0 +1,22 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/icons/fast_forward.webp" id="1_icon"]
+
+[node name="FastResolveButton" type="Button" groups=["word_plate_keep_clear"]]
+texture_filter = 4
+custom_minimum_size = Vector2(58, 58)
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = 327.0
+offset_top = -109.0
+offset_right = 385.0
+offset_bottom = -51.0
+grow_vertical = 0
+focus_mode = 0
+accessibility_name = "Schnell auflösen"
+theme_type_variation = &"HudRound"
+icon = ExtResource("1_icon")
+icon_alignment = 1
+expand_icon = true

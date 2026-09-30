@@ -1,19 +1,22 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://src/ui/legend_entry.gd" id="1_entry"]
+[ext_resource type="Script" path="res://src/ui/diamond.gd" id="2_diamond"]
 
 [node name="LegendEntry" type="HBoxContainer"]
-theme_override_constants/separation = 5
 mouse_filter = 2
+theme_type_variation = &"Tight"
 script = ExtResource("1_entry")
 
-[node name="Swatch" type="ColorRect" parent="."]
-custom_minimum_size = Vector2(15, 15)
+[node name="Swatch" type="Control" parent="."]
+custom_minimum_size = Vector2(14, 14)
+layout_mode = 2
 size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("2_diamond")
 color = Color(0.8, 0.8, 0.8, 1)
 
 [node name="Label" type="Label" parent="."]
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.75)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 14
+layout_mode = 2
+theme_type_variation = &"HudText"
 text = "Wortart"

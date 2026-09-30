@@ -155,9 +155,6 @@ func _ready() -> void:
 	_fast_resolve_confirm.cancelled.connect(_on_fast_resolve_cancelled)
 	_celebration.started.connect(_on_celebration_started)
 	_celebration.finished.connect(_on_celebration_finished)
-	Hints.attach(_fast_resolve_button, "Schnell auflösen",
-			"Spult den Rest der Welle vor, wenn du die Wörter gerade nicht weißt.",
-			"Die Monster treffen die Festung trotzdem, danach werden ihre Wörter aufgelöst.")
 	# Startschwierigkeit aus den persistenten Einstellungen des aktiven Profils.
 	_difficulty = UserSettings.default_difficulty()
 	_start_next_wave()
@@ -860,6 +857,7 @@ func _start_next_wave() -> void:
 	_set_view_active(true)
 
 	GameState.current_wave = "procedural_%d" % _wave_number
+	GameState.wave_number = _wave_number
 	# Tempo = Schwierigkeit × profilweite Grund-Geschwindigkeit (Barrierefreiheit / Grundtempo).
 	_generator.speed_scale = _difficulty_to_speed(_difficulty) * UserSettings.base_speed()
 	var spawns := _generate_wave(_difficulty, _wave_number)
@@ -1054,11 +1052,8 @@ func _hittable() -> Array[Monster]:
 	return out
 
 
-## Im Bild heißt: der Körper oder das Schild über ihm. Aus der Nähe ist das Schild über
-## dem Bildrand, von weit weg der Körper hinter dem Schild zu klein, um zu zählen.
 func _in_view(monster: Monster) -> bool:
-	return FirstPersonView.sees(_fp.camera, monster.global_position + Vector3(0.0, 1.2, 0.0)) \
-			or FirstPersonView.sees(_fp.camera, monster.global_position + Vector3(0.0, 4.6, 0.0))
+	return monster.in_view(_fp.camera)
 
 
 ## Für die Spur: welche Aufgaben standen auf dem Feld, aber außerhalb des Bildes? Daran
@@ -1346,17 +1341,21 @@ static func form_label(text: String) -> Label3D:
 	return label
 
 
-## Wie groß „+XP" in der Ich-Sicht gegenüber dem Prompt-Schild steht.
+## Wie groß „+XP" in der Ich-Sicht steht (gegenüber FP_TEXT_PIXEL_SIZE).
 const POPUP_SCREEN_SCALE := 2.0
 
-## In der Ich-Sicht bekommt ein aufsteigender Text eine feste Bildgröße wie die Schilder
-## (Monster.screen_sized_label): in Weltgröße füllte er nach einem Sturmangriff aus der
-## Nähe das ganze Bild. `scale` ist die Größe gegenüber dem Prompt-Schild.
+## Bildgröße eines Textes der Größe 64 in der Ich-Sicht (Label3D.fixed_size rechnet damit
+## je Bildhöhe) — so groß stand dort früher das Prompt-Schild.
+const FP_TEXT_PIXEL_SIZE := 0.0009
+
+## In der Ich-Sicht bekommt ein aufsteigender Text eine feste Bildgröße: in Weltgröße
+## füllte er nach einem Sturmangriff aus der Nähe das ganze Bild. `scale` ist die Größe
+## gegenüber FP_TEXT_PIXEL_SIZE.
 func _screen_size_in_first_person(label: Label3D, scale: float) -> void:
 	if _fp == null:
 		return
 	label.fixed_size = true
-	label.pixel_size = Monster.SCREEN_LABEL_PIXEL_SIZE * scale * 64.0 / float(label.font_size)
+	label.pixel_size = FP_TEXT_PIXEL_SIZE * scale * 64.0 / float(label.font_size)
 
 
 ## Instanziiert einen kurzlebigen Explosionseffekt an der Weltposition.

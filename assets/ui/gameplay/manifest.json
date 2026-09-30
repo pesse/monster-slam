@@ -1,0 +1,425 @@
+{
+  "format": "lossless WebP RGBA",
+  "concept": "concept/gameplay-hud-v8.png",
+  "assets": {
+    "frames/fortress": {
+      "path": "res://assets/ui/gameplay/frames/fortress.webp",
+      "size": [
+        369,
+        101
+      ],
+      "slice_ltrb": [
+        40,
+        14,
+        40,
+        14
+      ]
+    },
+    "frames/encounter": {
+      "path": "res://assets/ui/gameplay/frames/encounter.webp",
+      "size": [
+        374,
+        98
+      ],
+      "slice_ltrb": [
+        42,
+        49,
+        42,
+        49
+      ],
+      "scaling": "horizontal only; scale whole control uniformly for different heights"
+    },
+    "frames/name": {
+      "path": "res://assets/ui/gameplay/frames/name.webp",
+      "size": [
+        366,
+        61
+      ],
+      "slice_ltrb": [
+        40,
+        12,
+        40,
+        12
+      ]
+    },
+    "frames/answer": {
+      "path": "res://assets/ui/gameplay/frames/answer.webp",
+      "size": [
+        382,
+        78
+      ],
+      "slice_ltrb": [
+        28,
+        14,
+        28,
+        14
+      ]
+    },
+    "frames/legend": {
+      "path": "res://assets/ui/gameplay/frames/legend.webp",
+      "size": [
+        367,
+        52
+      ],
+      "slice_ltrb": [
+        30,
+        10,
+        30,
+        10
+      ]
+    },
+    "frames/round_button": {
+      "path": "res://assets/ui/gameplay/frames/round_button.webp",
+      "size": [
+        128,
+        128
+      ]
+    },
+    "icons/castle": {
+      "path": "res://assets/ui/gameplay/icons/castle.webp",
+      "size": [
+        96,
+        96
+      ]
+    },
+    "icons/armor": {
+      "path": "res://assets/ui/gameplay/icons/armor.webp",
+      "size": [
+        96,
+        96
+      ]
+    },
+    "icons/heart": {
+      "path": "res://assets/ui/gameplay/icons/heart.webp",
+      "size": [
+        96,
+        96
+      ]
+    },
+    "icons/swords": {
+      "path": "res://assets/ui/gameplay/icons/swords.webp",
+      "size": [
+        96,
+        96
+      ]
+    },
+    "icons/skull": {
+      "path": "res://assets/ui/gameplay/icons/skull.webp",
+      "size": [
+        96,
+        96
+      ]
+    },
+    "icons/mastered_book": {
+      "path": "res://assets/ui/gameplay/icons/mastered_book.webp",
+      "size": [
+        96,
+        96
+      ]
+    },
+    "icons/fast_forward": {
+      "path": "res://assets/ui/gameplay/icons/fast_forward.webp",
+      "size": [
+        96,
+        96
+      ]
+    },
+    "icons/portrait_ring": {
+      "path": "res://assets/ui/gameplay/icons/portrait_ring.webp",
+      "size": [
+        192,
+        192
+      ]
+    },
+    "icons/level_badge": {
+      "path": "res://assets/ui/gameplay/icons/level_badge.webp",
+      "size": [
+        96,
+        112
+      ]
+    },
+    "frames/round_button_hover": {
+      "path": "res://assets/ui/gameplay/frames/round_button_hover.webp",
+      "size": [
+        128,
+        128
+      ]
+    },
+    "frames/round_button_pressed": {
+      "path": "res://assets/ui/gameplay/frames/round_button_pressed.webp",
+      "size": [
+        128,
+        128
+      ]
+    },
+    "frames/round_button_disabled": {
+      "path": "res://assets/ui/gameplay/frames/round_button_disabled.webp",
+      "size": [
+        128,
+        128
+      ]
+    },
+    "frames/word_plate": {
+      "path": "res://assets/ui/gameplay/frames/word_plate.webp",
+      "size": [
+        384,
+        48
+      ],
+      "slice_ltrb": [
+        36,
+        8,
+        36,
+        8
+      ],
+      "minimum_size": [
+        96,
+        48
+      ],
+      "content_padding_ltrb": [
+        40,
+        10,
+        40,
+        10
+      ],
+      "scaling": "Nine-slice horizontally at 48 px height; scale complete composed plate to 24 px for distance.",
+      "pointer": {
+        "asset": "frames/word_plate_pointer",
+        "anchor": "bottom_center",
+        "offset_top_left": [
+          -12,
+          -2
+        ],
+        "formula": "pointer_top_left = (plate_width/2 - 12, plate_height - 2)",
+        "draw_order": "pointer behind plate",
+        "scaled_offset": "multiply all dimensions and offsets by uniform display scale"
+      }
+    },
+    "frames/word_plate_pointer": {
+      "path": "res://assets/ui/gameplay/frames/word_plate_pointer.webp",
+      "size": [
+        24,
+        12
+      ],
+      "slice_ltrb": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "scaling": "uniform only; never stretch with plate width",
+      "attachment_offset_top_left_from_plate_bottom_center": [
+        -12,
+        -2
+      ]
+    },
+    "frames/answer_closed": {
+      "path": "res://assets/ui/gameplay/frames/answer_closed.webp",
+      "size": [
+        382,
+        78
+      ],
+      "slice_ltrb": [
+        28,
+        14,
+        28,
+        14
+      ],
+      "alpha_identical_to": "frames/answer",
+      "outer_rim_rgb_preserved": true
+    },
+    "frames/word_plate_rim": {
+      "path": "res://assets/ui/gameplay/frames/word_plate_rim.webp",
+      "size": [
+        384,
+        48
+      ],
+      "slice_ltrb": [
+        36,
+        8,
+        36,
+        8
+      ],
+      "layer": "rim",
+      "alignment": "identical origin and dimensions to word_plate",
+      "pointer_offset_top_left_from_plate_bottom_center": [
+        -12,
+        -2
+      ],
+      "tint": {
+        "method": "multiply RGB by word-type color, preserve alpha",
+        "neutral_rgb_equal": true,
+        "gray_range": [
+          102,
+          250
+        ]
+      }
+    },
+    "frames/word_plate_base": {
+      "path": "res://assets/ui/gameplay/frames/word_plate_base.webp",
+      "size": [
+        384,
+        48
+      ],
+      "slice_ltrb": [
+        36,
+        8,
+        36,
+        8
+      ],
+      "layer": "base",
+      "alignment": "identical origin and dimensions to word_plate",
+      "pointer_offset_top_left_from_plate_bottom_center": [
+        -12,
+        -2
+      ],
+      "tint": {
+        "method": "multiply interior by mix(white,word_type_color,0.12); bypass gold end regions",
+        "protected_end_width_px": 30
+      }
+    },
+    "frames/word_plate_pointer_rim": {
+      "path": "res://assets/ui/gameplay/frames/word_plate_pointer_rim.webp",
+      "size": [
+        24,
+        12
+      ],
+      "slice_ltrb": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "layer": "rim",
+      "alignment": "identical origin and dimensions to word_plate_pointer",
+      "attachment_offset_top_left_from_plate_bottom_center": [
+        -12,
+        -2
+      ],
+      "overlap_px": 2,
+      "tint": {
+        "method": "multiply RGB by word-type color, preserve alpha",
+        "neutral_rgb_equal": true,
+        "gray_range": [
+          102,
+          250
+        ]
+      }
+    },
+    "frames/word_plate_pointer_base": {
+      "path": "res://assets/ui/gameplay/frames/word_plate_pointer_base.webp",
+      "size": [
+        24,
+        12
+      ],
+      "slice_ltrb": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "layer": "base",
+      "alignment": "identical origin and dimensions to word_plate_pointer",
+      "attachment_offset_top_left_from_plate_bottom_center": [
+        -12,
+        -2
+      ],
+      "overlap_px": 2,
+      "tint": {
+        "method": "multiply interior by mix(white,word_type_color,0.12); bypass gold end regions",
+        "protected_end_width_px": 0
+      }
+    }
+  },
+  "reuse": {
+    "avatar": "res://assets/ui/player_badge/menu/avatar.webp",
+    "enter_key_frame": "res://assets/ui/windows/tool_button_normal.webp"
+  },
+  "dynamic": [
+    "XP arc",
+    "armor/HP/wave tracks and fills",
+    "word-type diamonds",
+    "all text and numbers",
+    "Enter key glyph"
+  ],
+  "notes": [
+    "Generated reconstruction from approved concept; not a pixel-exact extraction.",
+    "All exported images are unlabelled and have real alpha.",
+    "No gameplay integration."
+  ],
+  "layout_reference": {
+    "size": [
+      1152,
+      648
+    ],
+    "fortress": [
+      82,
+      18,
+      366,
+      60
+    ],
+    "name": [
+      82,
+      73,
+      222,
+      32
+    ],
+    "encounter": [
+      831,
+      18,
+      304,
+      68
+    ],
+    "answer": [
+      206,
+      540,
+      681,
+      55
+    ],
+    "legend": [
+      206,
+      598,
+      681,
+      34
+    ],
+    "resolve": [
+      903,
+      539,
+      58,
+      58
+    ]
+  },
+  "portrait_xp_arc": {
+    "asset": "icons/portrait_ring",
+    "canvas": [
+      192,
+      192
+    ],
+    "center": [
+      96,
+      96
+    ],
+    "radius": 61.2,
+    "width": 9.6,
+    "start_degrees": -90,
+    "direction": "clockwise",
+    "draw_order": "avatar, frame, arc, level badge"
+  },
+  "word_plate_layers": {
+    "draw_order": [
+      "pointer_base",
+      "pointer_rim",
+      "plate_base",
+      "plate_rim",
+      "Label3D"
+    ],
+    "plate_origin": "same for both layers",
+    "pointer_offset": [
+      -12,
+      -2
+    ],
+    "overlap_px": 2,
+    "base_tint_strength": 0.12,
+    "gold_protection": "Do not globally modulate plate_base. At rendered width W, keep x<30 or x>=W-30 unchanged (before uniform display scale); lightly tint only inner face.",
+    "sampling": "Compose corresponding rim and base at native pixel registration before shared filtering/resizing when possible."
+  }
+}

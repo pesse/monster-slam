@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://src/battle/wave_runner.gd" id="1_battle"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="2_hud"]
@@ -13,6 +13,8 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/confirm_dialog.tscn" id="11_confirm"]
 [ext_resource type="PackedScene" path="res://scenes/ui/mastery_celebration.tscn" id="12_celebration"]
 [ext_resource type="PackedScene" path="res://scenes/ui/scene_zoom.tscn" id="20_zoom"]
+[ext_resource type="PackedScene" path="res://scenes/ui/fast_resolve_button.tscn" id="13_fast_resolve"]
+[ext_resource type="PackedScene" path="res://scenes/ui/word_plates.tscn" id="14_plates"]
 
 [sub_resource type="Environment" id="Env_1"]
 background_mode = 1
@@ -70,6 +72,8 @@ mouse_filter = 2
 color = Color(1, 0, 0, 0.35)
 modulate = Color(1, 1, 1, 0)
 
+[node name="WordPlates" parent="UI" instance=ExtResource("14_plates")]
+
 [node name="SlowMoVignette" parent="UI" instance=ExtResource("9_vignette")]
 
 [node name="MasteryCelebration" parent="UI" instance=ExtResource("12_celebration")]
@@ -79,18 +83,7 @@ modulate = Color(1, 1, 1, 0)
 [node name="AnswerInput" parent="UI" instance=ExtResource("3_input")]
 process_mode = 3
 
-[node name="FastResolveButton" type="Button" parent="UI"]
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = 232.0
-offset_top = -64.0
-offset_right = 272.0
-offset_bottom = -24.0
-grow_vertical = 0
-focus_mode = 0
-text = "⏩"
+[node name="FastResolveButton" parent="UI" instance=ExtResource("13_fast_resolve")]
 
 [node name="DebugPanel" parent="UI" instance=ExtResource("4_debug")]
 
