@@ -1,7 +1,6 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://src/ui/book_select.gd" id="1_screen"]
-[ext_resource type="PackedScene" path="res://scenes/ui/profile_badge.tscn" id="2_badge"]
 [ext_resource type="Texture2D" path="res://assets/ui/library/back.webp" id="3_back"]
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/play.webp" id="4_next"]
 [ext_resource type="Texture2D" path="res://assets/ui/library/title.webp" id="5_title"]
@@ -66,18 +65,6 @@ mouse_filter = 2
 texture = ExtResource("5_title")
 expand_mode = 1
 stretch_mode = 5
-
-[node name="ProfileBadge" parent="Ui" instance=ExtResource("2_badge")]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -301.0
-offset_top = 24.0
-offset_right = -24.0
-offset_bottom = 160.0
-grow_horizontal = 0
 
 [node name="PrevButton" type="Button" parent="Ui"]
 unique_name_in_owner = true

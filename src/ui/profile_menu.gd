@@ -8,6 +8,10 @@ extends Control
 ## hierher zurückkehrt, landet gleich im Menü (`intro_done`), aus der Buchkarte in der
 ## Bibliothek (MapSelection.to_shelf).
 ##
+## Das Medaillon (ProfileBadge) gibt es einmal für Menü und Bibliothek: es liegt über den
+## Seiten (BadgeLayer), fährt mit dem Menü herein und bleibt zwischen Menü und Bibliothek
+## stehen. Im Menü hält ein leerer Platz (BadgeSlot) ihm die Spalte frei.
+##
 ## Das Layout liegt in profile_menu.tscn (im Editor sichtbar, Entwurf unter
 ## assets/ui/main_menu/sources/); hier wird nur bedient und angezeigt. Hinter dem Menü
 ## steht die 3D-Kulisse (menu_backdrop.tscn). Einstellungen (Profil, Standard-Schwierigkeit, Reset) liegen im
@@ -53,9 +57,8 @@ var _slide: Tween
 
 func _ready() -> void:
 	_play_button.pressed.connect(_open_library)
-	_library.setup(_backdrop)
+	_library.setup(_backdrop, %BadgeLayer)
 	_library.back_requested.connect(func(): _slide_to(MENU))
-	_library.switch_requested.connect(_back_to_intro)
 	(%ExpertButton as Button).pressed.connect(
 			func(): get_tree().change_scene_to_file(SESSION_SETUP_SCENE))
 	(%SkillButton as Button).pressed.connect(_open_skills)
@@ -125,6 +128,7 @@ func _back_to_intro() -> void:
 func _open_library() -> void:
 	# Die Bücher stehen, bevor die Seite hereinfährt — nichts baut sich im Bild auf.
 	_library.enter()
+	_badge.refresh()
 	_slide_to(LIBRARY)
 
 
@@ -144,6 +148,7 @@ func _slide_to(target: float) -> void:
 		var page := _pages()[i]
 		page.visible = i >= floorf(minf(_page, target)) and i <= ceilf(maxf(_page, target))
 		page.process_mode = Node.PROCESS_MODE_DISABLED
+	(%BadgeLayer as Control).process_mode = Node.PROCESS_MODE_DISABLED
 	# Der Schatten links hinter den Knöpfen endet mitten im Bild; mitgeschoben sähe er
 	# aus wie eine Kante. Er kommt erst, wenn das Menü steht (_settle).
 	_shade.modulate.a = 0.0
@@ -168,6 +173,12 @@ func _show_page(page: float) -> void:
 	var slide := %Slide as Control
 	slide.anchor_left = -page
 	slide.anchor_right = 1.0 - page
+	# Das Medaillon steht mit dem Menü, ab dort still: von „Wer spielt?" kommt es mit herein.
+	var layer := %BadgeLayer as Control
+	var shift := maxf(0.0, MENU - page)
+	layer.anchor_left = shift
+	layer.anchor_right = 1.0 + shift
+	layer.visible = page > INTRO
 	_backdrop.page = page
 
 
@@ -177,6 +188,7 @@ func _settle() -> void:
 	for i in _pages().size():
 		_pages()[i].visible = i == at
 		_pages()[i].process_mode = Node.PROCESS_MODE_INHERIT
+	(%BadgeLayer as Control).process_mode = Node.PROCESS_MODE_INHERIT
 	if at == INTRO:
 		_intro.focus_next()
 	elif at == MENU and _shade.modulate.a < 1.0:

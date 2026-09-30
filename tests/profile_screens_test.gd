@@ -53,8 +53,10 @@ func test_a_click_selects_without_switching() -> void:
 func test_the_menu_page_offers_the_switch_instead_of_the_pick() -> void:
 	var screen := auto_free(MENU_SCENE.instantiate()) as Control
 	var page := screen.get_node("%MenuPage") as Control
-	assert_object(page.find_child("ProfileLabel", true, false)).is_not_null()
-	assert_object(page.find_child("SwitchButton", true, false)).is_not_null()
+	var layer := screen.get_node("%BadgeLayer") as Control
+	assert_object(layer.find_child("ProfileLabel", true, false)).is_not_null()
+	assert_object(layer.find_child("SwitchButton", true, false)).is_not_null()
+	assert_array(screen.find_children("*", "ProfileBadge", true, false)).has_size(1)
 	assert_object(page.find_child("NameInput", true, false)).is_null()
 	assert_object(screen.get_node("%Intro").find_child("NameInput", true, false)).is_not_null()
 
