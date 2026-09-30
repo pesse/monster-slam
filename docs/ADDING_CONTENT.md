@@ -292,7 +292,10 @@ Eine Datei je Baum. Der erste Eintrag ist der Baum-Kopf, die übrigen sind seine
   zeichnet ein Netz, in dem jeder Baum von seinem eigenen Punkt nach außen aufgeht. Ein
   Ast bleibt über alle Stufen auf demselben Strahl, die Wurzel steht allein auf der Achse.
   **Positionen stehen NICHT in der JSON** — `SkillTree.layout()` rechnet sie aus diesen
-  zwei Feldern, ein vierter Baum verschiebt die vorhandenen von selbst. Zwei Knoten mit
+  zwei Feldern, ein vierter Baum verschiebt die vorhandenen von selbst. Wer einen Knoten
+  anders haben will, zieht ihn in `scenes/dev/skill_tree_lab.tscn` („Knoten verschieben",
+  „Speichern"). Das schreibt `assets/ui/skill_tree/layout.json`, und nur die gesetzten Ids
+  weichen von der Rechnung ab. Zwei Knoten mit
   demselben `tree`/`tier`/`branch` lägen übereinander — `tests/skill_data_test.gd` meldet das.
 - `color` am Baum-Kopf (`"#b38ce6"`) färbt Knoten und Linien des ganzen Baums, `icon` ist
   das Zeichen im Kreis. Beides ist optional: ohne `color` wird der Baum grau, ohne `icon`

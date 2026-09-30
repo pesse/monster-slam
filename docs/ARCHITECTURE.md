@@ -592,6 +592,14 @@ Start-Screen (`🌳 Fähigkeiten`), nicht am Kampf: gelernt wird zwischen den L�
   Ast ist damit ein Eintrag in der JSON, ein vierter Baum eine Datei — die drei
   vorhandenen rücken von selbst zusammen (`tests/skill_graph_layout_test.gd` prüft das bis
   sechs Bäume).
+- **Von Hand gesetzt wird je Id, nicht als Ganzes** (`SkillLayout`,
+  `assets/ui/skill_tree/layout.json`). Wo die Rechnung nicht schön ist, zieht man einen
+  Knoten oder Baumnamen in der Werkbank `skill_tree_lab` („Knoten verschieben",
+  „Speichern") und schreibt so die Datei. Jeder Knoten ohne Eintrag bleibt gerechnet, auch
+  ein neuer aus einem Pack. Ein Baumname ohne Eintrag rückt hinter den äußersten Knoten
+  seines Baums. Die Datei liegt in der EXE wie die Kartenpunkte: Sie ist Bild, nicht
+  Inhalt. Die gesetzten Plätze der ausgelieferten Bäume halten dieselbe Regel wie die
+  Rechnung (kein Knoten berührt einen anderen, `skill_graph_layout_test`).
 - **Gezeichnet statt gebaut** (`SkillGraph`, `_draw()`): drei Bäume mal vier Zuständen
   wären zwölf Theme-Variationen, und die Farbe eines Baums soll aus seiner JSON kommen
   (`color`) und nicht aus dem Theme. Der Screen zoomt mit dem Mausrad und lässt sich

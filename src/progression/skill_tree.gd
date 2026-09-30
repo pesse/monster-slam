@@ -51,6 +51,10 @@ const MIN_SLOW_FACTOR := 0.05
 ## damit ein Eintrag in den Daten, und ein vierter Baum verschiebt die drei vorhandenen
 ## automatisch, statt dass jemand Koordinaten nachträgt.
 ##
+## Wo die Rechnung nicht schön ist, setzt man einen Knoten von Hand (Werkbank
+## scenes/dev/skill_tree_lab.tscn, gespeichert in SkillLayout.PATH). Die Übersteuerung gilt
+## je Id: jeder Knoten ohne Eintrag bleibt gerechnet, auch ein neuer.
+##
 ## Die Rechnung steht hier und nicht im Screen, weil sie prüfbar sein muss: dass sich zwei
 ## Bäume nicht überlappen, ist eine Aussage über Zahlen und nicht über Pixel auf einem
 ## Bildschirm (tests/skill_graph_layout_test.gd).
@@ -322,7 +326,11 @@ static func forget_cost(entries: Array, id: String, unlocked: PackedStringArray)
 ## kommt aus der POSITION in der Stufe und nicht aus dem Zahlenwert von `branch`: die
 ## Werte dürfen Lücken haben (ein Ast, der später dazwischenkommt), der Fächer soll
 ## trotzdem gleichmäßig bleiben.
-static func layout(entries: Array) -> Dictionary:
+##
+## `overrides` (Id -> Position, aus SkillLayout) setzt einzelne Plätze von Hand. Ein Baumname
+## ohne eigenen Eintrag rückt dann hinter den äußersten Knoten seines Baums, wo der auch
+## steht.
+static func layout(entries: Array, overrides: Dictionary = {}) -> Dictionary:
 	var out: Dictionary = {}
 	var tree_list := trees(entries)
 	var count := maxi(1, tree_list.size())
@@ -344,12 +352,16 @@ static func layout(entries: Array) -> Dictionary:
 					spread = (float(j) / float(row.size() - 1) - 0.5) * fan
 				var steps := maxi(1, int(node.get("tier", 1))) - 1
 				var radius := ANCHOR_RADIUS + float(steps) * TIER_STEP
-				reach = maxf(reach, radius)
-				out[str(node.get("id", ""))] = Vector2.from_angle(base + spread) * radius * STRETCH
+				var id := str(node.get("id", ""))
+				var at: Vector2 = overrides.get(id, Vector2.from_angle(base + spread) * radius * STRETCH)
+				# Der Abstand von der Mitte, ungestreckt — bei einem gerechneten Platz genau
+				# `radius`, bei einem gesetzten so weit, wie er wirklich draußen liegt.
+				reach = maxf(reach, (at / STRETCH).length())
+				out[id] = at
 		# Der Abstand des Namens wird NICHT gestaucht: er ist Luft über einem Knoten, und
 		# ein Knoten ist rund. Nur der Platz des Knotens, über dem er hängt, ist gestreckt.
 		var axis := Vector2.from_angle(base)
-		out[tree_id] = axis * reach * STRETCH + axis * (NODE_RADIUS + TITLE_GAP)
+		out[tree_id] = overrides.get(tree_id, axis * reach * STRETCH + axis * (NODE_RADIUS + TITLE_GAP))
 	return out
 
 
