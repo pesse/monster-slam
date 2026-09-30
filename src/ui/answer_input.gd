@@ -15,7 +15,7 @@ extends LineEdit
 ## bis typing_stopped). Gesperrt und umbeschriftet statt ausgeblendet — das Feld
 ## steht in der Bildmitte und behält seine Größe.
 
-const PLACEHOLDER_OPEN := "Übersetzung eingeben und Enter…"
+const PLACEHOLDER_OPEN := "Übersetzung eingeben…"
 const PLACEHOLDER_CLOSED := "Enter: antworten · WASD: laufen · Alt: Maus"
 const PLACEHOLDER_CLOSED_TAB := "Enter: antworten · Tab: Waffe · Alt: Maus"
 

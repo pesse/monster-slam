@@ -211,6 +211,13 @@
       "height": 64,
       "notes": "Separate overlay, never baked into skill icon.",
       "sha256": "fe5b7f614290f4ae4cefcb476f23934163b321a95e4535945de175d92eea21e8"
+    },
+    "icons/scout_blast": {
+      "path": "res://assets/ui/skill_tree/icons/scout_blast.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated Explosionspfeil; 256 px canvas, <=208 px centered motif; genuine alpha; lossless WebP RGBA. One wooden arrow pointing up-right, Langbogen red/ivory fletching, amber ember-gem head, compact fire, angular gold sparks and grey faceted smoke. Source: sources/scout_blast.png.",
+      "sha256": "04a6fb89cd3da6d50868b1264960ac397f6e42a7bd3276ef11612d8d36bb724c"
     }
   },
   "skill_icons": {
@@ -318,6 +325,11 @@
       "name": "Zeitriss",
       "tree": "tree.timeweaver",
       "path": "res://assets/ui/skill_tree/icons/time_rift.webp"
+    },
+    "skill.scout.blast": {
+      "name": "Explosionspfeil",
+      "tree": "tree.scout",
+      "path": "res://assets/ui/skill_tree/icons/scout_blast.webp"
     }
   },
   "tree_colors": {

@@ -15,7 +15,7 @@ extends SceneTree
 ## Platz (Baum, Fels, Gras, Wahrzeichen) gleich, egal welches Modell dort steht. Zum
 ## Vergleich bei Skalierung 1: tree.glb ist 7.3 hoch (Bäume stehen bei ~1), rock.glb ein
 ## Kieselhaufen von 1.1 Breite (Felsen bei ~2.3), grass.glb 1.0 hoch (Gras bei ~1.6),
-## pillar.gltf 4.0 (Wahrzeichen bei ~0.9). Die Burg ist 4.0 hoch (im Kampf ×3).
+## pillar.gltf 4.0 (Wahrzeichen bei ~0.9). Die Burg ist 4.0 hoch (im Kampf × FortressModel.SCALE).
 
 const OUT := "res://assets/models/forge"
 
@@ -1864,6 +1864,9 @@ func _flower_tuft() -> Forge:
 		var top := Vector3(cos(a) * r, rng.randf_range(0.5, 0.75), sin(a) * r)
 		f.frustum(Vector3(top.x * 0.4, 0, top.z * 0.4), top, 0.015, 0.012, 3, FLOWER_LEAF, 0.0)
 		f.blob(top, 0.09, PETAL_PINK if k % 2 == 0 else PETAL_WHITE, rng, 0.0)
+	return f
+
+
 const FENCE_A := Color(0.55, 0.36, 0.20)
 const FENCE_B := Color(0.44, 0.28, 0.15)
 
@@ -2150,9 +2153,16 @@ class Forge:
 		for i in rings + 1:
 			var row: Array[Vector3] = []
 			var phi := PI * i / rings
+			var pole_k := 0.0
 			for j in sides:
 				var theta := TAU * j / sides + (PI / sides if i % 2 == 1 else 0.0)
 				var k := 1.0 + rng.randf_range(-jitter, jitter)
+				# Am Pol liegen alle Punkte der Reihe auf der Achse: verbeult jeder für sich,
+				# stünden sie übereinander und die Dreiecke dazwischen als Grat heraus.
+				if i == 0 or i == rings:
+					if j == 0:
+						pole_k = k
+					k = pole_k
 				var p := Vector3(sin(phi) * cos(theta), cos(phi), sin(phi) * sin(theta)) * radii * k
 				p.y = maxf(p.y, floor_y)
 				row.append(c + p)

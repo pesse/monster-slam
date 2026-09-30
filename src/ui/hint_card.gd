@@ -10,7 +10,7 @@ extends PanelContainer
 ## sollen untereinander stehen, damit man sie vergleichen kann. Sie weiß nicht, ob sie einen Fähigkeitsknoten, eine Wortzeile oder eine
 ## Schatzkiste erklärt — das ist genau der Grund, aus dem es sie nur einmal gibt. Was in
 ## ihr steht, entscheidet die Stelle, die sie anmeldet (`Hints.attach`); Regeln wie
-## `SkillTree.state_label` bleiben dort, wo sie hingehören.
+## `SkillTree.state_name` bleiben dort, wo sie hingehören.
 ##
 ## Gehalten wird sie vom Autoload `Hints`, das sie über allem einblendet und dem Zeiger
 ## nachführt. Godots eigener Tooltip erscheint verzögert, bleibt stehen, wo er aufgegangen
@@ -54,6 +54,8 @@ const POINTER_ARM_LEFT := Vector2(4.0, 27.5)
 const POINTER_ARM_RIGHT := Vector2(59.0, 27.5)
 ## Kantenlänge eines Zeichens in der Liste, wenn es ein Bild ist.
 const LIST_ICON := 20.0
+## Ein Preis im Kopf: Zeichen und Zahl (`fill`, `prices`).
+const PRICE_SCENE := preload("res://scenes/ui/hint_price.tscn")
 
 @onready var _title: Label = %Title
 @onready var _body: Label = %Body
@@ -63,6 +65,7 @@ const LIST_ICON := 20.0
 @onready var _icon: TextureRect = %Icon
 @onready var _subtitle: Label = %Subtitle
 @onready var _rule: HSeparator = %Rule
+@onready var _prices: HBoxContainer = %Prices
 
 ## Wo der Pfeil sitzt: waagerecht in Kartenkoordinaten, und ob oben (Karte unter dem
 ## Zeiger) oder unten (Karte darüber). NaN heißt: kein Pfeil.
@@ -86,8 +89,11 @@ var _pointer_up := true
 ## Farbe eines Fähigkeitsbaums aus seinen Daten kommt und nicht aus dem Theme. Gefärbt
 ## wird über `self_modulate` auf weißer Schrift (`HintSubtitle`), nicht über einen
 ## Theme-Override. Mit einer Unterzeile trennt ein Strich den Kopf vom Text.
+##
+## `prices` stehen rechts im Kopf, jeder `[zeichen, zahl]` — was ein Klick kostet, als
+## Zeichen statt als Satz (Stern für Skillpunkte, Münzen für Gold).
 func fill(title: String, body := "", note := "", list := [], image: Texture2D = null,
-		icon: Texture2D = null, subtitle := "", tint := Color.WHITE) -> void:
+		icon: Texture2D = null, subtitle := "", tint := Color.WHITE, prices := []) -> void:
 	# Eine leere Zeile verschwindet, statt eine leere Zeile zu hinterlassen: die Karte für
 	# eine Münze ist eine Zeile hoch und kein Kasten mit Luft.
 	_title.text = title
@@ -105,7 +111,20 @@ func fill(title: String, body := "", note := "", list := [], image: Texture2D = 
 	_subtitle.self_modulate = tint
 	_rule.visible = not subtitle.is_empty()
 	_fill_list(list)
+	_fill_prices(prices)
 	_fit()
+
+
+func _fill_prices(prices: Array) -> void:
+	for child in _prices.get_children():
+		_prices.remove_child(child)
+		child.queue_free()
+	for price in prices:
+		var item := PRICE_SCENE.instantiate() as HBoxContainer
+		(item.get_node("Mark") as TextureRect).texture = price[0] as Texture2D
+		(item.get_node("Value") as Label).text = str(price[1])
+		_prices.add_child(item)
+	_prices.visible = not prices.is_empty()
 
 
 ## Die Zellen kommen bei jedem Aufruf neu: eine Karte zeigt mal zwei, mal sechs Zeilen.

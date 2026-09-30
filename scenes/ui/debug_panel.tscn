@@ -56,3 +56,7 @@ text = "Aufgabe"
 [node name="Word" type="Button" parent="Root/Body/CelebrateRow"]
 focus_mode = 0
 text = "Wort"
+
+[node name="Level" type="Button" parent="Root/Body/CelebrateRow"]
+focus_mode = 0
+text = "Level"

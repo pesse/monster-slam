@@ -7,3 +7,4 @@ script = ExtResource("1_theme")
 ground_texture = "grass"
 ground_texture_strength = 0.8
 trees = Array[String](["props/tree.glb", "props/tree.glb", "forge/blossom_tree.glb"])
+particles = "pollen"

@@ -1,7 +1,7 @@
 class_name Monster
 extends Node3D
-## Ein normales Monster in 3D: trägt eine aufgelöste Aufgabe (schwebendes Label3D
-## mit dem Prompt) und bewegt sich entlang +Z auf die Festung zu. Präsentation +
+## Ein normales Monster in 3D: trägt eine aufgelöste Aufgabe (den Prompt zeigt sein
+## Wortschild, siehe WordPlates) und bewegt sich entlang +Z auf die Festung zu. Präsentation +
 ## Bewegung; Kampf-/Wellenlogik liegt im WaveRunner. Das Monster kennt die Aufgabe
 ## nur als { prompt, accepted_answers, learnable_id, ... } (siehe TaskResolver).
 
@@ -23,15 +23,20 @@ var xp: int = Experience.MONSTER_XP_MIN
 ## Zeitpunkt des Spawns (ms) für die Antwortzeit-Messung; vom WaveRunner gesetzt.
 var spawned_at_ms: int = 0
 
-## Ich-Sicht: das Schild hat eine feste Größe im Bild statt in der Welt — sonst ist ein
-## Prompt am Spawn unlesbar klein und direkt vor der Nase riesig. Vor add_child setzen.
+## Ich-Sicht: das Wortschild steht in der größeren Ausführung — dort muss es auf jede
+## Entfernung lesbar sein. Vor add_child setzen.
 var screen_sized_label := false
-## Bildgröße des Schilds in der Ich-Sicht (Label3D.fixed_size rechnet damit je Bildhöhe).
-const SCREEN_LABEL_PIXEL_SIZE := 0.0009
+
+## Die Gruppe, aus der WordPlates die Schilder baut.
+const PLATE_GROUP := &"word_plate"
 
 var _speed: float = 2.0
 var _target_z: float = 0.0
 var _done: bool = false
+## Was sichtbar ist — das Modell oder der Platzhalter. `flinch` wackelt nur daran, damit
+## Position, Schild und Bahn unberührt bleiben.
+var _body: Node3D
+var _flinch: Tween = null
 
 ## Wortart-Outline: Inverted-Hull-Shader, Farbe je Wortart (siehe WordTypePalette).
 const OUTLINE_SHADER := preload("res://assets/shaders/monster_outline.gdshader")
@@ -40,7 +45,7 @@ const OUTLINE_GLOW_STRENGTH := 1.0  # Emission-Faktor; genau 1.0 => kein Kanal-C
                                     # Outline-Farbe == Legenden-Farbe. Der Glow-Halo kommt
                                     # aus dem WorldEnvironment (niedrige HDR-Schwelle).
 
-@onready var _label: Label3D = $Label
+@onready var _plate_anchor: Marker3D = $PlateAnchor
 @onready var _placeholder: MeshInstance3D = $Placeholder
 
 
@@ -57,11 +62,31 @@ func setup(def: Dictionary, task_data: Dictionary, target_z: float, speed_units:
 
 
 func _ready() -> void:
-	_label.text = str(task.get("prompt", "?"))
-	if screen_sized_label:
-		_label.fixed_size = true
-		_label.pixel_size = SCREEN_LABEL_PIXEL_SIZE
+	add_to_group(PLATE_GROUP)
 	_apply_model()
+
+
+## Was auf dem Wortschild steht.
+func prompt() -> String:
+	return str(task.get("prompt", "?"))
+
+
+## Die Farbe der Wortart, wie die Outline am Modell (WordTypePalette).
+func word_color() -> Color:
+	return WordTypePalette.color_for(str(task.get("lexeme_type", "")))
+
+
+## Der Punkt über dem Kopf, auf den der Zipfel des Wortschilds zeigt.
+func plate_anchor() -> Vector3:
+	return _plate_anchor.global_position
+
+
+## Im Bild heißt: der Körper oder das Schild über ihm. Aus der Nähe ist das Schild über
+## dem Bildrand, von weit weg der Körper hinter dem Schild zu klein, um zu zählen. Danach
+## trifft eine Antwort in der Ich-Sicht (WaveRunner._hittable) und steht ein Wortschild.
+func in_view(camera: Camera3D) -> bool:
+	return FirstPersonView.sees(camera, global_position + Vector3(0.0, 1.2, 0.0)) \
+			or FirstPersonView.sees(camera, plate_anchor())
 
 
 ## Lädt das 3D-Modell aus dem "model"-Feld (GLTF/GLB/scn). Fehlt es oder existiert
@@ -74,6 +99,7 @@ func _apply_model() -> void:
 	if path == "" or not ResourceLoader.exists(path):
 		# Kein Modell -> Platzhalter-Kapsel behält die Wortart-Outline (Konsistenz).
 		_apply_outline(_placeholder, color, 1.0)
+		_body = _placeholder
 		return
 	var packed: PackedScene = load(path)
 	var inst := packed.instantiate() as Node3D
@@ -81,6 +107,7 @@ func _apply_model() -> void:
 	inst.scale = Vector3.ONE * model_scale
 	inst.rotation_degrees.y = float(monster_def.get("model_yaw", 0.0))
 	add_child(inst)
+	_body = inst
 	_placeholder.visible = false
 	_apply_outline(inst, color, model_scale)
 	_setup_animation(inst)
@@ -142,6 +169,34 @@ func head_height() -> float:
 ## Platzen kommt später (Sturmangriff in der Ich-Sicht).
 func halt() -> void:
 	_done = true
+
+
+## Neben einer Explosion (Blast) bei `from`: der Körper duckt sich, kippt vom Knall weg und
+## federt zurück. Nur das Bild — Position, Tempo und Aufgabe bleiben, wie sie sind.
+func flinch(from: Vector3) -> void:
+	if _body == null:
+		return
+	var away := global_position - from
+	away.y = 0.0
+	var axis := Vector3.UP.cross(away.normalized()) if away.length_squared() > 0.0001 \
+			else Vector3.RIGHT
+	# Die Achse in den Rahmen des Monsters: der Körper hängt darunter.
+	axis = (global_basis.inverse() * axis).normalized()
+	var rest := _body.transform
+	if _flinch != null and _flinch.is_valid():
+		_flinch.kill()
+	_flinch = create_tween()
+	_flinch.tween_method(func(t: float) -> void: _lean(rest, axis, t), 0.0, 1.0, 0.55)
+
+
+## Ein Schlag, der ausschwingt: kippt bis ~20° und staucht, dann gedämpft zurück.
+func _lean(rest: Transform3D, axis: Vector3, t: float) -> void:
+	# (1 - t): am Ende genau wieder in Ruhe, nicht nur fast.
+	var swing := sin(t * PI * 2.5) * exp(-t * 4.0) * (1.0 - t)
+	var squash := 1.0 - 0.18 * swing
+	var basis := Basis(axis, deg_to_rad(22.0) * swing) \
+			* Basis.from_scale(Vector3(1.0 / sqrt(squash), squash, 1.0 / sqrt(squash)))
+	_body.transform = Transform3D(basis * rest.basis, rest.origin)
 
 
 func _physics_process(delta: float) -> void:

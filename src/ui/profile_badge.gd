@@ -31,6 +31,8 @@ const RING_CENTER := Vector2(1133, 480)
 const RING_RADIUS := 278.0
 const RING_WIDTH := 34.0
 const RING_COLOR := Color("43bafa")
+## Halbe Lücke unten (Bogenmaß, von der Senkrechten gemessen): dort sitzt die Levelplakette.
+const RING_GAP := PI / 4.0
 
 @onready var _name_label: Label = %ProfileLabel
 @onready var _gold_label: Label = %GoldLabel
@@ -81,6 +83,8 @@ static func at(canvas_point: Vector2) -> Vector2:
 func _draw() -> void:
 	draw_texture_rect(FRAME, Rect2(at(Vector2.ZERO), CANVAS * SCALE), false)
 	if _ratio > 0.0:
-		# Von oben gegen den Uhrzeigersinn, wie im Entwurf.
-		draw_arc(at(RING_CENTER), RING_RADIUS * SCALE, -PI / 2.0 - TAU * _ratio, -PI / 2.0,
-				96, RING_COLOR, RING_WIDTH * SCALE, true)
+		# Von unten links im Uhrzeigersinn über oben nach unten rechts, wie im Kampf-HUD
+		# (XpRing): so steht der Anfang nicht hinter der Plakette. PI / 2 ist unten.
+		var start := PI / 2.0 + RING_GAP
+		draw_arc(at(RING_CENTER), RING_RADIUS * SCALE, start,
+				start + (TAU - 2.0 * RING_GAP) * _ratio, 96, RING_COLOR, RING_WIDTH * SCALE, true)

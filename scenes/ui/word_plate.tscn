@@ -1,0 +1,39 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://src/ui/word_plate.gd" id="1_plate"]
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/frames/word_plate_pointer_rim.webp" id="2_pointer"]
+[ext_resource type="Shader" path="res://assets/shaders/word_plate.gdshader" id="3_shader"]
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/frames/word_plate_base.webp" id="4_base"]
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/frames/word_plate_pointer_base.webp" id="5_pointer_base"]
+
+[sub_resource type="ShaderMaterial" id="pointer_layers"]
+shader = ExtResource("3_shader")
+shader_parameter/base = ExtResource("5_pointer_base")
+
+[sub_resource type="ShaderMaterial" id="plate_layers"]
+shader = ExtResource("3_shader")
+shader_parameter/base = ExtResource("4_base")
+
+[node name="WordPlate" type="Control"]
+mouse_filter = 2
+script = ExtResource("1_plate")
+
+[node name="Pointer" type="TextureRect" parent="."]
+material = SubResource("pointer_layers")
+layout_mode = 0
+mouse_filter = 2
+texture = ExtResource("2_pointer")
+expand_mode = 1
+
+[node name="Frame" type="PanelContainer" parent="."]
+material = SubResource("plate_layers")
+layout_mode = 0
+mouse_filter = 2
+theme_type_variation = &"HudWordPlate"
+
+[node name="Text" type="Label" parent="Frame"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudPlateText"
+horizontal_alignment = 1
+vertical_alignment = 1

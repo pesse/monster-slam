@@ -1,0 +1,17 @@
+[gd_scene format=3]
+
+[node name="HintPrice" type="HBoxContainer"]
+theme_type_variation = &"Tight"
+mouse_filter = 2
+
+[node name="Mark" type="TextureRect" parent="."]
+custom_minimum_size = Vector2(20, 20)
+size_flags_vertical = 4
+mouse_filter = 2
+texture_filter = 4
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Value" type="Label" parent="."]
+theme_type_variation = &"HintSubtitle"
+text = "5"

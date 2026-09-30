@@ -15,3 +15,4 @@ sun_color = Color(1.0, 0.96, 0.88, 1)
 trees = Array[String](["props/tree.glb", "forge/pine.glb"])
 rocks = Array[String](["props/rock.glb", "forge/boulder_moss.glb"])
 grass = Array[String](["props/grass.glb", "forge/fern.glb"])
+particles = "pollen"

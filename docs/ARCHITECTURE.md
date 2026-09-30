@@ -441,7 +441,7 @@ der umgekehrten Absicht: Gold ist Beute, Erfahrung ist Lernfortschritt.
 |---|---|---|
 | `Experience` | `src/progression/experience.gd` | reine Rechnung: XP je Monster, Stufenkosten, Skillpunkte |
 | `PlayerLevel` (Autoload) | `src/progression/player_level.gd` | Gesamt-Erfahrung des Profils, Aufstieg, Persistenz |
-| Anzeige | `hud.tscn` (Level + Balken beim Namen), `wave_stats.gd` (Zuwachs der Welle), `profile_badge.gd` (Level, Bogen im Level, Gold; Menü und Bibliothek) / `stats_screen.gd` (Stand + offene Skillpunkte) | — |
+| Anzeige | `hud.tscn` (Level + Erfahrungsring am Porträt), `wave_stats.gd` (Zuwachs der Welle), `profile_badge.gd` (Level, Bogen im Level, Gold; Menü und Bibliothek) / `stats_screen.gd` (Stand + offene Skillpunkte) | — |
 
 - **10..15 XP je besiegtem Monster, aus seiner Schwierigkeit** — und zwar aus DERSELBEN,
   aus der auch Tempo und Punkte entstehen (`WaveGenerator`, das Netto-Maß `t - c` aus
@@ -469,9 +469,10 @@ der umgekehrten Absicht: Gold ist Beute, Erfahrung ist Lernfortschritt.
   nur den Zuwachs der Welle und liest den Stand bei `PlayerLevel`.
 - **`PlayerLevel.skill_points()` ist der VERDIENTE Stand**, die offenen Punkte rechnet
   `SkillBook.available()` aus den gelernten Knoten — auch dort kein zweiter Zähler.
-- **Level und Balken stehen im HUD beim Namen**, nicht in einer fünften Tafel: die
-  Kopfleiste passt bei 1152 Pixeln nur knapp (`tests/hud_header_test.gd` misst mit einem
-  späten Spielstand). Was dort dazukommt, muss anderswo eingespart werden.
+- **Level und Erfahrung stehen im HUD am Porträt**: das Level in der Plakette, die
+  Erfahrung nur als Ring (`XpRing`), ohne Zahl. Die Kopfleiste hat zwei Tafeln fester
+  Breite (Festung links, Welle rechts; Grafiken `assets/ui/gameplay/`),
+  `tests/hud_header_test.gd` misst mit einem späten Spielstand, dass keine wächst.
 
 ## Karte und Laufanfrage (ADR 0006)
 
@@ -550,6 +551,15 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
   aus. Der Bosskampf trägt kein Thema.
   Die Farben kommen im Licht des Kampfes etwa halb so hell an, wie sie in der `.tres`
   stehen — abgestimmt wird am Bild der Werkbank, nicht an den Zahlen.
+- **Wind, Wolken und Luft.** Bäume und Gras schwanken (`Wind.sway`): das Modell bekommt statt
+  seines StandardMaterial3D den Windshader (`assets/shaders/wind.gdshaderinc`), der es mit
+  denselben Werten zeichnet und die Ecken mit der Höhe biegt; nur Modelle aus `Wind.SWAY`
+  schwanken, denn im Platz `trees` stehen auch Häuser. Über den Boden ziehen Wolkenschatten
+  (gerechnetes Rauschen im Bodenshader, nimmt der Sonne ihren Anteil wie ein Schatten).
+  Beide laufen nach `wind_time`, einem globalen Shader-Parameter, den ein `Wind`-Knoten mit
+  dem skalierten delta treibt — in der Zeitlupe wehen sie langsamer. In der Luft treibt je
+  Thema eine Art `AmbientParticles` (Laub, Schnee, Staub, Pollen, Glühwürmchen) über dem
+  sichtbaren Boden. Stärke je Thema: `wind`, `clouds`, `particles`.
 - **Schatten und Licht des Bodens.** Der Bodenshader beleuchtet selbst (`light()`): Grund
   ist das Umgebungslicht des Themas, die Sonne legt nur einen festen Anteil davon dazu
   (`shadow_depth`, nach Neigung zur Sonne). So steht flacher Boden in der Sonne in der Farbe
@@ -572,7 +582,7 @@ Start-Screen (`🌳 Fähigkeiten`), nicht am Kampf: gelernt wird zwischen den L�
 | `SkillTree` | `src/progression/skill_tree.gd` | reine Regeln: Stufen, Äste, Voraussetzungen, Kosten, Summe der Boni |
 | `SkillBook` (Autoload) | `src/progression/skill_book.gd` | das Gelernte des Profils, Kauf, Umlernen, Persistenz |
 | Wirkung | `GameState.apply_skills`, `SlowMotion.apply_skills` | Boni auf die Grundwerte des Laufs |
-| Anzeige | `skill_tree.tscn` + `skill_graph.gd` (gezeichnetes Netz), `Hints` (Auskunft am Zeiger, spielweit), `confirm_dialog.tscn` (Rückfrage), `hud.tscn` (Rüstungsleiste) | — |
+| Anzeige | `skill_tree.tscn` + `skill_graph.gd` (gezeichnetes Netz), `Hints` (Auskunft am Zeiger, spielweit), `confirm_dialog.tscn` (Rückfrage), `hud.tscn` (Rüstungszeile) | — |
 
 - **Ein Knoten hat `tier` (Abstand) und `branch` (Stelle im Fächer)** — zwei Felder statt
   einer aus `requires` gerechneten Position, und statt fertiger Koordinaten in den Daten.
@@ -610,9 +620,10 @@ Start-Screen (`🌳 Fähigkeiten`), nicht am Kampf: gelernt wird zwischen den L�
   der Graph seine Treffer selbst sucht, hängt er dort als *lebende* Auskunft
   (`attach_live`) und antwortet über `SkillTree._hint_at(local)`, statt jede Mausbewegung
   zu melden.
-  Über einem Knoten trägt sie Bild, Name, „Baum · Zustand" (`SkillTree.state_name`),
-  Wirkung, Kosten und Voraussetzungen als Tabelle und die Zustandszeile
-  (`SkillTree.state_label`), über dem NAMEN eines Baums dessen Stand
+  Über einem Knoten trägt sie Bild, Name, „Baum · Zustand" (`SkillTree.state_name`), rechts
+  im Kopf den Preis eines Klicks als Zeichen (`prices`: Stern und Skillpunkte, gelernt
+  Münzen und das Gold fürs Verlernen), die Wirkung und die Voraussetzungen als Tabelle.
+  Einen Nachsatz gibt es nur, wenn das Gold fürs Verlernen fehlt. Über dem NAMEN eines Baums steht dessen Stand
   (`SkillTree.tree_status`: „2/5 gelernt · +2 HP je besiegtem Monster"). Ein Klick auf
   einen lernbaren Knoten öffnet `ConfirmDialog`, und erst dessen Bestätigung bucht — ein
   ausgegebener Punkt kommt nur gegen Gold zurück, das soll ein einzelner Klick nicht
@@ -637,9 +648,8 @@ Start-Screen (`🌳 Fähigkeiten`), nicht am Kampf: gelernt wird zwischen den L�
   endlos. Ein aufgefangener Treffer zählt trotzdem als durchgelassen — eine aufgefangene
   Welle ist keine saubere; `min_fortress_health` hängt am Leben, nicht an der Rüstung.
   Wer an den Beträgen dreht, vergleicht mit der Genesung, die nur an besiegten Monstern
-  heilt. Im HUD steht die Rüstung als Leiste über dem Lebensbalken und **ohne Zahl** — eine
-  Zahl am HP-Text sprengte die Kopfleiste (`tests/hud_armor_test.gd`), und die Beträge
-  sollen in der JSON justierbar bleiben.
+  heilt. Im HUD steht die Rüstung als eigene Zeile über den HP, nur mit gelerntem Baum; die
+  Festungstafel behält ohne sie ihre Höhe (`tests/hud_armor_test.gd`).
 - **Die Zeitlupe hat eine Untergrenze** (`SkillTree.MIN_SLOW_FACTOR`), sonst fröre ein
   tiefer Baum das Spiel ein.
 - **Verlernen geht einzeln** (`SkillBook.forget`): mit dem Knoten fällt jeder gelernte
@@ -650,7 +660,7 @@ Start-Screen (`🌳 Fähigkeiten`), nicht am Kampf: gelernt wird zwischen den L�
   immer günstiger als alles.
 - **Kleinere Regeln des Screens**: der Ausschnitt gehört dem Spieler (`setup()` passt nur
   ein, solange niemand gezoomt oder geschoben hat; zurück über ⛶); ein gesperrter Knoten
-  nennt seine Vorstufe beim Namen (`state_label`), weil an einem Knoten mehrere Linien
+  nennt seine Vorstufe beim Namen (Zeile „Voraussetzung" mit Schloss), weil an einem Knoten mehrere Linien
   hängen; der Dialog fokussiert ABBRECHEN; `SkillGraph.select()` meldet jeden Klick, auch
   auf den gewählten Knoten, damit ein abgebrochener Antrag neu gestellt werden kann.
   Schriftgrößen liest `_draw()` aus dem Theme (`SkillIcon`, `SectionTitle`, `Hint`,
@@ -675,9 +685,21 @@ Kamera frei; die Äste darunter heben nur das Lauftempo (`walk_speed`, Anteile a
   schalten beides ab.
 - **Der Kampf ist derselbe.** `WaveRunner` baut Boden, Deko und Festung wie immer für die
   Iso-Kamera (die bleibt in der Szene, nur nicht aktiv) und setzt `FirstPersonView`
-  darauf: Nebel in der Hintergrundfarbe statt Weltrand, kleineres Gras, Prompt-Schilder in
-  fester Bildgröße (`Monster.screen_sized_label`). Wellen, Tempo, `t - c` und Auswertung
+  darauf: Nebel in der Hintergrundfarbe statt Weltrand, kleineres Gras, die größere Ausführung der
+  Wortschilder (`Monster.screen_sized_label`). Wellen, Tempo, `t - c` und Auswertung
   fasst die Ich-Sicht nicht an.
+- **Wortschilder sind 2D** (`WordPlates` im Kampf-UI, `WordPlate` je Monster): die Ebene
+  holt die Monster aus der Gruppe `Monster.PLATE_GROUP`, projiziert den `PlateAnchor` über
+  dem Kopf ins Bild und legt die Schilder so, dass keines ein anderes überdeckt
+  (`WordPlates.layout`: das Monster am nächsten zur Festung zuerst, dann der nächste freie
+  Platz über/neben/unter einem gelegten Schild, der alte Platz ist billiger). Kopfleiste,
+  Antwortfeld, Legende und Knopf stehen in der Gruppe `WordPlates.KEEP_CLEAR_GROUP` und
+  zählen wie gelegte Schilder — kein fester Streifen, die Kopfleiste belegt nur die Ecken.
+  Rand und Schrift tragen die Farbe der Wortart: der Rand ist eine graue Ebene, die
+  `word_plate.gdshader` mit der dunklen Basis zusammensetzt (Farbe über `self_modulate`,
+  ein Material für alle Schilder). Ein Schild
+  steht genau dann, wenn das Monster treffbar ist (Regel darunter). In 3D ging das nicht:
+  ein `Label3D` weiß nichts von den anderen.
 - **Die eine neue Regel: eine Antwort trifft nur ein Monster im Bild** (`WaveRunner._hittable`,
   `FirstPersonView.sees` — Körper oder Schild im Sichtkegel, verdeckt zählt als sichtbar).
   Eine richtige Antwort auf ein Monster außerhalb ist eine Falscheingabe; die Spur trägt
@@ -719,6 +741,14 @@ Kamera frei; die Äste darunter heben nur das Lauftempo (`walk_speed`, Anteile a
   bleibt „im Bild". Sind Bogen und Sturmangriff gelernt, wechselt Tab
   (`FirstPersonView.weapons`, `switch_weapon`); die Wahl gilt bis zum Beenden, gespeichert
   wird sie nicht. Pfeil und Spur sind im Vorwärmen (`FxWarmup`).
+- **Explosionspfeil** (`explosive_arrow`, `FirstPersonView.explodes_for`/`explosive`) ist
+  keine Waffe, sondern ein anderes Bild für den Bogentreffer: `WaveRunner._blast` statt
+  `_burst`. `Blast` (`src/fx/blast.gd`) schichtet Blitz, Feuerball, Druckwelle, Funken, Glut
+  in der Wortfarbe und Rauch aus eigenen Shadern (`fireball`, `shockwave`, `spark`,
+  `smoke`), alles gerechnet und ohne Textur, und weich statt Low-Poly. Nachbarn im Umkreis
+  `BLAST_FLINCH_RADIUS` zucken (`Monster.flinch`, nur der Körper). Gebucht, getroffen und
+  gespurt wird genau wie ohne. Glühender Pfeil und `Blast` sind im Vorwärmen, sobald der
+  Skill gelernt ist.
 - **Gelaufen wird nach der Wanduhr**, nicht mit `delta`: weder Zeitlupe noch der Zeitraffer
   von „Schnell auflösen" sollen den Spieler mitnehmen, und `Engine.time_scale` gehört
   SlowMotion. Die Maus ist nur im laufenden Kampf gefangen (`FirstPersonView.set_active`)
@@ -984,8 +1014,17 @@ sind **Type-Variations**, gesetzt über `theme_type_variation`:
 | — (Grundgröße) | 18 | `Tight` | 4, Listenzeilen |
 | `Hint` | 14, gedämpft | (Klassenvorgabe) | 8 |
 | `Caption` | 12, gedämpft | `ScrollGutter` | 8 rechts, in jedem ScrollContainer |
-| `Accent` | Gold, Nachdruck | `HudPanel` | Tafel der Kopfleiste, 8/4 statt 16 |
+| `Accent` | Gold, Nachdruck | `HudPanel` | schlichte Tafel (Boss), 8/4 statt 16 |
+| `HudText`, `HudTitle`, `HudName`, `HudLevel` | 14–18, Kontur | `HudStack` | 0, Zeilen im Encounter-Rahmen |
 | `SectionButton` | 20, klappbare Abschnitte | | |
+
+Die Rahmen des Kampf-HUD (`HudFortress`, `HudNamePlate`, `HudEncounter`, `HudLegend`,
+`HudAnswer`, `HudRound`) sind `FrameStyle`: ein 9-Slice, der die Grafik aus
+`assets/ui/gameplay/frames/` samt Ecken verkleinert zeichnet (`scale`), statt die Ränder in
+Texturpixeln wie `StyleBoxTexture`. Die Grafik bleibt in voller Auflösung, damit sie bei
+größeren Fenstern nicht hochgerechnet wird. Die Balken wechseln ihre Farbe über die Variation
+(`HudHp`/`HudHpWarn`/`HudHpLow`), nicht über einen geänderten Style: der gehört dem Theme
+und ist geteilt.
 
 - **Abstände nur in den Stufen 0 / 4 / 8 / 16 / 24.** Der Karten-Innenabstand kommt aus
   `PanelContainer/styles/panel` (16) — **keinen MarginContainer in eine PanelContainer**,

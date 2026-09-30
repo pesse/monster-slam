@@ -175,9 +175,10 @@ mouse_filter = 2
 [node name="Right" type="VBoxContainer" parent="Slide/MenuPage/Margin/Layout"]
 layout_mode = 2
 
-[node name="ProfileBadge" parent="Slide/MenuPage/Margin/Layout/Right" instance=ExtResource("14_badge")]
-unique_name_in_owner = true
+[node name="BadgeSlot" type="Control" parent="Slide/MenuPage/Margin/Layout/Right"]
+custom_minimum_size = Vector2(277, 136)
 layout_mode = 2
+mouse_filter = 2
 
 [node name="Fill" type="Control" parent="Slide/MenuPage/Margin/Layout/Right"]
 layout_mode = 2
@@ -207,6 +208,28 @@ visible = false
 layout_mode = 1
 anchor_left = 2.0
 anchor_right = 3.0
+
+[node name="BadgeLayer" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ProfileBadge" parent="BadgeLayer" instance=ExtResource("14_badge")]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -301.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = 160.0
+grow_horizontal = 0
 
 [node name="UpdateDialog" parent="." instance=ExtResource("2_update")]
 unique_name_in_owner = true

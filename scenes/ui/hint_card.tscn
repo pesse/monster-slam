@@ -42,6 +42,12 @@ visible = false
 text = "Zweig · Zustand"
 autowrap_mode = 3
 
+[node name="Prices" type="HBoxContainer" parent="Root/Head"]
+unique_name_in_owner = true
+visible = false
+size_flags_vertical = 0
+mouse_filter = 2
+
 [node name="Rule" type="HSeparator" parent="Root"]
 theme_type_variation = &"HintRule"
 unique_name_in_owner = true
@@ -67,7 +73,7 @@ mouse_filter = 2
 columns = 3
 
 [node name="Note" type="Label" parent="Root"]
-theme_type_variation = &"Accent"
+theme_type_variation = &"HintNote"
 unique_name_in_owner = true
 text = "Zustand"
 autowrap_mode = 3

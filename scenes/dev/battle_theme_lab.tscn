@@ -19,9 +19,432 @@ current = true
 
 [node name="UI" type="CanvasLayer" parent="."]
 
-[node name="Name" type="Label" parent="UI"]
-offset_left = 16.0
-offset_top = 16.0
-offset_right = 416.0
-offset_bottom = 56.0
-theme_type_variation = &"Display"
+[node name="Margin" type="MarginContainer" parent="UI"]
+theme_type_variation = &"ScreenMargin"
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Root" type="VBoxContainer" parent="UI/Margin"]
+theme_type_variation = &"ScreenStack"
+mouse_filter = 2
+
+[node name="MenuToggle" type="Button" parent="UI/Margin/Root"]
+unique_name_in_owner = true
+size_flags_horizontal = 0
+focus_mode = 0
+toggle_mode = true
+text = "Regler ▸"
+
+[node name="Menu" type="PanelContainer" parent="UI/Margin/Root"]
+unique_name_in_owner = true
+self_modulate = Color(1, 1, 1, 0.6)
+visible = false
+size_flags_horizontal = 0
+
+[node name="Items" type="VBoxContainer" parent="UI/Margin/Root/Menu"]
+theme_type_variation = &"Tight"
+
+[node name="Name" type="Label" parent="UI/Margin/Root/Menu/Items"]
+unique_name_in_owner = true
+theme_type_variation = &"SectionTitle"
+
+[node name="Tabs" type="TabContainer" parent="UI/Margin/Root/Menu/Items"]
+unique_name_in_owner = true
+self_modulate = Color(1, 1, 1, 0.6)
+current_tab = 0
+[node name="Ansicht" type="GridContainer" parent="UI/Margin/Root/Menu/Items/Tabs"]
+columns = 4
+metadata/_tab_index = 0
+[node name="ThemeCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Ansicht"]
+theme_type_variation = &"Hint"
+text = "Thema"
+
+[node name="ThemeSelect" type="OptionButton" parent="UI/Margin/Root/Menu/Items/Tabs/Ansicht"]
+unique_name_in_owner = true
+focus_mode = 0
+
+[node name="TierCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Ansicht"]
+theme_type_variation = &"Hint"
+text = "Stufe"
+
+[node name="TierSelect" type="OptionButton" parent="UI/Margin/Root/Menu/Items/Tabs/Ansicht"]
+unique_name_in_owner = true
+focus_mode = 0
+
+[node name="ViewCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Ansicht"]
+theme_type_variation = &"Hint"
+text = "Sicht"
+
+[node name="ViewSelect" type="OptionButton" parent="UI/Margin/Root/Menu/Items/Tabs/Ansicht"]
+unique_name_in_owner = true
+focus_mode = 0
+
+[node name="View2Caption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Ansicht"]
+theme_type_variation = &"Hint"
+text = "Bildmitte z"
+
+[node name="ViewSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Ansicht"]
+unique_name_in_owner = true
+min_value = -80.0
+max_value = 40.0
+step = 0.5
+allow_greater = true
+allow_lesser = true
+
+[node name="SizeCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Ansicht"]
+theme_type_variation = &"Hint"
+text = "Ausschnitt"
+
+[node name="SizeSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Ansicht"]
+unique_name_in_owner = true
+min_value = 10.0
+max_value = 80.0
+step = 1.0
+allow_greater = true
+allow_lesser = true
+
+[node name="PitchCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Ansicht"]
+theme_type_variation = &"Hint"
+text = "Neigung °"
+
+[node name="PitchSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Ansicht"]
+unique_name_in_owner = true
+min_value = 10.0
+max_value = 89.0
+step = 1.0
+allow_greater = true
+allow_lesser = true
+
+[node name="Bahn" type="GridContainer" parent="UI/Margin/Root/Menu/Items/Tabs"]
+columns = 4
+metadata/_tab_index = 1
+[node name="ScaleCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn"]
+theme_type_variation = &"Hint"
+text = "Festungsgröße"
+
+[node name="ScaleSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn"]
+unique_name_in_owner = true
+min_value = 1.0
+max_value = 10.0
+step = 0.25
+allow_greater = true
+allow_lesser = true
+
+[node name="GoalCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn"]
+theme_type_variation = &"Hint"
+text = "Festungsfront z"
+
+[node name="GoalSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn"]
+unique_name_in_owner = true
+min_value = -40.0
+max_value = 60.0
+step = 0.5
+allow_greater = true
+allow_lesser = true
+
+[node name="SpawnCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn"]
+theme_type_variation = &"Hint"
+text = "Spawn z"
+
+[node name="SpawnSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn"]
+unique_name_in_owner = true
+min_value = -120.0
+max_value = 0.0
+step = 0.5
+allow_greater = true
+allow_lesser = true
+
+[node name="LaneCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn"]
+theme_type_variation = &"Hint"
+text = "Bahnbreite ±x"
+
+[node name="LaneSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn"]
+unique_name_in_owner = true
+min_value = 1.0
+max_value = 30.0
+step = 0.5
+allow_greater = true
+allow_lesser = true
+
+[node name="SpeedCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn"]
+theme_type_variation = &"Hint"
+text = "Monstertempo"
+
+[node name="SpeedSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn"]
+unique_name_in_owner = true
+min_value = 5.0
+max_value = 150.0
+step = 1.0
+allow_greater = true
+allow_lesser = true
+
+[node name="LaneLength" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn"]
+unique_name_in_owner = true
+theme_type_variation = &"Hint"
+
+[node name="Licht" type="GridContainer" parent="UI/Margin/Root/Menu/Items/Tabs"]
+columns = 4
+metadata/_tab_index = 2
+[node name="ShadowDistanceCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+theme_type_variation = &"Hint"
+text = "Schattentiefe m"
+[node name="ShadowDistanceSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+unique_name_in_owner = true
+min_value = 50.0
+max_value = 2000.0
+step = 10.0
+allow_greater = true
+allow_lesser = true
+[node name="ShadowBiasCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+theme_type_variation = &"Hint"
+text = "Bias"
+[node name="ShadowBiasSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+unique_name_in_owner = true
+min_value = 0.0
+max_value = 2.0
+step = 0.02
+allow_greater = true
+allow_lesser = true
+[node name="NormalBiasCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+theme_type_variation = &"Hint"
+text = "Normal-Bias"
+[node name="NormalBiasSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+unique_name_in_owner = true
+min_value = 0.0
+max_value = 4.0
+step = 0.1
+allow_greater = true
+allow_lesser = true
+[node name="ShadowBlurCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+theme_type_variation = &"Hint"
+text = "Weichheit"
+[node name="ShadowBlurSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+unique_name_in_owner = true
+min_value = 0.0
+max_value = 5.0
+step = 0.1
+allow_greater = true
+allow_lesser = true
+[node name="SunTimeCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+theme_type_variation = &"Hint"
+text = "Tageszeit h"
+
+[node name="SunTimeSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+unique_name_in_owner = true
+min_value = 6.0
+max_value = 18.0
+step = 0.25
+allow_greater = true
+allow_lesser = true
+
+[node name="RealTimeCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+theme_type_variation = &"Hint"
+text = "Echte Uhrzeit h"
+
+[node name="RealTimeSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+unique_name_in_owner = true
+max_value = 24.0
+step = 0.25
+allow_greater = true
+allow_lesser = true
+
+[node name="ClockCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+theme_type_variation = &"Hint"
+text = "Uhr"
+
+[node name="ClockCheck" type="CheckBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "läuft mit"
+
+[node name="SunSpeedCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+theme_type_variation = &"Hint"
+text = "Zeitraffer h/s"
+
+[node name="SunSpeedSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+unique_name_in_owner = true
+min_value = 0.0
+max_value = 6.0
+step = 0.25
+allow_greater = true
+allow_lesser = true
+
+[node name="SunLowCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+theme_type_variation = &"Hint"
+text = "Höhe morgens °"
+
+[node name="SunLowSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+unique_name_in_owner = true
+min_value = 0.0
+max_value = 90.0
+step = 1.0
+allow_greater = true
+allow_lesser = true
+
+[node name="SunHighCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+theme_type_variation = &"Hint"
+text = "Höhe mittags °"
+
+[node name="SunHighSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+unique_name_in_owner = true
+min_value = 0.0
+max_value = 90.0
+step = 1.0
+allow_greater = true
+allow_lesser = true
+
+[node name="SunSweepCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+theme_type_variation = &"Hint"
+text = "Wanderung °"
+
+[node name="SunSweepSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+unique_name_in_owner = true
+min_value = 0.0
+max_value = 360.0
+step = 5.0
+allow_greater = true
+allow_lesser = true
+
+[node name="SunYawCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+theme_type_variation = &"Hint"
+text = "Mittagsrichtung °"
+
+[node name="SunYawSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+unique_name_in_owner = true
+min_value = -180.0
+max_value = 180.0
+step = 5.0
+allow_greater = true
+allow_lesser = true
+
+[node name="HUD" type="GridContainer" parent="UI/Margin/Root/Menu/Items/Tabs"]
+visible = false
+columns = 6
+metadata/_tab_index = 3
+
+[node name="HudCheck" type="CheckButton" parent="UI/Margin/Root/Menu/Items/Tabs/HUD"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "HUD zeigen"
+
+[node name="LevelUpButton" type="Button" parent="UI/Margin/Root/Menu/Items/Tabs/HUD"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "Aufsteigen"
+
+[node name="XpCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/HUD"]
+theme_type_variation = &"Hint"
+text = "XP %"
+
+[node name="XpSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/HUD"]
+unique_name_in_owner = true
+max_value = 100.0
+value = 60.0
+
+[node name="KillsCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/HUD"]
+theme_type_variation = &"Hint"
+text = "Besiegt"
+
+[node name="KillsSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/HUD"]
+unique_name_in_owner = true
+max_value = 99999.0
+allow_greater = true
+
+[node name="HpCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/HUD"]
+theme_type_variation = &"Hint"
+text = "HP"
+
+[node name="HpSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/HUD"]
+unique_name_in_owner = true
+max_value = 9999.0
+value = 80.0
+allow_greater = true
+
+[node name="HpMaxCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/HUD"]
+theme_type_variation = &"Hint"
+text = "HP max"
+
+[node name="HpMaxSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/HUD"]
+unique_name_in_owner = true
+max_value = 9999.0
+value = 100.0
+allow_greater = true
+
+[node name="MasteredCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/HUD"]
+theme_type_variation = &"Hint"
+text = "Gemeistert"
+
+[node name="MasteredSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/HUD"]
+unique_name_in_owner = true
+max_value = 99999.0
+allow_greater = true
+
+[node name="ArmorCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/HUD"]
+theme_type_variation = &"Hint"
+text = "Rüstung"
+
+[node name="ArmorSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/HUD"]
+unique_name_in_owner = true
+max_value = 9999.0
+value = 60.0
+allow_greater = true
+
+[node name="ArmorMaxCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/HUD"]
+theme_type_variation = &"Hint"
+text = "Rüstung max"
+
+[node name="ArmorMaxSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/HUD"]
+unique_name_in_owner = true
+max_value = 9999.0
+value = 100.0
+allow_greater = true
+
+[node name="WaveNumberCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/HUD"]
+theme_type_variation = &"Hint"
+text = "Welle"
+
+[node name="WaveNumberSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/HUD"]
+unique_name_in_owner = true
+max_value = 999.0
+value = 3.0
+allow_greater = true
+
+[node name="WaveResolvedCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/HUD"]
+theme_type_variation = &"Hint"
+text = "Erledigt"
+
+[node name="WaveResolvedSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/HUD"]
+unique_name_in_owner = true
+max_value = 999.0
+value = 3.0
+allow_greater = true
+
+[node name="WaveTotalCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/HUD"]
+theme_type_variation = &"Hint"
+text = "von"
+
+[node name="WaveTotalSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/HUD"]
+unique_name_in_owner = true
+max_value = 999.0
+value = 15.0
+allow_greater = true
+
+[node name="Buttons" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items"]
+
+[node name="SpawnButton" type="Button" parent="UI/Margin/Root/Menu/Items/Buttons"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "Monster spawnen"
+
+[node name="CopyButton" type="Button" parent="UI/Margin/Root/Menu/Items/Buttons"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "Werte kopieren"
+
+[node name="Keys" type="Label" parent="UI/Margin/Root/Menu/Items"]
+theme_type_variation = &"Hint"
+text = "←/→ Thema · 0–4 Stufe · V Sicht · M Monster · R Regler
+Ich-Sicht: WASD und Maus, Alt gibt die Maus frei"

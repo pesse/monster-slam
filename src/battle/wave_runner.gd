@@ -5,11 +5,12 @@ extends Node3D
 
 const MONSTER_SCENE := preload("res://scenes/entities/monster.tscn")
 const FIRST_PERSON_SCENE := preload("res://scenes/battle/first_person_view.tscn")
-const GOAL_Z := 6.5           # Festungsfront (Monster-Ziel)
+const GOAL_Z := 16.5          # Festungsfront (Monster-Ziel)
 const SPAWN_Z := -24.0        # Spawn am hinteren Ende der Bahn (längerer Anmarsch)
-const LANE_HALF_WIDTH := 7.0
-## Bildmitte auf der Bahn (z). Der Boden richtet sich danach, nicht umgekehrt.
-const VIEW_CENTER_Z := -5.5
+const LANE_HALF_WIDTH := 8.0
+## Bildmitte auf der Bahn (z). Der Boden richtet sich danach, nicht umgekehrt. Festung,
+## Bahn und Bild sind in battle_theme_lab zusammen eingestellt (Regler); dort ändern.
+const VIEW_CENTER_Z := -3.5
 
 const SHAKE_DURATION := 0.35
 const SHAKE_MAGNITUDE := 0.35 # in 3D-Einheiten
@@ -71,6 +72,9 @@ var _underway := 0
 ## Woran ein Fehlschuss vorbeizielt: die Körpermitte, wie beim Blick (_in_view). Ein
 ## Treffer geht in den Kopf (Monster.head_height).
 const ARROW_AIM_Y := 1.2
+## Explosionspfeil: so groß der Knall (Blast), und bis hierhin zucken die Nachbarn.
+const BLAST_SCALE := 1.0
+const BLAST_FLINCH_RADIUS := 5.0
 
 @onready var _monsters: Node3D = $Monsters
 @onready var _camera: Camera3D = $CameraPivot/Camera3D
@@ -89,6 +93,7 @@ var _warming := false
 @onready var _fast_resolve_button: Button = $UI/FastResolveButton
 @onready var _fast_resolve_confirm: ConfirmDialog = $UI/FastResolveConfirm
 @onready var _celebration: MasteryCelebration = $UI/MasteryCelebration
+@onready var _level_flare: LevelFlare = $UI/HUD.level_flare
 
 
 func _ready() -> void:
@@ -98,13 +103,23 @@ func _ready() -> void:
 	# Der Kampf kommt aus der Ferne heran (SceneZoom, wie die Karten): das Gelände wird für
 	# den weitesten Blick gebaut, sonst sähe man beim Heranzoomen seinen Rand.
 	var view_size := _camera.size
+	# Die Teilchen in der Luft füllen, was im Kampf zu sehen ist — nicht den weiten Blick
+	# des Heranzoomens, sonst stünden sie dort dünner.
+	var air_area := visible_ground_area(_camera)
 	_camera.size = view_size / SceneZoom.FROM
 	# Das Thema VOR Boden und Ich-Sicht: der Boden nimmt seine Farben, der Nebel der
 	# Ich-Sicht die Hintergrundfarbe des schon gefärbten Environments.
 	_theme = BattleTheme.for_level(RunRequest.level())
 	_theme.apply($WorldEnvironment as WorldEnvironment, $Sun as DirectionalLight3D)
+	GraphicsQuality.apply_environment($WorldEnvironment as WorldEnvironment)
 	_setup_ground()
 	_decorate()
+	add_child(Wind.new())
+	_sun_cycle = SunCycle.attach(self, $Sun as DirectionalLight3D, $CameraPivot as Node3D)
+	var air := AmbientParticles.build(_theme.particles, air_area) \
+			if GraphicsQuality.particles() else null
+	if air != null:
+		add_child(air)
 	_build_fortress()
 	_cam_base = _camera.position
 	GameState.reset()
@@ -131,6 +146,8 @@ func _ready() -> void:
 		debug_panel.fortress_tier_selected.connect(_on_debug_tier_selected)
 	if debug_panel.has_signal("celebration_requested"):
 		debug_panel.celebration_requested.connect(_on_debug_celebration)
+	if debug_panel.has_signal("level_up_requested"):
+		debug_panel.level_up_requested.connect(_level_flare.play)
 	if _stats.has_signal("next_wave_requested"):
 		_stats.next_wave_requested.connect(_on_next_wave_requested)
 	if _stats.has_signal("back_to_menu_requested"):
@@ -144,9 +161,6 @@ func _ready() -> void:
 	_fast_resolve_confirm.cancelled.connect(_on_fast_resolve_cancelled)
 	_celebration.started.connect(_on_celebration_started)
 	_celebration.finished.connect(_on_celebration_finished)
-	Hints.attach(_fast_resolve_button, "Schnell auflösen",
-			"Spult den Rest der Welle vor, wenn du die Wörter gerade nicht weißt.",
-			"Die Monster treffen die Festung trotzdem, danach werden ihre Wörter aufgelöst.")
 	# Startschwierigkeit aus den persistenten Einstellungen des aktiven Profils.
 	_difficulty = UserSettings.default_difficulty()
 	_start_next_wave()
@@ -171,14 +185,22 @@ func _warm_up() -> void:
 	var at := FxWarmup.point_in_view(get_viewport().get_camera_3d(),
 			Vector3(0.0, 1.0, VIEW_CENTER_Z))
 	_celebration.warm_up()
+	_level_flare.warm_up()
 	var extras: Array[Node3D] = [xp, form]
 	# Der Pfeil fliegt erst nach der ersten Antwort; der Bogen hängt schon an der Kamera.
 	if _fp != null:
 		var arrow := Arrow.new()
 		arrow.trail = true
 		extras.append(arrow)
+		if _fp.explosive:
+			var ember := Arrow.new()
+			ember.trail = true
+			ember.glowing = true
+			extras.append(ember)
+			extras.append(Blast.new())
 	await FxWarmup.run(self, at, FxWarmup.monster_defs(), extras, _fp != null)
 	_celebration.cool_down()
+	_level_flare.cool_down()
 
 
 ## Zurück auf die Karte (oder ins Menü), als Zoom hinaus — die Umkehrung des Wegs herein.
@@ -230,6 +252,8 @@ const VIEW_MARGIN := TERRAIN_HEIGHT_MAX + SHAKE_MAGNITUDE
 var _terrain_noise: FastNoiseLite
 ## Farben von Boden und Licht für die Unit des Laufs (BattleTheme, aus map.json).
 var _theme: BattleTheme
+## Stellt die Sonne nach der Uhr; hält während einer Welle den Sprung auf den Morgen an.
+var _sun_cycle: SunCycle
 
 func _setup_ground() -> void:
 	_terrain_noise = terrain_noise(_rng.randi())
@@ -239,11 +263,14 @@ func _setup_ground() -> void:
 
 
 ## Material und Schatten des Bodens — statisch, damit die Werkbank ihn genauso anzieht.
+## Wolkenschatten nur, wenn die Grafikstufe sie zeigt (GraphicsQuality).
 ## Der Boden wirft selbst keinen Schatten: die Hügel schattiert der Bodenshader über ihre
 ## Neigung, und ohne Selbstschatten reicht ein kleiner Bias (setup_view), ohne dass der
 ## Boden Streifen bekommt.
 static func dress_ground(ground: MeshInstance3D, theme: BattleTheme) -> void:
 	ground.material_override = theme.ground_material()
+	if not GraphicsQuality.clouds():
+		(ground.material_override as ShaderMaterial).set_shader_parameter("clouds", 0.0)
 	ground.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
@@ -331,9 +358,14 @@ static func _terrain_point(x: float, z: float, noise: FastNoiseLite) -> Vector3:
 	return Vector3(x, terrain_height(x, z, noise), z)
 
 
+## Halbe Breite des flachen Bodens.
+const FLAT_HALF_X := 9.0 * FORTRESS_GROW
+
+
 static func terrain_height(x: float, z: float, noise: FastNoiseLite) -> float:
-	# Innenfeld flach halten (bis knapp hinter den Spawn); nur außerhalb sanfte Hügel.
-	var edge := maxf(absf(x) - 9.0, -z + SPAWN_Z)
+	# Innenfeld flach halten (bis knapp hinter den Spawn); nur außerhalb sanfte Hügel. So
+	# breit wie die Festung, sonst stünden ihre Ecktürme am Hang.
+	var edge := maxf(absf(x) - FLAT_HALF_X, -z + SPAWN_Z)
 	if edge <= 0.0:
 		return 0.0
 	var n := noise.get_noise_2d(x, z) * 0.5 + 0.5
@@ -376,8 +408,9 @@ func _scatter(parent: Node3D, slot: Array[String], x: float, z: float, scale: fl
 	if slot.is_empty():
 		return
 	var model := slot[_rng.randi() % slot.size()]
-	_place_model(parent, model.get_file(), Vector3(x, _ground_y(x, z), z), _rng.randf_range(0.0, 360.0),
-			Vector3.ONE * scale, model.get_base_dir())
+	var inst := _place_model(parent, model.get_file(), Vector3(x, _ground_y(x, z), z),
+			_rng.randf_range(0.0, 360.0), Vector3.ONE * scale, model.get_base_dir())
+	Wind.sway(inst, model, _theme.wind)
 
 
 const GRASS_SCALE_FIRST_PERSON := 0.4
@@ -392,7 +425,9 @@ func _decorate() -> void:
 	add_child(d)
 
 	var z_back := SPAWN_Z - 2.0    # bis knapp hinter den Spawn
-	var z_front := GOAL_Z - 2.0    # bis kurz vor die Festung
+	# Bis kurz vor die Festung. Ihre Ecktürme ragen weiter vor als die Mauer, und mehr, je
+	# größer sie steht — ein Baum am Seitenstreifen stünde sonst im Turm.
+	var z_front := GOAL_Z - 3.0 * FORTRESS_GROW
 
 	# Bäume nur an den Seitenstreifen (|x| groß), damit die Bahn frei bleibt
 	for i in _rng.randi_range(8, 14):
@@ -433,9 +468,12 @@ func _decorate() -> void:
 ## Das Innenfeld: Bahn plus Festung im Vollausbau (Kirche und Nebengebäude liegen am
 ## weitesten hinten). Hier steht keine Streudeko — es ist die Fläche, auf der gespielt
 ## wird, und der Boden darunter ist flach (siehe terrain_height).
-const FIELD_HALF_X := 11.0
+## Breite und Tiefe wachsen mit der Festung (FortressModel.grow), damit die Streudeko auch
+## um eine größere Burg herum Platz lässt.
+const FORTRESS_GROW := FortressModel.SCALE / FortressModel.LAYOUT_SCALE
+const FIELD_HALF_X := 11.0 * FORTRESS_GROW
 const FIELD_Z_BACK := SPAWN_Z - 3.0
-const FIELD_Z_FRONT := GOAL_Z + 11.0
+const FIELD_Z_FRONT := GOAL_Z + 11.0 * FORTRESS_GROW
 ## Zugabe in Bildeinheiten um den Bildstreifen des Innenfelds: die Modelle sind breiter
 ## und höher als der Punkt, an dem sie stehen.
 const FIELD_CLEARANCE := 4.0
@@ -554,7 +592,7 @@ func _rebuild_fortress(tier: int) -> void:
 	if is_instance_valid(_fortress):
 		_fortress.queue_free()
 	_spawn_fortress(tier)
-	_spawn_explosion(Vector3(0.0, 1.5, GOAL_Z + 2.0), Color(1.0, 0.9, 0.4), 2.0)
+	_spawn_explosion(Vector3(0.0, 1.5, GOAL_Z + 2.0 * FORTRESS_GROW), Color(1.0, 0.9, 0.4), 2.0)
 
 
 ## „Cutscene" beim Festungsausbau (nach gewonnener Welle, vor der Statistik): die
@@ -571,7 +609,7 @@ func _play_upgrade_cutscene(tier: int, bonus: int) -> void:
 		# Aus der Ich-Sicht fährt keine Kamera: Blitz und Banner stehen, solange die Fahrt
 		# der Iso-Kamera dauern würde.
 		_fp.shake(Vector2.ZERO)
-		_spawn_explosion(Vector3(0.0, 2.0, GOAL_Z + 2.0), Color(1.0, 0.85, 0.3), 3.0)
+		_spawn_explosion(Vector3(0.0, 2.0, GOAL_Z + 2.0 * FORTRESS_GROW), Color(1.0, 0.85, 0.3), 3.0)
 		_show_upgrade_banner(tier, bonus)
 		await get_tree().create_timer(2.4).timeout
 		_cutscene = false
@@ -581,17 +619,17 @@ func _play_upgrade_cutscene(tier: int, bonus: int) -> void:
 	var pivot_base := pivot.position
 	var size_base := _camera.size
 	# Ziel: Festungsmitte im Bild, deutlich herangezoomt (kleinere ortho-Größe = näher).
-	var focus := Vector3(0.0, pivot_base.y, GOAL_Z + 3.0)
+	var focus := Vector3(0.0, pivot_base.y, GOAL_Z + 3.0 * FORTRESS_GROW)
 
 	# Festlicher goldener Blitz an der Festung + Banner.
-	_spawn_explosion(Vector3(0.0, 2.0, GOAL_Z + 2.0), Color(1.0, 0.85, 0.3), 3.0)
+	_spawn_explosion(Vector3(0.0, 2.0, GOAL_Z + 2.0 * FORTRESS_GROW), Color(1.0, 0.85, 0.3), 3.0)
 	_show_upgrade_banner(tier, bonus)
 
 	# Heranfahren + kräftig hineinzoomen.
 	var tw_in := create_tween()
 	tw_in.set_parallel(true)
 	tw_in.tween_property(pivot, "position", focus, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	tw_in.tween_property(_camera, "size", size_base * 0.42, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw_in.tween_property(_camera, "size", size_base * minf(0.42 * FORTRESS_GROW, 1.0), 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	await tw_in.finished
 	await get_tree().create_timer(1.1).timeout
 
@@ -676,13 +714,14 @@ func _setup_view() -> void:
 ## Kamera aufbauen kann, gegen die der Boden gerechnet wird.
 static func setup_view(pivot: Node3D, camera: Camera3D, sun: DirectionalLight3D) -> void:
 	pivot.rotation_degrees = Vector3(-30.0, 45.0, 0.0)
-	# Auf die Bahn zentrieren, damit der längere Anmarsch komplett im Bild bleibt und
-	# die Festung mit ihren Nebengebäuden trotzdem ganz darauf steht.
+	# Auf die Bahn zentrieren, damit der längere Anmarsch komplett im Bild bleibt; die
+	# Festung steht am Rand, ihre Nebengebäude laufen links unten aus dem Bild.
 	pivot.position = Vector3(0.0, 0.0, VIEW_CENTER_Z)
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	camera.size = 32.0
+	camera.size = 34.0
 	camera.position = Vector3(0.0, 0.0, CAMERA_DISTANCE)
-	sun.rotation_degrees = Vector3(-BattleTheme.SUN_ELEVATION, -35.0, 0.0)
+	# Mittags, hinter der Kamera; von da an stellt sie SunCycle nach der Uhr (WaveRunner._ready).
+	sun.rotation_degrees = Vector3(-SunCycle.HIGH, pivot.rotation_degrees.y, 0.0)
 	# Schatten mit EINER Schattenkarte statt gestaffelter (PSSM): die Staffelung rechnet mit
 	# einer Kamera, die in die Tiefe schaut, und liefert mit dieser Orthogonal-Kamera auf
 	# CAMERA_DISTANCE gar keinen Schatten.
@@ -832,6 +871,7 @@ func _start_next_wave() -> void:
 	_set_view_active(true)
 
 	GameState.current_wave = "procedural_%d" % _wave_number
+	GameState.wave_number = _wave_number
 	# Tempo = Schwierigkeit × profilweite Grund-Geschwindigkeit (Barrierefreiheit / Grundtempo).
 	_generator.speed_scale = _difficulty_to_speed(_difficulty) * UserSettings.base_speed()
 	var spawns := _generate_wave(_difficulty, _wave_number)
@@ -846,6 +886,9 @@ func _start_next_wave() -> void:
 	# Löst den Wellenstart in GameState + HUD-Refresh aus. Die Festungs-HP bleiben dabei
 	# unangetastet — der Stand wird über die Wellen hinweg mitgenommen (siehe GameState).
 	EventBus.wave_started.emit(GameState.current_wave)
+	# Kein Sprung auf den Morgen, solange Monster laufen (_finish_wave gibt ihn frei).
+	if _sun_cycle != null:
+		_sun_cycle.hold = true
 	# Gesamtzahl der Welle bekanntgeben -> GameState füllt wave_total/wave_resolved (HUD-Balken).
 	EventBus.wave_totals.emit(_total)
 	for entry in spawns:
@@ -1023,11 +1066,8 @@ func _hittable() -> Array[Monster]:
 	return out
 
 
-## Im Bild heißt: der Körper oder das Schild über ihm. Aus der Nähe ist das Schild über
-## dem Bildrand, von weit weg der Körper hinter dem Schild zu klein, um zu zählen.
 func _in_view(monster: Monster) -> bool:
-	return FirstPersonView.sees(_fp.camera, monster.global_position + Vector3(0.0, 1.2, 0.0)) \
-			or FirstPersonView.sees(_fp.camera, monster.global_position + Vector3(0.0, 4.6, 0.0))
+	return monster.in_view(_fp.camera)
 
 
 ## Für die Spur: welche Aufgaben standen auf dem Feld, aber außerhalb des Bildes? Daran
@@ -1051,6 +1091,7 @@ func _setup_first_person(bonuses: Dictionary) -> void:
 	_fp = FIRST_PERSON_SCENE.instantiate() as FirstPersonView
 	_fp.speed = FirstPersonView.speed_for(bonuses)
 	_fp.weapons = FirstPersonView.weapons_for(bonuses)
+	_fp.explosive = FirstPersonView.explodes_for(bonuses)
 	_fp.bounds = Rect2(-FIELD_HALF_X + 1.0, SPAWN_Z - 1.0,
 			2.0 * (FIELD_HALF_X - 1.0), GOAL_Z - 1.5 - (SPAWN_Z - 1.0))
 	_fp.position = Vector3(0.0, 0.0, GOAL_Z - 2.0)
@@ -1201,8 +1242,12 @@ func _defeat_by_arrow(monster: Monster) -> void:
 	await _fp.shoot_at(monster.global_position + Vector3(0.0, monster.head_height(), 0.0))
 	_underway -= 1
 	if is_instance_valid(monster):
-		_shake(0.3)
-		_burst(monster, 2.0)
+		if _fp.explosive:
+			_shake(0.7)
+			_blast(monster)
+		else:
+			_shake(0.3)
+			_burst(monster, 2.0)
 	_check_end()
 
 
@@ -1227,6 +1272,25 @@ func _wrong_feedback() -> void:
 ## Das Bild zum Treffer: Explosion, Klang, „+XP" und das Monster geht.
 func _burst(monster: Monster, size: float = 1.5) -> void:
 	_spawn_explosion(monster.position + Vector3(0.0, 1.0, 0.0), Color(0.7, 1.0, 0.4), size)
+	_leave(monster)
+
+
+## Das Bild zum Treffer mit dem Explosionspfeil: Feuerball, Rauch und Trümmer in der
+## Wortfarbe, und wer daneben steht, zuckt zusammen — nur das Bild, besiegt ist allein
+## das getroffene Monster.
+func _blast(monster: Monster) -> void:
+	var fx := Blast.new()
+	fx.setup(monster.word_color(), BLAST_SCALE)
+	fx.position = monster.position
+	add_child(fx)
+	for other in _active:
+		if other.position.distance_to(monster.position) <= BLAST_FLINCH_RADIUS:
+			other.flinch(monster.global_position)
+	_leave(monster)
+
+
+## Was jeder Treffer nach seinem Knall tut: Klang, „+XP" und das Monster geht.
+func _leave(monster: Monster) -> void:
 	# Hier und nicht in _spawn_explosion(): denselben Effekt nutzen auch der Festungsausbau
 	# und der Aufschlag eines durchgelassenen Monsters — die klingen nicht gleich.
 	Sfx.play(&"monster_kill")
@@ -1315,17 +1379,21 @@ static func form_label(text: String) -> Label3D:
 	return label
 
 
-## Wie groß „+XP" in der Ich-Sicht gegenüber dem Prompt-Schild steht.
+## Wie groß „+XP" in der Ich-Sicht steht (gegenüber FP_TEXT_PIXEL_SIZE).
 const POPUP_SCREEN_SCALE := 2.0
 
-## In der Ich-Sicht bekommt ein aufsteigender Text eine feste Bildgröße wie die Schilder
-## (Monster.screen_sized_label): in Weltgröße füllte er nach einem Sturmangriff aus der
-## Nähe das ganze Bild. `scale` ist die Größe gegenüber dem Prompt-Schild.
+## Bildgröße eines Textes der Größe 64 in der Ich-Sicht (Label3D.fixed_size rechnet damit
+## je Bildhöhe) — so groß stand dort früher das Prompt-Schild.
+const FP_TEXT_PIXEL_SIZE := 0.0009
+
+## In der Ich-Sicht bekommt ein aufsteigender Text eine feste Bildgröße: in Weltgröße
+## füllte er nach einem Sturmangriff aus der Nähe das ganze Bild. `scale` ist die Größe
+## gegenüber FP_TEXT_PIXEL_SIZE.
 func _screen_size_in_first_person(label: Label3D, scale: float) -> void:
 	if _fp == null:
 		return
 	label.fixed_size = true
-	label.pixel_size = Monster.SCREEN_LABEL_PIXEL_SIZE * scale * 64.0 / float(label.font_size)
+	label.pixel_size = FP_TEXT_PIXEL_SIZE * scale * 64.0 / float(label.font_size)
 
 
 ## Instanziiert einen kurzlebigen Explosionseffekt an der Weltposition.
@@ -1386,6 +1454,8 @@ func _finish_wave(won: bool) -> void:
 		return
 	_finished = true
 	_last_won = won
+	if _sun_cycle != null:
+		_sun_cycle.hold = false
 	_set_view_active(false)
 	_answer_input.visible = false
 	_fast_resolve_button.visible = false

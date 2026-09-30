@@ -39,12 +39,9 @@ const SPACING_STEPS := [0, 4, 8, 16, 24]
 ## den Grund dazu — sonst ist die Liste in einem Jahr die Regel.
 const ALLOWED := {
 	"res://scenes/battle/battle.tscn": "Kampf-HUD, eigene Effekt-Typografie",
-	"res://scenes/ui/hud.tscn": "Kampf-HUD, eigene Abstände und HP-Balken-Style",
 	"res://scenes/ui/leak_reveal.tscn": "Effekt-Overlay",
-	"res://scenes/ui/legend_entry.tscn": "Effekt-Overlay, Textkontur",
 	"res://scenes/ui/reveal_card.tscn": "Effekt-Overlay, Wortart-Farben",
 	"res://scenes/ui/wave_stats.tscn": "Effekt-Overlay",
-	"res://scenes/ui/word_type_legend.tscn": "Effekt-Overlay",
 	"res://src/battle/wave_runner.gd": "Combo-Zahlen, zur Laufzeit skaliert",
 	"res://src/ui/reveal_card.gd": "Wortart-Farbe kommt aus WordTypePalette, nicht aus dem Theme",
 	"res://src/ui/wave_stats.gd": "Sieg/Niederlage-Farbe zur Laufzeit",
@@ -129,7 +126,7 @@ func test_theme_declares_the_role_variations() -> void:
 			"ScreenStack",
 			"SectionStack", "Tight", "HudPanel", "BossBubble", "PlayerBubble", "BubbleText",
 			"BubbleTitle", "BubbleAccent", "BubbleHint", "Shout", "BossHp", "ActionButton",
-			"GameWindow", "WindowTitle", "HintCard", "HintRule", "HintSubtitle", "WindowTab",
+			"GameWindow", "WindowTitle", "HintCard", "HintRule", "HintSubtitle", "HintNote", "WindowTab",
 			"StatHeadline", "StatRule", "StatDivider"]:
 		assert_str(theme.get_type_variation_base(role)).override_failure_message(
 				"Variation fehlt im Theme: " + role).is_not_empty()
@@ -141,6 +138,7 @@ func test_scenes_reference_only_declared_variations() -> void:
 	var theme: Theme = load(THEME_PATH)
 	var declared := theme.get_type_variation_list("Label")
 	declared.append_array(theme.get_type_variation_list("Button"))
+	declared.append_array(theme.get_type_variation_list("LineEdit"))
 	declared.append_array(theme.get_type_variation_list("MarginContainer"))
 	declared.append_array(theme.get_type_variation_list("BoxContainer"))
 	declared.append_array(theme.get_type_variation_list("PanelContainer"))

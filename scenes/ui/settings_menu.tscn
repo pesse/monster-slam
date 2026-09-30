@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://src/ui/settings_menu.gd" id="1_settings"]
 [ext_resource type="Texture2D" path="res://assets/ui/windows/window_surface.webp" id="2_surface"]
@@ -13,6 +13,8 @@
 [sub_resource type="ButtonGroup" id="tab_group"]
 
 [sub_resource type="ButtonGroup" id="diff_group"]
+
+[sub_resource type="ButtonGroup" id="graphics_group"]
 
 [node name="SettingsMenu" type="Control"]
 layout_mode = 3
@@ -305,6 +307,43 @@ text = "Macht alle Monster langsamer oder schneller, unabhängig von der Schwier
 autowrap_mode = 3
 
 [node name="SpeedRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+layout_mode = 2
+theme_type_variation = &"StatRule"
+
+[node name="GraphicsLabel" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+layout_mode = 2
+theme_type_variation = &"StatHeading"
+text = "Grafik"
+
+[node name="GraphicsRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="GraphicsFine" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/GraphicsRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+theme_type_variation = &"ToolChoice"
+toggle_mode = true
+button_group = SubResource("graphics_group")
+text = "Schön"
+
+[node name="GraphicsSimple" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/GraphicsRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+theme_type_variation = &"ToolChoice"
+toggle_mode = true
+button_group = SubResource("graphics_group")
+text = "Einfach"
+
+[node name="GraphicsNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+layout_mode = 2
+theme_type_variation = &"Caption"
+text = "„Einfach“ lässt Kantenglättung, Leuchten, Wolkenschatten und fliegende Blätter oder Flocken weg — für ältere Rechner, wenn das Spiel ruckelt. Gilt für diesen Rechner, nicht nur für dieses Profil."
+autowrap_mode = 3
+
+[node name="GraphicsRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
 layout_mode = 2
 theme_type_variation = &"StatRule"
 

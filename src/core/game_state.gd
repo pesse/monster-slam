@@ -30,6 +30,9 @@ var fortress_armor_regen: int = 0
 var fortress_health: int = FORTRESS_BASE_MAX_HEALTH
 var score: int = 0
 var current_wave: String = ""
+## Laufende Nummer der Welle für die Anzeige. Gezählt wird im WaveRunner (_wave_number),
+## hier steht nur der Stand, den das HUD liest.
+var wave_number: int = 0
 var active_spells: Array[String] = []
 
 ## Lauf-Statistik (für HUD-Zähler und Statistik-Screen).
@@ -73,6 +76,7 @@ func reset() -> void:
 	fortress_health = fortress_max_health
 	score = 0
 	current_wave = ""
+	wave_number = 0
 	active_spells.clear()
 	monsters_defeated = 0
 	monsters_leaked = 0

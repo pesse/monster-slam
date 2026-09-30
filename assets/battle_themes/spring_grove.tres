@@ -19,3 +19,4 @@ rocks = Array[String](["forge/boulder_grey.glb"])
 grass = Array[String](["forge/flower_tuft.glb", "forge/flower_tuft.glb", "forge/fern.glb"])
 props = Array[String]([])
 landmarks = Array[String]([])
+particles = "pollen"

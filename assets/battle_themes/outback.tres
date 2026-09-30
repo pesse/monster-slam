@@ -18,3 +18,4 @@ rocks = Array[String](["forge/red_boulder.glb"])
 grass = Array[String](["forge/spinifex.glb"])
 props = Array[String]([])
 landmarks = Array[String](["forge/canyon_spire.glb", "forge/termite_mound.glb"])
+particles = "dust"

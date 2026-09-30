@@ -3,7 +3,7 @@ extends SceneTree
 ## Festungsanzeige der Karte: freigestellt, von der Feindseite, auf die Größe gebracht, in
 ## der das Medaillon sie zeigt. Einmal vorab statt 3D in der Karte.
 ##
-##     GODOT_WINDOW=1 tools/godot.sh -s res://src/dev/fortress_icons.gd [-- --size=56]
+##     GODOT_WINDOW=1 tools/godot.sh -s res://src/dev/fortress_icons.gd [-- --size=72]
 ##
 ## Kopflos gibt es kein Bild. Ausgabe: assets/ui/fortress/tiers/tier_<n>.webp (verlustfrei);
 ## danach `tools/godot.sh --import`.
@@ -16,7 +16,7 @@ const VIEW := Vector3(-28.0, 200.0, 0.0)
 
 
 func _initialize() -> void:
-	var size := 56
+	var size := 72
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--size="):
 			size = int(arg.get_slice("=", 1))

@@ -153,19 +153,25 @@ langsam tippen.
   Genitiv und Genus („m“, „f“, „n“ — oder „maskulin“ …), bei Verben das Perfekt. Die
   Längenstriche (ā, ē …) musst du nie tippen; nach einer Übersetzung zeigt die Auflösung
   die Lexikonform mit, etwa den Genitiv und das Genus.
-- **Der farbige Rand** eines Monsters zeigt die Wortart. Die Legende am unteren Bildrand
-  sagt, welche Farbe was bedeutet (zum Beispiel Nomen, Verb, Adjektiv). Das hilft, wenn
-  ein Wort mehrere Bedeutungen hat.
-- **Die Kopfleiste** oben:
-  - „👤“ mit deinem Namen, dazu „⭐“ mit deinem Level und ein Balken für die Erfahrung bis
-    zum nächsten Level.
-  - „🏰“ mit dem Lebensbalken der Festung und den HP (zum Beispiel „100/100“). Der Balken
-    ist grün, wird gelb, wenn es knapp wird, und rot, wenn es brenzlig ist.
-  - Hast du Rüstung (Kapitel 11), liegt ein zweiter Streifen über dem Lebensbalken.
-  - „⚔“ mit dem Fortschritt der Welle: wie viele Monster erledigt sind, von wie vielen.
-  - „💀“ – besiegte Monster in diesem Lauf.
-  - „🏅“ – wie viele Aufgaben du **in dieser Sitzung gemeistert** hast. Das Zeichen
-    erscheint erst, wenn es die erste gibt.
+- **Der farbige Rand** eines Monsters und seines Wortschilds zeigt die Wortart, auch die
+  Schrift auf dem Schild hat diese Farbe. Die Legende am unteren Bildrand sagt, welche
+  Farbe was bedeutet (zum Beispiel Nomen, Verb, Adjektiv). Das hilft, wenn ein Wort
+  mehrere Bedeutungen hat.
+- **Die Wortschilder** stehen über den Köpfen. Drängen sich mehrere Monster, rücken die
+  Schilder zur Seite, eine dünne Linie zeigt dann auf das Monster.
+- **Die Kopfleiste** oben links:
+  - Dein Bild im Ring. Die kleine Plakette darunter zeigt dein Level, der blaue Bogen im
+    Ring die Erfahrung bis zum nächsten Level.
+  - Daneben die Festung mit ihren **HP** (zum Beispiel „80 / 100“). Der Balken ist grün,
+    wird gelb, wenn es knapp wird, und rot, wenn es brenzlig ist.
+  - Hast du Rüstung (Kapitel 11), steht darüber eine zweite Zeile **Rüstung**.
+  - Unter der Festung steht dein Name.
+- **Oben rechts:**
+  - Die **Welle** mit ihrer Nummer und dem Fortschritt: wie viele Monster erledigt sind,
+    von wie vielen.
+  - Darunter die **besiegten** Monster in diesem Lauf und mit dem goldenen Buch, wie viele
+    Aufgaben du **in dieser Sitzung gemeistert** hast. Das Buch erscheint erst, wenn es
+    die erste gibt.
 
 ### Was du tust
 
@@ -203,7 +209,7 @@ gesperrt.
 - **Laufen:** W, A, S, D (oder die Pfeiltasten). Mit der Maus siehst du dich um.
 - **Antworten:** **Enter** öffnet das Eingabefeld, du tippst, und das zweite **Enter**
   schickt ab und schließt es wieder. **Escape** schließt das Feld, ohne abzuschicken.
-  Solange das Feld offen ist, stehst du still, und der Mauszeiger ist da, etwa für „⏩“.
+  Solange das Feld offen ist, stehst du still, und der Mauszeiger ist da, etwa für den Vorspul-Knopf.
 - **Zeitlupe:** Sie beginnt, sobald du mit Enter das Feld öffnest, und hält, bis du
   abschickst oder das Feld schließt. Wie lange du tippst, spielt dabei keine Rolle. Der
   Zeitwandler-Ast für die Nachwirkung bringt hier deshalb nichts, der für die Tiefe schon.
@@ -220,6 +226,10 @@ gesperrt.
   dahinter im Boden stecken. Wie stark der Bogen gespannt ist, verrät nichts über die
   Antwort. Hast du Bogen und Sturmangriff gelernt, wechselst du mit **Tab** zwischen
   beiden. Das Spiel merkt sich deine Wahl, bis du es beendest.
+- **Explosionspfeil:** Nach dem Langbogen kannst du den **Explosionspfeil** lernen. Deine
+  Pfeile glühen dann an der Spitze, und ein Treffer explodiert in einem Feuerball: Rauch
+  steigt auf, Funken und Glut in der Farbe der Wortart fliegen, und Monster in der Nähe
+  zucken zusammen. Besiegt wird trotzdem nur das Monster, dessen Wort du richtig getippt hast.
 - **Maus freigeben:** Auch beim Laufen ist der Mauszeiger da, solange du **Alt** gedrückt
   hältst. Nach der Welle ist er von selbst wieder da.
 
@@ -284,7 +294,7 @@ und die sicheren Wörter werden zum Tempo-Training.
 
 ## 6. „Schnell auflösen“
 
-Neben dem Eingabefeld steht der Knopf **„⏩“**. Er ist für den Moment, in dem du die
+Neben dem Eingabefeld steht der runde Knopf mit den **zwei Pfeilen** (Vorspulen). Er ist für den Moment, in dem du die
 Wörter auf dem Feld gerade einfach nicht weißt und nicht warten willst, bis alle
 Monster angekommen sind.
 
@@ -523,14 +533,14 @@ rechts ist der Preis in Skillpunkten. Unten links erklärt eine Legende die Zeic
 Jeder Baum hat einen eigenen Anfangsknoten und verzweigt sich danach in zwei Äste. Man
 baut einen Ast aus und kann den anderen liegen lassen. Knoten der ersten und zweiten
 Stufe kosten 1 Skillpunkt, die der dritten 2. Im Späher kosten der Anfang, der
-Sturmangriff und der Langbogen je 5.
+Sturmangriff und der Langbogen je 5, der Explosionspfeil danach 3.
 
 | Baum | Was er tut |
 |---|---|
 | **Genesung** | Jedes besiegte Monster heilt die Festung um mehr HP. |
 | **Bollwerk** | Die Festung bekommt Rüstung. Ein Ast vergrößert den Vorrat, der andere setzt ihn zu jeder Welle ein Stück instand. |
 | **Zeitwandler** | Die Zeitlupe beim Tippen hält länger nach (ein Ast) oder wird noch tiefer (der andere Ast). |
-| **Späher** | Der Anfang, der **Späherblick**, schaltet die Ich-Sicht frei (Kapitel 5). Beide Äste danach machen dich darin schneller, am Ende des einen warten der **Sturmangriff** und der **Langbogen**. |
+| **Späher** | Der Anfang, der **Späherblick**, schaltet die Ich-Sicht frei (Kapitel 5). Beide Äste danach machen dich darin schneller, am Ende des einen warten der **Sturmangriff** und der **Langbogen**, nach dem Langbogen der **Explosionspfeil**. |
 
 Alle Wirkungen zählen zusammen: zwei Knoten, die je 1 HP mehr heilen, heilen zusammen
 2 HP mehr.
@@ -538,9 +548,10 @@ Alle Wirkungen zählen zusammen: zwei Knoten, die je 1 HP mehr heilen, heilen zu
 ### Bedienung
 
 - **Ansehen:** Fährst du mit der Maus über einen Knoten, zeigt eine Karte mit Pfeil auf
-  den Zeiger: Bild und Name, Baum und Zustand, was er tut, was er kostet und was vorher
-  gelernt sein muss, und darunter die Zustandszeile: „✓ Gelernt“, „Klicken zum Lernen · 1 P.“, „2 Skillpunkte nötig“
-  oder zum Beispiel „🔒 braucht Verband“, wenn erst ein anderer Knoten dran ist. Über dem
+  den Zeiger: Bild und Name, Baum und Zustand, was er tut und was vorher gelernt sein
+  muss (mit Haken oder Schloss). Rechts oben steht, was ein Klick kostet: ein Stern mit
+  den Skillpunkten fürs Lernen, bei einem gelernten Knoten Münzen mit dem Gold fürs
+  Verlernen. Reicht das Gold nicht, sagt es ein Satz darunter. Über dem
   Namen eines Baums steht, wie weit er ausgebaut ist, zum Beispiel „2/5 gelernt · +2 HP
   je besiegtem Monster“.
 - **Zoomen und Verschieben:** Mausrad oder die Knöpfe **„−“** und **„+“** unten rechts
@@ -728,7 +739,7 @@ damit sie nicht abgeschnitten wird.
 
 Zum Beispiel:
 
-- die Schatzkiste und der Knopf „⏩“,
+- die Schatzkiste,
 - jeder Knoten, jeder Baumname und die Zeichen „⛶“ und „↺“ im Fähigkeiten-Screen,
 - Zeilen und Wörter in der Statistik, die Tage der Monatsreihe,
 - die Knöpfe im Reiter „Protokoll“.

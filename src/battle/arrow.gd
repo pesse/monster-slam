@@ -17,10 +17,14 @@ const HEAD_COLOR := Color(0.55, 0.58, 0.62)
 const FLETCH_COLOR := Color(0.85, 0.22, 0.16)
 const TRAIL_COLOR := Color(1.0, 0.95, 0.7)
 const TRAIL_LENGTH := 1.6
+## Explosionspfeil: die Spitze glüht, die Spur brennt orange.
+const EMBER_COLOR := Color(1.0, 0.5, 0.12)
 
 ## Ein fliegender Pfeil zieht eine helle Spur hinter sich her — aus der Ich-Sicht wäre er
 ## über das Feld sonst nur ein Strich, den man verpasst. Der aufgelegte hat keine.
 var trail := false
+## Explosionspfeil (Späher-Baum): man soll ihm im Flug ansehen, dass er gleich knallt.
+var glowing := false
 
 var _trail: MeshInstance3D
 
@@ -40,7 +44,13 @@ func _ready() -> void:
 	head.height = 0.1
 	head.radial_segments = 4
 	head.rings = 1
-	_part(head, HEAD_COLOR, Vector3(0.0, 0.0, -LENGTH - 0.05), Vector3(-90.0, 0.0, 0.0))
+	var tip := _part(head, HEAD_COLOR, Vector3(0.0, 0.0, -LENGTH - 0.05), Vector3(-90.0, 0.0, 0.0))
+	if glowing:
+		var ember := material(EMBER_COLOR)
+		ember.emission_enabled = true
+		ember.emission = EMBER_COLOR
+		ember.emission_energy_multiplier = 4.0
+		tip.material_override = ember
 	for i in 3:
 		var vane := BoxMesh.new()
 		vane.size = Vector3(0.004, 0.036, 0.13)
@@ -57,12 +67,13 @@ func _ready() -> void:
 		# leuchtend) — deren Shader ist dann schon übersetzt.
 		var streak := BoxMesh.new()
 		streak.size = Vector3(0.018, 0.018, TRAIL_LENGTH)
+		var colour := EMBER_COLOR if glowing else TRAIL_COLOR
 		var mat := StandardMaterial3D.new()
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mat.albedo_color = Color(TRAIL_COLOR.r, TRAIL_COLOR.g, TRAIL_COLOR.b, 0.55)
+		mat.albedo_color = Color(colour.r, colour.g, colour.b, 0.55)
 		mat.emission_enabled = true
-		mat.emission = TRAIL_COLOR
+		mat.emission = colour
 		mat.emission_energy_multiplier = 2.0
 		_trail = MeshInstance3D.new()
 		_trail.mesh = streak
@@ -107,13 +118,14 @@ func _place_on(from: Vector3, to: Vector3, lift: float, t: float) -> void:
 		look_at(p + d, Vector3.UP)
 
 
-func _part(mesh: Mesh, color: Color, pos: Vector3, rot_deg: Vector3) -> void:
+func _part(mesh: Mesh, color: Color, pos: Vector3, rot_deg: Vector3) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
 	mi.mesh = mesh
 	mi.material_override = material(color)
 	mi.position = pos
 	mi.rotation_degrees = rot_deg
 	add_child(mi)
+	return mi
 
 
 static func material(color: Color) -> StandardMaterial3D:

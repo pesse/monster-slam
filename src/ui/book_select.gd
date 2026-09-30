@@ -22,8 +22,6 @@ extends Control
 
 ## „Zurück" (und Esc): ProfileMenu schiebt ins Hauptmenü.
 signal back_requested
-## „Profil wechseln" am Spielerschild: ProfileMenu schiebt zu „Wer spielt?".
-signal switch_requested
 
 const BOOK_SCENE := preload("res://scenes/ui/book_3d.tscn")
 
@@ -39,6 +37,8 @@ const PAGE_TIME := 0.36
 
 @onready var _stage: Control = %Stage
 @onready var _ui: Control = %Ui
+## Das Medaillon des Start-Screens (setup), oder null.
+var _badge: Control
 @onready var _dive: Control = %Dive
 @onready var _dive_image: TextureRect = %Image
 @onready var _empty_hint: Label = %EmptyHint
@@ -58,7 +58,6 @@ var _run := {}
 
 func _ready() -> void:
 	(%BackButton as Button).pressed.connect(back_requested.emit)
-	(%ProfileBadge as ProfileBadge).switch_pressed.connect(switch_requested.emit)
 	_prev.pressed.connect(func(): _page_to(_first - SLOTS))
 	_next.pressed.connect(func(): _page_to(_first + SLOTS))
 	Hints.attach(_prev, "Vorherige Bücher")
@@ -67,7 +66,10 @@ func _ready() -> void:
 
 
 ## Die Kulisse, in deren Turm die Bücher stehen. ProfileMenu ruft das einmal auf.
-func setup(backdrop: MenuBackdrop) -> void:
+## `badge`: das Medaillon des Start-Screens — es steht über Menü und Bibliothek und blendet
+## beim Flug ins Buch mit der Kopfzeile aus.
+func setup(backdrop: MenuBackdrop, badge: Control = null) -> void:
+	_badge = badge
 	_backdrop = backdrop
 	_camera = backdrop.camera()
 	_books = backdrop.library_books()
@@ -81,7 +83,6 @@ func enter() -> void:
 	_fill()
 	var book := _book_of(MapSelection.book)
 	_page_to(0 if book == null else book.get_index(), true)
-	(%ProfileBadge as ProfileBadge).refresh()
 
 
 ## Beim Hinausfahren: kein Buch bleibt in der Luft.
@@ -98,7 +99,7 @@ func return_from_book() -> void:
 	_select(book.get_index())
 	book.show_open()
 	_cover_screen(book.texture())
-	_ui.modulate.a = 0.0
+	_set_ui_alpha(0.0)
 	# Erst wenn der Viewport seine Größe hat, lässt sich der Blick ins Buch rechnen.
 	await get_tree().process_frame
 	_start_dive(book, true)
@@ -358,10 +359,17 @@ func _show_dive(t: float) -> void:
 	var home: Transform3D = _run["home"]
 	var inside: Transform3D = _run["inside"]
 	_camera.global_transform = home.interpolate_with(inside, k)
-	_ui.modulate.a = 1.0 - smoothstep(0.0, 0.3, t)
+	_set_ui_alpha(1.0 - smoothstep(0.0, 0.3, t))
 	var blend := smoothstep(BLEND_FROM, 1.0, t)
 	_dive.modulate.a = blend
 	_dive.visible = blend > 0.0
+
+
+## Kopfzeile und Medaillon zusammen ein- und ausblenden.
+func _set_ui_alpha(alpha: float) -> void:
+	_ui.modulate.a = alpha
+	if _badge != null:
+		_badge.modulate.a = alpha
 
 
 ## Legt die flache Buchkarte über den ganzen Bildschirm, wie MapCanvas sie zeichnet.

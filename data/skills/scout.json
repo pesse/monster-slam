@@ -96,7 +96,7 @@
 		"tree": "tree.scout",
 		"name": "Langbogen",
 		"icon": "🏹",
-		"description": "Beim Tippen spannst du einen Bogen, beim Abschicken fliegt der Pfeil: richtig trifft er, und das Monster platzt — falsch geht er daneben. Mit dem Sturmangriff zusammen wechselt Tab zwischen beiden.",
+		"description": "Richtig getippt trifft dein Pfeil, falsch geht er daneben. Tab wechselt zum Sturmangriff.",
 		"cost": 5,
 		"tier": 3,
 		"branch": 2,
@@ -105,6 +105,23 @@
 		],
 		"effects": {
 			"bow": 1
+		}
+	},
+	{
+		"id": "skill.scout.blast",
+		"kind": "skill",
+		"tree": "tree.scout",
+		"name": "Explosionspfeil",
+		"icon": "🔥",
+		"description": "Treffer explodieren in einem Feuerball. Es wird nur ein Gegner getroffen.",
+		"cost": 3,
+		"tier": 4,
+		"branch": 2,
+		"requires": [
+			"skill.scout.bow"
+		],
+		"effects": {
+			"explosive_arrow": 1
 		}
 	}
 ]

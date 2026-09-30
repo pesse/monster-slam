@@ -17,3 +17,4 @@ sun_energy = 1.25
 trees = Array[String](["forge/acacia.glb", "forge/acacia.glb", "forge/dead_tree.glb"])
 rocks = Array[String](["forge/sandstone_rock.glb"])
 grass = Array[String](["forge/dry_grass.glb"])
+particles = "dust"
