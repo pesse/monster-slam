@@ -21,6 +21,10 @@ python3 tools/packs/build_packs.py --config data/language/packs.yaml \
 
 # PHP nur im Container:
 tools/report/php.sh server/melden/test_endpoint.php
+
+# Windows-EXE → exports/MonsterSlam-<version>.exe; die Version steht nur in project.godot
+# (config/version), build.sh gleicht export_presets.cfg daran an:
+./build.sh
 ```
 
 - Der Wrapper braucht den **Konsolen**-Build (`GODOT=… tools/godot.sh` überschreibt den
@@ -33,7 +37,12 @@ tools/report/php.sh server/melden/test_endpoint.php
   (`config/use_custom_user_dir.editor` in `project.godot`). Nie auf die Basis-Schlüssel
   ausweiten — sonst zieht die EXE mit und verliert die Profile der Spieler.
 - **Ein echter Kampf headless spielt im aktiven Entwicklungsprofil** und schreibt Lernstand,
-  Sitzungen und Spur. Vorher `user://` sichern und danach zurückspielen, oder nicht tun.
+  Sitzungen und Spur. Nicht tun, oder in einem `zz-`-Profil.
+- **Nie eine Datei aus einer Sicherung pauschal nach `user://` zurückspielen.** Der Nutzer
+  spielt oft parallel, die Spur ist offen und wird angehängt — ein `cp` hat schon eine
+  laufende Sitzung überschrieben (NUL-Bytes in der Spur). Nur eigene Zeilen oder Dateien
+  gezielt entfernen, vorher prüfen, ob Godot läuft (`tasklist.exe | grep -i godot`).
+- **Löschen nur einzeln benannt**, nie mit Wildcard (`rm dir/*.png`), auch im Scratchpad.
 
 ## Was in welches Repo gehört
 
@@ -46,8 +55,14 @@ urheberrechtlich geschütztem Lehrbuchmaterial und liegen im privaten Submodule
 - Spielkonfiguration (`monsters`, `bosses`, `waves`, `skills`, `spells`,
   `task_definitions`, `monster_task_rules`) → Hauptrepo.
 - `raw/` (Buchscans) gehört in **kein** Repo.
-- **Vor jedem Commit im Hauptrepo:** keine Lemmata oder Wortlisten in Code, Docs, Tests
-  oder Reports. Ein einzelnes Allerweltswort als Schema-Beispiel ist ok.
+- **Vor jedem Commit im Hauptrepo:** keine Wortlisten, Lexem- oder Satzdaten in Code,
+  Docs, Tests oder Reports. Einzelne Vokabeln sind urheberrechtlich frei — Beispiele,
+  Konzeptbilder, Screenshots und Test-Prompts mit einzelnen Wörtern sind immer ok;
+  geschützt ist die Sammlung (Listen, Unit-Zuordnungen, Sätze).
+- Nur lokal, nie committen: `assets/maps/*/drafts/` (steht in `.git/info/exclude`).
+- Jeder Content-Generierungslauf (Vokabeln, Formen, Relationen, Sätze) bekommt einen
+  Eintrag und eine Tabellenzeile in `docs/CONTENT_GENERATION_RUNS.md` (Ansatz, Modell,
+  Agenten, Tokens, Kosten, Ergebnis) — Kosten beim Nutzer erfragen, wenn unbekannt.
 - Die Spur (`user://logs/*_trace.jsonl`) enthält getippte Kindertexte und Lemmata — sie
   verlässt den Rechner nicht.
 
@@ -133,7 +148,10 @@ urheberrechtlich geschütztem Lehrbuchmaterial und liegen im privaten Submodule
 - Kein Test startet `llama-server` oder spricht mit einem Dienst.
 
 **Oberfläche:**
-- Statische UI als `.tscn` im Editor-Format, nicht im Code.
+- Statische UI als `.tscn` im Editor-Format, nicht im Code. Was zur Laufzeit in
+  variabler Zahl entsteht, kommt aus einer `.tscn`-Vorlage für ein Element (`instantiate()`).
+- Im Kampf-HUD keine Hinweise (kein `Hints.attach`): gespielt wird meist ohne Maus.
+  Erklärungen gehören in den Bestätigungsdialog; XP steht nur als Ring da.
 - Raum und Typografie nur aus `scenes/ui/ui_theme.tres` über `theme_type_variation` —
   kein `theme_override_…`, keine `add_theme_*_override`. Abstände nur 0/4/8/16/24. Kein
   MarginContainer in einem PanelContainer; in jeden ScrollContainer ein `Gutter`.
@@ -166,7 +184,9 @@ urheberrechtlich geschütztem Lehrbuchmaterial und liegen im privaten Submodule
 - **Godot schreibt offene Dateien um.** Jeder Lauf, auch headless, lädt und speichert die
   im Skripteditor offenen Dateien und stellt ihre Einrückung auf Tabs um — auch Markdown,
   JSON und Dateien im Submodule. `tools/godot.sh` setzt reine Einrückungsänderungen danach
-  zurück und meldet alles andere.
+  zurück und meldet alles andere. Der offene GUI-Editor des Nutzers schreibt auch
+  Sekunden später noch nach — vor jedem Commit `git diff -w --stat` gegen
+  `git diff --stat` halten und reine Einrückungsänderungen zurücksetzen.
 - **Das Vollbild ist der schmalste Fall.** `canvas_items`/`expand` dehnt die längere Achse;
   ein maximiertes Fenster ist breiter als 1152, das Vollbild auf 16:9 nicht. Was im
   Fenster passt, kann im Vollbild abgeschnitten sein.
