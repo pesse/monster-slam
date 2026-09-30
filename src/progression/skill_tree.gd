@@ -115,6 +115,7 @@ const EFFECT_KEYS: Array[String] = [
 	"charge",
 	"bow",
 	"explosive_arrow",
+	"auto_catapult",
 ]
 
 
@@ -459,6 +460,8 @@ static func effect_label(key: String, value: float) -> String:
 			return "Bogen in der Ich-Sicht"
 		"explosive_arrow":
 			return "Pfeile explodieren beim Treffer"
+		"auto_catapult":
+			return "Katapulte räumen Gemeistertes ab"
 	return ""
 
 

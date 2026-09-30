@@ -82,3 +82,6 @@ signal task_mastered(task_id: String)
 ## (Lexeme.mastery_directions). Kommt direkt nach dem task_mastered der
 ## Aufgabe, die es abgeschlossen hat.
 signal lexeme_mastered(lexeme_id: String)
+## Das Wachkatapult (Bollwerk) hat ein Monster mit gemeisterter Aufgabe abgeschossen. Es ist
+## erledigt, aber nicht beantwortet: kein Lernstand, keine Erfahrung, keine Punkte.
+signal monster_catapulted(task: Dictionary)

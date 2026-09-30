@@ -40,6 +40,7 @@ func _ready() -> void:
 	set_player_name(UserSettings.display_name())
 	EventBus.fortress_damaged.connect(func(_amount): _refresh())
 	EventBus.monster_defeated.connect(func(_monster, _correct): _refresh())
+	EventBus.monster_catapulted.connect(func(_task): _refresh())
 	# Gemeistert wird in PlayerProgress.record(), und das läuft VOR diesem Signal.
 	EventBus.item_reviewed.connect(func(_id, _correct, _rt): _refresh())
 	# Wellenstart setzt wave_total/wave_resolved zurück -> sofort auffrischen.

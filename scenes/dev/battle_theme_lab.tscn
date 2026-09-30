@@ -439,6 +439,11 @@ unique_name_in_owner = true
 focus_mode = 0
 text = "Monster spawnen"
 
+[node name="CatapultButton" type="Button" parent="UI/Margin/Root/Menu/Items/Buttons"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "Katapult werfen"
+
 [node name="CopyButton" type="Button" parent="UI/Margin/Root/Menu/Items/Buttons"]
 unique_name_in_owner = true
 focus_mode = 0

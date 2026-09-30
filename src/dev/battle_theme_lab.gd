@@ -11,6 +11,8 @@ extends Node3D
 ##         das ganze Gelände und schaut mit der Maus; Alt gibt die Maus frei.
 ##         M (oder der Knopf) schickt ein Monster im Grundtempo vom Spawn zur Mauer; dort
 ##         explodiert es wie im Kampf, ohne der Festung etwas zu melden (keine Spur).
+##         K (oder der Knopf) wirft mit dem Wachkatapult (nur Stufe 4) auf das jüngste Monster, ohne eins
+##         auf eine Stelle der Bahn — nur das Bild.
 ##         „Regler ▸" (oder R) klappt die Regler auf, halb durchsichtig, in vier Reitern:
 ##         Ansicht (Thema, Stufe, Sicht, Bildmitte, Ausschnitt, Neigung), Bahn (Festungsgröße,
 ##         Festungsfront, Spawn, Bahnbreite, Monstertempo), Licht (Schattentiefe, Bias,
@@ -35,6 +37,10 @@ extends Node3D
 ##         Der Explosionspfeil (Blast) aus der Ich-Sicht auf ein Monster mit zwei Nachbarn,
 ##         in Schritten nach dem Aufprall, als reports/battle_themes/blast_<ms>.png. Jeder
 ##         Schritt ist ein eigener Knall — das Speichern eines Bilds dauert länger als der.
+##     … -- --catapult
+##         Das Wachkatapult auf Stufe 4: Kranz dreht sich, Arm schlägt aus, der Stein fliegt
+##         auf ein Monster und platzt, in Schritten nach dem Abschuss, als
+##         reports/battle_themes/catapult_<ms>.png. Jeder Schritt ist ein eigener Wurf.
 ##     … -- --hitches [--warm]
 ##         Misst den längsten Frame beim ERSTEN Auftritt jedes Kampfeffekts (Explosion,
 ##         „+XP", Monster, Meister-Feier) und gibt ihn in ms aus; --warm wärmt vorher vor
@@ -166,6 +172,8 @@ func _ready() -> void:
 		_shoot_bow.call_deferred()
 	elif _has_arg("blast"):
 		_shoot_blast.call_deferred()
+	elif _has_arg("catapult"):
+		_shoot_catapult.call_deferred()
 	elif _has_arg("hud"):
 		_shoot_hud.call_deferred()
 	elif _has_arg("levelup"):
@@ -196,6 +204,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		if key.keycode == KEY_M:
 			_spawn_monster()
 			return
+		if key.keycode == KEY_K:
+			_throw_at_lane()
+			return
 		if key.keycode >= KEY_0 and key.keycode <= KEY_4:
 			_set_tier(key.keycode - KEY_0)
 			return
@@ -220,6 +231,7 @@ func _fill_controls() -> void:
 	_tier_select.item_selected.connect(_set_tier)
 	_view_select.item_selected.connect(func(i: int) -> void: _set_first_person(i == 1))
 	%SpawnButton.pressed.connect(_spawn_monster)
+	%CatapultButton.pressed.connect(_throw_at_lane)
 	%GoalSpin.value = _goal_z
 	%SpawnSpin.value = _spawn_z
 	%ViewSpin.value = _view_z
@@ -268,7 +280,7 @@ func _fill_controls() -> void:
 	%MenuToggle.toggled.connect(func(on: bool) -> void:
 		%Menu.visible = on
 		%MenuToggle.text = "Regler ▾" if on else "Regler ▸")
-	var batch := ["shoot", "specimens", "bow", "blast", "hitches", "fps", "fortress",
+	var batch := ["shoot", "specimens", "bow", "blast", "catapult", "hitches", "fps", "fortress",
 			"levelup"].any(_has_arg)
 	%MenuToggle.visible = not batch
 
@@ -602,6 +614,110 @@ func _shoot_hud() -> void:
 		await get_tree().process_frame
 	GameState.reset()
 	get_tree().quit()
+
+
+func _shoot_catapult() -> void:
+	var dir := ProjectSettings.globalize_path(SHOT_DIR)
+	DirAccess.make_dir_recursive_absolute(dir)
+	$UI/Margin.visible = false
+	_tier = 4
+	_build_decor(_noise, _theme)
+	var at := Vector3(6.0, 0.0, _goal() - 16.0)
+	await FxWarmup.run(self, at + WaveRunnerScript.CATAPULT_AIM, [],
+			[CatapultStone.new(), Blast.new()])
+	await get_tree().create_timer(1.0).timeout
+	var turrets := FortressModel.catapults(_decor)
+	if turrets.is_empty():
+		push_error("battle_theme_lab: kein Katapult auf Stufe 4")
+		get_tree().quit(1)
+		return
+	for ms: int in [120, 300, 390, 550, 800, 1100, 1350, 1600, 2100]:
+		# Jeder Schritt ein eigener Wurf auf ein eigenes Monster, das im Grundtempo läuft.
+		var monster := _walker_at(at)
+		var turret := _nearest_turret(turrets, monster.global_position)
+		turret.rotation.y = 0.0
+		(turret.get_node(FortressModel.CATAPULT_ARM) as Node3D).rotation.x = 0.0
+		_throw(turret, monster, monster.global_position + WaveRunnerScript.CATAPULT_AIM)
+		await get_tree().create_timer(ms / 1000.0).timeout
+		await RenderingServer.frame_post_draw
+		var path := "%s/catapult_%04d.png" % [dir, ms]
+		get_viewport().get_texture().get_image().save_png(path)
+		print("battle_theme_lab: ", path)
+		# Der Wurf zu Ende, bevor der nächste anfängt.
+		await get_tree().create_timer(2.5).timeout
+		if is_instance_valid(monster):
+			monster.queue_free()
+	get_tree().quit()
+
+
+## Ein Monster wie mit M, aber an einer festen Stelle der Bahn.
+func _walker_at(at: Vector3) -> Monster:
+	_spawn_monster()
+	var monster := _walkers.get_child(_walkers.get_child_count() - 1) as Monster
+	monster.position = at
+	return monster
+
+
+func _nearest_turret(turrets: Array[Node3D], at: Vector3) -> Node3D:
+	var best := turrets[0]
+	for t in turrets:
+		if absf(t.global_position.x - at.x) < absf(best.global_position.x - at.x):
+			best = t
+	return best
+
+
+## Taste K: ein Wurf aus dem nächsten Katapult, auf das zuletzt geschickte Monster (mit
+## Vorhalt, wie im Kampf) oder eine Stelle der Bahn. Unter Stufe 4 gibt es keine
+## Katapulte, wie im Kampf.
+func _throw_at_lane() -> void:
+	var turrets := FortressModel.catapults(_decor)
+	if turrets.is_empty():
+		print("battle_theme_lab: Katapulte erst ab Stufe %d (Taste 4)" % FortressModel.CATAPULT_TIER)
+		return
+	var target := Vector3(randf_range(-6.0, 6.0), 0.0, _goal() - randf_range(8.0, 20.0)) \
+			+ WaveRunnerScript.CATAPULT_AIM
+	var monster: Monster = null
+	if is_instance_valid(_walkers):
+		for i in range(_walkers.get_child_count() - 1, -1, -1):
+			var walker := _walkers.get_child(i) as Monster
+			if walker != null and not walker.is_queued_for_deletion() \
+					and not walker.has_meta(&"targeted"):
+				monster = walker
+				target = walker.global_position + WaveRunnerScript.CATAPULT_AIM
+				break
+	_throw(_nearest_turret(turrets, target), monster, target)
+
+
+## Ein Wurf wie im Kampf (WaveRunner._catapult_later): mit Vorhalt auf `monster`, das beim
+## Einschlag platzt, ohne Monster auf `at`. Keine Spur, kein Lernstand — nur das Bild.
+func _throw(turret: Node3D, monster: Monster, at: Vector3) -> void:
+	var target := at
+	if monster != null:
+		monster.set_meta(&"targeted", true)
+		target = WaveRunnerScript.catapult_lead(turret.global_position, at, monster.velocity())
+	var from := await FortressModel.fire(turret, target)
+	var stone := CatapultStone.new()
+	add_child(stone)
+	stone.global_position = from
+	await stone.fly(target, from.distance_to(target) * WaveRunnerScript.CATAPULT_LIFT,
+			WaveRunnerScript.catapult_flight_time(from, target))
+	stone.queue_free()
+	var fx := Blast.new()
+	if monster != null and is_instance_valid(monster) and not monster.is_queued_for_deletion():
+		monster.halt()
+		fx.setup(monster.word_color())
+		fx.position = monster.position
+		for other: Node in _walkers.get_children():
+			var walker := other as Monster
+			if walker != null and walker != monster and walker.position.distance_to(
+					monster.position) <= WaveRunnerScript.BLAST_FLINCH_RADIUS:
+				walker.flinch(monster.global_position)
+		Sfx.play(&"monster_kill")
+		monster.queue_free()
+	else:
+		fx.setup(Color(0.75, 0.72, 0.66), 0.6)
+		fx.position = target - WaveRunnerScript.CATAPULT_AIM
+	add_child(fx)
 
 
 ## Das HUD ein- oder ausblenden. Es liegt oben links wie die Regler — die rücken so lange

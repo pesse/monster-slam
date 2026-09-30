@@ -218,6 +218,13 @@
       "height": 256,
       "notes": "Isolated Explosionspfeil; 256 px canvas, <=208 px centered motif; genuine alpha; lossless WebP RGBA. One wooden arrow pointing up-right, Langbogen red/ivory fletching, amber ember-gem head, compact fire, angular gold sparks and grey faceted smoke. Source: sources/scout_blast.png.",
       "sha256": "04a6fb89cd3da6d50868b1264960ac397f6e42a7bd3276ef11612d8d36bb724c"
+    },
+    "icons/bulwark_catapult": {
+      "path": "res://assets/ui/skill_tree/icons/bulwark_catapult.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated Wachkatapult; 256 px canvas, <=208 px centered motif; genuine alpha; lossless WebP RGBA. Wooden catapult on grey stone feet, rope torsion bundle, dark iron brackets with gold rivets, blue pennant; grey faceted boulder leaving the spoon with a small amber flare. Source: sources/bulwark_catapult.png.",
+      "sha256": "b60432896da1b63fdd3235173e6b520fffc037f0728484453f6441cada59dcad"
     }
   },
   "skill_icons": {
@@ -330,6 +337,11 @@
       "name": "Explosionspfeil",
       "tree": "tree.scout",
       "path": "res://assets/ui/skill_tree/icons/scout_blast.webp"
+    },
+    "skill.armor.catapult": {
+      "name": "Wachkatapult",
+      "tree": "tree.bulwark",
+      "path": "res://assets/ui/skill_tree/icons/bulwark_catapult.webp"
     }
   },
   "tree_colors": {

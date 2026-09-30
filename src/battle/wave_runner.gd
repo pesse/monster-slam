@@ -67,14 +67,32 @@ var _fp: FirstPersonView = null
 ## Spielt dieser Lauf aus der Ich-Sicht? Einmal am Anfang gefragt: schon die Streudeko
 ## richtet sich danach, bevor die Ich-Sicht steht.
 var _first_person_run := false
-## Laufende Sturmangriffe und fliegende Pfeile (Ich-Sicht): so lange wartet das Wellenende.
+## Laufende Sturmangriffe, fliegende Pfeile und Steine: so lange wartet das Wellenende.
 var _underway := 0
+## Wachkatapult gelernt (Bollwerk, `auto_catapult`): Monster mit gemeisterter Aufgabe
+## werden abgeschossen.
+var _catapult := false
+## Die Katapulte der Festung (FortressModel.catapults) — erst ab FortressModel.CATAPULT_TIER
+## gibt es welche, und nur dann wirft das Wachkatapult.
+var _catapults: Array[Node3D] = []
 ## Woran ein Fehlschuss vorbeizielt: die Körpermitte, wie beim Blick (_in_view). Ein
 ## Treffer geht in den Kopf (Monster.head_height).
 const ARROW_AIM_Y := 1.2
 ## Explosionspfeil: so groß der Knall (Blast), und bis hierhin zucken die Nachbarn.
 const BLAST_SCALE := 1.0
 const BLAST_FLINCH_RADIUS := 5.0
+## Wachkatapult (Bollwerk): so lange nach dem Spawn wirft es, zufällig dazwischen — bis
+## dahin kann der Spieler das Monster auch selbst treffen.
+const CATAPULT_DELAY_MIN := 1.0
+const CATAPULT_DELAY_MAX := 3.0
+## Flugzeit des Steins je Meter, mit Unter- und Obergrenze, und wie hoch er steigt (Anteil
+## der Strecke).
+const CATAPULT_TIME_PER_M := 0.035
+const CATAPULT_TIME_MIN := 0.8
+const CATAPULT_TIME_MAX := 1.5
+const CATAPULT_LIFT := 0.3
+## Worauf der Stein zielt: die Körpermitte, nicht die Füße.
+const CATAPULT_AIM := Vector3(0.0, 1.0, 0.0)
 
 @onready var _monsters: Node3D = $Monsters
 @onready var _camera: Camera3D = $CameraPivot/Camera3D
@@ -133,6 +151,7 @@ func _ready() -> void:
 			+ FortressTier.health_bonus(_fortress_tier)
 	GameState.apply_skills(skill_bonuses)
 	_slow_motion.apply_skills(skill_bonuses)
+	_catapult = float(skill_bonuses.get("auto_catapult", 0.0)) > 0.0
 	if _first_person_run:
 		_setup_first_person(skill_bonuses)
 	# Der Lauf beginnt hier, nicht mit der ersten Welle: alles, was über die Wellen hinweg
@@ -197,6 +216,10 @@ func _warm_up() -> void:
 			ember.trail = true
 			ember.glowing = true
 			extras.append(ember)
+			extras.append(Blast.new())
+	if _catapult:
+		extras.append(CatapultStone.new())
+		if _fp == null or not _fp.explosive:
 			extras.append(Blast.new())
 	await FxWarmup.run(self, at, FxWarmup.monster_defs(), extras, _fp != null)
 	_celebration.cool_down()
@@ -584,6 +607,7 @@ func _spawn_fortress(tier: int) -> void:
 	_fortress = fort
 	print("[FORTRESS] Stufe %d (+%d HP)" % [tier, FortressTier.health_bonus(tier)])
 	FortressModel.build(fort, tier, GOAL_Z, _ground_y)
+	_catapults = FortressModel.catapults(fort)
 
 
 ## Baut die Festung neu auf, mit kurzem Bau-Effekt als Feedback. Nur das Bild — die
@@ -996,6 +1020,9 @@ func _spawn(entry: Dictionary) -> void:
 	_wave_shown[str(plan["task"].get("source_id", ""))] = _spawned
 	_spawned += 1
 	EventBus.monster_spawned.emit(plan["monster_def"], plan["task"])
+	if _catapult and _fortress_tier >= FortressModel.CATAPULT_TIER \
+			and PlayerProgress.is_mastered(str(plan["task"].get("learnable_id", ""))):
+		_catapult_later(monster, _wave_gen)
 
 
 func _on_answer_submitted(text: String) -> void:
@@ -1279,6 +1306,13 @@ func _burst(monster: Monster, size: float = 1.5) -> void:
 ## Wortfarbe, und wer daneben steht, zuckt zusammen — nur das Bild, besiegt ist allein
 ## das getroffene Monster.
 func _blast(monster: Monster) -> void:
+	_blast_at(monster)
+	_leave(monster)
+
+
+## Nur der Knall: Blast in der Wortfarbe, und die Nachbarn zucken. Explosionspfeil und
+## Wachkatapult teilen ihn.
+func _blast_at(monster: Monster) -> void:
 	var fx := Blast.new()
 	fx.setup(monster.word_color(), BLAST_SCALE)
 	fx.position = monster.position
@@ -1286,7 +1320,83 @@ func _blast(monster: Monster) -> void:
 	for other in _active:
 		if other.position.distance_to(monster.position) <= BLAST_FLINCH_RADIUS:
 			other.flinch(monster.global_position)
-	_leave(monster)
+
+
+## Wachkatapult (Bollwerk): ein Monster mit gemeisterter Aufgabe wird nach einer kurzen,
+## zufälligen Weile abgeschossen. Es läuft dabei weiter, das Katapult hält auf den Ort vor,
+## an dem es beim Einschlag sein wird (catapult_lead). Trifft der Spieler es vorher selbst,
+## zählt sein Treffer, und der Stein schlägt ins Leere. Erledigt ist es danach, aber nicht
+## beantwortet: kein Lernstand, keine Erfahrung, keine Punkte (monster_catapulted statt
+## monster_defeated), und in der Auflösung nach der Welle steht es nicht.
+func _catapult_later(monster: Monster, gen: int) -> void:
+	# process_always = false: in der Meister-Feier wartet auch das Katapult.
+	await get_tree().create_timer(randf_range(CATAPULT_DELAY_MIN, CATAPULT_DELAY_MAX), false).timeout
+	if _finished or gen != _wave_gen or not is_instance_valid(monster) or not _active.has(monster):
+		return
+	var turret := _nearest_catapult(monster.global_position)
+	if turret == null:
+		return
+	var target := catapult_lead(turret.global_position, monster.global_position + CATAPULT_AIM,
+			monster.velocity())
+	# Ist es beim Einschlag schon an der Mauer, kommt der Stein zu spät: kein Wurf.
+	if target.z >= GOAL_Z:
+		return
+	_underway += 1
+	var from := await FortressModel.fire(turret, target)
+	var stone := CatapultStone.new()
+	add_child(stone)
+	stone.global_position = from
+	var distance := from.distance_to(target)
+	await stone.fly(target, distance * CATAPULT_LIFT, catapult_flight_time(from, target))
+	stone.queue_free()
+	_underway -= 1
+	# Die Welle ist inzwischen vorbei (gefallene Festung): nichts mehr nachbuchen.
+	if _finished or gen != _wave_gen:
+		return
+	if is_instance_valid(monster) and _active.has(monster):
+		_active.erase(monster)
+		monster.halt()
+		_shake(0.5)
+		_blast_at(monster)
+		Sfx.play(&"monster_kill")
+		EventBus.monster_catapulted.emit(monster.task)
+		monster.queue_free()
+	else:
+		# Schon getroffen oder durchgekommen: der Stein schlägt trotzdem ein.
+		var fx := Blast.new()
+		fx.setup(Color(0.75, 0.72, 0.66), BLAST_SCALE * 0.6)
+		fx.position = target - CATAPULT_AIM
+		add_child(fx)
+	_check_end()
+
+
+## Wie lange ein Stein von `from` nach `to` fliegt.
+static func catapult_flight_time(from: Vector3, to: Vector3) -> float:
+	return clampf(from.distance_to(to) * CATAPULT_TIME_PER_M, CATAPULT_TIME_MIN, CATAPULT_TIME_MAX)
+
+
+## Wohin das Katapult zielt, damit der Stein das Monster trifft: dorthin, wo es nach
+## Drehen, Ausschlagen und Flug steht. Monster laufen geradeaus mit festem Tempo, also ist
+## das eine Gerade; die Flugzeit hängt selbst am Ziel, zweimal nachrechnen reicht.
+static func catapult_lead(from: Vector3, at: Vector3, velocity: Vector3) -> Vector3:
+	var windup := FortressModel.CATAPULT_TURN_TIME + FortressModel.CATAPULT_SWING_TIME
+	var target := at
+	for i in 3:
+		target = at + velocity * (windup + catapult_flight_time(from, target))
+	return target
+
+
+## Das Katapult, das dem Ziel am nächsten steht, oder null, wenn keins mehr steht. Es dreht
+## sich zum Ziel und schlägt aus, der Stein fliegt im Scheitel des Wurfs los
+## (FortressModel.fire).
+func _nearest_catapult(target: Vector3) -> Node3D:
+	var best: Node3D = null
+	for turret in _catapults:
+		if not is_instance_valid(turret) or not turret.is_inside_tree():
+			continue
+		if best == null or absf(turret.global_position.x - target.x) < absf(best.global_position.x - target.x):
+			best = turret
+	return best
 
 
 ## Was jeder Treffer nach seinem Knall tut: Klang, „+XP" und das Monster geht.

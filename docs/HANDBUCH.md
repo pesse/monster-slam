@@ -274,6 +274,13 @@ hängt von der Art der Aufgabe ab.
 - **Rüstung** gibt es nur mit dem Fähigkeitsbaum „Bollwerk“. Sie fängt Schaden ab, bevor
   die HP sinken. Aufgefüllt wird sie nur, wenn du den Ast gelernt hast, der sie zu jeder
   Welle ein Stück instand setzt.
+- **Wachkatapult:** Mit diesem Bollwerk-Knoten schießen die Katapulte der Festung jedes
+  Monster ab, dessen Aufgabe du schon gemeistert hast, ein bis drei Sekunden nach seinem
+  Erscheinen. Katapulte stehen erst auf der voll ausgebauten Festung (Stufe 4). Das
+  Wachkatapult hilft dir also beim letzten Stück einer Unit. Ein Stein fliegt im Bogen und explodiert. Das Monster zählt für die Welle als
+  erledigt, aber Erfahrung und Punkte gibt es dafür nicht, und dein Lernstand ändert sich
+  nicht. Bist du schneller und tippst das Wort vorher selbst, zählt dein Treffer wie immer.
+  Du siehst die Katapulte auf den Ecktürmen dabei zielen und werfen.
 - Ein Monster, das die Rüstung abfängt, zählt trotzdem als **durchgelassen**: für die
   Serie, für die Statistik und für die Güte der Schatzkiste.
 - Fallen die HP auf 0, ist die Festung gefallen und der Lauf zu Ende (Kapitel 8).
@@ -533,12 +540,13 @@ rechts ist der Preis in Skillpunkten. Unten links erklärt eine Legende die Zeic
 Jeder Baum hat einen eigenen Anfangsknoten und verzweigt sich danach in zwei Äste. Man
 baut einen Ast aus und kann den anderen liegen lassen. Knoten der ersten und zweiten
 Stufe kosten 1 Skillpunkt, die der dritten 2. Im Späher kosten der Anfang, der
-Sturmangriff und der Langbogen je 5, der Explosionspfeil danach 3.
+Sturmangriff und der Langbogen je 5, der Explosionspfeil danach 3. Das Wachkatapult im
+Bollwerk kostet 8 und hängt als dritter Ast direkt am Anfang.
 
 | Baum | Was er tut |
 |---|---|
 | **Genesung** | Jedes besiegte Monster heilt die Festung um mehr HP. |
-| **Bollwerk** | Die Festung bekommt Rüstung. Ein Ast vergrößert den Vorrat, der andere setzt ihn zu jeder Welle ein Stück instand. |
+| **Bollwerk** | Die Festung bekommt Rüstung. Ein Ast vergrößert den Vorrat, der andere setzt ihn zu jeder Welle ein Stück instand. Ganz außen wartet das **Wachkatapult**, das Monster mit gemeisterten Aufgaben abschießt. |
 | **Zeitwandler** | Die Zeitlupe beim Tippen hält länger nach (ein Ast) oder wird noch tiefer (der andere Ast). |
 | **Späher** | Der Anfang, der **Späherblick**, schaltet die Ich-Sicht frei (Kapitel 5). Beide Äste danach machen dich darin schneller, am Ende des einen warten der **Sturmangriff** und der **Langbogen**, nach dem Langbogen der **Explosionspfeil**. |
 

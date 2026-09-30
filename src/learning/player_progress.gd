@@ -134,6 +134,13 @@ func has_seen(task_id: String) -> bool:
 	return _records.has(task_id)
 
 
+## Die Aufgabe sitzt: gesehen und über der Meisterungs-Schwelle — dieselbe Regel wie
+## mastered_count(). Der Prior einer ungesehenen Aufgabe zählt nicht, gemeistert wird im
+## Kampf. Das Wachkatapult (Bollwerk) räumt solche Monster ab.
+func is_mastered(task_id: String, threshold := MASTERY_CONFIDENCE) -> bool:
+	return has_seen(task_id) and confidence(task_id) >= threshold
+
+
 ## Anzahl Aufgaben, deren Confidence die Meisterungs-Schwelle erreicht. Die Festungsstufe
 ## hängt NICHT mehr daran, sondern an den Wörtern je Unit (FortressTier).
 func mastered_count(threshold := MASTERY_CONFIDENCE) -> int:

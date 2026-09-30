@@ -165,7 +165,7 @@ urheberrechtlich geschütztem Lehrbuchmaterial und liegen im privaten Submodule
   ist: sperren und umbeschriften statt ein-/ausblenden; Inhaltsentscheidungen vor dem
   Anzeigen.
 - Entwickler-Werkbänke liegen unter `scenes/dev/`, `src/dev/` (im Export ausgeschlossen),
-  nie als Knopf im Startmenü.
+  nie als Knopf im Startmenü. Jede Taste einer Werkbank hat auch einen Knopf.
 
 ## Tests
 

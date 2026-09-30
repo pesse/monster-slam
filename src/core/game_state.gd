@@ -59,6 +59,7 @@ var wave_resolved: int = 0
 func _ready() -> void:
 	EventBus.fortress_damaged.connect(_on_fortress_damaged)
 	EventBus.monster_defeated.connect(_on_monster_defeated)
+	EventBus.monster_catapulted.connect(_on_monster_catapulted)
 	# HP wird NICHT pro Welle zurückgesetzt (siehe _on_wave_started) — der Stand wird
 	# über gewonnene Wellen hinweg mitgenommen.
 	EventBus.wave_started.connect(_on_wave_started)
@@ -165,4 +166,10 @@ func _on_monster_defeated(monster: Dictionary, was_correct: bool) -> void:
 		# vorbei, aufgefüllt wird erst wieder beim Start eines neuen (reset()).
 		if fortress_health > 0:
 			fortress_health = mini(fortress_max_health, fortress_health + fortress_heal_per_correct)
+	wave_resolved += 1
+
+
+## Vom Wachkatapult abgeschossen: erledigt für den Wellenbalken, sonst nichts — nicht
+## beantwortet heißt keine Punkte, keine Serie und kein Heilen.
+func _on_monster_catapulted(_task: Dictionary) -> void:
 	wave_resolved += 1

@@ -305,7 +305,9 @@ Eine Datei je Baum. Der erste Eintrag ist der Baum-Kopf, die übrigen sind seine
   `first_person` (> 0 schaltet die Ich-Sicht frei), `walk_speed` (Anteil auf das Lauftempo der Ich-Sicht) und
   `charge` (> 0: Sturmangriff bei jedem Treffer in der Ich-Sicht) und `bow` (> 0: Bogen in
   der Ich-Sicht; mit `charge` zusammen wechselt Tab) und `explosive_arrow` (> 0: ein
-  Bogentreffer platzt als Feuerball mit Rauch, nur das Bild). Ein neuer
+  Bogentreffer platzt als Feuerball mit Rauch, nur das Bild) und `auto_catapult` (> 0: die
+  Katapulte der vollen Festung schießen Monster mit gemeisterter Aufgabe ab, ohne Lernstand
+  und Erfahrung). Ein neuer
   Schlüssel braucht einen Eintrag dort **und** ein `apply_skills`, das ihn liest.
 
 Die Beträge sind reine Balance und ohne Code-Änderung justierbar. Was sich nicht ändern

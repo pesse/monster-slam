@@ -76,6 +76,10 @@ static func describe(line: Dictionary, tasks: Dictionary = {}) -> Dictionary:
 					"Accent", {"title": str(line.get("prompt", "")),
 					"body": "Richtig wäre gewesen: %s" % _answers(line),
 					"note": str(line.get("id", ""))})
+		"catapult":
+			return _entry("🪨 Katapult: %s" % str(line.get("prompt", "")), "Hint",
+					{"title": "Vom Wachkatapult abgeschossen",
+					"body": "Die Aufgabe war schon gemeistert.", "note": str(line.get("id", ""))})
 		"mastered":
 			var id := str(line.get("id", ""))
 			var prompt := str((tasks.get(id, {}) as Dictionary).get("prompt", id))

@@ -650,6 +650,30 @@ Start-Screen (`🌳 Fähigkeiten`), nicht am Kampf: gelernt wird zwischen den L�
   Wer an den Beträgen dreht, vergleicht mit der Genesung, die nur an besiegten Monstern
   heilt. Im HUD steht die Rüstung als eigene Zeile über den HP, nur mit gelerntem Baum; die
   Festungstafel behält ohne sie ihre Höhe (`tests/hud_armor_test.gd`).
+- **Das Wachkatapult räumt ab, es beantwortet nicht** (`auto_catapult`, Bollwerk, Stufe 4
+  an der Wurzel). Es wirft nur, wenn die Festung des Laufs auf
+  `FortressModel.CATAPULT_TIER` (4) steht: es hilft beim letzten Stück einer Unit, nicht
+  am Anfang. Steigt die Stufe nach einer Welle, wirft es ab der nächsten. Ein Monster,
+  dessen Aufgabe beim Spawn gemeistert ist
+  (`PlayerProgress.is_mastered`: gesehen und über `MASTERY_CONFIDENCE`, dieselbe Regel wie
+  `mastered_count`), wird nach `CATAPULT_DELAY_MIN..MAX` abgeschossen
+  (`WaveRunner._catapult_later`). Bis dahin kann der Spieler es selbst treffen, dann fliegt
+  kein Stein. Gebucht wird nur „erledigt": `EventBus.monster_catapulted` statt
+  `monster_defeated`. `GameState` zählt `wave_resolved`, sonst nichts, und die Spur
+  schreibt `catapult`. Es gibt keinen `PlayerProgress.record`, keine Erfahrung, keine Punkte,
+  keine Serie, kein Heilen und keinen Eintrag in der Auflösung: sonst hielte das Katapult
+  eine Aufgabe ohne Abruf für gemeistert. Geworfen wird aus dem nächsten Katapultturm
+  (`FortressModel.catapults`/`fire`). Das Modell des Packs bringt Drehkranz
+  und Wurfarm als eigene Knoten mit: der Kranz dreht sich zum Ziel, der Arm schlägt aus.
+  Das Monster läuft dabei weiter. Gezielt wird auf den Ort, an dem es beim Einschlag steht
+  (`WaveRunner.catapult_lead`, `Monster.velocity`): Monster laufen geradeaus mit festem
+  Tempo, also reicht eine Gerade. Wurf und Stein laufen deshalb in Spielzeit wie die Monster
+  und anders als Pfeil und Sturmangriff, sonst stimmte der Vorhalt in der Zeitlupe nicht.
+  Kommt der Stein zu spät (Monster schon an der Mauer), wird nicht geworfen. Trifft der
+  Spieler vorher, schlägt der Stein ins Leere.
+  Die Werkbank wirft mit `battle_theme_lab -- --catapult` oder Taste K. `CatapultStone` ist
+  Low-Poly, der Einschlag ist der `Blast` des Explosionspfeils (`WaveRunner._blast_at`).
+  Stein und Blast sind im Vorwärmen.
 - **Die Zeitlupe hat eine Untergrenze** (`SkillTree.MIN_SLOW_FACTOR`), sonst fröre ein
   tiefer Baum das Spiel ein.
 - **Verlernen geht einzeln** (`SkillBook.forget`): mit dem Knoten fällt jeder gelernte

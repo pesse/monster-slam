@@ -53,6 +53,7 @@ func _ready() -> void:
 	EventBus.monster_spawned.connect(func(_monster, task): note_spawn(task))
 	EventBus.answer_judged.connect(note_answer)
 	EventBus.monster_reached_fortress.connect(func(_monster, task, damage): note_leak(task, damage))
+	EventBus.monster_catapulted.connect(note_catapult)
 	EventBus.task_mastered.connect(note_task_mastered)
 	EventBus.lexeme_mastered.connect(note_lexeme_mastered)
 	EventBus.boss_started.connect(note_boss_start)
@@ -186,6 +187,18 @@ func note_leak(task: Dictionary, damage: int) -> void:
 		"prompt": str(task.get("prompt", "")),
 		"answers": task.get("accepted_answers", []),
 		"dmg": damage,
+	})
+
+
+## Das Wachkatapult hat ein Monster abgeschossen, dessen Aufgabe gemeistert war. Keine
+## Antwort, kein Lernstand — `conf` zeigt, warum es geschossen hat.
+func note_catapult(task: Dictionary) -> void:
+	var id := str(task.get("learnable_id", ""))
+	_write({
+		"e": "catapult", "id": id,
+		"lex": str(task.get("source_id", "")),
+		"prompt": str(task.get("prompt", "")),
+		"conf": _confidence(id, float(task.get("initial_confidence", -1.0))),
 	})
 
 
