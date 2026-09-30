@@ -40,6 +40,10 @@ var sweep := SWEEP
 var phase := 0.5
 ## Gesetzt: kein Sprung auf den Morgen, die Sonne bleibt am Abend stehen.
 var hold := false
+## Zu diesem Anteil (0..1) scheint die Sonne aus `rest` statt aus dem Tag — drinnen (die
+## Bibliothek im Hauptmenü) hängt das Licht nicht an der Uhrzeit.
+var rest := Basis.IDENTITY
+var rest_weight := 0.0
 
 
 ## Stellt `sun` in den Tag, gesehen von `view` (der Kamera, oder ihrem Drehpunkt).
@@ -113,4 +117,7 @@ func apply() -> void:
 	var e := elevation_at(phase)
 	if sun != null:
 		sun.rotation_degrees = Vector3(-e, yaw_at(phase), 0.0)
+		if rest_weight > 0.0:
+			var day := sun.basis.get_rotation_quaternion()
+			sun.basis = Basis(day.slerp(rest.get_rotation_quaternion(), rest_weight))
 	RenderingServer.global_shader_parameter_set(&"sun_sin", sin(deg_to_rad(e)))

@@ -54,6 +54,9 @@ const SWAY_PERIOD := 11.0
 const INDOOR_AMBIENT := Color(0.62, 0.48, 0.38)
 const INDOOR_SKY_CONTRIBUTION := 0.25
 const INDOOR_SUN := 0.8
+## Draußen wird die Sonne nie heller, als die Szene flachen Boden beleuchtet (ihre Höhe im
+## Editor): steht sie höher, nimmt ihre Energie ab — aber nie unter diesen Anteil.
+const SUN_DIM_FLOOR := 0.55
 
 ## Wo die Kamera für „Wer spielt?" steht, gemessen an ihrem Platz fürs Hauptmenü: so weit
 ## links, dass das Skelett außerhalb des Bildes bleibt — die Profilwahl hat keine Figur,
@@ -78,6 +81,10 @@ var _look_left := LOOK_MIN
 var _rng := RandomNumberGenerator.new()
 ## Das Licht draußen, wie es in der Szene steht.
 var _outdoor := {}
+## Die Sonne zieht nach der Uhr (SunCycle); ihre Richtung aus dem Editor gilt drinnen.
+var _sun_cycle: SunCycle
+## sin(Höhe) der Sonne, wie sie im Editor steht — daran misst sich ihre Helligkeit.
+var _design_sun_sin := 1.0
 ## Der Platz des Skeletts, wie er in der Szene steht, und sein Blick dort.
 var _home := Vector3.ZERO
 var _home_yaw := 0.0
@@ -97,7 +104,12 @@ func _ready() -> void:
 	_outdoor = {"fog": _env.fog_density, "ambient": _env.ambient_light_color,
 			"sky": _env.ambient_light_sky_contribution, "sun": _sun.light_energy}
 	# Die Sonne zieht wie im Kampf nach der Uhr durchs Bild, von links nach rechts.
-	SunCycle.attach(self, _sun, _camera)
+	# Vor attach gelesen — das dreht sie sofort in den Tag. Sie scheint entlang -z, also
+	# ist z.y der Sinus ihrer Höhe.
+	var design := _sun.basis
+	_design_sun_sin = maxf(_sun.global_transform.basis.z.y, 0.05)
+	_sun_cycle = SunCycle.attach(self, _sun, _camera)
+	_sun_cycle.rest = design
 	_anim = RigAnimations.attach_player(_model, {"general": RigAnimations.general(),
 			"move": RigAnimations.movement()})
 	if _anim.has_animation(WALK):
@@ -194,7 +206,10 @@ func _light_for(at: float) -> void:
 	_env.fog_density = lerpf(float(_outdoor["fog"]), 0.0, t)
 	_env.ambient_light_color = (_outdoor["ambient"] as Color).lerp(INDOOR_AMBIENT, t)
 	_env.ambient_light_sky_contribution = lerpf(float(_outdoor["sky"]), INDOOR_SKY_CONTRIBUTION, t)
-	_sun.light_energy = lerpf(float(_outdoor["sun"]), INDOOR_SUN, t)
+	var sun_sin := sin(deg_to_rad(_sun_cycle.elevation_at(_sun_cycle.phase)))
+	var dim := clampf(_design_sun_sin / sun_sin, SUN_DIM_FLOOR, 1.0)
+	_sun.light_energy = lerpf(float(_outdoor["sun"]) * dim, INDOOR_SUN, t)
+	_sun_cycle.rest_weight = t
 
 
 func camera() -> Camera3D:
