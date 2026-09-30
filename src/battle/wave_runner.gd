@@ -5,11 +5,12 @@ extends Node3D
 
 const MONSTER_SCENE := preload("res://scenes/entities/monster.tscn")
 const FIRST_PERSON_SCENE := preload("res://scenes/battle/first_person_view.tscn")
-const GOAL_Z := 6.5           # Festungsfront (Monster-Ziel)
+const GOAL_Z := 16.5          # Festungsfront (Monster-Ziel)
 const SPAWN_Z := -24.0        # Spawn am hinteren Ende der Bahn (längerer Anmarsch)
-const LANE_HALF_WIDTH := 7.0
-## Bildmitte auf der Bahn (z). Der Boden richtet sich danach, nicht umgekehrt.
-const VIEW_CENTER_Z := -5.5
+const LANE_HALF_WIDTH := 8.0
+## Bildmitte auf der Bahn (z). Der Boden richtet sich danach, nicht umgekehrt. Festung,
+## Bahn und Bild sind in battle_theme_lab zusammen eingestellt (Regler); dort ändern.
+const VIEW_CENTER_Z := -3.5
 
 const SHAKE_DURATION := 0.35
 const SHAKE_MAGNITUDE := 0.35 # in 3D-Einheiten
@@ -699,11 +700,11 @@ func _setup_view() -> void:
 ## Kamera aufbauen kann, gegen die der Boden gerechnet wird.
 static func setup_view(pivot: Node3D, camera: Camera3D, sun: DirectionalLight3D) -> void:
 	pivot.rotation_degrees = Vector3(-30.0, 45.0, 0.0)
-	# Auf die Bahn zentrieren, damit der längere Anmarsch komplett im Bild bleibt und
-	# die Festung mit ihren Nebengebäuden trotzdem ganz darauf steht.
+	# Auf die Bahn zentrieren, damit der längere Anmarsch komplett im Bild bleibt; die
+	# Festung steht am Rand, ihre Nebengebäude laufen links unten aus dem Bild.
 	pivot.position = Vector3(0.0, 0.0, VIEW_CENTER_Z)
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	camera.size = 32.0
+	camera.size = 34.0
 	camera.position = Vector3(0.0, 0.0, CAMERA_DISTANCE)
 	sun.rotation_degrees = Vector3(-BattleTheme.SUN_ELEVATION, -35.0, 0.0)
 	# Schatten mit EINER Schattenkarte statt gestaffelter (PSSM): die Staffelung rechnet mit
