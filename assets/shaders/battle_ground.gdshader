@@ -26,7 +26,8 @@ uniform float tile_size = 8.0;
 // Umgebungslicht des Themas, linear und mal Energie (ambient * ambient_energy).
 uniform vec3 ambient_light = vec3(0.21, 0.23, 0.34);
 // sin(Sonnenhöhe): so hell trifft die Sonne flachen Boden — das ist „keine Änderung".
-uniform float sun_sin = 0.819;
+// Global, weil die Sonne wandert (SunCycle stellt ihn jedes Bild).
+global uniform float sun_sin;
 // Wie viel vom Umgebungslicht der Schatten wegnimmt (unter 1).
 uniform float shadow_depth : hint_range(0.0, 0.9) = 0.45;
 // Wie viel vom Sonnenanteil eine Wolke nimmt (BattleTheme.clouds): 0 = keine Wolken.

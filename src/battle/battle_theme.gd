@@ -23,9 +23,6 @@ extends Resource
 ## Festung sind in jedem Thema dieselben, und die Deko steht an denselben Stellen.
 
 const DIR := "res://assets/battle_themes"
-## Höhe der Sonne über dem Horizont; `WaveRunner.setup_view` stellt sie so.
-const SUN_ELEVATION := 55.0
-
 ## Die zwei Töne, zwischen denen der Boden fleckig streut.
 @export var ground_low := Color(0.22, 0.34, 0.15)
 @export var ground_high := Color(0.42, 0.56, 0.28)
@@ -182,7 +179,6 @@ func ground_material() -> Material:
 	# Sonne nimmt davon nur weg (Schatten, abgewandte Hänge) oder legt wenig dazu.
 	var amb := ambient.srgb_to_linear() * ambient_energy
 	mat.set_shader_parameter("ambient_light", Vector3(amb.r, amb.g, amb.b))
-	mat.set_shader_parameter("sun_sin", sin(deg_to_rad(SUN_ELEVATION)))
 	mat.set_shader_parameter("clouds", clouds)
 	return mat
 

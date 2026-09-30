@@ -63,3 +63,7 @@ wind_time={
 "type": "float",
 "value": 0.0
 }
+sun_sin={
+"type": "float",
+"value": 0.819
+}

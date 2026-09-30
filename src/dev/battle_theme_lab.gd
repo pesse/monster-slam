@@ -11,8 +11,10 @@ extends Node3D
 ##         das ganze Gelände und schaut mit der Maus; Alt gibt die Maus frei.
 ##         M (oder der Knopf) schickt ein Monster im Grundtempo vom Spawn zur Mauer; dort
 ##         explodiert es wie im Kampf, ohne der Festung etwas zu melden (keine Spur).
-##         „Regler ▸" (oder R) klappt die Regler auf: Thema, Stufe, Sicht, dazu Festungsfront,
-##         Spawn, Bildmitte, Bahnbreite, Festungsgröße, Ausschnitt, Neigung und Monstertempo —
+##         „Regler ▸" (oder R) klappt die Regler auf, halb durchsichtig, in drei Reitern:
+##         Ansicht (Thema, Stufe, Sicht, Bildmitte, Ausschnitt, Neigung), Bahn (Festungsgröße,
+##         Festungsfront, Spawn, Bahnbreite, Monstertempo) und Licht (Schattentiefe, Bias,
+##         Normal-Bias, Weichheit; Tageszeit, Uhr, Zeitraffer und die Grenzen des SunCycle) —
 ##         Namen wie die Konstanten im Spiel. „Werte kopieren" legt sie als Konstanten in die
 ##         Zwischenablage und schreibt sie in die Konsole. Der flache Boden wächst nicht mit
 ##         der Festungsgröße (FLAT_HALF_X ist eine Konstante des WaveRunners).
@@ -89,6 +91,16 @@ var _monster_speed: float = WaveGenerator.REFERENCE_SPEED
 ## Ausschnitt und Neigung der Iso-Kamera, wie WaveRunner.setup_view sie setzt (in _ready gelesen).
 var _cam_size := 32.0
 var _pitch := 30.0
+## Schattenkarte, wie WaveRunner.setup_view sie setzt (in _ready gelesen). Wirkt ohne Umbau.
+var _shadow_distance: float = WaveRunnerScript.SHADOW_DISTANCE
+var _shadow_bias := 0.1
+var _normal_bias := 1.0
+var _shadow_blur := 1.0
+## Die Sonne wie im Kampf, aber steht mittags, bis die Uhr oder der Zeitraffer sie zieht —
+## die Bilderläufe bleiben so vergleichbar.
+var _sun_cycle: SunCycle
+## Stunden im Spiel je Sekunde; 0 = steht.
+var _sun_speed := 0.0
 ## Die gespawnten Monster — eigener Knoten, damit sie einen Umbau der Deko überstehen.
 var _walkers: Node3D
 
@@ -98,7 +110,15 @@ func _ready() -> void:
 	WaveRunnerScript.setup_view(_pivot, _camera, _sun)
 	_cam_size = _camera.size
 	_pitch = -_pivot.rotation_degrees.x
+	_shadow_bias = _sun.shadow_bias
+	_normal_bias = _sun.shadow_normal_bias
+	_shadow_blur = _sun.shadow_blur
 	add_child(Wind.new())
+	_sun_cycle = SunCycle.new()
+	_sun_cycle.sun = _sun
+	_sun_cycle.noon_yaw = SunCycle.yaw_of(_pivot)
+	_sun_cycle.follow_clock = false
+	add_child(_sun_cycle)
 	for file in DirAccess.get_files_at(BattleTheme.DIR):
 		if file.ends_with(".tres"):
 			_names.append(file.get_basename())
@@ -178,6 +198,31 @@ func _fill_controls() -> void:
 	%SpeedSpin.value_changed.connect(func(v: float) -> void: _monster_speed = v)
 	for spin: SpinBox in [%GoalSpin, %SpawnSpin, %ViewSpin, %LaneSpin, %ScaleSpin, %SizeSpin, %PitchSpin]:
 		spin.value_changed.connect(_on_layout_changed)
+	%ShadowDistanceSpin.value = _shadow_distance
+	%ShadowBiasSpin.value = _shadow_bias
+	%NormalBiasSpin.value = _normal_bias
+	%ShadowBlurSpin.value = _shadow_blur
+	%SunTimeSpin.value = SunCycle.hour_of(_sun_cycle.phase)
+	# Die echte Uhrzeit steht auf jetzt; wer sie verstellt, sieht die Sonne des Spiels zu
+	# dieser Stunde (und die Tageszeit im Spiel springt mit).
+	%RealTimeSpin.set_value_no_signal(_real_hour_now())
+	%RealTimeSpin.value_changed.connect(func(hour: float) -> void:
+		_sun_cycle.phase = SunCycle.clock_phase(hour * 3600.0)
+		%SunTimeSpin.set_value_no_signal(SunCycle.hour_of(_sun_cycle.phase))
+		_apply_light())
+	%SunSpeedSpin.value = _sun_speed
+	%SunLowSpin.value = _sun_cycle.low
+	%SunHighSpin.value = _sun_cycle.high
+	%SunSweepSpin.value = _sun_cycle.sweep
+	%SunYawSpin.value = _sun_cycle.noon_yaw
+	for spin: SpinBox in [%ShadowDistanceSpin, %ShadowBiasSpin, %NormalBiasSpin, %ShadowBlurSpin,
+			%SunTimeSpin, %SunSpeedSpin, %SunLowSpin, %SunHighSpin, %SunSweepSpin, %SunYawSpin]:
+		spin.value_changed.connect(_on_light_changed)
+	%ClockCheck.toggled.connect(func(on: bool) -> void:
+		_sun_cycle.follow_clock = on
+		%SunTimeSpin.editable = not on
+		%RealTimeSpin.editable = not on
+		%SunSpeedSpin.editable = not on)
 	%CopyButton.pressed.connect(_copy_layout)
 	%MenuToggle.toggled.connect(func(on: bool) -> void:
 		%Menu.visible = on
@@ -204,7 +249,8 @@ func _spawn_monster() -> void:
 	_walkers.add_child(monster)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_run_sun(delta)
 	if _walkers == null:
 		return
 	for monster: Node3D in _walkers.get_children():
@@ -216,6 +262,24 @@ func _process(_delta: float) -> void:
 			add_child(fx)
 			Sfx.play(&"fortress_hit")
 			monster.queue_free()
+
+
+## Zeitraffer: `_sun_speed` Stunden je Sekunde, nach dem Abend wieder der Morgen. Mit der
+## Uhr zieht SunCycle selbst; die Anzeige der Tageszeit läuft in beiden Fällen mit.
+func _run_sun(delta: float) -> void:
+	if not _sun_cycle.follow_clock and _sun_speed > 0.0:
+		var day := SunCycle.DUSK_HOUR - SunCycle.DAWN_HOUR
+		_sun_cycle.phase = fposmod(_sun_cycle.phase + _sun_speed * delta / day, 1.0)
+		_sun_cycle.apply()
+	if _sun_cycle.follow_clock or _sun_speed > 0.0:
+		%SunTimeSpin.set_value_no_signal(SunCycle.hour_of(_sun_cycle.phase))
+	if _sun_cycle.follow_clock:
+		%RealTimeSpin.set_value_no_signal(_real_hour_now())
+
+
+## Stunde der echten Uhr dieses Rechners, mit Minuten als Bruch.
+func _real_hour_now() -> float:
+	return fposmod(SunCycle.local_unix(), 86400.0) / 3600.0
 
 
 ## Die Werkbank baut in einem Rahmen, in dem der Spawn auf WaveRunner.SPAWN_Z bleibt: die
@@ -246,6 +310,32 @@ func _on_layout_changed(_value: float) -> void:
 	_show(_index)
 
 
+func _on_light_changed(_value: float) -> void:
+	_shadow_distance = %ShadowDistanceSpin.value
+	_shadow_bias = %ShadowBiasSpin.value
+	_normal_bias = %NormalBiasSpin.value
+	_shadow_blur = %ShadowBlurSpin.value
+	_sun_speed = %SunSpeedSpin.value
+	_sun_cycle.low = %SunLowSpin.value
+	_sun_cycle.high = %SunHighSpin.value
+	_sun_cycle.sweep = %SunSweepSpin.value
+	_sun_cycle.noon_yaw = %SunYawSpin.value
+	if not _sun_cycle.follow_clock:
+		_sun_cycle.phase = SunCycle.phase_of(%SunTimeSpin.value)
+	_apply_light()
+
+
+## Sonne und Schattenkarte wie in WaveRunner.setup_view, mit den Werten der Regler. Die
+## Karte spannt sich über die Tiefe der Iso-Kamera bis `far` — beides hängt zusammen wie dort.
+func _apply_light() -> void:
+	_sun_cycle.apply()
+	_sun.directional_shadow_max_distance = _shadow_distance
+	_camera.far = _shadow_distance
+	_sun.shadow_bias = _shadow_bias
+	_sun.shadow_normal_bias = _normal_bias
+	_sun.shadow_blur = _shadow_blur
+
+
 func _copy_layout() -> void:
 	var text := "\n".join([
 		"# src/battle/wave_runner.gd",
@@ -258,6 +348,15 @@ func _copy_layout() -> void:
 		"const SCALE := %.2f" % _fortress_scale,
 		"# src/battle/wave_generator.gd",
 		"const REFERENCE_SPEED := %.1f" % _monster_speed,
+		"# src/battle/wave_runner.gd (Licht)",
+		"const SHADOW_DISTANCE := %.1f" % _shadow_distance,
+		"# setup_view: sun.shadow_bias = %.2f, sun.shadow_normal_bias = %.2f, sun.shadow_blur = %.2f"
+				% [_shadow_bias, _normal_bias, _shadow_blur],
+		"# src/battle/sun_cycle.gd",
+		"const LOW := %.1f" % _sun_cycle.low,
+		"const HIGH := %.1f" % _sun_cycle.high,
+		"const SWEEP := %.1f" % _sun_cycle.sweep,
+		"# noon_yaw = %.1f (Vorgabe: Blickrichtung der Kamera, %.1f)" % [_sun_cycle.noon_yaw, SunCycle.yaw_of(_pivot)],
 	])
 	DisplayServer.clipboard_set(text)
 	print("battle_theme_lab: Bahn %.1f m\n%s" % [_goal_z - _spawn_z, text])
@@ -333,6 +432,7 @@ func _show(index: int) -> void:
 	_ground.mesh = WaveRunnerScript.build_terrain(_camera, noise, theme)
 	_camera.size = view_size
 	WaveRunnerScript.dress_ground(_ground, theme)
+	_apply_light()
 	_wind_strength = theme.wind
 	_theme = theme
 	_noise = noise

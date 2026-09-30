@@ -111,6 +111,7 @@ func _ready() -> void:
 	_setup_ground()
 	_decorate()
 	add_child(Wind.new())
+	_sun_cycle = SunCycle.attach(self, $Sun as DirectionalLight3D, $CameraPivot as Node3D)
 	var air := AmbientParticles.build(_theme.particles, air_area) \
 			if GraphicsQuality.particles() else null
 	if air != null:
@@ -240,6 +241,8 @@ const VIEW_MARGIN := TERRAIN_HEIGHT_MAX + SHAKE_MAGNITUDE
 var _terrain_noise: FastNoiseLite
 ## Farben von Boden und Licht für die Unit des Laufs (BattleTheme, aus map.json).
 var _theme: BattleTheme
+## Stellt die Sonne nach der Uhr; hält während einer Welle den Sprung auf den Morgen an.
+var _sun_cycle: SunCycle
 
 func _setup_ground() -> void:
 	_terrain_noise = terrain_noise(_rng.randi())
@@ -706,7 +709,8 @@ static func setup_view(pivot: Node3D, camera: Camera3D, sun: DirectionalLight3D)
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
 	camera.size = 34.0
 	camera.position = Vector3(0.0, 0.0, CAMERA_DISTANCE)
-	sun.rotation_degrees = Vector3(-BattleTheme.SUN_ELEVATION, -35.0, 0.0)
+	# Mittags, hinter der Kamera; von da an stellt sie SunCycle nach der Uhr (WaveRunner._ready).
+	sun.rotation_degrees = Vector3(-SunCycle.HIGH, pivot.rotation_degrees.y, 0.0)
 	# Schatten mit EINER Schattenkarte statt gestaffelter (PSSM): die Staffelung rechnet mit
 	# einer Kamera, die in die Tiefe schaut, und liefert mit dieser Orthogonal-Kamera auf
 	# CAMERA_DISTANCE gar keinen Schatten.
@@ -870,6 +874,9 @@ func _start_next_wave() -> void:
 	# Löst den Wellenstart in GameState + HUD-Refresh aus. Die Festungs-HP bleiben dabei
 	# unangetastet — der Stand wird über die Wellen hinweg mitgenommen (siehe GameState).
 	EventBus.wave_started.emit(GameState.current_wave)
+	# Kein Sprung auf den Morgen, solange Monster laufen (_finish_wave gibt ihn frei).
+	if _sun_cycle != null:
+		_sun_cycle.hold = true
 	# Gesamtzahl der Welle bekanntgeben -> GameState füllt wave_total/wave_resolved (HUD-Balken).
 	EventBus.wave_totals.emit(_total)
 	for entry in spawns:
@@ -1410,6 +1417,8 @@ func _finish_wave(won: bool) -> void:
 		return
 	_finished = true
 	_last_won = won
+	if _sun_cycle != null:
+		_sun_cycle.hold = false
 	_set_view_active(false)
 	_answer_input.visible = false
 	_fast_resolve_button.visible = false

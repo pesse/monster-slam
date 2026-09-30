@@ -96,6 +96,8 @@ func _ready() -> void:
 	($WorldEnvironment as WorldEnvironment).environment = _env
 	_outdoor = {"fog": _env.fog_density, "ambient": _env.ambient_light_color,
 			"sky": _env.ambient_light_sky_contribution, "sun": _sun.light_energy}
+	# Die Sonne zieht wie im Kampf nach der Uhr durchs Bild, von links nach rechts.
+	SunCycle.attach(self, _sun, _camera)
 	_anim = RigAnimations.attach_player(_model, {"general": RigAnimations.general(),
 			"move": RigAnimations.movement()})
 	if _anim.has_animation(WALK):
