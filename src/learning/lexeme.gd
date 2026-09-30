@@ -16,7 +16,7 @@ extends RefCounted
 
 const DEFAULT_LANGUAGE := "en"
 ## Anzeigenamen der Sprachen (UI-Sprache Deutsch).
-const LANGUAGE_NAMES := {"en": "Englisch", "la": "Latein"}
+const LANGUAGE_NAMES := {"en": "Englisch", "fr": "Französisch", "la": "Latein"}
 
 
 ## Die Sprache eines Lexems oder einer task_definition, "en" ohne Feld.

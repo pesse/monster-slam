@@ -1108,25 +1108,15 @@ func _on_answer_submitted(text: String) -> void:
 	if _celebration.is_playing():
 		_held_answers.append(text)
 		return
-	# Zwei Durchläufe, weil die Auswertung Toleranz kennt (AnswerEvaluator): ein
-	# vollständig passendes Monster muss gewinnen, sonst schnappt sich bei mehreren
-	# Monstern auf dem Feld ein nur im Kern passendes den Treffer weg
-	# ("take" gegen "take (on sth.)").
-	var partial: Monster = null
-	var partial_form := ""
-	for monster in _hittable():
-		var verdict := _evaluator.evaluate(monster.task.get("accepted_answers", []), text)
-		if not bool(verdict["matched"]):
-			continue
-		if bool(verdict["complete"]):
-			_score_hit(monster, text)
-			return
-		if partial == null:
-			partial = monster
-			partial_form = str(verdict["canonical"])
-	if partial != null:
-		# Richtig, aber etwas Optionales fehlte — die Vollform wird eingeblendet.
-		_score_hit(partial, text, partial_form)
+	var targets := _hittable()
+	var answers: Array = []
+	for monster in targets:
+		answers.append(monster.task.get("accepted_answers", []))
+	var hit := best_hit(_evaluator, answers, text)
+	if int(hit["index"]) >= 0:
+		# Ist die Antwort nur im Kern richtig oder anders geschrieben, blendet _score_hit
+		# die richtige Form ein.
+		_score_hit(targets[int(hit["index"])], text, hit["verdict"])
 		return
 	# Kein Treffer -> Falscheingabe: rotes Flash + Kamera-Wackeln.
 	# Bewusst KEIN Fortschritts-Eintrag: eine Falscheingabe lässt sich keiner
@@ -1144,6 +1134,29 @@ func _on_answer_submitted(text: String) -> void:
 		_miss_with_arrow()
 	else:
 		_wrong_feedback()
+
+
+## Welches Monster eine Antwort trifft: `answers` hält je Monster seine accepted_answers.
+## Rückgabe {index, verdict}, index -1 ohne Treffer. Die Auswertung kennt Toleranz
+## (AnswerEvaluator): ein exakt und vollständig passendes Monster muss gewinnen, sonst
+## schnappt sich bei mehreren Monstern auf dem Feld ein nur im Kern passendes den Treffer
+## weg ("take" gegen "take (on sth.)"), oder eines, das sich nur im Akzent unterscheidet
+## ("ou" gegen "où", ADR 0008). Rang: vollständig vor unvollständig, darin exakt vor
+## nachsichtig; bei Gleichstand das erste.
+static func best_hit(evaluator: AnswerEvaluator, answers: Array, text: String) -> Dictionary:
+	var best := {"index": -1, "verdict": {}}
+	var best_rank := -1
+	for i in answers.size():
+		var verdict := evaluator.evaluate(answers[i], text, true)
+		if not bool(verdict["matched"]):
+			continue
+		var rank := 2 * int(bool(verdict["complete"])) + int(bool(verdict["exact"]))
+		if rank > best_rank:
+			best = {"index": i, "verdict": verdict}
+			best_rank = rank
+		if rank == 3:
+			break
+	return best
 
 
 ## Die learnable_ids der Aufgaben, die gerade auf dem Feld stehen — der Zusammenhang, in
@@ -1215,11 +1228,15 @@ func _setup_first_person(bonuses: Dictionary) -> void:
 	_answer_input.weapon_switch = _fp.weapons.size() > 1
 
 
-## Treffer verbuchen. `full_form` != "" heißt: die Antwort war richtig, ließ aber einen
-## optionalen Bestandteil weg ("criticize" statt "criticize sb. (for)"). Das kostet
-## nichts — die vollständige Form wird nur zusätzlich eingeblendet, damit das Muster
-## trotzdem einmal zu sehen war.
-func _score_hit(monster: Monster, text: String = "", full_form: String = "") -> void:
+## Treffer verbuchen. `verdict` ist das Urteil des AnswerEvaluator, leer für einen Treffer
+## ohne Abzug. War die Antwort richtig, ließ aber einen optionalen Bestandteil weg
+## ("criticize" statt "criticize sb. (for)") oder stimmte die Schreibweise nicht ("ecole"
+## statt "l'école"), kostet das nichts — die richtige Form wird nur zusätzlich
+## eingeblendet, damit sie trotzdem einmal zu sehen war.
+func _score_hit(monster: Monster, text: String = "", verdict: Dictionary = {}) -> void:
+	var complete := bool(verdict.get("complete", true))
+	var exact := bool(verdict.get("exact", true))
+	var full_form := "" if complete and exact else str(verdict.get("canonical", ""))
 	var rt := Time.get_ticks_msec() - monster.spawned_at_ms
 	var task_id := str(monster.task.get("learnable_id", ""))
 	var newly_mastered := PlayerProgress.record(task_id, true, rt,
@@ -1228,7 +1245,7 @@ func _score_hit(monster: Monster, text: String = "", full_form: String = "") -> 
 	# Nach record(), damit ein Mithörer die Confidence DANACH liest — die davor steht in
 	# der Spawn-Zeile des Protokolls.
 	EventBus.answer_judged.emit(text, {
-		"matched": true, "complete": full_form.is_empty(), "learnable_id": task_id,
+		"matched": true, "complete": complete, "exact": exact, "learnable_id": task_id,
 		"source_id": str(monster.task.get("source_id", "")), "response_time_ms": rt,
 		"canonical": full_form, "candidates": _active_learnable_ids(),
 	})

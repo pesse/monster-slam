@@ -200,3 +200,70 @@ func test_complete_match_wins_over_partial_across_answers() -> void:
 	assert_bool(verdict["matched"]).is_true()
 	assert_bool(verdict["complete"]).is_true()
 	assert_str(str(verdict["canonical"])).is_equal("take")
+
+
+# --- Französisch: nachsichtige Schreibweise (ADR 0008) ---
+
+
+func test_missing_accents_match_leniently_and_name_the_spelling() -> void:
+	var verdict := _evaluator.evaluate(["l'école"], "l'ecole", true)
+	assert_bool(verdict["matched"]).is_true()
+	assert_bool(verdict["complete"]).is_true()
+	assert_bool(verdict["exact"]).is_false()
+	assert_str(str(verdict["canonical"])).is_equal("l'école")
+	for typed in ["lecole", "l ecole", "L'ÉCOLE", "l'école"]:
+		assert_bool(_evaluator.evaluate(["l'école"], typed, true)["complete"]) \
+				.override_failure_message(typed).is_true()
+
+
+func test_exact_spelling_is_exact() -> void:
+	var verdict := _evaluator.evaluate(["le cœur"], "le cœur", true)
+	assert_bool(verdict["complete"]).is_true()
+	assert_bool(verdict["exact"]).is_true()
+	assert_bool(_evaluator.evaluate(["le cœur"], "le coeur", true)["exact"]).is_false()
+	assert_bool(_evaluator.evaluate(["le garçon"], "le garcon", true)["matched"]).is_true()
+
+
+func test_without_lenient_spelling_stays_strict() -> void:
+	# Die Satzbewertung fragt ohne Nachsicht — dort bleibt alles, wie es war.
+	assert_bool(_evaluator.evaluate(["l'école"], "l'ecole")["matched"]).is_false()
+	assert_bool(_evaluator.evaluate(["don't"], "dont")["matched"]).is_false()
+
+
+func test_hyphen_may_be_space_or_missing() -> void:
+	for typed in ["est ce que", "estce que"]:
+		var verdict := _evaluator.evaluate(["est-ce que"], typed, true)
+		assert_bool(verdict["complete"]).override_failure_message(typed).is_true()
+		assert_bool(verdict["exact"]).is_false()
+	assert_bool(_evaluator.evaluate(["aujourd'hui"], "aujourdhui", true)["complete"]).is_true()
+
+
+func test_umlauts_are_not_folded() -> void:
+	# Die deutsche Seite: „schon" ist nicht „schön".
+	assert_bool(_evaluator.evaluate(["schön"], "schon", true)["matched"]).is_false()
+
+
+func test_french_article_is_required() -> void:
+	assert_bool(_evaluator.evaluate(["la maison"], "maison", true)["matched"]).is_false()
+	assert_bool(_evaluator.evaluate(["la maison"], "le maison", true)["matched"]).is_false()
+	assert_bool(_evaluator.evaluate(["l'école"], "ecole", true)["matched"]).is_false()
+
+
+func test_exact_partial_wins_over_lenient_partial_only_when_nothing_complete() -> void:
+	# Exakt, aber unvollständig bleibt exakt, solange nachsichtig nichts Vollständiges trifft.
+	var verdict := _evaluator.evaluate(["parler (à qn)"], "parler", true)
+	assert_bool(verdict["complete"]).is_false()
+	assert_bool(verdict["exact"]).is_true()
+	# Nachsichtig vollständig schlägt exakt unvollständig.
+	verdict = _evaluator.evaluate(["parler (à qn)"], "parler a qn", true)
+	assert_bool(verdict["complete"]).is_true()
+	assert_bool(verdict["exact"]).is_false()
+
+
+func test_french_placeholders_are_wildcards() -> void:
+	var accepted := ["parler à qn"]
+	for typed in ["parler à quelqu'un", "parler à qn.", "parler à qn"]:
+		assert_bool(_evaluator.evaluate(accepted, typed)["complete"]) \
+				.override_failure_message(typed).is_true()
+	assert_bool(_evaluator.evaluate(["faire qc"], "faire quelque chose")["complete"]).is_true()
+	assert_bool(_evaluator.evaluate(["faire qch"], "faire qc")["complete"]).is_true()

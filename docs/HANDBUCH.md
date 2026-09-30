@@ -186,6 +186,11 @@ auswählen: das Spiel sucht selbst das Monster, zu dem deine Antwort passt.
   wird dann kurz über dem Monster eingeblendet, damit du sie einmal gesehen hast.
   Platzhalter darfst du schreiben, wie du willst: „sb“, „somebody“, „jn.“, „jmd.“ und
   „jemanden“ gelten gleich.
+- **Richtig, aber anders geschrieben:** Fehlen nur Akzente (é, è, ê, ç …), oder hast du
+  einen Bindestrich oder Apostroph weggelassen oder als Leerzeichen getippt („ecole“ für
+  „l’école“, „est ce que“ für „est-ce que“), zählt die Antwort voll. Die richtige
+  Schreibweise wird dann über dem Monster eingeblendet, damit sie sich einprägt.
+  Umlaute zählen nicht dazu: „schon“ ist nicht „schön“.
 - **Falsch:** Es blitzt rot und das Bild wackelt. Sonst passiert nichts. Eine falsche
   Eingabe wird keinem Wort als Fehler angerechnet, weil nicht klar ist, welches Monster
   gemeint war. Als Fehler zählt erst ein Monster, das die Festung erreicht.

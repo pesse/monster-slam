@@ -145,6 +145,9 @@ Score, aktive Welle) und reagiert selbst nur über EventBus-Signale.
 - **`answer_evaluator.gd`** — normalisierter Exakt-/Alternativabgleich für schnellen
   Recall (offline, deterministisch). Hier wohnt die Normalisierung (Artikel,
   Platzhalter, Klammergruppen, Typografie); die Satzbewertung nimmt sie über `tokens()`.
+  Der Wellenkampf fragt zusätzlich nachsichtig (`lenient`): Akzente, Bindestrich und
+  Apostroph dürfen fehlen, das Urteil trägt dann `exact: false`, und die richtige
+  Schreibweise wird eingeblendet (ADR 0008).
 
 ### Sätze bewerten (`docs/adr/0004-satzbewertung-ohne-modell.md`, `docs/adr/0005-bosskampf-mit-erklaerung.md`)
 

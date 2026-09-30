@@ -1,0 +1,4 @@
+[
+  { "id": "def.translate.de_fr", "language": "fr", "task_type": "translate", "direction": "de_to_fr", "allowed_types": ["*"], "difficulty": 1 },
+  { "id": "def.translate.fr_de", "language": "fr", "task_type": "translate", "direction": "fr_to_de", "allowed_types": ["*"], "difficulty": 2 }
+]

@@ -78,6 +78,24 @@ lässt, stehen als `lexeme_forms` mit `language: "la"`: `la_genitive` und `la_ge
 tragen ebenfalls `language` und gelten nur für Lexeme dieser Sprache; jede neue Richtung
 braucht eine `monster_task_rule`.
 
+**Französisch (*À plus!*, ADR 0008).** Wie Latein, mit `language: "fr"`, `lemma_fr`,
+Ids `lex.fr.<buch>.…` und Dateien `fr_<buch>_unit<n>.json`. Die Aufgaben stehen in
+`data/task_definitions/fr_basics.json`. Für die Daten gilt:
+- **Akzente, Cédille, œ, Bindestrich und Apostroph genau wie im Buch.** Getippt werden
+  müssen sie nicht, denn der Kampf vergleicht nachsichtig und blendet die richtige
+  Schreibweise ein. Deshalb gehört eine Variante ohne Akzent **nie** in `lemma_fr_alt`,
+  sie würde als exakt gelten, und die Einblendung fiele weg.
+- **Nomen mit Artikel**, denn der Artikel ist Pflicht und trägt das Genus: `la maison`,
+  `l'école`, `les vacances`. Keine Genus-Glosse in Klammern (`l'école (f.)`), denn jede
+  Antwort ohne sie wäre unvollständig.
+- **Weibliche und männliche Formen ausschreiben**, nicht in der Notation des Buchs
+  (`ami(e)`, `petit, e`, `acteur/actrice`). Zwei Wörter mit eigener deutscher Seite
+  (*der Freund* / *die Freundin*) werden zwei Lexeme. Ein Adjektiv trägt die männliche
+  Form als `lemma_fr` und die weibliche in `lemma_fr_alt`, wenn das Buch beide nennt.
+- Platzhalter wie im Buch (*qn*, *qc*). Der Evaluator kennt sie.
+- Formen (`fr_*`) erst, wenn die Unit sie lernen lässt, samt Label in
+  `TaskResolver.FORM_LABELS` und einer Definition in `fr_basics.json`.
+
 **Keine Dubletten.** Dasselbe Wort unter zwei Lexem-Ids hat zwei Fortschrittsstände; die
 Treffer verteilen sich, und keine der beiden Ids wird je gemeistert. Vor dem Anlegen
 prüfen, ob das Wort schon existiert (auch in anderen Units und Büchern).

@@ -136,8 +136,12 @@ static func _answer(line: Dictionary, tasks: Dictionary) -> Dictionary:
 	var note := "Antwortzeit %.1f s" % (int(line.get("rt", 0)) / 1000.0)
 	if line.has("conf"):
 		note += " · Sicherheit danach %d %%" % roundi(float(line.get("conf", 0.0)) * 100.0)
-	if bool(line.get("full", true)):
+	if bool(line.get("full", true)) and bool(line.get("exact", true)):
 		return _entry("✔ %s — %s" % [typed, prompt], "", {"title": prompt, "note": note})
+	if bool(line.get("full", true)):
+		return _entry("◐ %s — %s, Schreibweise" % [typed, prompt], "",
+				{"title": prompt, "body": "Richtig geschrieben: %s" % str(line.get("canonical", "")),
+				"note": note})
 	return _entry("◐ %s — %s, unvollständig" % [typed, prompt], "",
 			{"title": prompt, "body": "Vollständig: %s" % str(line.get("canonical", "")),
 			"note": note})
