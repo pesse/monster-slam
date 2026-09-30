@@ -862,7 +862,7 @@ vertical = true
 
 [sub_resource type="StyleBox" id="hud_fortress"]
 script = ExtResource("frame_style")
-content_margin_left = 16.0
+content_margin_left = 48.0
 content_margin_top = 8.0
 content_margin_right = 16.0
 content_margin_bottom = 8.0
@@ -888,10 +888,10 @@ scale = 0.52
 
 [sub_resource type="StyleBox" id="hud_encounter"]
 script = ExtResource("frame_style")
-content_margin_left = 24.0
-content_margin_top = 0.0
-content_margin_right = 24.0
-content_margin_bottom = 0.0
+content_margin_left = 40.0
+content_margin_top = 6.0
+content_margin_right = 40.0
+content_margin_bottom = 6.0
 texture = ExtResource("hud_encounter_tex")
 slice_left = 42.0
 slice_top = 49.0
@@ -1521,6 +1521,8 @@ HudLevel/fonts/font = ExtResource("fira_bold")
 HudLevel/font_sizes/font_size = 16
 HudStack/base_type = &"BoxContainer"
 HudStack/constants/separation = 0
+HudTallyRow/base_type = &"BoxContainer"
+HudTallyRow/constants/separation = 16
 HudLegendRow/base_type = &"BoxContainer"
 HudLegendRow/constants/separation = 16
 HudFortress/base_type = &"PanelContainer"

@@ -93,6 +93,7 @@ var _warming := false
 @onready var _fast_resolve_button: Button = $UI/FastResolveButton
 @onready var _fast_resolve_confirm: ConfirmDialog = $UI/FastResolveConfirm
 @onready var _celebration: MasteryCelebration = $UI/MasteryCelebration
+@onready var _level_flare: LevelFlare = $UI/HUD.level_flare
 
 
 func _ready() -> void:
@@ -145,6 +146,8 @@ func _ready() -> void:
 		debug_panel.fortress_tier_selected.connect(_on_debug_tier_selected)
 	if debug_panel.has_signal("celebration_requested"):
 		debug_panel.celebration_requested.connect(_on_debug_celebration)
+	if debug_panel.has_signal("level_up_requested"):
+		debug_panel.level_up_requested.connect(_level_flare.play)
 	if _stats.has_signal("next_wave_requested"):
 		_stats.next_wave_requested.connect(_on_next_wave_requested)
 	if _stats.has_signal("back_to_menu_requested"):
@@ -182,6 +185,7 @@ func _warm_up() -> void:
 	var at := FxWarmup.point_in_view(get_viewport().get_camera_3d(),
 			Vector3(0.0, 1.0, VIEW_CENTER_Z))
 	_celebration.warm_up()
+	_level_flare.warm_up()
 	var extras: Array[Node3D] = [xp, form]
 	# Der Pfeil fliegt erst nach der ersten Antwort; der Bogen hängt schon an der Kamera.
 	if _fp != null:
@@ -196,6 +200,7 @@ func _warm_up() -> void:
 			extras.append(Blast.new())
 	await FxWarmup.run(self, at, FxWarmup.monster_defs(), extras, _fp != null)
 	_celebration.cool_down()
+	_level_flare.cool_down()
 
 
 ## Zurück auf die Karte (oder ins Menü), als Zoom hinaus — die Umkehrung des Wegs herein.

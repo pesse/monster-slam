@@ -1,45 +1,51 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene format=3 uid="uid://27myaowl2dtp"]
 
-[ext_resource type="Script" path="res://src/ui/hud.gd" id="1_hud"]
-[ext_resource type="Texture2D" path="res://assets/ui/gameplay/icons/castle.webp" id="2_castle"]
-[ext_resource type="Texture2D" path="res://assets/ui/gameplay/icons/armor.webp" id="3_armor"]
-[ext_resource type="Texture2D" path="res://assets/ui/gameplay/icons/heart.webp" id="4_heart"]
-[ext_resource type="Texture2D" path="res://assets/ui/gameplay/icons/swords.webp" id="5_swords"]
-[ext_resource type="Texture2D" path="res://assets/ui/gameplay/icons/skull.webp" id="6_skull"]
-[ext_resource type="Texture2D" path="res://assets/ui/gameplay/icons/mastered_book.webp" id="7_book"]
-[ext_resource type="Texture2D" path="res://assets/ui/gameplay/icons/portrait_ring.webp" id="8_ring"]
-[ext_resource type="Texture2D" path="res://assets/ui/gameplay/icons/level_badge.webp" id="9_badge"]
-[ext_resource type="Texture2D" path="res://assets/ui/player_badge/menu/avatar.webp" id="10_avatar"]
-[ext_resource type="Script" path="res://src/ui/xp_ring.gd" id="11_xp"]
+[ext_resource type="Script" uid="uid://hn2cevwum11o" path="res://src/ui/hud.gd" id="1_hud"]
+[ext_resource type="Texture2D" uid="uid://bfkkbg4ueek2l" path="res://assets/ui/gameplay/icons/castle.webp" id="2_castle"]
+[ext_resource type="Texture2D" uid="uid://k6h64agdo0ki" path="res://assets/ui/gameplay/icons/armor.webp" id="3_armor"]
+[ext_resource type="Texture2D" uid="uid://bk5gmbasw0t1g" path="res://assets/ui/gameplay/icons/heart.webp" id="4_heart"]
+[ext_resource type="Texture2D" uid="uid://c2n3dt20u4mte" path="res://assets/ui/gameplay/icons/swords.webp" id="5_swords"]
+[ext_resource type="Texture2D" uid="uid://dg0umb3eclnxe" path="res://assets/ui/gameplay/icons/skull.webp" id="6_skull"]
+[ext_resource type="Texture2D" uid="uid://cc0ddx4dhx7wp" path="res://assets/ui/gameplay/icons/mastered_book.webp" id="7_book"]
+[ext_resource type="Texture2D" uid="uid://c1pvrs8i74er" path="res://assets/ui/gameplay/icons/portrait_ring.webp" id="8_ring"]
+[ext_resource type="Texture2D" uid="uid://ch2bvhnkbq10p" path="res://assets/ui/gameplay/icons/level_badge.webp" id="9_badge"]
+[ext_resource type="Texture2D" uid="uid://cn4jymil5rgtl" path="res://assets/ui/player_badge/menu/avatar.webp" id="10_avatar"]
+[ext_resource type="Script" uid="uid://b3x2gxkloyfmm" path="res://src/ui/xp_ring.gd" id="11_xp"]
+[ext_resource type="PackedScene" path="res://scenes/ui/level_flare.tscn" id="12_flare"]
+[ext_resource type="Shader" uid="uid://cd2rlsgmacy34" path="res://assets/shaders/gold_glow.gdshader" id="13_gold"]
 
-[node name="HUD" type="Control"]
+[sub_resource type="ShaderMaterial" id="badge_glow"]
+shader = ExtResource("13_gold")
+shader_parameter/glow = 0.0
+shader_parameter/gold = Color(0.95, 0.68, 0.18, 1)
+
+[node name="HUD" type="Control" unique_id=1436566685]
 texture_filter = 4
+layout_mode = 3
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1_hud")
 
-[node name="Plates" type="VBoxContainer" parent="." groups=["word_plate_keep_clear"]]
-offset_left = 84.0
+[node name="FortressPanel" type="PanelContainer" parent="." unique_id=1553338338 groups=["word_plate_keep_clear"]]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(406, 60)
+layout_mode = 0
+offset_left = 44.0
 offset_top = 16.0
 offset_right = 450.0
-offset_bottom = 108.0
-mouse_filter = 2
-theme_type_variation = &"Tight"
-
-[node name="FortressPanel" type="PanelContainer" parent="Plates"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(366, 60)
-layout_mode = 2
-size_flags_horizontal = 0
+offset_bottom = 76.0
 mouse_filter = 2
 theme_type_variation = &"HudFortress"
 
-[node name="FortressRow" type="HBoxContainer" parent="Plates/FortressPanel"]
+[node name="FortressRow" type="HBoxContainer" parent="FortressPanel" unique_id=528545671]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Castle" type="TextureRect" parent="Plates/FortressPanel/FortressRow"]
+[node name="Castle" type="TextureRect" parent="FortressPanel/FortressRow" unique_id=113243447]
 custom_minimum_size = Vector2(28, 28)
 layout_mode = 2
 size_flags_vertical = 4
@@ -48,20 +54,20 @@ texture = ExtResource("2_castle")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Bars" type="VBoxContainer" parent="Plates/FortressPanel/FortressRow"]
+[node name="Bars" type="VBoxContainer" parent="FortressPanel/FortressRow" unique_id=568040673]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 mouse_filter = 2
 theme_type_variation = &"Tight"
 
-[node name="ArmorRow" type="HBoxContainer" parent="Plates/FortressPanel/FortressRow/Bars"]
+[node name="ArmorRow" type="HBoxContainer" parent="FortressPanel/FortressRow/Bars" unique_id=2089540881]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 mouse_filter = 2
 
-[node name="ArmorIcon" type="TextureRect" parent="Plates/FortressPanel/FortressRow/Bars/ArmorRow"]
+[node name="ArmorIcon" type="TextureRect" parent="FortressPanel/FortressRow/Bars/ArmorRow" unique_id=1473927756]
 custom_minimum_size = Vector2(18, 18)
 layout_mode = 2
 size_flags_vertical = 4
@@ -70,14 +76,14 @@ texture = ExtResource("3_armor")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="ArmorCaption" type="Label" parent="Plates/FortressPanel/FortressRow/Bars/ArmorRow"]
+[node name="ArmorCaption" type="Label" parent="FortressPanel/FortressRow/Bars/ArmorRow" unique_id=74889627]
 custom_minimum_size = Vector2(60, 0)
 layout_mode = 2
 theme_type_variation = &"HudText"
 text = "Rüstung"
 vertical_alignment = 1
 
-[node name="ArmorBar" type="ProgressBar" parent="Plates/FortressPanel/FortressRow/Bars/ArmorRow"]
+[node name="ArmorBar" type="ProgressBar" parent="FortressPanel/FortressRow/Bars/ArmorRow" unique_id=1535949523]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 12)
 layout_mode = 2
@@ -87,7 +93,7 @@ mouse_filter = 2
 theme_type_variation = &"HudBar"
 show_percentage = false
 
-[node name="ArmorText" type="Label" parent="Plates/FortressPanel/FortressRow/Bars/ArmorRow"]
+[node name="ArmorText" type="Label" parent="FortressPanel/FortressRow/Bars/ArmorRow" unique_id=1541046853]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(64, 0)
 layout_mode = 2
@@ -96,11 +102,11 @@ text = "0 / 0"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="HpRow" type="HBoxContainer" parent="Plates/FortressPanel/FortressRow/Bars"]
+[node name="HpRow" type="HBoxContainer" parent="FortressPanel/FortressRow/Bars" unique_id=1236453157]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="HpIcon" type="TextureRect" parent="Plates/FortressPanel/FortressRow/Bars/HpRow"]
+[node name="HpIcon" type="TextureRect" parent="FortressPanel/FortressRow/Bars/HpRow" unique_id=1805240227]
 custom_minimum_size = Vector2(18, 18)
 layout_mode = 2
 size_flags_vertical = 4
@@ -109,14 +115,14 @@ texture = ExtResource("4_heart")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="HpCaption" type="Label" parent="Plates/FortressPanel/FortressRow/Bars/HpRow"]
+[node name="HpCaption" type="Label" parent="FortressPanel/FortressRow/Bars/HpRow" unique_id=1570906027]
 custom_minimum_size = Vector2(60, 0)
 layout_mode = 2
 theme_type_variation = &"HudText"
 text = "HP"
 vertical_alignment = 1
 
-[node name="HpBar" type="ProgressBar" parent="Plates/FortressPanel/FortressRow/Bars/HpRow"]
+[node name="HpBar" type="ProgressBar" parent="FortressPanel/FortressRow/Bars/HpRow" unique_id=1580853119]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 12)
 layout_mode = 2
@@ -126,7 +132,7 @@ mouse_filter = 2
 theme_type_variation = &"HudHp"
 show_percentage = false
 
-[node name="HpText" type="Label" parent="Plates/FortressPanel/FortressRow/Bars/HpRow"]
+[node name="HpText" type="Label" parent="FortressPanel/FortressRow/Bars/HpRow" unique_id=1762025893]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(64, 0)
 layout_mode = 2
@@ -135,15 +141,18 @@ text = "100 / 100"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="NamePanel" type="PanelContainer" parent="Plates"]
+[node name="NamePanel" type="PanelContainer" parent="." unique_id=1360268161 groups=["word_plate_keep_clear"]]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 32)
-layout_mode = 2
-size_flags_horizontal = 0
+layout_mode = 0
+offset_left = 72.0
+offset_top = 70.0
+offset_right = 121.0
+offset_bottom = 102.0
 mouse_filter = 2
 theme_type_variation = &"HudNamePlate"
 
-[node name="PlayerName" type="Label" parent="Plates/NamePanel"]
+[node name="PlayerName" type="Label" parent="NamePanel" unique_id=1156921141]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HudName"
@@ -151,14 +160,15 @@ text = "Spieler"
 vertical_alignment = 1
 text_overrun_behavior = 3
 
-[node name="Portrait" type="Control" parent="." groups=["word_plate_keep_clear"]]
+[node name="Portrait" type="Control" parent="." unique_id=1189159918 groups=["word_plate_keep_clear"]]
+anchors_preset = 0
 offset_left = 12.0
 offset_top = 16.0
 offset_right = 92.0
 offset_bottom = 96.0
 mouse_filter = 2
 
-[node name="Disc" type="PanelContainer" parent="Portrait"]
+[node name="Disc" type="PanelContainer" parent="Portrait" unique_id=1629612814]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -167,36 +177,57 @@ offset_left = 12.0
 offset_top = 12.0
 offset_right = -12.0
 offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
 theme_type_variation = &"HudDisc"
 
-[node name="Avatar" type="TextureRect" parent="Portrait/Disc"]
+[node name="Avatar" type="TextureRect" parent="Portrait/Disc" unique_id=1510725093]
 layout_mode = 2
 mouse_filter = 2
 texture = ExtResource("10_avatar")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Ring" type="TextureRect" parent="Portrait"]
+[node name="Ring" type="TextureRect" parent="Portrait" unique_id=533393917]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
 texture = ExtResource("8_ring")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="XpRing" type="Control" parent="Portrait"]
+[node name="XpRing" type="Control" parent="Portrait" unique_id=1620944163]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("11_xp")
 
-[node name="LevelBadge" type="TextureRect" parent="Portrait"]
+[node name="LevelFlare" parent="Portrait" unique_id=580714092 node_paths=PackedStringArray("badge") instance=ExtResource("12_flare")]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_top = -1.0
+offset_bottom = -1.0
+grow_horizontal = 2
+grow_vertical = 0
+badge = NodePath("../LevelBadge")
+
+[node name="LevelBadge" type="TextureRect" parent="Portrait" unique_id=1216902346]
+material = SubResource("badge_glow")
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
@@ -207,30 +238,35 @@ offset_left = -15.0
 offset_top = -18.0
 offset_right = 15.0
 offset_bottom = 17.0
+grow_horizontal = 2
+grow_vertical = 0
 mouse_filter = 2
 texture = ExtResource("9_badge")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="LevelText" type="Label" parent="Portrait/LevelBadge"]
+[node name="LevelText" type="Label" parent="Portrait/LevelBadge" unique_id=799955545]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_bottom = -3.0
+offset_top = 2.0
+offset_bottom = -1.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_type_variation = &"HudLevel"
 text = "1"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="EncounterPanel" type="PanelContainer" parent="." groups=["word_plate_keep_clear"]]
+[node name="EncounterPanel" type="PanelContainer" parent="." unique_id=1504664251 groups=["word_plate_keep_clear"]]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(320, 68)
-anchors_preset = 1
+custom_minimum_size = Vector2(344, 68)
+layout_mode = 0
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -336.0
+offset_left = -360.0
 offset_top = 16.0
 offset_right = -16.0
 offset_bottom = 84.0
@@ -238,33 +274,40 @@ grow_horizontal = 0
 mouse_filter = 2
 theme_type_variation = &"HudEncounter"
 
-[node name="Rows" type="VBoxContainer" parent="EncounterPanel"]
+[node name="Rows" type="VBoxContainer" parent="EncounterPanel" unique_id=724844995]
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"HudStack"
 
-[node name="WaveRow" type="HBoxContainer" parent="EncounterPanel/Rows"]
-custom_minimum_size = Vector2(0, 34)
+[node name="WaveRow" type="HBoxContainer" parent="EncounterPanel/Rows" unique_id=2075101030]
+custom_minimum_size = Vector2(0, 28)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Swords" type="TextureRect" parent="EncounterPanel/Rows/WaveRow"]
+[node name="SwordsSlot" type="Control" parent="EncounterPanel/Rows/WaveRow" unique_id=1539849769]
 custom_minimum_size = Vector2(22, 22)
 layout_mode = 2
+
+[node name="Swords" type="TextureRect" parent="EncounterPanel/Rows/WaveRow/SwordsSlot" unique_id=1494136226]
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 0
+offset_top = 4.0
+offset_right = 22.0
+offset_bottom = 26.0
 size_flags_vertical = 4
 mouse_filter = 2
 texture = ExtResource("5_swords")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="WaveTitle" type="Label" parent="EncounterPanel/Rows/WaveRow"]
+[node name="WaveTitle" type="Label" parent="EncounterPanel/Rows/WaveRow" unique_id=647162087]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HudTitle"
 text = "Welle 1"
 vertical_alignment = 1
 
-[node name="WaveBar" type="ProgressBar" parent="EncounterPanel/Rows/WaveRow"]
+[node name="WaveBar" type="ProgressBar" parent="EncounterPanel/Rows/WaveRow" unique_id=1399339416]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 12)
 layout_mode = 2
@@ -274,7 +317,7 @@ mouse_filter = 2
 theme_type_variation = &"HudBar"
 show_percentage = false
 
-[node name="WaveText" type="Label" parent="EncounterPanel/Rows/WaveRow"]
+[node name="WaveText" type="Label" parent="EncounterPanel/Rows/WaveRow" unique_id=386324878]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HudText"
@@ -282,31 +325,48 @@ text = "0 / 0"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="TallyRow" type="HBoxContainer" parent="EncounterPanel/Rows"]
-custom_minimum_size = Vector2(0, 34)
+[node name="TallyRow" type="HBoxContainer" parent="EncounterPanel/Rows" unique_id=102547370]
+custom_minimum_size = Vector2(0, 28)
 layout_mode = 2
 mouse_filter = 2
+theme_type_variation = &"HudTallyRow"
 
-[node name="Skull" type="TextureRect" parent="EncounterPanel/Rows/TallyRow"]
+[node name="KillsHalf" type="HBoxContainer" parent="EncounterPanel/Rows/TallyRow" unique_id=1048183179]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+alignment = 2
+
+[node name="SkullSlot" type="Control" parent="EncounterPanel/Rows/TallyRow/KillsHalf" unique_id=1302309385]
 custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
+
+[node name="Skull" type="TextureRect" parent="EncounterPanel/Rows/TallyRow/KillsHalf/SkullSlot" unique_id=715265773]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 0
+offset_top = 5.0
+offset_right = 20.0
+offset_bottom = 25.0
 size_flags_vertical = 4
 mouse_filter = 2
 texture = ExtResource("6_skull")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Kills" type="Label" parent="EncounterPanel/Rows/TallyRow"]
+[node name="Kills" type="Label" parent="EncounterPanel/Rows/TallyRow/KillsHalf" unique_id=1073942573]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 3
 theme_type_variation = &"HudText"
 text = "0 besiegt"
 vertical_alignment = 1
 
-[node name="Book" type="TextureRect" parent="EncounterPanel/Rows/TallyRow"]
+[node name="MasteredHalf" type="HBoxContainer" parent="EncounterPanel/Rows/TallyRow" unique_id=1458412678]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="Book" type="TextureRect" parent="EncounterPanel/Rows/TallyRow/MasteredHalf" unique_id=2009477968]
 unique_name_in_owner = true
-visible = false
 custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
 size_flags_vertical = 4
@@ -315,15 +375,9 @@ texture = ExtResource("7_book")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Mastered" type="Label" parent="EncounterPanel/Rows/TallyRow"]
+[node name="Mastered" type="Label" parent="EncounterPanel/Rows/TallyRow/MasteredHalf" unique_id=1784416466]
 unique_name_in_owner = true
-visible = false
 layout_mode = 2
 theme_type_variation = &"HudText"
 text = "0 gemeistert"
 vertical_alignment = 1
-
-[node name="TallyEnd" type="Control" parent="EncounterPanel/Rows/TallyRow"]
-custom_minimum_size = Vector2(16, 0)
-layout_mode = 2
-mouse_filter = 2

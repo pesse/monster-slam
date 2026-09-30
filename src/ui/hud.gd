@@ -30,6 +30,9 @@ const HP_WARN := 0.3
 @onready var _player_name: Label = %PlayerName
 @onready var _level_text: Label = %LevelText
 @onready var _xp_ring: XpRing = %XpRing
+## Das goldene Aufleuchten des Level-Badges beim Aufstieg. Öffentlich, weil der Kampf es
+## beim Start vorwärmt (FxWarmup) und das Debug-Panel es auslöst.
+@onready var level_flare: LevelFlare = %LevelFlare
 
 
 func _ready() -> void:
@@ -46,6 +49,8 @@ func _ready() -> void:
 	# Erfahrung meldet sich selbst (Profilstand, kein Lauf-Zustand) — der Ring hängt am
 	# Signal statt an jedem Refresh, weil er sich nur beim Verbuchen ändert.
 	PlayerLevel.changed.connect(func(_total_xp, _level): _refresh_level())
+	# `changed` kommt vorher: das Badge zeigt schon die neue Zahl, wenn es aufleuchtet.
+	PlayerLevel.leveled_up.connect(func(_level, _points): level_flare.play())
 	_refresh_level()
 	_refresh()
 

@@ -11,10 +11,13 @@ extends Node3D
 ##         das ganze Gelände und schaut mit der Maus; Alt gibt die Maus frei.
 ##         M (oder der Knopf) schickt ein Monster im Grundtempo vom Spawn zur Mauer; dort
 ##         explodiert es wie im Kampf, ohne der Festung etwas zu melden (keine Spur).
-##         „Regler ▸" (oder R) klappt die Regler auf, halb durchsichtig, in drei Reitern:
+##         „Regler ▸" (oder R) klappt die Regler auf, halb durchsichtig, in vier Reitern:
 ##         Ansicht (Thema, Stufe, Sicht, Bildmitte, Ausschnitt, Neigung), Bahn (Festungsgröße,
-##         Festungsfront, Spawn, Bahnbreite, Monstertempo) und Licht (Schattentiefe, Bias,
-##         Normal-Bias, Weichheit; Tageszeit, Uhr, Zeitraffer und die Grenzen des SunCycle) —
+##         Festungsfront, Spawn, Bahnbreite, Monstertempo), Licht (Schattentiefe, Bias,
+##         Normal-Bias, Weichheit; Tageszeit, Uhr, Zeitraffer und die Grenzen des SunCycle)
+##         und HUD (das Kampf-HUD zeigen; „Aufsteigen" lässt das Level-Badge aufleuchten,
+##         die Felder darunter setzen HP, Rüstung, XP-Ring, Zählerzeile und Wellenfortschritt
+##         — nur GameState im Speicher und die Anzeige, nichts im Profil) —
 ##         Namen wie die Konstanten im Spiel. „Werte kopieren" legt sie als Konstanten in die
 ##         Zwischenablage und schreibt sie in die Konsole. Der flache Boden wächst nicht mit
 ##         der Festungsgröße (FLAT_HALF_X ist eine Konstante des WaveRunners).
@@ -47,6 +50,9 @@ extends Node3D
 ##         Thema mit Beispielwerten: voll (Rüstung, Meisterungen) und schmal (ohne beides,
 ##         langer Name, geschlossene Eingabe der Ich-Sicht), als
 ##         reports/battle_themes/hud_<fall>.png. Werte stehen nur im Speicher.
+##     … -- --levelup
+##         Das Aufleuchten des Level-Badges in Schritten nach dem Aufstieg, als
+##         reports/battle_themes/levelup_<ms>.png. Jeder Schritt ist ein eigener Aufstieg.
 ##     … -- --plates
 ##         Sieben Monster dicht beieinander auf der Bahn, in beiden Sichten — die Wortschilder
 ##         dürfen sich nicht überdecken — als reports/battle_themes/plates_<sicht>.png.
@@ -115,6 +121,10 @@ var _sun_cycle: SunCycle
 var _sun_speed := 0.0
 ## Die gespawnten Monster — eigener Knoten, damit sie einen Umbau der Deko überstehen.
 var _walkers: Node3D
+## Das Kampf-HUD für den Aufstieg (L), oder null, solange es nicht gebraucht wurde.
+var _hud: Control
+## Das Level, das das HUD zeigt — nur hier, PlayerLevel bleibt unberührt.
+var _shown_level := 1
 
 
 func _ready() -> void:
@@ -158,6 +168,8 @@ func _ready() -> void:
 		_shoot_blast.call_deferred()
 	elif _has_arg("hud"):
 		_shoot_hud.call_deferred()
+	elif _has_arg("levelup"):
+		_shoot_level_up.call_deferred()
 	elif _has_arg("plates"):
 		_shoot_plates.call_deferred()
 	elif _has_arg("fps"):
@@ -246,10 +258,18 @@ func _fill_controls() -> void:
 		%RealTimeSpin.editable = not on
 		%SunSpeedSpin.editable = not on)
 	%CopyButton.pressed.connect(_copy_layout)
+	%HudCheck.toggled.connect(_show_hud)
+	%LevelUpButton.pressed.connect(_level_up)
+	%KillsSpin.value_changed.connect(func(_v: float) -> void: _show_tally())
+	%MasteredSpin.value_changed.connect(func(_v: float) -> void: _show_tally())
+	for spin: SpinBox in [%WaveNumberSpin, %WaveResolvedSpin, %WaveTotalSpin, %HpSpin,
+			%HpMaxSpin, %ArmorSpin, %ArmorMaxSpin, %XpSpin]:
+		spin.value_changed.connect(func(_v: float) -> void: _show_tally())
 	%MenuToggle.toggled.connect(func(on: bool) -> void:
 		%Menu.visible = on
 		%MenuToggle.text = "Regler ▾" if on else "Regler ▸")
-	var batch := ["shoot", "specimens", "bow", "blast", "hitches", "fps", "fortress"].any(_has_arg)
+	var batch := ["shoot", "specimens", "bow", "blast", "hitches", "fps", "fortress",
+			"levelup"].any(_has_arg)
 	%MenuToggle.visible = not batch
 
 
@@ -581,6 +601,72 @@ func _shoot_hud() -> void:
 			piece.queue_free()
 		await get_tree().process_frame
 	GameState.reset()
+	get_tree().quit()
+
+
+## Das HUD ein- oder ausblenden. Es liegt oben links wie die Regler — die rücken so lange
+## nach unten links. Unter den Reglern eingehängt, damit sie bedienbar bleiben.
+func _show_hud(on: bool) -> void:
+	if on and _hud == null:
+		_hud = (load("res://scenes/ui/hud.tscn") as PackedScene).instantiate() as Control
+		$UI.add_child(_hud)
+		$UI.move_child(_hud, $UI/Margin.get_index())
+		_shown_level = int(PlayerLevel.progress()["level"])
+		_show_tally.call_deferred()
+	if _hud != null:
+		_hud.visible = on
+	%HudCheck.set_pressed_no_signal(on)
+	($UI/Margin/Root as Control).size_flags_vertical = \
+			Control.SIZE_SHRINK_END if on else Control.SIZE_FILL
+
+
+## Die Werte aus dem Reiter HUD: Festung, Welle und Zähler gehen in GameState (nur im
+## Speicher, wie beim Bilderlauf --hud), das HUD frischt sich selbst auf — so gelten seine
+## Farbschwellen und Regeln. Nur Meisterungen (Sitzung) und XP-Ring (Profil) setzt die
+## Werkbank direkt, statt Sitzung und Erfahrung anzufassen.
+func _show_tally() -> void:
+	_show_hud(true)
+	GameState.fortress_max_health = maxi(1, int(%HpMaxSpin.value))
+	GameState.fortress_health = mini(int(%HpSpin.value), GameState.fortress_max_health)
+	GameState.fortress_armor_max = int(%ArmorMaxSpin.value)
+	GameState.fortress_armor = mini(int(%ArmorSpin.value), GameState.fortress_armor_max)
+	GameState.monsters_defeated = int(%KillsSpin.value)
+	GameState.wave_number = int(%WaveNumberSpin.value)
+	GameState.wave_total = int(%WaveTotalSpin.value)
+	GameState.wave_resolved = mini(int(%WaveResolvedSpin.value), GameState.wave_total)
+	_hud.call("_refresh")
+	var mastered := int(%MasteredSpin.value)
+	(_hud.get_node("%Book") as Control).visible = mastered > 0
+	(_hud.get_node("%Mastered") as Control).visible = mastered > 0
+	(_hud.get_node("%Mastered") as Label).text = "%d gemeistert" % mastered
+	(_hud.get_node("%XpRing") as XpRing).ratio = %XpSpin.value / 100.0
+
+
+## Ein Aufstieg, wie ihn das HUD auf PlayerLevel.leveled_up zeigt — aber ohne Erfahrung zu
+## verbuchen: Zahl und Ring werden nur im HUD gesetzt.
+func _level_up() -> void:
+	_show_hud(true)
+	_shown_level += 1
+	(_hud.get_node("%LevelText") as Label).text = str(_shown_level)
+	%XpSpin.value = 5
+	(_hud.get("level_flare") as LevelFlare).play()
+
+
+func _shoot_level_up() -> void:
+	var dir := ProjectSettings.globalize_path(SHOT_DIR)
+	DirAccess.make_dir_recursive_absolute(dir)
+	_show_hud(true)
+	await get_tree().create_timer(0.3).timeout
+	for ms in [0, 60, 150, 300, 500, 800, 1200]:
+		_level_up()
+		if ms > 0:
+			await get_tree().create_timer(ms / 1000.0).timeout
+		await RenderingServer.frame_post_draw
+		var image := get_viewport().get_texture().get_image()
+		var path := "%s/levelup_%d.png" % [dir, ms]
+		image.get_region(Rect2i(0, 0, 320, 200)).save_png(path)
+		print("battle_theme_lab: ", path)
+		await get_tree().create_timer(1.5).timeout
 	get_tree().quit()
 
 

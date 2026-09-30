@@ -86,6 +86,11 @@ process_mode = 3
 [node name="FastResolveButton" parent="UI" instance=ExtResource("13_fast_resolve")]
 
 [node name="DebugPanel" parent="UI" instance=ExtResource("4_debug")]
+anchors_preset = 1
+offset_left = -299.0
+offset_top = 404.0
+offset_right = -18.0
+offset_bottom = 630.0
 
 [node name="WaveStats" parent="UI" instance=ExtResource("5_stats")]
 
