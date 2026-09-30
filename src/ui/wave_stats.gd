@@ -39,6 +39,16 @@ extends PanelContainer
 ## und Auslassung (Vorlage `BalanceLineTemplate`) — sonst wüchse die unsichtbare Seite mit
 ## einem langen Wort und schöbe über den PageStack auch Stufe 1 aus dem Bild.
 ##
+## **Enter geht weiter**, wo auch ein Knopf weitergeht: auf Stufe 1 „Weiter" (erst, wenn
+## die Kiste offen ist — gesperrt ist gesperrt), auf Stufe 2 die nächste Welle, nach einer
+## Niederlage der Weg zurück. Gespielt wird mit der Tastatur; der Griff zur Maus zwischen
+## zwei Wellen war der einzige im Lauf. Nach jedem Stufenwechsel zählt Enter erst nach
+## `enter_grace_ms`: das Enter der letzten Antwort oder der Auflösung soll nicht durch das
+## Ergebnis klicken, und ein doppeltes Enter nicht über die Schwierigkeitswahl hinweg
+## starten. Enter hält auch die Kiste auf (`ui_accept`); das gehaltene Enter schickt nur
+## Wiederholungen und geht deshalb nicht weiter — erst ein neuer Druck. Die Leertaste geht
+## nicht weiter: sie ist an der Kiste die Haltetaste und sonst nichts.
+##
 ## Das Layout liegt in wave_stats.tscn; hier nur die Befüllung (show_stats), der
 ## Stufenwechsel und die Auswahl-Logik. Interaktive Controls haben focus_mode=FOCUS_NONE
 ## (in der Szene gesetzt), sonst reißt die Antwort-LineEdit (die sich per _process den
@@ -72,6 +82,9 @@ const CHEST_HINT := "2 Sekunden auf die Kiste drücken\n(oder Leertaste halten)"
 ## Steht statt des Kistennamens, wenn kein Monster besiegt wurde. Zweizeilig, weil der
 ## Titel nicht umbricht und die Spalte sonst den Screen verbreitern würde.
 const CONSOLATION_TITLE := "Kein Monster besiegt –\naller Anfang ist schwer"
+## So lange nach einem Stufenwechsel zählt Enter noch nicht (siehe Kopf). Eine Variable,
+## damit Tests ohne Warten auskommen.
+var enter_grace_ms := 400
 
 enum Stage {
 	RESULT,  ## Ergebnis der Welle: Zahlen und Schatzkiste.
@@ -104,6 +117,7 @@ var _selected_choice: int = DEFAULT_CHOICE
 var _won: bool = true
 var _wave_number: int = 0
 var _chest_gold: int = 0
+var _stage_since_ms: int = 0
 
 
 func _ready() -> void:
@@ -214,6 +228,7 @@ func stage() -> Stage:
 
 func _goto_stage(next: Stage) -> void:
 	_stage = next
+	_stage_since_ms = Time.get_ticks_msec()
 	_result_page.visible = next == Stage.RESULT
 	_next_page.visible = next == Stage.NEXT
 	# Beide Stufen teilen die Fußzeile: links der Weg zurück, rechts der Weg weiter. Alle
@@ -229,6 +244,31 @@ func _goto_stage(next: Stage) -> void:
 				Color(0.3, 1.0, 0.45) if _won else Color(1.0, 0.35, 0.35))
 	else:
 		_title.remove_theme_color_override("font_color")
+
+
+## `_input` und nicht `_unhandled_input`: die Knöpfe haben keinen Fokus (siehe Kopf), und
+## was sonst gerade Enter bekäme, soll es hier nicht bekommen.
+func _input(event: InputEvent) -> void:
+	if not is_visible_in_tree():
+		return
+	var key := event as InputEventKey
+	if key == null or not key.pressed or key.echo or not key.keycode in [KEY_ENTER, KEY_KP_ENTER]:
+		return
+	if Time.get_ticks_msec() - _stage_since_ms < enter_grace_ms:
+		return
+	var button := _forward_button()
+	if not button.visible or button.disabled:
+		return
+	accept_event()
+	button.pressed.emit()
+
+
+## Der Knopf, auf den Enter drückt: rechts in der Fußzeile, nach einer Niederlage der
+## einzige Weg, den Stufe 2 noch hat.
+func _forward_button() -> Button:
+	if _stage == Stage.RESULT:
+		return _result_continue
+	return _start_button if _won else _menu_button
 
 
 func _title_for(stage_value: Stage) -> String:

@@ -324,7 +324,8 @@ Mit **Escape** kommst du während einer Welle sofort zurück zum Start-Screen.
 - Die angefangene Welle zählt nicht: es gibt keine Auflösung, keine Statistik und keine
   Schatzkiste.
 - Erfahrung, die du in der Welle schon bekommen hast, bleibt dir.
-- Nach dem Ende einer Welle ist Escape ohne Wirkung; dort führen die Knöpfe weiter.
+- Nach dem Ende einer Welle ist Escape ohne Wirkung; dort führen die Knöpfe weiter
+  (oder Enter).
 
 ## 8. Der Wellenabschluss
 
@@ -384,7 +385,7 @@ Rechts steht die **Schatzkiste**.
   trotzdem ein Goldstück: aus einer Welle ganz mit leeren Händen zu gehen, frustriert,
   gerade wenn die Wörter noch neu sind.
 
-Mit „Weiter ▸“ geht es zur zweiten Stufe.
+Mit „Weiter ▸“ (oder Enter, sobald die Kiste offen ist) geht es zur zweiten Stufe.
 
 ### Stufe 2: Die nächste Welle
 
@@ -395,7 +396,7 @@ Aufgaben du im Lauf neu gemeistert hast. Mit „↺“ markierte Wörter hast du
 
 Darunter wählst du die **Schwierigkeit der nächsten Welle**, im Vergleich zu der eben
 gespielten: „Viel leichter“, „Leichter“, „Gleich“, „Schwieriger“, „Viel schwieriger“.
-Vorausgewählt ist „Gleich“. Mit „Nächste Welle“ geht es weiter, mit „⟵ Zurück zum
+Vorausgewählt ist „Gleich“. Mit „Nächste Welle“ (oder Enter) geht es weiter, mit „⟵ Zurück zum
 Menü“ endet der Lauf.
 
 Jede neue Welle bringt ein Monster mehr als die vorige.
@@ -404,7 +405,8 @@ Jede neue Welle bringt ein Monster mehr als die vorige.
 
 Die Überschrift lautet dann „Festung gefallen (Welle …)“. Die Kiste gibt es trotzdem:
 verdient ist verdient, und das Gold gehört dir, nicht dem Lauf. Auf Stufe 2 steht
-„Lauf beendet“ mit der Bilanz des ganzen Laufs, und es gibt nur den Weg zurück ins Menü.
+„Lauf beendet“ mit der Bilanz des ganzen Laufs, und es gibt nur den Weg zurück ins Menü
+(auch mit Enter).
 Der nächste Lauf beginnt mit voller Festung.
 
 ## 9. Gold, Erfahrung und Level
