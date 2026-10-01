@@ -120,6 +120,19 @@ func record(task_id: String, correct: bool, response_time_ms: int = 0, initial_c
 	return newly_mastered
 
 
+## Fälligkeit (unix) einer Aufgabe laut Scheduler; 0, wenn sie nie beantwortet wurde.
+func due_at(task_id: String) -> int:
+	return _sr.due_at(task_id)
+
+
+## Eine Kopie des Schedulers — für die Werkbank, die mit verstellter Uhr fragt, was fällig
+## wäre, ohne den Lernstand anzufassen.
+func scheduler_copy() -> SpacedRepetition:
+	var sr := _new_scheduler()
+	sr.from_dict(_sr.to_dict())
+	return sr
+
+
 ## learnable_ids, die jetzt fällig sind (überfälligste zuerst).
 ## Nur bereits gesehene Aufgaben; neue (ohne Record) wählt der WaveGenerator separat.
 func due_task_ids() -> Array:

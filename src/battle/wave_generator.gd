@@ -42,6 +42,11 @@ const REWARD_SENSITIVITY := 0.6
 ## denn die Wiederholungen wählt der Scheduler, nicht der Spieler.
 const MASTERED_REWARD_FACTOR := 0.1
 
+## Die Gruppen der Auswahl (siehe ordered()), so auch in der Spur.
+const GROUP_DUE := "due"
+const GROUP_NEW := "new"
+const GROUP_REST := "rest"
+
 ## Globaler Tempo-Multiplikator, vom WaveRunner aus der gewählten Wellen-Schwierigkeit gesetzt
 ## (1.0 = neutral, >1 schneller/schwerer, <1 langsamer/leichter). Ist selbst eine
 ## Schwierigkeits-Quelle und wirkt daher multiplikativ auf das Referenztempo.
@@ -121,25 +126,110 @@ func has_playable(pool: Dictionary) -> bool:
 ## `shown_sources` (Lexem-id -> laufende Spawn-Nummer der letzten Zeigung) sind die in
 ## dieser Welle schon gezeigten Grundwörter; sie kommen erst dran, wenn der Rest des
 ## Pools erschöpft ist (siehe ordered()).
+##
+## Der Plan trägt in `task["pick"]` den Grund der Wahl (siehe pick_reason()); die Spur
+## schreibt ihn in jede spawn-Zeile.
 func pick(pool: Dictionary, exclude_sources: Dictionary = {}, shown_sources: Dictionary = {}) -> Dictionary:
-	var candidates := _candidates(pool)
-	if candidates.is_empty():
-		return {}
-	var ordered_candidates := ordered(candidates, PlayerProgress.due_task_ids(),
-		PlayerProgress.has_seen, shown_sources)
+	return pick_with(listing(pool, shown_sources, PlayerProgress.due_task_ids()), exclude_sources)
 
-	# Der Reihe nach durchprobieren, bis eine Aufgabe auflösbar ist.
-	# Erster Durchlauf meidet bereits sichtbare Grundwörter; findet sich damit nichts
-	# Spielbares, lässt der zweite Durchlauf die Sperre fallen (lieber ein Duplikat
-	# als eine hängende Welle).
+
+## Die Kandidaten des Pools in der Reihenfolge, in der pick() sie probiert, jeder mit
+## `group` und `repeat` (siehe ordered()). `due`: die fälligen learnable_ids — im Spiel
+## PlayerProgress.due_task_ids(), in der Werkbank die einer verstellten Uhr.
+func listing(pool: Dictionary, shown_sources: Dictionary, due: Array) -> Array:
+	return ordered(_candidates(pool), due, PlayerProgress.has_seen, shown_sources)
+
+
+## Wählt aus einer listing() den ersten spielbaren Kandidaten.
+##
+## Der Reihe nach durchprobieren, bis eine Aufgabe auflösbar ist. Erster Durchlauf meidet
+## bereits sichtbare Grundwörter; findet sich damit nichts Spielbares, lässt der zweite
+## Durchlauf die Sperre fallen (lieber ein Duplikat als eine hängende Welle).
+func pick_with(ordered_candidates: Array, exclude_sources: Dictionary = {}) -> Dictionary:
 	for respect_exclude in [true, false]:
-		for candidate in ordered_candidates:
+		for i in ordered_candidates.size():
+			var candidate: Dictionary = ordered_candidates[i]
 			if respect_exclude and exclude_sources.has(str(candidate["source"].get("id", ""))):
 				continue
 			var plan := _build_plan(candidate)
 			if not plan.is_empty():
+				plan["task"]["pick"] = pick_reason(ordered_candidates, i, not respect_exclude,
+						float(plan["net"]), PlayerProgress.due_at(candidate["learnable_id"]))
 				return plan
 	return {}
+
+
+## Warum der Kandidat an Stelle `index` gewählt wurde — für die Spur, das Debug-Panel und
+## die Werkbank. Nur Ids und Zahlen, keine Wörter: die stehen schon in der spawn-Zeile.
+##   group:    "due" | "new" | "rest" (siehe ordered())
+##   repeat:   das Wort war in dieser Welle schon dran (alle anderen sind verbraucht)
+##   pos:      Stelle in der Reihenfolge (0 = vorn); davor lagen Wörter auf dem Feld
+##             oder Unauflösbares
+##   pool:     Zahl der Kandidaten
+##   counts:   je Gruppe, wie viele noch nicht gezeigte es gab, dazu `repeat`
+##   fallback: die Sperre gegen Wörter auf dem Feld musste fallen
+##   net:      t - c des Monsters
+##   due_at:   Fälligkeit (unix), 0 = nie beantwortet
+static func pick_reason(candidates: Array, index: int, fallback: bool, net: float,
+		due_at: int) -> Dictionary:
+	var counts := {GROUP_DUE: 0, GROUP_NEW: 0, GROUP_REST: 0, "repeat": 0}
+	for c in candidates:
+		if bool(c.get("repeat", false)):
+			counts["repeat"] += 1
+		else:
+			counts[str(c["group"])] += 1
+	var chosen: Dictionary = candidates[index]
+	return {
+		"group": str(chosen["group"]),
+		"repeat": bool(chosen.get("repeat", false)),
+		"pos": index,
+		"pool": candidates.size(),
+		"counts": counts,
+		"fallback": fallback,
+		"net": snappedf(net, 0.01),
+		"due_at": due_at,
+	}
+
+
+const GROUP_LABELS := {"due": "fällig", "new": "neu", "rest": "Rest"}
+
+
+## Der Grund als eine Zeile, z. B. „fällig (seit 2 T) · Platz 1 von 34 · fällig 3 / neu 12
+## / Rest 19 / gezeigt 0 · t−c +0.25". `now`: Bezugszeit für die Fälligkeit (unix).
+static func describe_reason(why: Dictionary, now: int) -> String:
+	if why.is_empty():
+		return ""
+	var group := str(GROUP_LABELS.get(str(why.get("group", "")), why.get("group", "")))
+	var due_at := int(why.get("due_at", 0))
+	if due_at > 0:
+		group += " (%s)" % due_text(due_at, now)
+	if bool(why.get("repeat", false)):
+		group = "Wiederholung, " + group
+	var counts: Dictionary = why.get("counts", {})
+	var parts: Array = [
+		group,
+		"Platz %d von %d" % [int(why.get("pos", 0)) + 1, int(why.get("pool", 0))],
+		"fällig %d / neu %d / Rest %d / schon gezeigt %d" % [int(counts.get("due", 0)),
+				int(counts.get("new", 0)), int(counts.get("rest", 0)), int(counts.get("repeat", 0))],
+		"t−c %+.2f" % float(why.get("net", 0.0)),
+	]
+	if bool(why.get("fallback", false)):
+		parts.append("trotz Wort auf dem Feld")
+	return " · ".join(parts)
+
+
+## „seit 2 T", „in 8 min" — die Fälligkeit relativ zu `now`.
+static func due_text(due_at: int, now: int) -> String:
+	var delta := due_at - now
+	var span := absi(delta)
+	var amount: String
+	if span < 3600:
+		amount = "%d min" % ceili(span / 60.0)
+	elif span < 86400:
+		amount = "%d h" % roundi(span / 3600.0)
+	else:
+		amount = "%d T" % roundi(span / 86400.0)
+	return ("in " if delta > 0 else "seit ") + amount
 
 
 ## Die Auswahlreihenfolge von pick(), statisch und ohne Autoload prüfbar.
@@ -152,6 +242,10 @@ func pick(pool: Dictionary, exclude_sources: Dictionary = {}, shown_sources: Dic
 ## eine andere Richtung oder Aufgabenart sofort wieder.
 ##
 ## `due`: learnable_ids, die heute fällig sind. `seen`: learnable_id -> bool.
+##
+## Jeder Kandidat bekommt dabei `group` ("due" | "new" | "rest") und `repeat` (Wort in
+## dieser Welle schon gezeigt) — der Grund der Wahl kommt so aus derselben Sortierung und
+## nicht aus einer zweiten Regel daneben.
 static func ordered(candidates: Array, due: Array, seen: Callable, shown: Dictionary) -> Array:
 	var due_set := {}
 	for id in due:
@@ -161,7 +255,9 @@ static func ordered(candidates: Array, due: Array, seen: Callable, shown: Dictio
 	for c in candidates:
 		var id: String = c["learnable_id"]
 		var rank := 0 if due_set.has(id) else (1 if not seen.call(id) else 2)
+		c["group"] = [GROUP_DUE, GROUP_NEW, GROUP_REST][rank]
 		var source_id := str(c["source"].get("id", ""))
+		c["repeat"] = shown.has(source_id)
 		if shown.has(source_id):
 			var key := int(shown[source_id])
 			if not repeats.has(key):
@@ -381,4 +477,5 @@ func _build_plan(candidate: Dictionary) -> Dictionary:
 		"damage": int(rule.get("base_damage", 10)),
 		"reward": reward,
 		"xp": xp,
+		"net": net,
 	}

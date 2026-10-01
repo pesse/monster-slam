@@ -960,6 +960,14 @@ Zeile JSON.
 - **Wer eine Zeile braucht, die es nicht gibt, gibt dem EventBus ein Signal** — das Spiel
   ruft das Protokoll nie direkt. Ein Fehler darin darf kein Spiel kosten
   (`push_warning` und Stille, kein `push_error`).
+- **Jede `spawn`-Zeile sagt, warum das Wort kam** (`why`, aus
+  `WaveGenerator.pick_reason`): Gruppe (fällig/neu/Rest), ob das Wort in der Welle schon
+  dran war, Stelle in der Reihenfolge, Größe des Pools mit Summen je Gruppe, `t − c` und
+  Fälligkeit. Die Gruppe kommt aus derselben Sortierung, die auch wählt
+  (`WaveGenerator.ordered`), nicht aus einer zweiten Regel. Dieselbe Zeile zeigt im
+  Debug-Build das Debug-Panel („Letzte Spawns") und die Konsole; ohne Spiel zeigt
+  `scenes/dev/pool_lab.tscn` den ganzen Pool in Wahlreihenfolge, mit verstellbarer Uhr
+  und einer simulierten Welle.
 - **Die Ansicht im Reiter ist ein Leser, keine Auswertung.** `TraceLog.recent()` liest nur
   das Ende beider Generationen, `TraceView.rows()` übersetzt Zeile für Zeile; verknüpft wird
   nur die learnable_id einer `answer`-Zeile mit dem Prompt der `spawn`-Zeile. Eine

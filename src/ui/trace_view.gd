@@ -156,6 +156,9 @@ static func _task_hint(line: Dictionary) -> Dictionary:
 	var conf := float(line.get("conf", -1.0))
 	if conf >= 0.0:
 		parts.append("Sicherheit %d %%" % roundi(conf * 100.0))
+	var why := WaveGenerator.describe_reason(line.get("why", {}), int(line.get("at", 0)))
+	if not why.is_empty():
+		parts.append("gewählt: " + why)
 	return {"title": str(line.get("prompt", "")), "body": "Lösung: %s" % _answers(line),
 			"note": " · ".join(parts)}
 
