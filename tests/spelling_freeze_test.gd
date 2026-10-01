@@ -148,6 +148,16 @@ func test_every_folded_accent_has_a_name() -> void:
 		assert_bool(SpellingFreeze.ACCENT_NAMES.has(c)).override_failure_message(c).is_true()
 
 
+## Ein Name, der niemandem im Weg ist, bleibt direkt über dem Wort.
+func test_a_single_name_stays_on_the_lower_row() -> void:
+	_f.play("ils reçoivent", PackedInt32Array([6]))
+	var names := _f.get_node("%Names") as Control
+	var label := names.get_child(0) as Label
+	assert_float(label.position.y + label.get_combined_minimum_size().y) \
+			.is_equal_approx(names.custom_minimum_size.y, 0.5)
+	await _pump(SpellingFreeze.LEAD_MS + SpellingFreeze.duration_ms() + 200)
+
+
 func test_the_names_stand_over_the_word() -> void:
 	_f.play("élève", PackedInt32Array([0, 2]))
 	var names := _f.get_node("%Names")
@@ -156,6 +166,7 @@ func test_the_names_stand_over_the_word() -> void:
 	var second := names.get_child(1) as Label
 	assert_str(first.text).is_equal("accent aigu")
 	assert_str(second.text).is_equal("accent grave")
-	# Nebeneinander passen sie nicht: der zweite steht eine Zeile höher.
-	assert_float(second.position.y).is_less(first.position.y)
+	# Nebeneinander passen sie nicht: gelesen wird von oben nach unten, der linke steht oben.
+	assert_float(first.position.y).is_less(second.position.y)
+	assert_float(first.position.x).is_less(second.position.x)
 	await _pump(SpellingFreeze.LEAD_MS + SpellingFreeze.duration_ms() + 200)

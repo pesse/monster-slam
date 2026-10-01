@@ -39,7 +39,7 @@ const ACCENT_NAMES := {
 	"ç": "cédille",
 	"œ": "e dans l'o", "æ": "e dans l'a",
 }
-## Abstand zweier Namen in einer Zeile; rücken sie näher, kommt der zweite eine Zeile höher.
+## Abstand zweier Namen in einer Zeile; rücken sie näher, steht der linke eine Zeile höher.
 const NAME_GAP := 8.0
 
 ## Wartende Standbilder als [Form, Stellen, Kamerafahrt]. Kommen zwei kurz nacheinander
@@ -143,18 +143,35 @@ func _place_names(text: String, marks: PackedInt32Array) -> void:
 	var measure := func(part: String) -> float:
 		return font.get_string_size(part, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
 	var left := (width - float(measure.call(text))) / 2.0
-	var row_ends: Array[float] = [-INF, -INF]
+	var labels: Array[Label] = []
 	for group in accent_groups(text, marks):
 		var x0 := left + float(measure.call(text.substr(0, int(group["first"]))))
 		var x1 := left + float(measure.call(text.substr(0, int(group["last"]) + 1)))
 		var label := ACCENT_NAME_SCENE.instantiate() as Label
 		label.text = str(group["name"])
 		_names.add_child(label)
-		var label_size := label.get_combined_minimum_size()
-		var from := (x0 + x1 - label_size.x) / 2.0
-		var row := 0 if from >= row_ends[0] + NAME_GAP else 1
-		label.position = Vector2(from, _names.custom_minimum_size.y - label_size.y * (row + 1))
-		row_ends[row] = from + label_size.x
+		label.position.x = (x0 + x1 - label.get_combined_minimum_size().x) / 2.0
+		labels.append(label)
+	# Namen, die sich ins Gehege kämen, bilden eine Kette und wechseln die Zeile. Gelesen wird
+	# von oben nach unten und von links nach rechts: der linke einer Kette steht oben.
+	var chain: Array[Label] = []
+	for label in labels:
+		if not chain.is_empty() and label.position.x < chain[-1].position.x \
+				+ chain[-1].get_combined_minimum_size().x + NAME_GAP:
+			chain.append(label)
+		else:
+			_stack(chain)
+			chain = [label]
+	_stack(chain)
+
+
+## Eine Kette sich überlappender Namen: allein steht einer unten, direkt über dem Wort; sonst
+## beginnt sie oben und wechselt dann ab.
+func _stack(chain: Array[Label]) -> void:
+	for k in chain.size():
+		var row := 0 if chain.size() == 1 else (1 if k % 2 == 0 else 0)
+		var height := chain[k].get_combined_minimum_size().y
+		chain[k].position.y = _names.custom_minimum_size.y - height * (row + 1)
 
 
 func _clear_names() -> void:

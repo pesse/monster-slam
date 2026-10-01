@@ -26,8 +26,9 @@ geklappt hat. So prägt sich *ecole* ein und nicht *l'école*.
    - Ein ganz weggelassener Teil, der erlaubt war (Artikel, Platzhalter), ist es nicht.
 3. **Über jedem Akzent steht klein sein französischer Name** („accent aigu", „cédille",
    „tréma" …), so wie er im Unterricht heißt. Derselbe Akzent zweimal kurz hintereinander
-   bekommt einen Namen. Passen zwei Namen nicht nebeneinander, rückt der zweite eine Zeile
-   höher. Bindestriche und Apostrophe bleiben ohne Namen.
+   bekommt einen Namen. Passen zwei Namen nicht nebeneinander, steht der linke eine Zeile
+   höher — gelesen wird von oben nach unten und von links nach rechts. Bindestriche und
+   Apostrophe bleiben ohne Namen.
 4. **Keine Taste beendet das Standbild.** Es soll nichts kosten außer der kurzen Pause.
    Während es steht, getippte Antworten werden aufgehoben und danach ausgewertet, wie bei
    der Meisterungsfeier. Die Antwortzeit der Monster wird um die Pause verschoben.
