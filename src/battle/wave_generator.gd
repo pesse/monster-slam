@@ -36,6 +36,11 @@ const DIFFICULTY_MAX := 5
 const REFERENCE_REWARD := 12
 ## Empfindlichkeit: wie stark die Schwierigkeit (t - c) die Punkte auslenkt.
 const REWARD_SENSITIVITY := 0.6
+## Anteil der Punkte, den ein Monster mit schon gemeisterter Aufgabe bringt — und damit
+## auch des Golds, das aus den Punkten kommt (ChestReward). Dieselbe Absicht wie
+## Experience.MASTERED_XP: Beute kommt aus dem Lernen, nicht aus dem Wiederholen. Nicht 0,
+## denn die Wiederholungen wählt der Scheduler, nicht der Spieler.
+const MASTERED_REWARD_FACTOR := 0.1
 
 ## Globaler Tempo-Multiplikator, vom WaveRunner aus der gewählten Wellen-Schwierigkeit gesetzt
 ## (1.0 = neutral, >1 schneller/schwerer, <1 langsamer/leichter). Ist selbst eine
@@ -354,7 +359,13 @@ func _build_plan(candidate: Dictionary) -> Dictionary:
 	# Punkte skalieren mit derselben Schwierigkeit, aber invers zum Tempo: je schwerer
 	# das Monster (hohe Grundschwierigkeit, niedrige Confidence, härtere Welle), desto
 	# mehr Punkte. So lohnt sich das Abrufen unsicherer/harter Aufgaben.
-	var reward := int(round(REFERENCE_REWARD * clampf(1.0 + REWARD_SENSITIVITY * net, 0.4, 1.6) * speed_scale))
+	# Eine schon gemeisterte Aufgabe bringt nur einen Bruchteil (MASTERED_REWARD_FACTOR),
+	# geprüft beim Spawn wie die Erfahrung unten.
+	var mastered := c >= PlayerProgress.MASTERY_CONFIDENCE
+	var reward_scale := clampf(1.0 + REWARD_SENSITIVITY * net, 0.4, 1.6) * speed_scale
+	if mastered:
+		reward_scale *= MASTERED_REWARD_FACTOR
+	var reward := maxi(1, int(round(REFERENCE_REWARD * reward_scale)))
 
 	# Erfahrung aus derselben Schwierigkeit, aber OHNE `speed_scale`: XP ist
 	# Lernfortschritt und keine Beute — eine härtere Welle macht das einzelne Wort nicht
@@ -362,7 +373,7 @@ func _build_plan(candidate: Dictionary) -> Dictionary:
 	# Aufgabe bringt fast nichts (siehe Experience.MASTERED_XP); geprüft wird das HIER,
 	# beim Spawn, denn nach dem Treffer hat PlayerProgress die Confidence bereits
 	# angehoben — das Monster, das die Meisterung bringt, zählt noch voll.
-	var xp := Experience.for_monster(0.5 + 0.5 * net, c >= PlayerProgress.MASTERY_CONFIDENCE)
+	var xp := Experience.for_monster(0.5 + 0.5 * net, mastered)
 	return {
 		"task": task,
 		"monster_def": monster_def,
