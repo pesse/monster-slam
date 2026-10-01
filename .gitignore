@@ -50,3 +50,6 @@ assets/maps/**/*.png.import
 assets/ui/**/preview/test_project/
 assets/ui/**/preview/runtime/
 assets/ui/**/preview/*.log
+
+# Entwürfe der Release-Notes (Text des Update-Dialogs), bis sie im GitHub-Release stehen
+/release-notes/
