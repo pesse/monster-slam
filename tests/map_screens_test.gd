@@ -326,7 +326,9 @@ func test_level_hints_speak_of_stars_and_never_of_the_fortress() -> void:
 	var parts := {"b/1/1": {"tier": 1, "done": 1, "total": 5}}
 	var nodes := AreaMap.nodes_for(levels, units, parts, 0, true, {})
 	var part := str(AreaMap.hint_lines(nodes[0])["body"])
-	assert_str(part).contains("1 von 4 Sternen")
+	# 1 von 5 Wörtern sind 20 %: der erste von fünf Sternen, egal welche Stufe dort steht.
+	assert_str(part).contains("1 von 5 Sternen")
+	assert_str(part).contains("Noch 1 Wort bis zum 2. Stern")
 	var whole := str(AreaMap.hint_lines(nodes[2])["body"])
 	assert_str(whole).contains("5 von 10")
 	assert_str(whole).not_contains("Stern")
@@ -336,6 +338,22 @@ func test_level_hints_speak_of_stars_and_never_of_the_fortress() -> void:
 		assert_str(text).not_contains("HP")
 	assert_bool(bool(nodes[0].get("stars", true))).is_true()
 	assert_bool(bool(nodes[2].get("stars", true))).is_false()
+
+
+## Fünf Sterne zu je 20 %, unabhängig von den Schwellen der Festung: bei 75 % ist die
+## Festung voll, die Sterne erst bei 100 %.
+func test_stars_count_mastered_words_in_fifths() -> void:
+	assert_int(MapCanvas.stars_for(0, 10)).is_equal(0)
+	assert_int(MapCanvas.stars_for(1, 10)).is_equal(0)
+	assert_int(MapCanvas.stars_for(2, 10)).is_equal(1)
+	assert_int(MapCanvas.stars_for(9, 10)).is_equal(4)
+	assert_int(MapCanvas.stars_for(10, 10)).is_equal(5)
+	assert_int(MapCanvas.stars_for(0, 0)).is_equal(0)
+	assert_int(FortressTier.tier_for(15, 20)).is_equal(FortressTier.MAX_TIER)
+	assert_int(MapCanvas.stars_for(15, 20)).is_equal(3)
+	# 80 % von 12 sind 9,6 — aufgerundet 10.
+	assert_dict(MapCanvas.next_star(8, 12)).is_equal({"star": 4, "needed": 2})
+	assert_dict(MapCanvas.next_star(12, 12)).is_empty()
 
 
 func test_the_fortress_badge_fills_from_one_tier_to_the_next() -> void:

@@ -63,6 +63,10 @@ const TIER_COLORS := [
 const BOSS_COLOR := Color(0.45, 0.12, 0.14)
 ## Ringfarbe je Medaille 1..3: Bronze, Silber, Gold.
 const MEDAL_COLORS := [Color(0.72, 0.45, 0.2), Color(0.8, 0.83, 0.88), Color(1.0, 0.8, 0.2)]
+## Ab so viel Prozent gemeisterter Wörter leuchtet Stern 1…5 unter einem Ort. Die Sterne
+## sind der Meisterungsstand und NICHT die Festungsstufe (ADR 0009): die ist bei 75 % voll,
+## die Sterne erst bei 100 % — das letzte Viertel bleibt sichtbar etwas wert.
+const STAR_PERCENT := [20, 40, 60, 80, 100]
 ## Füllung eines gesperrten Ortes — grau statt in der Farbe seiner Stufe.
 const DISABLED_COLOR := Color(0.34, 0.35, 0.38)
 const BLANK_COLOR := Color(0.16, 0.21, 0.18)
@@ -540,6 +544,9 @@ func _draw_node(i: int) -> void:
 	if boss:
 		if medal > 0:
 			draw_arc(at, r, 0.0, TAU, 48, MEDAL_COLORS[medal - 1], ring + 1.0, true)
+	elif total > 0 and done >= total:
+		# Alles gemeistert: der volle Ring in Gold und breiter, wie die Medaille eines Bosses.
+		draw_arc(at, r, 0.0, TAU, 48, MEDAL_COLORS[2], ring + 1.0, true)
 	elif total > 0 and done > 0:
 		# Der Ring zeigt den Weg durchs Level, die Füllung die erreichte Stufe: zwischen zwei
 		# Stufen soll man sehen, dass sich etwas tut.
@@ -563,7 +570,7 @@ func _draw_node(i: int) -> void:
 		_draw_caption(at, r, str(node.get("caption", "")), dim)
 	# Gesamt ist die ganze Unit und hat keine Sterne ("stars": false).
 	if not boss and bool(node.get("stars", true)):
-		_draw_stars(at, r, tier, dim)
+		_draw_stars(at, r, stars_for(done, total), dim)
 
 
 ## Die Beschriftung unter dem Ort, auf einer dunklen Platte — das Bild darunter ist bunt.
@@ -580,12 +587,37 @@ func _draw_caption(at: Vector2, r: float, text: String, dim: float) -> void:
 			HORIZONTAL_ALIGNMENT_CENTER, width, font_size, Color(0.95, 0.96, 1.0, dim))
 
 
-## Die Stufe als vier kleine Punkte zwischen Ort und Beschriftung: gefüllt bis zur Stufe.
-func _draw_stars(at: Vector2, r: float, tier: int, dim: float) -> void:
+## Leuchtende Sterne 0…5 für `done` gemeisterte von `total` Wörtern (STAR_PERCENT). In
+## Ganzzahlen verglichen wie FortressTier.tier_for: 2 von 10 sind genau 20 %.
+static func stars_for(done: int, total: int) -> int:
+	if total <= 0:
+		return 0
+	var stars := 0
+	for pct in STAR_PERCENT:
+		if done * 100 >= int(pct) * total:
+			stars += 1
+	return stars
+
+
+## Der nächste Stern: { star, needed } — wie viele Wörter bis zu ihm fehlen. Leer, wenn alle
+## leuchten oder es keine Wörter gibt.
+static func next_star(done: int, total: int) -> Dictionary:
+	var stars := stars_for(done, total)
+	if total <= 0 or stars >= STAR_PERCENT.size():
+		return {}
+	# Aufgerundet und in Ganzzahlen, wie FortressTier.next_threshold.
+	@warning_ignore("integer_division")
+	var target := (int(STAR_PERCENT[stars]) * total + 99) / 100
+	return {"star": stars + 1, "needed": maxi(1, target - done)}
+
+
+## Der Meisterungsstand als fünf kleine Punkte zwischen Ort und Beschriftung.
+func _draw_stars(at: Vector2, r: float, stars: int, dim: float) -> void:
 	var gold: Color = MEDAL_COLORS[2]
 	var k := r / NODE_RADIUS
 	var y := at.y + r + 11.0 * k
-	for s in FortressTier.MAX_TIER:
-		var x := at.x + (float(s) - 1.5) * maxf(11.0 * k, 7.0)
-		var lit := s < tier
+	var count := STAR_PERCENT.size()
+	for s in count:
+		var x := at.x + (float(s) - (count - 1) * 0.5) * maxf(11.0 * k, 7.0)
+		var lit := s < stars
 		draw_circle(Vector2(x, y), maxf(4.0 * k, 2.5), Color(gold, dim) if lit else Color(0.1, 0.1, 0.12, 0.8 * dim))

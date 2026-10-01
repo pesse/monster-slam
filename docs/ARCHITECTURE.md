@@ -275,6 +275,13 @@ UND `translate:en_to_de:<id>` über der Schwelle liegen — allgemein beide Rich
 Sprache (`Lexeme.mastery_directions`: `de_to_<sprache>`/`<sprache>_to_de`, ADR 0007). Der
 Reiter „Aufgaben" daneben zählt learnable_ids — zwei Maße, zwei Reiter, mit Absicht.
 
+Ein Verb mit `irregular: true` braucht dazu seine Formaufgaben (ADR 0009): die
+learnable_ids, die es braucht, sammelt `ContentRegistry.form_requirements()` beim Laden
+(Definitionen mit `requires_form`, deren Form das Lexem hat), und `mastered_lexemes_in`
+und `mastered_lexeme_in` bekommen sie übergeben, damit die Regel statisch prüfbar bleibt.
+Die Kartensterne (`MapCanvas.stars_for`, fünf zu je 20 %) rechnen aus denselben
+`done`/`total` wie `FortressTier` — mit eigenen Schwellen, aber ohne eigenen Zähler.
+
 Die Kopplung macht den Balken **empfindlich gegen alles, was EINE Richtung stört**: fällt
 en→de aus, steht die Unit dauerhaft auf „0 von N", während „Gemeisterte Aufgaben" weiter
 steigt. Das sieht aus wie ein Rechenfehler der Statistik und war noch nie einer (die

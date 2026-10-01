@@ -35,7 +35,8 @@ dem Menü, nicht mehr der Hauptweg.
 ### 2. Nichts wird gesperrt, nichts wird als Abschluss gespeichert
 
 Alle Level sind frei wählbar. Wie weit ein Level ist, wird aus der Meisterung **gerechnet**
-— dieselbe Zählung und dieselben Schwellen (10/35/60/85 %) wie die Festungsstufe
+— dieselbe Zählung und dieselben Schwellen (10/35/60/85 %; seit ADR 0009 10/32/53/75 %,
+und die Sterne der Karte zählen dort eigene Fünftel) wie die Festungsstufe
 (`FortressTier.part_tiers` neben `unit_tiers`; Gesamt ist genau `unit_tiers`). Ein
 gespeichertes „Level geschafft" wäre ein zweiter Zähler neben dem Lernstand.
 

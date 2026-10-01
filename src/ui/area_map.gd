@@ -275,12 +275,13 @@ static func hint_lines(node: Dictionary) -> Dictionary:
 		# Gesamt hat keine Sterne: es ist die ganze Unit, ihre Stufe steht oben im Kopf.
 		body = "Alle Wörter aus %s · %d von %d gemeistert" % [unit_label, done, total]
 	else:
-		var next := FortressTier.next_threshold(done, total)
+		# Die Sterne sind der Meisterungsstand, nicht die Festungsstufe (MapCanvas.STAR_PERCENT).
+		var next := MapCanvas.next_star(done, total)
 		var needed := int(next.get("needed", 0))
 		body = "⭐ %d von %d Sternen · %d von %d Wörtern gemeistert" % [
-				int(node.get("tier", 0)), FortressTier.MAX_TIER, done, total]
+				MapCanvas.stars_for(done, total), MapCanvas.STAR_PERCENT.size(), done, total]
 		body += "\nAlle Sterne." if next.is_empty() else "\nNoch %d %s bis zum %d. Stern" % [
-				needed, "Wort" if needed == 1 else "Wörter", int(next["tier"])]
+				needed, "Wort" if needed == 1 else "Wörter", int(next["star"])]
 	return {"title": title, "body": body}
 
 

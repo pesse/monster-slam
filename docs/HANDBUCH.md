@@ -451,15 +451,16 @@ Level 4 ab 600 XP und so weiter (jeder Aufstieg kostet 100 XP mehr als der vorig
 
 Deine Festung zeigt, wie gut du die Units kannst, die du gerade spielst. **Jede Unit hat
 ihre eigene Festungsstufe.** Sie hängt daran, wie viele Wörter der Unit du gemeistert hast
-(in beide Richtungen, wie im Reiter „Fortschritt“ der Statistik):
+(in beide Richtungen, wie im Reiter „Fortschritt“ der Statistik; ein unregelmäßiges Verb
+zählt erst, wenn auch seine Formen sitzen):
 
 | Stufe | ab so viel gemeisterten Wörtern der Unit | Festung |
 |---|---|---|
 | 0 | weniger als 10 % | Baustelle |
 | 1 | 10 % | ein Turm |
-| 2 | 35 % | Mauern mit Tor |
-| 3 | 60 % | eine Burg |
-| 4 | 85 % | Burg mit Nebengebäuden und Fahnen |
+| 2 | 32 % | Mauern mit Tor |
+| 3 | 53 % | eine Burg |
+| 4 | 75 % | Burg mit Nebengebäuden und Fahnen |
 
 **Jede Stufe gibt der Festung 25 HP mehr.** Auf Stufe 4 hat sie also 100 HP mehr als auf
 der Baustelle.
@@ -521,9 +522,10 @@ Welle, bis du aufhörst oder die Festung fällt. Es spielt alle Aufgaben und Wor
 Teils. „⟵ Zurück zur Karte“ führt wieder auf die Gebietskarte.
 
 **Wie weit ein Level ist**, zeigt die Karte an drei Stellen: die Füllfarbe steht für die
-Stufe 0 bis 4 (dieselben Schwellen wie bei der Festung), die vier kleinen Punkte darunter
-leuchten bis zur erreichten Stufe, und der Ring wächst mit jedem gemeisterten Wort. Nichts
-davon wird gespeichert – es wird jedes Mal aus dem Lernstand gerechnet.
+Stufe 0 bis 4 (dieselben Schwellen wie bei der Festung), die fünf goldenen Sterne darunter
+leuchten je 20 % gemeisterter Wörter auf, und der Ring wächst mit jedem gemeisterten Wort –
+bei 100 % wird er golden. Nichts davon wird gespeichert – es wird jedes Mal aus dem
+Lernstand gerechnet.
 
 **Boss-Medaillen.** Jeder Sieg über den Boss einer Unit wird gezählt. Ab 1 Sieg bekommt er
 einen bronzenen Ring und eine Krone, ab 3 einen silbernen, ab 5 einen goldenen. Die Zahl
@@ -777,8 +779,12 @@ Auch das graue „↺“ im Fähigkeiten-Screen sagt am Zeiger, warum es gerade 
 - **Tippfehler-Frust wird klein gehalten:** Artikel, „the“, „to“, Klammerteile und
   Groß-/Kleinschreibung müssen nicht exakt stimmen. Eine falsche Eingabe wird keinem Wort
   angerechnet.
-- **Ein Wort zählt erst, wenn es in beide Richtungen sitzt.** Die Balken im Reiter
+- **Ein Wort zählt erst, wenn es in beide Richtungen sitzt**, ein unregelmäßiges Verb
+  (*go – went – gone*, *recevoir*) erst mit seinen Formen. Die Balken im Reiter
   „Fortschritt“ sind deshalb die Zahl, nach der man vor einer Vokabelarbeit fragt.
+- **Die Festung ist bei drei Vierteln fertig, die Sterne erst bei allem.** Stufe 4 mit dem
+  Wachkatapult gibt es ab 75 %; die fünf goldenen Sterne auf der Karte stehen für je
+  20 %, und erst bei 100 % wird der Ring um den Ort golden.
 - **Belohnung für Genauigkeit statt für Masse:** die Güte der Schatzkiste hängt nur davon
   ab, wie genau eine Welle war, nicht davon, wie lang sie war.
 - **Eine Niederlage kostet den Lauf, nicht das Erspielte.** Gold, Erfahrung und

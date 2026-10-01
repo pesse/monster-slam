@@ -28,23 +28,23 @@ func _unit(book: String, unit: int, count: int, mastered: int, into: Dictionary)
 # --- Schwellen ----------------------------------------------------------------
 
 func test_thresholds_hold_exactly_at_the_percentages() -> void:
-	# 20 Wörter: 10 % = 2, 35 % = 7, 60 % = 12, 85 % = 17.
+	# 20 Wörter: 10 % = 2, 32 % = 6,4, 53 % = 10,6, 75 % = 15.
 	assert_int(FortressTier.tier_for(0, 20)).is_equal(0)
 	assert_int(FortressTier.tier_for(1, 20)).is_equal(0)
 	assert_int(FortressTier.tier_for(2, 20)).is_equal(1)
 	assert_int(FortressTier.tier_for(6, 20)).is_equal(1)
 	assert_int(FortressTier.tier_for(7, 20)).is_equal(2)
-	assert_int(FortressTier.tier_for(11, 20)).is_equal(2)
-	assert_int(FortressTier.tier_for(12, 20)).is_equal(3)
-	assert_int(FortressTier.tier_for(16, 20)).is_equal(3)
-	assert_int(FortressTier.tier_for(17, 20)).is_equal(4)
+	assert_int(FortressTier.tier_for(10, 20)).is_equal(2)
+	assert_int(FortressTier.tier_for(11, 20)).is_equal(3)
+	assert_int(FortressTier.tier_for(14, 20)).is_equal(3)
+	assert_int(FortressTier.tier_for(15, 20)).is_equal(4)
 	assert_int(FortressTier.tier_for(20, 20)).is_equal(4)
 
 
-## In Ganzzahlen verglichen: 7 von 20 sind genau 35 % und nicht knapp darunter.
+## In Ganzzahlen verglichen: 32 von 100 sind genau 32 % und nicht knapp darunter.
 func test_the_comparison_has_no_rounding_gap() -> void:
-	assert_int(FortressTier.tier_for(35, 100)).is_equal(2)
-	assert_int(FortressTier.tier_for(34, 100)).is_equal(1)
+	assert_int(FortressTier.tier_for(32, 100)).is_equal(2)
+	assert_int(FortressTier.tier_for(31, 100)).is_equal(1)
 	assert_int(FortressTier.tier_for(3, 30)).is_equal(1)
 
 
@@ -61,13 +61,13 @@ func test_health_bonus_is_flat_per_tier() -> void:
 
 
 func test_next_threshold_names_the_missing_words() -> void:
-	# 40 Wörter: 10 % = 4, 35 % = 14, 60 % = 24, 85 % = 34.
+	# 40 Wörter: 10 % = 4, 32 % = 12,8, 53 % = 21,2, 75 % = 30.
 	assert_dict(FortressTier.next_threshold(0, 40)).is_equal({"tier": 1, "needed": 4})
-	assert_dict(FortressTier.next_threshold(13, 40)).is_equal({"tier": 2, "needed": 1})
-	assert_dict(FortressTier.next_threshold(14, 40)).is_equal({"tier": 3, "needed": 10})
-	# 85 % von 30 sind 25,5 — aufgerundet 26.
-	assert_dict(FortressTier.next_threshold(18, 30)).is_equal({"tier": 4, "needed": 8})
-	assert_dict(FortressTier.next_threshold(34, 40)).is_empty()
+	assert_dict(FortressTier.next_threshold(12, 40)).is_equal({"tier": 2, "needed": 1})
+	assert_dict(FortressTier.next_threshold(13, 40)).is_equal({"tier": 3, "needed": 9})
+	# 75 % von 30 sind 22,5 — aufgerundet 23.
+	assert_dict(FortressTier.next_threshold(18, 30)).is_equal({"tier": 4, "needed": 5})
+	assert_dict(FortressTier.next_threshold(30, 40)).is_empty()
 
 
 # --- Zählung ------------------------------------------------------------------
