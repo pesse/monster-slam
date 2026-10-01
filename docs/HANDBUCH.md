@@ -153,6 +153,10 @@ langsam tippen.
   Genitiv und Genus („m“, „f“, „n“ — oder „maskulin“ …), bei Verben das Perfekt. Die
   Längenstriche (ā, ē …) musst du nie tippen; nach einer Übersetzung zeigt die Auflösung
   die Lexikonform mit, etwa den Genitiv und das Genus.
+- **Französisch** fragt bei den unregelmäßigen Verben die Konjugation ab: das Präsens
+  für eine Person („Präsens, nous") oder das Passé composé mit *je*. Du kannst die
+  Person mitschreiben („nous recevons") oder nur das Verb („recevons"). Akzente musst
+  du nicht tippen, die richtige Schreibweise wird dir aber gleich gezeigt.
 - **Der farbige Rand** eines Monsters und seines Wortschilds zeigt die Wortart, auch die
   Schrift auf dem Schild hat diese Farbe. Die Legende am unteren Bildrand sagt, welche
   Farbe was bedeutet (zum Beispiel Nomen, Verb, Adjektiv). Das hilft, wenn ein Wort

@@ -35,6 +35,13 @@ const FORM_LABELS := {
 	"la_infinitive": "Infinitiv",
 	"la_perfect": "Perfekt",
 	"la_ppp": "PPP",
+	"fr_pres_1sg": "Präsens, je",
+	"fr_pres_2sg": "Präsens, tu",
+	"fr_pres_3sg": "Präsens, il/elle/on",
+	"fr_pres_1pl": "Präsens, nous",
+	"fr_pres_2pl": "Präsens, vous",
+	"fr_pres_3pl": "Präsens, ils/elles",
+	"fr_passe_compose": "Passé composé, je",
 }
 
 ## Genus wird als Buchstabe hinterlegt (m/f/n); getippt werden darf auch das Wort dazu.

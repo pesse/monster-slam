@@ -1,4 +1,11 @@
 [
   { "id": "def.translate.de_fr", "language": "fr", "task_type": "translate", "direction": "de_to_fr", "allowed_types": ["*"], "difficulty": 1 },
-  { "id": "def.translate.fr_de", "language": "fr", "task_type": "translate", "direction": "fr_to_de", "allowed_types": ["*"], "difficulty": 2 }
+  { "id": "def.translate.fr_de", "language": "fr", "task_type": "translate", "direction": "fr_to_de", "allowed_types": ["*"], "difficulty": 2 },
+  { "id": "def.conj.fr_pres_1sg", "language": "fr", "task_type": "conjugation", "direction": "fr", "requires_form": "fr_pres_1sg", "allowed_types": ["verb"], "difficulty": 2 },
+  { "id": "def.conj.fr_pres_2sg", "language": "fr", "task_type": "conjugation", "direction": "fr", "requires_form": "fr_pres_2sg", "allowed_types": ["verb"], "difficulty": 2 },
+  { "id": "def.conj.fr_pres_3sg", "language": "fr", "task_type": "conjugation", "direction": "fr", "requires_form": "fr_pres_3sg", "allowed_types": ["verb"], "difficulty": 2 },
+  { "id": "def.conj.fr_pres_1pl", "language": "fr", "task_type": "conjugation", "direction": "fr", "requires_form": "fr_pres_1pl", "allowed_types": ["verb"], "difficulty": 2 },
+  { "id": "def.conj.fr_pres_2pl", "language": "fr", "task_type": "conjugation", "direction": "fr", "requires_form": "fr_pres_2pl", "allowed_types": ["verb"], "difficulty": 2 },
+  { "id": "def.conj.fr_pres_3pl", "language": "fr", "task_type": "conjugation", "direction": "fr", "requires_form": "fr_pres_3pl", "allowed_types": ["verb"], "difficulty": 2 },
+  { "id": "def.conj.fr_passe_compose", "language": "fr", "task_type": "conjugation", "direction": "fr", "requires_form": "fr_passe_compose", "allowed_types": ["verb"], "difficulty": 3 }
 ]

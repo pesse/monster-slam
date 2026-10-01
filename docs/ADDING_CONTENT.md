@@ -102,7 +102,11 @@ Ids `lex.fr.<buch>.…` und Dateien `fr_<buch>_unit<n>.json`. Die Aufgaben stehe
   Die Anzeige („Dossier 2 · Partie A") steht unter `naming` in
   `assets/maps/<buch>/map.json` (`BookNaming`).
 - Formen (`fr_*`) erst, wenn die Unit sie lernen lässt, samt Label in
-  `TaskResolver.FORM_LABELS` und einer Definition in `fr_basics.json`.
+  `TaskResolver.FORM_LABELS` und einer Definition in `fr_basics.json`. Konjugiert werden
+  nur die unregelmäßigen Verben, mit Präsens und Passé composé nach ADR 0008, Punkt 7.
+  Regelmäßige bekommen keine Formen, auch nicht *-ir* wie *finir*, *-dre* wie *attendre*
+  und *-er* mit Stammwechsel (*gérer*, *effacer*), selbst wenn das Buch „wird wie …
+  konjugiert" dazuschreibt.
 
 **Keine Dubletten.** Dasselbe Wort unter zwei Lexem-Ids hat zwei Fortschrittsstände; die
 Treffer verteilen sich, und keine der beiden Ids wird je gemeistert. Vor dem Anlegen

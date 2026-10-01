@@ -42,7 +42,17 @@ Gespielt wird am Lehrbuch *À plus!* entlang, zunächst ohne Bosskampf.
    Auswertung: Die Daten tragen ausgeschriebene Formen statt der Notation des Buchs
    (`ami(e)`, `petit, e`), siehe `docs/prompts/vocab_generation.md`.
 7. **Formen am Buch entlang.** Neue `fr_*`-Formtypen kommen erst, wenn eine Unit sie
-   lernen lässt, und nicht vorab als Konjugationstabelle.
+   lernen lässt, und nicht vorab als Konjugationstabelle. Konjugiert werden nur die
+   unregelmäßigen Verben; regelmäßige (auch *-ir* wie *finir*, *-dre* wie *attendre*,
+   *-er* mit Stammwechsel) bekommen keine Formen. Abgefragt wird das Präsens in allen sechs Personen (`fr_pres_1sg` … `fr_pres_3pl`)
+   und Passé composé mit *je* (`fr_passe_compose`), als Aufgabe `conjugation`. Jede
+   Form steht einmal mit Subjekt (die gezeigte, „ils reçoivent") und einmal ohne
+   („reçoivent"), bei der 3. Person auch mit *elle/on* bzw. *elles*. Getippt reicht das
+   Verb, gezeigt wird es mit Person. Reflexivpronomen gehören zur Form; bei *nous/vous*
+   eines reflexiven Verbs gibt es nur die volle Form, weil „nous battons" allein wie die
+   nicht-reflexive Form mit Subjekt aussähe. Mit *être* trägt das Passé composé beide
+   Genera. Die Formen stammen aus der Grammatik, nicht aus dem Buch: Das Buch nennt nur
+   für einen Teil der Verben die Konjugation und verweist sonst auf „wird wie … konjugiert".
 8. **Jedes Buch nennt seine Ebenen selbst.** Intern bleiben es Unit und Teil, als Zahlen.
    Was dasteht, kommt aus `naming` in `assets/maps/<book>/map.json` (`BookNaming`):
    *À plus!* zeigt „Dossier 2 · Partie A" (Teile als Buchstaben), Latein „Abschnitt 2 ·

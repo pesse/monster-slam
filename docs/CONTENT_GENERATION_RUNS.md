@@ -11,7 +11,7 @@ verschiedener Wege vergleichbar zu machen. Pro Lauf ein Eintrag; Vergleichstabel
 | #2 | 2026-09-03 | Ein-Kontext-Lauf aus Buchfotos (Vision) + Merge/Validate-Skript | Opus | 0 | ~2 Mio. (geschätzt) | ~30 $ (geschätzt) | 1.166 | 0 Fehler / 0 Dubletten |
 | #3 | 2026-09-14 | Ein-Kontext-Lauf aus Buchfotos, ohne Beispielsätze | Opus | 0 | ~0,2 Mio. | ~3 $ | 279 | 0 Fehler / 0 Dubletten |
 | #4 | 2026-09-25 | Sätze je Unit: Fan-out je Unit + Gegenlesung + Prüf-/Merge-Skript | Opus | 9 | ~0,85 Mio. | n. b. | 257 Sätze, 397 Verknüpfungen | 0 Fehler, Datentests grün |
-| #5 | 2026-10-01 | Ein-Kontext-Lauf aus Buchfotos, erste Französisch-Daten, Zeilen-Notation + Generator-Skript | Opus | 0 | n. b. | n. b. | 320 | 0 Fehler / 0 Dubletten |
+| #5 | 2026-10-01 | Ein-Kontext-Lauf aus Buchfotos, erste Französisch-Daten, Zeilen-Notation + Generator-Skript | Opus | 0 | n. b. | n. b. | 575 (320 Lexeme, 255 Formen) | 0 Fehler / 0 Dubletten |
 
 ---
 
@@ -284,8 +284,14 @@ Wie Lauf #3 (ein Kontext, ohne Beispielsätze), aber nicht direkt als JSON:
 - **Kästen:** Die mit deutscher Entsprechung kamen mit (Himmelsrichtungen, Ausdrücke mit
   *le coup*, *avoir raison*). Die Wiederholungs-Kästen und der Kasten „familier/standard“
   ohne Deutsch blieben draußen (später Kandidat für Relationen).
-- **Konjugationen** der unregelmäßigen Verben stehen vorerst nur in `notes`. Formen
-  (`fr_*`) kommen erst, wenn die Aufgaben dafür gebaut sind.
+- **Konjugationen** als zweiter Schritt, mit eigenem Skript: Präsens (sechs Personen)
+  und Passé composé (*je*) für die 15 unregelmäßigen Verben. Regelmäßige bleiben ohne
+  Formen, auch *-ir* wie *finir*, *-dre* wie *attendre* und *-er* mit Stammwechsel; ein
+  erster Schnitt mit diesen (29 Verben) wurde auf Wunsch wieder zurückgenommen. Die
+  Formen kommen aus der Grammatik, nicht vom Foto; das Buch nennt nur für sieben Verben
+  die Konjugation.
+  Das Skript ergänzt Subjekt und Elision (*j'*) und schreibt je Person eine Zeile mit
+  Subjekt und eine ohne (ADR 0008, Punkt 7).
 
 ### Aufwand
 | | Lauf #5 |
@@ -300,8 +306,11 @@ Wie Lauf #3 (ein Kontext, ohne Beispielsätze), aber nicht direkt als JSON:
 | Dossier 1 | 153 | 28 | 44 | 49 | 32 |
 | Dossier 2 | 167 | 53 | 76 | 34 | 4 |
 
+Formen: 255 (9 Verben in Dossier 1, 6 in Dossier 2), je Verb 7 Formtypen.
+
 ### Qualität
 - **Automatisch:** 0 JSON-Fehler, 0 doppelte Ids, Datentests grün, Pack-Zuordnung eindeutig.
+  Jede Form passt exakt auf sich selbst und auch ohne Akzente und Apostroph.
 - **Prompt-Kollisionen:** zwei, mit einer Glosse gelöst („der Blick (kurz)“,
   „die Erlaubnis (Schein)“). Drei weitere waren beim Lesen schon aufgefallen und wurden
   gleich geglosst (*direct* gegen *directement*, *simple* gegen *simplement*, *cause*
