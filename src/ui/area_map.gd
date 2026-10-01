@@ -201,10 +201,8 @@ static func nodes_for(levels: Array, units: Dictionary, parts: Dictionary, wins:
 						int(level["part"]))
 				if int(counts["total"]) == 0:
 					node["disabled"] = true
-					node["stars"] = false
 			MapLevel.KIND_ALL:
 				node["glyph"] = "★"
-				node["stars"] = false
 			MapLevel.KIND_BOSS:
 				node["glyph"] = "💀"
 				node["boss"] = true
@@ -272,16 +270,14 @@ static func hint_lines(node: Dictionary) -> Dictionary:
 		return {"title": title, "body": "Für %s gibt es noch keine Wörter." % str(node.get("caption", ""))}
 	var body := ""
 	if str(node.get("kind", "")) == MapLevel.KIND_ALL:
-		# Gesamt hat keine Sterne: es ist die ganze Unit, ihre Stufe steht oben im Kopf.
+		# Gesamt ist die ganze Unit, ihre Stufe steht oben im Kopf.
 		body = "Alle Wörter aus %s · %d von %d gemeistert" % [unit_label, done, total]
 	else:
-		# Die Sterne sind der Meisterungsstand, nicht die Festungsstufe (MapCanvas.STAR_PERCENT).
-		var next := MapCanvas.next_star(done, total)
-		var needed := int(next.get("needed", 0))
-		body = "⭐ %d von %d Sternen · %d von %d Wörtern gemeistert" % [
-				MapCanvas.stars_for(done, total), MapCanvas.STAR_PERCENT.size(), done, total]
-		body += "\nAlle Sterne." if next.is_empty() else "\nNoch %d %s bis zum %d. Stern" % [
-				needed, "Wort" if needed == 1 else "Wörter", int(next["star"])]
+		# Der Ring ist der Meisterungsstand, nicht die Festungsstufe (MapCanvas.RING_GOLD).
+		var missing := total - done
+		body = "%d von %d Wörtern gemeistert" % [done, total]
+		body += "\nAlles gemeistert ✨" if missing <= 0 else "\nNoch %d %s bis zum goldenen Ring" % [
+				missing, "Wort" if missing == 1 else "Wörter"]
 	return {"title": title, "body": body}
 
 

@@ -125,7 +125,7 @@ static func nodes_for(book: String, units: Array, points: Dictionary, wins: Dict
 		out.append({
 			"key": "%s/%s" % [book, number], "unit": int(number), "pos": points[number],
 			"glyph": str(number), "caption": BookNaming.unit_label(book, int(number)),
-			"tier": 0, "done": 0, "total": 0, "disabled": true, "missing": true, "stars": false,
+			"tier": 0, "done": 0, "total": 0, "disabled": true, "missing": true,
 		})
 	out.sort_custom(func(a, b): return int(a["unit"]) < int(b["unit"]))
 	return out
