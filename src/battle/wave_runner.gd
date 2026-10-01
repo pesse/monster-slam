@@ -279,6 +279,8 @@ var _theme: BattleTheme
 var _sun_cycle: SunCycle
 ## Der Weg zum Tor; die Streudeko hält ihn frei.
 var _path: BattlePath
+## Fußpunkte der gestreuten Bäume, für die Sträucher darum (GroundCover).
+var _tree_feet: Array[Vector3] = []
 
 func _setup_ground() -> void:
 	_terrain_noise = terrain_noise(_rng.randi())
@@ -428,8 +430,7 @@ static func _add_terrain_tri(st: SurfaceTool, noise: FastNoiseLite, theme: Battl
 
 
 static func _terrain_color(p: Vector3, noise: FastNoiseLite, theme: BattleTheme) -> Color:
-	var t := noise.get_noise_2d(p.x * 2.3 + 100.0, p.z * 2.3) * 0.5 + 0.5
-	return theme.ground_color(t, p.y)
+	return theme.ground_color(BattleTheme.ground_t(noise, p.x, p.z), p.y)
 
 
 ## Normale der Höhenfunktion bei (x,z), über zentrale Differenzen. Aus der Funktion und
@@ -450,13 +451,17 @@ func _ground_y(x: float, z: float) -> float:
 ## Platziert eines der Modelle eines Deko-Platzes (`BattleTheme.trees` …, Pfade unter
 ## assets/models/) auf Terrain-Höhe mit zufälliger Drehung; ein leerer Platz stellt nichts
 ## hin, und auf dem Weg (BattlePath) steht nichts. Position/Skalierung kommen vom Aufrufer.
+## Bäume merken sich ihren Fuß (`_tree_feet`): um sie wachsen Sträucher (GroundCover).
 func _scatter(parent: Node3D, slot: Array[String], x: float, z: float, scale: float) -> void:
 	if slot.is_empty() or (_path != null and _path.blocks(x, z, 0.4 * scale)):
 		return
 	var model := slot[_rng.randi() % slot.size()]
-	var inst := _place_model(parent, model.get_file(), Vector3(x, _ground_y(x, z), z),
+	var at := Vector3(x, _ground_y(x, z), z)
+	var inst := _place_model(parent, model.get_file(), at,
 			_rng.randf_range(0.0, 360.0), Vector3.ONE * scale, model.get_base_dir())
 	Wind.sway(inst, model, _theme.wind)
+	if slot == _theme.trees:
+		_tree_feet.append(at)
 
 
 const GRASS_SCALE_FIRST_PERSON := 0.4
@@ -509,6 +514,20 @@ func _decorate() -> void:
 		_place_model(d, "torch_lit.gltf", Vector3(px, gy + 4.0, pz), 0.0, Vector3.ONE)
 
 	_decorate_outskirts(d)
+	GroundCover.grow(d, _theme, _cover_site(), GraphicsQuality.cover(), _rng)
+
+
+## Wo der Bewuchs wächst: der sichtbare Boden ohne Weg und ohne die Burg hinter der Mauer.
+func _cover_site() -> GroundCover.Site:
+	var site := GroundCover.Site.new()
+	site.area = visible_ground_area(_camera)
+	site.on_screen = func(x: float, z: float) -> bool: return tile_on_screen(_camera, x, z)
+	site.height = _ground_y
+	site.t_at = func(x: float, z: float) -> float: return BattleTheme.ground_t(_terrain_noise, x, z)
+	site.path = _path
+	site.keep_out = Rect2(-FIELD_HALF_X, GOAL_Z - 0.5, 2.0 * FIELD_HALF_X, FIELD_Z_FRONT - GOAL_Z + 0.5)
+	site.trees = _tree_feet
+	return site
 
 
 ## Das Innenfeld: Bahn plus Festung im Vollausbau (Kirche und Nebengebäude liegen am
@@ -525,6 +544,10 @@ const FIELD_Z_FRONT := GOAL_Z + 11.0 * FORTRESS_GROW
 const FIELD_CLEARANCE := 4.0
 
 
+## Radius eines Hains im Umland.
+const GROVE_RADIUS := 5.0
+
+
 ## Das Umland: Bäume und Felsen über den Teil des Bodens, der seit der Erweiterung bis
 ## an den Bildrand reicht. Ohne sie wäre die zusätzliche Fläche eine grüne Leere — mit
 ## ihnen liest sie sich als Landschaft, in der das Spielfeld liegt. Gras kommt hier
@@ -533,7 +556,17 @@ const FIELD_CLEARANCE := 4.0
 func _decorate_outskirts(d: Node3D) -> void:
 	var area := visible_ground_area(_camera)
 	var field := _field_span()
-	for i in _rng.randi_range(55, 80):
+	# Bäume stehen meist in Hainen, ein paar einzeln dazwischen: gleichmäßig verstreut
+	# läse sich das Umland als Baumschule.
+	for i in _rng.randi_range(10, 15):
+		var centre := _outskirts_point(area, field)
+		if centre == Vector2.INF:
+			continue
+		for k in _rng.randi_range(3, 6):
+			var p := centre + Vector2.from_angle(_rng.randf_range(0.0, TAU)) * _rng.randf_range(0.0, GROVE_RADIUS)
+			if not _blocks_field(p.x, p.y, field) and tile_on_screen(_camera, p.x, p.y):
+				_scatter(d, _theme.trees, p.x, p.y, _rng.randf_range(0.8, 1.4))
+	for i in _rng.randi_range(12, 20):
 		var p := _outskirts_point(area, field)
 		if p != Vector2.INF:
 			_scatter(d, _theme.trees, p.x, p.y, _rng.randf_range(0.8, 1.4))

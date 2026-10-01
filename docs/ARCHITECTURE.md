@@ -583,12 +583,22 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
   `ground_patch_amount`). Der Hügelfuß weicht in Bögen nach außen zurück
   (`WaveRunner._foot_shift`) und ist hinter dem Spawn rund — nie nach innen, das Feld
   bleibt flach (`tests/battle_ground_test.gd`).
+- **Bewuchs und Haine.** Zwischen der Streudeko wachsen kleine Halmbüschel, Blüten darin
+  und Sträucher um die Bäume (`GroundCover`), je Art ein MultiMesh. Die Formen entstehen im
+  Code; die Büschel nehmen die Bodenfarbe darunter (oder `cover_color`), Blüten und
+  Sträucher ihre aus dem Thema (`cover_flowers`, `bush_color`). Die Dichte ist `cover`
+  bzw. `bushes` des Themas mal `GraphicsQuality.cover`; die Büschel stehen in Klumpen mit
+  freien Flächen dazwischen, am dichtesten am Wegrand, nie auf dem Weg, in der Burg oder im
+  Schnee. `GroundCover.plan` rechnet die Lagen ohne zu bauen (kopflos gibt ein MultiMesh
+  sie nicht zurück; `tests/ground_cover_test.gd`). Die Bäume im Umland stehen meist in
+  Hainen (`GROVE_RADIUS`), ein paar einzeln.
 - **Farbgebung.** Die Kampfszene tonemappt (Filmic) und hebt Kontrast und Sättigung leicht
   (`adjustment_*`). Die Sonne wird tief golden (`SunCycle.tint_at`, von `NOON_TINT` nach
   `GOLDEN`) auf die Farbe des Themas; derselbe Ton geht als `sun_tint` an den Bodenshader.
 - **Grafikstufen** (`GraphicsQuality`, geräteweit in `UserSettings.graphics_quality`):
   „Schön" zeigt alles, „Mittel" lässt Glow weg und halbiert MSAA, „Schnell" lässt dazu MSAA,
-  Wolken, Teilchen, Bodenflecken und die Farbkorrektur weg. Schatten, Wind und der Weg
+  Wolken, Teilchen, Bodenflecken und die Farbkorrektur weg. Die Büschel des Bewuchses
+  halbiert „Mittel", „Schnell" lässt sie weg; die Sträucher bleiben. Schatten, Wind und der Weg
   bleiben überall. Die Kosten misst `battle_theme_lab -- --fps`. Das alte `graphics_simple`
   wird als „Schnell" gelesen, solange keine Stufe gespeichert ist.
 

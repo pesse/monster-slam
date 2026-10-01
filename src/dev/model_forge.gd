@@ -42,6 +42,9 @@ func _initialize() -> void:
 	# Gras
 	_export("dry_grass", _dry_grass())
 	_export("fern", _fern())
+	_export("green_grass", _grass(79, LUSH_A, LUSH_B, 0.85))
+	_export("dune_grass", _grass(83, DUNE_A, DUNE_B, 1.0))
+	_export("wild_flowers", _wild_flowers())
 	# Wahrzeichen
 	_export("ruin_column", _ruin_column())
 	_export("marble_column", _marble_column())
@@ -512,6 +515,55 @@ func _dry_grass() -> Forge:
 		var foot := out * rng.randf_range(0.05, 0.35)
 		var tip := foot + out * rng.randf_range(0.25, 0.5) + Vector3(0, rng.randf_range(0.65, 1.05), 0)
 		f.blade(foot - side, foot + side, tip, DRY_A if k % 2 == 0 else DRY_B)
+	return f
+
+
+const LUSH_A := Color(0.30, 0.50, 0.16)
+const LUSH_B := Color(0.22, 0.40, 0.12)
+const DUNE_A := Color(0.62, 0.62, 0.34)
+const DUNE_B := Color(0.50, 0.52, 0.28)
+
+
+## Grasbüschel wie dry_grass, in den Farben `a`/`b` und `height` mal so hoch: grünes Gras
+## für Wiesen und Wälder, Dünengras für Strände. Grüne Themen bekamen sonst das gekaufte
+## grass.glb oder dry_grass, und deren Orange stand auf der Wiese wie Herbstlaub.
+func _grass(seed_value: int, a: Color, b: Color, height: float) -> Forge:
+	var f := Forge.new()
+	var rng := _rng(seed_value)
+	for k in 19:
+		var yaw := TAU * k / 19.0 + rng.randf_range(-0.2, 0.2)
+		var out := Vector3(cos(yaw), 0, sin(yaw))
+		var side := Vector3(-out.z, 0, out.x) * 0.09
+		var foot := out * rng.randf_range(0.05, 0.3)
+		var tip := foot + out * rng.randf_range(0.2, 0.45) \
+				+ Vector3(0, rng.randf_range(0.6, 1.0) * height, 0)
+		f.blade(foot - side, foot + side, tip, a if k % 2 == 0 else b)
+	return f
+
+
+const WILD_YELLOW := Color(0.95, 0.80, 0.25)
+const WILD_VIOLET := Color(0.62, 0.48, 0.86)
+
+
+## Wiesenblumen: ein niedriges grünes Büschel, darüber Blüten in Gelb, Violett und Weiß.
+## Wie flower_tuft, aber ohne das Rosa des Frühlingshains. Etwa 0.6 hoch.
+func _wild_flowers() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(97)
+	for k in 13:
+		var a := TAU * k / 13.0 + rng.randf_range(-0.2, 0.2)
+		var d := Vector3(cos(a), 0, sin(a))
+		var foot := d * rng.randf_range(0.0, 0.2)
+		var side := Vector3(-d.z, 0, d.x) * 0.06
+		f.blade(foot - side, foot + side, foot + d * 0.25 + Vector3(0, rng.randf_range(0.3, 0.45), 0),
+				LUSH_A if k % 2 == 0 else LUSH_B)
+	var petals := [WILD_YELLOW, WILD_VIOLET, PETAL_WHITE]
+	for k in 7:
+		var a := TAU * k / 7.0 + rng.randf_range(-0.3, 0.3)
+		var r := rng.randf_range(0.1, 0.32)
+		var top := Vector3(cos(a) * r, rng.randf_range(0.42, 0.62), sin(a) * r)
+		f.frustum(Vector3(top.x * 0.4, 0, top.z * 0.4), top, 0.015, 0.012, 3, LUSH_B, 0.0)
+		f.blob(top, 0.08, petals[k % petals.size()], rng, 0.0)
 	return f
 
 

@@ -24,6 +24,7 @@ func test_fine_keeps_everything() -> void:
 	assert_bool(GraphicsQuality.particles(Level.FINE)).is_true()
 	assert_bool(GraphicsQuality.patches(Level.FINE)).is_true()
 	assert_bool(GraphicsQuality.grading(Level.FINE)).is_true()
+	assert_float(GraphicsQuality.cover(Level.FINE)).is_equal(1.0)
 
 
 func test_medium_drops_glow_and_halves_msaa() -> void:
@@ -33,6 +34,7 @@ func test_medium_drops_glow_and_halves_msaa() -> void:
 	assert_bool(GraphicsQuality.particles(Level.MEDIUM)).is_true()
 	assert_bool(GraphicsQuality.patches(Level.MEDIUM)).is_true()
 	assert_bool(GraphicsQuality.grading(Level.MEDIUM)).is_true()
+	assert_float(GraphicsQuality.cover(Level.MEDIUM)).is_equal(0.5)
 
 
 func test_fast_drops_the_expensive_parts() -> void:
@@ -42,6 +44,7 @@ func test_fast_drops_the_expensive_parts() -> void:
 	assert_bool(GraphicsQuality.particles(Level.FAST)).is_false()
 	assert_bool(GraphicsQuality.patches(Level.FAST)).is_false()
 	assert_bool(GraphicsQuality.grading(Level.FAST)).is_false()
+	assert_float(GraphicsQuality.cover(Level.FAST)).is_equal(0.0)
 
 
 ## Die Stufe liegt in [general] und damit am Gerät, nicht am Profil.

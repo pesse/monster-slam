@@ -22,3 +22,7 @@ trees = Array[String](["forge/acacia.glb", "forge/acacia.glb", "forge/dead_tree.
 rocks = Array[String](["forge/sandstone_rock.glb"])
 grass = Array[String](["forge/dry_grass.glb"])
 particles = "dust"
+cover = 0.7
+cover_color = Color(0.8, 0.64, 0.3, 1)
+bush_color = Color(0.4, 0.46, 0.2, 1)
+bushes = 0.4

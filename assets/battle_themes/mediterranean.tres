@@ -21,3 +21,7 @@ trees = Array[String](["forge/cypress.glb", "forge/olive.glb"])
 rocks = Array[String](["forge/boulder_grey.glb"])
 grass = Array[String](["forge/dry_grass.glb"])
 landmarks = Array[String](["forge/marble_column.glb"])
+cover = 0.4
+cover_color = Color(0.6, 0.58, 0.3, 1)
+bush_color = Color(0.3, 0.38, 0.2, 1)
+bushes = 0.7

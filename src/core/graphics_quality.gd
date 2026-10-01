@@ -7,9 +7,9 @@ extends RefCounted
 ## die Stufen ab. Was sie weglassen, ist gemessen (`battle_theme_lab -- --fps`): MSAA kostet
 ## 11–29 % der Bildzeit, Glow 11–15 %, Schatten 7–15 %, Weg und Bodenflecken um 14 %, Wolken,
 ## Teilchen, Wind und die Farbkorrektur je 0–8 %.
-## - „Mittel" nimmt Glow weg und halbiert MSAA.
-## - „Schnell" nimmt dazu MSAA, Wolkenschatten, Teilchen, Bodenflecken und die Farbkorrektur
-##   (Kontrast, Sättigung) weg. Das Tonemapping bleibt, es kostet nichts.
+## - „Mittel" nimmt Glow weg und halbiert MSAA und die Büschel des Bewuchses (GroundCover).
+## - „Schnell" nimmt dazu MSAA, Wolkenschatten, Teilchen, Bodenflecken, Büschel und die
+##   Farbkorrektur (Kontrast, Sättigung) weg. Das Tonemapping bleibt, es kostet nichts.
 ## Schatten, Wind und der Weg zum Tor bleiben in jeder Stufe: Schatten geben dem Bild die
 ## Tiefe, Wind kostet fast nichts, und der Weg gehört zum Bildaufbau (BattlePath).
 ##
@@ -47,6 +47,17 @@ static func particles(at := level()) -> bool:
 ## Flecken im dritten Bodenton (BattleTheme.ground_patch).
 static func patches(at := level()) -> bool:
 	return at != Level.FAST
+
+
+## Dichte des Bewuchses (GroundCover), als Anteil der Büschel: „Mittel" die Hälfte,
+## „Schnell" keine. Die Sträucher bleiben.
+static func cover(at := level()) -> float:
+	match at:
+		Level.FINE:
+			return 1.0
+		Level.MEDIUM:
+			return 0.5
+	return 0.0
 
 
 ## Kontrast und Sättigung des Environments (adjustment_*).

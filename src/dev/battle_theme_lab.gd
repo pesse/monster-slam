@@ -105,6 +105,9 @@ var _wind_strength := 1.0
 var _theme: BattleTheme
 var _noise: FastNoiseLite
 var _path: BattlePath
+## Fußpunkte der Bäume (für die Sträucher, GroundCover) und Dichte der Büschel.
+var _tree_feet: Array[Vector3] = []
+var _cover_density := GraphicsQuality.cover()
 var _tier := 4
 ## Die Ich-Sicht, oder null für die Iso-Kamera.
 var _fp: FirstPersonView
@@ -916,7 +919,7 @@ func _shoot_bow() -> void:
 ## Zutaten, die --fps einzeln abschaltet, mit ihrem Namen in der Ausgabe.
 const FPS_PARTS := {"msaa": "MSAA", "clouds": "Wolken", "particles": "Teilchen",
 		"wind": "Wind", "shadows": "Schatten", "glow": "Glow", "grade": "Farbgebung",
-		"ground": "Weg+Flecken"}
+		"ground": "Weg+Flecken", "cover": "Bewuchs"}
 
 
 func _measure_fps() -> void:
@@ -957,6 +960,7 @@ func _apply_parts(cfg: Dictionary) -> void:
 		_air.emitting = cfg.particles
 		_air.visible = cfg.particles
 	_wind_strength = _theme.wind if cfg.wind else 0.0
+	_cover_density = GraphicsQuality.cover() if cfg.cover else 0.0
 	_build_decor(_noise, _theme)
 	_sun.shadow_enabled = cfg.shadows
 	_world.environment.glow_enabled = cfg.glow
@@ -1057,17 +1061,31 @@ func _build_decor(noise: FastNoiseLite, theme: BattleTheme) -> void:
 	add_child(_decor)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED
+	_tree_feet.clear()
 	var area := WaveRunnerScript.visible_ground_area(_camera)
 	var half_x := 11.0 * _grow()   # WaveRunner.FIELD_HALF_X
-	for i in 90:
+	var z_front := _goal() + 11.0 * _grow()   # WaveRunner.FIELD_Z_FRONT
+	var outside := func(x: float, z: float) -> bool:
+		var on_field := absf(x) < half_x and z > WaveRunnerScript.FIELD_Z_BACK and z < z_front
+		return not on_field and WaveRunnerScript.tile_on_screen(_camera, x, z)
+	# Wie im Kampf (_decorate_outskirts): Bäume meist in Hainen, ein paar einzeln.
+	for i in 60:
 		var x := rng.randf_range(area.position.x, area.end.x)
 		var z := rng.randf_range(area.position.y, area.end.y)
-		var on_field := absf(x) < half_x and z > WaveRunnerScript.FIELD_Z_BACK \
-				and z < _goal() + 11.0 * _grow()   # WaveRunner.FIELD_Z_FRONT
-		if on_field or not WaveRunnerScript.tile_on_screen(_camera, x, z):
+		if not outside.call(x, z):
 			continue
-		var slot := "landmarks" if i % 15 == 1 else "rocks" if i % 3 == 0 else "trees"
-		_place_from(theme, slot, x, z, noise, rng)
+		if i % 15 == 1:
+			_place_from(theme, "landmarks", x, z, noise, rng)
+		elif i % 2 == 0:
+			_place_from(theme, "rocks", x, z, noise, rng)
+		elif i % 3 == 0:
+			_place_from(theme, "trees", x, z, noise, rng)
+		else:
+			for k in rng.randi_range(3, 6):
+				var p := Vector2(x, z) + Vector2.from_angle(rng.randf_range(0.0, TAU)) \
+						* rng.randf_range(0.0, WaveRunnerScript.GROVE_RADIUS)
+				if outside.call(p.x, p.y):
+					_place_from(theme, "trees", p.x, p.y, noise, rng)
 	for i in 28:
 		var x := rng.randf_range(-11.0, 11.0)
 		var z := rng.randf_range(WaveRunnerScript.SPAWN_Z, _goal() - 2.0)
@@ -1082,6 +1100,15 @@ func _build_decor(noise: FastNoiseLite, theme: BattleTheme) -> void:
 	FortressModel.build(_decor, _tier, _goal(),
 			func(x: float, z: float) -> float: return WaveRunnerScript.terrain_height(x, z, noise),
 			_fortress_scale)
+	var site := GroundCover.Site.new()
+	site.area = area
+	site.on_screen = func(x: float, z: float) -> bool: return WaveRunnerScript.tile_on_screen(_camera, x, z)
+	site.height = func(x: float, z: float) -> float: return WaveRunnerScript.terrain_height(x, z, noise)
+	site.t_at = func(x: float, z: float) -> float: return BattleTheme.ground_t(noise, x, z)
+	site.path = _path
+	site.keep_out = Rect2(-half_x, _goal() - 0.5, 2.0 * half_x, z_front - _goal() + 0.5)
+	site.trees = _tree_feet
+	GroundCover.grow(_decor, theme, site, _cover_density, rng)
 	if _has_arg("monsters"):
 		_place_monsters()
 
@@ -1108,6 +1135,8 @@ func _place_from(theme: BattleTheme, slot: String, x: float, z: float, noise: Fa
 	var model := models[rng.randi() % models.size()]
 	var span: Array = SLOT_SCALE[slot]
 	_place(model, x, z, noise, rng.randf_range(0.0, 360.0), rng.randf_range(span[0], span[1]))
+	if slot == "trees":
+		_tree_feet.append(Vector3(x, WaveRunnerScript.terrain_height(x, z, noise), z))
 
 
 ## Nahaufnahme: die gekauften Vergleichsstücke und die Deko des Themas in einer Reihe, jedes

@@ -20,3 +20,5 @@ grass = Array[String]([])
 props = Array[String](["forge/woodpile.glb", "props/barrel_large.gltf"])
 landmarks = Array[String](["forge/log_cabin.glb"])
 particles = "snow"
+cover = 0.0
+bushes = 0.0

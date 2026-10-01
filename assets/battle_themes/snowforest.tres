@@ -24,3 +24,5 @@ trees = Array[String](["forge/pine_snow.glb"])
 rocks = Array[String](["forge/boulder_snow.glb"])
 grass = Array[String]([])
 particles = "snow"
+cover = 0.0
+bushes = 0.0

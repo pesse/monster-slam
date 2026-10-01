@@ -50,6 +50,17 @@ const DIR := "res://assets/battle_themes"
 ## Pflaster haben keine, ihr Muster rechnet der Shader.
 @export var path_texture := ""
 @export_range(0.0, 1.0) var path_texture_strength := 0.9
+## Bewuchs (GroundCover): wie dicht kleine Halmbüschel in der Farbe des Bodens stehen
+## (0 = keine, 1 = Wiese), welche Blüten darin stehen und in wie vielen Büscheln.
+@export_range(0.0, 1.5) var cover := 0.8
+## Farbe der Büschel. Ohne (Alpha 0) die des Bodens darunter, etwas heller — auf Sand und
+## Stein wäre das weißes Gras, dort steht eine eigene.
+@export var cover_color := Color(0.0, 0.0, 0.0, 0.0)
+@export var cover_flowers: Array[Color] = []
+@export_range(0.0, 1.0) var cover_flower_amount := 0.08
+## Sträucher um die Bäume: Farbe und wie viele (0 = keine, 1 = bis zu drei je Baum).
+@export var bush_color := Color(0.2, 0.36, 0.13)
+@export_range(0.0, 1.0) var bushes := 0.6
 ## Detailtextur des Bodens: Name einer grauen Kachel unter `assets/textures/ground/` (ohne
 ## Endung), die die Bodenfarben in der Helligkeit moduliert. Leer, oder die Datei fehlt
 ## noch: der Boden bleibt glatt wie ohne Thema. Was dort liegen soll, steht im BRIEF.md.
@@ -179,6 +190,23 @@ func ground_color(t: float, height: float) -> Color:
 	if patches <= 1.0 + PATCH_BLEND:
 		col = col.lerp(peak, smoothstep(patches - PATCH_BLEND, patches + PATCH_BLEND, t))
 	return col
+
+
+## Wie weit der Boden an dieser Stelle in Kuppenfarbe liegt (0..1) — Schnee, auf dem kein
+## Gras wächst (GroundCover). Dieselben Übergänge wie in `ground_color`.
+func ground_snow(t: float, height: float) -> float:
+	var snow := 0.0
+	if height > peak_height:
+		snow = clampf((height - peak_height) / PEAK_BLEND, 0.0, 1.0)
+	if patches <= 1.0 + PATCH_BLEND:
+		snow = maxf(snow, smoothstep(patches - PATCH_BLEND, patches + PATCH_BLEND, t))
+	return snow
+
+
+## Der Streuwert `t` des Bodens bei (x,z) aus dem Rauschen des Terrains — für die Ecken des
+## Bodens (WaveRunner) und für den Bewuchs darauf (GroundCover) derselbe.
+static func ground_t(noise: FastNoiseLite, x: float, z: float) -> float:
+	return noise.get_noise_2d(x * 2.3 + 100.0, z * 2.3) * 0.5 + 0.5
 
 
 ## Material des Bodens: immer der Bodenshader; mit Detailtextur, wenn das Thema eine hat und

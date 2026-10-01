@@ -19,3 +19,7 @@ grass = Array[String](["forge/dry_grass.glb"])
 props = Array[String](["forge/amphorae.glb", "props/crates_stacked.gltf", "props/barrel_large.gltf"])
 landmarks = Array[String](["forge/clay_house.glb", "forge/ruin_column.glb"])
 particles = "dust"
+cover = 0.2
+cover_color = Color(0.72, 0.66, 0.36, 1)
+bush_color = Color(0.45, 0.5, 0.25, 1)
+bushes = 0.2

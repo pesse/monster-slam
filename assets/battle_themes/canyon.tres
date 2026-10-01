@@ -22,3 +22,7 @@ rocks = Array[String](["forge/sandstone_rock.glb"])
 grass = Array[String](["forge/dry_grass.glb"])
 landmarks = Array[String](["forge/canyon_spire.glb"])
 particles = "dust"
+cover = 0.25
+cover_color = Color(0.7, 0.6, 0.32, 1)
+bush_color = Color(0.42, 0.42, 0.22, 1)
+bushes = 0.3
