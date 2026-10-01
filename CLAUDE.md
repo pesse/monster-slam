@@ -117,8 +117,6 @@ Aufzählung von Kleinkram; unter ~600 Zeichen je Release.
 - Ein Verb mit `irregular: true` ist erst mit seinen Formaufgaben gemeistert (ADR 0009,
   `ContentRegistry.form_requirements`) — in jeder Sprache; neue unregelmäßige Verben
   bekommen das Feld beim Erzeugen. Keine Zusatzbedingung für Stufe 4.
-- Die Kartensterne sind **nicht** die Stufe: fünf zu je 20 % (`MapCanvas.stars_for`),
-  bei 100 % ein goldener Ring.
 - Im Kampf gilt die schwächste Unit des Scopes; ein Teil-Scope oder Tag-Filter wertet die
   **ganze** Unit. Gezählt wird nur in `FortressTier.unit_tiers` — `StatsScreen.unit_rows`
   baut darauf auf, keine zweite Zählregel.
