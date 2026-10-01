@@ -120,6 +120,11 @@ var _warming := false
 @onready var _slow_motion: SlowMotion = $SlowMotion
 @onready var _fast_resolve_button: Button = $UI/FastResolveButton
 @onready var _fast_resolve_confirm: ConfirmDialog = $UI/FastResolveConfirm
+@onready var _pause_overlay: PauseOverlay = $UI/PauseOverlay
+@onready var _pause_button: Button = $UI/PauseButton
+## Seit wann der Spieler pausiert hat (Echtzeit, ms); -1 = keine Pause des Spielers. Die
+## Baum-Pause der Feiern ist eine andere und läuft nicht über diese Variable.
+var _paused_since_ms := -1
 @onready var _celebration: MasteryCelebration = $UI/MasteryCelebration
 @onready var _spelling: SpellingFreeze = $UI/SpellingFreeze
 @onready var _level_flare: LevelFlare = $UI/HUD.level_flare
@@ -198,6 +203,15 @@ func _ready() -> void:
 	_fast_resolve_button.pressed.connect(_on_fast_resolve_pressed)
 	_fast_resolve_confirm.confirmed.connect(_fast_resolve_wave)
 	_fast_resolve_confirm.cancelled.connect(_on_fast_resolve_cancelled)
+	_pause_overlay.toggle_requested.connect(_on_pause_key)
+	# Esc in der Pause beendet den Kampf wie sonst auch. Der Zoom hinaus braucht den
+	# laufenden Baum, also erst die Pause aufheben.
+	_pause_overlay.leave_requested.connect(func() -> void:
+		if _leaving:
+			return
+		_toggle_pause()
+		_abort_battle())
+	_pause_button.pressed.connect(_toggle_pause)
 	_celebration.started.connect(_on_celebration_started)
 	_celebration.finished.connect(_on_celebration_finished)
 	_spelling.started.connect(_on_spelling_started)
@@ -921,6 +935,44 @@ func _exit_tree() -> void:
 ## „Schnell auflösen" fragt erst nach. Solange die Frage steht, ist die Eingabe weg: sie
 ## holt sich sonst jeden Frame den Fokus zurück, und Enter ginge an sie statt an „Abbrechen".
 ## Das Spiel läuft dabei weiter — ein Pausieren hielten die Spawn-Timer ohnehin nicht an.
+## Strg+P immer, das nackte P nur in der Ich-Sicht, solange nicht getippt wird — in der
+## Iso-Sicht ist die Eingabe immer offen und das „p" ein Buchstabe.
+func _on_pause_key(bare: bool) -> void:
+	if bare and (_fp == null or _answer_input.is_typing()):
+		return
+	if _toggle_pause():
+		_pause_overlay.consume()
+
+
+## Pausiert oder setzt fort; false, wenn gerade keine Pause möglich ist. Hält den Baum an
+## wie eine Feier (Monster, Spawn-Timer, Tweens) und nimmt die Eingabe weg, sonst ließe
+## sich in Ruhe antworten. Die Pausenzeit zählt nicht als Bedenkzeit der Monster.
+func _toggle_pause() -> bool:
+	if _paused_since_ms >= 0:
+		var duration := Time.get_ticks_msec() - _paused_since_ms
+		_paused_since_ms = -1
+		for monster in _active:
+			monster.spawned_at_ms += duration
+		_pause_overlay.hide_pause()
+		get_tree().paused = false
+		_answer_input.visible = true
+		_fast_resolve_button.disabled = false
+		_set_view_active(true)
+		return true
+	# Keine Pause über eine Feier, das Standbild, die Rückfrage oder das Wellenende hinweg:
+	# die geben den Baum selbst wieder frei und nähmen die Pause dabei mit.
+	if _finished or _warming or _leaving or _fast_resolving or get_tree().paused \
+			or _fast_resolve_confirm.visible:
+		return false
+	_paused_since_ms = Time.get_ticks_msec()
+	get_tree().paused = true
+	_answer_input.visible = false
+	_fast_resolve_button.disabled = true
+	_set_view_active(false)
+	_pause_overlay.show_pause(_fp != null)
+	return true
+
+
 func _on_fast_resolve_pressed() -> void:
 	if _finished or _fast_resolving:
 		return
@@ -949,6 +1001,7 @@ func _fast_resolve_wave() -> void:
 	_fast_resolving = true
 	_answer_input.visible = false
 	_fast_resolve_button.disabled = true
+	_pause_button.disabled = true
 	# Ich-Sicht: zurück zum Laufen — die Frage hat die Maus freigegeben, und eine Eingabe
 	# gibt es im Zeitraffer nicht mehr.
 	_set_view_active(true)
@@ -989,6 +1042,8 @@ func _start_next_wave() -> void:
 	_celebration.release()
 	_fast_resolve_button.visible = true
 	_fast_resolve_button.disabled = false
+	_pause_button.visible = true
+	_pause_button.disabled = false
 	_set_view_active(true)
 
 	GameState.current_wave = "procedural_%d" % _wave_number
@@ -1055,6 +1110,7 @@ func _show_no_content() -> void:
 	_set_view_active(false)
 	_answer_input.visible = false
 	_fast_resolve_button.visible = false
+	_pause_button.visible = false
 	_stats.hide_stats()
 	_end_label.text = "Keine spielbaren Aufgaben.\n\nFilter prüfen oder über „Inhalte“\neinen Vokabel-Pack installieren.\n\n[Esc] zurück ins Menü"
 	_end_label.visible = true
@@ -1770,6 +1826,7 @@ func _finish_wave(won: bool) -> void:
 	_set_view_active(false)
 	_answer_input.visible = false
 	_fast_resolve_button.visible = false
+	_pause_button.visible = false
 	# Endet die Welle, während die Rückfrage offen ist, gibt es nichts mehr aufzulösen.
 	_fast_resolve_confirm.hide()
 	# Cutscene, Auflösung und Statistik immer in Normaltempo.

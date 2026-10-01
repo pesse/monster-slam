@@ -337,6 +337,17 @@ Monster angekommen sind.
 **Warum voller Schaden?** „Schnell auflösen“ soll Zeit sparen, aber keine verlorene Welle
 retten. Das Ergebnis ist dasselbe, das auch ohne Vorspulen herausgekommen wäre.
 
+### Pause
+
+Unter dem Vorspul-Knopf steht der kleine Knopf mit den **zwei Balken**. Er hält den Kampf
+an, ebenso **Strg+P**. In der Ich-Sicht reicht ein **P**, solange das Eingabefeld zu ist;
+sonst ist das P ein Buchstabe deiner Antwort.
+
+- Das Bild wird abgedunkelt und das Eingabefeld ist weg. Die Pause ist zum Durchatmen da,
+  nicht zum Nachdenken über die Wörter auf dem Feld.
+- Weiter geht es mit derselben Taste oder dem Knopf, **Esc** beendet den Kampf (Kapitel 7).
+- Die Pause zählt nicht als Bedenkzeit.
+
 ## 7. Abbrechen mit Escape
 
 Mit **Escape** kommst du während einer Welle sofort zurück zum Start-Screen.

@@ -940,7 +940,8 @@ func _shoot_hud() -> void:
 		GameState.monsters_defeated = 24
 		var pieces: Array[Node] = []
 		for path in ["res://scenes/ui/hud.tscn", "res://scenes/ui/answer_input.tscn",
-				"res://scenes/ui/word_type_legend.tscn", "res://scenes/ui/fast_resolve_button.tscn"]:
+				"res://scenes/ui/word_type_legend.tscn", "res://scenes/ui/fast_resolve_button.tscn",
+				"res://scenes/ui/pause_button.tscn", "res://scenes/ui/pause_overlay.tscn"]:
 			var piece := (load(path) as PackedScene).instantiate()
 			$UI.add_child(piece)
 			pieces.append(piece)
@@ -952,6 +953,9 @@ func _shoot_hud() -> void:
 		(hud.get_node("%Mastered") as Control).visible = bool(c["mastered"])
 		(hud.get_node("%Mastered") as Label).text = "8 gemeistert"
 		pieces[1].set("gated", bool(c["closed"]))
+		# Die Pause im zweiten Bild: abgedunkelt, mit der Taste der Ich-Sicht.
+		if bool(c["closed"]):
+			(pieces[5] as PauseOverlay).show_pause(true)
 		for i in 3:
 			await RenderingServer.frame_post_draw
 		var path := "%s/hud_%s.png" % [dir, case]
