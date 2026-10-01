@@ -62,6 +62,16 @@ sehen.
 5. **Packs mit dem Feld heben `min_app_version` auf 0.19.0** (Access 2–4, Latein; *À plus!*
    lag schon dort). Eine ältere App kennt das Feld nicht und zählte unregelmäßige Verben
    nach den Richtungen allein.
+6. **Nachtrag 2026-10-01: Formen nach der Regel starten sicher.** Regelmäßige Verben
+   behalten ihre Formaufgaben, aber eine Form nach der *-ed*-Regel startet mit Confidence
+   0.65, also gemeistert nach zwei Treffern (`WaveGenerator.RULE_FORM_PRIOR`). Bei einer
+   Schreibfalle (verdoppelter Konsonant, *y → ied*) liegt der Start bei 0.55, also drei
+   Treffer. Ein Fehler halbiert die Confidence wie bei jeder anderen Aufgabe. Anlass war
+   Access 4 Unit 1: 22 von 24 Verben sind regelmäßig, die Formaufgaben dort bestanden fast
+   nur aus *-ed* und verdrängten *dug* und *stood up*. Ganz herausnehmen wollten wir sie
+   nicht, denn ein-, zweimal soll man sie sehen. Erkannt wird die Regel an den Formen
+   selbst (`rule_form_kind`), nicht über ein Feld. Eine Form, die zu keinem Muster passt,
+   behält den Prior des Lexems. Nur Englisch, siehe `RULE_FORMS`.
 
 ## Folgen
 

@@ -84,6 +84,71 @@ func _confidence_prior(source: Dictionary) -> float:
 	return sum / float(priors.size())
 
 
+## Start-Confidence einer Formaufgabe, deren Form aus der Regel folgt — ein Verb ohne
+## `irregular`, dessen Vergangenheit auf *-ed* gebildet ist (ADR 0009, Nachtrag). Wer die
+## Regel kann, kann jedes solche Verb; die Aufgabe soll ein-, zweimal kommen und dann als
+## gemeistert hinten stehen, statt die unregelmäßigen zu verdrängen. Gemessen an der
+## Fortschreibung in PlayerProgress.record (+25 % des Abstands zu 1 je Treffer, Meisterung
+## ab 0.8): 0.65 ist nach zwei Treffern gemeistert, 0.55 nach drei. Ein Fehler halbiert
+## die Confidence wie bei jeder Aufgabe.
+const RULE_FORM_PRIOR := 0.65
+## Regel mit Schreibfalle: verdoppelter Konsonant (preferred, snorkelled) oder y → ied
+## (bullied). Regelmäßig, aber nicht geschenkt.
+const SPELLING_FORM_PRIOR := 0.55
+## Formen, bei denen eine Sprache „regelmäßig" kennt (ADR 0009, Punkt 2). Latein und
+## Französisch fehlen: dort gibt es die Formaufgaben nur bei unregelmäßigen Verben, oder
+## die Regel hängt an der Konjugation, die das Lexem nicht trägt.
+const RULE_FORMS := {"en": ["past_simple", "past_participle"]}
+
+
+## Wie eine englische Vergangenheitsform zu ihrer Grundform steht: "plain" (settled,
+## discussed), "spelling" (preferred, bullied) oder "" (nicht nach der Regel — took, oder
+## Daten, die nicht passen). Bei mehreren Wörtern („bump into") zählt das erste, der Rest
+## muss gleich bleiben.
+static func rule_form_kind(base: String, value: String) -> String:
+	var parts := base.split(" ", false, 1)
+	if parts.is_empty():
+		return ""
+	var head := parts[0]
+	var tail := (" " + parts[1]) if parts.size() > 1 else ""
+	if not value.ends_with(tail):
+		return ""
+	var form := value.substr(0, value.length() - tail.length())
+	if form == head + "ed" or (head.ends_with("e") and form == head + "d"):
+		return "plain"
+	if head.length() > 1 and form == head + head.right(1) + "ed":
+		return "spelling"
+	if head.ends_with("y") and form == head.substr(0, head.length() - 1) + "ied":
+		return "spelling"
+	return ""
+
+
+## Prior einer Formaufgabe nach der Regel (siehe RULE_FORM_PRIOR), oder -1, wenn die
+## Aufgabe keine solche ist — dann gilt der Prior des Lexems.
+func _rule_form_prior(definition: Dictionary, source: Dictionary) -> float:
+	var form_type := str(definition.get("requires_form", ""))
+	if not form_type in RULE_FORMS.get(Lexeme.language(source), []):
+		return -1.0
+	if bool(source.get("irregular", false)):
+		return -1.0
+	var id := str(source.get("id", ""))
+	var bases := ContentRegistry.forms_for(id, "base")
+	var base := str(bases[0].get("value", "")) if not bases.is_empty() else Lexeme.foreign(source)
+	var forms := ContentRegistry.forms_for(id, form_type, _resolver.scope)
+	if forms.is_empty():
+		return -1.0
+	var spelling := false
+	for form in forms:
+		match rule_form_kind(base, str(form.get("value", ""))):
+			"plain":
+				pass
+			"spelling":
+				spelling = true
+			_:
+				return -1.0
+	return SPELLING_FORM_PRIOR if spelling else RULE_FORM_PRIOR
+
+
 ## Aufgaben-Pool aus der Auswahl des aktiven Profils (Session-Setup). EINE Quelle für
 ## beide Fragen: welche Aufgaben der Kampf spawnt (WaveRunner._generate_wave) und ob
 ## überhaupt etwas spielbar ist (has_playable, Menü-Knöpfe). Getrennte Pools hier hießen:
@@ -518,7 +583,10 @@ func _build_plan(candidate: Dictionary) -> Dictionary:
 	var t := _difficulty_norm(int(task.get("difficulty", 1)))
 	# Prior aus den Lexem-Metadaten: gilt als Confidence, solange die Aufgabe ungesehen ist,
 	# und als Start-Confidence des Records beim ersten echten Kontakt (siehe WaveRunner).
-	var prior := _confidence_prior(candidate["source"])
+	# Eine Form nach der Regel hat ihren eigenen, höheren Prior (siehe RULE_FORM_PRIOR).
+	var prior := _rule_form_prior(candidate["definition"], candidate["source"])
+	if prior < 0.0:
+		prior = _confidence_prior(candidate["source"])
 	task["initial_confidence"] = prior
 	var c := PlayerProgress.confidence(task["learnable_id"], prior)
 
