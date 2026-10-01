@@ -378,9 +378,9 @@ Bedeutung. Hat ein Wort mehrere Übersetzungen, stehen sie auf beiden Seiten als
 dabei — unter der Aufgabe und unter der Antwort. Die Karten laufen von selbst durch, etwa
 drei Sekunden je Karte.
 
-Danach kannst du mit „◀“ und „▶“ blättern. „Alle anzeigen“ nimmt auch die Wörter dazu,
+Danach kannst du mit „◀“ und „▶“ blättern — oder mit den Pfeiltasten ← und →. „Alle anzeigen“ nimmt auch die Wörter dazu,
 die du richtig hattest. Das geht schon während des Durchlaufs: die richtigen kommen dann
-hinten dran, der Durchlauf zeigt aber erst alle durchgelassenen zu Ende. Mit „Weiter ▸“ geht es zur Statistik. Hast du nichts
+hinten dran, der Durchlauf zeigt aber erst alle durchgelassenen zu Ende. Mit „Weiter ▸“ (oder Enter) geht es zur Statistik. Hast du nichts
 durchgelassen, siehst du gleich alle Karten zum Durchblättern.
 
 Ist dort ein Wort falsch, kannst du es mit „⚑ Melden“ melden (Kapitel 14).

@@ -13,8 +13,12 @@ func _item(id: String, leaked: bool) -> Dictionary:
 
 
 func _enter() -> InputEventKey:
+	return _key(KEY_ENTER)
+
+
+func _key(code: Key) -> InputEventKey:
 	var key := InputEventKey.new()
-	key.keycode = KEY_ENTER
+	key.keycode = code
 	key.pressed = true
 	return key
 
@@ -45,3 +49,17 @@ func test_enter_right_after_the_last_answer_does_not_click_through() -> void:
 	reveal._input(_enter())
 	await get_tree().process_frame
 	assert_bool(reveal.visible).is_true()
+
+
+func test_arrow_keys_turn_the_cards() -> void:
+	var reveal := await _reveal(60000)
+	var progress := reveal.get_node("%Progress") as Label
+	assert_str(progress.text).is_equal("Karte 1 / 2")
+	reveal._input(_key(KEY_LEFT))
+	assert_str(progress.text).is_equal("Karte 1 / 2")
+	reveal._input(_key(KEY_RIGHT))
+	assert_str(progress.text).is_equal("Karte 2 / 2")
+	reveal._input(_key(KEY_RIGHT))
+	assert_str(progress.text).is_equal("Karte 2 / 2")
+	reveal._input(_key(KEY_LEFT))
+	assert_str(progress.text).is_equal("Karte 1 / 2")

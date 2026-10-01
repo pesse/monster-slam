@@ -9,7 +9,7 @@ extends PanelContainer
 ## Durchlauf selbst bleibt bei den durchgelassenen und lässt sich nicht abbrechen), einzelne Vokabeln per "⚑ Melden" mit Kommentar flaggen und mit
 ## "Weiter" zum Statistik-Screen gehen.
 ##
-## **Enter drückt "Weiter"**, sobald der Knopf frei ist — gespielt wird mit der Tastatur.
+## **Enter drückt "Weiter"**, sobald der Knopf frei ist, ←/→ blättern — gespielt wird mit der Tastatur.
 ## Erst nach `enter_grace_ms`: bei perfekter Welle steht der Screen sofort da, und das
 ## Enter der letzten Antwort soll nicht durch ihn hindurchklicken. Im Kommentarfeld
 ## gehört Enter dem Absenden.
@@ -113,11 +113,21 @@ func play(played: Array) -> void:
 
 
 ## `_input` und nicht `_unhandled_input`: die Knöpfe haben keinen Fokus (siehe Kopf).
+## ←/→ drücken die Pfeilknöpfe, solange die frei sind (nicht im Auto-Durchlauf);
+## gehaltene Tasten blättern weiter.
 func _input(event: InputEvent) -> void:
-	if not is_visible_in_tree() or _continue_btn.disabled or _flag_comment.has_focus():
+	if not is_visible_in_tree() or _flag_comment.has_focus():
 		return
 	var key := event as InputEventKey
-	if key == null or not key.pressed or key.echo or not key.keycode in [KEY_ENTER, KEY_KP_ENTER]:
+	if key == null or not key.pressed:
+		return
+	var arrow := {KEY_LEFT: _prev_btn, KEY_RIGHT: _next_btn}.get(key.keycode) as Button
+	if arrow != null:
+		if not arrow.disabled:
+			accept_event()
+			arrow.pressed.emit()
+		return
+	if key.echo or _continue_btn.disabled or not key.keycode in [KEY_ENTER, KEY_KP_ENTER]:
 		return
 	if Time.get_ticks_msec() - _continue_since_ms < enter_grace_ms:
 		return
