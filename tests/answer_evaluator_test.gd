@@ -267,3 +267,9 @@ func test_french_placeholders_are_wildcards() -> void:
 				.override_failure_message(typed).is_true()
 	assert_bool(_evaluator.evaluate(["faire qc"], "faire quelque chose")["complete"]).is_true()
 	assert_bool(_evaluator.evaluate(["faire qch"], "faire qc")["complete"]).is_true()
+
+
+## Die deutsche Seite von À plus! schreibt „jdm“/„jdn“ ohne Punkt.
+func test_german_placeholders_as_a_plus_writes_them() -> void:
+	assert_bool(_evaluator.evaluate(["jdm etw. versprechen"], "jemandem etwas versprechen")["complete"]).is_true()
+	assert_bool(_evaluator.evaluate(["jdm Bescheid sagen"], "jmdm. Bescheid sagen")["complete"]).is_true()

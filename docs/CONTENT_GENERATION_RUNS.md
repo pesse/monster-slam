@@ -11,6 +11,7 @@ verschiedener Wege vergleichbar zu machen. Pro Lauf ein Eintrag; Vergleichstabel
 | #2 | 2026-09-03 | Ein-Kontext-Lauf aus Buchfotos (Vision) + Merge/Validate-Skript | Opus | 0 | ~2 Mio. (geschätzt) | ~30 $ (geschätzt) | 1.166 | 0 Fehler / 0 Dubletten |
 | #3 | 2026-09-14 | Ein-Kontext-Lauf aus Buchfotos, ohne Beispielsätze | Opus | 0 | ~0,2 Mio. | ~3 $ | 279 | 0 Fehler / 0 Dubletten |
 | #4 | 2026-09-25 | Sätze je Unit: Fan-out je Unit + Gegenlesung + Prüf-/Merge-Skript | Opus | 9 | ~0,85 Mio. | n. b. | 257 Sätze, 397 Verknüpfungen | 0 Fehler, Datentests grün |
+| #5 | 2026-10-01 | Ein-Kontext-Lauf aus Buchfotos, erste Französisch-Daten, Zeilen-Notation + Generator-Skript | Opus | 0 | n. b. | n. b. | 320 | 0 Fehler / 0 Dubletten |
 
 ---
 
@@ -254,3 +255,68 @@ Die Lösungen zählen die Komma- und Kurzform-Varianten mit.
   `sentence_lexemes`.
 - **−** Britische Norm als Maßstab: Simple Past mit „just“/„already“/„ever“ steht als
   Stolperstelle, obwohl es im Amerikanischen vertretbar ist.
+
+---
+
+## Lauf #5 — À plus!, Dossiers 1–2 (aus Buchfotos, erste Französisch-Daten)
+
+**Datum:** 2026-10-01
+**Ziel:** Das Vokabelverzeichnis der ersten beiden Dossiers als neues Inhaltspaket
+(`language-aplusx`), zugleich der erste Bestand für Französisch (ADR 0008).
+
+### Ansatz
+Wie Lauf #3 (ein Kontext, ohne Beispielsätze), aber nicht direkt als JSON:
+
+- **Je Seite eine Zeilen-Notation** im Scratchpad (`teil|typ|fr;alt|de;alt|notiz`),
+  gleich beim Lesen des Fotos geschrieben. Ein Generator-Skript macht daraus die Lexeme:
+  Slug, Id, Artikel-Abtrennung für die Id, Dubletten über beide Units, Typ-Feinzuordnung.
+  Eine Korrektur ist eine geänderte Zeile und ein neuer Lauf, kein Suchen im JSON.
+- **Dossier → Unit, Partie A/B/C → Teil 1/2/3.** Auftaktseite und *Mots en contexte*
+  bekommen keinen Teil; ihre Wörter erscheinen nur im Gesamt-Level der Unit.
+- **Formen nach den Regeln aus ADDING_CONTENT:** männlich und weiblich mit eigener
+  deutscher Seite als zwei Lexeme. Sind beide Formen gleich und nur der Artikel
+  unterscheidet sich, gibt es ein Lexem mit beiden Artikeln (z. B. *le/la bénévole*), denn
+  „der/die …“ wären nach dem Abtrennen des Artikels derselbe Prompt. Adjektive tragen die
+  weibliche Form als Alternative, Nomen mit *l'* den unbestimmten Artikel. Das Genus steht
+  in `notes`.
+- **Wiederholungen weggelassen:** Was D2 aus D1 wiederholt, bleibt in D1 (sieben Einträge).
+  Gleiches Stichwort in anderer Wortart (Adjektiv in D1, Nomen in D2) bekommt eine eigene Id.
+- **Kästen:** Die mit deutscher Entsprechung kamen mit (Himmelsrichtungen, Ausdrücke mit
+  *le coup*, *avoir raison*). Die Wiederholungs-Kästen und der Kasten „familier/standard“
+  ohne Deutsch blieben draußen (später Kandidat für Relationen).
+- **Konjugationen** der unregelmäßigen Verben stehen vorerst nur in `notes`. Formen
+  (`fr_*`) kommen erst, wenn die Aufgaben dafür gebaut sind.
+
+### Aufwand
+| | Lauf #5 |
+|---|---|
+| Agenten | 0 (ein Kontext) |
+| Bild-Eingaben | 17 Fotos (16 Seiten, 1 Fehlaufnahme), wegen einer Kontext-Zusammenfassung zweimal gelesen |
+| ~Tokens | n. b. |
+
+### Output (320 Lexeme)
+| Unit | Lexeme | ohne Teil | A | B | C |
+|---|---|---|---|---|---|
+| Dossier 1 | 153 | 28 | 44 | 49 | 32 |
+| Dossier 2 | 167 | 53 | 76 | 34 | 4 |
+
+### Qualität
+- **Automatisch:** 0 JSON-Fehler, 0 doppelte Ids, Datentests grün, Pack-Zuordnung eindeutig.
+- **Prompt-Kollisionen:** zwei, mit einer Glosse gelöst („der Blick (kurz)“,
+  „die Erlaubnis (Schein)“). Drei weitere waren beim Lesen schon aufgefallen und wurden
+  gleich geglosst (*direct* gegen *directement*, *simple* gegen *simplement*, *cause*
+  gegen *raison*).
+- **Notation geprüft:** Paare wie *les uns …, les autres* bekamen eine Alternative ohne
+  „…“, weil der Platzhalter sonst ein Füllwort verlangt.
+- **Lücken:** Von D2 Partie C fehlt alles nach S. 190 (nur vier Einträge da). Der Fuß von
+  S. 175 ist abgeschnitten, und die letzte Zeile von S. 189 ist unleserlich.
+- **Offen:** Die Bandnummer steht noch aus, `aplusx` ist ein Arbeitstitel.
+
+### Stärken / Schwächen dieses Ansatzes
+- **+** Die Zeilen-Notation ist knapp genug, um sie direkt beim Lesen zu schreiben, und
+  überlebt eine Kontext-Zusammenfassung, weil sie auf der Platte liegt.
+- **+** Regeln (Artikel, Formen, Dubletten) liegen im Skript, nicht in der Disziplin
+  beim Abtippen.
+- **−** Die Fotos kamen ungeordnet und ohne Seitenzahl im Dateinamen; die Reihenfolge
+  musste aus den Seitenzahlen im Bild rekonstruiert werden.
+

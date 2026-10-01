@@ -92,6 +92,11 @@ Ids `lex.fr.<buch>.…` und Dateien `fr_<buch>_unit<n>.json`. Die Aufgaben stehe
   (`ami(e)`, `petit, e`, `acteur/actrice`). Zwei Wörter mit eigener deutscher Seite
   (*der Freund* / *die Freundin*) werden zwei Lexeme. Ein Adjektiv trägt die männliche
   Form als `lemma_fr` und die weibliche in `lemma_fr_alt`, wenn das Buch beide nennt.
+  Unterscheidet nur der Artikel (*le/la bénévole*), wird es **ein** Lexem mit beiden
+  Artikeln in `lemma_fr`/`lemma_fr_alt` und beiden deutschen Formen. Zwei Lexeme hätten
+  nach dem Abtrennen des Artikels denselben Prompt.
+- Nomen mit *l'* tragen den unbestimmten Artikel als Alternative (`une étape`) und
+  das Genus in `notes` (`f.`).
 - Platzhalter wie im Buch (*qn*, *qc*). Der Evaluator kennt sie.
 - Dossier → `unit`, Partie A/B/C → `part` 1/2/3 (wie die Lektionen im Lateinbuch).
   Die Anzeige („Dossier 2 · Partie A") steht unter `naming` in
