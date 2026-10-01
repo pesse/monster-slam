@@ -558,8 +558,15 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
   (gerechnetes Rauschen im Bodenshader, nimmt der Sonne ihren Anteil wie ein Schatten).
   Beide laufen nach `wind_time`, einem globalen Shader-Parameter, den ein `Wind`-Knoten mit
   dem skalierten delta treibt — in der Zeitlupe wehen sie langsamer. In der Luft treibt je
-  Thema eine Art `AmbientParticles` (Laub, Schnee, Staub, Pollen, Glühwürmchen) über dem
-  sichtbaren Boden. Stärke je Thema: `wind`, `clouds`, `particles`.
+  Thema eine Art `AmbientParticles` (Laub, Schnee, Pollen, Glühwürmchen) über dem
+  sichtbaren Boden — nur, wo dort wirklich etwas in der Luft wäre (kein Staub über der
+  Wüste, keine Glühwürmchen im Tageslicht des Dschungels). Laub fällt als Blattform aus den
+  Kronen der Laubbäume (`LEAF_TREES`, `crown_of`) und kippt im Fallen; Kirschblüten fallen
+  genauso aus jedem Blütenbaum (`BLOSSOM_TREES`, `AmbientParticles.blossoms`), unabhängig
+  von der Art des Themas. In trockenen Themen (`tumbleweeds`) rollt statt Staub selten
+  ein Steppenläufer (`Tumbleweeds`) mit dem Wind durchs Bild und schrumpft vor der Burg
+  weg. Beides gehört zu den Teilchen und fällt in „Schnell" weg. Stärke je Thema:
+  `wind`, `clouds`, `particles`.
 - **Schatten und Licht des Bodens.** Der Bodenshader beleuchtet selbst (`light()`): Grund
   ist das Umgebungslicht des Themas, die Sonne legt nur einen festen Anteil davon dazu
   (`shadow_depth`, nach Neigung zur Sonne). So steht flacher Boden in der Sonne in der Farbe

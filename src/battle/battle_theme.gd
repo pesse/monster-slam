@@ -51,8 +51,9 @@ const DIR := "res://assets/battle_themes"
 @export var path_texture := ""
 @export_range(0.0, 1.0) var path_texture_strength := 0.9
 ## Bewuchs (GroundCover): wie dicht kleine Halmbüschel in der Farbe des Bodens stehen
-## (0 = keine, 1 = Wiese), welche Blüten darin stehen und in wie vielen Büscheln.
-@export_range(0.0, 1.5) var cover := 0.8
+## (0 = keine, 1 = karg, 3 = dichte Wiese), welche Blüten darin stehen und in wie vielen
+## Büscheln.
+@export_range(0.0, 4.0) var cover := 1.0
 ## Farbe der Büschel. Ohne (Alpha 0) die des Bodens darunter, etwas heller — auf Sand und
 ## Stein wäre das weißes Gras, dort steht eine eigene.
 @export var cover_color := Color(0.0, 0.0, 0.0, 0.0)
@@ -83,9 +84,11 @@ const DIR := "res://assets/battle_themes"
 ## Wie dunkel die Wolkenschatten über den Boden ziehen: der Anteil der Sonne, den eine
 ## Wolke nimmt (battle_ground.gdshader). 0 = wolkenlos.
 @export_range(0.0, 1.0) var clouds := 0.6
-## Was in der Luft treibt: eine Art aus AmbientParticles.KINDS ("leaves", "snow", "dust",
+## Was in der Luft treibt: eine Art aus AmbientParticles.KINDS ("leaves", "snow",
 ## "pollen", "fireflies"), leer heißt nichts.
 @export var particles := ""
+## Ab und zu rollt ein verdorrter Busch durchs Bild (Tumbleweeds) — Wüste, Steppe, Savanne.
+@export var tumbleweeds := false
 
 ## Die Deko je Platz: Modelle unter `assets/models/` (etwa "props/tree.glb"), aus denen der
 ## Kampf zufällig zieht. Größe und Menge gehören dem PLATZ, nicht dem Modell — ein Modell

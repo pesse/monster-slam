@@ -19,6 +19,6 @@ rocks = Array[String](["forge/sky_boulder.glb"])
 grass = Array[String](["forge/dry_grass.glb"])
 props = Array[String]([])
 landmarks = Array[String](["forge/tholos.glb", "forge/marble_column.glb"])
-cover = 0.4
+cover = 0.9
 bush_color = Color(0.3, 0.4, 0.2, 1)
 bushes = 0.3

@@ -15,12 +15,12 @@ extends RefCounted
 ## (GraphicsQuality.cover). Auf dem Weg, in der Burg und im Schnee wächst nichts.
 
 ## Büschel je Quadratmeter bei `cover` = 1, bevor die Klumpen (CLUMP_*) ausdünnen.
-const TUFT_DENSITY := 0.45
+const TUFT_DENSITY := 0.95
 ## Klumpen: Rauschen in dieser Frequenz, ab `CLUMP_FROM` wächst etwas, ab `CLUMP_FULL` voll.
 ## Gleichmäßig verteilt läse sich der Bewuchs als Raster; in Klumpen als Wiese.
 const CLUMP_FREQUENCY := 0.09
-const CLUMP_FROM := 0.05
-const CLUMP_FULL := 0.45
+const CLUMP_FROM := -0.1
+const CLUMP_FULL := 0.85
 ## Abstand vom Wegrand, bis zu dem nichts wächst — und gleich dahinter mehr: am Wegrand
 ## steht das Gras am dichtesten (EDGE_BOOST mal so oft).
 const PATH_MARGIN := 0.15
@@ -34,7 +34,7 @@ const TUFT_SCALE := Vector2(1.1, 1.9)
 ## Anteil der Schneefarbe (BattleTheme.ground_snow), ab dem nichts mehr wächst.
 const SNOW_LIMIT := 0.35
 ## Sträucher je Baum (zufällig 0 bis so viele) und wie weit vom Stamm.
-const BUSHES_PER_TREE := 3
+const BUSHES_PER_TREE := 4
 const BUSH_RING := Vector2(2.2, 4.5)
 const BUSH_SCALE := Vector2(1.0, 1.8)
 ## Ausschlag im Wind (Wind.SWAY), Büschel wie grass.glb, Sträucher wie ein Baum.
@@ -44,6 +44,21 @@ const BUSH_SWAY := 0.02
 const BUSH_LIFT := 1.7
 
 static var _meshes := {}
+
+
+## Die Stellschrauben, mit den Konstanten oben als Vorgabe. Das Spiel nimmt immer die;
+## eigene Werte setzt nur die Werkbank (battle_theme_lab, Reiter Bewuchs), um sie am Bild zu
+## finden — „Werte kopieren" schreibt sie dann als Konstanten heraus.
+class Tuning:
+	var tuft_density := TUFT_DENSITY
+	var clump_from := CLUMP_FROM
+	var clump_full := CLUMP_FULL
+	var tuft_lift := TUFT_LIFT
+	var tuft_scale := TUFT_SCALE
+	var bushes_per_tree := BUSHES_PER_TREE
+	## Obere Grenzen von BUSH_RING und BUSH_SCALE.
+	var bush_ring := BUSH_RING.y
+	var bush_scale := BUSH_SCALE.y
 
 
 ## Wo der Bewuchs wächst: der Boden eines Kampfes, wie WaveRunner und die Werkbank ihn
@@ -67,8 +82,8 @@ class Site:
 ## Wächst unter `parent` auf `site`. `density` ist die der Grafikstufe
 ## (GraphicsQuality.cover); 0 heißt: keine Büschel, nur Sträucher.
 static func grow(parent: Node3D, theme: BattleTheme, site: Site, density: float,
-		rng: RandomNumberGenerator) -> void:
-	var plan := plan(theme, site, density, rng)
+		rng: RandomNumberGenerator, tuning: Tuning = null) -> void:
+	var plan := plan(theme, site, density, rng, tuning)
 	_add(parent, "Tufts", _mesh("tuft"), plan.tufts, TUFT_SWAY, false)
 	_add(parent, "Flowers", _mesh("flower"), plan.flowers, TUFT_SWAY, false)
 	_add(parent, "Bushes", _mesh("bush"), plan.bushes, BUSH_SWAY, true)
@@ -77,25 +92,28 @@ static func grow(parent: Node3D, theme: BattleTheme, site: Site, density: float,
 ## Was wo wächst, ohne es zu bauen: je Art (`tufts`, `flowers`, `bushes`) eine Liste aus
 ## [Transform3D, Color]. Getrennt von `grow`, weil ein MultiMesh seine Lagen kopflos nicht
 ## zurückgibt — der Test prüft hier.
-static func plan(theme: BattleTheme, site: Site, density: float, rng: RandomNumberGenerator) -> Dictionary:
+static func plan(theme: BattleTheme, site: Site, density: float, rng: RandomNumberGenerator,
+		tuning: Tuning = null) -> Dictionary:
+	if tuning == null:
+		tuning = Tuning.new()
 	var out := {"tufts": [], "flowers": [], "bushes": []}
-	_plan_tufts(out, theme, site, density, rng)
-	_plan_bushes(out, theme, site, rng)
+	_plan_tufts(out, theme, site, density, rng, tuning)
+	_plan_bushes(out, theme, site, rng, tuning)
 	return out
 
 
 static func _plan_tufts(out: Dictionary, theme: BattleTheme, site: Site, density: float,
-		rng: RandomNumberGenerator) -> void:
+		rng: RandomNumberGenerator, tuning: Tuning) -> void:
 	if density <= 0.0 or theme.cover <= 0.0:
 		return
 	var clumps := FastNoiseLite.new()
 	clumps.seed = rng.randi()
 	clumps.frequency = CLUMP_FREQUENCY
 	var path := site.path
-	for i in int(site.area.get_area() * TUFT_DENSITY * theme.cover * density):
+	for i in int(site.area.get_area() * tuning.tuft_density * theme.cover * density):
 		var x := rng.randf_range(site.area.position.x, site.area.end.x)
 		var z := rng.randf_range(site.area.position.y, site.area.end.y)
-		var keep := smoothstep(CLUMP_FROM, CLUMP_FULL, clumps.get_noise_2d(x, z))
+		var keep := smoothstep(tuning.clump_from, tuning.clump_full, clumps.get_noise_2d(x, z))
 		if path != null and z < path.gate_z + 1.0:
 			var edge := path.distance(x, z) - path.half_width()
 			if edge < PATH_MARGIN:
@@ -109,10 +127,10 @@ static func _plan_tufts(out: Dictionary, theme: BattleTheme, site: Site, density
 		if theme.ground_snow(t, y) > SNOW_LIMIT:
 			continue
 		var basis := Basis(Vector3.UP, rng.randf_range(0.0, TAU)) \
-				.scaled(Vector3.ONE * rng.randf_range(TUFT_SCALE.x, TUFT_SCALE.y))
+				.scaled(Vector3.ONE * rng.randf_range(tuning.tuft_scale.x, tuning.tuft_scale.y))
 		var at := Transform3D(basis, Vector3(x, y, z))
 		var base := (theme.cover_color if theme.cover_color.a > 0.0
-				else theme.ground_color(t, y)).srgb_to_linear() * TUFT_LIFT
+				else theme.ground_color(t, y)).srgb_to_linear() * tuning.tuft_lift
 		var top := maxf(base.r, maxf(base.g, base.b))
 		if top > TUFT_MAX:
 			base *= TUFT_MAX / top
@@ -125,19 +143,19 @@ static func _plan_tufts(out: Dictionary, theme: BattleTheme, site: Site, density
 ## dem Rasen. Nicht von der Grafikstufe ausgedünnt — es sind wenige, und ohne sie stünden
 ## die Bäume in „Schnell" wieder nackt da.
 static func _plan_bushes(out: Dictionary, theme: BattleTheme, site: Site,
-		rng: RandomNumberGenerator) -> void:
+		rng: RandomNumberGenerator, tuning: Tuning) -> void:
 	if theme.bushes <= 0.0:
 		return
 	for tree in site.trees:
-		for k in rng.randi_range(0, BUSHES_PER_TREE):
+		for k in rng.randi_range(0, tuning.bushes_per_tree):
 			if rng.randf() >= theme.bushes:
 				continue
-			var off := Vector2.from_angle(rng.randf_range(0.0, TAU)) * rng.randf_range(BUSH_RING.x, BUSH_RING.y)
+			var off := Vector2.from_angle(rng.randf_range(0.0, TAU)) * rng.randf_range(BUSH_RING.x, tuning.bush_ring)
 			var x := tree.x + off.x
 			var z := tree.z + off.y
 			if (site.path != null and site.path.blocks(x, z, 0.8)) or not site.free_at(x, z):
 				continue
-			var s := rng.randf_range(BUSH_SCALE.x, BUSH_SCALE.y)
+			var s := rng.randf_range(BUSH_SCALE.x, tuning.bush_scale)
 			var basis := Basis(Vector3.UP, rng.randf_range(0.0, TAU)) \
 					.scaled(Vector3(s, s * rng.randf_range(0.8, 1.1), s))
 			var at := Transform3D(basis, Vector3(x, float(site.height.call(x, z)) - 0.05, z))

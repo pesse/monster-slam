@@ -13,13 +13,19 @@ extends Node3D
 ##         explodiert es wie im Kampf, ohne der Festung etwas zu melden (keine Spur).
 ##         K (oder der Knopf) wirft mit dem Wachkatapult (nur Stufe 4) auf das jüngste Monster, ohne eins
 ##         auf eine Stelle der Bahn — nur das Bild.
-##         „Regler ▸" (oder R) klappt die Regler auf, halb durchsichtig, in vier Reitern:
+##         T (oder der Knopf) lässt sofort einen Steppenläufer rollen, wenn das Thema welche hat.
+##         G (oder „Grafik" im Reiter Ansicht) schaltet die Grafikstufe durch (Schön, Mittel,
+##         Schnell) — nur hier, die Einstellung des Geräts bleibt; --quality=fine|medium|fast
+##         wählt den Anfang, auch für die Bildläufe. Ohne gilt die des Geräts.
+##         „Regler ▸" (oder R) klappt die Regler auf, halb durchsichtig, in fünf Reitern:
 ##         Ansicht (Thema, Stufe, Sicht, Bildmitte, Ausschnitt, Neigung), Bahn (Festungsgröße,
 ##         Festungsfront, Spawn, Bahnbreite, Monstertempo), Licht (Schattentiefe, Bias,
 ##         Normal-Bias, Weichheit; Tageszeit, Uhr, Zeitraffer und die Grenzen des SunCycle)
-##         und HUD (das Kampf-HUD zeigen; „Aufsteigen" lässt das Level-Badge aufleuchten,
+##         HUD (das Kampf-HUD zeigen; „Aufsteigen" lässt das Level-Badge aufleuchten,
 ##         die Felder darunter setzen HP, Rüstung, XP-Ring, Zählerzeile und Wellenfortschritt
-##         — nur GameState im Speicher und die Anzeige, nichts im Profil) —
+##         — nur GameState im Speicher und die Anzeige, nichts im Profil) und Bewuchs
+##         (Dichte, Klumpen, Helligkeit, Größe der Büschel, Sträucher; die oberen drei
+##         gelten dem Thema und stehen nach dem Wechsel auf dessen Werten) —
 ##         Namen wie die Konstanten im Spiel. „Werte kopieren" legt sie als Konstanten in die
 ##         Zwischenablage und schreibt sie in die Konsole. Der flache Boden wächst nicht mit
 ##         der Festungsgröße (FLAT_HALF_X ist eine Konstante des WaveRunners).
@@ -78,6 +84,13 @@ const SHOT_DIR := "res://reports/battle_themes"
 ## Fester Samen: dieselben Hügel und dieselbe Deko in jedem Thema, damit Bilder vergleichbar
 ## sind.
 const SEED := 4711
+## Die Grafikstufen in der Reihenfolge von G, mit Namen wie in den Einstellungen.
+const QUALITY_ORDER: Array[GraphicsQuality.Level] = [GraphicsQuality.Level.FINE,
+		GraphicsQuality.Level.MEDIUM, GraphicsQuality.Level.FAST]
+const QUALITY_NAMES := {GraphicsQuality.Level.FINE: "Schön", GraphicsQuality.Level.MEDIUM: "Mittel",
+		GraphicsQuality.Level.FAST: "Schnell"}
+const QUALITY_ARGS := {"fine": GraphicsQuality.Level.FINE, "medium": GraphicsQuality.Level.MEDIUM,
+		"fast": GraphicsQuality.Level.FAST}
 
 ## Skalierung je Deko-Platz, wie im WaveRunner (_decorate, _decorate_outskirts).
 const SLOT_SCALE := {"trees": [0.8, 1.4], "rocks": [1.6, 3.2], "grass": [1.2, 2.0],
@@ -101,13 +114,21 @@ var _index := 0
 var _decor: Node3D
 var _scene_env: Environment
 var _air: CPUParticles3D
+var _petals: CPUParticles3D
+var _weeds: Tumbleweeds
 var _wind_strength := 1.0
 var _theme: BattleTheme
 var _noise: FastNoiseLite
 var _path: BattlePath
 ## Fußpunkte der Bäume (für die Sträucher, GroundCover) und Dichte der Büschel.
 var _tree_feet: Array[Vector3] = []
+var _leaf_crowns: Array[AABB] = []
+var _blossom_crowns: Array[AABB] = []
 var _cover_density := GraphicsQuality.cover()
+## Stellschrauben des Bewuchses (Reiter Bewuchs); das Spiel nimmt die Vorgaben.
+var _tuning := GroundCover.Tuning.new()
+## Grafikstufe der Werkbank (G), unabhängig von der des Geräts.
+var _quality := GraphicsQuality.level()
 var _tier := 4
 ## Die Ich-Sicht, oder null für die Iso-Kamera.
 var _fp: FirstPersonView
@@ -174,6 +195,8 @@ func _ready() -> void:
 		_cam_size = float(_arg("size"))
 	if not _arg("hour").is_empty():
 		_sun_cycle.phase = SunCycle.phase_of(float(_arg("hour")))
+	if QUALITY_ARGS.has(_arg("quality")):
+		_quality = QUALITY_ARGS[_arg("quality")]
 	_fill_controls()
 	_show(0)
 	if _arg("view") == "first":
@@ -217,6 +240,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		if key.keycode == KEY_K:
 			_throw_at_lane()
 			return
+		if key.keycode == KEY_T:
+			_roll_tumbleweed()
+			return
+		if key.keycode == KEY_G:
+			_set_quality(QUALITY_ORDER[(QUALITY_ORDER.find(_quality) + 1) % QUALITY_ORDER.size()])
+			return
 		if key.keycode >= KEY_0 and key.keycode <= KEY_4:
 			_set_tier(key.keycode - KEY_0)
 			return
@@ -235,6 +264,11 @@ func _fill_controls() -> void:
 		_theme_select.add_item(n)
 	for t in 5:
 		_tier_select.add_item("Stufe %d" % t)
+	for q in QUALITY_ORDER:
+		%QualitySelect.add_item(QUALITY_NAMES[q], q)
+	%QualitySelect.select(%QualitySelect.get_item_index(_quality))
+	%QualitySelect.item_selected.connect(func(i: int) -> void:
+		_set_quality(%QualitySelect.get_item_id(i) as GraphicsQuality.Level))
 	_view_select.add_item("Iso")
 	_view_select.add_item("Ich-Sicht")
 	_theme_select.item_selected.connect(_show)
@@ -242,6 +276,7 @@ func _fill_controls() -> void:
 	_view_select.item_selected.connect(func(i: int) -> void: _set_first_person(i == 1))
 	%SpawnButton.pressed.connect(_spawn_monster)
 	%CatapultButton.pressed.connect(_throw_at_lane)
+	%TumbleweedButton.pressed.connect(_roll_tumbleweed)
 	%GoalSpin.value = _goal_z
 	%SpawnSpin.value = _spawn_z
 	%ViewSpin.value = _view_z
@@ -280,6 +315,7 @@ func _fill_controls() -> void:
 		%RealTimeSpin.editable = not on
 		%SunSpeedSpin.editable = not on)
 	%CopyButton.pressed.connect(_copy_layout)
+	_fill_cover_controls()
 	%HudCheck.toggled.connect(_show_hud)
 	%LevelUpButton.pressed.connect(_level_up)
 	%KillsSpin.value_changed.connect(func(_v: float) -> void: _show_tally())
@@ -293,6 +329,55 @@ func _fill_controls() -> void:
 	var batch := ["shoot", "specimens", "bow", "blast", "catapult", "hitches", "fps", "fortress",
 			"levelup"].any(_has_arg)
 	%MenuToggle.visible = not batch
+
+
+## Reiter Bewuchs: drei Werte des Themas, der Rest sind die Konstanten von GroundCover.
+## Jede Änderung baut die Deko neu (gleicher Samen, also dieselben Bäume).
+func _fill_cover_controls() -> void:
+	var knobs := {
+		%CoverSpin: func(v: float) -> void: _theme.cover = v,
+		%FlowersSpin: func(v: float) -> void: _theme.cover_flower_amount = v,
+		%BushesSpin: func(v: float) -> void: _theme.bushes = v,
+		%TuftDensitySpin: func(v: float) -> void: _tuning.tuft_density = v,
+		%ClumpFromSpin: func(v: float) -> void: _tuning.clump_from = v,
+		%ClumpFullSpin: func(v: float) -> void: _tuning.clump_full = v,
+		%TuftLiftSpin: func(v: float) -> void: _tuning.tuft_lift = v,
+		%TuftSizeMinSpin: func(v: float) -> void: _tuning.tuft_scale.x = v,
+		%TuftSizeMaxSpin: func(v: float) -> void: _tuning.tuft_scale.y = v,
+		%BushesPerTreeSpin: func(v: float) -> void: _tuning.bushes_per_tree = int(v),
+		%BushRingSpin: func(v: float) -> void: _tuning.bush_ring = v,
+		%BushScaleSpin: func(v: float) -> void: _tuning.bush_scale = v,
+	}
+	%TuftDensitySpin.value = _tuning.tuft_density
+	%ClumpFromSpin.value = _tuning.clump_from
+	%ClumpFullSpin.value = _tuning.clump_full
+	%TuftLiftSpin.value = _tuning.tuft_lift
+	%TuftSizeMinSpin.value = _tuning.tuft_scale.x
+	%TuftSizeMaxSpin.value = _tuning.tuft_scale.y
+	%BushesPerTreeSpin.value = _tuning.bushes_per_tree
+	%BushRingSpin.value = _tuning.bush_ring
+	%BushScaleSpin.value = _tuning.bush_scale
+	for spin: SpinBox in knobs:
+		var apply: Callable = knobs[spin]
+		spin.value_changed.connect(func(v: float) -> void:
+			apply.call(v)
+			_build_decor(_noise, _theme))
+
+
+## Wie viel gerade wächst, unter den Reglern.
+func _count_cover() -> void:
+	var parts: Array[String] = []
+	for kind: String in ["Tufts", "Flowers", "Bushes"]:
+		var mmi := _decor.get_node_or_null(kind) as MultiMeshInstance3D
+		parts.append("%s %d" % [kind, mmi.multimesh.instance_count if mmi != null else 0])
+	%CoverCount.text = "  ".join(parts)
+
+
+## Grafikstufe der Werkbank wechseln und das Thema damit neu aufbauen.
+func _set_quality(level: GraphicsQuality.Level) -> void:
+	_quality = level
+	%QualitySelect.select(%QualitySelect.get_item_index(level))
+	_show(_index)
 
 
 ## Ein Monster wie im Kampf (WaveRunner._spawn_next) im Grundtempo des WaveGenerators. Sein
@@ -422,6 +507,19 @@ func _copy_layout() -> void:
 		"const HIGH := %.1f" % _sun_cycle.high,
 		"const SWEEP := %.1f" % _sun_cycle.sweep,
 		"# noon_yaw = %.1f (Vorgabe: Blickrichtung der Kamera, %.1f)" % [_sun_cycle.noon_yaw, SunCycle.yaw_of(_pivot)],
+		"# src/battle/ground_cover.gd",
+		"const TUFT_DENSITY := %.2f" % _tuning.tuft_density,
+		"const CLUMP_FROM := %.2f" % _tuning.clump_from,
+		"const CLUMP_FULL := %.2f" % _tuning.clump_full,
+		"const TUFT_LIFT := %.2f" % _tuning.tuft_lift,
+		"const TUFT_SCALE := Vector2(%.1f, %.1f)" % [_tuning.tuft_scale.x, _tuning.tuft_scale.y],
+		"const BUSHES_PER_TREE := %d" % _tuning.bushes_per_tree,
+		"const BUSH_RING := Vector2(%.1f, %.2f)" % [GroundCover.BUSH_RING.x, _tuning.bush_ring],
+		"const BUSH_SCALE := Vector2(%.1f, %.1f)" % [GroundCover.BUSH_SCALE.x, _tuning.bush_scale],
+		"# assets/battle_themes/%s.tres" % _names[_index],
+		"cover = %.2f" % _theme.cover,
+		"cover_flower_amount = %.2f" % _theme.cover_flower_amount,
+		"bushes = %.2f" % _theme.bushes,
 	])
 	DisplayServer.clipboard_set(text)
 	print("battle_theme_lab: Bahn %.1f m\n%s" % [_goal_z - _spawn_z, text])
@@ -471,11 +569,14 @@ func _apply_fog() -> void:
 
 
 func _update_label() -> void:
-	_label.text = "%s  (%d/%d)" % [_names[_index], _index + 1, _names.size()]
+	_label.text = "%s  (%d/%d)  · %s" % [_names[_index], _index + 1, _names.size(), QUALITY_NAMES[_quality]]
 	if not _theme.ground_texture.is_empty():
 		var missing := not ResourceLoader.exists(_theme.ground_texture_path())
 		_label.text += "  · %s%s" % [_theme.ground_texture, " (fehlt)" if missing else ""]
 	_theme_select.select(_index)
+	%CoverSpin.set_value_no_signal(_theme.cover)
+	%FlowersSpin.set_value_no_signal(_theme.cover_flower_amount)
+	%BushesSpin.set_value_no_signal(_theme.bushes)
 	_tier_select.select(_tier)
 	_view_select.select(1 if _fp != null else 0)
 	%LaneLength.text = "Bahn %.1f m" % (_goal_z - _spawn_z)
@@ -486,6 +587,9 @@ func _show(index: int) -> void:
 	var theme := BattleTheme.named(_names[index])
 	_world.environment = _scene_env
 	theme.apply(_world, _sun)
+	GraphicsQuality.apply_environment(_world, _quality)
+	get_viewport().msaa_3d = GraphicsQuality.msaa(_quality)
+	_cover_density = GraphicsQuality.cover(_quality)
 	_sun_cycle.color = theme.sun_color
 	var noise := WaveRunnerScript.terrain_noise(SEED)
 	# Wie im Kampf für den weitesten Blick gebaut (SceneZoom kommt aus der Ferne) — sonst
@@ -501,7 +605,7 @@ func _show(index: int) -> void:
 	# Je Thema ein anderer Verlauf, aber bei jedem Lauf derselbe — wie im Kampf gewürfelt.
 	path_rng.seed = SEED + index
 	_path = BattlePath.make(theme.path, _goal(), path_rng)
-	WaveRunnerScript.dress_ground(_ground, theme, _path)
+	WaveRunnerScript.dress_ground(_ground, theme, _path, _quality)
 	_apply_light()
 	_wind_strength = theme.wind
 	_theme = theme
@@ -509,9 +613,38 @@ func _show(index: int) -> void:
 	_build_decor(noise, theme)
 	if _air != null:
 		_air.free()
-	_air = AmbientParticles.build(theme.particles, WaveRunnerScript.visible_ground_area(_camera))
+	_air = AmbientParticles.build(theme.particles, WaveRunnerScript.visible_ground_area(_camera), _leaf_crowns) \
+			if GraphicsQuality.particles(_quality) else null
 	if _air != null:
 		add_child(_air)
+	for old: Node in [_petals, _weeds]:
+		if old != null:
+			old.free()
+	_petals = AmbientParticles.blossoms(_blossom_crowns) if GraphicsQuality.particles(_quality) else null
+	if _petals != null:
+		add_child(_petals)
+	_weeds = null
+	if theme.tumbleweeds and GraphicsQuality.particles(_quality):
+		var half_x := 11.0 * _grow()
+		_weeds = Tumbleweeds.make(WaveRunnerScript.visible_ground_area(_camera),
+				func(x: float, z: float) -> float: return WaveRunnerScript.terrain_height(x, z, noise),
+				Rect2(-half_x, _goal() - 0.5, 2.0 * half_x, 11.0 * _grow() + 0.5), SEED + index)
+		_weeds.on_screen = func(x: float, z: float) -> bool:
+			return _fp != null or WaveRunnerScript.tile_on_screen(_camera, x, z)
+		add_child(_weeds)
+		# In den Bildläufen steht einer mitten im Bild, sonst sähe man keinen.
+		if _has_arg("shoot"):
+			_weeds.roll()
+			var weed := _weeds.get_child(0) as Node3D
+			var mid := _weeds.area.get_center()
+			var best := INF
+			while _weeds.alive() > 0:
+				var gap := Vector2(weed.position.x, weed.position.z).distance_to(mid)
+				if gap > best:
+					break
+				best = gap
+				_weeds.step(0.02)
+			_weeds.set_process(false)
 	_apply_fog()
 	_update_label()
 
@@ -679,6 +812,14 @@ func _nearest_turret(turrets: Array[Node3D], at: Vector3) -> Node3D:
 		if absf(t.global_position.x - at.x) < absf(best.global_position.x - at.x):
 			best = t
 	return best
+
+
+## Taste T: ein Steppenläufer sofort, ohne auf den nächsten zu warten.
+func _roll_tumbleweed() -> void:
+	if _weeds == null:
+		print("battle_theme_lab: hier rollen keine Steppenläufer (BattleTheme.tumbleweeds)")
+		return
+	_weeds.roll()
 
 
 ## Taste K: ein Wurf aus dem nächsten Katapult, auf das zuletzt geschickte Monster (mit
@@ -956,11 +1097,14 @@ func _apply_parts(cfg: Dictionary) -> void:
 	get_viewport().msaa_3d = Viewport.MSAA_4X if cfg.msaa else Viewport.MSAA_DISABLED
 	(_ground.material_override as ShaderMaterial).set_shader_parameter("clouds",
 			_theme.clouds if cfg.clouds else 0.0)
-	if _air != null:
-		_air.emitting = cfg.particles
-		_air.visible = cfg.particles
+	for p: CPUParticles3D in [_air, _petals]:
+		if p != null:
+			p.emitting = cfg.particles
+			p.visible = cfg.particles
+	if _weeds != null:
+		_weeds.visible = cfg.particles
 	_wind_strength = _theme.wind if cfg.wind else 0.0
-	_cover_density = GraphicsQuality.cover() if cfg.cover else 0.0
+	_cover_density = GraphicsQuality.cover(_quality) if cfg.cover else 0.0
 	_build_decor(_noise, _theme)
 	_sun.shadow_enabled = cfg.shadows
 	_world.environment.glow_enabled = cfg.glow
@@ -1062,6 +1206,8 @@ func _build_decor(noise: FastNoiseLite, theme: BattleTheme) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED
 	_tree_feet.clear()
+	_leaf_crowns.clear()
+	_blossom_crowns.clear()
 	var area := WaveRunnerScript.visible_ground_area(_camera)
 	var half_x := 11.0 * _grow()   # WaveRunner.FIELD_HALF_X
 	var z_front := _goal() + 11.0 * _grow()   # WaveRunner.FIELD_Z_FRONT
@@ -1108,7 +1254,8 @@ func _build_decor(noise: FastNoiseLite, theme: BattleTheme) -> void:
 	site.path = _path
 	site.keep_out = Rect2(-half_x, _goal() - 0.5, 2.0 * half_x, z_front - _goal() + 0.5)
 	site.trees = _tree_feet
-	GroundCover.grow(_decor, theme, site, _cover_density, rng)
+	GroundCover.grow(_decor, theme, site, _cover_density, rng, _tuning)
+	_count_cover()
 	if _has_arg("monsters"):
 		_place_monsters()
 
@@ -1134,9 +1281,13 @@ func _place_from(theme: BattleTheme, slot: String, x: float, z: float, noise: Fa
 		return
 	var model := models[rng.randi() % models.size()]
 	var span: Array = SLOT_SCALE[slot]
-	_place(model, x, z, noise, rng.randf_range(0.0, 360.0), rng.randf_range(span[0], span[1]))
+	var inst := _place(model, x, z, noise, rng.randf_range(0.0, 360.0), rng.randf_range(span[0], span[1]))
 	if slot == "trees":
 		_tree_feet.append(Vector3(x, WaveRunnerScript.terrain_height(x, z, noise), z))
+		if inst != null and AmbientParticles.LEAF_TREES.has(model.get_file().get_basename()):
+			_leaf_crowns.append(AmbientParticles.crown_of(inst))
+		elif inst != null and AmbientParticles.BLOSSOM_TREES.has(model.get_file().get_basename()):
+			_blossom_crowns.append(AmbientParticles.crown_of(inst))
 
 
 ## Nahaufnahme: die gekauften Vergleichsstücke und die Deko des Themas in einer Reihe, jedes
@@ -1180,16 +1331,17 @@ func _shoot_specimens() -> void:
 
 
 ## `model` ist ein Pfad unter assets/models/, wie in BattleTheme.
-func _place(model: String, x: float, z: float, noise: FastNoiseLite, yaw: float, scale: float) -> void:
+func _place(model: String, x: float, z: float, noise: FastNoiseLite, yaw: float, scale: float) -> Node3D:
 	var path := "%s/%s" % [BattleTheme.MODEL_DIR, model]
 	if not ResourceLoader.exists(path):
-		return
+		return null
 	var inst := (load(path) as PackedScene).instantiate() as Node3D
 	inst.position = Vector3(x, WaveRunnerScript.terrain_height(x, z, noise), z)
 	inst.rotation_degrees.y = yaw
 	inst.scale = Vector3.ONE * scale
 	_decor.add_child(inst)
 	Wind.sway(inst, model, _wind_strength)
+	return inst
 
 
 func _has_arg(key: String) -> bool:

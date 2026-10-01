@@ -84,7 +84,7 @@ func test_every_theme_has_sensible_cover() -> void:
 		if not f.ends_with(".tres"):
 			continue
 		var theme := BattleTheme.named(f.get_basename())
-		assert_float(theme.cover).override_failure_message(f).is_between(0.0, 1.5)
+		assert_float(theme.cover).override_failure_message(f).is_between(0.0, 4.0)
 		assert_float(theme.bushes).override_failure_message(f).is_between(0.0, 1.0)
 
 

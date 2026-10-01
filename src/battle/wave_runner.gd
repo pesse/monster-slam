@@ -134,10 +134,19 @@ func _ready() -> void:
 	_decorate()
 	add_child(Wind.new())
 	_sun_cycle = SunCycle.attach(self, $Sun as DirectionalLight3D, $CameraPivot as Node3D)
-	var air := AmbientParticles.build(_theme.particles, air_area) \
+	var air := AmbientParticles.build(_theme.particles, air_area, _leaf_crowns) \
 			if GraphicsQuality.particles() else null
 	if air != null:
 		add_child(air)
+	var petals := AmbientParticles.blossoms(_blossom_crowns) if GraphicsQuality.particles() else null
+	if petals != null:
+		add_child(petals)
+	if _theme.tumbleweeds and GraphicsQuality.particles():
+		var weeds := Tumbleweeds.make(air_area, _ground_y, _cover_site().keep_out, _rng.randi())
+		# Nur in der Iso-Sicht sagt der Ausschnitt etwas; in der Ich-Sicht gilt die Fläche.
+		weeds.on_screen = func(x: float, z: float) -> bool:
+			return _fp != null or tile_on_screen(_camera, x, z)
+		add_child(weeds)
 	_build_fortress()
 	_cam_base = _camera.position
 	GameState.reset()
@@ -217,6 +226,8 @@ func _warm_up() -> void:
 			ember.glowing = true
 			extras.append(ember)
 			extras.append(Blast.new())
+	if _theme.tumbleweeds:
+		extras.append(Tumbleweeds.specimen())
 	if _catapult:
 		extras.append(CatapultStone.new())
 		if _fp == null or not _fp.explosive:
@@ -281,6 +292,9 @@ var _sun_cycle: SunCycle
 var _path: BattlePath
 ## Fußpunkte der gestreuten Bäume, für die Sträucher darum (GroundCover).
 var _tree_feet: Array[Vector3] = []
+## Kronen der Laubbäume darunter, aus denen das Laub fällt (AmbientParticles).
+var _leaf_crowns: Array[AABB] = []
+var _blossom_crowns: Array[AABB] = []
 
 func _setup_ground() -> void:
 	_terrain_noise = terrain_noise(_rng.randi())
@@ -295,11 +309,12 @@ func _setup_ground() -> void:
 ## Der Boden wirft selbst keinen Schatten: die Hügel schattiert der Bodenshader über ihre
 ## Neigung, und ohne Selbstschatten reicht ein kleiner Bias (setup_view), ohne dass der
 ## Boden Streifen bekommt.
-static func dress_ground(ground: MeshInstance3D, theme: BattleTheme, path: BattlePath = null) -> void:
+static func dress_ground(ground: MeshInstance3D, theme: BattleTheme, path: BattlePath = null,
+		quality := GraphicsQuality.level()) -> void:
 	ground.material_override = theme.ground_material(path)
-	if not GraphicsQuality.clouds():
+	if not GraphicsQuality.clouds(quality):
 		(ground.material_override as ShaderMaterial).set_shader_parameter("clouds", 0.0)
-	if not GraphicsQuality.patches():
+	if not GraphicsQuality.patches(quality):
 		(ground.material_override as ShaderMaterial).set_shader_parameter("patch_amount", 0.0)
 	ground.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
@@ -462,6 +477,10 @@ func _scatter(parent: Node3D, slot: Array[String], x: float, z: float, scale: fl
 	Wind.sway(inst, model, _theme.wind)
 	if slot == _theme.trees:
 		_tree_feet.append(at)
+		if AmbientParticles.LEAF_TREES.has(model.get_file().get_basename()):
+			_leaf_crowns.append(AmbientParticles.crown_of(inst))
+		elif AmbientParticles.BLOSSOM_TREES.has(model.get_file().get_basename()):
+			_blossom_crowns.append(AmbientParticles.crown_of(inst))
 
 
 const GRASS_SCALE_FIRST_PERSON := 0.4

@@ -24,6 +24,6 @@ grass = Array[String](["forge/dry_grass.glb", "forge/fern.glb"])
 props = Array[String]([])
 landmarks = Array[String]([])
 particles = "leaves"
-cover = 0.7
+cover = 1.8
 bush_color = Color(0.62, 0.3, 0.12, 1)
 bushes = 0.8
