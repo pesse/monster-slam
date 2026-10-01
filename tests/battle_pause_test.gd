@@ -92,3 +92,19 @@ func test_the_key_reaches_the_overlay() -> void:
 	overlay._input(_key(true))
 	overlay._input(_key(false))
 	assert_array(got).contains_exactly([false, true])
+
+
+## Das Debug-Panel liegt über dem Schleier und bleibt in der Pause bedienbar; nur die
+## Feier wartet, sie gäbe am Ende den Baum frei.
+func test_the_debug_panel_works_during_the_pause() -> void:
+	var battle := await _battle()
+	var ui := battle.get_node("UI")
+	var panel := ui.get_node_or_null("DebugPanel") as Control
+	if panel == null:
+		return
+	assert_int(panel.get_index()).is_greater(ui.get_node("PauseOverlay").get_index())
+	(ui.get_node("PauseOverlay") as PauseOverlay).toggle_requested.emit(false)
+	assert_bool(panel.can_process()).is_true()
+	panel.celebration_requested.emit(false)
+	assert_bool(get_tree().paused).is_true()
+	assert_bool((ui.get_node("PauseOverlay") as PauseOverlay).is_shown()).is_true()

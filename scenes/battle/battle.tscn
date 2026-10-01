@@ -96,8 +96,6 @@ process_mode = 3
 
 [node name="FastResolveButton" parent="UI" instance=ExtResource("13_fast_resolve")]
 
-[node name="DebugPanel" parent="UI" instance=ExtResource("4_debug")]
-
 [node name="WaveStats" parent="UI" instance=ExtResource("5_stats")]
 
 [node name="LeakReveal" parent="UI" instance=ExtResource("6_reveal")]
@@ -125,5 +123,8 @@ visible = false
 [node name="PauseOverlay" parent="UI" instance=ExtResource("22_pause")]
 
 [node name="PauseButton" parent="UI" instance=ExtResource("23_pause_button")]
+
+[node name="DebugPanel" parent="UI" instance=ExtResource("4_debug")]
+process_mode = 3
 
 [node name="SceneZoom" parent="." instance=ExtResource("20_zoom")]

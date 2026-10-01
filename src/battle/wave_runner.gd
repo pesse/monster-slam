@@ -1439,7 +1439,11 @@ func _on_spelling_finished() -> void:
 
 ## Debug-Panel: feiert mit dem Wort des ersten Monsters auf dem Feld (sonst ohne Wort),
 ## aber an der Meisterung vorbei — Lernstand und Spur bleiben unberührt.
+## Nicht in der Pause: das Debug-Panel ist dort bedienbar, aber die Feier gäbe am Ende den
+## Baum frei und nähme die Pause mit.
 func _on_debug_celebration(word: bool) -> void:
+	if _paused_since_ms >= 0:
+		return
 	var task: Dictionary = _active[0].task if not _active.is_empty() else {}
 	if word:
 		_celebration.celebrate(MasteryCelebration.Kind.WORD, str(task.get("source_id", "")))
