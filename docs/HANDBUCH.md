@@ -532,8 +532,8 @@ aktuelle Stand steigen um denselben Betrag.
    Festung dieser Unit, so wie sie im Kampf steht, und darunter ihre Stufe. Unten links
    geht es zurück zur Buchkarte; liegt dort ein Ort, rückt der Knopf nach oben.
 
-   **Auswählen und spielen.** Ein Klick auf einen Ort markiert ihn (er wird größer und
-   bekommt einen goldenen Ring), ein zweiter Klick nimmt die Markierung wieder weg. Teile
+   **Auswählen und spielen.** Ein Klick auf einen Ort markiert ihn (er wird größer, und
+   ein weißer Pfeil wippt über ihm), ein zweiter Klick nimmt die Markierung wieder weg. Teile
    lassen sich beliebig zusammen markieren – etwa nur Teil 2 und 3; dann kommen die Wörter
    beider Teile in den Kampf. „Gesamt“ und der Boss stehen allein: wer sie markiert, hebt
    die übrige Auswahl auf. Los geht es mit **„Spielen“** (golden) unten rechts (oder Enter); ohne
@@ -544,10 +544,11 @@ nur eine Reihenfolge vor. Ein Level läuft wie ein Kampf aus dem Expertenmodus �
 Welle, bis du aufhörst oder die Festung fällt. Es spielt alle Aufgaben und Wortarten seines
 Teils. „⟵ Zurück zur Karte“ führt wieder auf die Gebietskarte.
 
-**Wie weit ein Level ist**, zeigt die Karte an drei Stellen: die Füllfarbe steht für die
-Stufe 0 bis 4 (dieselben Schwellen wie bei der Festung), die fünf goldenen Sterne darunter
-leuchten je 20 % gemeisterter Wörter auf, und der Ring wächst mit jedem gemeisterten Wort –
-bei 100 % wird er golden. Nichts davon wird gespeichert – es wird jedes Mal aus dem
+**Wie weit ein Level ist**, zeigt der goldene Ring um den Ort: er wächst mit jedem
+gemeisterten Wort. Die Füllung wird ab einem Viertel bronzen, ab 60 % silbern und bei
+100 % golden – dann wird der Ring breit, pulsiert und sprüht Funken. Sterne unter einem
+Ort stehen für Bonus-Level; sie sind grau und leuchten golden, sobald ihr Bonus gemeistert
+ist. Nichts davon wird gespeichert – es wird jedes Mal aus dem
 Lernstand gerechnet.
 
 **Boss-Medaillen.** Jeder Sieg über den Boss einer Unit wird gezählt. Ab 1 Sieg bekommt er
@@ -806,9 +807,9 @@ Auch das graue „↺“ im Fähigkeiten-Screen sagt am Zeiger, warum es gerade 
 - **Ein Wort zählt erst, wenn es in beide Richtungen sitzt**, ein unregelmäßiges Verb
   (*go – went – gone*, *recevoir*) erst mit seinen Formen. Die Balken im Reiter
   „Fortschritt“ sind deshalb die Zahl, nach der man vor einer Vokabelarbeit fragt.
-- **Die Festung ist bei drei Vierteln fertig, die Sterne erst bei allem.** Stufe 4 mit dem
-  Wachkatapult gibt es ab 75 %; die fünf goldenen Sterne auf der Karte stehen für je
-  20 %, und erst bei 100 % wird der Ring um den Ort golden.
+- **Die Festung ist bei drei Vierteln fertig, der Ring erst bei allem.** Stufe 4 mit dem
+  Wachkatapult gibt es ab 75 %; der Ring um den Ort auf der Karte füllt sich bis 100 %,
+  und erst dann leuchtet er.
 - **Belohnung für Genauigkeit statt für Masse:** die Güte der Schatzkiste hängt nur davon
   ab, wie genau eine Welle war, nicht davon, wie lang sie war.
 - **Eine Niederlage kostet den Lauf, nicht das Erspielte.** Gold, Erfahrung und

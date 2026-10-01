@@ -283,8 +283,9 @@ Ein Verb mit `irregular: true` braucht dazu seine Formaufgaben (ADR 0009): die
 learnable_ids, die es braucht, sammelt `ContentRegistry.form_requirements()` beim Laden
 (Definitionen mit `requires_form`, deren Form das Lexem hat), und `mastered_lexemes_in`
 und `mastered_lexeme_in` bekommen sie übergeben, damit die Regel statisch prüfbar bleibt.
-Die Kartensterne (`MapCanvas.stars_for`, fünf zu je 20 %) rechnen aus denselben
-`done`/`total` wie `FortressTier` — mit eigenen Schwellen, aber ohne eigenen Zähler.
+Der Ring auf der Karte (`MapCanvas`, stetig bis 100 %, Füllfarbe nach
+`MapCanvas.FILL_PERCENT`) rechnet aus denselben `done`/`total` wie `FortressTier` — mit
+eigenen Schwellen, aber ohne eigenen Zähler (ADR 0009, Nachtrag).
 
 Die Kopplung macht den Balken **empfindlich gegen alles, was EINE Richtung stört**: fällt
 en→de aus, steht die Unit dauerhaft auf „0 von N", während „Gemeisterte Aufgaben" weiter
@@ -514,7 +515,7 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
 | `MapSelection` | `src/ui/map_selection.gd` | welches Buch, welche Unit gerade offen ist (überdauert den Szenenwechsel) |
 | `MapLayout` | `src/ui/map_layout.gd` | Bild und Punkte unter `assets/maps/<book>/` (`book.png`, `unit<n>.png`, `map.json`) |
 | `BookNaming` | `src/core/book_naming.gd` | Wie das Buch sich und seine Ebenen nennt („Dossier 2 · Partie A", „Abschnitt 2 · Lektion 10"); unter `naming` in `map.json`, ohne Eintrag „Unit"/„Teil" |
-| `MapCanvas` | `src/ui/map_canvas.gd` | zeichnet eine Karte: Bild letterboxed in 16:9, Weg, Orte mit Stufe, Ring, Medaille |
+| `MapCanvas` | `src/ui/map_canvas.gd` | zeichnet eine Karte: Bild letterboxed in 16:9, Weg, Orte mit Fortschrittsring, Bonus-Sternen, Medaille |
 | Screens | `book_select` (die Bibliothek), `book_map`, `area_map` (`src/ui/` + `scenes/ui/`) | die drei Ebenen; die Bibliothek ist kein eigener Screen, sondern die dritte Seite von `profile_menu.tscn` |
 | Bibliothek | `scenes/ui/library_room.tscn` in `menu_backdrop.tscn` | der Raum im Turm der Menü-Kulisse: Lesepult, Regale, Kerzen, `%Eye` (Kamerastand), `%Books` (dort stellt `BookSelect` die Bücher auf) |
 | `Book3D` | `src/ui/book_3d.gd` + `scenes/ui/book_3d.tscn` | ein gebundenes Buch auf dem Lesepult: leicht schräg (`SLOT_ANGLE`, Rücken links sichtbar), ausgewählt vom Pult genommen — nach vorn, gerade zur Kamera, ein Stück zur Bildmitte (`TOWARD`), mit Glanz (`book_glow.gdshader`) und Stand auf dem Cover —, beim Öffnen schlägt der vordere Deckel am Falz auf. Das Cover ist eine 2D-Szene im SubViewport (Einband `assets/ui/library/`, Karte im `OrnateFrame`, darunter der Stand); die Doppelseite trägt die Buchkarte. `spread_view` liefert den Kamerastand, aus dem die Doppelseite das Bild so füllt wie die Buchkarte — die Bibliothek fliegt die Kamera dorthin und blendet erst am Ende auf das flache Bild über |
@@ -544,8 +545,15 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
   Gebietskarte: Teile beliebig zusammen, Gesamt und Boss allein. `MapLevel.combine` macht
   daraus EIN Level für `RunRequest` — mehrere Teile mit allen ihren Scopes, `keys` nennt
   die Orte (Zoom hinein und zurück in ihre Mitte, Vorauswahl nach dem Kampf). Markiert
-  zeichnet `MapCanvas.set_selected`; der Knopf `%PlayButton` wird gesperrt statt
-  ausgeblendet.
+  zeichnet `MapCanvas.set_selected` als wippenden weißen Pfeil über dem Ort — Gold ist
+  der Fortschritt; der Knopf `%PlayButton` wird gesperrt statt ausgeblendet.
+- **Der Ring ist der Meisterungsstand.** Er füllt sich mit dem Anteil gemeisterter
+  Wörter, die Füllung wird bronze, silbern, golden (`MapCanvas.fill_level`). Bei 100 %
+  wird er massiv und pulsiert; Schein und Funken zeichnet eine additive Ebene (`_fx`,
+  `BLEND_MODE_ADD`), zustandslos aus der Zeit gerechnet. Bonus-Sterne unter einem Ort
+  (`node["bonus"]`) leuchten mit denselben Funken, wenn ihr Bonus gemeistert ist. Ein
+  weicher Schatten um Ort und Sternreihe hebt beides vom bunten Bild ab. Werkbank:
+  `scenes/dev/map_ring_lab.tscn`.
 - **Nichts wird gesperrt, nichts als Abschluss gespeichert.** Die Stufe eines Levels ist
   `FortressTier.part_tiers` (Teil) bzw. `unit_tiers` (Gesamt) — dieselbe Zählregel und
   dieselben Schwellen wie die Festung. Gespeichert wird nur, was sich nicht ableiten
