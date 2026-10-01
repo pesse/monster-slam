@@ -101,30 +101,7 @@ grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
 script = ExtResource("6_overlap")
-
-[node name="NamePanel" type="PanelContainer" parent="Hud/Corners/Plate"]
-z_index = 1
-layout_mode = 2
-mouse_filter = 2
-theme_type_variation = &"FortressName"
-
-[node name="Place" type="VBoxContainer" parent="Hud/Corners/Plate/NamePanel"]
-layout_mode = 2
-size_flags_vertical = 4
-mouse_filter = 2
-theme_type_variation = &"Tight"
-
-[node name="Book" type="Label" parent="Hud/Corners/Plate/NamePanel/Place"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"FortressBook"
-text = "Buch"
-
-[node name="Title" type="Label" parent="Hud/Corners/Plate/NamePanel/Place"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"FortressTitle"
-text = "Unit"
+order = PackedStringArray("NamePanel", "Fortress", "Medal")
 
 [node name="Fortress" type="PanelContainer" parent="Hud/Corners/Plate"]
 unique_name_in_owner = true
@@ -170,6 +147,29 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"FortressLine"
 text = "Wörter bis Stufe 1"
+
+[node name="NamePanel" type="PanelContainer" parent="Hud/Corners/Plate"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"FortressName"
+
+[node name="Place" type="VBoxContainer" parent="Hud/Corners/Plate/NamePanel"]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_type_variation = &"Tight"
+
+[node name="Book" type="Label" parent="Hud/Corners/Plate/NamePanel/Place"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"FortressBook"
+text = "Buch"
+
+[node name="Title" type="Label" parent="Hud/Corners/Plate/NamePanel/Place"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"FortressTitle"
+text = "Unit"
 
 [node name="Medal" type="Control" parent="Hud/Corners/Plate"]
 unique_name_in_owner = true

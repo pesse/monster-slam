@@ -21,6 +21,7 @@ extends Node
 ##     … -- --shoot --badge-hint         die Karte am Medaillon der Plakette (Level, XP, Punkte)
 ##     … -- --shoot --map=book [--book=<id>]            die Buchkarte
 ##     … -- --shoot --map=area [--book=<id>] [--unit=N] die Gebietskarte einer Unit
+##     … -- --shoot --map=area --stats   … mit dem Statistik-Fenster der Plakette darüber
 ##     … -- --shoot --updates            beide Update-Hinweise sichtbar (App und Inhalte)
 ##     … -- --shoot … --name=<Name> --gold=<n>       Name und Gold der Plakette, nur im Speicher
 ##                                       (für Bilder ohne echten Profilnamen und Debug-Gold)
@@ -90,6 +91,10 @@ func _ready() -> void:
 				await get_tree().process_frame
 				print("menu_lab: Fokus bei ", get_viewport().gui_get_focus_owner(),
 						", Fenster noch da: ", is_instance_valid(window) and window.is_inside_tree()))
+	if not (screen is ProfileMenu) and (_has_arg("stats") or not _arg("stats").is_empty()):
+		var stats_button := screen.find_child("ProfileBadge", true, false) \
+				.get_node("%StatsButton") as Button
+		get_tree().create_timer(0.5).timeout.connect(func(): stats_button.pressed.emit())
 	if screen is ProfileMenu and _has_arg("updates"):
 		_force_updates(screen)
 		# Nach dem Menü verbunden, läuft also nach dessen Abzeichen: die echte Prüfung

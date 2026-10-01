@@ -462,7 +462,8 @@ Erspielte.
   und Fortschrittsrahmen, Medaillon, Stufenplakette, verkleinert unter `fortress/small/`
   (Variationen `FortressName`, `FortressProgress`, `FortressBar`). Die Rahmen greifen
   ineinander — `OverlapRow` schiebt jedes Teil um seinen Rand in das vorige, vorn liegt der
-  Namensrahmen (`z_index`). Statt des Burg-Bildes der Vorlage zeigt das Medaillon die Festung
+  Namensrahmen (Baumreihenfolge; die Plätze nennt `order`, kein `z_index` — der hob ihn über
+  die Fenster der Plakette). Statt des Burg-Bildes der Vorlage zeigt das Medaillon die Festung
   der Stufe aus dem Kampf: `FortressModel` baut sie für `WaveRunner` und für
   `src/dev/fortress_icons.gd`, das daraus `fortress/tiers/tier_<n>.webp` rendert
   (`GODOT_WINDOW=1`). Ändert sich die Festung im Kampf, die Bilder neu rendern.
