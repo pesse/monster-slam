@@ -82,6 +82,12 @@ func _ready() -> void:
 				await get_tree().process_frame
 				print("menu_lab: Fokus bei ", get_viewport().gui_get_focus_owner(),
 						", Fenster noch da: ", is_instance_valid(window) and window.is_inside_tree()))
+	if screen is ProfileMenu and _has_arg("updates"):
+		_force_updates(screen)
+		# Nach dem Menü verbunden, läuft also nach dessen Abzeichen: die echte Prüfung
+		# beim Laden blendet die Knöpfe sonst wieder aus.
+		UpdateService.changed.connect(_force_updates.bind(screen))
+		ContentService.changed.connect(_force_updates.bind(screen))
 	if screen is ProfileMenu and _has_arg("content"):
 		get_tree().create_timer(0.5).timeout.connect(
 				func(): (screen.get_node("%ContentButton") as Button).pressed.emit())
@@ -95,17 +101,18 @@ func _ready() -> void:
 		_shoot.call_deferred()
 
 
+## Beide Update-Hinweise sichtbar, mit Beispieltext — nur das Bild, ohne echtes Update.
+func _force_updates(screen: Node) -> void:
+	var update := screen.get_node("%UpdateButton") as Button
+	update.text = "⬆ Update auf 9.9.9"
+	update.visible = true
+	var content := screen.get_node("%ContentUpdateButton") as Button
+	content.text = ProfileMenu.content_update_text(2)
+	content.visible = true
+
+
 func _shoot() -> void:
 	await get_tree().create_timer(SETTLE).timeout
-	if _has_arg("updates"):
-		# Erst hier: die echte Prüfung beim Laden kann die Knöpfe sonst wieder ausblenden.
-		var update := get_tree().root.find_child("UpdateButton", true, false) as Button
-		var content := get_tree().root.find_child("ContentUpdateButton", true, false) as Button
-		update.text = "⬆ Update auf 9.9.9"
-		update.visible = true
-		content.text = ProfileMenu.content_update_text(2)
-		content.visible = true
-		await get_tree().process_frame
 	if _has_arg("badge-hint"):
 		var medallion := get_tree().root.find_child("Medallion", true, false) as Control
 		if medallion != null:
