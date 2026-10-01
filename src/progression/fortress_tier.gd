@@ -27,21 +27,47 @@ const PROGRESS := preload("res://src/learning/player_progress.gd")
 const THRESHOLDS_PERCENT := [10, 32, 53, 75]
 const MAX_TIER := 4
 
+## Der Skill „Schneller Erbauer" (Bollwerk, `fortress_tier_drop`) zieht die Schwellen vor:
+## `drop` Prozentpunkte früher Stufe 4, die anderen Stufen im SELBEN Verhältnis
+## (bei 5: rund 9,3 / 29,9 / 49,5 / 70 %). Ein Skalieren und kein Abziehen, damit Stufe 1 nicht
+## schon bei 5 % steht. Jede Zählung bekommt `drop` übergeben, damit Karte, Statistik und
+## Kampf dieselbe Stufe sehen; der Wert kommt aus SkillBook.bonuses (`drop_of`).
+## Nie unter MIN_TOP_PERCENT, sonst wäre Stufe 4 geschenkt.
+const MIN_TOP_PERCENT := 50
+
 ## Festungs-HP je Stufe. Additiv auf den Grundwert, in dieselbe Summe wie die Skill-Boni
 ## (`max_health`, siehe WaveRunner._ready).
 const HP_PER_TIER := 25
 
 
-## Stufe 0..4 für `done` gemeisterte von `total` Wörtern. In Ganzzahlen verglichen
-## (`done * 100 >= pct * total`): 3 von 30 sind genau 10 % und keine 9,999…
-static func tier_for(done: int, total: int) -> int:
+## Stufe 0..4 für `done` gemeisterte von `total` Wörtern, mit `drop` vorgezogenen
+## Prozentpunkten (siehe MIN_TOP_PERCENT). In Ganzzahlen verglichen (`words_for`): 3 von 30
+## sind genau 10 % und keine 9,999…
+static func tier_for(done: int, total: int, drop: int = 0) -> int:
 	if total <= 0:
 		return 0
 	var tier := 0
-	for pct in THRESHOLDS_PERCENT:
-		if done * 100 >= int(pct) * total:
+	for i in THRESHOLDS_PERCENT.size():
+		if done >= words_for(i + 1, total, drop):
 			tier += 1
 	return tier
+
+
+## So viele von `total` Wörtern braucht Stufe `tier` (1..4) mindestens — aufgerundet und in
+## Ganzzahlen: das kleinste `d` mit d * 100 * top >= pct * (top - drop) * total.
+static func words_for(tier: int, total: int, drop: int = 0) -> int:
+	var top := int(THRESHOLDS_PERCENT[-1])
+	var scale := top - clampi(drop, 0, top - MIN_TOP_PERCENT)
+	var pct := int(THRESHOLDS_PERCENT[clampi(tier, 1, MAX_TIER) - 1])
+	var den := 100 * top
+	@warning_ignore("integer_division")
+	return (pct * scale * total + den - 1) / den
+
+
+## Wie viele Prozentpunkte die Schwellen vorgezogen sind, aus den Skill-Boni
+## (SkillBook.bonuses()).
+static func drop_of(bonuses: Dictionary) -> int:
+	return maxi(0, int(round(float(bonuses.get("fortress_tier_drop", 0.0)))))
 
 
 ## Der Unit-Schlüssel eines Lexems, „<book>/<unit>" — dieselbe Form wie der Scope-Schlüssel
@@ -59,7 +85,7 @@ static func unit_key(entry: Dictionary) -> String:
 ## `lexemes` ist der Katalog (oder ein Teil davon), `mastered` die Menge aus
 ## PlayerProgress.mastered_lexemes. Nicht meisterbare Lexeme fallen hier heraus, damit
 ## kein Aufrufer das Filtern vergessen kann; Lexeme ohne Unit ebenso.
-static func unit_tiers(lexemes: Array, mastered: Dictionary) -> Dictionary:
+static func unit_tiers(lexemes: Array, mastered: Dictionary, drop: int = 0) -> Dictionary:
 	var groups := {}
 	for entry in lexemes:
 		if not PROGRESS.masterable(entry):
@@ -72,7 +98,7 @@ static func unit_tiers(lexemes: Array, mastered: Dictionary) -> Dictionary:
 		groups[key]["unit"] = int(entry["unit"])
 	for key in groups:
 		var group: Dictionary = groups[key]
-		group["tier"] = tier_for(int(group["done"]), int(group["total"]))
+		group["tier"] = tier_for(int(group["done"]), int(group["total"]), drop)
 	return groups
 
 
@@ -83,7 +109,8 @@ static func unit_tiers(lexemes: Array, mastered: Dictionary) -> Dictionary:
 ##
 ## `part_of` bildet eine Lexem-Id auf ihren Teil ab (ContentRegistry.part_of); 0 heißt:
 ## ohne Teil, fällt heraus.
-static func part_tiers(lexemes: Array, mastered: Dictionary, part_of: Callable) -> Dictionary:
+static func part_tiers(lexemes: Array, mastered: Dictionary, part_of: Callable,
+		drop: int = 0) -> Dictionary:
 	var groups := {}
 	for entry in lexemes:
 		if not PROGRESS.masterable(entry):
@@ -99,7 +126,7 @@ static func part_tiers(lexemes: Array, mastered: Dictionary, part_of: Callable) 
 		groups[key]["part"] = part
 	for key in groups:
 		var group: Dictionary = groups[key]
-		group["tier"] = tier_for(int(group["done"]), int(group["total"]))
+		group["tier"] = tier_for(int(group["done"]), int(group["total"]), drop)
 	return groups
 
 
@@ -142,14 +169,10 @@ static func health_bonus(tier: int) -> int:
 
 ## Was bis zur nächsten Stufe fehlt: { tier, needed } — `needed` Wörter mehr bringen Stufe
 ## `tier`. Leer, wenn die Unit schon auf der höchsten Stufe steht oder keine Wörter hat.
-static func next_threshold(done: int, total: int) -> Dictionary:
+static func next_threshold(done: int, total: int, drop: int = 0) -> Dictionary:
 	if total <= 0:
 		return {}
-	var tier := tier_for(done, total)
+	var tier := tier_for(done, total, drop)
 	if tier >= MAX_TIER:
 		return {}
-	var pct := int(THRESHOLDS_PERCENT[tier])
-	# Aufgerundet und in Ganzzahlen: die kleinste Zahl `d` mit d * 100 >= pct * total.
-	@warning_ignore("integer_division")
-	var target := (pct * total + 99) / 100
-	return {"tier": tier + 1, "needed": maxi(1, target - done)}
+	return {"tier": tier + 1, "needed": maxi(1, words_for(tier + 1, total, drop) - done)}

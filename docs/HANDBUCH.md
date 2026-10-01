@@ -487,6 +487,10 @@ zählt erst, wenn auch seine Formen sitzen):
 | 3 | 53 % | eine Burg |
 | 4 | 75 % | Burg mit Nebengebäuden und Fahnen |
 
+Mit dem **Schnellen Erbauer** aus dem Bollwerk-Baum kommt jede Stufe früher: Stufe 4 schon
+bei 70 %, die anderen im selben Verhältnis (etwa 9 %, 30 %, 49 %). Karte, Statistik und
+Kampf rechnen dann alle mit den früheren Schwellen.
+
 **Jede Stufe gibt der Festung 25 HP mehr.** Auf Stufe 4 hat sie also 100 HP mehr als auf
 der Baustelle.
 
@@ -580,12 +584,13 @@ Jeder Baum hat einen eigenen Anfangsknoten und verzweigt sich danach in zwei Äs
 baut einen Ast aus und kann den anderen liegen lassen. Knoten der ersten und zweiten
 Stufe kosten 1 Skillpunkt, die der dritten 2. Im Späher kosten der Anfang, der
 Sturmangriff und der Langbogen je 5, der Explosionspfeil danach 3. Das Wachkatapult im
-Bollwerk kostet 8 und hängt als dritter Ast direkt am Anfang.
+Bollwerk kostet 8 und hängt als dritter Ast direkt am Anfang, ebenso der Schnelle Erbauer
+für 4.
 
 | Baum | Was er tut |
 |---|---|
 | **Genesung** | Jedes besiegte Monster heilt die Festung um mehr HP. |
-| **Bollwerk** | Die Festung bekommt Rüstung. Ein Ast vergrößert den Vorrat, der andere setzt ihn zu jeder Welle ein Stück instand. Ganz außen wartet das **Wachkatapult**, das Monster mit gemeisterten Aufgaben abschießt. |
+| **Bollwerk** | Die Festung bekommt Rüstung. Ein Ast vergrößert den Vorrat, der andere setzt ihn zu jeder Welle ein Stück instand. Ganz außen wartet das **Wachkatapult**, das Monster mit gemeisterten Aufgaben abschießt. Direkt am Anfang hängt der **Schnelle Erbauer**: Stufe 4 der Festung kommt schon bei 70 % statt 75 %, die Stufen davor entsprechend früher. |
 | **Zeitwandler** | Die Zeitlupe beim Tippen hält länger nach (ein Ast) oder wird noch tiefer (der andere Ast). |
 | **Späher** | Der Anfang, der **Späherblick**, schaltet die Ich-Sicht frei (Kapitel 5). Beide Äste danach machen dich darin schneller, am Ende des einen warten der **Sturmangriff** und der **Langbogen**, nach dem Langbogen der **Explosionspfeil**. |
 
@@ -814,7 +819,7 @@ Auch das graue „↺“ im Fähigkeiten-Screen sagt am Zeiger, warum es gerade 
   (*go – went – gone*, *recevoir*) erst mit seinen Formen. Die Balken im Reiter
   „Fortschritt“ sind deshalb die Zahl, nach der man vor einer Vokabelarbeit fragt.
 - **Die Festung ist bei drei Vierteln fertig, der Ring erst bei allem.** Stufe 4 mit dem
-  Wachkatapult gibt es ab 75 %; der Ring um den Ort auf der Karte füllt sich bis 100 %,
+  Wachkatapult gibt es ab 75 % (mit dem Schnellen Erbauer ab 70 %); der Ring um den Ort auf der Karte füllt sich bis 100 %,
   und erst dann leuchtet er.
 - **Belohnung für Genauigkeit statt für Masse:** die Güte der Schatzkiste hängt nur davon
   ab, wie genau eine Welle war, nicht davon, wie lang sie war.

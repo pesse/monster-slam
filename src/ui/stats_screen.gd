@@ -496,7 +496,8 @@ func _refresh_progress() -> void:
 	var mastered := PlayerProgress.mastered_lexemes()
 	# Die Festungsstufe wertet die GANZE Unit, auch wenn der Bereich nur ein Viertel davon
 	# zeigt (FortressTier.run_tier) — deshalb über den Katalog und nicht über `pool`.
-	var tiers := FortressTier.unit_tiers(ContentRegistry.lexemes.values(), mastered)
+	var tiers := FortressTier.unit_tiers(ContentRegistry.lexemes.values(), mastered,
+			FortressTier.drop_of(SkillBook.bonuses()))
 	var units := unit_rows(pool, mastered, ContentRegistry.book_label)
 	for row in units:
 		var tier := int((tiers.get(str(row["key"]), {}) as Dictionary).get("tier", 0))

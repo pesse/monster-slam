@@ -130,9 +130,10 @@ func _fill() -> void:
 	_levels = MapLevel.levels_for(book, unit, part_count(book, unit, layout))
 	var lexemes := ContentRegistry.lexemes.values()
 	var mastered := PlayerProgress.mastered_lexemes()
-	var units := FortressTier.unit_tiers(lexemes, mastered)
-	var parts := FortressTier.part_tiers(lexemes, mastered, ContentRegistry.part_of)
-	var fortress := fortress_state(units.get("%s/%d" % [book, unit], {}))
+	var drop := FortressTier.drop_of(SkillBook.bonuses())
+	var units := FortressTier.unit_tiers(lexemes, mastered, drop)
+	var parts := FortressTier.part_tiers(lexemes, mastered, ContentRegistry.part_of, drop)
+	var fortress := fortress_state(units.get("%s/%d" % [book, unit], {}), drop)
 	_fortress_bar.value = float(fortress["share"])
 	(%Before as Label).text = str(fortress["before"])
 	(%Count as Label).text = str(fortress["count"])
@@ -217,19 +218,19 @@ static func nodes_for(levels: Array, units: Dictionary, parts: Dictionary, wins:
 ## deshalb steht sie dort und nicht an den Orten. `share` ist der Weg von der erreichten
 ## zur nächsten Stufe (0..1), auf der höchsten Stufe voll. Die Zeile unter dem Balken in
 ## drei Stücken, damit die Zahl golden stehen kann: „Noch" · `count` · „Wörter bis Stufe 2".
-static func fortress_state(group: Dictionary) -> Dictionary:
+## `drop` wie bei FortressTier.unit_tiers, mit dem auch `group` gezählt ist.
+static func fortress_state(group: Dictionary, drop: int = 0) -> Dictionary:
 	var done := int(group.get("done", 0))
 	var total := int(group.get("total", 0))
 	var tier := int(group.get("tier", 0))
-	var next := FortressTier.next_threshold(done, total)
+	var next := FortressTier.next_threshold(done, total, drop)
 	if next.is_empty():
 		return {"tier": tier, "before": "Höchste Stufe" if total > 0 else "", "count": "",
 				"after": "", "share": 1.0 if total > 0 else 0.0}
 	var needed := int(next["needed"])
 	var from := 0
 	if tier > 0:
-		@warning_ignore("integer_division")
-		from = (int(FortressTier.THRESHOLDS_PERCENT[tier - 1]) * total + 99) / 100
+		from = FortressTier.words_for(tier, total, drop)
 	var span := maxi(1, done + needed - from)
 	return {
 		"tier": tier,

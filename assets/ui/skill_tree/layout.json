@@ -1,4 +1,8 @@
 {
+  "skill.armor.builder": [323, 167],
+  "skill.armor.catapult": [482, 185],
+  "skill.armor.gate": [326, 35],
+  "skill.armor.portcullis": [477, 34],
   "skill.scout.blast": [-555, -235],
   "skill.scout.bow": [-461, -140],
   "skill.scout.sprint": [-425, 180]

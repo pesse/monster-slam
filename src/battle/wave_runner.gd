@@ -698,8 +698,8 @@ func _build_fortress() -> void:
 ## Ganzes über den ganzen Katalog (siehe FortressTier.run_tier).
 func _current_fortress_tier() -> int:
 	var scoped := ContentRegistry.lexemes_scoped(RunRequest.scope(), RunRequest.tags())
-	var units := FortressTier.unit_tiers(
-			ContentRegistry.lexemes.values(), PlayerProgress.mastered_lexemes())
+	var units := FortressTier.unit_tiers(ContentRegistry.lexemes.values(),
+			PlayerProgress.mastered_lexemes(), FortressTier.drop_of(SkillBook.bonuses()))
 	return FortressTier.run_tier(scoped, units)
 
 

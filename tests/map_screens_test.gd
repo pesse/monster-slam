@@ -362,6 +362,11 @@ func test_the_fortress_badge_fills_from_one_tier_to_the_next() -> void:
 	assert_str(str(top["count"])).is_empty()
 	assert_float(float(top["share"])).is_equal(1.0)
 	assert_int(int(AreaMap.fortress_state({})["tier"])).is_equal(0)
+	# Mit Schneller Erbauer (10 Wörter: Stufe 2 ab 3, Stufe 3 ab 5) zählt der Weg ab 3.
+	var early := AreaMap.fortress_state({"tier": 2, "done": 3, "total": 10}, 5)
+	assert_str("%s %s %s" % [early["before"], early["count"], early["after"]]).is_equal(
+			"Noch 2 Wörter bis Stufe 3")
+	assert_float(float(early["share"])).is_equal(0.0)
 
 
 ## Jede Stufe hat ihr Bild im Medaillon, gerendert aus derselben Festung wie im Kampf.

@@ -128,7 +128,7 @@ func _fill() -> void:
 		child.queue_free()
 	_selected = -1
 	var tiers := FortressTier.unit_tiers(ContentRegistry.lexemes.values(),
-			PlayerProgress.mastered_lexemes())
+			PlayerProgress.mastered_lexemes(), FortressTier.drop_of(SkillBook.bonuses()))
 	var shelves := BookMap.book_units(tiers)
 	var wins := BossRecord.wins(UserSettings.active_profile())
 	_empty_hint.visible = shelves.is_empty()

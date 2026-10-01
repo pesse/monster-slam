@@ -69,7 +69,7 @@ func _fill() -> void:
 	var book := MapSelection.book
 	var book_name := ContentRegistry.book_label(book)
 	var tiers := FortressTier.unit_tiers(ContentRegistry.lexemes.values(),
-			PlayerProgress.mastered_lexemes())
+			PlayerProgress.mastered_lexemes(), FortressTier.drop_of(SkillBook.bonuses()))
 	var units: Array = book_units(tiers).get(book, [])
 	_empty_hint.visible = units.is_empty()
 	var layout := MapLayout.data(book)

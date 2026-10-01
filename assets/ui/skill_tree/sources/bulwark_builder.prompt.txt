@@ -1,0 +1,5 @@
+Tool: built-in image_gen.imagegen
+transparent_background: true
+Reference: assets/ui/skill_tree/icons/bulwark_bastion.webp, bulwark_wall.webp (style, palette, lighting)
+
+Polished fantasy game inventory icon in exactly the style of the other Bulwark icons: a sturdy wooden builder's hammer with a dark iron head, tilted diagonally, striking a single light-grey stone block. Two or three small motion arcs behind the hammer head suggest speed, and a few tiny angular golden sparks fly from the point of impact. A small blue pennant tied to the hammer handle, matching the blue of the other Bulwark icons. Same materials, lighting, outline weight and perspective as the reference icons. Actual transparent background, not black. Square canvas, all elements inside central 81.25% with at least 9.375% fully transparent margins on every side. No floor shadow, no background glow, no text.
