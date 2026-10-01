@@ -138,16 +138,11 @@ func _best_match(accepted: Array, answer: String, loose: bool) -> Dictionary:
 	return result
 
 
-## Die Stellen in `canonical`, an denen `typed` von der Schreibweise abwich: Indizes der
-## Zeichen mit Akzent, Cédille oder Ligatur, die ohne getippt wurden, und der Bindestriche
-## und Apostrophe, die fehlten oder als Leerzeichen kamen. Für die Einblendung nach einem
-## nachsichtigen Treffer (ADR 0008, `exact` false): das Kind sieht die richtige Form mit
-## markierten Fehlern, nicht seine eigene.
-##
-## Ausgerichtet wird Zeichen für Zeichen (kleinste Kosten, wie eine Editierdistanz). Was
-## weggelassen werden durfte (Artikel, Klammerteile, Platzhalter), ist kein Schreibfehler
-## und bleibt unmarkiert — markiert wird nur, was `_loosen` nachsieht.
-static func spelling_marks(canonical: String, typed: String) -> PackedInt32Array:
+## Richtet `typed` Zeichen für Zeichen an `canonical` aus (kleinste Kosten, wie eine
+## Editierdistanz). Rückgabe: `marked` — die Indizes in `canonical`, deren Schreibweise
+## nachgesehen wurde —, und `typed_against` — je Zeichen von `canonical`, ob ihm etwas
+## Getipptes gegenübersteht. Gemeinsame Grundlage von spelling_marks() und missing_marks().
+static func _align(canonical: String, typed: String) -> Dictionary:
 	var a := _spelling_chars(canonical)
 	var b := _spelling_chars(typed.strip_edges())
 	var m := a.size()
@@ -190,6 +185,23 @@ static func spelling_marks(canonical: String, typed: String) -> PackedInt32Array
 				marked.append(i)
 		i = int(s[0])
 		j = int(s[1])
+	return {"marked": marked, "typed_against": typed_against}
+
+
+## Die Stellen in `canonical`, an denen `typed` von der Schreibweise abwich: Indizes der
+## Zeichen mit Akzent, Cédille oder Ligatur, die ohne getippt wurden, und der Bindestriche
+## und Apostrophe, die fehlten oder als Leerzeichen kamen. Für die Einblendung nach einem
+## nachsichtigen Treffer (ADR 0008, `exact` false): das Kind sieht die richtige Form mit
+## markierten Fehlern, nicht seine eigene.
+##
+## Ausgerichtet wird Zeichen für Zeichen (kleinste Kosten, wie eine Editierdistanz). Was
+## weggelassen werden durfte (Artikel, Klammerteile, Platzhalter), ist kein Schreibfehler
+## und bleibt unmarkiert — markiert wird nur, was `_loosen` nachsieht.
+static func spelling_marks(canonical: String, typed: String) -> PackedInt32Array:
+	var aligned := _align(canonical, typed)
+	var marked: Array[int] = aligned["marked"]
+	var typed_against: Array[bool] = aligned["typed_against"]
+	var m := typed_against.size()
 	# Ein ausgelassener Verbinder ist nur ein Fehler MITTEN im Getippten („lecole"), nicht
 	# am Rand eines weggelassenen Teils („école" für „l'école": der Artikel durfte fehlen).
 	var marks := PackedInt32Array()
@@ -199,6 +211,39 @@ static func spelling_marks(canonical: String, typed: String) -> PackedInt32Array
 			continue
 		marks.append(k)
 	return marks
+
+
+## Die Stellen in `canonical`, die bei einem unvollständigen Treffer fehlten (ADR 0010):
+## Klammergruppen und Platzhalter, von denen nichts getippt wurde („etwas" in „die Meinung
+## (zu etwas)" für getipptes „meinung zu"). Was nicht zur Vollständigkeit zählt — Artikel,
+## „the", „to", Auslassungspunkte —, ist kein Bereich und bleibt unmarkiert; Leerzeichen
+## auch. Eine ganz weggelassene Klammergruppe ist samt ihren Klammern markiert.
+##
+## Dieselbe Ausrichtung wie spelling_marks(): ein Bereich fehlt, wenn keinem seiner Zeichen
+## etwas Getipptes gegenübersteht.
+static func missing_marks(canonical: String, typed: String) -> PackedInt32Array:
+	var typed_against: Array[bool] = _align(canonical, typed)["typed_against"]
+	var lower := "".join(_spelling_chars(canonical))
+	var regions: Array = []
+	for g in _group_re.search_all(lower):
+		regions.append([g.get_start(0), g.get_end(0)])
+	for p in _placeholder_re.search_all(lower):
+		regions.append([p.get_start(0), p.get_end(0)])
+	var marked := {}
+	for region in regions:
+		var omitted := true
+		for k in range(int(region[0]), int(region[1])):
+			if typed_against[k] and lower[k] != " ":
+				omitted = false
+				break
+		if not omitted:
+			continue
+		for k in range(int(region[0]), int(region[1])):
+			if lower[k] != " ":
+				marked[k] = true
+	var keys := marked.keys()
+	keys.sort()
+	return PackedInt32Array(keys)
 
 
 ## Die möglichen Schritte von (i, j): [neues i, neues j, Kosten, markiert a[i]?].

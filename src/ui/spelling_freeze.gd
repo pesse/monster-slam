@@ -1,10 +1,11 @@
 class_name SpellingFreeze
 extends Control
-## Das Standbild nach einem nachsichtigen Treffer (ADR 0008, ADR 0010): die Antwort zählte,
-## war aber anders geschrieben („ecole" für „l'école"). Das Monster ist schon zerplatzt,
-## dann steht das Bild, die Kamera fährt auf die Stelle zu, ein heller Schleier legt sich
-## darüber und in der Mitte steht die richtige Schreibweise mit markierten Fehlern. Danach
-## fährt die Kamera zurück und der Kampf läuft weiter.
+## Das Standbild nach einem Treffer, der nicht ganz stimmte (ADR 0008, ADR 0010): die
+## Antwort zählte, war aber anders geschrieben („ecole" für „l'école") oder unvollständig
+## („meinung zu" für „die Meinung (zu etwas)"). Das Monster ist schon zerplatzt, dann steht
+## das Bild, die Kamera fährt auf die Stelle zu, ein heller Schleier legt sich darüber und
+## in der Mitte steht die richtige Form: Schreibfehler rot (`SpellingMark`), fehlende Teile
+## blau (`SpellingMissing`). Danach fährt die Kamera zurück und der Kampf läuft weiter.
 ##
 ## Wie die Meister-Feier meldet die Szene über `started`, wie lange sie steht — das
 ## Anhalten macht der WaveRunner über die Baum-Pause, Engine.time_scale bleibt SlowMotion.
@@ -42,7 +43,7 @@ const ACCENT_NAMES := {
 ## Abstand zweier Namen in einer Zeile; rücken sie näher, steht der linke eine Zeile höher.
 const NAME_GAP := 8.0
 
-## Wartende Standbilder als [Form, Stellen, Kamerafahrt]. Kommen zwei kurz nacheinander
+## Wartende Standbilder als [Form, Schreibfehler, Kamerafahrt, fehlende Teile]. Kommen zwei kurz nacheinander
 ## (ein Pfeil war noch unterwegs), folgt das zweite direkt; `finished` kommt nach dem letzten.
 var _queue: Array = []
 var _running := false
@@ -60,8 +61,11 @@ static func duration_ms() -> int:
 	return ZOOM_IN_MS + HOLD_MS + ZOOM_OUT_MS
 
 
-func play(canonical: String, marks: PackedInt32Array, zoom := Callable()) -> void:
-	_queue.append([canonical, marks, zoom])
+## `marks`: Schreibfehler (AnswerEvaluator.spelling_marks), `missing`: fehlende Teile
+## (AnswerEvaluator.missing_marks). Akzentnamen gibt es nur über den Schreibfehlern.
+func play(canonical: String, marks: PackedInt32Array, zoom := Callable(),
+		missing := PackedInt32Array()) -> void:
+	_queue.append([canonical, marks, zoom, missing])
 	if not _running:
 		_run()
 
@@ -70,15 +74,17 @@ func _run() -> void:
 	_running = true
 	while not _queue.is_empty():
 		var next: Array = _queue.pop_front()
-		await _show(next[0], next[1], next[2])
+		await _show(next[0], next[1], next[2], next[3])
 	visible = false
 	_running = false
 	finished.emit()
 
 
-func _show(canonical: String, marks: PackedInt32Array, zoom: Callable) -> void:
+func _show(canonical: String, marks: PackedInt32Array, zoom: Callable,
+		missing: PackedInt32Array) -> void:
 	# Inhalt VOR dem Einblenden: ein sichtbares Overlay in der Bildmitte ändert seine Größe nicht.
-	_word.text = markup(canonical, marks, get_theme_color("font_color", &"SpellingMark"))
+	_word.text = markup(canonical, marks, get_theme_color("font_color", &"SpellingMark"),
+			missing, get_theme_color("font_color", &"SpellingMissing"))
 	_place_names(canonical, marks)
 	modulate.a = 0.0
 	visible = true
@@ -103,7 +109,8 @@ func warm_up() -> void:
 	if is_busy():
 		return
 	_word.text = markup(FxWarmup.GLYPHS, PackedInt32Array([0]),
-			get_theme_color("font_color", &"SpellingMark"))
+			get_theme_color("font_color", &"SpellingMark"), PackedInt32Array([1]),
+			get_theme_color("font_color", &"SpellingMissing"))
 	_clear_names()
 	var label := ACCENT_NAME_SCENE.instantiate() as Label
 	label.text = FxWarmup.GLYPHS
@@ -180,16 +187,21 @@ func _clear_names() -> void:
 		child.free()
 
 
-## BBCode für `text` mit den Zeichen an `marks` farbig und unterstrichen. Eckige Klammern
-## im Wort werden maskiert, sonst läsen sie sich als Tags.
-static func markup(text: String, marks: PackedInt32Array, mark_color: Color) -> String:
+## BBCode für `text` mit den Zeichen an `marks` (Schreibfehler) und `missing` (fehlende
+## Teile) farbig und unterstrichen. Eckige Klammern im Wort werden maskiert, sonst läsen
+## sie sich als Tags.
+static func markup(text: String, marks: PackedInt32Array, mark_color: Color,
+		missing := PackedInt32Array(), missing_color := Color.BLUE) -> String:
 	var out := ""
 	var hex := mark_color.to_html(false)
+	var missing_hex := missing_color.to_html(false)
 	for i in text.length():
 		var c := text[i]
 		var shown := "[lb]" if c == "[" else c
 		if marks.has(i):
 			out += "[color=#%s][u]%s[/u][/color]" % [hex, shown]
+		elif missing.has(i):
+			out += "[color=#%s][u]%s[/u][/color]" % [missing_hex, shown]
 		else:
 			out += shown
 	return out

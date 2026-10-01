@@ -50,11 +50,13 @@ extends Node3D
 ##         reports/battle_themes/catapult_<ms>.png. Jeder Schritt ist ein eigener Wurf.
 ##         Reiter Schreibweise: richtige Form und getippte Antwort (oder ein Beispiel) —
 ##         darunter steht, wie der Kampf sie wertet. „Abspielen" (oder Enter im Feld
-##         „Getippt") lässt bei einem nachsichtigen Treffer ein Monster platzen und zeigt das
-##         Standbild wie im Kampf (ADR 0010), in der gerade eingestellten Sicht.
+##         „Getippt") lässt bei einem nachsichtigen oder unvollständigen Treffer ein Monster
+##         platzen und zeigt das Standbild wie im Kampf (ADR 0010), in der gerade
+##         eingestellten Sicht.
 ##     … -- --spelling
 ##         Das Standbild der Schreibweise (SpellingFreeze) nach einer Explosion, in beiden
-##         Sichten ganz herangefahren, als reports/battle_themes/spelling_<sicht>.png.
+##         Sichten ganz herangefahren, als reports/battle_themes/spelling_<sicht>.png, dazu
+##         eine unvollständige Antwort als spelling_missing.png.
 ##     … -- --hitches [--warm]
 ##         Misst den längsten Frame beim ERSTEN Auftritt jedes Kampfeffekts (Explosion,
 ##         „+XP", Monster, Meister-Feier) und gibt ihn in ms aus; --warm wärmt vorher vor
@@ -105,13 +107,14 @@ const SLOT_SCALE := {"trees": [0.8, 1.4], "rocks": [1.6, 3.2], "grass": [1.2, 2.
 ## Die gekauften Vergleichsstücke vor jeder Nahaufnahme, mit ihrem Platz.
 const REFERENCE := [["props/tree.glb", "trees"], ["props/rock.glb", "rocks"],
 		["props/pillar.gltf", "landmarks"]]
-## Reiter Schreibweise: [richtig, getippt] — jede Art Nachsicht einmal, dazu ein exakter und
-## ein falscher Treffer, die kein Standbild auslösen. Einzelne Wörter, keine Wortliste.
+## Reiter Schreibweise: [richtig, getippt] — jede Art Nachsicht einmal, zwei unvollständige
+## Antworten, dazu ein exakter und ein falscher Treffer, die kein Standbild auslösen. Einzelne Wörter, keine Wortliste.
 const SPELLING_EXAMPLES := [
 	["l'élève", "l eleve"], ["l'école", "ecole"], ["été", "ete"], ["la forêt", "la foret"],
 	["Noël", "noel"], ["ils reçoivent", "ils recoivent"], ["le cœur", "le coeur"],
 	["à côté", "a cote"], ["aujourd'hui", "aujourdhui"], ["est-ce que", "est ce que"],
 	["north-east", "north east"], ["That's fine by me.", "thats fine by me"],
+	["die Meinung (zu etwas)", "meinung zu"], ["criticize sb. (for)", "criticize"],
 	["le café", "le café"], ["l'école", "lecola"],
 ]
 
@@ -432,35 +435,46 @@ func _spelling_verdict() -> Dictionary:
 	return AnswerEvaluator.new().evaluate([%SpellWord.text], %SpellTyped.text, true)
 
 
-## Das Urteil unter den Feldern; nur ein nachsichtiger Treffer gibt das Standbild.
+## Ob der Kampf das Standbild zeigte: ein Treffer, der nicht exakt oder nicht vollständig war.
+static func _spelling_shown(verdict: Dictionary) -> bool:
+	return bool(verdict["matched"]) and not (bool(verdict["exact"]) and bool(verdict["complete"]))
+
+
+## Das Urteil unter den Feldern; nur ein nachsichtiger oder unvollständiger Treffer gibt
+## das Standbild.
 func _judge_spelling() -> void:
 	var verdict := _spelling_verdict()
 	var text := "Falsch — kein Standbild"
-	if bool(verdict["matched"]) and bool(verdict["exact"]):
+	if bool(verdict["matched"]) and not _spelling_shown(verdict):
 		text = "Exakt — kein Standbild"
 	elif bool(verdict["matched"]):
 		var form := str(verdict["canonical"])
 		var marks := AnswerEvaluator.spelling_marks(form, %SpellTyped.text)
+		var missing := AnswerEvaluator.missing_marks(form, %SpellTyped.text)
 		var parts: Array[String] = []
 		for i in marks:
 			parts.append(form[i])
+		var gaps: Array[String] = []
+		for i in missing:
+			gaps.append(form[i])
 		var names: Array[String] = []
 		for group: Dictionary in SpellingFreeze.accent_groups(form, marks):
 			names.append(str(group["name"]))
-		text = "Nachsichtig — markiert: %s" % (" ".join(parts) if not parts.is_empty() else "nichts")
+		text = "Nachsichtig — rot: %s" % (" ".join(parts) if not parts.is_empty() else "nichts")
+		if not gaps.is_empty():
+			text += "\nFehlt (blau): " + "".join(gaps)
 		if not names.is_empty():
 			text += "\nÜber dem Wort: " + ", ".join(names)
-		if not bool(verdict["complete"]):
-			text += "\nUnvollständig — gezeigt wird die volle Form"
 	%SpellVerdict.text = text
 
 
 ## Ein Monster platzt vor der Festung, dann das Standbild wie im Kampf: der Baum hält an,
-## solange es steht (WaveRunner._on_spelling_started). Nur bei einem nachsichtigen Treffer.
+## solange es steht (WaveRunner._on_spelling_started). Nur bei einem nachsichtigen oder
+## unvollständigen Treffer.
 func _play_spelling() -> void:
 	_judge_spelling()
 	var verdict := _spelling_verdict()
-	if not bool(verdict["matched"]) or bool(verdict["exact"]):
+	if not _spelling_shown(verdict):
 		return
 	if _spelling == null:
 		_spelling = (load("res://scenes/ui/spelling_freeze.tscn") as PackedScene).instantiate()
@@ -476,6 +490,7 @@ func _play_spelling() -> void:
 		return
 	var form := str(verdict["canonical"])
 	var marks := AnswerEvaluator.spelling_marks(form, %SpellTyped.text)
+	var missing := AnswerEvaluator.missing_marks(form, %SpellTyped.text)
 	var at := Vector3(2.0, 0.0, _goal() - 12.0)
 	var monster := FxWarmup.MONSTER_SCENE.instantiate() as Monster
 	monster.setup(FxWarmup.monster_defs()[0], {"prompt": %SpellTyped.text,
@@ -493,7 +508,8 @@ func _play_spelling() -> void:
 	Sfx.play(&"monster_kill")
 	monster.queue_free()
 	var camera := _fp.camera if _fp != null else _camera
-	_spelling.play(form, marks, WaveRunnerScript.spelling_zoom(camera, at + Vector3(0.0, 1.0, 0.0)))
+	_spelling.play(form, marks, WaveRunnerScript.spelling_zoom(camera, at + Vector3(0.0, 1.0, 0.0)),
+			missing)
 
 
 ## Wie viel gerade wächst, unter den Reglern.
@@ -1192,8 +1208,12 @@ func _shoot_spelling() -> void:
 	# Wie im Kampf: das Standbild hält den Baum an, die Explosion steht.
 	freeze.started.connect(func(_ms: int) -> void: get_tree().paused = true)
 	freeze.finished.connect(func() -> void: get_tree().paused = false)
-	var word := "l'élève"
-	for first: bool in [false, true]:
+	# [Ich-Sicht, richtig, getippt, Name]
+	var shots := [[false, "l'élève", "l eleve", "iso"], [true, "l'élève", "l eleve", "first"],
+			[false, "die Meinung (zu etwas)", "meinung zu", "missing"]]
+	for shot: Array in shots:
+		var first: bool = shot[0]
+		var word: String = shot[1]
 		_set_first_person(first)
 		await get_tree().create_timer(0.6).timeout
 		var camera := _fp.camera if _fp != null else _camera
@@ -1202,12 +1222,13 @@ func _shoot_spelling() -> void:
 		fx.setup(WordTypePalette.color_for("noun"))
 		fx.position = at
 		add_child(fx)
-		freeze.play(word, AnswerEvaluator.spelling_marks(word, "l eleve"),
-				WaveRunnerScript.spelling_zoom(camera, at + Vector3(0.0, 1.0, 0.0)))
+		freeze.play(word, AnswerEvaluator.spelling_marks(word, shot[2]),
+				WaveRunnerScript.spelling_zoom(camera, at + Vector3(0.0, 1.0, 0.0)),
+				AnswerEvaluator.missing_marks(word, shot[2]))
 		await get_tree().create_timer(
 				(SpellingFreeze.LEAD_MS + SpellingFreeze.ZOOM_IN_MS + 300) / 1000.0, true, false, true).timeout
 		await RenderingServer.frame_post_draw
-		var path := "%s/spelling_%s.png" % [dir, "first" if first else "iso"]
+		var path := "%s/spelling_%s.png" % [dir, shot[3]]
 		get_viewport().get_texture().get_image().save_png(path)
 		print("battle_theme_lab: ", path)
 		await freeze.finished
@@ -1371,8 +1392,7 @@ func _measure_hitches() -> void:
 		var t0 := Time.get_ticks_usec()
 		celebration.warm_up()
 		await FxWarmup.run(self, at, FxWarmup.monster_defs(),
-				[WaveRunnerScript.xp_label(FxWarmup.GLYPHS), WaveRunnerScript.form_label(FxWarmup.GLYPHS),
-				Blast.new()])
+				[WaveRunnerScript.xp_label(FxWarmup.GLYPHS), Blast.new()])
 		celebration.cool_down()
 		print("hitches: Vorwärmen %.1f ms" % ((Time.get_ticks_usec() - t0) / 1000.0))
 		await _worst_frame(func() -> void: pass, 60)

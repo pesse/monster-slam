@@ -329,16 +329,17 @@ und, wenn `mastered_lexeme_of()` ein Lexem nennt, `lexeme_mastered`. Kein neues 
 
 ### Standbild bei Schreibfehlern (ADR 0010)
 
-Ein nachsichtiger Treffer (`verdict.exact == false`) auf eine noch nicht gemeisterte
-Aufgabe merkt sich in `WaveRunner._score_hit` Form und Markierungen
-(`AnswerEvaluator.spelling_marks`) und hält die Feier an (`MasteryCelebration.hold()`).
+Ein Treffer, der nicht exakt oder nicht vollständig war (`verdict.exact`/`complete`),
+merkt sich in `WaveRunner._score_hit` Form und Markierungen — Schreibfehler rot
+(`AnswerEvaluator.spelling_marks`), fehlende Klammergruppen und Platzhalter blau
+(`AnswerEvaluator.missing_marks`) — und hält die Feier an (`MasteryCelebration.hold()`).
 Nach der Explosion spielt `SpellingFreeze` (`scenes/ui/spelling_freeze.tscn`): kurzer
 Vorlauf, dann `started(ms)` → dieselbe Baum-Pause und Verschiebung von `spawned_at_ms`
 wie bei der Feier, Kamerafahrt über `WaveRunner.spelling_zoom(camera, ziel)` (k von 0
 nach 1 und zurück, bei 0 exakt der Ausgangszustand), `finished` → Pause aus,
 `release()`, aufgehobene Antworten. Mehrere Standbilder stellen sich an; solange eines
-ansteht (`is_busy`), wartet auch das Wellenende. Gemeisterte Aufgaben zeigen weiter nur
-das Formschild.
+ansteht (`is_busy`), wartet auch das Wellenende. Ein Formschild über dem Monster gibt es
+nicht mehr.
 
 ## Wirtschaft: Gold und Schatzkisten (`src/economy/`)
 
@@ -828,7 +829,7 @@ Kamera frei; die Äste darunter heben nur das Lauftempo (`walk_speed`, Anteile a
   wartet, die Zahlen nicht. Das Monster steht (`Monster.halt`) und ist aus `_active`
   heraus, kann also weder die Festung erreichen noch eine zweite Antwort fangen;
   `_check_end` wartet laufende Anläufe und Pfeile ab (`_underway`). Ein zweiter Treffer während eines
-  Anlaufs lässt den ersten sofort ankommen. Aufsteigende Texte („+XP", Vollform) haben in
+  Anlaufs lässt den ersten sofort ankommen. Aufsteigende Texte („+XP") haben in
   der Ich-Sicht eine feste Bildgröße, sonst füllten sie aus der Nähe das Bild.
 - **Langbogen** (`bow`): dieselbe Buchung wie beim Sturmangriff, nur fliegt statt des
   Spielers ein Pfeil (`FirstPersonView.shoot_at`, `Arrow`), und das Monster platzt, wenn er

@@ -22,8 +22,8 @@ Gespielt wird am Lehrbuch *À plus!* entlang, zunächst ohne Bosskampf.
    Auslassungspunkte („…“, „...“, „..“) fallen schon in der Normalisierung weg — sie
    markieren eine Lücke, keinen Bestandteil, und Weglassen ist vollständig. Eine so getroffene Antwort gilt voll, zählt voll für den
    Lernstand, und die richtige Schreibweise wird sofort über dem Monster
-   eingeblendet (dasselbe Schild wie bei einer unvollständigen Antwort; bei noch nicht
-   gemeisterten Aufgaben seit ADR 0010 ein kurzes Standbild).
+   eingeblendet (dasselbe Schild wie bei einer unvollständigen Antwort; seit ADR 0010
+   statt des Schilds ein kurzes Standbild).
    Umlaute und ß werden **nicht** gefaltet: Sie sind die deutsche Seite.
 2. **Exakt vor nachsichtig.** `AnswerEvaluator.evaluate(…, lenient)` vergleicht zuerst
    exakt und nur bei Bedarf gefaltet und meldet das im neuen Feld `exact`. Der Kampf

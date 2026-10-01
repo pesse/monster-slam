@@ -235,14 +235,12 @@ func _ready() -> void:
 func _warm_up() -> void:
 	var xp := xp_label(FxWarmup.GLYPHS)
 	_screen_size_in_first_person(xp, POPUP_SCREEN_SCALE)
-	var form := form_label(FxWarmup.GLYPHS)
-	_screen_size_in_first_person(form, 1.4)
 	var at := FxWarmup.point_in_view(get_viewport().get_camera_3d(),
 			Vector3(0.0, 1.0, VIEW_CENTER_Z))
 	_celebration.warm_up()
 	_spelling.warm_up()
 	_level_flare.warm_up()
-	var extras: Array[Node3D] = [xp, form]
+	var extras: Array[Node3D] = [xp]
 	# Der Pfeil fliegt erst nach der ersten Antwort; der Bogen hängt schon an der Kamera.
 	if _fp != null:
 		var arrow := Arrow.new()
@@ -1309,25 +1307,22 @@ func _setup_first_person(bonuses: Dictionary) -> void:
 ## Treffer verbuchen. `verdict` ist das Urteil des AnswerEvaluator, leer für einen Treffer
 ## ohne Abzug. War die Antwort richtig, ließ aber einen optionalen Bestandteil weg
 ## ("criticize" statt "criticize sb. (for)") oder stimmte die Schreibweise nicht ("ecole"
-## statt "l'école"), kostet das nichts — die richtige Form wird nur zusätzlich
-## eingeblendet, damit sie trotzdem einmal zu sehen war.
-##
-## Die Schreibweise bekommt mehr als das Schild: nach dem Zerplatzen steht das Bild, und die
-## richtige Form steht groß mit markierten Fehlern da (SpellingFreeze, ADR 0010) — erst danach
-## die Feier einer Meisterung. Bei einer schon gemeisterten Aufgabe bleibt es beim Schild:
-## wer das Wort sicher kann, soll für einen Akzent nicht jedes Mal angehalten werden.
+## statt "l'école"), kostet das nichts — die richtige Form wird nur zusätzlich gezeigt,
+## damit sie trotzdem einmal zu sehen war: nach dem Zerplatzen steht das Bild, und die
+## Form steht groß da, Schreibfehler rot, fehlende Teile blau (SpellingFreeze, ADR 0010) —
+## erst danach die Feier einer Meisterung.
 func _score_hit(monster: Monster, text: String = "", verdict: Dictionary = {}) -> void:
 	var complete := bool(verdict.get("complete", true))
 	var exact := bool(verdict.get("exact", true))
 	var full_form := "" if complete and exact else str(verdict.get("canonical", ""))
 	var rt := Time.get_ticks_msec() - monster.spawned_at_ms
 	var task_id := str(monster.task.get("learnable_id", ""))
-	var freeze := not exact and not full_form.is_empty() and not PlayerProgress.is_mastered(task_id)
-	if freeze:
+	if not full_form.is_empty():
 		# Vor record(): eine Meisterung durch DIESE Antwort feiert erst nach dem Standbild.
 		_celebration.hold()
 		_spelling_due[monster.get_instance_id()] = [full_form,
-				AnswerEvaluator.spelling_marks(full_form, text)]
+				AnswerEvaluator.spelling_marks(full_form, text),
+				AnswerEvaluator.missing_marks(full_form, text)]
 	var newly_mastered := PlayerProgress.record(task_id, true, rt,
 			float(monster.task.get("initial_confidence", -1.0)))
 	EventBus.item_reviewed.emit(task_id, true, rt)
@@ -1344,7 +1339,6 @@ func _score_hit(monster: Monster, text: String = "", verdict: Dictionary = {}) -
 		var lexeme_id := PlayerProgress.mastered_lexeme_of(task_id)
 		if not lexeme_id.is_empty():
 			EventBus.lexeme_mastered.emit(lexeme_id)
-	var pos := monster.position
 	var weapon := _fp.weapon if _fp != null else FirstPersonView.Weapon.NONE
 	if weapon == FirstPersonView.Weapon.CHARGE:
 		_defeat_by_charge(monster)
@@ -1353,8 +1347,6 @@ func _score_hit(monster: Monster, text: String = "", verdict: Dictionary = {}) -
 	else:
 		_defeat(monster)
 	_flash_feedback(FLASH_CORRECT)
-	if not full_form.is_empty() and not freeze:
-		_spawn_form_hint(pos + Vector3(0.0, 3.4, 0.0), full_form)
 
 
 ## Eine Meister-Feier beginnt: der Kampf pausiert (Baum-Pause). Monster, Animationen,
@@ -1388,7 +1380,7 @@ func _spell_out(key: int, at: Vector3) -> void:
 	_spelling_due.erase(key)
 	var target := at + Vector3(0.0, 1.0, 0.0)
 	_spelling.play(str(due[0]), due[1],
-			spelling_zoom(_fp.camera if _fp != null else _camera, target))
+			spelling_zoom(_fp.camera if _fp != null else _camera, target), due[2])
 
 
 ## Die Kamerafahrt des Standbilds auf `camera`: k = 0 ist das Spielbild, k = 1 ganz
@@ -1703,20 +1695,6 @@ func _spawn_xp_popup(pos: Vector3, amount: int) -> void:
 	tw.chain().tween_callback(label.queue_free)
 
 
-## Die vollständige Form nach einem nur im Kern richtigen Treffer. Bewusst ruhiger als
-## das "+XP"-Popup (kein Pop, längere Standzeit): es ist ein Hinweis, kein Tadel.
-func _spawn_form_hint(pos: Vector3, form: String) -> void:
-	var label := form_label(form)
-	_screen_size_in_first_person(label, 1.4)
-	label.position = pos
-	add_child(label)
-	var tw := create_tween()
-	tw.set_parallel(true)
-	tw.tween_property(label, "position:y", pos.y + 2.0, 1.8).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tw.tween_property(label, "modulate:a", 0.0, 0.6).set_delay(1.2)
-	tw.chain().tween_callback(label.queue_free)
-
-
 ## Das Schild des „+XP"-Popups, ohne Bewegung. Eigene Funktion, damit das Vorwärmen
 ## (FxWarmup) dieselbe Schrift in derselben Größe zeichnet.
 static func xp_label(text: String) -> Label3D:
@@ -1729,20 +1707,6 @@ static func xp_label(text: String) -> Label3D:
 	label.modulate = Color(1.0, 0.9, 0.25)
 	label.outline_size = 32
 	label.outline_modulate = Color(0.15, 0.08, 0.0, 1.0)
-	return label
-
-
-## Das Schild des Form-Hinweises, ohne Bewegung (wie xp_label).
-static func form_label(text: String) -> Label3D:
-	var label := Label3D.new()
-	label.text = text
-	label.font_size = 130
-	label.pixel_size = 0.02
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.no_depth_test = true
-	label.modulate = Color(0.85, 0.95, 1.0)
-	label.outline_size = 28
-	label.outline_modulate = Color(0.05, 0.1, 0.2, 1.0)
 	return label
 
 
