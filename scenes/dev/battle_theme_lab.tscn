@@ -581,6 +581,46 @@ allow_greater = true
 unique_name_in_owner = true
 theme_type_variation = &"Hint"
 
+[node name="Schreibweise" type="GridContainer" parent="UI/Margin/Root/Menu/Items/Tabs"]
+visible = false
+columns = 2
+metadata/_tab_index = 5
+
+[node name="SpellPresetCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Schreibweise"]
+theme_type_variation = &"Hint"
+text = "Beispiel"
+
+[node name="SpellPreset" type="OptionButton" parent="UI/Margin/Root/Menu/Items/Tabs/Schreibweise"]
+unique_name_in_owner = true
+focus_mode = 0
+
+[node name="SpellWordCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Schreibweise"]
+theme_type_variation = &"Hint"
+text = "Richtig"
+
+[node name="SpellWord" type="LineEdit" parent="UI/Margin/Root/Menu/Items/Tabs/Schreibweise"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 0)
+
+[node name="SpellTypedCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Schreibweise"]
+theme_type_variation = &"Hint"
+text = "Getippt"
+
+[node name="SpellTyped" type="LineEdit" parent="UI/Margin/Root/Menu/Items/Tabs/Schreibweise"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 0)
+
+[node name="SpellPlayButton" type="Button" parent="UI/Margin/Root/Menu/Items/Tabs/Schreibweise"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "Abspielen"
+
+[node name="SpellVerdict" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Schreibweise"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 0)
+theme_type_variation = &"Hint"
+autowrap_mode = 3
+
 [node name="Buttons" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items"]
 
 [node name="SpawnButton" type="Button" parent="UI/Margin/Root/Menu/Items/Buttons"]
