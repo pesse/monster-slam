@@ -20,7 +20,8 @@ extends Control
 ##
 ## Die beiden Maße auseinanderzuhalten ist der Sinn der Reiter-Namen: „Aufgaben" zählt
 ## learnable_ids (Richtung, Form, Relation — das Maß von mastered_count), „Fortschritt"
-## zählt Wörter (beide Übersetzungsrichtungen — das Maß von mastered_lexemes).
+## zählt Wörter (beide Übersetzungsrichtungen, bei unregelmäßigen Verben auch die Formen —
+## das Maß von mastered_lexemes).
 ##
 ## Die Reiter sind eigene Knöpfe und kein `TabContainer`: dessen Reiter lassen sich nicht
 ## mit den Bildern des Fensterpakets belegen, ohne das ganze Theme umzustellen. Alle drei
@@ -502,7 +503,8 @@ static func unit_rows(lexemes: Array, mastered: Dictionary, book_label: Callable
 		var group: Dictionary = groups[key]
 		rows.append({
 			"key": key,
-			"label": "%s, Unit %d" % [book_label.call(group["book"]), int(group["unit"])],
+			"label": "%s, %s" % [book_label.call(group["book"]),
+					BookNaming.unit_label(str(group["book"]), int(group["unit"]))],
 			"done": int(group["done"]), "total": int(group["total"]),
 			"lexemes": group["lexemes"],
 		})
@@ -536,6 +538,9 @@ static func tag_rows(lexemes: Array, mastered: Dictionary) -> Array:
 ## einer sitzenden und einer offenen Richtung bei 60 % — der Haken stünde dann an einer
 ## anderen Zahl als der angezeigten, und die Liste erklärte den Balken nicht mehr.
 ##
+## Bei einem unregelmäßigen Verb zählen auch seine Formen in den Prozentstand, aus demselben
+## Grund wie in der Meisterung (`requirements`, ContentRegistry.form_requirements).
+##
 ## Die ÜBRIGEN Aufgaben zum Wort (Formen, Gegenteile, Synonyme, Verwechslungen) zählen
 ## bewusst NICHT in die Meisterung — sie hängen an Zusatzdaten, die nur ein Teil der
 ## Wörter hat, und eine nachgetragene Relation nähme dem Spieler sonst rückwirkend ein
@@ -550,7 +555,8 @@ static func tag_rows(lexemes: Array, mastered: Dictionary) -> Array:
 ## PlayerProgress.confidence mit -1 als Vorgabe), `learnables` alle learnable_ids zu einem
 ## Lexem (WaveGenerator.learnables_of). Als Callables übergeben — wie book_label bei
 ## unit_rows —, damit die Regeln ohne Autoload prüfbar bleiben.
-static func word_rows(lexemes: Array, conf: Callable, learnables := Callable()) -> Array:
+static func word_rows(lexemes: Array, conf: Callable, learnables := Callable(),
+		requirements: Dictionary = {}) -> Array:
 	var rows: Array = []
 	for entry in lexemes:
 		var id := str(entry.get("id", ""))
@@ -567,6 +573,9 @@ static func word_rows(lexemes: Array, conf: Callable, learnables := Callable()) 
 			else:
 				seen = true
 			weakest = minf(weakest, value)
+		for required in requirements.get(id, []):
+			if not str(required).begins_with("translate:"):
+				weakest = minf(weakest, maxf(0.0, float(conf.call(required))))
 		rows.append({
 			"label": word_label(entry),
 			"confidence": weakest if seen else -1.0,
@@ -611,9 +620,9 @@ static func extra_rows(entry: Dictionary, conf: Callable, learnables: Callable) 
 ## genau wissen will, hält drauf. `describe` benennt eine Aufgabe (TaskResolver
 ## .describe_learnable); ohne sie steht die rohe learnable_id da.
 static func word_lines(lexemes: Array, conf: Callable, learnables := Callable(),
-		describe := Callable()) -> Array:
+		describe := Callable(), requirements: Dictionary = {}) -> Array:
 	var lines: Array = []
-	for row in word_rows(lexemes, conf, learnables):
+	for row in word_rows(lexemes, conf, learnables, requirements):
 		var value := float(row["confidence"])
 		var mastered: bool = value >= PROGRESS.MASTERY_CONFIDENCE
 		var extras: Array = row["extras"]
@@ -683,7 +692,8 @@ func _fill_progress(box: VBoxContainer, rows: Array, empty_text: String) -> void
 		# Erst beim Aufklappen gerufen: siehe ProgressRow.
 		bar.setup(str(row["label"]), int(row["done"]), int(row["total"]),
 				func(): return word_lines(lexemes, PlayerProgress.confidence.bind(-1.0),
-						_generator.learnables_of, _resolver.describe_learnable))
+						_generator.learnables_of, _resolver.describe_learnable,
+						ContentRegistry.form_requirements()))
 
 
 ## Alle geübten AUFGABEN, schwächste Confidence zuerst (die Sortierung liefert

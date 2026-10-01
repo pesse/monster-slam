@@ -21,7 +21,7 @@ const SWAY := {
 	"cypress": 0.02, "olive": 0.015, "blossom_tree": 0.02, "jungle_tree": 0.015,
 	"palm": 0.03, "eucalyptus": 0.02, "pandanus": 0.025, "tree_fern": 0.03,
 	"park_tree": 0.02, "stone_pine": 0.015, "autumn_red": 0.02, "autumn_orange": 0.02,
-	"autumn_yellow": 0.02, "boab": 0.006, "vine_row": 0.015,
+	"autumn_yellow": 0.02, "boab": 0.006, "vine_row": 0.015, "plane_tree": 0.02,
 	# Gras
 	"grass": 0.07, "dry_grass": 0.08, "fern": 0.05, "spinifex": 0.05, "reeds": 0.09,
 	"flower_tuft": 0.07, "green_grass": 0.08, "dune_grass": 0.09, "wild_flowers": 0.07,

@@ -48,6 +48,13 @@ extends Node3D
 ##         Das Wachkatapult auf Stufe 4: Kranz dreht sich, Arm schlägt aus, der Stein fliegt
 ##         auf ein Monster und platzt, in Schritten nach dem Abschuss, als
 ##         reports/battle_themes/catapult_<ms>.png. Jeder Schritt ist ein eigener Wurf.
+##         Reiter Schreibweise: richtige Form und getippte Antwort (oder ein Beispiel) —
+##         darunter steht, wie der Kampf sie wertet. „Abspielen" (oder Enter im Feld
+##         „Getippt") lässt bei einem nachsichtigen Treffer ein Monster platzen und zeigt das
+##         Standbild wie im Kampf (ADR 0010), in der gerade eingestellten Sicht.
+##     … -- --spelling
+##         Das Standbild der Schreibweise (SpellingFreeze) nach einer Explosion, in beiden
+##         Sichten ganz herangefahren, als reports/battle_themes/spelling_<sicht>.png.
 ##     … -- --hitches [--warm]
 ##         Misst den längsten Frame beim ERSTEN Auftritt jedes Kampfeffekts (Explosion,
 ##         „+XP", Monster, Meister-Feier) und gibt ihn in ms aus; --warm wärmt vorher vor
@@ -98,6 +105,15 @@ const SLOT_SCALE := {"trees": [0.8, 1.4], "rocks": [1.6, 3.2], "grass": [1.2, 2.
 ## Die gekauften Vergleichsstücke vor jeder Nahaufnahme, mit ihrem Platz.
 const REFERENCE := [["props/tree.glb", "trees"], ["props/rock.glb", "rocks"],
 		["props/pillar.gltf", "landmarks"]]
+## Reiter Schreibweise: [richtig, getippt] — jede Art Nachsicht einmal, dazu ein exakter und
+## ein falscher Treffer, die kein Standbild auslösen. Einzelne Wörter, keine Wortliste.
+const SPELLING_EXAMPLES := [
+	["l'élève", "l eleve"], ["l'école", "ecole"], ["été", "ete"], ["la forêt", "la foret"],
+	["Noël", "noel"], ["ils reçoivent", "ils recoivent"], ["le cœur", "le coeur"],
+	["à côté", "a cote"], ["aujourd'hui", "aujourdhui"], ["est-ce que", "est ce que"],
+	["north-east", "north east"], ["That's fine by me.", "thats fine by me"],
+	["le café", "le café"], ["l'école", "lecola"],
+]
 
 @onready var _pivot: Node3D = $CameraPivot
 @onready var _camera: Camera3D = $CameraPivot/Camera3D
@@ -158,6 +174,8 @@ var _walkers: Node3D
 var _hud: Control
 ## Das Level, das das HUD zeigt — nur hier, PlayerLevel bleibt unberührt.
 var _shown_level := 1
+## Das Standbild des Reiters Schreibweise, oder null, solange es nicht gebraucht wurde.
+var _spelling: SpellingFreeze
 
 
 func _ready() -> void:
@@ -215,6 +233,8 @@ func _ready() -> void:
 		_shoot_plates.call_deferred()
 	elif _has_arg("fps"):
 		_measure_fps.call_deferred()
+	elif _has_arg("spelling"):
+		_shoot_spelling.call_deferred()
 	elif _has_arg("hitches"):
 		_measure_hitches.call_deferred()
 	elif _has_arg("specimens"):
@@ -316,6 +336,7 @@ func _fill_controls() -> void:
 		%SunSpeedSpin.editable = not on)
 	%CopyButton.pressed.connect(_copy_layout)
 	_fill_cover_controls()
+	_fill_spelling_controls()
 	%HudCheck.toggled.connect(_show_hud)
 	%LevelUpButton.pressed.connect(_level_up)
 	%KillsSpin.value_changed.connect(func(_v: float) -> void: _show_tally())
@@ -327,7 +348,7 @@ func _fill_controls() -> void:
 		%Menu.visible = on
 		%MenuToggle.text = "Regler ▾" if on else "Regler ▸")
 	var batch := ["shoot", "specimens", "bow", "blast", "catapult", "hitches", "fps", "fortress",
-			"levelup"].any(_has_arg)
+			"levelup", "spelling"].any(_has_arg)
 	%MenuToggle.visible = not batch
 
 
@@ -362,6 +383,92 @@ func _fill_cover_controls() -> void:
 		spin.value_changed.connect(func(v: float) -> void:
 			apply.call(v)
 			_build_decor(_noise, _theme))
+
+
+## Reiter Schreibweise: ein Beispiel füllt beide Felder, jede Änderung zeigt sofort das Urteil.
+func _fill_spelling_controls() -> void:
+	for pair: Array in SPELLING_EXAMPLES:
+		%SpellPreset.add_item("%s  ←  %s" % pair)
+	%SpellPreset.item_selected.connect(func(i: int) -> void:
+		%SpellWord.text = SPELLING_EXAMPLES[i][0]
+		%SpellTyped.text = SPELLING_EXAMPLES[i][1]
+		_judge_spelling())
+	%SpellWord.text = SPELLING_EXAMPLES[0][0]
+	%SpellTyped.text = SPELLING_EXAMPLES[0][1]
+	%SpellWord.text_changed.connect(func(_t: String) -> void: _judge_spelling())
+	%SpellTyped.text_changed.connect(func(_t: String) -> void: _judge_spelling())
+	%SpellTyped.text_submitted.connect(func(_t: String) -> void: _play_spelling())
+	%SpellPlayButton.pressed.connect(_play_spelling)
+	_judge_spelling()
+
+
+## Wie der Kampf die Antwort wertet (WaveRunner.best_hit, nachsichtig).
+func _spelling_verdict() -> Dictionary:
+	return AnswerEvaluator.new().evaluate([%SpellWord.text], %SpellTyped.text, true)
+
+
+## Das Urteil unter den Feldern; nur ein nachsichtiger Treffer gibt das Standbild.
+func _judge_spelling() -> void:
+	var verdict := _spelling_verdict()
+	var text := "Falsch — kein Standbild"
+	if bool(verdict["matched"]) and bool(verdict["exact"]):
+		text = "Exakt — kein Standbild"
+	elif bool(verdict["matched"]):
+		var form := str(verdict["canonical"])
+		var marks := AnswerEvaluator.spelling_marks(form, %SpellTyped.text)
+		var parts: Array[String] = []
+		for i in marks:
+			parts.append(form[i])
+		var names: Array[String] = []
+		for group: Dictionary in SpellingFreeze.accent_groups(form, marks):
+			names.append(str(group["name"]))
+		text = "Nachsichtig — markiert: %s" % (" ".join(parts) if not parts.is_empty() else "nichts")
+		if not names.is_empty():
+			text += "\nÜber dem Wort: " + ", ".join(names)
+		if not bool(verdict["complete"]):
+			text += "\nUnvollständig — gezeigt wird die volle Form"
+	%SpellVerdict.text = text
+
+
+## Ein Monster platzt vor der Festung, dann das Standbild wie im Kampf: der Baum hält an,
+## solange es steht (WaveRunner._on_spelling_started). Nur bei einem nachsichtigen Treffer.
+func _play_spelling() -> void:
+	_judge_spelling()
+	var verdict := _spelling_verdict()
+	if not bool(verdict["matched"]) or bool(verdict["exact"]):
+		return
+	if _spelling == null:
+		_spelling = (load("res://scenes/ui/spelling_freeze.tscn") as PackedScene).instantiate()
+		$UI.add_child(_spelling)
+		# Die Regler treten zurück, solange es steht — sonst stünden sie im Bild.
+		_spelling.started.connect(func(_ms: int) -> void:
+			get_tree().paused = true
+			%Menu.visible = false)
+		_spelling.finished.connect(func() -> void:
+			get_tree().paused = false
+			%Menu.visible = %MenuToggle.button_pressed)
+	if _spelling.is_busy():
+		return
+	var form := str(verdict["canonical"])
+	var marks := AnswerEvaluator.spelling_marks(form, %SpellTyped.text)
+	var at := Vector3(2.0, 0.0, _goal() - 12.0)
+	var monster := FxWarmup.MONSTER_SCENE.instantiate() as Monster
+	monster.setup(FxWarmup.monster_defs()[0], {"prompt": %SpellTyped.text,
+			"lexeme_type": "noun"}, 1000.0, 0.0)
+	monster.screen_sized_label = _fp != null
+	monster.position = at
+	add_child(monster)
+	monster.halt()
+	await get_tree().create_timer(0.6).timeout
+	var fx := Explosion.new()
+	# Wie WaveRunner._burst nach einem Treffer.
+	fx.setup(Color(0.7, 1.0, 0.4), 1.5)
+	fx.position = at + Vector3(0.0, 1.0, 0.0)
+	add_child(fx)
+	Sfx.play(&"monster_kill")
+	monster.queue_free()
+	var camera := _fp.camera if _fp != null else _camera
+	_spelling.play(form, marks, WaveRunnerScript.spelling_zoom(camera, at + Vector3(0.0, 1.0, 0.0)))
 
 
 ## Wie viel gerade wächst, unter den Reglern.
@@ -977,6 +1084,37 @@ func _shoot_blast() -> void:
 		print("battle_theme_lab: ", path)
 		fx.queue_free()
 		await get_tree().create_timer(0.8).timeout
+	get_tree().quit()
+
+
+func _shoot_spelling() -> void:
+	var dir := ProjectSettings.globalize_path(SHOT_DIR)
+	DirAccess.make_dir_recursive_absolute(dir)
+	var freeze := (load("res://scenes/ui/spelling_freeze.tscn") as PackedScene).instantiate() as SpellingFreeze
+	$UI.add_child(freeze)
+	# Wie im Kampf: das Standbild hält den Baum an, die Explosion steht.
+	freeze.started.connect(func(_ms: int) -> void: get_tree().paused = true)
+	freeze.finished.connect(func() -> void: get_tree().paused = false)
+	var word := "l'élève"
+	for first: bool in [false, true]:
+		_set_first_person(first)
+		await get_tree().create_timer(0.6).timeout
+		var camera := _fp.camera if _fp != null else _camera
+		var at := Vector3(2.0, 0.0, _goal() - 12.0)
+		var fx := Blast.new()
+		fx.setup(WordTypePalette.color_for("noun"))
+		fx.position = at
+		add_child(fx)
+		freeze.play(word, AnswerEvaluator.spelling_marks(word, "l eleve"),
+				WaveRunnerScript.spelling_zoom(camera, at + Vector3(0.0, 1.0, 0.0)))
+		await get_tree().create_timer(
+				(SpellingFreeze.LEAD_MS + SpellingFreeze.ZOOM_IN_MS + 300) / 1000.0, true, false, true).timeout
+		await RenderingServer.frame_post_draw
+		var path := "%s/spelling_%s.png" % [dir, "first" if first else "iso"]
+		get_viewport().get_texture().get_image().save_png(path)
+		print("battle_theme_lab: ", path)
+		await freeze.finished
+		fx.queue_free()
 	get_tree().quit()
 
 

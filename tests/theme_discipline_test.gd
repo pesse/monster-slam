@@ -139,6 +139,7 @@ func test_scenes_reference_only_declared_variations() -> void:
 	var declared := theme.get_type_variation_list("Label")
 	declared.append_array(theme.get_type_variation_list("Button"))
 	declared.append_array(theme.get_type_variation_list("LineEdit"))
+	declared.append_array(theme.get_type_variation_list("RichTextLabel"))
 	declared.append_array(theme.get_type_variation_list("MarginContainer"))
 	declared.append_array(theme.get_type_variation_list("BoxContainer"))
 	declared.append_array(theme.get_type_variation_list("PanelContainer"))

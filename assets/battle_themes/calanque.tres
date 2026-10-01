@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="BattleTheme" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/battle/battle_theme.gd" id="1_theme"]
+
+[resource]
+script = ExtResource("1_theme")
+ground_patch = Color(0.5, 0.56, 0.26, 1)
+ground_patch_amount = 0.35
+path = "trail"
+path_color = Color(0.88, 0.8, 0.64, 1)
+ground_texture = "dry_earth"
+ground_texture_strength = 0.8
+ground_low = Color(0.78, 0.68, 0.46, 1)
+ground_high = Color(0.86, 0.76, 0.52, 1)
+hill = Color(0.86, 0.8, 0.68, 1)
+background = Color(0.05, 0.1, 0.22, 1)
+light_from = "port_town"
+trees = Array[String](["forge/stone_pine.glb", "forge/stone_pine.glb", "forge/cypress.glb", "forge/olive.glb"])
+rocks = Array[String](["forge/boulder_grey.glb", "forge/marble_rubble.glb"])
+grass = Array[String](["forge/dry_grass.glb", "forge/wild_flowers.glb"])
+props = Array[String](["props/crates_stacked.gltf"])
+landmarks = Array[String](["forge/lighthouse.glb", "forge/aqueduct.glb", "forge/ruin_column.glb"])
+cover = 1.0
+cover_color = Color(0.56, 0.58, 0.3, 1)
+cover_flowers = Array[Color]([Color(0.62, 0.5, 0.85, 1), Color(0.95, 0.85, 0.3, 1)])
+cover_flower_amount = 0.04
+bush_color = Color(0.26, 0.38, 0.18, 1)
+bushes = 0.9

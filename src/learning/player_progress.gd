@@ -277,16 +277,23 @@ func _local_day_end(unix: int) -> int:
 ## 100 % gehen. Beide Richtungen, weil ein Wort erkennen (en→de) leichter ist als es
 ## produzieren (de→en); wer nur die eine Richtung kann, kann das Wort noch nicht.
 ##
-## Formen und Relationen (Konjugation, Gegenteil …) bleiben außen vor: sie hängen an
-## Zusatzdaten, die nur ein Teil der Lexeme hat, und wären als Bedingung eine Hürde, die
-## vom Wort selbst nicht abhängt.
+## Ausnahme unregelmäßige Verben (`irregular: true` am Lexem, ADR 0009): bei ihnen gehören
+## auch die Formaufgaben zur Meisterung (ContentRegistry.form_requirements). Ihre Formen
+## lassen sich nicht aus einer Regel ableiten — wer „go" übersetzen kann, aber „went" nicht,
+## kann das Wort nicht. Bei allen anderen bleiben Formen und Relationen außen vor: sie
+## hängen an Zusatzdaten, die nur ein Teil der Lexeme hat, und wären als Bedingung eine
+## Hürde, die vom Wort selbst nicht abhängt.
 func mastered_lexemes(threshold := MASTERY_CONFIDENCE) -> Dictionary:
-	return mastered_lexemes_in(_records, threshold)
+	return mastered_lexemes_in(_records, threshold, ContentRegistry.form_requirements())
 
 
 ## Wie mastered_lexemes(), aber über übergebene Records — statisch und ohne Autoload,
 ## damit die Regel für sich prüfbar bleibt (siehe tests/mastered_lexemes_test.gd).
-static func mastered_lexemes_in(records: Dictionary, threshold := MASTERY_CONFIDENCE) -> Dictionary:
+## `requirements` ist ContentRegistry.form_requirements(): Lexem-Id -> alle learnable_ids,
+## die für dieses Wort sitzen müssen; Wörter, die nicht drinstehen, brauchen nur die
+## beiden Übersetzungsrichtungen.
+static func mastered_lexemes_in(records: Dictionary, threshold := MASTERY_CONFIDENCE,
+		requirements: Dictionary = {}) -> Dictionary:
 	# lexeme_id -> Menge der gemeisterten Richtungen. Die Sprache steht in der Richtung
 	# („de_to_la"); ein Wort ist gemeistert, wenn beide Richtungen EINER Sprache sitzen.
 	var hits := {}
@@ -306,26 +313,34 @@ static func mastered_lexemes_in(records: Dictionary, threshold := MASTERY_CONFID
 	var out := {}
 	for key in hits:
 		if hits[key].size() == 2:
-			out[str(key).get_slice("|", 0)] = true
+			var lexeme_id := str(key).get_slice("|", 0)
+			if _all_mastered(records, requirements.get(lexeme_id, []), threshold):
+				out[lexeme_id] = true
 	return out
 
 
 ## Das Lexem, dessen Meisterung die Aufgabe `task_id` gerade abschließt — oder "".
 ##
-## Gedacht für den Moment direkt nach einem record(), das true geliefert hat: ist die
-## Aufgabe eine der Übersetzungsrichtungen (Lexeme.mastery_directions) und sitzen jetzt
-## alle, ist das WORT zum ersten Mal gemeistert. Zum ersten Mal, weil diese Richtung eben
-## erst ihre erste Meisterung bekam — vorher können nie beide zugleich gesessen haben.
+## Gedacht für den Moment direkt nach einem record(), das true geliefert hat: gehört die
+## Aufgabe zu dem, was das Wort braucht (eine der Übersetzungsrichtungen, bei einem
+## unregelmäßigen Verb auch eine seiner Formen) und sitzt jetzt alles, ist das WORT zum
+## ersten Mal gemeistert. Zum ersten Mal, weil diese Aufgabe eben erst ihre erste
+## Meisterung bekam — vorher kann nie alles zugleich gesessen haben.
 ## Dieselbe Regel wie mastered_lexemes(), nur für ein einzelnes Wort.
 func mastered_lexeme_of(task_id: String, threshold := MASTERY_CONFIDENCE) -> String:
-	return mastered_lexeme_in(_records, task_id, threshold)
+	return mastered_lexeme_in(_records, task_id, threshold, ContentRegistry.form_requirements())
 
 
 ## Wie mastered_lexeme_of(), statisch über übergebene Records (prüfbar ohne Autoload).
-static func mastered_lexeme_in(records: Dictionary, task_id: String, threshold := MASTERY_CONFIDENCE) -> String:
+static func mastered_lexeme_in(records: Dictionary, task_id: String, threshold := MASTERY_CONFIDENCE,
+		requirements: Dictionary = {}) -> String:
 	var parts := task_id.split(":")
-	if parts.size() != 3 or parts[0] != "translate":
+	if parts.size() != 3:
 		return ""
+	if parts[0] != "translate":
+		# Eine Formaufgabe (conjugation:<lexem>:<form>) schließt nur ein Wort ab, das sie braucht.
+		var needed: Array = requirements.get(parts[1], [])
+		return parts[1] if task_id in needed and _all_mastered(records, needed, threshold) else ""
 	var lang := Lexeme.language_of_direction(parts[1])
 	if lang.is_empty():
 		return ""
@@ -333,7 +348,14 @@ static func mastered_lexeme_in(records: Dictionary, task_id: String, threshold :
 		var id := "translate:%s:%s" % [direction, parts[2]]
 		if float(records.get(id, {}).get("confidence", 0.0)) < threshold:
 			return ""
-	return parts[2]
+	return parts[2] if _all_mastered(records, requirements.get(parts[2], []), threshold) else ""
+
+
+static func _all_mastered(records: Dictionary, ids: Array, threshold: float) -> bool:
+	for id in ids:
+		if float(records.get(id, {}).get("confidence", 0.0)) < threshold:
+			return false
+	return true
 
 
 ## Kann dieses Lexem überhaupt gemeistert werden — gibt es zu ihm Übersetzungsaufgaben?

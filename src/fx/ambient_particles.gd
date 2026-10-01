@@ -20,7 +20,7 @@ extends RefCounted
 const KINDS := ["leaves", "snow", "pollen", "fireflies"]
 
 ## Bäume, deren Kronen Laub abwerfen (Dateiname ohne Endung) — kein Nadelbaum, kein Haus.
-const LEAF_TREES := ["autumn_red", "autumn_orange", "autumn_yellow", "tree", "park_tree", "vine_row"]
+const LEAF_TREES := ["autumn_red", "autumn_orange", "autumn_yellow", "tree", "park_tree", "plane_tree", "vine_row"]
 ## Blätter je Krone, die gleichzeitig unterwegs sind.
 const LEAVES_PER_CROWN := 5.0
 ## Startpunkte je Krone: im oberen Teil der Krone verteilt.

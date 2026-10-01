@@ -153,6 +153,10 @@ langsam tippen.
   Genitiv und Genus („m“, „f“, „n“ — oder „maskulin“ …), bei Verben das Perfekt. Die
   Längenstriche (ā, ē …) musst du nie tippen; nach einer Übersetzung zeigt die Auflösung
   die Lexikonform mit, etwa den Genitiv und das Genus.
+- **Französisch** fragt bei den unregelmäßigen Verben die Konjugation ab: das Präsens
+  für eine Person („Präsens, nous") oder das Passé composé mit *je*. Du kannst die
+  Person mitschreiben („nous recevons") oder nur das Verb („recevons"). Akzente musst
+  du nicht tippen, die richtige Schreibweise wird dir aber gleich gezeigt.
 - **Der farbige Rand** eines Monsters und seines Wortschilds zeigt die Wortart, auch die
   Schrift auf dem Schild hat diese Farbe. Die Legende am unteren Bildrand sagt, welche
   Farbe was bedeutet (zum Beispiel Nomen, Verb, Adjektiv). Das hilft, wenn ein Wort
@@ -186,6 +190,15 @@ auswählen: das Spiel sucht selbst das Monster, zu dem deine Antwort passt.
   wird dann kurz über dem Monster eingeblendet, damit du sie einmal gesehen hast.
   Platzhalter darfst du schreiben, wie du willst: „sb“, „somebody“, „jn.“, „jmd.“ und
   „jemanden“ gelten gleich.
+- **Richtig, aber anders geschrieben:** Fehlen nur Akzente (é, è, ê, ç …), oder hast du
+  einen Bindestrich oder Apostroph weggelassen oder als Leerzeichen getippt („ecole“ für
+  „l’école“, „est ce que“ für „est-ce que“), zählt die Antwort voll. Das Monster
+  explodiert, dann steht das Spiel gut eine Sekunde still: die Kamera fährt heran und die
+  richtige Schreibweise steht groß im Bild. Was gefehlt hat, ist rot unterstrichen, und
+  über jedem Akzent steht klein sein Name („accent aigu“, „cédille“ …). Danach läuft das
+  Spiel von selbst weiter; was du in der Zeit tippst, zählt danach. Kannst du die Aufgabe
+  schon, gibt es kein Standbild, nur die Einblendung über dem Monster.
+  Umlaute zählen nicht dazu: „schon“ ist nicht „schön“.
 - **Falsch:** Es blitzt rot und das Bild wackelt. Sonst passiert nichts. Eine falsche
   Eingabe wird keinem Wort als Fehler angerechnet, weil nicht klar ist, welches Monster
   gemeint war. Als Fehler zählt erst ein Monster, das die Festung erreicht.
@@ -442,15 +455,16 @@ Level 4 ab 600 XP und so weiter (jeder Aufstieg kostet 100 XP mehr als der vorig
 
 Deine Festung zeigt, wie gut du die Units kannst, die du gerade spielst. **Jede Unit hat
 ihre eigene Festungsstufe.** Sie hängt daran, wie viele Wörter der Unit du gemeistert hast
-(in beide Richtungen, wie im Reiter „Fortschritt“ der Statistik):
+(in beide Richtungen, wie im Reiter „Fortschritt“ der Statistik; ein unregelmäßiges Verb
+zählt erst, wenn auch seine Formen sitzen):
 
 | Stufe | ab so viel gemeisterten Wörtern der Unit | Festung |
 |---|---|---|
 | 0 | weniger als 10 % | Baustelle |
 | 1 | 10 % | ein Turm |
-| 2 | 35 % | Mauern mit Tor |
-| 3 | 60 % | eine Burg |
-| 4 | 85 % | Burg mit Nebengebäuden und Fahnen |
+| 2 | 32 % | Mauern mit Tor |
+| 3 | 53 % | eine Burg |
+| 4 | 75 % | Burg mit Nebengebäuden und Fahnen |
 
 **Jede Stufe gibt der Festung 25 HP mehr.** Auf Stufe 4 hat sie also 100 HP mehr als auf
 der Baustelle.
@@ -512,9 +526,10 @@ Welle, bis du aufhörst oder die Festung fällt. Es spielt alle Aufgaben und Wor
 Teils. „⟵ Zurück zur Karte“ führt wieder auf die Gebietskarte.
 
 **Wie weit ein Level ist**, zeigt die Karte an drei Stellen: die Füllfarbe steht für die
-Stufe 0 bis 4 (dieselben Schwellen wie bei der Festung), die vier kleinen Punkte darunter
-leuchten bis zur erreichten Stufe, und der Ring wächst mit jedem gemeisterten Wort. Nichts
-davon wird gespeichert – es wird jedes Mal aus dem Lernstand gerechnet.
+Stufe 0 bis 4 (dieselben Schwellen wie bei der Festung), die fünf goldenen Sterne darunter
+leuchten je 20 % gemeisterter Wörter auf, und der Ring wächst mit jedem gemeisterten Wort –
+bei 100 % wird er golden. Nichts davon wird gespeichert – es wird jedes Mal aus dem
+Lernstand gerechnet.
 
 **Boss-Medaillen.** Jeder Sieg über den Boss einer Unit wird gezählt. Ab 1 Sieg bekommt er
 einen bronzenen Ring und eine Krone, ab 3 einen silbernen, ab 5 einen goldenen. Die Zahl
@@ -768,8 +783,12 @@ Auch das graue „↺“ im Fähigkeiten-Screen sagt am Zeiger, warum es gerade 
 - **Tippfehler-Frust wird klein gehalten:** Artikel, „the“, „to“, Klammerteile und
   Groß-/Kleinschreibung müssen nicht exakt stimmen. Eine falsche Eingabe wird keinem Wort
   angerechnet.
-- **Ein Wort zählt erst, wenn es in beide Richtungen sitzt.** Die Balken im Reiter
+- **Ein Wort zählt erst, wenn es in beide Richtungen sitzt**, ein unregelmäßiges Verb
+  (*go – went – gone*, *recevoir*) erst mit seinen Formen. Die Balken im Reiter
   „Fortschritt“ sind deshalb die Zahl, nach der man vor einer Vokabelarbeit fragt.
+- **Die Festung ist bei drei Vierteln fertig, die Sterne erst bei allem.** Stufe 4 mit dem
+  Wachkatapult gibt es ab 75 %; die fünf goldenen Sterne auf der Karte stehen für je
+  20 %, und erst bei 100 % wird der Ring um den Ort golden.
 - **Belohnung für Genauigkeit statt für Masse:** die Güte der Schatzkiste hängt nur davon
   ab, wie genau eine Welle war, nicht davon, wie lang sie war.
 - **Eine Niederlage kostet den Lauf, nicht das Erspielte.** Gold, Erfahrung und

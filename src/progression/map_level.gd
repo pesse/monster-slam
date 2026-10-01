@@ -27,7 +27,8 @@ const KIND_BOSS := "boss"
 
 
 ## Die Level einer Unit in Spielreihenfolge:
-## [{ key, kind, book, unit, part, scope, label }].
+## [{ key, kind, book, unit, part, scope, label }]. `label` nennt den Teil, wie das Buch
+## ihn nennt (BookNaming: „Teil 1", „Partie A", „Lektion 10").
 ##
 ## `key` ist der Name des Punkts auf der Karte („t1" … „t4" bzw. „t6", „all", „boss") — derselbe
 ## Schlüssel wie in assets/maps/<book>/map.json. `scope` ist der Curriculum-Scope des
@@ -40,7 +41,8 @@ static func levels_for(book: String, unit: int, part_count: int) -> Array:
 	for part in range(1, part_count + 1):
 		out.append({
 			"key": "t%d" % part, "kind": KIND_PART, "book": book, "unit": unit, "part": part,
-			"scope": ["%s/%d" % [unit_scope, part]], "label": "Teil %d" % part,
+			"scope": ["%s/%d" % [unit_scope, part]],
+			"label": BookNaming.part_label(book, unit, part),
 		})
 	if part_count > 1:
 		out.append({
@@ -126,7 +128,7 @@ static func combine(levels: Array, keys: Array) -> Dictionary:
 	return {
 		"key": str(first["key"]), "keys": picked, "kind": KIND_PART,
 		"book": first["book"], "unit": first["unit"], "part": 0, "parts": parts,
-		"scope": scope, "label": "Teil %s" % " + ".join(parts.map(func(p): return str(p))),
+		"scope": scope, "label": BookNaming.parts_label(str(first["book"]), int(first["unit"]), parts),
 	}
 
 

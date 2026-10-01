@@ -106,6 +106,18 @@ func _verdict(matched: bool, id: String, candidates: Array) -> Dictionary:
 
 # --- Zeilenformat -------------------------------------------------------------
 
+## `exact` steht nur in der Zeile, wenn die Schreibweise nachgesehen wurde (ADR 0008).
+func test_a_lenient_hit_writes_exact_false() -> void:
+	var verdict := _verdict(true, TASK["learnable_id"], [TASK["learnable_id"]])
+	_log.note_answer("coral", verdict)
+	verdict["exact"] = false
+	verdict["canonical"] = "córal"
+	_log.note_answer("coral", verdict)
+	var lines := _lines()
+	assert_bool(lines[0].has("exact")).is_false()
+	assert_bool(lines[1]["exact"]).is_false()
+	assert_str(str(lines[1]["canonical"])).is_equal("córal")
+
 func test_every_event_becomes_one_line() -> void:
 	_log.note_run_start()
 	_log.note_wave_start("procedural_1")

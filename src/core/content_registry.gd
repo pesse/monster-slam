@@ -81,6 +81,11 @@ var _origins: Dictionary = {}
 ## siehe _index_parts(); Lexeme ohne Buch/Unit stehen nicht drin.
 var _parts: Dictionary = {}
 
+## Lexem-Id -> alle learnable_ids, die für seine Meisterung sitzen müssen (beide
+## Übersetzungsrichtungen und die Formaufgaben) — nur für Lexeme mit `irregular: true`.
+## Siehe _index_form_requirements() und PlayerProgress.mastered_lexemes_in.
+var _form_requirements: Dictionary = {}
+
 
 func _ready() -> void:
 	_by_category = {
@@ -125,6 +130,7 @@ func reload() -> void:
 		)
 
 	_index_parts()
+	_index_form_requirements()
 	_apply_flags()
 
 
@@ -175,6 +181,57 @@ func _index_parts() -> void:
 			for _i in range(size):
 				_parts[ids[index]] = part
 				index += 1
+
+
+## Sammelt je unregelmäßigem Verb (`irregular: true` am Lexem) die learnable_ids seiner
+## Formaufgaben — Definitionen mit `requires_form`, zu denen das Lexem die Form hat, also
+## genau die, die WaveGenerator._instances auch spawnen würde. Ein unregelmäßiges Verb gilt
+## erst als gemeistert, wenn auch diese sitzen (PlayerProgress.mastered_lexemes_in): seine
+## Formen lassen sich nicht ableiten, sie SIND Teil des Wortes. Bei regelmäßigen ergibt sich
+## die Form aus der Regel, dort bleibt es bei den beiden Übersetzungsrichtungen.
+##
+## Als Index und nicht bei jeder Abfrage, weil forms_for den ganzen Formbestand durchläuft
+## und die Karte die Meisterung beim Öffnen für alle Units braucht.
+func _index_form_requirements() -> void:
+	_form_requirements.clear()
+	var form_types: Dictionary = {}   # lexeme_id -> {form_type: true}, nur unregelmäßige
+	for id in lexemes:
+		if bool(lexemes[id].get("irregular", false)):
+			form_types[id] = {}
+	if form_types.is_empty():
+		return
+	for entry in lexeme_forms.values():
+		var lexeme_id := str(entry.get("lexeme_id", ""))
+		if form_types.has(lexeme_id):
+			form_types[lexeme_id][str(entry.get("form_type", ""))] = true
+	var resolver := TaskResolver.new()
+	for lexeme_id in form_types:
+		var lexeme: Dictionary = lexemes[lexeme_id]
+		var ids: Array = []
+		for definition in task_definitions.values():
+			var form_type := str(definition.get("requires_form", ""))
+			if form_type.is_empty() or not form_types[lexeme_id].has(form_type):
+				continue
+			var task_type := str(definition.get("task_type", ""))
+			if Lexeme.language(definition) != Lexeme.language(lexeme) \
+					or task_type in lexeme.get("excluded_task_types", []):
+				continue
+			var allowed: Array = definition.get("allowed_types", ["*"])
+			if not (allowed.is_empty() or "*" in allowed or str(lexeme.get("type", "")) in allowed):
+				continue
+			ids.append(resolver.learnable_id(task_type, str(definition.get("direction", "")),
+					lexeme_id, {"form_type": form_type}))
+		if ids.is_empty():
+			continue
+		for direction in Lexeme.mastery_directions(Lexeme.language(lexeme)):
+			ids.push_front(resolver.learnable_id("translate", direction, lexeme_id))
+		_form_requirements[lexeme_id] = ids
+
+
+## Lexem-Id -> learnable_ids, die ein unregelmäßiges Verb für seine Meisterung braucht
+## (beide Richtungen und die Formen). Lexeme, für die nur die Übersetzung zählt, fehlen.
+func form_requirements() -> Dictionary:
+	return _form_requirements
 
 
 ## Die Roots in Vorrangfolge: ein späterer überschreibt bei gleicher `id` einen früheren.
@@ -262,7 +319,12 @@ func all_books() -> PackedStringArray:
 ## Titel. Die Buch-Ids sind klein und ohne Trennzeichen, für die Anzeige taugen sie nicht.
 ## Steht hier und nicht in einem Screen, weil inzwischen mehrere Screens Bücher benennen
 ## (Session-Setup, Statistik) und zwei Regeln irgendwann auseinanderlaufen.
+##
+## Nennt die Karte des Buchs einen Titel (BookNaming, „À plus!"), gilt der.
 func book_label(book: String) -> String:
+	var titled := BookNaming.title(book)
+	if not titled.is_empty():
+		return titled
 	var i := book.length()
 	while i > 0 and book[i - 1] >= "0" and book[i - 1] <= "9":
 		i -= 1

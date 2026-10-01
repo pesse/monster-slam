@@ -31,14 +31,15 @@ const _OPTIONAL_PREFIXES := ["der ", "die ", "das ", "eine ", "ein ", "the ", "t
 ## sind: "sb." = "sb" = "somebody" = "jn." = "jmd." = "jemanden". Zusätzlich darf jeder
 ## Platzhalter ganz entfallen. Längere Alternativen zuerst, damit die Alternation nicht
 ## kürzer greift. "jmd."/"jmdn."/"jmdm." stehen nicht im Buch, aber so kürzen Kinder ab.
+## Französisch: "qn" = "quelqu'un", "qc"/"qch" = "quelque chose" (ADR 0008).
 ##
 ## Mit Schrägstrich verbundene Platzhalter ("wait for sb./sth.", "jn./etwas") sind EINE
 ## Stelle mit zwei Lesarten, nicht zwei Stellen: "wait for sb", "wait for sth" und
 ## "wait for sb / sth" sind alle vollständig.
 const WILDCARD := "•"
 const _PLACEHOLDER_ATOM := \
-	"(?:somebody|someone|something|jemandem|jemanden|jemand|etwas|etw\\.?" \
-	+ "|sth\\.?|sb\\.?|jmdn\\.?|jmdm\\.?|jmd\\.?|jdn\\.?|jm\\.?|jn\\.?|jd\\.?|…|\\.\\.\\.)(?!\\p{L})"
+	"(?:quelque chose|quelqu'un|qch\\.?|qn\\.?|qc\\.?|somebody|someone|something|jemandem|jemanden|jemand|etwas|etw\\.?" \
+	+ "|sth\\.?|sb\\.?|jdm\\.?|jds\\.?|jmdn\\.?|jmdm\\.?|jmd\\.?|jdn\\.?|jm\\.?|jn\\.?|jd\\.?|…|\\.\\.\\.)(?!\\p{L})"
 const PLACEHOLDER_PATTERN := \
 	"(?<!\\p{L})" + _PLACEHOLDER_ATOM + "(?:\\s*/\\s*" + _PLACEHOLDER_ATOM + ")*"
 
@@ -58,6 +59,18 @@ const MAX_PLACEHOLDERS := 4
 const _MACRONS := {"ā": "a", "ē": "e", "ī": "i", "ō": "o", "ū": "u", "ȳ": "y",
 		"ă": "a", "ĕ": "e", "ĭ": "i", "ŏ": "o", "ŭ": "u"}
 
+## Diakritika, die der NACHSICHTIGE Vergleich faltet (ADR 0008): Französisch lässt sich
+## auf der deutschen Tastatur kaum tippen (ç, œ gar nicht), die Schreibweise ist aber
+## Lernstoff. Anders als die Makrons nicht in `_normalize` — ein so getroffenes Wort wird
+## mit richtiger Schreibweise eingeblendet. Umlaute und ß fehlen mit Absicht: sie sind die
+## deutsche Seite.
+const _DIACRITICS := {"à": "a", "â": "a", "á": "a", "é": "e", "è": "e", "ê": "e", "ë": "e",
+		"î": "i", "ï": "i", "í": "i", "ô": "o", "ó": "o", "û": "u", "ù": "u", "ú": "u",
+		"ÿ": "y", "ç": "c", "œ": "oe", "æ": "ae"}
+## Wortverbinder, die nachsichtig als Leerzeichen getippt werden oder fehlen dürfen
+## („est ce que", „aujourdhui").
+const _JOINERS := ["'", "-"]
+
 static var _group_re: RegEx = RegEx.create_from_string(GROUP_PATTERN)
 static var _placeholder_re: RegEx = RegEx.create_from_string(PLACEHOLDER_PATTERN)
 
@@ -71,14 +84,30 @@ static var _placeholder_re: RegEx = RegEx.create_from_string(PLACEHOLDER_PATTERN
 ##                nicht ("criticize" ist richtig, aber unvollständig).
 ##   "canonical": die getroffene hinterlegte Antwort in Originalschreibweise — bei
 ##                unvollständigem Treffer die Form, die der Spieler noch sehen soll.
-func evaluate(accepted: Array, answer: String) -> Dictionary:
-	var result := {"matched": false, "complete": false, "canonical": ""}
-	var input := variants(answer)
+##   "exact":     traf sie ohne Nachsicht bei der Schreibweise? Nur bei `lenient` kann
+##                das false sein; `canonical` ist dann die richtige Schreibweise.
+##
+## `lenient` erlaubt fehlende Akzente, Bindestriche und Apostrophe (ADR 0008) — aber erst,
+## wenn der exakte Vergleich nichts Vollständiges fand. Der Wellenkampf fragt so, die
+## Satzbewertung nicht.
+func evaluate(accepted: Array, answer: String, lenient := false) -> Dictionary:
+	var result := _best_match(accepted, answer, false)
+	if not lenient or bool(result["complete"]):
+		return result
+	var loose := _best_match(accepted, answer, true)
+	if bool(loose["complete"]) or (bool(loose["matched"]) and not bool(result["matched"])):
+		return loose
+	return result
+
+
+func _best_match(accepted: Array, answer: String, loose: bool) -> Dictionary:
+	var result := {"matched": false, "complete": false, "exact": false, "canonical": ""}
+	var input := variants(answer, loose)
 	if input.is_empty():
 		return result
 	for a in accepted:
 		var candidate := str(a)
-		var forms := variants(candidate)
+		var forms := variants(candidate, loose)
 		var hit := false
 		var complete := false
 		for key in forms:
@@ -89,6 +118,7 @@ func evaluate(accepted: Array, answer: String) -> Dictionary:
 			continue
 		if not bool(result["matched"]):
 			result["matched"] = true
+			result["exact"] = not loose
 			result["canonical"] = candidate
 		if complete:
 			# Bester Fall — die Suche kann hier aufhören.
@@ -96,6 +126,104 @@ func evaluate(accepted: Array, answer: String) -> Dictionary:
 			result["canonical"] = candidate
 			return result
 	return result
+
+
+## Die Stellen in `canonical`, an denen `typed` von der Schreibweise abwich: Indizes der
+## Zeichen mit Akzent, Cédille oder Ligatur, die ohne getippt wurden, und der Bindestriche
+## und Apostrophe, die fehlten oder als Leerzeichen kamen. Für die Einblendung nach einem
+## nachsichtigen Treffer (ADR 0008, `exact` false): das Kind sieht die richtige Form mit
+## markierten Fehlern, nicht seine eigene.
+##
+## Ausgerichtet wird Zeichen für Zeichen (kleinste Kosten, wie eine Editierdistanz). Was
+## weggelassen werden durfte (Artikel, Klammerteile, Platzhalter), ist kein Schreibfehler
+## und bleibt unmarkiert — markiert wird nur, was `_loosen` nachsieht.
+static func spelling_marks(canonical: String, typed: String) -> PackedInt32Array:
+	var a := _spelling_chars(canonical)
+	var b := _spelling_chars(typed.strip_edges())
+	var m := a.size()
+	var n := b.size()
+	const INF := 1 << 20
+	# cost[i][j]: günstigste Ausrichtung von a[i..] gegen b[j..]; step[i][j] der Schritt dazu.
+	var cost: Array = []
+	var step: Array = []
+	for i in m + 1:
+		var cost_row: Array = []
+		cost_row.resize(n + 1)
+		cost.append(cost_row)
+		var step_row: Array = []
+		step_row.resize(n + 1)
+		step.append(step_row)
+	for i in range(m, -1, -1):
+		for j in range(n, -1, -1):
+			if i == m and j == n:
+				cost[i][j] = 0
+				continue
+			var best := INF
+			var best_step: Array = []
+			for option in _spelling_steps(a, b, i, j):
+				var total: int = int(option[2]) + int(cost[int(option[0])][int(option[1])])
+				if total < best:
+					best = total
+					best_step = option
+			cost[i][j] = best
+			step[i][j] = best_step
+	var marked: Array[int] = []
+	var typed_against: Array[bool] = []   # a[i] steht einem getippten Zeichen gegenüber
+	typed_against.resize(m)
+	var i := 0
+	var j := 0
+	while i < m or j < n:
+		var s: Array = step[i][j]
+		if i < m and int(s[0]) == i + 1:
+			typed_against[i] = int(s[1]) > j
+			if bool(s[3]):
+				marked.append(i)
+		i = int(s[0])
+		j = int(s[1])
+	# Ein ausgelassener Verbinder ist nur ein Fehler MITTEN im Getippten („lecole"), nicht
+	# am Rand eines weggelassenen Teils („école" für „l'école": der Artikel durfte fehlen).
+	var marks := PackedInt32Array()
+	for k in marked:
+		var dropped := not typed_against[k]
+		if dropped and not (k > 0 and typed_against[k - 1] and k + 1 < m and typed_against[k + 1]):
+			continue
+		marks.append(k)
+	return marks
+
+
+## Die möglichen Schritte von (i, j): [neues i, neues j, Kosten, markiert a[i]?].
+static func _spelling_steps(a: PackedStringArray, b: PackedStringArray, i: int, j: int) -> Array:
+	var out: Array = []
+	if i < a.size():
+		var c := a[i]
+		var joiner := c in _JOINERS
+		if j < b.size():
+			var t := b[j]
+			if c == t:
+				out.append([i + 1, j + 1, 0, false])
+			else:
+				var folded := str(_DIACRITICS.get(c, ""))
+				if folded.length() == 1 and folded == t:
+					out.append([i + 1, j + 1, 1, true])
+				elif joiner and t == " ":
+					out.append([i + 1, j + 1, 1, true])
+				else:
+					out.append([i + 1, j + 1, 3, false])
+				if folded.length() == 2 and j + 1 < b.size() and folded == t + b[j + 1]:
+					out.append([i + 1, j + 2, 1, true])
+		# Ein fehlender Verbinder ist ein Schreibfehler, ein fehlender Buchstabe ein
+		# weggelassener Bestandteil (Artikel, Klammer, Platzhalter).
+		out.append([i + 1, j, 1 if joiner else 2, joiner])
+	if j < b.size():
+		out.append([i, j + 1, 2, false])
+	return out
+
+
+static func _spelling_chars(s: String) -> PackedStringArray:
+	var chars := PackedStringArray()
+	for c in s.to_lower().replace("’", "'").replace("‘", "'").replace("–", "-"):
+		chars.append(c)
+	return chars
 
 
 ## Returns true if `answer` matches any accepted answer.
@@ -124,7 +252,9 @@ func tokens(s: String) -> PackedStringArray:
 ## Öffentlich, weil die Datenvalidierung dieselbe Frage stellt wie die Auswertung: ob sich
 ## zwei Lemmata unterscheiden lassen, entscheidet der Schnitt ihrer VOLLSTÄNDIGEN Varianten
 ## (tests/lexeme_data_test.gd). Eine zweite Normalisierung daneben liefe davon weg.
-func variants(s: String) -> Dictionary:
+##
+## `loose` faltet jede Variante zusätzlich nachsichtig (`_loosen`, ADR 0008).
+func variants(s: String, loose := false) -> Dictionary:
 	var base := _normalize(s)
 	if base.is_empty():
 		return {}
@@ -141,7 +271,31 @@ func variants(s: String) -> Dictionary:
 			result[key] = bool(result.get(key, false)) or complete
 	if result.is_empty():
 		result[base] = true
-	return result
+	if not loose:
+		return result
+	var folded := {}
+	for key in result:
+		for form in _loosen(str(key)):
+			folded[form] = bool(folded.get(form, false)) or bool(result[key])
+	return folded
+
+
+## Die nachsichtigen Formen einer Variante: ohne Diakritika, jeder Wortverbinder einmal als
+## Leerzeichen und einmal weggelassen („l'école" -> „l ecole", „lecole").
+func _loosen(key: String) -> Array:
+	var folded := key
+	for mark in _DIACRITICS:
+		folded = folded.replace(mark, _DIACRITICS[mark])
+	var forms: Array = [folded]
+	for joiner in _JOINERS:
+		if not folded.contains(joiner):
+			continue
+		var next: Array = []
+		for f in forms:
+			next.append(_collapse(str(f).replace(joiner, " ")))
+			next.append(_collapse(str(f).replace(joiner, "")))
+		forms = next
+	return forms
 
 
 ## Klammergruppen dreifach auflösen: behalten, entklammert, weggelassen. Nur das

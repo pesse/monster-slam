@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3]
+[gd_scene load_steps=19 format=3]
 
 [ext_resource type="Script" path="res://src/battle/wave_runner.gd" id="1_battle"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="2_hud"]
@@ -12,6 +12,7 @@
 [ext_resource type="Script" path="res://src/battle/slow_mo_sfx.gd" id="10_slowmosfx"]
 [ext_resource type="PackedScene" path="res://scenes/ui/confirm_dialog.tscn" id="11_confirm"]
 [ext_resource type="PackedScene" path="res://scenes/ui/mastery_celebration.tscn" id="12_celebration"]
+[ext_resource type="PackedScene" path="res://scenes/ui/spelling_freeze.tscn" id="21_spelling"]
 [ext_resource type="PackedScene" path="res://scenes/ui/scene_zoom.tscn" id="20_zoom"]
 [ext_resource type="PackedScene" path="res://scenes/ui/fast_resolve_button.tscn" id="13_fast_resolve"]
 [ext_resource type="PackedScene" path="res://scenes/ui/word_plates.tscn" id="14_plates"]
@@ -81,6 +82,8 @@ modulate = Color(1, 1, 1, 0)
 [node name="WordPlates" parent="UI" instance=ExtResource("14_plates")]
 
 [node name="SlowMoVignette" parent="UI" instance=ExtResource("9_vignette")]
+
+[node name="SpellingFreeze" parent="UI" instance=ExtResource("21_spelling")]
 
 [node name="MasteryCelebration" parent="UI" instance=ExtResource("12_celebration")]
 

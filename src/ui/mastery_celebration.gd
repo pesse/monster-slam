@@ -36,6 +36,9 @@ var _flush_queued: bool = false
 var _playing: bool = false
 ## Wartende Feiern als [Kind, id], älteste zuerst.
 var _queue_list: Array = []
+## Angehalten (hold): Feiern stellen sich an, starten aber erst mit release(). So kommt das
+## Standbild der Schreibweise (SpellingFreeze) vor der Feier derselben Antwort.
+var _held: bool = false
 
 @onready var _flash: ColorRect = $Flash
 @onready var _origin: Control = $Origin
@@ -81,7 +84,19 @@ func _flush() -> void:
 	if kind == Kind.NONE:
 		return
 	_queue_list.append([kind, id])
-	if not _playing:
+	if not _playing and not _held:
+		_run()
+
+
+## Hält neue Feiern zurück, bis release() kommt.
+func hold() -> void:
+	_held = true
+
+
+## Lässt zurückgehaltene Feiern laufen. Startet eine, kommt `started` noch in diesem Aufruf.
+func release() -> void:
+	_held = false
+	if not _playing and not _flush_queued and not _queue_list.is_empty():
 		_run()
 
 

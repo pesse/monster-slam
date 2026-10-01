@@ -145,6 +145,9 @@ Score, aktive Welle) und reagiert selbst nur über EventBus-Signale.
 - **`answer_evaluator.gd`** — normalisierter Exakt-/Alternativabgleich für schnellen
   Recall (offline, deterministisch). Hier wohnt die Normalisierung (Artikel,
   Platzhalter, Klammergruppen, Typografie); die Satzbewertung nimmt sie über `tokens()`.
+  Der Wellenkampf fragt zusätzlich nachsichtig (`lenient`): Akzente, Bindestrich und
+  Apostroph dürfen fehlen, das Urteil trägt dann `exact: false`, und die richtige
+  Schreibweise wird eingeblendet (ADR 0008).
 
 ### Sätze bewerten (`docs/adr/0004-satzbewertung-ohne-modell.md`, `docs/adr/0005-bosskampf-mit-erklaerung.md`)
 
@@ -272,6 +275,13 @@ UND `translate:en_to_de:<id>` über der Schwelle liegen — allgemein beide Rich
 Sprache (`Lexeme.mastery_directions`: `de_to_<sprache>`/`<sprache>_to_de`, ADR 0007). Der
 Reiter „Aufgaben" daneben zählt learnable_ids — zwei Maße, zwei Reiter, mit Absicht.
 
+Ein Verb mit `irregular: true` braucht dazu seine Formaufgaben (ADR 0009): die
+learnable_ids, die es braucht, sammelt `ContentRegistry.form_requirements()` beim Laden
+(Definitionen mit `requires_form`, deren Form das Lexem hat), und `mastered_lexemes_in`
+und `mastered_lexeme_in` bekommen sie übergeben, damit die Regel statisch prüfbar bleibt.
+Die Kartensterne (`MapCanvas.stars_for`, fünf zu je 20 %) rechnen aus denselben
+`done`/`total` wie `FortressTier` — mit eigenen Schwellen, aber ohne eigenen Zähler.
+
 Die Kopplung macht den Balken **empfindlich gegen alles, was EINE Richtung stört**: fällt
 en→de aus, steht die Unit dauerhaft auf „0 von N", während „Gemeisterte Aufgaben" weiter
 steigt. Das sieht aus wie ein Rechenfehler der Statistik und war noch nie einer (die
@@ -311,6 +321,19 @@ und, wenn `mastered_lexeme_of()` ein Lexem nennt, `lexeme_mastered`. Kein neues 
 - **Antwortzeit**: der WaveRunner schiebt `spawned_at_ms` jedes Monsters auf dem Feld um die
   Dauer der Feier. Während der Feier abgeschickte Antworten werden aufgehoben und danach
   ausgewertet (`_held_answers`).
+
+### Standbild bei Schreibfehlern (ADR 0010)
+
+Ein nachsichtiger Treffer (`verdict.exact == false`) auf eine noch nicht gemeisterte
+Aufgabe merkt sich in `WaveRunner._score_hit` Form und Markierungen
+(`AnswerEvaluator.spelling_marks`) und hält die Feier an (`MasteryCelebration.hold()`).
+Nach der Explosion spielt `SpellingFreeze` (`scenes/ui/spelling_freeze.tscn`): kurzer
+Vorlauf, dann `started(ms)` → dieselbe Baum-Pause und Verschiebung von `spawned_at_ms`
+wie bei der Feier, Kamerafahrt über `WaveRunner.spelling_zoom(camera, ziel)` (k von 0
+nach 1 und zurück, bei 0 exakt der Ausgangszustand), `finished` → Pause aus,
+`release()`, aufgehobene Antworten. Mehrere Standbilder stellen sich an; solange eines
+ansteht (`is_busy`), wartet auch das Wellenende. Gemeisterte Aufgaben zeigen weiter nur
+das Formschild.
 
 ## Wirtschaft: Gold und Schatzkisten (`src/economy/`)
 
@@ -486,6 +509,7 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
 | `BossRecord` | `src/progression/boss_record.gd` | Boss-Siege je Unit (Ursprungswert), Medaille bei 1/3/5 Siegen |
 | `MapSelection` | `src/ui/map_selection.gd` | welches Buch, welche Unit gerade offen ist (überdauert den Szenenwechsel) |
 | `MapLayout` | `src/ui/map_layout.gd` | Bild und Punkte unter `assets/maps/<book>/` (`book.png`, `unit<n>.png`, `map.json`) |
+| `BookNaming` | `src/core/book_naming.gd` | Wie das Buch sich und seine Ebenen nennt („Dossier 2 · Partie A", „Abschnitt 2 · Lektion 10"); unter `naming` in `map.json`, ohne Eintrag „Unit"/„Teil" |
 | `MapCanvas` | `src/ui/map_canvas.gd` | zeichnet eine Karte: Bild letterboxed in 16:9, Weg, Orte mit Stufe, Ring, Medaille |
 | Screens | `book_select` (die Bibliothek), `book_map`, `area_map` (`src/ui/` + `scenes/ui/`) | die drei Ebenen; die Bibliothek ist kein eigener Screen, sondern die dritte Seite von `profile_menu.tscn` |
 | Bibliothek | `scenes/ui/library_room.tscn` in `menu_backdrop.tscn` | der Raum im Turm der Menü-Kulisse: Lesepult, Regale, Kerzen, `%Eye` (Kamerastand), `%Books` (dort stellt `BookSelect` die Bücher auf) |

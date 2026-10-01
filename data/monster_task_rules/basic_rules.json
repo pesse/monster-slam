@@ -7,5 +7,8 @@
   { "id": "mrule.confusables.de_en", "task_type": "confusables", "direction": "de_to_en", "monster_type": "monster.skeleton_warrior", "base_damage": 12, "weight": 1.0 },
   { "id": "mrule.translate.de_la", "task_type": "translate",   "direction": "de_to_la", "monster_type": "monster.skeleton_minion",  "base_damage": 8,  "weight": 3.0 },
   { "id": "mrule.translate.la_de", "task_type": "translate",   "direction": "la_to_de", "monster_type": "monster.skeleton_rogue",   "base_damage": 10, "weight": 2.0 },
-  { "id": "mrule.forms.la",        "task_type": "forms",       "direction": "la",       "monster_type": "monster.skeleton_warrior", "base_damage": 11, "weight": 1.5 }
+  { "id": "mrule.forms.la",        "task_type": "forms",       "direction": "la",       "monster_type": "monster.skeleton_warrior", "base_damage": 11, "weight": 1.5 },
+  { "id": "mrule.translate.de_fr", "task_type": "translate",   "direction": "de_to_fr", "monster_type": "monster.skeleton_minion",  "base_damage": 8,  "weight": 3.0 },
+  { "id": "mrule.translate.fr_de", "task_type": "translate",   "direction": "fr_to_de", "monster_type": "monster.skeleton_rogue",   "base_damage": 10, "weight": 2.0 },
+  { "id": "mrule.conjugation.fr",  "task_type": "conjugation", "direction": "fr",       "monster_type": "monster.skeleton_warrior", "base_damage": 11, "weight": 1.5 }
 ]

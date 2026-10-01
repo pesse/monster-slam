@@ -25,7 +25,7 @@ signal answer_submitted(text: String)
 ## Aufgabe zuzuordnen war. Das unterscheidet es von `item_reviewed`: das ist eine
 ## Lernstands-Buchung und feuert auch ohne Eingabe (durchgelassenes Monster), dieses hier
 ## feuert genau dann, wenn jemand Enter gedrückt hat.
-## `verdict` trägt {matched, complete, learnable_id, source_id, response_time_ms,
+## `verdict` trägt {matched, complete, exact, learnable_id, source_id, response_time_ms,
 ## canonical, candidates} und bei einer Falscheingabe `unseen` (Ich-Sicht: auf dem Feld,
 ## aber nicht im Bild). Ein Dictionary, damit Felder dazukommen können, ohne die
 ## Signatur zu brechen.

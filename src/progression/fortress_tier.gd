@@ -9,8 +9,9 @@ extends RefCounted
 ## Wörter; jede neue Unit ist wieder eine Baustelle.
 ##
 ## Gezählt wird mit derselben Regel wie der Fortschrittsbalken der Statistik: ein Wort ist
-## gemeistert, wenn beide Übersetzungsrichtungen sitzen (PlayerProgress.mastered_lexemes),
-## und Wörter ohne Übersetzungsaufgabe stehen nicht im Nenner (PlayerProgress.masterable).
+## gemeistert, wenn beide Übersetzungsrichtungen sitzen und bei einem unregelmäßigen Verb
+## auch seine Formen (PlayerProgress.mastered_lexemes), und Wörter ohne Übersetzungsaufgabe
+## stehen nicht im Nenner (PlayerProgress.masterable).
 ## `StatsScreen.unit_rows` baut seine Zeilen aus `unit_tiers` — eine Zählregel, nicht zwei.
 ##
 ## Reine Rechnung ohne Zustand, Szene und Autoload, wie Experience und ChestReward (siehe
@@ -18,8 +19,12 @@ extends RefCounted
 
 const PROGRESS := preload("res://src/learning/player_progress.gd")
 
-## Ab so viel Prozent gemeisterter Wörter einer Unit gilt Stufe 1, 2, 3, 4.
-const THRESHOLDS_PERCENT := [10, 35, 60, 85]
+## Ab so viel Prozent gemeisterter Wörter einer Unit gilt Stufe 1, 2, 3, 4 — linear von
+## 10 bis 75 % (ADR 0009). Stufe 4 bringt das Wachkatapult; sie kommt bei drei Vierteln,
+## damit das letzte Viertel nicht für die Festung, sondern für die goldenen Sterne der
+## Karte gelernt wird (MapCanvas, 20 % je Stern) — ohne die schon sitzenden Wörter noch
+## einmal anfassen zu müssen.
+const THRESHOLDS_PERCENT := [10, 32, 53, 75]
 const MAX_TIER := 4
 
 ## Festungs-HP je Stufe. Additiv auf den Grundwert, in dieselbe Summe wie die Skill-Boni

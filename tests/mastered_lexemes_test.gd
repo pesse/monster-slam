@@ -74,6 +74,86 @@ func test_empty_progress_yields_no_mastered_lexemes() -> void:
 	assert_dict(PROGRESS.mastered_lexemes_in({})).is_empty()
 
 
+# --- Unregelmäßige Verben: die Formen gehören dazu (ADR 0009) ---------------------
+
+## So sieht ContentRegistry.form_requirements() für ein unregelmäßiges Verb aus.
+const IRREGULAR := {"go": [
+	"translate:de_to_en:go", "translate:en_to_de:go",
+	"conjugation:go:past_simple", "conjugation:go:past_participle",
+]}
+
+
+func test_an_irregular_verb_needs_its_forms_too() -> void:
+	var records := {
+		"translate:de_to_en:go": _record(0.9),
+		"translate:en_to_de:go": _record(0.9),
+		"conjugation:go:past_simple": _record(0.9),
+	}
+	assert_dict(PROGRESS.mastered_lexemes_in(records, PROGRESS.MASTERY_CONFIDENCE, IRREGULAR)).is_empty()
+	# Ohne Anforderung (ein regelmäßiges Verb) reichen die Richtungen wie bisher.
+	assert_bool(PROGRESS.mastered_lexemes_in(records).has("go")).is_true()
+	records["conjugation:go:past_participle"] = _record(0.85)
+	assert_bool(PROGRESS.mastered_lexemes_in(records, PROGRESS.MASTERY_CONFIDENCE, IRREGULAR) \
+			.has("go")).is_true()
+
+
+## Die letzte Form schließt das Wort ab — die Feier kommt dann bei ihr, nicht bei einer
+## Richtung, die schon lange saß.
+func test_the_last_form_completes_an_irregular_verb() -> void:
+	var records := {
+		"translate:de_to_en:go": _record(0.9),
+		"translate:en_to_de:go": _record(0.9),
+		"conjugation:go:past_simple": _record(0.9),
+	}
+	var threshold := PROGRESS.MASTERY_CONFIDENCE
+	assert_str(PROGRESS.mastered_lexeme_in(records, "translate:de_to_en:go", threshold, IRREGULAR)).is_empty()
+	assert_str(PROGRESS.mastered_lexeme_in(records, "conjugation:go:past_simple", threshold, IRREGULAR)).is_empty()
+	records["conjugation:go:past_participle"] = _record(0.9)
+	assert_str(PROGRESS.mastered_lexeme_in(records, "conjugation:go:past_participle", threshold, IRREGULAR)) \
+			.is_equal("go")
+	# Eine Form, die das Wort nicht braucht, schließt nichts ab.
+	assert_str(PROGRESS.mastered_lexeme_in(records, "conjugation:go:present_participle", threshold, IRREGULAR)) \
+			.is_empty()
+
+
+## Die Wortliste zeigt bei einem unregelmäßigen Verb dieselbe Rechnung: die schwächste
+## Form zieht den Prozentstand, sonst stünde ein Haken an einem nicht gemeisterten Wort.
+func test_the_word_row_of_an_irregular_verb_counts_its_forms() -> void:
+	var stands := {
+		"translate:de_to_en:go": 0.9, "translate:en_to_de:go": 0.9,
+		"conjugation:go:past_simple": 0.5,
+	}
+	var lexeme := _lexeme("go", "access2", 6)
+	var rows := STATS_SCREEN.word_rows([lexeme], _conf(stands), Callable(), IRREGULAR)
+	# Die nie geübte Form zählt wie 0, nicht wie „ungeübt" — die Richtungen sind geübt.
+	assert_float(float(rows[0]["confidence"])).is_equal_approx(0.0, 0.001)
+	stands["conjugation:go:past_participle"] = 0.7
+	rows = STATS_SCREEN.word_rows([lexeme], _conf(stands), Callable(), IRREGULAR)
+	assert_float(float(rows[0]["confidence"])).is_equal_approx(0.5, 0.001)
+	assert_float(float(STATS_SCREEN.word_rows([lexeme], _conf(stands))[0]["confidence"])) \
+			.is_equal_approx(0.9, 0.001)
+
+
+## Die Daten: `irregular` steht nur an Verben, jedes davon hat Formaufgaben (sonst wäre das
+## Feld wirkungslos), und jedes Verb mit dem Thementag „irregular" der Access-Bände trägt es.
+func test_irregular_verbs_in_the_catalog_have_form_tasks() -> void:
+	var requirements := ContentRegistry.form_requirements()
+	for id in ContentRegistry.lexemes:
+		var entry: Dictionary = ContentRegistry.lexemes[id]
+		var flagged := bool(entry.get("irregular", false))
+		# Eine Wendung („take a break") trägt den Tag, hat aber keine Konjugationsaufgabe.
+		if "irregular" in entry.get("tags", []) and str(entry.get("type", "")) == "verb":
+			assert_bool(flagged).override_failure_message("%s: Tag ohne Feld" % id).is_true()
+		if not flagged:
+			assert_bool(requirements.has(id)).is_false()
+			continue
+		assert_str(str(entry.get("type", ""))).override_failure_message(str(id)).is_equal("verb")
+		assert_bool(requirements.has(id)).override_failure_message("%s: keine Formaufgabe" % id).is_true()
+		var needed: Array = requirements.get(id, [])
+		assert_int(needed.filter(func(t): return str(t).begins_with("translate:")).size()).is_equal(2)
+		assert_int(needed.size()).is_greater(2)
+
+
 # --- Die Gruppierung: Balken je Unit und Thema ----------------------------------
 
 func test_unit_rows_count_mastered_against_the_whole_unit() -> void:

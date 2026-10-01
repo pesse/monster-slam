@@ -165,6 +165,10 @@ func note_answer(text: String, verdict: Dictionary) -> void:
 	}
 	if not id.is_empty():
 		line["conf"] = _confidence(id, -1.0)
+	# Nur nachsichtig getroffen (ADR 0008): die Schreibweise stimmte nicht. Nur dann, damit
+	# die übrigen Zeilen bleiben, wie sie waren.
+	if not bool(verdict.get("exact", true)):
+		line["exact"] = false
 	var canonical := str(verdict.get("canonical", ""))
 	if not canonical.is_empty():
 		line["canonical"] = canonical

@@ -64,6 +64,16 @@ func test_a_hit_names_the_word_it_belongs_to() -> void:
 	assert_str(rows[1]["hint"]["body"]).is_equal("Lösung: coral")
 
 
+## Nur nachsichtig getroffen (ADR 0008): die Zeile sagt es, die Karte nennt die Schreibweise.
+func test_a_lenient_hit_names_the_spelling() -> void:
+	var answer := _answer("ecole", true, SPAWN["id"])
+	answer["exact"] = false
+	answer["canonical"] = "l'école"
+	var rows := _events(TraceView.rows([SPAWN, answer]))
+	assert_str(rows[0]["text"]).is_equal("◐ „ecole“ — Koralle, Schreibweise")
+	assert_str(rows[0]["hint"]["body"]).is_equal("Richtig geschrieben: l'école")
+
+
 ## Die Falscheingabe zeigt in ihrer Karte, was auf dem Feld stand — dafür gibt es sie.
 func test_a_miss_lists_the_field() -> void:
 	var rows := _events(TraceView.rows([

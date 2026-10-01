@@ -14,6 +14,13 @@ const VIEW_CENTER_Z := -3.5
 
 const SHAKE_DURATION := 0.35
 const SHAKE_MAGNITUDE := 0.35 # in 3D-Einheiten
+## Standbild der Schreibweise (SpellingFreeze): so weit fährt die Kamera an die Stelle des
+## Treffers heran. Ich-Sicht: Bildwinkel als Faktor und Anteil der Drehung zum Ziel;
+## Iso-Sicht: Bildgröße als Faktor und Anteil des Wegs vom Bildmittelpunkt zum Ziel.
+const SPELLING_FOV := 0.6
+const SPELLING_TURN := 0.6
+const SPELLING_ISO_SIZE := 0.6
+const SPELLING_ISO_PAN := 0.6
 const FLASH_CORRECT := Color(0.3, 1.0, 0.45)
 const FLASH_WRONG := Color(1.0, 0.3, 0.3)
 
@@ -47,6 +54,9 @@ var _fast_resolving: bool = false
 ## Während der Meister-Feier abgeschickte Antworten: sie werden nach der Feier in dieser
 ## Reihenfolge ausgewertet, damit keine verloren geht (siehe _on_answer_submitted).
 var _held_answers: Array[String] = []
+## Monster, nach deren Zerplatzen das Standbild der Schreibweise kommt: Instanz-Id ->
+## [richtige Form, markierte Stellen]. Mit Pfeil oder Sturmangriff platzt es erst später.
+var _spelling_due: Dictionary = {}
 ## In dieser Welle schon gezeigte Grundwörter: Lexem-id -> Spawn-Nummer der letzten
 ## Zeigung. WaveGenerator.pick() nimmt sie erst, wenn der Pool erschöpft ist (Issue #24).
 ## Gilt nur für die laufende Welle und wird nicht gespeichert.
@@ -111,6 +121,7 @@ var _warming := false
 @onready var _fast_resolve_button: Button = $UI/FastResolveButton
 @onready var _fast_resolve_confirm: ConfirmDialog = $UI/FastResolveConfirm
 @onready var _celebration: MasteryCelebration = $UI/MasteryCelebration
+@onready var _spelling: SpellingFreeze = $UI/SpellingFreeze
 @onready var _level_flare: LevelFlare = $UI/HUD.level_flare
 
 
@@ -189,6 +200,8 @@ func _ready() -> void:
 	_fast_resolve_confirm.cancelled.connect(_on_fast_resolve_cancelled)
 	_celebration.started.connect(_on_celebration_started)
 	_celebration.finished.connect(_on_celebration_finished)
+	_spelling.started.connect(_on_spelling_started)
+	_spelling.finished.connect(_on_spelling_finished)
 	# Startschwierigkeit aus den persistenten Einstellungen des aktiven Profils.
 	_difficulty = UserSettings.default_difficulty()
 	_start_next_wave()
@@ -213,6 +226,7 @@ func _warm_up() -> void:
 	var at := FxWarmup.point_in_view(get_viewport().get_camera_3d(),
 			Vector3(0.0, 1.0, VIEW_CENTER_Z))
 	_celebration.warm_up()
+	_spelling.warm_up()
 	_level_flare.warm_up()
 	var extras: Array[Node3D] = [xp, form]
 	# Der Pfeil fliegt erst nach der ersten Antwort; der Bogen hängt schon an der Kamera.
@@ -234,6 +248,7 @@ func _warm_up() -> void:
 			extras.append(Blast.new())
 	await FxWarmup.run(self, at, FxWarmup.monster_defs(), extras, _fp != null)
 	_celebration.cool_down()
+	_spelling.cool_down()
 	_level_flare.cool_down()
 
 
@@ -965,6 +980,10 @@ func _start_next_wave() -> void:
 	_answer_input.visible = true
 	_fast_resolving = false
 	_held_answers.clear()
+	# Endete die letzte Welle, während ein Pfeil zu einem Monster mit Standbild flog, hielt
+	# die Feier noch an.
+	_spelling_due.clear()
+	_celebration.release()
 	_fast_resolve_button.visible = true
 	_fast_resolve_button.disabled = false
 	_set_view_active(true)
@@ -1105,28 +1124,18 @@ func _on_answer_submitted(text: String) -> void:
 		return
 	# Während der Feier steht das Spiel; eine Antwort jetzt auszuwerten hieße, ein Monster
 	# in der Pause zu besiegen und die nächste Feier anzustoßen. Aufheben statt verwerfen.
-	if _celebration.is_playing():
+	if _celebration.is_playing() or _spelling.is_busy():
 		_held_answers.append(text)
 		return
-	# Zwei Durchläufe, weil die Auswertung Toleranz kennt (AnswerEvaluator): ein
-	# vollständig passendes Monster muss gewinnen, sonst schnappt sich bei mehreren
-	# Monstern auf dem Feld ein nur im Kern passendes den Treffer weg
-	# ("take" gegen "take (on sth.)").
-	var partial: Monster = null
-	var partial_form := ""
-	for monster in _hittable():
-		var verdict := _evaluator.evaluate(monster.task.get("accepted_answers", []), text)
-		if not bool(verdict["matched"]):
-			continue
-		if bool(verdict["complete"]):
-			_score_hit(monster, text)
-			return
-		if partial == null:
-			partial = monster
-			partial_form = str(verdict["canonical"])
-	if partial != null:
-		# Richtig, aber etwas Optionales fehlte — die Vollform wird eingeblendet.
-		_score_hit(partial, text, partial_form)
+	var targets := _hittable()
+	var answers: Array = []
+	for monster in targets:
+		answers.append(monster.task.get("accepted_answers", []))
+	var hit := best_hit(_evaluator, answers, text)
+	if int(hit["index"]) >= 0:
+		# Ist die Antwort nur im Kern richtig oder anders geschrieben, blendet _score_hit
+		# die richtige Form ein.
+		_score_hit(targets[int(hit["index"])], text, hit["verdict"])
 		return
 	# Kein Treffer -> Falscheingabe: rotes Flash + Kamera-Wackeln.
 	# Bewusst KEIN Fortschritts-Eintrag: eine Falscheingabe lässt sich keiner
@@ -1144,6 +1153,29 @@ func _on_answer_submitted(text: String) -> void:
 		_miss_with_arrow()
 	else:
 		_wrong_feedback()
+
+
+## Welches Monster eine Antwort trifft: `answers` hält je Monster seine accepted_answers.
+## Rückgabe {index, verdict}, index -1 ohne Treffer. Die Auswertung kennt Toleranz
+## (AnswerEvaluator): ein exakt und vollständig passendes Monster muss gewinnen, sonst
+## schnappt sich bei mehreren Monstern auf dem Feld ein nur im Kern passendes den Treffer
+## weg ("take" gegen "take (on sth.)"), oder eines, das sich nur im Akzent unterscheidet
+## ("ou" gegen "où", ADR 0008). Rang: vollständig vor unvollständig, darin exakt vor
+## nachsichtig; bei Gleichstand das erste.
+static func best_hit(evaluator: AnswerEvaluator, answers: Array, text: String) -> Dictionary:
+	var best := {"index": -1, "verdict": {}}
+	var best_rank := -1
+	for i in answers.size():
+		var verdict := evaluator.evaluate(answers[i], text, true)
+		if not bool(verdict["matched"]):
+			continue
+		var rank := 2 * int(bool(verdict["complete"])) + int(bool(verdict["exact"]))
+		if rank > best_rank:
+			best = {"index": i, "verdict": verdict}
+			best_rank = rank
+		if rank == 3:
+			break
+	return best
 
 
 ## Die learnable_ids der Aufgaben, die gerade auf dem Feld stehen — der Zusammenhang, in
@@ -1215,20 +1247,35 @@ func _setup_first_person(bonuses: Dictionary) -> void:
 	_answer_input.weapon_switch = _fp.weapons.size() > 1
 
 
-## Treffer verbuchen. `full_form` != "" heißt: die Antwort war richtig, ließ aber einen
-## optionalen Bestandteil weg ("criticize" statt "criticize sb. (for)"). Das kostet
-## nichts — die vollständige Form wird nur zusätzlich eingeblendet, damit das Muster
-## trotzdem einmal zu sehen war.
-func _score_hit(monster: Monster, text: String = "", full_form: String = "") -> void:
+## Treffer verbuchen. `verdict` ist das Urteil des AnswerEvaluator, leer für einen Treffer
+## ohne Abzug. War die Antwort richtig, ließ aber einen optionalen Bestandteil weg
+## ("criticize" statt "criticize sb. (for)") oder stimmte die Schreibweise nicht ("ecole"
+## statt "l'école"), kostet das nichts — die richtige Form wird nur zusätzlich
+## eingeblendet, damit sie trotzdem einmal zu sehen war.
+##
+## Die Schreibweise bekommt mehr als das Schild: nach dem Zerplatzen steht das Bild, und die
+## richtige Form steht groß mit markierten Fehlern da (SpellingFreeze, ADR 0010) — erst danach
+## die Feier einer Meisterung. Bei einer schon gemeisterten Aufgabe bleibt es beim Schild:
+## wer das Wort sicher kann, soll für einen Akzent nicht jedes Mal angehalten werden.
+func _score_hit(monster: Monster, text: String = "", verdict: Dictionary = {}) -> void:
+	var complete := bool(verdict.get("complete", true))
+	var exact := bool(verdict.get("exact", true))
+	var full_form := "" if complete and exact else str(verdict.get("canonical", ""))
 	var rt := Time.get_ticks_msec() - monster.spawned_at_ms
 	var task_id := str(monster.task.get("learnable_id", ""))
+	var freeze := not exact and not full_form.is_empty() and not PlayerProgress.is_mastered(task_id)
+	if freeze:
+		# Vor record(): eine Meisterung durch DIESE Antwort feiert erst nach dem Standbild.
+		_celebration.hold()
+		_spelling_due[monster.get_instance_id()] = [full_form,
+				AnswerEvaluator.spelling_marks(full_form, text)]
 	var newly_mastered := PlayerProgress.record(task_id, true, rt,
 			float(monster.task.get("initial_confidence", -1.0)))
 	EventBus.item_reviewed.emit(task_id, true, rt)
 	# Nach record(), damit ein Mithörer die Confidence DANACH liest — die davor steht in
 	# der Spawn-Zeile des Protokolls.
 	EventBus.answer_judged.emit(text, {
-		"matched": true, "complete": full_form.is_empty(), "learnable_id": task_id,
+		"matched": true, "complete": complete, "exact": exact, "learnable_id": task_id,
 		"source_id": str(monster.task.get("source_id", "")), "response_time_ms": rt,
 		"canonical": full_form, "candidates": _active_learnable_ids(),
 	})
@@ -1247,7 +1294,7 @@ func _score_hit(monster: Monster, text: String = "", full_form: String = "") -> 
 	else:
 		_defeat(monster)
 	_flash_feedback(FLASH_CORRECT)
-	if not full_form.is_empty():
+	if not full_form.is_empty() and not freeze:
 		_spawn_form_hint(pos + Vector3(0.0, 3.4, 0.0), full_form)
 
 
@@ -1265,6 +1312,73 @@ func _on_celebration_started(duration_ms: int) -> void:
 
 func _on_celebration_finished() -> void:
 	get_tree().paused = false
+	var held := _held_answers.duplicate()
+	_held_answers.clear()
+	for text in held:
+		_on_answer_submitted(text)
+	_check_end()
+
+
+## Das Standbild der Schreibweise für ein eben zerplatztes Monster, falls _score_hit eines
+## vorgemerkt hat (`key` ist seine Instanz-Id, `at` seine Stelle — beides vor dem Zerplatzen
+## genommen, danach kann es freigegeben sein).
+func _spell_out(key: int, at: Vector3) -> void:
+	if not _spelling_due.has(key):
+		return
+	var due: Array = _spelling_due[key]
+	_spelling_due.erase(key)
+	var target := at + Vector3(0.0, 1.0, 0.0)
+	_spelling.play(str(due[0]), due[1],
+			spelling_zoom(_fp.camera if _fp != null else _camera, target))
+
+
+## Die Kamerafahrt des Standbilds auf `camera`: k = 0 ist das Spielbild, k = 1 ganz
+## herangefahren — die Ich-Sicht dreht sich zum Ziel und verengt den Bildwinkel, die
+## Iso-Sicht schwenkt hin und verkleinert den Ausschnitt. Den Ausgangsstand nimmt sie beim
+## ersten Aufruf (da steht das Bild schon, kein Wackeln und kein Rückstoß verschiebt ihn
+## mehr), und k = 0 stellt ihn genau wieder her. Statisch für die Werkbank (`--spelling`).
+static func spelling_zoom(camera: Camera3D, target: Vector3) -> Callable:
+	var start := {}
+	if camera.projection != Camera3D.PROJECTION_ORTHOGONAL:
+		return func(k: float) -> void:
+			if start.is_empty():
+				start["fov"] = camera.fov
+				start["from"] = camera.global_basis.get_rotation_quaternion()
+				var look := Basis.looking_at(target - camera.global_position, Vector3.UP)
+				start["to"] = (start["from"] as Quaternion).slerp(
+						look.get_rotation_quaternion(), SPELLING_TURN)
+			camera.fov = lerpf(start["fov"], float(start["fov"]) * SPELLING_FOV, k)
+			camera.global_basis = Basis((start["from"] as Quaternion).slerp(start["to"], k))
+	return func(k: float) -> void:
+		if start.is_empty():
+			start["size"] = camera.size
+			start["pos"] = camera.global_position
+			# Wohin die Bildmitte auf der Höhe des Ziels zeigt: von dort zum Ziel wird geschwenkt.
+			var forward := -camera.global_basis.z
+			var t := (target.y - camera.global_position.y) / forward.y if absf(forward.y) > 0.001 else 0.0
+			start["pan"] = (target - (camera.global_position + forward * t)) * SPELLING_ISO_PAN
+		camera.size = lerpf(start["size"], float(start["size"]) * SPELLING_ISO_SIZE, k)
+		camera.global_position = (start["pos"] as Vector3) + (start["pan"] as Vector3) * k
+
+
+## Das Standbild beginnt: es hält den Kampf an wie eine Feier. Ist die Welle in seinem
+## Vorlauf zu Ende gegangen (die Festung fiel), bleibt der Baum laufen.
+func _on_spelling_started(duration_ms: int) -> void:
+	if _finished:
+		return
+	_on_celebration_started(duration_ms)
+
+
+## Das Standbild ist vorbei: der Kampf läuft weiter, und steht eine Feier derselben Antwort
+## an, kommt sie jetzt (sie hält den Kampf dann selbst wieder an und wertet danach die
+## aufgehobenen Antworten aus).
+func _on_spelling_finished() -> void:
+	get_tree().paused = false
+	# Fliegt noch ein Pfeil zu einem Monster mit Standbild, wartet dessen Feier mit.
+	if _spelling_due.is_empty():
+		_celebration.release()
+	if _celebration.is_playing() or _finished:
+		return
 	var held := _held_answers.duplicate()
 	_held_answers.clear()
 	for text in held:
@@ -1313,7 +1427,10 @@ func _task_snapshot(monster: Monster, leaked: bool) -> Dictionary:
 
 func _defeat(monster: Monster) -> void:
 	_book_defeat(monster)
+	var key := monster.get_instance_id()
+	var at := monster.global_position
 	_burst(monster)
+	_spell_out(key, at)
 	_check_end()
 
 
@@ -1326,11 +1443,14 @@ func _defeat_by_charge(monster: Monster) -> void:
 	_book_defeat(monster)
 	monster.halt()
 	_underway += 1
-	await _fp.charge_at(monster.global_position)
+	var key := monster.get_instance_id()
+	var at := monster.global_position
+	await _fp.charge_at(at)
 	_underway -= 1
 	if is_instance_valid(monster):
 		_shake(0.6)
 		_burst(monster, 2.2)
+	_spell_out(key, at)
 	_check_end()
 
 
@@ -1341,7 +1461,9 @@ func _defeat_by_arrow(monster: Monster) -> void:
 	monster.halt()
 	_underway += 1
 	# In den Kopf: das Ziel, das man sieht, ist das Schild darüber — und dort trifft es.
-	await _fp.shoot_at(monster.global_position + Vector3(0.0, monster.head_height(), 0.0))
+	var key := monster.get_instance_id()
+	var at := monster.global_position
+	await _fp.shoot_at(at + Vector3(0.0, monster.head_height(), 0.0))
 	_underway -= 1
 	if is_instance_valid(monster):
 		if _fp.explosive:
@@ -1350,6 +1472,7 @@ func _defeat_by_arrow(monster: Monster) -> void:
 		else:
 			_shake(0.3)
 			_burst(monster, 2.0)
+	_spell_out(key, at)
 	_check_end()
 
 
@@ -1626,7 +1749,7 @@ func _check_end() -> void:
 		return
 	# Meistert das letzte Monster etwas, wird erst gefeiert und dann abgerechnet —
 	# _on_celebration_finished ruft hierher zurück.
-	if _celebration.is_busy():
+	if _celebration.is_busy() or _spelling.is_busy():
 		return
 	if _spawned >= _total and _active.is_empty():
 		EventBus.wave_cleared.emit(GameState.current_wave)
