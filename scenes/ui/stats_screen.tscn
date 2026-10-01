@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3]
+[gd_scene load_steps=19 format=3]
 
 [ext_resource type="Script" path="res://src/ui/stats_screen.gd" id="1_r"]
 [ext_resource type="Script" path="res://src/ui/stats_chart.gd" id="2_r"]
@@ -16,6 +16,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/skill_tree/icons/skill_point.webp" id="14_r"]
 [ext_resource type="Texture2D" path="res://assets/ui/statistics/icons/gold_coins.webp" id="15_r"]
 [ext_resource type="Texture2D" path="res://assets/ui/statistics/icons/treasure_chest.webp" id="16_r"]
+[ext_resource type="PackedScene" path="res://scenes/ui/sort_bar.tscn" id="17_r"]
 
 [sub_resource type="ButtonGroup" id="tab_group"]
 
@@ -809,6 +810,10 @@ theme_type_variation = &"Hint"
 text = "Klick auf eine Zeile zeigt ihre Wörter.  ✓ das Wort sitzt in beiden Übersetzungsrichtungen  ·  ★ eine weitere Aufgabe dazu sitzt (Form, Gegenteil, Synonym, Verwechslung)  ·  ☆ die gibt es, sie sitzt noch nicht. Zeigt der Mauszeiger auf ein Wort, stehen die Einzelstände da."
 autowrap_mode = 3
 
+[node name="WordSort" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress" instance=ExtResource("17_r")]
+unique_name_in_owner = true
+layout_mode = 2
+
 [node name="UnitSection" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress"]
 layout_mode = 2
 theme_type_variation = &"Tight"
@@ -869,6 +874,10 @@ layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Eine Zeile je Aufgabe: beide Übersetzungsrichtungen getrennt, dazu Formen, Gegenteile, Synonyme und Verwechslungen. Ein Wort steht hier also mehrfach — als Wort steht es im Reiter „Fortschritt“."
 autowrap_mode = 3
+
+[node name="TaskSort" parent="Window/Layout/Content/Body/Pages/TaskPage/Gutter/TaskSection" instance=ExtResource("17_r")]
+unique_name_in_owner = true
+layout_mode = 2
 
 [node name="TaskList" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/TaskPage/Gutter/TaskSection"]
 unique_name_in_owner = true

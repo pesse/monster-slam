@@ -55,6 +55,13 @@ const SPOTLESS_FORTRESS_HP := 90
 ## zwei Punkte sind bei dreißig Antworten eine einzige.
 const TREND_STEADY_POINTS := 3
 
+## Reihenfolge der Wortlisten (Fortschritt aufgeklappt) und der Aufgabenliste, in der
+## Reihenfolge der Knöpfe in `SortBar`. Gilt für beide Reiter zugleich.
+enum SortMode { BEST_FIRST, WEAKEST_FIRST, ALPHABETICAL }
+## Die Wahl bleibt, solange das Spiel läuft — wer zweimal hineinschaut, will nicht zweimal
+## umstellen. Gespeichert wird sie nicht: sie ist eine Ansicht, kein Lernstand.
+static var _sort_mode := SortMode.BEST_FIRST
+
 ## Das Fenster will zu. Wer es geöffnet hat, nimmt es weg; hängt niemand daran (der Screen
 ## läuft allein, etwa aus dem Editor), geht es zurück ins Startmenü.
 signal closed()
@@ -80,6 +87,7 @@ var _resolver := TaskResolver.new()
 @onready var _unit_list: VBoxContainer = %UnitList
 @onready var _tag_list: VBoxContainer = %TagList
 @onready var _task_list: VBoxContainer = %TaskList
+@onready var _sort_bars: Array[SortBar] = [%WordSort as SortBar, %TaskSort as SortBar]
 ## Reiter → Seite, in der Reihenfolge der Knöpfe.
 @onready var _pages := {
 	%OverviewTab: %OverviewPage,
@@ -95,6 +103,9 @@ func _ready() -> void:
 		tab.toggled.connect(func(on: bool) -> void:
 			if on:
 				_show_page(tab))
+	for bar in _sort_bars:
+		bar.set_mode(_sort_mode)
+		bar.changed.connect(_on_sort_changed)
 	Hints.attach(%StreakCard as Control, "Tage in Folge",
 			"Jeder Tag mit mindestens einem Lauf zählt. Heute ist keine Lücke, solange der "
 			+ "Tag läuft — die Serie reißt erst, wenn ein ganzer Tag fehlt.")
@@ -119,6 +130,19 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
 		close()
+
+
+## Beide Leisten zeigen dieselbe Wahl; die Wortlisten bauen sich neu auf, wenn sie schon
+## aufgeklappt waren (die übrigen erst beim Aufklappen, `ProgressRow`).
+func _on_sort_changed(mode: int) -> void:
+	_sort_mode = mode as SortMode
+	for bar in _sort_bars:
+		bar.set_mode(mode)
+	for box in [_unit_list, _tag_list]:
+		for row in box.get_children():
+			if row is ProgressRow:
+				(row as ProgressRow).refill()
+	_refresh_tasks()
 
 
 ## Zeigt die Seite zu `tab`. Der Knopf selbst steht schon gedrückt (ButtonGroup).
@@ -547,16 +571,14 @@ static func tag_rows(lexemes: Array, mastered: Dictionary) -> Array:
 ## gemeistertes Wort weg. Sie fahren als `extras` mit und stehen in der Zeile als
 ## Sternchen: ein Wort kann sitzen UND noch etwas zu holen haben.
 ##
-## Sortiert: das Schwächste zuerst, wie überall in diesem Screen. Noch nie geübte Wörter
-## stehen alphabetisch am Ende — sie sind kein Lernstand, sondern das, was noch aussteht,
-## und oben verdrängten sie genau die Wörter, an denen gerade etwas zu holen ist.
+## Sortiert nach `sort` (`sort_rows`), von Haus aus das Sicherste zuerst.
 ##
 ## `conf` liefert die Confidence einer Aufgabe und -1 für „kein Record" (im Spiel
 ## PlayerProgress.confidence mit -1 als Vorgabe), `learnables` alle learnable_ids zu einem
 ## Lexem (WaveGenerator.learnables_of). Als Callables übergeben — wie book_label bei
 ## unit_rows —, damit die Regeln ohne Autoload prüfbar bleiben.
 static func word_rows(lexemes: Array, conf: Callable, learnables := Callable(),
-		requirements: Dictionary = {}) -> Array:
+		requirements: Dictionary = {}, sort := SortMode.BEST_FIRST) -> Array:
 	var rows: Array = []
 	for entry in lexemes:
 		var id := str(entry.get("id", ""))
@@ -582,14 +604,30 @@ static func word_rows(lexemes: Array, conf: Callable, learnables := Callable(),
 			"directions": directions,
 			"extras": extra_rows(entry, conf, learnables),
 		})
+	return sort_rows(rows, sort)
+
+
+## Ordnet Zeilen mit `label` und `confidence` (-1 heißt „noch nie geübt") nach `mode` —
+## die eine Regel für Wort- und Aufgabenliste.
+##
+## Nach Stand sortiert stehen die nie geübten in BEIDEN Richtungen alphabetisch am Ende:
+## sie sind kein Lernstand, sondern das, was noch aussteht — als „schwächste" oben
+## verdrängten sie genau die Wörter, an denen gerade etwas zu holen ist, und unter 0 %
+## gehören sie auch nicht, denn 0 % ist gemessen. Gleiche Stände stehen alphabetisch,
+## damit die Liste beim Umschalten nicht springt.
+static func sort_rows(rows: Array, mode := SortMode.BEST_FIRST) -> Array:
 	rows.sort_custom(func(a, b):
+		var la := str(a["label"])
+		var lb := str(b["label"])
+		if mode == SortMode.ALPHABETICAL:
+			return la.naturalnocasecmp_to(lb) < 0
 		var ca := float(a["confidence"])
 		var cb := float(b["confidence"])
 		if (ca < 0.0) != (cb < 0.0):
 			return cb < 0.0
-		if ca < 0.0:
-			return str(a["label"]) < str(b["label"])
-		return ca < cb)
+		if ca == cb or ca < 0.0:
+			return la.naturalnocasecmp_to(lb) < 0
+		return ca > cb if mode == SortMode.BEST_FIRST else ca < cb)
 	return rows
 
 
@@ -620,9 +658,10 @@ static func extra_rows(entry: Dictionary, conf: Callable, learnables: Callable) 
 ## genau wissen will, hält drauf. `describe` benennt eine Aufgabe (TaskResolver
 ## .describe_learnable); ohne sie steht die rohe learnable_id da.
 static func word_lines(lexemes: Array, conf: Callable, learnables := Callable(),
-		describe := Callable(), requirements: Dictionary = {}) -> Array:
+		describe := Callable(), requirements: Dictionary = {},
+		sort := SortMode.BEST_FIRST) -> Array:
 	var lines: Array = []
-	for row in word_rows(lexemes, conf, learnables, requirements):
+	for row in word_rows(lexemes, conf, learnables, requirements, sort):
 		var value := float(row["confidence"])
 		var mastered: bool = value >= PROGRESS.MASTERY_CONFIDENCE
 		var extras: Array = row["extras"]
@@ -693,11 +732,11 @@ func _fill_progress(box: VBoxContainer, rows: Array, empty_text: String) -> void
 		bar.setup(str(row["label"]), int(row["done"]), int(row["total"]),
 				func(): return word_lines(lexemes, PlayerProgress.confidence.bind(-1.0),
 						_generator.learnables_of, _resolver.describe_learnable,
-						ContentRegistry.form_requirements()))
+						ContentRegistry.form_requirements(), _sort_mode))
 
 
-## Alle geübten AUFGABEN, schwächste Confidence zuerst (die Sortierung liefert
-## PlayerProgress). Der Haken markiert die gemeisterten.
+## Alle geübten AUFGABEN in der gewählten Reihenfolge (`sort_rows`). Der Haken markiert
+## die gemeisterten.
 ##
 ## Eine Zeile je learnable_id, nicht je Wort: ein Wort hat beide Übersetzungsrichtungen
 ## und dazu seine Formen und Relationen. Deshalb heißt der Reiter „Aufgaben" — als
@@ -705,7 +744,7 @@ func _fill_progress(box: VBoxContainer, rows: Array, empty_text: String) -> void
 ## Haken behauptete etwas anderes als der Haken im Fortschritt (dort: das WORT sitzt).
 func _refresh_tasks() -> void:
 	_clear(_task_list)
-	var rows := PlayerProgress.records_for_display()
+	var rows := sort_rows(PlayerProgress.records_for_display(), _sort_mode)
 	if rows.is_empty():
 		_add_line(_task_list, "Noch keine Aufgabe geübt.")
 		return

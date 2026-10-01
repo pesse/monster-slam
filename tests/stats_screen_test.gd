@@ -280,6 +280,24 @@ func test_the_tabs_switch_pages() -> void:
 	remove_child(screen)
 
 
+## Die Sortierwahl steht in beiden Reitern und zeigt dort dasselbe; von Haus aus
+## „Beste zuerst".
+func test_both_sort_bars_follow_one_choice() -> void:
+	var screen: Control = auto_free(STATS_SCENE.instantiate())
+	add_child(screen)
+	var word_alpha := screen.get_node("%WordSort/Alpha") as Button
+	var task_alpha := screen.get_node("%TaskSort/Alpha") as Button
+	assert_bool((screen.get_node("%WordSort/Best") as Button).button_pressed).is_true()
+	assert_bool((screen.get_node("%TaskSort/Best") as Button).button_pressed).is_true()
+	word_alpha.button_pressed = true
+	word_alpha.pressed.emit()
+	assert_bool(task_alpha.button_pressed).is_true()
+	assert_bool((screen.get_node("%TaskSort/Best") as Button).button_pressed).is_false()
+	(screen.get_node("%TaskSort/Best") as Button).pressed.emit()
+	assert_bool((screen.get_node("%WordSort/Best") as Button).button_pressed).is_true()
+	remove_child(screen)
+
+
 ## Schließen-X und Escape melden `closed` — das Menü nimmt das Fenster dann weg.
 func test_close_and_escape_tell_the_opener() -> void:
 	var screen: Control = auto_free(STATS_SCENE.instantiate())

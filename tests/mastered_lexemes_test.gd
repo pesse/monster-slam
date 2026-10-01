@@ -250,18 +250,43 @@ func test_an_untouched_word_has_no_percentage() -> void:
 	assert_str(str(lines[0]["mark"])).is_empty()
 
 
-func test_the_weakest_word_comes_first_and_untouched_ones_last() -> void:
-	var pool := [
+## Von Haus aus steht das Sicherste oben; nie Geübtes steht auch unter einem 0-%-Wort,
+## denn 0 % ist gemessen.
+func test_the_best_word_comes_first_and_untouched_ones_last() -> void:
+	var rows := STATS_SCREEN.word_rows(_sort_pool(), _sort_conf())
+	assert_array(_labels(rows)).is_equal(["stark", "schwach", "null", "neu"])
+
+
+func test_weakest_first_still_puts_untouched_words_last() -> void:
+	var rows := STATS_SCREEN.word_rows(_sort_pool(), _sort_conf(), Callable(), {},
+			STATS_SCREEN.SortMode.WEAKEST_FIRST)
+	assert_array(_labels(rows)).is_equal(["null", "schwach", "stark", "neu"])
+
+
+func test_alphabetical_ignores_the_confidence() -> void:
+	var rows := STATS_SCREEN.word_rows(_sort_pool(), _sort_conf(), Callable(), {},
+			STATS_SCREEN.SortMode.ALPHABETICAL)
+	assert_array(_labels(rows)).is_equal(["neu", "null", "schwach", "stark"])
+
+
+func _sort_pool() -> Array:
+	return [
 		_lexeme("stark", "access2", 6), _lexeme("neu", "access2", 6),
-		_lexeme("schwach", "access2", 6),
+		_lexeme("schwach", "access2", 6), _lexeme("null", "access2", 6),
 	]
-	var rows := STATS_SCREEN.word_rows(pool, _conf({
+
+
+func _sort_conf() -> Callable:
+	return _conf({
 		"translate:de_to_en:stark": 0.9, "translate:en_to_de:stark": 0.85,
 		"translate:de_to_en:schwach": 0.5, "translate:en_to_de:schwach": 0.6,
-	}))
-	assert_str(str(rows[0]["label"])).contains("schwach")
-	assert_str(str(rows[1]["label"])).contains("stark")
-	assert_str(str(rows[2]["label"])).contains("neu")
+		"translate:de_to_en:null": 0.0, "translate:en_to_de:null": 0.0,
+	})
+
+
+## Das Wort vor dem Strich — die Labels sind „fremd — deutsch".
+func _labels(rows: Array) -> Array:
+	return rows.map(func(row): return str(row["label"]).get_slice(" — ", 0))
 
 
 ## Der Haken steht genau ab der Schwelle, aus der auch die Meisterung kommt — sonst

@@ -69,6 +69,20 @@ func toggle() -> void:
 	_update_header()
 
 
+## Baut eine schon aufgeklappte Liste neu (die Sortierung hat gewechselt); eine
+## zugeklappte holt ihre Zeilen ohnehin erst beim nächsten Aufklappen.
+func refill() -> void:
+	if not _filled:
+		return
+	var list := $Words/WordList as Node
+	for child in list.get_children():
+		list.remove_child(child)
+		child.queue_free()
+	_filled = false
+	if is_expanded():
+		_fill()
+
+
 func _fill() -> void:
 	_filled = true
 	var list := $Words/WordList as VBoxContainer

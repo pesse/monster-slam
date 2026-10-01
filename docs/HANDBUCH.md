@@ -674,6 +674,10 @@ Die Zeichen:
 
 Zeigt die Maus auf ein Wort, stehen die Einzelstände jeder Richtung da.
 
+Oben wählst du die Reihenfolge der Wörter: **„Beste zuerst“** (so startet die Liste),
+**„Schwächste zuerst“** oder **„A–Z“**. Noch nie geübte Wörter stehen beim Sortieren nach
+Stand immer am Ende, auch hinter 0 %. Die Wahl gilt auch im Reiter „Aufgaben“.
+
 Welche Units und Themen hier stehen, richtet sich nach der Auswahl bei „Bücher & Units“
 aus „Runde vorbereiten“. Die Themen-Auswahl wird dabei bewusst nicht mitgerechnet: bei
 „Unit 6: 8 von 12“ sollen alle Wörter der Unit gezählt sein, nicht nur ein Teil davon.
