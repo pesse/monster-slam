@@ -277,23 +277,28 @@ var _terrain_noise: FastNoiseLite
 var _theme: BattleTheme
 ## Stellt die Sonne nach der Uhr; hält während einer Welle den Sprung auf den Morgen an.
 var _sun_cycle: SunCycle
+## Der Weg zum Tor; die Streudeko hält ihn frei.
+var _path: BattlePath
 
 func _setup_ground() -> void:
 	_terrain_noise = terrain_noise(_rng.randi())
+	_path = BattlePath.make(_theme.path, GOAL_Z, _rng)
 	var ground := $Ground as MeshInstance3D
 	ground.mesh = build_terrain(_camera, _terrain_noise, _theme)
-	dress_ground(ground, _theme)
+	dress_ground(ground, _theme, _path)
 
 
 ## Material und Schatten des Bodens — statisch, damit die Werkbank ihn genauso anzieht.
-## Wolkenschatten nur, wenn die Grafikstufe sie zeigt (GraphicsQuality).
+## Wolkenschatten und Bodenflecken nur, wenn die Grafikstufe sie zeigt (GraphicsQuality).
 ## Der Boden wirft selbst keinen Schatten: die Hügel schattiert der Bodenshader über ihre
 ## Neigung, und ohne Selbstschatten reicht ein kleiner Bias (setup_view), ohne dass der
 ## Boden Streifen bekommt.
-static func dress_ground(ground: MeshInstance3D, theme: BattleTheme) -> void:
-	ground.material_override = theme.ground_material()
+static func dress_ground(ground: MeshInstance3D, theme: BattleTheme, path: BattlePath = null) -> void:
+	ground.material_override = theme.ground_material(path)
 	if not GraphicsQuality.clouds():
 		(ground.material_override as ShaderMaterial).set_shader_parameter("clouds", 0.0)
+	if not GraphicsQuality.patches():
+		(ground.material_override as ShaderMaterial).set_shader_parameter("patch_amount", 0.0)
 	ground.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
@@ -385,14 +390,32 @@ static func _terrain_point(x: float, z: float, noise: FastNoiseLite) -> Vector3:
 const FLAT_HALF_X := 9.0 * FORTRESS_GROW
 
 
+## Um so viel weicht der Hügelfuß höchstens nach außen zurück (TERRAIN_FOOT_WAVE Meter je
+## Bogen) — sonst stünde das flache Feld als Rechteck in der Landschaft.
+const TERRAIN_FOOT_SHIFT := 6.0
+const TERRAIN_FOOT_WAVE := 0.045
+
+
 static func terrain_height(x: float, z: float, noise: FastNoiseLite) -> float:
 	# Innenfeld flach halten (bis knapp hinter den Spawn); nur außerhalb sanfte Hügel. So
-	# breit wie die Festung, sonst stünden ihre Ecktürme am Hang.
-	var edge := maxf(absf(x) - FLAT_HALF_X, -z + SPAWN_Z)
+	# breit wie die Festung, sonst stünden ihre Ecktürme am Hang. Der Hügelfuß weicht in
+	# Bögen nach außen zurück, nie nach innen — das Feld bleibt mindestens so groß. Die
+	# Ecke hinter dem Spawn ist rund: außerhalb des Rechtecks zählt der Abstand zur Ecke.
+	var ex := absf(x) - FLAT_HALF_X - _foot_shift(z * signf(x) + 200.0, noise)
+	var ez := -z + SPAWN_Z - _foot_shift(x + 400.0, noise)
+	var edge := Vector2(maxf(ex, 0.0), maxf(ez, 0.0)).length() if ex > 0.0 and ez > 0.0 \
+			else maxf(ex, ez)
 	if edge <= 0.0:
 		return 0.0
 	var n := noise.get_noise_2d(x, z) * 0.5 + 0.5
 	return clampf(edge, 0.0, TERRAIN_EDGE_MAX) * (0.3 + 0.7 * n) * TERRAIN_HEIGHT_SCALE
+
+
+## Wie weit der Hügelfuß an der Stelle `t` (längs seiner Kante) zurückweicht, 0 bis
+## TERRAIN_FOOT_SHIFT.
+static func _foot_shift(t: float, noise: FastNoiseLite) -> float:
+	var n := noise.get_noise_2d(t * TERRAIN_FOOT_WAVE / noise.frequency, 777.0) * 0.5 + 0.5
+	return TERRAIN_FOOT_SHIFT * smoothstep(0.2, 0.8, n)
 
 
 static func _add_terrain_tri(st: SurfaceTool, noise: FastNoiseLite, theme: BattleTheme, a: Vector3, b: Vector3, c: Vector3) -> void:
@@ -426,9 +449,9 @@ func _ground_y(x: float, z: float) -> float:
 
 ## Platziert eines der Modelle eines Deko-Platzes (`BattleTheme.trees` …, Pfade unter
 ## assets/models/) auf Terrain-Höhe mit zufälliger Drehung; ein leerer Platz stellt nichts
-## hin. Position/Skalierung kommen vom Aufrufer.
+## hin, und auf dem Weg (BattlePath) steht nichts. Position/Skalierung kommen vom Aufrufer.
 func _scatter(parent: Node3D, slot: Array[String], x: float, z: float, scale: float) -> void:
-	if slot.is_empty():
+	if slot.is_empty() or (_path != null and _path.blocks(x, z, 0.4 * scale)):
 		return
 	var model := slot[_rng.randi() % slot.size()]
 	var inst := _place_model(parent, model.get_file(), Vector3(x, _ground_y(x, z), z),

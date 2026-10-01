@@ -82,6 +82,23 @@ func test_the_playfield_stays_flat() -> void:
 			assert_float(WaveRunnerScript.terrain_height(x, z, noise)).is_equal(0.0)
 
 
+## Der Hügelfuß ist keine Gerade: an der Seite des Felds fängt der Hang an manchen Stellen
+## gleich an, an anderen erst weiter draußen — sonst stünde das Feld als Rechteck da.
+func test_the_hill_foot_is_not_a_straight_line() -> void:
+	var noise: FastNoiseLite = WaveRunnerScript.terrain_noise(4711)
+	var x: float = WaveRunnerScript.FLAT_HALF_X + 1.0
+	var flat := 0
+	var hill := 0
+	for j in 80:
+		var z := lerpf(WaveRunnerScript.SPAWN_Z, WaveRunnerScript.GOAL_Z, j / 79.0)
+		if WaveRunnerScript.terrain_height(x, z, noise) == 0.0:
+			flat += 1
+		else:
+			hill += 1
+	assert_int(flat).is_greater(0)
+	assert_int(hill).is_greater(0)
+
+
 ## Der Boden ist Kulisse und kein zweites Spielfeld: er darf reichen, so weit er muss,
 ## aber das Mesh soll nicht unbemerkt ins Unbezahlbare wachsen. Das Sichtfeld ist eine
 ## Raute im x/z-Raster (45° Gierwinkel), ein gutes Drittel des umschließenden Rechtecks

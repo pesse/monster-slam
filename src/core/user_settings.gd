@@ -36,7 +36,7 @@ func _ready() -> void:
 	if str(_config.get_value("names", DEFAULT_PROFILE, "")).is_empty():
 		_config.set_value("names", DEFAULT_PROFILE, "Spieler")
 		_save()
-	GraphicsQuality.apply_window(get_tree().root, graphics_simple())
+	GraphicsQuality.apply_window(get_tree().root, graphics_quality())
 
 
 func active_profile() -> String:
@@ -158,14 +158,21 @@ func set_music_volume(value: float) -> void:
 	_save()
 
 
-## Grafikstufe „Einfach" (GraphicsQuality)? Geräteweit wie die Lautstärke: ob der Rechner
-## mitkommt, hängt nicht daran, wer spielt. Vorgabe aus („Schön").
-func graphics_simple() -> bool:
-	return bool(_config.get_value("general", "graphics_simple", false))
+## Grafikstufe (GraphicsQuality.Level)? Geräteweit wie die Lautstärke: ob der Rechner
+## mitkommt, hängt nicht daran, wer spielt. Vorgabe „Schön". Früher gab es nur
+## `graphics_simple` (an = „Einfach"); wer das gesetzt hat, bekommt „Schnell" — das ist
+## dieselbe Wahl, und sie bleibt gelesen, solange keine neue Stufe gespeichert ist.
+func graphics_quality() -> GraphicsQuality.Level:
+	if _config.has_section_key("general", "graphics_quality"):
+		return clampi(int(_config.get_value("general", "graphics_quality")),
+				GraphicsQuality.Level.FAST, GraphicsQuality.Level.FINE) as GraphicsQuality.Level
+	if bool(_config.get_value("general", "graphics_simple", false)):
+		return GraphicsQuality.Level.FAST
+	return GraphicsQuality.Level.FINE
 
 
-func set_graphics_simple(value: bool) -> void:
-	_config.set_value("general", "graphics_simple", value)
+func set_graphics_quality(value: GraphicsQuality.Level) -> void:
+	_config.set_value("general", "graphics_quality", int(value))
 	_save()
 	GraphicsQuality.apply_window(get_tree().root, value)
 

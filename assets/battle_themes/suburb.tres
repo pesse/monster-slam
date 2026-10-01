@@ -4,6 +4,10 @@
 
 [resource]
 script = ExtResource("1_theme")
+ground_patch = Color(0.56, 0.62, 0.28, 1)
+ground_patch_amount = 0.25
+path = "road"
+path_color = Color(0.6, 0.6, 0.58, 1)
 light_from = "sydney_bush"
 ground_texture = "grass"
 ground_texture_strength = 0.8

@@ -328,19 +328,28 @@ toggle_mode = true
 button_group = SubResource("graphics_group")
 text = "Schön"
 
-[node name="GraphicsSimple" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/GraphicsRow"]
+[node name="GraphicsMedium" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/GraphicsRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 theme_type_variation = &"ToolChoice"
 toggle_mode = true
 button_group = SubResource("graphics_group")
-text = "Einfach"
+text = "Mittel"
+
+[node name="GraphicsFast" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/GraphicsRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+theme_type_variation = &"ToolChoice"
+toggle_mode = true
+button_group = SubResource("graphics_group")
+text = "Schnell"
 
 [node name="GraphicsNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
 layout_mode = 2
 theme_type_variation = &"Caption"
-text = "„Einfach“ lässt Kantenglättung, Leuchten, Wolkenschatten und fliegende Blätter oder Flocken weg — für ältere Rechner, wenn das Spiel ruckelt. Gilt für diesen Rechner, nicht nur für dieses Profil."
+text = "„Mittel“ lässt das Leuchten weg und glättet Kanten weniger. „Schnell“ lässt dazu Kantenglättung, Wolkenschatten, Bodenflecken und fliegende Blätter oder Flocken weg — für ältere Rechner, wenn das Spiel ruckelt. Gilt für diesen Rechner, nicht nur für dieses Profil."
 autowrap_mode = 3
 
 [node name="GraphicsRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]

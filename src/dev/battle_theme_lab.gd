@@ -23,10 +23,11 @@ extends Node3D
 ##         Namen wie die Konstanten im Spiel. „Werte kopieren" legt sie als Konstanten in die
 ##         Zwischenablage und schreibt sie in die Konsole. Der flache Boden wächst nicht mit
 ##         der Festungsgröße (FLAT_HALF_X ist eine Konstante des WaveRunners).
-##         --tier=<0..4> und --view=first wählen den Anfang.
+##         --tier=<0..4>, --view=first, --hour=<6..18> (Tageszeit) und --size=<m> (Ausschnitt)
+##         wählen den Anfang.
 ##     GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/battle_theme_lab.tscn -- --shoot
 ##         speichert jedes Thema als reports/battle_themes/<name>.png und beendet sich.
-##         --theme=<name> beschränkt auf ein Thema.
+##         --theme=<name>[,<name>…] beschränkt auf diese Themen, --hour=<6..18> stellt die Tageszeit.
 ##     … -- --specimens
 ##         Nahaufnahme der Deko jedes Themas neben den gekauften Vergleichsstücken, in der
 ##         Größe ihres Platzes, als reports/battle_themes/specimens_<name>.png.
@@ -64,8 +65,9 @@ extends Node3D
 ##         dürfen sich nicht überdecken — als reports/battle_themes/plates_<sicht>.png.
 ##     … -- --fps [--theme=<name>] [--windowed]
 ##         Misst im Vollbild und ohne VSync die mittlere Bildzeit mit allem an, jeweils ohne
-##         eine Zutat (MSAA, Wolken, Teilchen, Wind, Schatten, Glow) und ohne alles — die
-##         Grundlage für die Stufen in GraphicsQuality. Ein Thema je Lauf (das erste).
+##         eine Zutat (MSAA, Wolken, Teilchen, Wind, Schatten, Glow, Farbgebung, Weg+Flecken)
+##         und ohne alles — die Grundlage für die Stufen in GraphicsQuality. Ein Thema je
+##         Lauf (das erste).
 ##
 ## Headless gibt es keinen Renderer — deshalb GODOT_WINDOW=1.
 
@@ -102,6 +104,7 @@ var _air: CPUParticles3D
 var _wind_strength := 1.0
 var _theme: BattleTheme
 var _noise: FastNoiseLite
+var _path: BattlePath
 var _tier := 4
 ## Die Ich-Sicht, oder null für die Iso-Kamera.
 var _fp: FirstPersonView
@@ -157,13 +160,17 @@ func _ready() -> void:
 	_names.sort()
 	var only := _arg("theme")
 	if not only.is_empty():
-		_names = _names.filter(func(n: String) -> bool: return n == only)
+		_names = _names.filter(func(n: String) -> bool: return only.split(",").has(n))
 	if _names.is_empty():
 		push_error("battle_theme_lab: kein Thema gefunden")
 		get_tree().quit(1)
 		return
 	if not _arg("tier").is_empty():
 		_tier = clampi(int(_arg("tier")), 0, 4)
+	if not _arg("size").is_empty():
+		_cam_size = float(_arg("size"))
+	if not _arg("hour").is_empty():
+		_sun_cycle.phase = SunCycle.phase_of(float(_arg("hour")))
 	_fill_controls()
 	_show(0)
 	if _arg("view") == "first":
@@ -476,6 +483,7 @@ func _show(index: int) -> void:
 	var theme := BattleTheme.named(_names[index])
 	_world.environment = _scene_env
 	theme.apply(_world, _sun)
+	_sun_cycle.color = theme.sun_color
 	var noise := WaveRunnerScript.terrain_noise(SEED)
 	# Wie im Kampf für den weitesten Blick gebaut (SceneZoom kommt aus der Ferne) — sonst
 	# ragt am unteren Rand der Hintergrund unter den Hügeln hervor.
@@ -486,7 +494,11 @@ func _show(index: int) -> void:
 	_camera.size = view_size / SceneZoom.FROM
 	_ground.mesh = WaveRunnerScript.build_terrain(_camera, noise, theme)
 	_camera.size = view_size
-	WaveRunnerScript.dress_ground(_ground, theme)
+	var path_rng := RandomNumberGenerator.new()
+	# Je Thema ein anderer Verlauf, aber bei jedem Lauf derselbe — wie im Kampf gewürfelt.
+	path_rng.seed = SEED + index
+	_path = BattlePath.make(theme.path, _goal(), path_rng)
+	WaveRunnerScript.dress_ground(_ground, theme, _path)
 	_apply_light()
 	_wind_strength = theme.wind
 	_theme = theme
@@ -903,7 +915,8 @@ func _shoot_bow() -> void:
 
 ## Zutaten, die --fps einzeln abschaltet, mit ihrem Namen in der Ausgabe.
 const FPS_PARTS := {"msaa": "MSAA", "clouds": "Wolken", "particles": "Teilchen",
-		"wind": "Wind", "shadows": "Schatten", "glow": "Glow"}
+		"wind": "Wind", "shadows": "Schatten", "glow": "Glow", "grade": "Farbgebung",
+		"ground": "Weg+Flecken"}
 
 
 func _measure_fps() -> void:
@@ -947,6 +960,11 @@ func _apply_parts(cfg: Dictionary) -> void:
 	_build_decor(_noise, _theme)
 	_sun.shadow_enabled = cfg.shadows
 	_world.environment.glow_enabled = cfg.glow
+	_world.environment.tonemap_mode = _scene_env.tonemap_mode if cfg.grade else Environment.TONE_MAPPER_LINEAR
+	_world.environment.adjustment_enabled = _scene_env.adjustment_enabled and cfg.grade
+	var ground := _ground.material_override as ShaderMaterial
+	ground.set_shader_parameter("patch_amount", _theme.ground_patch_amount if cfg.ground else 0.0)
+	ground.set_shader_parameter("path_kind", BattlePath.KINDS.keys().find(_path.kind) if cfg.ground else -1)
 
 
 ## Mittlere Bildzeit über `seconds`, nach einer Sekunde Anlauf (Shader, neue Deko).
@@ -1085,7 +1103,7 @@ func _place_monsters() -> void:
 func _place_from(theme: BattleTheme, slot: String, x: float, z: float, noise: FastNoiseLite,
 		rng: RandomNumberGenerator) -> void:
 	var models: Array[String] = theme.get(slot)
-	if models.is_empty():
+	if models.is_empty() or _path.blocks(x, z, 0.4 * float(SLOT_SCALE[slot][1])):
 		return
 	var model := models[rng.randi() % models.size()]
 	var span: Array = SLOT_SCALE[slot]

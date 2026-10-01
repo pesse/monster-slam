@@ -570,6 +570,27 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
   spannt sie sich bis `camera.far`, deshalb setzt `setup_view` `far` auf `SHADOW_DISTANCE`
   — der Wert bestimmt zugleich, wie weich die Schatten sind. Der Boden selbst wirft keinen
   Schatten (`dress_ground`), sonst braucht es einen großen Bias, der Baumschatten schluckt.
+- **Weg, Flecken, Hügelfuß.** Jeder Kampf hat einen Weg vom hinteren Bildrand ins
+  Festungstor (`BattlePath`): Bildgestaltung, kein Spielfeld — die Monster laufen über die
+  ganze Bahn. Der Verlauf (zwei Bögen und eine Schräge) wird je Kampf gewürfelt, die Art
+  (`path`: Trampelpfad, Weg, Bohlenweg, Pflaster) und `path_color` nennt das Thema.
+  Gezeichnet wird er im Bodenshader, der dieselbe Mittellinie rechnet (`path_centre` =
+  `BattlePath.centre_x`, die Zahlen kommen aus `apply_to`); die Streudeko fragt
+  `BattlePath.blocks`. Trampelpfad und Weg tragen eine eigene Detailtextur aus
+  `assets/textures/ground/` (`BattlePath.TEXTURES`: `dry_earth`, `gravel`; ein Thema kann
+  mit `path_texture` eine andere nennen), Bohlen und Pflaster rechnet der Shader. Der Rand
+  ist scharf mit feinem Ausfransen — weich sah der Weg verwaschen aus. Ebenfalls im Shader: Flecken in einem dritten Ton (`ground_patch`,
+  `ground_patch_amount`). Der Hügelfuß weicht in Bögen nach außen zurück
+  (`WaveRunner._foot_shift`) und ist hinter dem Spawn rund — nie nach innen, das Feld
+  bleibt flach (`tests/battle_ground_test.gd`).
+- **Farbgebung.** Die Kampfszene tonemappt (Filmic) und hebt Kontrast und Sättigung leicht
+  (`adjustment_*`). Die Sonne wird tief golden (`SunCycle.tint_at`, von `NOON_TINT` nach
+  `GOLDEN`) auf die Farbe des Themas; derselbe Ton geht als `sun_tint` an den Bodenshader.
+- **Grafikstufen** (`GraphicsQuality`, geräteweit in `UserSettings.graphics_quality`):
+  „Schön" zeigt alles, „Mittel" lässt Glow weg und halbiert MSAA, „Schnell" lässt dazu MSAA,
+  Wolken, Teilchen, Bodenflecken und die Farbkorrektur weg. Schatten, Wind und der Weg
+  bleiben überall. Die Kosten misst `battle_theme_lab -- --fps`. Das alte `graphics_simple`
+  wird als „Schnell" gelesen, solange keine Stufe gespeichert ist.
 
 ## Fähigkeitsbäume: wofür die Punkte da sind
 

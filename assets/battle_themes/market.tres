@@ -4,6 +4,10 @@
 
 [resource]
 script = ExtResource("1_theme")
+ground_patch = Color(0.86, 0.78, 0.62, 1)
+ground_patch_amount = 0.25
+path = "cobble"
+path_color = Color(0.74, 0.66, 0.56, 1)
 light_from = "forum"
 ground_texture = "flagstone"
 ground_texture_strength = 0.8
