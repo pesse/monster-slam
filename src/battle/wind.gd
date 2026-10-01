@@ -24,7 +24,7 @@ const SWAY := {
 	"autumn_yellow": 0.02, "boab": 0.006, "vine_row": 0.015,
 	# Gras
 	"grass": 0.07, "dry_grass": 0.08, "fern": 0.05, "spinifex": 0.05, "reeds": 0.09,
-	"flower_tuft": 0.07,
+	"flower_tuft": 0.07, "green_grass": 0.08, "dune_grass": 0.09, "wild_flowers": 0.07,
 }
 
 static var _time := 0.0

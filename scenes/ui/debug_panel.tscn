@@ -3,60 +3,81 @@
 [ext_resource type="Script" path="res://src/ui/debug_panel.gd" id="1_debug"]
 
 [node name="DebugPanel" type="PanelContainer"]
+anchors_preset = 3
 anchor_left = 1.0
+anchor_top = 1.0
 anchor_right = 1.0
-offset_top = 60.0
-offset_right = -8.0
+anchor_bottom = 1.0
+offset_right = -16.0
+offset_bottom = -16.0
 grow_horizontal = 0
+grow_vertical = 0
+theme_type_variation = &"DebugPanel"
 script = ExtResource("1_debug")
 
 [node name="Root" type="VBoxContainer" parent="."]
+theme_type_variation = &"Tight"
 
-[node name="Toggle" type="CheckButton" parent="Root"]
+[node name="Toggle" type="Button" parent="Root"]
 focus_mode = 0
-button_pressed = true
+theme_type_variation = &"DebugButton"
+toggle_mode = true
 text = "🐞 Debug"
 
 [node name="Body" type="VBoxContainer" parent="Root"]
+visible = false
+theme_type_variation = &"Tight"
 
 [node name="TierLabel" type="Label" parent="Root/Body"]
+theme_type_variation = &"Caption"
 text = "Festung-Stufe"
 
 [node name="TierRow" type="HBoxContainer" parent="Root/Body"]
+theme_type_variation = &"Tight"
 
 [node name="Tier0" type="Button" parent="Root/Body/TierRow"]
 focus_mode = 0
+theme_type_variation = &"DebugButton"
 text = "0"
 
 [node name="Tier1" type="Button" parent="Root/Body/TierRow"]
 focus_mode = 0
+theme_type_variation = &"DebugButton"
 text = "1"
 
 [node name="Tier2" type="Button" parent="Root/Body/TierRow"]
 focus_mode = 0
+theme_type_variation = &"DebugButton"
 text = "2"
 
 [node name="Tier3" type="Button" parent="Root/Body/TierRow"]
 focus_mode = 0
+theme_type_variation = &"DebugButton"
 text = "3"
 
 [node name="Tier4" type="Button" parent="Root/Body/TierRow"]
 focus_mode = 0
+theme_type_variation = &"DebugButton"
 text = "4"
 
 [node name="CelebrateLabel" type="Label" parent="Root/Body"]
+theme_type_variation = &"Caption"
 text = "Feier"
 
 [node name="CelebrateRow" type="HBoxContainer" parent="Root/Body"]
+theme_type_variation = &"Tight"
 
 [node name="Task" type="Button" parent="Root/Body/CelebrateRow"]
 focus_mode = 0
+theme_type_variation = &"DebugButton"
 text = "Aufgabe"
 
 [node name="Word" type="Button" parent="Root/Body/CelebrateRow"]
 focus_mode = 0
+theme_type_variation = &"DebugButton"
 text = "Wort"
 
 [node name="Level" type="Button" parent="Root/Body/CelebrateRow"]
 focus_mode = 0
+theme_type_variation = &"DebugButton"
 text = "Level"

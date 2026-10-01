@@ -558,8 +558,15 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
   (gerechnetes Rauschen im Bodenshader, nimmt der Sonne ihren Anteil wie ein Schatten).
   Beide laufen nach `wind_time`, einem globalen Shader-Parameter, den ein `Wind`-Knoten mit
   dem skalierten delta treibt — in der Zeitlupe wehen sie langsamer. In der Luft treibt je
-  Thema eine Art `AmbientParticles` (Laub, Schnee, Staub, Pollen, Glühwürmchen) über dem
-  sichtbaren Boden. Stärke je Thema: `wind`, `clouds`, `particles`.
+  Thema eine Art `AmbientParticles` (Laub, Schnee, Pollen, Glühwürmchen) über dem
+  sichtbaren Boden — nur, wo dort wirklich etwas in der Luft wäre (kein Staub über der
+  Wüste, keine Glühwürmchen im Tageslicht des Dschungels). Laub fällt als Blattform aus den
+  Kronen der Laubbäume (`LEAF_TREES`, `crown_of`) und kippt im Fallen; Kirschblüten fallen
+  genauso aus jedem Blütenbaum (`BLOSSOM_TREES`, `AmbientParticles.blossoms`), unabhängig
+  von der Art des Themas. In trockenen Themen (`tumbleweeds`) rollt statt Staub selten
+  ein Steppenläufer (`Tumbleweeds`) mit dem Wind durchs Bild und schrumpft vor der Burg
+  weg. Beides gehört zu den Teilchen und fällt in „Schnell" weg. Stärke je Thema:
+  `wind`, `clouds`, `particles`.
 - **Schatten und Licht des Bodens.** Der Bodenshader beleuchtet selbst (`light()`): Grund
   ist das Umgebungslicht des Themas, die Sonne legt nur einen festen Anteil davon dazu
   (`shadow_depth`, nach Neigung zur Sonne). So steht flacher Boden in der Sonne in der Farbe
@@ -570,6 +577,37 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
   spannt sie sich bis `camera.far`, deshalb setzt `setup_view` `far` auf `SHADOW_DISTANCE`
   — der Wert bestimmt zugleich, wie weich die Schatten sind. Der Boden selbst wirft keinen
   Schatten (`dress_ground`), sonst braucht es einen großen Bias, der Baumschatten schluckt.
+- **Weg, Flecken, Hügelfuß.** Jeder Kampf hat einen Weg vom hinteren Bildrand ins
+  Festungstor (`BattlePath`): Bildgestaltung, kein Spielfeld — die Monster laufen über die
+  ganze Bahn. Der Verlauf (zwei Bögen und eine Schräge) wird je Kampf gewürfelt, die Art
+  (`path`: Trampelpfad, Weg, Bohlenweg, Pflaster) und `path_color` nennt das Thema.
+  Gezeichnet wird er im Bodenshader, der dieselbe Mittellinie rechnet (`path_centre` =
+  `BattlePath.centre_x`, die Zahlen kommen aus `apply_to`); die Streudeko fragt
+  `BattlePath.blocks`. Trampelpfad und Weg tragen eine eigene Detailtextur aus
+  `assets/textures/ground/` (`BattlePath.TEXTURES`: `dry_earth`, `gravel`; ein Thema kann
+  mit `path_texture` eine andere nennen), Bohlen und Pflaster rechnet der Shader. Der Rand
+  ist scharf mit feinem Ausfransen — weich sah der Weg verwaschen aus. Ebenfalls im Shader: Flecken in einem dritten Ton (`ground_patch`,
+  `ground_patch_amount`). Der Hügelfuß weicht in Bögen nach außen zurück
+  (`WaveRunner._foot_shift`) und ist hinter dem Spawn rund — nie nach innen, das Feld
+  bleibt flach (`tests/battle_ground_test.gd`).
+- **Bewuchs und Haine.** Zwischen der Streudeko wachsen kleine Halmbüschel, Blüten darin
+  und Sträucher um die Bäume (`GroundCover`), je Art ein MultiMesh. Die Formen entstehen im
+  Code; die Büschel nehmen die Bodenfarbe darunter (oder `cover_color`), Blüten und
+  Sträucher ihre aus dem Thema (`cover_flowers`, `bush_color`). Die Dichte ist `cover`
+  bzw. `bushes` des Themas mal `GraphicsQuality.cover`; die Büschel stehen in Klumpen mit
+  freien Flächen dazwischen, am dichtesten am Wegrand, nie auf dem Weg, in der Burg oder im
+  Schnee. `GroundCover.plan` rechnet die Lagen ohne zu bauen (kopflos gibt ein MultiMesh
+  sie nicht zurück; `tests/ground_cover_test.gd`). Die Bäume im Umland stehen meist in
+  Hainen (`GROVE_RADIUS`), ein paar einzeln.
+- **Farbgebung.** Die Kampfszene tonemappt (Filmic) und hebt Kontrast und Sättigung leicht
+  (`adjustment_*`). Die Sonne wird tief golden (`SunCycle.tint_at`, von `NOON_TINT` nach
+  `GOLDEN`) auf die Farbe des Themas; derselbe Ton geht als `sun_tint` an den Bodenshader.
+- **Grafikstufen** (`GraphicsQuality`, geräteweit in `UserSettings.graphics_quality`):
+  „Schön" zeigt alles, „Mittel" lässt Glow weg und halbiert MSAA, „Schnell" lässt dazu MSAA,
+  Wolken, Teilchen, Bodenflecken und die Farbkorrektur weg. Die Büschel des Bewuchses
+  halbiert „Mittel", „Schnell" lässt sie weg; die Sträucher bleiben. Schatten, Wind und der Weg
+  bleiben überall. Die Kosten misst `battle_theme_lab -- --fps`. Das alte `graphics_simple`
+  wird als „Schnell" gelesen, solange keine Stufe gespeichert ist.
 
 ## Fähigkeitsbäume: wofür die Punkte da sind
 
@@ -592,6 +630,14 @@ Start-Screen (`🌳 Fähigkeiten`), nicht am Kampf: gelernt wird zwischen den L�
   Ast ist damit ein Eintrag in der JSON, ein vierter Baum eine Datei — die drei
   vorhandenen rücken von selbst zusammen (`tests/skill_graph_layout_test.gd` prüft das bis
   sechs Bäume).
+- **Von Hand gesetzt wird je Id, nicht als Ganzes** (`SkillLayout`,
+  `assets/ui/skill_tree/layout.json`). Wo die Rechnung nicht schön ist, zieht man einen
+  Knoten oder Baumnamen in der Werkbank `skill_tree_lab` („Knoten verschieben",
+  „Speichern") und schreibt so die Datei. Jeder Knoten ohne Eintrag bleibt gerechnet, auch
+  ein neuer aus einem Pack. Ein Baumname ohne Eintrag rückt hinter den äußersten Knoten
+  seines Baums. Die Datei liegt in der EXE wie die Kartenpunkte: Sie ist Bild, nicht
+  Inhalt. Die gesetzten Plätze der ausgelieferten Bäume halten dieselbe Regel wie die
+  Rechnung (kein Knoten berührt einen anderen, `skill_graph_layout_test`).
 - **Gezeichnet statt gebaut** (`SkillGraph`, `_draw()`): drei Bäume mal vier Zuständen
   wären zwölf Theme-Variationen, und die Farbe eines Baums soll aus seiner JSON kommen
   (`color`) und nicht aus dem Theme. Der Screen zoomt mit dem Mausrad und lässt sich
@@ -650,6 +696,30 @@ Start-Screen (`🌳 Fähigkeiten`), nicht am Kampf: gelernt wird zwischen den L�
   Wer an den Beträgen dreht, vergleicht mit der Genesung, die nur an besiegten Monstern
   heilt. Im HUD steht die Rüstung als eigene Zeile über den HP, nur mit gelerntem Baum; die
   Festungstafel behält ohne sie ihre Höhe (`tests/hud_armor_test.gd`).
+- **Das Wachkatapult räumt ab, es beantwortet nicht** (`auto_catapult`, Bollwerk, Stufe 4
+  an der Wurzel). Es wirft nur, wenn die Festung des Laufs auf
+  `FortressModel.CATAPULT_TIER` (4) steht: es hilft beim letzten Stück einer Unit, nicht
+  am Anfang. Steigt die Stufe nach einer Welle, wirft es ab der nächsten. Ein Monster,
+  dessen Aufgabe beim Spawn gemeistert ist
+  (`PlayerProgress.is_mastered`: gesehen und über `MASTERY_CONFIDENCE`, dieselbe Regel wie
+  `mastered_count`), wird nach `CATAPULT_DELAY_MIN..MAX` abgeschossen
+  (`WaveRunner._catapult_later`). Bis dahin kann der Spieler es selbst treffen, dann fliegt
+  kein Stein. Gebucht wird nur „erledigt": `EventBus.monster_catapulted` statt
+  `monster_defeated`. `GameState` zählt `wave_resolved`, sonst nichts, und die Spur
+  schreibt `catapult`. Es gibt keinen `PlayerProgress.record`, keine Erfahrung, keine Punkte,
+  keine Serie, kein Heilen und keinen Eintrag in der Auflösung: sonst hielte das Katapult
+  eine Aufgabe ohne Abruf für gemeistert. Geworfen wird aus dem nächsten Katapultturm
+  (`FortressModel.catapults`/`fire`). Das Modell des Packs bringt Drehkranz
+  und Wurfarm als eigene Knoten mit: der Kranz dreht sich zum Ziel, der Arm schlägt aus.
+  Das Monster läuft dabei weiter. Gezielt wird auf den Ort, an dem es beim Einschlag steht
+  (`WaveRunner.catapult_lead`, `Monster.velocity`): Monster laufen geradeaus mit festem
+  Tempo, also reicht eine Gerade. Wurf und Stein laufen deshalb in Spielzeit wie die Monster
+  und anders als Pfeil und Sturmangriff, sonst stimmte der Vorhalt in der Zeitlupe nicht.
+  Kommt der Stein zu spät (Monster schon an der Mauer), wird nicht geworfen. Trifft der
+  Spieler vorher, schlägt der Stein ins Leere.
+  Die Werkbank wirft mit `battle_theme_lab -- --catapult` oder Taste K. `CatapultStone` ist
+  Low-Poly, der Einschlag ist der `Blast` des Explosionspfeils (`WaveRunner._blast_at`).
+  Stein und Blast sind im Vorwärmen.
 - **Die Zeitlupe hat eine Untergrenze** (`SkillTree.MIN_SLOW_FACTOR`), sonst fröre ein
   tiefer Baum das Spiel ein.
 - **Verlernen geht einzeln** (`SkillBook.forget`): mit dem Knoten fällt jeder gelernte

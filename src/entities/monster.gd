@@ -165,6 +165,12 @@ func head_height() -> float:
 	return top * HEAD_SHARE
 
 
+## Wie schnell und wohin es gerade läuft (Einheiten je Sekunde Spielzeit): geradeaus auf die
+## Festung zu, oder gar nicht, wenn es steht. Das Wachkatapult hält damit vor.
+func velocity() -> Vector3:
+	return Vector3.ZERO if _done else Vector3(0.0, 0.0, _speed)
+
+
 ## Bleibt stehen, wo es ist, und erreicht die Festung nicht mehr — getroffen, aber das
 ## Platzen kommt später (Sturmangriff in der Ich-Sicht).
 func halt() -> void:

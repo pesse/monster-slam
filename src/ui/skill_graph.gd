@@ -23,6 +23,8 @@ signal node_selected(id: String)
 
 ## Zoom oder Ausschnitt haben sich geändert — für die Prozentanzeige der Werkzeugleiste.
 signal view_changed()
+## Ein Platz wurde von Hand verschoben (nur mit `arranging`, Werkbank).
+signal arranged(id: String)
 
 const MIN_ZOOM := 0.35
 const MAX_ZOOM := 2.0
@@ -125,6 +127,15 @@ var _keyboard := false
 ## Der Zoom nach dem letzten Einpassen — die 100 % der Prozentanzeige.
 var _fit_zoom: float = 1.0
 
+## Werkbank (skill_tree_lab): Knoten und Baumnamen lassen sich ziehen statt wählen. Im
+## Spiel nie an.
+var arranging := false
+## Die von Hand gesetzten Plätze (SkillLayout), plus was in dieser Sitzung gezogen wurde.
+var _overrides: Dictionary = {}
+var _overrides_loaded := false
+## Was gerade gezogen wird (leer: nichts).
+var _moving: String = ""
+
 
 func _ready() -> void:
 	resized.connect(func() -> void:
@@ -143,7 +154,10 @@ func setup(entries: Array, unlocked: PackedStringArray, points: int) -> void:
 	_entries = entries
 	_unlocked = unlocked
 	_points = points
-	_places = SkillTree.layout(entries)
+	if not _overrides_loaded:
+		_overrides = SkillLayout.overrides()
+		_overrides_loaded = true
+	_places = SkillTree.layout(entries, _overrides)
 	if not _places.has(_selected):
 		_selected = ""
 	if not _places.has(_focused):
@@ -224,6 +238,12 @@ func _gui_input(event: InputEvent) -> void:
 	if _keyboard:
 		_keyboard = false
 		queue_redraw()
+	if not _moving.is_empty():
+		_overrides[_moving] = (motion.position - _origin) / _zoom
+		_places = SkillTree.layout(_entries, _overrides)
+		queue_redraw()
+		accept_event()
+		return
 	if not _dragging:
 		_set_hovered(id_at(motion.position))
 		return
@@ -336,6 +356,10 @@ func _on_button(button: InputEventMouseButton) -> void:
 				_set_hovered(id_at(button.position))
 				accept_event()
 		MOUSE_BUTTON_LEFT, MOUSE_BUTTON_MIDDLE:
+			if arranging and button.button_index == MOUSE_BUTTON_LEFT:
+				_arrange_button(button)
+				accept_event()
+				return
 			if button.pressed:
 				_pressed = true
 				_dragging = button.button_index == MOUSE_BUTTON_MIDDLE
@@ -348,6 +372,32 @@ func _on_button(button: InputEventMouseButton) -> void:
 				_pressed = false
 				_dragging = false
 			accept_event()
+
+
+## Werkbank: Drücken auf einen Knoten oder Baumnamen fasst ihn, Loslassen setzt ihn ab.
+## Daneben geschoben wird mit der mittleren Taste wie immer.
+func _arrange_button(button: InputEventMouseButton) -> void:
+	if button.pressed:
+		_moving = id_at(button.position)
+		return
+	if _moving.is_empty():
+		return
+	var id := _moving
+	_moving = ""
+	arranged.emit(id)
+
+
+## Die Plätze, wie sie gerade stehen — gesetzte und in der Sitzung gezogene. Zum Speichern.
+func overrides() -> Dictionary:
+	return _overrides.duplicate()
+
+
+## Setzt die Plätze neu (leer: alles wieder gerechnet) und zeichnet das Netz damit.
+func set_overrides(places: Dictionary) -> void:
+	_overrides = places.duplicate()
+	_overrides_loaded = true
+	_places = SkillTree.layout(_entries, _overrides)
+	queue_redraw()
 
 
 ## Der helle Ring um den Knoten unter dem Zeiger. Gezeichnet wird nur neu, wenn sich der

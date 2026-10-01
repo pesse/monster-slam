@@ -2,17 +2,21 @@
 # Erzeugt das Update-Manifest latest.json zu einer gebauten EXE: Prüfsumme, Signatur,
 # Release-Notes.
 #
+# `notes` trägt nur den aktuellen Release und bleibt für ältere Clients stehen; `history`
+# (optional, aus release_history.sh) trägt die Notes der letzten Releases, damit der Dialog
+# alles zeigt, was seit der installierten Fassung dazukam.
+#
 # Die Prüfsumme fängt den kaputten Download, die Signatur den manipulierten — sie allein
 # wäre keine Sicherung, denn sie steht im selben Manifest wie die URL. Geprüft wird in der
 # App gegen den öffentlichen Schlüssel in src/update/release_key.gd; wer den privaten Teil
 # austauscht, muss beide Seiten austauschen.
 #
 # Nutzung:
-#   make_latest_json.sh <exe> <version> <notes-datei> <privater-schlüssel> <download-url> <out>
+#   make_latest_json.sh <exe> <version> <notes-datei> <privater-schlüssel> <download-url> <out> [<history.json>]
 set -euo pipefail
 
-if [[ $# -ne 6 ]]; then
-	sed -n '2,15p' "$0" >&2
+if [[ $# -ne 6 && $# -ne 7 ]]; then
+	sed -n '2,19p' "$0" >&2
 	exit 2
 fi
 
@@ -22,11 +26,16 @@ NOTES_FILE="$3"
 KEY="$4"
 URL="$5"
 OUT="$6"
+HISTORY="${7:-}"
 
 for tool in openssl jq sha256sum; do
 	command -v "$tool" >/dev/null || { echo "FEHLER: $tool fehlt." >&2; exit 1; }
 done
 [[ -f "$EXE" ]] || { echo "FEHLER: '$EXE' existiert nicht." >&2; exit 1; }
+if [[ -n "$HISTORY" ]]; then
+	jq -e 'type == "array"' "$HISTORY" >/dev/null \
+		|| { echo "FEHLER: '$HISTORY' ist kein JSON-Array." >&2; exit 1; }
+fi
 
 SHA="$(sha256sum "$EXE" | cut -d' ' -f1)"
 
@@ -50,10 +59,12 @@ jq -n \
 	--arg url "$URL" \
 	--arg sha256 "$SHA" \
 	--arg signature "$SIG" \
+	--argjson history "$(if [[ -n "$HISTORY" ]]; then cat "$HISTORY"; else echo '[]'; fi)" \
 	'{
 		version: $version,
 		notes: $notes,
 		pub_date: $pub_date,
+		history: $history,
 		platforms: {
 			"windows-x86_64": { url: $url, sha256: $sha256, signature: $signature }
 		}

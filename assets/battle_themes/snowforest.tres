@@ -4,6 +4,10 @@
 
 [resource]
 script = ExtResource("1_theme")
+ground_patch = Color(0.78, 0.82, 0.9, 1)
+ground_patch_amount = 0.25
+path = "trail"
+path_color = Color(0.7, 0.74, 0.82, 1)
 ground_texture = "snow"
 ground_texture_strength = 0.4
 ground_low = Color(0.86, 0.89, 0.94, 1)
@@ -20,3 +24,5 @@ trees = Array[String](["forge/pine_snow.glb"])
 rocks = Array[String](["forge/boulder_snow.glb"])
 grass = Array[String]([])
 particles = "snow"
+cover = 0.0
+bushes = 0.0

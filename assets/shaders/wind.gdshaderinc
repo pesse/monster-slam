@@ -28,7 +28,9 @@ void vertex() {
 	UV = UV * uv1_scale.xy + uv1_offset.xy;
 	float h = clamp(VERTEX.y / sway_height, 0.0, 1.0);
 	float bend = h * h;
-	float phase = dot(NODE_POSITION_WORLD.xz, WIND_DIR) * 0.15;
+	// Lage aus MODEL_MATRIX, nicht NODE_POSITION_WORLD: in einem MultiMesh (GroundCover)
+	// trägt sie die des einzelnen Büschels, der Knoten nur die aller.
+	float phase = dot(MODEL_MATRIX[3].xz, WIND_DIR) * 0.15;
 	// Ein Grundzug in Windrichtung, darauf Böen; nie ganz zurück in die Ruhelage.
 	float gust = 0.35 + 0.6 * sin(wind_time * 1.1 - phase) + 0.25 * sin(wind_time * 2.3 - phase * 1.7);
 	// Blätter zittern je Ecke ein wenig gegeneinander.

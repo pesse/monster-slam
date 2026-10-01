@@ -4,3 +4,47 @@
 
 [node name="SkillTreeLab" type="Node"]
 script = ExtResource("1_lab")
+
+[node name="Arrange" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="Margin" type="MarginContainer" parent="Arrange"]
+theme_type_variation = &"ScreenMargin"
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Root" type="VBoxContainer" parent="Arrange/Margin"]
+theme_type_variation = &"ScreenStack"
+mouse_filter = 2
+alignment = 2
+
+[node name="Bar" type="PanelContainer" parent="Arrange/Margin/Root"]
+unique_name_in_owner = true
+self_modulate = Color(1, 1, 1, 0.85)
+size_flags_horizontal = 4
+
+[node name="Items" type="HBoxContainer" parent="Arrange/Margin/Root/Bar"]
+theme_type_variation = &"Tight"
+
+[node name="ArrangeButton" type="Button" parent="Arrange/Margin/Root/Bar/Items"]
+unique_name_in_owner = true
+focus_mode = 0
+toggle_mode = true
+text = "Knoten verschieben"
+
+[node name="SaveButton" type="Button" parent="Arrange/Margin/Root/Bar/Items"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "Speichern"
+
+[node name="ResetButton" type="Button" parent="Arrange/Margin/Root/Bar/Items"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "Alle berechnen"
+
+[node name="Status" type="Label" parent="Arrange/Margin/Root/Bar/Items"]
+unique_name_in_owner = true
+theme_type_variation = &"Hint"

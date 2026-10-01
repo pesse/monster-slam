@@ -1089,6 +1089,72 @@ slice_right = 36.0
 slice_bottom = 8.0
 scale = 1.0
 
+[sub_resource type="StyleBoxFlat" id="dbg_btn_normal"]
+content_margin_left = 8.0
+content_margin_top = 4.0
+content_margin_right = 8.0
+content_margin_bottom = 4.0
+bg_color = Color(0.18, 0.21, 0.3, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.5, 0.56, 0.7, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="dbg_btn_hover"]
+content_margin_left = 8.0
+content_margin_top = 4.0
+content_margin_right = 8.0
+content_margin_bottom = 4.0
+bg_color = Color(0.24, 0.28, 0.38, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.66, 0.72, 0.85, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="dbg_btn_pressed"]
+content_margin_left = 8.0
+content_margin_top = 4.0
+content_margin_right = 8.0
+content_margin_bottom = 4.0
+bg_color = Color(0.09, 0.11, 0.16, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.5, 0.56, 0.7, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="dbg_panel"]
+content_margin_left = 8.0
+content_margin_top = 8.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
+bg_color = Color(0.12, 0.14, 0.22, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.5, 0.56, 0.7, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(0, 0, 0, 0.4)
+shadow_size = 6
+
 [resource]
 default_font_size = 18
 Button/colors/font_color = Color(0.92, 0.94, 0.98, 1)
@@ -1567,3 +1633,10 @@ HudPlateText/font_sizes/font_size = 18
 HudPlateTextLarge/base_type = &"HudText"
 HudPlateTextLarge/constants/outline_size = 6
 HudPlateTextLarge/font_sizes/font_size = 28
+DebugPanel/base_type = &"PanelContainer"
+DebugPanel/styles/panel = SubResource("dbg_panel")
+DebugButton/base_type = &"Button"
+DebugButton/font_sizes/font_size = 13
+DebugButton/styles/hover = SubResource("dbg_btn_hover")
+DebugButton/styles/normal = SubResource("dbg_btn_normal")
+DebugButton/styles/pressed = SubResource("dbg_btn_pressed")

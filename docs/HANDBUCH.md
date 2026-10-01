@@ -274,6 +274,13 @@ hängt von der Art der Aufgabe ab.
 - **Rüstung** gibt es nur mit dem Fähigkeitsbaum „Bollwerk“. Sie fängt Schaden ab, bevor
   die HP sinken. Aufgefüllt wird sie nur, wenn du den Ast gelernt hast, der sie zu jeder
   Welle ein Stück instand setzt.
+- **Wachkatapult:** Mit diesem Bollwerk-Knoten schießen die Katapulte der Festung jedes
+  Monster ab, dessen Aufgabe du schon gemeistert hast, ein bis drei Sekunden nach seinem
+  Erscheinen. Katapulte stehen erst auf der voll ausgebauten Festung (Stufe 4). Das
+  Wachkatapult hilft dir also beim letzten Stück einer Unit. Ein Stein fliegt im Bogen und explodiert. Das Monster zählt für die Welle als
+  erledigt, aber Erfahrung und Punkte gibt es dafür nicht, und dein Lernstand ändert sich
+  nicht. Bist du schneller und tippst das Wort vorher selbst, zählt dein Treffer wie immer.
+  Du siehst die Katapulte auf den Ecktürmen dabei zielen und werfen.
 - Ein Monster, das die Rüstung abfängt, zählt trotzdem als **durchgelassen**: für die
   Serie, für die Statistik und für die Güte der Schatzkiste.
 - Fallen die HP auf 0, ist die Festung gefallen und der Lauf zu Ende (Kapitel 8).
@@ -317,7 +324,8 @@ Mit **Escape** kommst du während einer Welle sofort zurück zum Start-Screen.
 - Die angefangene Welle zählt nicht: es gibt keine Auflösung, keine Statistik und keine
   Schatzkiste.
 - Erfahrung, die du in der Welle schon bekommen hast, bleibt dir.
-- Nach dem Ende einer Welle ist Escape ohne Wirkung; dort führen die Knöpfe weiter.
+- Nach dem Ende einer Welle ist Escape ohne Wirkung; dort führen die Knöpfe weiter
+  (oder Enter).
 
 ## 8. Der Wellenabschluss
 
@@ -377,7 +385,7 @@ Rechts steht die **Schatzkiste**.
   trotzdem ein Goldstück: aus einer Welle ganz mit leeren Händen zu gehen, frustriert,
   gerade wenn die Wörter noch neu sind.
 
-Mit „Weiter ▸“ geht es zur zweiten Stufe.
+Mit „Weiter ▸“ (oder Enter, sobald die Kiste offen ist) geht es zur zweiten Stufe.
 
 ### Stufe 2: Die nächste Welle
 
@@ -388,7 +396,7 @@ Aufgaben du im Lauf neu gemeistert hast. Mit „↺“ markierte Wörter hast du
 
 Darunter wählst du die **Schwierigkeit der nächsten Welle**, im Vergleich zu der eben
 gespielten: „Viel leichter“, „Leichter“, „Gleich“, „Schwieriger“, „Viel schwieriger“.
-Vorausgewählt ist „Gleich“. Mit „Nächste Welle“ geht es weiter, mit „⟵ Zurück zum
+Vorausgewählt ist „Gleich“. Mit „Nächste Welle“ (oder Enter) geht es weiter, mit „⟵ Zurück zum
 Menü“ endet der Lauf.
 
 Jede neue Welle bringt ein Monster mehr als die vorige.
@@ -397,7 +405,8 @@ Jede neue Welle bringt ein Monster mehr als die vorige.
 
 Die Überschrift lautet dann „Festung gefallen (Welle …)“. Die Kiste gibt es trotzdem:
 verdient ist verdient, und das Gold gehört dir, nicht dem Lauf. Auf Stufe 2 steht
-„Lauf beendet“ mit der Bilanz des ganzen Laufs, und es gibt nur den Weg zurück ins Menü.
+„Lauf beendet“ mit der Bilanz des ganzen Laufs, und es gibt nur den Weg zurück ins Menü
+(auch mit Enter).
 Der nächste Lauf beginnt mit voller Festung.
 
 ## 9. Gold, Erfahrung und Level
@@ -533,12 +542,13 @@ rechts ist der Preis in Skillpunkten. Unten links erklärt eine Legende die Zeic
 Jeder Baum hat einen eigenen Anfangsknoten und verzweigt sich danach in zwei Äste. Man
 baut einen Ast aus und kann den anderen liegen lassen. Knoten der ersten und zweiten
 Stufe kosten 1 Skillpunkt, die der dritten 2. Im Späher kosten der Anfang, der
-Sturmangriff und der Langbogen je 5, der Explosionspfeil danach 3.
+Sturmangriff und der Langbogen je 5, der Explosionspfeil danach 3. Das Wachkatapult im
+Bollwerk kostet 8 und hängt als dritter Ast direkt am Anfang.
 
 | Baum | Was er tut |
 |---|---|
 | **Genesung** | Jedes besiegte Monster heilt die Festung um mehr HP. |
-| **Bollwerk** | Die Festung bekommt Rüstung. Ein Ast vergrößert den Vorrat, der andere setzt ihn zu jeder Welle ein Stück instand. |
+| **Bollwerk** | Die Festung bekommt Rüstung. Ein Ast vergrößert den Vorrat, der andere setzt ihn zu jeder Welle ein Stück instand. Ganz außen wartet das **Wachkatapult**, das Monster mit gemeisterten Aufgaben abschießt. |
 | **Zeitwandler** | Die Zeitlupe beim Tippen hält länger nach (ein Ast) oder wird noch tiefer (der andere Ast). |
 | **Späher** | Der Anfang, der **Späherblick**, schaltet die Ich-Sicht frei (Kapitel 5). Beide Äste danach machen dich darin schneller, am Ende des einen warten der **Sturmangriff** und der **Langbogen**, nach dem Langbogen der **Explosionspfeil**. |
 

@@ -67,3 +67,7 @@ sun_sin={
 "type": "float",
 "value": 0.819
 }
+sun_tint={
+"type": "color",
+"value": Color(1, 1, 1, 1)
+}

@@ -4,6 +4,10 @@
 
 [resource]
 script = ExtResource("1_theme")
+ground_patch = Color(0.56, 0.62, 0.28, 1)
+ground_patch_amount = 0.25
+path = "road"
+path_color = Color(0.6, 0.6, 0.58, 1)
 light_from = "sydney_bush"
 ground_texture = "grass"
 ground_texture_strength = 0.8
@@ -15,3 +19,8 @@ rocks = Array[String](["forge/sandstone_rock.glb"])
 grass = Array[String]([])
 props = Array[String](["forge/hills_hoist.glb", "forge/wheelie_bin.glb", "forge/bbq.glb"])
 landmarks = Array[String](["forge/cottage.glb", "forge/cottage.glb", "forge/water_tank.glb"])
+cover = 1.4
+cover_flowers = Array[Color]([Color(0.95, 0.95, 0.9, 1), Color(0.95, 0.85, 0.3, 1)])
+cover_flower_amount = 0.03
+bush_color = Color(0.2, 0.38, 0.14, 1)
+bushes = 1.0

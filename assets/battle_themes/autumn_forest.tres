@@ -4,6 +4,10 @@
 
 [resource]
 script = ExtResource("1_theme")
+ground_patch = Color(0.7, 0.36, 0.16, 1)
+ground_patch_amount = 0.35
+path = "trail"
+path_color = Color(0.42, 0.3, 0.18, 1)
 ground_texture = "autumn_leaves"
 ground_texture_strength = 0.8
 ground_low = Color(0.64, 0.46, 0.2, 1)
@@ -20,3 +24,6 @@ grass = Array[String](["forge/dry_grass.glb", "forge/fern.glb"])
 props = Array[String]([])
 landmarks = Array[String]([])
 particles = "leaves"
+cover = 1.8
+bush_color = Color(0.62, 0.3, 0.12, 1)
+bushes = 0.8

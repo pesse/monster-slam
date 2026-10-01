@@ -4,6 +4,10 @@
 
 [resource]
 script = ExtResource("1_theme")
+ground_patch = Color(0.5, 0.56, 0.32, 1)
+ground_patch_amount = 0.3
+path = "cobble"
+path_color = Color(0.6, 0.56, 0.52, 1)
 ground_texture = "flagstone"
 ground_texture_strength = 0.7
 ground_low = Color(0.68, 0.6, 0.42, 1)
@@ -19,3 +23,6 @@ rocks = Array[String](["forge/sky_boulder.glb"])
 grass = Array[String](["forge/dry_grass.glb"])
 props = Array[String]([])
 landmarks = Array[String](["forge/ruin_column.glb", "forge/marble_column.glb", "forge/aqueduct.glb", "forge/floating_rock.glb"])
+cover = 1.0
+bush_color = Color(0.36, 0.42, 0.22, 1)
+bushes = 0.3

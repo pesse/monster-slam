@@ -234,3 +234,46 @@ func test_the_shared_halo_holds_exactly_the_starting_nodes() -> void:
 ## Wo `at` zur Ellipse mit den Halbachsen `axes` liegt: unter 1 drin, über 1 draußen.
 static func _ellipse(at: Vector2, axes: Vector2) -> float:
 	return pow(at.x / axes.x, 2.0) + pow(at.y / axes.y, 2.0)
+
+
+# --- Von Hand gesetzte Plätze -------------------------------------------------
+
+## Ein gesetzter Platz gilt, die übrigen bleiben gerechnet.
+func test_an_override_moves_only_its_node() -> void:
+	var entries := _forest(2)
+	var plain := SkillTree.layout(entries)
+	var moved := SkillTree.layout(entries, {"tree.0.tip0": Vector2(12.0, -700.0)})
+	assert_vector(moved["tree.0.tip0"]).is_equal(Vector2(12.0, -700.0))
+	assert_vector(moved["tree.0.tip1"]).is_equal(plain["tree.0.tip1"])
+	assert_vector(moved["tree.1.tip0"]).is_equal(plain["tree.1.tip0"])
+
+
+## Rückt ein Knoten weiter nach außen, rückt der Name seines Baums mit — sonst stünde er
+## mitten im Fächer.
+func test_the_tree_name_follows_an_outer_override() -> void:
+	var entries := _forest(1)
+	var plain := SkillTree.layout(entries)
+	var far: Vector2 = (plain["tree.0.tip0"] as Vector2) * 2.0
+	var moved := SkillTree.layout(entries, {"tree.0.tip0": far})
+	assert_float((moved["tree.0"] as Vector2).length()).is_greater(
+			(plain["tree.0"] as Vector2).length())
+
+
+## Die gesetzten Plätze der ausgelieferten Bäume halten dieselbe Regel wie die Rechnung:
+## kein Knoten berührt einen anderen.
+func test_the_shipped_overrides_keep_nodes_apart() -> void:
+	var entries := ContentRegistry.skills.values()
+	var overrides := SkillLayout.overrides()
+	if entries.is_empty() or overrides.is_empty():
+		return
+	var places := SkillTree.layout(entries, overrides)
+	var ids: Array = []
+	for entry in entries:
+		if str((entry as Dictionary).get("kind", "")) == "skill":
+			ids.append(str((entry as Dictionary).get("id", "")))
+	for i in ids.size():
+		for j in range(i + 1, ids.size()):
+			var gap: float = (places[ids[i]] as Vector2).distance_to(places[ids[j]])
+			assert_float(gap).override_failure_message(
+					"'%s' und '%s' liegen nur %.1f px auseinander" % [ids[i], ids[j], gap]
+			).is_greater(SkillTree.NODE_RADIUS * 2.0)

@@ -240,3 +240,49 @@ func test_back_and_forward_share_one_row() -> void:
 	assert_object(back.get_parent()).is_same(_button("StartButton").get_parent())
 	assert_bool(_visible("ResultContinue")).is_false()
 	assert_bool(_visible("StartButton")).is_true()
+
+
+# --- Enter ----------------------------------------------------------------------
+
+func _press_enter() -> void:
+	var key := InputEventKey.new()
+	key.keycode = KEY_ENTER
+	key.pressed = true
+	get_viewport().push_input(key)
+
+
+## Enter geht weiter wie der rechte Knopf der Fußzeile — aber nicht an einer
+## ungeöffneten Kiste vorbei.
+func test_enter_goes_on_once_the_chest_is_open() -> void:
+	var deltas: Array = []
+	_stats.next_wave_requested.connect(func(delta: int) -> void: deltas.append(delta))
+	_stats.enter_grace_ms = 0
+	_stats.show_stats(_wave_data())
+	_press_enter()
+	assert_bool(_visible("ResultPage")).is_true()
+	var chest := _stats.get_node("%Chest") as TreasureChest
+	chest.begin_hold()
+	chest.hold(TreasureChest.HOLD_TIME)
+	_press_enter()
+	assert_bool(_visible("NextPage")).is_true()
+	_press_enter()
+	assert_array(deltas).is_equal([0])
+
+
+## Direkt nach dem Stufenwechsel zählt Enter noch nicht: das Enter der letzten Antwort
+## soll nicht durch das Ergebnis klicken.
+func test_enter_waits_a_moment_after_each_stage() -> void:
+	_stats.show_stats(_wave_data({"chest": {}}))
+	_press_enter()
+	assert_bool(_visible("ResultPage")).is_true()
+
+
+## Nach einer Niederlage führt Enter auf Stufe 2 zurück — es gibt keine nächste Welle.
+func test_after_a_defeat_enter_leads_back() -> void:
+	var back: Array = []
+	_stats.back_to_menu_requested.connect(func() -> void: back.append(true))
+	_stats.enter_grace_ms = 0
+	_stats.show_stats(_wave_data({"won": false, "chest": {}}))
+	_press_enter()
+	_press_enter()
+	assert_array(back).has_size(1)

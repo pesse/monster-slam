@@ -4,6 +4,10 @@
 
 [resource]
 script = ExtResource("1_theme")
+ground_patch = Color(0.98, 0.84, 0.44, 1)
+ground_patch_amount = 0.3
+path = "trail"
+path_color = Color(0.7, 0.44, 0.24, 1)
 ground_texture = "grass"
 ground_texture_strength = 0.8
 ground_low = Color(0.86, 0.62, 0.22, 1)
@@ -17,4 +21,8 @@ sun_energy = 1.25
 trees = Array[String](["forge/acacia.glb", "forge/acacia.glb", "forge/dead_tree.glb"])
 rocks = Array[String](["forge/sandstone_rock.glb"])
 grass = Array[String](["forge/dry_grass.glb"])
-particles = "dust"
+cover = 1.6
+cover_color = Color(0.8, 0.64, 0.3, 1)
+bush_color = Color(0.4, 0.46, 0.2, 1)
+bushes = 0.4
+tumbleweeds = true

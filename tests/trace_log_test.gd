@@ -72,6 +72,19 @@ func test_masteries_are_logged() -> void:
 	assert_str(str(lines[1]["lex"])).is_equal(TASK["source_id"])
 
 
+## Das Wachkatapult schreibt eine eigene Zeile: keine Antwort, aber welche Aufgabe und mit
+## welcher Confidence.
+func test_a_catapult_shot_is_logged() -> void:
+	_log.note_catapult(TASK)
+	var lines := _lines()
+	assert_int(lines.size()).is_equal(1)
+	assert_str(str(lines[0]["e"])).is_equal("catapult")
+	assert_str(str(lines[0]["id"])).is_equal(TASK["learnable_id"])
+	assert_str(str(lines[0]["lex"])).is_equal(TASK["source_id"])
+	assert_str(str(lines[0]["prompt"])).is_equal(TASK["prompt"])
+	assert_bool(lines[0].has("conf")).is_true()
+
+
 ## „Schnell auflösen" steht als eigene Zeile vor den Leaks, die es auslöst.
 func test_a_fast_resolve_is_logged_with_its_wave() -> void:
 	GameState.current_wave = "procedural_3"

@@ -4,6 +4,10 @@
 
 [resource]
 script = ExtResource("1_theme")
+ground_patch = Color(0.42, 0.46, 0.3, 1)
+ground_patch_amount = 0.3
+path = "boardwalk"
+path_color = Color(0.59, 0.45, 0.28, 1)
 ground_texture = "marsh"
 ground_texture_strength = 0.8
 ground_low = Color(0.3, 0.46, 0.2, 1)
@@ -16,7 +20,12 @@ sun_color = Color(1.0, 0.88, 0.66, 1)
 sun_energy = 1.25
 trees = Array[String](["forge/eucalyptus.glb", "forge/pandanus.glb"])
 rocks = Array[String](["forge/boulder_grey.glb"])
-grass = Array[String](["forge/reeds.glb", "forge/fern.glb"])
+grass = Array[String](["forge/reeds.glb", "forge/fern.glb", "forge/green_grass.glb"])
 props = Array[String]([])
 landmarks = Array[String](["forge/termite_mound.glb"])
 particles = "fireflies"
+cover = 3.0
+cover_flowers = Array[Color]([Color(0.95, 0.95, 0.9, 1), Color(0.95, 0.85, 0.3, 1)])
+cover_flower_amount = 0.05
+bush_color = Color(0.2, 0.36, 0.16, 1)
+bushes = 0.8

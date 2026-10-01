@@ -73,6 +73,15 @@ urheberrechtlich geschütztem Lehrbuchmaterial und liegen im privaten Submodule
 - HMAC-Geheimnis des Melde-Endpunkts: nur in `ms-secret.php` über dem Docroot — nicht ins
   Repo, kein GitHub-Secret, keine Konstante. Geprägte Token werden nicht committet.
 
+## Release-Notes
+
+Die Beschreibung eines GitHub-Releases ist der Text im Update-Dialog. Der Dialog zeigt
+**alle** Releases, die seit der installierten Fassung dazukamen (Manifest trägt die der
+letzten 7 Tage, mindestens 3; `tools/release/release_history.sh`) — bei mehreren Releases
+am Tag liest ein Kind schnell zehn davon hintereinander. Deshalb kompakt: je Neuerung ein
+fetter Titel und ein, zwei Sätze aus Spielersicht, keine technischen Details, keine
+Aufzählung von Kleinkram; unter ~600 Zeichen je Release.
+
 ## Harte Regeln
 
 **Packs** (`docs/PACK_FORMAT.md`, ADR 0001) — die EXE enthält keine Sprachdaten:
@@ -165,7 +174,7 @@ urheberrechtlich geschütztem Lehrbuchmaterial und liegen im privaten Submodule
   ist: sperren und umbeschriften statt ein-/ausblenden; Inhaltsentscheidungen vor dem
   Anzeigen.
 - Entwickler-Werkbänke liegen unter `scenes/dev/`, `src/dev/` (im Export ausgeschlossen),
-  nie als Knopf im Startmenü.
+  nie als Knopf im Startmenü. Jede Taste einer Werkbank hat auch einen Knopf.
 
 ## Tests
 

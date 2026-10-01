@@ -42,6 +42,9 @@ func _initialize() -> void:
 	# Gras
 	_export("dry_grass", _dry_grass())
 	_export("fern", _fern())
+	_export("green_grass", _grass(79, LUSH_A, LUSH_B, 0.85))
+	_export("dune_grass", _grass(83, DUNE_A, DUNE_B, 1.0))
+	_export("wild_flowers", _wild_flowers())
 	# Wahrzeichen
 	_export("ruin_column", _ruin_column())
 	_export("marble_column", _marble_column())
@@ -468,19 +471,33 @@ const BOULDER_B := Color(0.27, 0.27, 0.30)
 const MOSS := Color(0.18, 0.28, 0.11)
 
 
-## Findling, flach auf dem Boden. `cover` (Schnee, Moos) liegt auf den Facetten, die nach
-## oben zeigen; ohne (`r` < 0) bleibt er grau. Etwa 0.5 hoch und 1 breit — der Kampf
-## stellt Felsen mit ~2.3 hin.
+const BOULDER_TOP := Color(0.41, 0.41, 0.42)
+
+
+## Findling, flach auf dem Boden. `cover` (Schnee, Moos) liegt nur auf den Facetten, die
+## fast flach nach oben zeigen — eine Kappe, kein Überzug; ohne (`r` < 0) bleibt er grau.
+## Etwa 0.5 hoch und 1 breit — der Kampf stellt Felsen mit ~2.3 hin.
 func _boulder(seed_value: int, cover: Color) -> Forge:
 	var f := Forge.new()
 	var rng := _rng(seed_value)
-	var paint := func(_m: Vector3, n: Vector3) -> Color:
-		if cover.r >= 0.0 and n.y > 0.6:
-			return cover
-		return BOULDER_A if rng.randf() < 0.5 else BOULDER_B
-	f.lump(Vector3(0, 0.12, 0), Vector3(0.5, 0.4, 0.45), 4, 6, rng, 0.25, paint, -0.12)
-	f.lump(Vector3(0.45, 0.06, 0.3), Vector3(0.22, 0.18, 0.2), 3, 5, rng, 0.2, paint, -0.06)
+	var paint := _stone_paint(rng, BOULDER_TOP, BOULDER_A, BOULDER_B, cover)
+	f.rock(Vector3(0, 0.12, 0), Vector3(0.5, 0.4, 0.45), rng, 5, paint, -0.12)
+	f.rock(Vector3(0.45, 0.06, 0.3), Vector3(0.22, 0.18, 0.2), rng, 3, paint, -0.06)
 	return f
+
+
+## Farbe einer Steinfacette: oben `top`, an den Seiten `a` und `b` — nach Neigung, mit
+## etwas Zufall an der Grenze, damit die Töne nicht als Ringe um den Stein liegen. `cover`
+## (r < 0: keine) nur auf fast waagerechten Flächen oben.
+func _stone_paint(rng: RandomNumberGenerator, top: Color, a: Color, b: Color,
+		cover := Color(-1, -1, -1)) -> Callable:
+	return func(_m: Vector3, n: Vector3) -> Color:
+		if cover.r >= 0.0 and n.y > 0.82:
+			return cover
+		var up := n.y + rng.randf_range(-0.15, 0.15)
+		if up > 0.55:
+			return top
+		return a if up > -0.1 else b
 
 
 const DRY_A := Color(0.60, 0.48, 0.26)
@@ -498,6 +515,55 @@ func _dry_grass() -> Forge:
 		var foot := out * rng.randf_range(0.05, 0.35)
 		var tip := foot + out * rng.randf_range(0.25, 0.5) + Vector3(0, rng.randf_range(0.65, 1.05), 0)
 		f.blade(foot - side, foot + side, tip, DRY_A if k % 2 == 0 else DRY_B)
+	return f
+
+
+const LUSH_A := Color(0.30, 0.50, 0.16)
+const LUSH_B := Color(0.22, 0.40, 0.12)
+const DUNE_A := Color(0.62, 0.62, 0.34)
+const DUNE_B := Color(0.50, 0.52, 0.28)
+
+
+## Grasbüschel wie dry_grass, in den Farben `a`/`b` und `height` mal so hoch: grünes Gras
+## für Wiesen und Wälder, Dünengras für Strände. Grüne Themen bekamen sonst das gekaufte
+## grass.glb oder dry_grass, und deren Orange stand auf der Wiese wie Herbstlaub.
+func _grass(seed_value: int, a: Color, b: Color, height: float) -> Forge:
+	var f := Forge.new()
+	var rng := _rng(seed_value)
+	for k in 19:
+		var yaw := TAU * k / 19.0 + rng.randf_range(-0.2, 0.2)
+		var out := Vector3(cos(yaw), 0, sin(yaw))
+		var side := Vector3(-out.z, 0, out.x) * 0.09
+		var foot := out * rng.randf_range(0.05, 0.3)
+		var tip := foot + out * rng.randf_range(0.2, 0.45) \
+				+ Vector3(0, rng.randf_range(0.6, 1.0) * height, 0)
+		f.blade(foot - side, foot + side, tip, a if k % 2 == 0 else b)
+	return f
+
+
+const WILD_YELLOW := Color(0.95, 0.80, 0.25)
+const WILD_VIOLET := Color(0.62, 0.48, 0.86)
+
+
+## Wiesenblumen: ein niedriges grünes Büschel, darüber Blüten in Gelb, Violett und Weiß.
+## Wie flower_tuft, aber ohne das Rosa des Frühlingshains. Etwa 0.6 hoch.
+func _wild_flowers() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(97)
+	for k in 13:
+		var a := TAU * k / 13.0 + rng.randf_range(-0.2, 0.2)
+		var d := Vector3(cos(a), 0, sin(a))
+		var foot := d * rng.randf_range(0.0, 0.2)
+		var side := Vector3(-d.z, 0, d.x) * 0.06
+		f.blade(foot - side, foot + side, foot + d * 0.25 + Vector3(0, rng.randf_range(0.3, 0.45), 0),
+				LUSH_A if k % 2 == 0 else LUSH_B)
+	var petals := [WILD_YELLOW, WILD_VIOLET, PETAL_WHITE]
+	for k in 7:
+		var a := TAU * k / 7.0 + rng.randf_range(-0.3, 0.3)
+		var r := rng.randf_range(0.1, 0.32)
+		var top := Vector3(cos(a) * r, rng.randf_range(0.42, 0.62), sin(a) * r)
+		f.frustum(Vector3(top.x * 0.4, 0, top.z * 0.4), top, 0.015, 0.012, 3, LUSH_B, 0.0)
+		f.blob(top, 0.08, petals[k % petals.size()], rng, 0.0)
 	return f
 
 
@@ -746,12 +812,9 @@ const RED_ROCK_TOP := Color(0.66, 0.32, 0.18)
 func _red_boulder() -> Forge:
 	var f := Forge.new()
 	var rng := _rng(131)
-	var paint := func(_m: Vector3, n: Vector3) -> Color:
-		if n.y > 0.7:
-			return RED_ROCK_TOP
-		return RED_ROCK_A if rng.randf() < 0.5 else RED_ROCK_B
-	f.lump(Vector3(0, 0.12, 0), Vector3(0.5, 0.42, 0.45), 4, 6, rng, 0.25, paint, -0.12)
-	f.lump(Vector3(-0.42, 0.05, 0.28), Vector3(0.24, 0.2, 0.22), 3, 5, rng, 0.2, paint, -0.05)
+	var paint := _stone_paint(rng, RED_ROCK_TOP, RED_ROCK_A, RED_ROCK_B)
+	f.rock(Vector3(0, 0.12, 0), Vector3(0.5, 0.42, 0.45), rng, 5, paint, -0.12)
+	f.rock(Vector3(-0.42, 0.05, 0.28), Vector3(0.24, 0.2, 0.22), rng, 3, paint, -0.05)
 	return f
 
 
@@ -1833,12 +1896,14 @@ func _tholos() -> Forge:
 func _sky_boulder() -> Forge:
 	var f := Forge.new()
 	var rng := _rng(283)
-	var paint := func(_m: Vector3, n: Vector3) -> Color:
-		if n.y < 0.3 and rng.randf() < 0.1:
+	var stone := _stone_paint(rng, SKY_ROCK_A, SKY_ROCK_A, SKY_ROCK_B)
+	# Glimmen nur in ein paar Seitenflächen; bei den feineren Facetten von `rock` seltener.
+	var paint := func(m: Vector3, n: Vector3) -> Color:
+		if n.y < 0.3 and rng.randf() < 0.05:
 			return EMBER
-		return SKY_ROCK_A if rng.randf() < 0.5 else SKY_ROCK_B
-	f.lump(Vector3(0, 0.14, 0), Vector3(0.48, 0.45, 0.42), 4, 6, rng, 0.3, paint, -0.14)
-	f.lump(Vector3(-0.42, 0.06, 0.32), Vector3(0.2, 0.2, 0.18), 3, 5, rng, 0.2, paint, -0.06)
+		return stone.call(m, n)
+	f.rock(Vector3(0, 0.14, 0), Vector3(0.48, 0.45, 0.42), rng, 5, paint, -0.14)
+	f.rock(Vector3(-0.42, 0.06, 0.32), Vector3(0.2, 0.2, 0.18), rng, 3, paint, -0.06)
 	return f
 
 
@@ -2179,6 +2244,56 @@ class Forge:
 					var p2: Vector3 = t[2]
 					var m := (p0 + p1 + p2) / 3.0
 					var n := (p1 - p0).cross(p2 - p0)
+					if n.dot(m - c) < 0.0:
+						n = -n
+					tri_out(p0, p1, p2, paint.call(m, n.normalized()), c)
+
+	## Stein um `c` mit Halbachsen `radii`, unten bei `floor_y` abgeflacht: eine runde,
+	## leicht verbeulte Grundform, von der `cuts` Ebenen wie mit dem Meißel abgeschlagen sind.
+	## So bleibt er Low-Poly, besteht aber aus wenigen großen Bruchflächen und vielen kleinen
+	## Kanten dazwischen statt aus einer Handvoll riesiger Facetten wie `lump`.
+	func rock(c: Vector3, radii: Vector3, rng: RandomNumberGenerator, cuts: int,
+			paint: Callable, floor_y := -INF) -> void:
+		var planes: Array[Vector4] = []
+		for k in cuts:
+			var yaw := TAU * k / cuts + rng.randf_range(-0.5, 0.5)
+			var lift := rng.randf_range(-0.15, 0.9)
+			var n := Vector3(cos(yaw), lift, sin(yaw)).normalized()
+			planes.append(Vector4(n.x, n.y, n.z, rng.randf_range(0.62, 0.84)))
+		var rings := 6
+		var sides := 10
+		var pts: Array = []
+		for i in rings + 1:
+			var row: Array[Vector3] = []
+			var phi := PI * i / rings
+			for j in sides:
+				var theta := TAU * j / sides + (PI / sides if i % 2 == 1 else 0.0)
+				var q := Vector3(sin(phi) * cos(theta), cos(phi), sin(phi) * sin(theta))
+				if i > 0 and i < rings:
+					q *= 1.0 + rng.randf_range(-0.07, 0.07)
+				for plane in planes:
+					var pn := Vector3(plane.x, plane.y, plane.z)
+					var over := q.dot(pn) - plane.w
+					if over > 0.0:
+						q -= pn * over
+				var p := q * radii
+				p.y = maxf(p.y, floor_y)
+				row.append(c + p)
+			pts.append(row)
+		for i in rings:
+			for j in sides:
+				var a: Vector3 = pts[i][j]
+				var b: Vector3 = pts[i][(j + 1) % sides]
+				var d: Vector3 = pts[i + 1][(j + 1) % sides]
+				var e: Vector3 = pts[i + 1][j]
+				for t: Array in [[a, b, d], [a, d, e]]:
+					var p0: Vector3 = t[0]
+					var p1: Vector3 = t[1]
+					var p2: Vector3 = t[2]
+					var m := (p0 + p1 + p2) / 3.0
+					var n := (p1 - p0).cross(p2 - p0)
+					if n.length_squared() < 1e-12:
+						continue
 					if n.dot(m - c) < 0.0:
 						n = -n
 					tri_out(p0, p1, p2, paint.call(m, n.normalized()), c)

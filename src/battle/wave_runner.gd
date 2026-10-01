@@ -67,14 +67,32 @@ var _fp: FirstPersonView = null
 ## Spielt dieser Lauf aus der Ich-Sicht? Einmal am Anfang gefragt: schon die Streudeko
 ## richtet sich danach, bevor die Ich-Sicht steht.
 var _first_person_run := false
-## Laufende Sturmangriffe und fliegende Pfeile (Ich-Sicht): so lange wartet das Wellenende.
+## Laufende Sturmangriffe, fliegende Pfeile und Steine: so lange wartet das Wellenende.
 var _underway := 0
+## Wachkatapult gelernt (Bollwerk, `auto_catapult`): Monster mit gemeisterter Aufgabe
+## werden abgeschossen.
+var _catapult := false
+## Die Katapulte der Festung (FortressModel.catapults) — erst ab FortressModel.CATAPULT_TIER
+## gibt es welche, und nur dann wirft das Wachkatapult.
+var _catapults: Array[Node3D] = []
 ## Woran ein Fehlschuss vorbeizielt: die Körpermitte, wie beim Blick (_in_view). Ein
 ## Treffer geht in den Kopf (Monster.head_height).
 const ARROW_AIM_Y := 1.2
 ## Explosionspfeil: so groß der Knall (Blast), und bis hierhin zucken die Nachbarn.
 const BLAST_SCALE := 1.0
 const BLAST_FLINCH_RADIUS := 5.0
+## Wachkatapult (Bollwerk): so lange nach dem Spawn wirft es, zufällig dazwischen — bis
+## dahin kann der Spieler das Monster auch selbst treffen.
+const CATAPULT_DELAY_MIN := 1.0
+const CATAPULT_DELAY_MAX := 3.0
+## Flugzeit des Steins je Meter, mit Unter- und Obergrenze, und wie hoch er steigt (Anteil
+## der Strecke).
+const CATAPULT_TIME_PER_M := 0.035
+const CATAPULT_TIME_MIN := 0.8
+const CATAPULT_TIME_MAX := 1.5
+const CATAPULT_LIFT := 0.3
+## Worauf der Stein zielt: die Körpermitte, nicht die Füße.
+const CATAPULT_AIM := Vector3(0.0, 1.0, 0.0)
 
 @onready var _monsters: Node3D = $Monsters
 @onready var _camera: Camera3D = $CameraPivot/Camera3D
@@ -116,10 +134,19 @@ func _ready() -> void:
 	_decorate()
 	add_child(Wind.new())
 	_sun_cycle = SunCycle.attach(self, $Sun as DirectionalLight3D, $CameraPivot as Node3D)
-	var air := AmbientParticles.build(_theme.particles, air_area) \
+	var air := AmbientParticles.build(_theme.particles, air_area, _leaf_crowns) \
 			if GraphicsQuality.particles() else null
 	if air != null:
 		add_child(air)
+	var petals := AmbientParticles.blossoms(_blossom_crowns) if GraphicsQuality.particles() else null
+	if petals != null:
+		add_child(petals)
+	if _theme.tumbleweeds and GraphicsQuality.particles():
+		var weeds := Tumbleweeds.make(air_area, _ground_y, _cover_site().keep_out, _rng.randi())
+		# Nur in der Iso-Sicht sagt der Ausschnitt etwas; in der Ich-Sicht gilt die Fläche.
+		weeds.on_screen = func(x: float, z: float) -> bool:
+			return _fp != null or tile_on_screen(_camera, x, z)
+		add_child(weeds)
 	_build_fortress()
 	_cam_base = _camera.position
 	GameState.reset()
@@ -133,6 +160,7 @@ func _ready() -> void:
 			+ FortressTier.health_bonus(_fortress_tier)
 	GameState.apply_skills(skill_bonuses)
 	_slow_motion.apply_skills(skill_bonuses)
+	_catapult = float(skill_bonuses.get("auto_catapult", 0.0)) > 0.0
 	if _first_person_run:
 		_setup_first_person(skill_bonuses)
 	# Der Lauf beginnt hier, nicht mit der ersten Welle: alles, was über die Wellen hinweg
@@ -198,6 +226,12 @@ func _warm_up() -> void:
 			ember.glowing = true
 			extras.append(ember)
 			extras.append(Blast.new())
+	if _theme.tumbleweeds:
+		extras.append(Tumbleweeds.specimen())
+	if _catapult:
+		extras.append(CatapultStone.new())
+		if _fp == null or not _fp.explosive:
+			extras.append(Blast.new())
 	await FxWarmup.run(self, at, FxWarmup.monster_defs(), extras, _fp != null)
 	_celebration.cool_down()
 	_level_flare.cool_down()
@@ -254,23 +288,34 @@ var _terrain_noise: FastNoiseLite
 var _theme: BattleTheme
 ## Stellt die Sonne nach der Uhr; hält während einer Welle den Sprung auf den Morgen an.
 var _sun_cycle: SunCycle
+## Der Weg zum Tor; die Streudeko hält ihn frei.
+var _path: BattlePath
+## Fußpunkte der gestreuten Bäume, für die Sträucher darum (GroundCover).
+var _tree_feet: Array[Vector3] = []
+## Kronen der Laubbäume darunter, aus denen das Laub fällt (AmbientParticles).
+var _leaf_crowns: Array[AABB] = []
+var _blossom_crowns: Array[AABB] = []
 
 func _setup_ground() -> void:
 	_terrain_noise = terrain_noise(_rng.randi())
+	_path = BattlePath.make(_theme.path, GOAL_Z, _rng)
 	var ground := $Ground as MeshInstance3D
 	ground.mesh = build_terrain(_camera, _terrain_noise, _theme)
-	dress_ground(ground, _theme)
+	dress_ground(ground, _theme, _path)
 
 
 ## Material und Schatten des Bodens — statisch, damit die Werkbank ihn genauso anzieht.
-## Wolkenschatten nur, wenn die Grafikstufe sie zeigt (GraphicsQuality).
+## Wolkenschatten und Bodenflecken nur, wenn die Grafikstufe sie zeigt (GraphicsQuality).
 ## Der Boden wirft selbst keinen Schatten: die Hügel schattiert der Bodenshader über ihre
 ## Neigung, und ohne Selbstschatten reicht ein kleiner Bias (setup_view), ohne dass der
 ## Boden Streifen bekommt.
-static func dress_ground(ground: MeshInstance3D, theme: BattleTheme) -> void:
-	ground.material_override = theme.ground_material()
-	if not GraphicsQuality.clouds():
+static func dress_ground(ground: MeshInstance3D, theme: BattleTheme, path: BattlePath = null,
+		quality := GraphicsQuality.level()) -> void:
+	ground.material_override = theme.ground_material(path)
+	if not GraphicsQuality.clouds(quality):
 		(ground.material_override as ShaderMaterial).set_shader_parameter("clouds", 0.0)
+	if not GraphicsQuality.patches(quality):
+		(ground.material_override as ShaderMaterial).set_shader_parameter("patch_amount", 0.0)
 	ground.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
@@ -362,14 +407,32 @@ static func _terrain_point(x: float, z: float, noise: FastNoiseLite) -> Vector3:
 const FLAT_HALF_X := 9.0 * FORTRESS_GROW
 
 
+## Um so viel weicht der Hügelfuß höchstens nach außen zurück (TERRAIN_FOOT_WAVE Meter je
+## Bogen) — sonst stünde das flache Feld als Rechteck in der Landschaft.
+const TERRAIN_FOOT_SHIFT := 6.0
+const TERRAIN_FOOT_WAVE := 0.045
+
+
 static func terrain_height(x: float, z: float, noise: FastNoiseLite) -> float:
 	# Innenfeld flach halten (bis knapp hinter den Spawn); nur außerhalb sanfte Hügel. So
-	# breit wie die Festung, sonst stünden ihre Ecktürme am Hang.
-	var edge := maxf(absf(x) - FLAT_HALF_X, -z + SPAWN_Z)
+	# breit wie die Festung, sonst stünden ihre Ecktürme am Hang. Der Hügelfuß weicht in
+	# Bögen nach außen zurück, nie nach innen — das Feld bleibt mindestens so groß. Die
+	# Ecke hinter dem Spawn ist rund: außerhalb des Rechtecks zählt der Abstand zur Ecke.
+	var ex := absf(x) - FLAT_HALF_X - _foot_shift(z * signf(x) + 200.0, noise)
+	var ez := -z + SPAWN_Z - _foot_shift(x + 400.0, noise)
+	var edge := Vector2(maxf(ex, 0.0), maxf(ez, 0.0)).length() if ex > 0.0 and ez > 0.0 \
+			else maxf(ex, ez)
 	if edge <= 0.0:
 		return 0.0
 	var n := noise.get_noise_2d(x, z) * 0.5 + 0.5
 	return clampf(edge, 0.0, TERRAIN_EDGE_MAX) * (0.3 + 0.7 * n) * TERRAIN_HEIGHT_SCALE
+
+
+## Wie weit der Hügelfuß an der Stelle `t` (längs seiner Kante) zurückweicht, 0 bis
+## TERRAIN_FOOT_SHIFT.
+static func _foot_shift(t: float, noise: FastNoiseLite) -> float:
+	var n := noise.get_noise_2d(t * TERRAIN_FOOT_WAVE / noise.frequency, 777.0) * 0.5 + 0.5
+	return TERRAIN_FOOT_SHIFT * smoothstep(0.2, 0.8, n)
 
 
 static func _add_terrain_tri(st: SurfaceTool, noise: FastNoiseLite, theme: BattleTheme, a: Vector3, b: Vector3, c: Vector3) -> void:
@@ -382,8 +445,7 @@ static func _add_terrain_tri(st: SurfaceTool, noise: FastNoiseLite, theme: Battl
 
 
 static func _terrain_color(p: Vector3, noise: FastNoiseLite, theme: BattleTheme) -> Color:
-	var t := noise.get_noise_2d(p.x * 2.3 + 100.0, p.z * 2.3) * 0.5 + 0.5
-	return theme.ground_color(t, p.y)
+	return theme.ground_color(BattleTheme.ground_t(noise, p.x, p.z), p.y)
 
 
 ## Normale der Höhenfunktion bei (x,z), über zentrale Differenzen. Aus der Funktion und
@@ -403,14 +465,22 @@ func _ground_y(x: float, z: float) -> float:
 
 ## Platziert eines der Modelle eines Deko-Platzes (`BattleTheme.trees` …, Pfade unter
 ## assets/models/) auf Terrain-Höhe mit zufälliger Drehung; ein leerer Platz stellt nichts
-## hin. Position/Skalierung kommen vom Aufrufer.
+## hin, und auf dem Weg (BattlePath) steht nichts. Position/Skalierung kommen vom Aufrufer.
+## Bäume merken sich ihren Fuß (`_tree_feet`): um sie wachsen Sträucher (GroundCover).
 func _scatter(parent: Node3D, slot: Array[String], x: float, z: float, scale: float) -> void:
-	if slot.is_empty():
+	if slot.is_empty() or (_path != null and _path.blocks(x, z, 0.4 * scale)):
 		return
 	var model := slot[_rng.randi() % slot.size()]
-	var inst := _place_model(parent, model.get_file(), Vector3(x, _ground_y(x, z), z),
+	var at := Vector3(x, _ground_y(x, z), z)
+	var inst := _place_model(parent, model.get_file(), at,
 			_rng.randf_range(0.0, 360.0), Vector3.ONE * scale, model.get_base_dir())
 	Wind.sway(inst, model, _theme.wind)
+	if slot == _theme.trees:
+		_tree_feet.append(at)
+		if AmbientParticles.LEAF_TREES.has(model.get_file().get_basename()):
+			_leaf_crowns.append(AmbientParticles.crown_of(inst))
+		elif AmbientParticles.BLOSSOM_TREES.has(model.get_file().get_basename()):
+			_blossom_crowns.append(AmbientParticles.crown_of(inst))
 
 
 const GRASS_SCALE_FIRST_PERSON := 0.4
@@ -463,6 +533,20 @@ func _decorate() -> void:
 		_place_model(d, "torch_lit.gltf", Vector3(px, gy + 4.0, pz), 0.0, Vector3.ONE)
 
 	_decorate_outskirts(d)
+	GroundCover.grow(d, _theme, _cover_site(), GraphicsQuality.cover(), _rng)
+
+
+## Wo der Bewuchs wächst: der sichtbare Boden ohne Weg und ohne die Burg hinter der Mauer.
+func _cover_site() -> GroundCover.Site:
+	var site := GroundCover.Site.new()
+	site.area = visible_ground_area(_camera)
+	site.on_screen = func(x: float, z: float) -> bool: return tile_on_screen(_camera, x, z)
+	site.height = _ground_y
+	site.t_at = func(x: float, z: float) -> float: return BattleTheme.ground_t(_terrain_noise, x, z)
+	site.path = _path
+	site.keep_out = Rect2(-FIELD_HALF_X, GOAL_Z - 0.5, 2.0 * FIELD_HALF_X, FIELD_Z_FRONT - GOAL_Z + 0.5)
+	site.trees = _tree_feet
+	return site
 
 
 ## Das Innenfeld: Bahn plus Festung im Vollausbau (Kirche und Nebengebäude liegen am
@@ -479,6 +563,10 @@ const FIELD_Z_FRONT := GOAL_Z + 11.0 * FORTRESS_GROW
 const FIELD_CLEARANCE := 4.0
 
 
+## Radius eines Hains im Umland.
+const GROVE_RADIUS := 5.0
+
+
 ## Das Umland: Bäume und Felsen über den Teil des Bodens, der seit der Erweiterung bis
 ## an den Bildrand reicht. Ohne sie wäre die zusätzliche Fläche eine grüne Leere — mit
 ## ihnen liest sie sich als Landschaft, in der das Spielfeld liegt. Gras kommt hier
@@ -487,7 +575,17 @@ const FIELD_CLEARANCE := 4.0
 func _decorate_outskirts(d: Node3D) -> void:
 	var area := visible_ground_area(_camera)
 	var field := _field_span()
-	for i in _rng.randi_range(55, 80):
+	# Bäume stehen meist in Hainen, ein paar einzeln dazwischen: gleichmäßig verstreut
+	# läse sich das Umland als Baumschule.
+	for i in _rng.randi_range(10, 15):
+		var centre := _outskirts_point(area, field)
+		if centre == Vector2.INF:
+			continue
+		for k in _rng.randi_range(3, 6):
+			var p := centre + Vector2.from_angle(_rng.randf_range(0.0, TAU)) * _rng.randf_range(0.0, GROVE_RADIUS)
+			if not _blocks_field(p.x, p.y, field) and tile_on_screen(_camera, p.x, p.y):
+				_scatter(d, _theme.trees, p.x, p.y, _rng.randf_range(0.8, 1.4))
+	for i in _rng.randi_range(12, 20):
 		var p := _outskirts_point(area, field)
 		if p != Vector2.INF:
 			_scatter(d, _theme.trees, p.x, p.y, _rng.randf_range(0.8, 1.4))
@@ -584,6 +682,7 @@ func _spawn_fortress(tier: int) -> void:
 	_fortress = fort
 	print("[FORTRESS] Stufe %d (+%d HP)" % [tier, FortressTier.health_bonus(tier)])
 	FortressModel.build(fort, tier, GOAL_Z, _ground_y)
+	_catapults = FortressModel.catapults(fort)
 
 
 ## Baut die Festung neu auf, mit kurzem Bau-Effekt als Feedback. Nur das Bild — die
@@ -996,6 +1095,9 @@ func _spawn(entry: Dictionary) -> void:
 	_wave_shown[str(plan["task"].get("source_id", ""))] = _spawned
 	_spawned += 1
 	EventBus.monster_spawned.emit(plan["monster_def"], plan["task"])
+	if _catapult and _fortress_tier >= FortressModel.CATAPULT_TIER \
+			and PlayerProgress.is_mastered(str(plan["task"].get("learnable_id", ""))):
+		_catapult_later(monster, _wave_gen)
 
 
 func _on_answer_submitted(text: String) -> void:
@@ -1279,6 +1381,13 @@ func _burst(monster: Monster, size: float = 1.5) -> void:
 ## Wortfarbe, und wer daneben steht, zuckt zusammen — nur das Bild, besiegt ist allein
 ## das getroffene Monster.
 func _blast(monster: Monster) -> void:
+	_blast_at(monster)
+	_leave(monster)
+
+
+## Nur der Knall: Blast in der Wortfarbe, und die Nachbarn zucken. Explosionspfeil und
+## Wachkatapult teilen ihn.
+func _blast_at(monster: Monster) -> void:
 	var fx := Blast.new()
 	fx.setup(monster.word_color(), BLAST_SCALE)
 	fx.position = monster.position
@@ -1286,7 +1395,83 @@ func _blast(monster: Monster) -> void:
 	for other in _active:
 		if other.position.distance_to(monster.position) <= BLAST_FLINCH_RADIUS:
 			other.flinch(monster.global_position)
-	_leave(monster)
+
+
+## Wachkatapult (Bollwerk): ein Monster mit gemeisterter Aufgabe wird nach einer kurzen,
+## zufälligen Weile abgeschossen. Es läuft dabei weiter, das Katapult hält auf den Ort vor,
+## an dem es beim Einschlag sein wird (catapult_lead). Trifft der Spieler es vorher selbst,
+## zählt sein Treffer, und der Stein schlägt ins Leere. Erledigt ist es danach, aber nicht
+## beantwortet: kein Lernstand, keine Erfahrung, keine Punkte (monster_catapulted statt
+## monster_defeated), und in der Auflösung nach der Welle steht es nicht.
+func _catapult_later(monster: Monster, gen: int) -> void:
+	# process_always = false: in der Meister-Feier wartet auch das Katapult.
+	await get_tree().create_timer(randf_range(CATAPULT_DELAY_MIN, CATAPULT_DELAY_MAX), false).timeout
+	if _finished or gen != _wave_gen or not is_instance_valid(monster) or not _active.has(monster):
+		return
+	var turret := _nearest_catapult(monster.global_position)
+	if turret == null:
+		return
+	var target := catapult_lead(turret.global_position, monster.global_position + CATAPULT_AIM,
+			monster.velocity())
+	# Ist es beim Einschlag schon an der Mauer, kommt der Stein zu spät: kein Wurf.
+	if target.z >= GOAL_Z:
+		return
+	_underway += 1
+	var from := await FortressModel.fire(turret, target)
+	var stone := CatapultStone.new()
+	add_child(stone)
+	stone.global_position = from
+	var distance := from.distance_to(target)
+	await stone.fly(target, distance * CATAPULT_LIFT, catapult_flight_time(from, target))
+	stone.queue_free()
+	_underway -= 1
+	# Die Welle ist inzwischen vorbei (gefallene Festung): nichts mehr nachbuchen.
+	if _finished or gen != _wave_gen:
+		return
+	if is_instance_valid(monster) and _active.has(monster):
+		_active.erase(monster)
+		monster.halt()
+		_shake(0.5)
+		_blast_at(monster)
+		Sfx.play(&"monster_kill")
+		EventBus.monster_catapulted.emit(monster.task)
+		monster.queue_free()
+	else:
+		# Schon getroffen oder durchgekommen: der Stein schlägt trotzdem ein.
+		var fx := Blast.new()
+		fx.setup(Color(0.75, 0.72, 0.66), BLAST_SCALE * 0.6)
+		fx.position = target - CATAPULT_AIM
+		add_child(fx)
+	_check_end()
+
+
+## Wie lange ein Stein von `from` nach `to` fliegt.
+static func catapult_flight_time(from: Vector3, to: Vector3) -> float:
+	return clampf(from.distance_to(to) * CATAPULT_TIME_PER_M, CATAPULT_TIME_MIN, CATAPULT_TIME_MAX)
+
+
+## Wohin das Katapult zielt, damit der Stein das Monster trifft: dorthin, wo es nach
+## Drehen, Ausschlagen und Flug steht. Monster laufen geradeaus mit festem Tempo, also ist
+## das eine Gerade; die Flugzeit hängt selbst am Ziel, zweimal nachrechnen reicht.
+static func catapult_lead(from: Vector3, at: Vector3, velocity: Vector3) -> Vector3:
+	var windup := FortressModel.CATAPULT_TURN_TIME + FortressModel.CATAPULT_SWING_TIME
+	var target := at
+	for i in 3:
+		target = at + velocity * (windup + catapult_flight_time(from, target))
+	return target
+
+
+## Das Katapult, das dem Ziel am nächsten steht, oder null, wenn keins mehr steht. Es dreht
+## sich zum Ziel und schlägt aus, der Stein fliegt im Scheitel des Wurfs los
+## (FortressModel.fire).
+func _nearest_catapult(target: Vector3) -> Node3D:
+	var best: Node3D = null
+	for turret in _catapults:
+		if not is_instance_valid(turret) or not turret.is_inside_tree():
+			continue
+		if best == null or absf(turret.global_position.x - target.x) < absf(best.global_position.x - target.x):
+			best = turret
+	return best
 
 
 ## Was jeder Treffer nach seinem Knall tut: Klang, „+XP" und das Monster geht.

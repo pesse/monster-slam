@@ -4,6 +4,10 @@
 
 [resource]
 script = ExtResource("1_theme")
+ground_patch = Color(0.9, 0.82, 0.6, 1)
+ground_patch_amount = 0.3
+path = "boardwalk"
+path_color = Color(0.71, 0.52, 0.33, 1)
 light_from = "rainforest"
 ground_texture = "sand"
 ground_low = Color(0.96, 0.76, 0.48, 1)
@@ -11,6 +15,10 @@ ground_high = Color(1.0, 0.86, 0.58, 1)
 hill = Color(0.5, 0.42, 0.3, 1)
 trees = Array[String](["forge/palm.glb", "forge/palm.glb", "forge/pandanus.glb"])
 rocks = Array[String](["forge/sandstone_rock.glb"])
-grass = Array[String](["forge/fern.glb"])
+grass = Array[String](["forge/dune_grass.glb", "forge/fern.glb"])
 props = Array[String](["forge/canoe.glb", "forge/net_rack.glb", "props/crates_stacked.gltf", "props/barrel_large.gltf"])
 landmarks = Array[String](["forge/stilt_hut.glb"])
+cover = 0.7
+cover_color = Color(0.55, 0.62, 0.3, 1)
+bush_color = Color(0.25, 0.4, 0.18, 1)
+bushes = 0.5

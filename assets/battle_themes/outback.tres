@@ -4,6 +4,10 @@
 
 [resource]
 script = ExtResource("1_theme")
+ground_patch = Color(0.8, 0.62, 0.3, 1)
+ground_patch_amount = 0.3
+path = "trail"
+path_color = Color(0.88, 0.54, 0.3, 1)
 ground_texture = "gravel"
 ground_low = Color(0.72, 0.32, 0.16, 1)
 ground_high = Color(0.84, 0.44, 0.22, 1)
@@ -18,4 +22,8 @@ rocks = Array[String](["forge/red_boulder.glb"])
 grass = Array[String](["forge/spinifex.glb"])
 props = Array[String]([])
 landmarks = Array[String](["forge/canyon_spire.glb", "forge/termite_mound.glb"])
-particles = "dust"
+cover = 0.9
+cover_color = Color(0.62, 0.5, 0.28, 1)
+bush_color = Color(0.42, 0.44, 0.24, 1)
+bushes = 0.45
+tumbleweeds = true

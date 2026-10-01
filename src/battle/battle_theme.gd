@@ -35,6 +35,33 @@ const DIR := "res://assets/battle_themes"
 ## (0..1, also 0.7 ≈ ein Drittel der Fläche), mit weichem Rand (PATCH_BLEND). Über 1 heißt:
 ## keine — Schnee liegt dann nur auf den Kuppen, und um das flache Feld stünde er als Ring.
 @export var patches := 2.0
+## Dritter Bodenton in größeren Flecken (trockenes Gras, Erde, Moos) und wie viel Fläche er
+## ungefähr deckt (0 = keine). Gerechnet im Bodenshader, nicht in den Vertexfarben: so
+## bekommen die Flecken einen Rand, der feiner ist als das Raster des Geländes.
+@export var ground_patch := Color(0.5, 0.46, 0.27)
+@export_range(0.0, 1.0) var ground_patch_amount := 0.3
+## Der Weg zum Tor (BattlePath): "trail" (Trampelpfad), "road" (Weg), "boardwalk"
+## (Bohlenweg) oder "cobble" (Pflaster). Einen Weg gibt es immer.
+@export_enum("trail", "road", "boardwalk", "cobble") var path := "trail"
+## Grundfarbe des Wegs, gelesen wie die Bodenfarben: Erde, Kies, Holz oder Stein.
+@export var path_color := Color(0.48, 0.38, 0.24)
+## Detailtextur des Wegs, wie `ground_texture` eine graue Kachel unter
+## `assets/textures/ground/`. Leer: die der Wegart (BattlePath.TEXTURES); Bohlenweg und
+## Pflaster haben keine, ihr Muster rechnet der Shader.
+@export var path_texture := ""
+@export_range(0.0, 1.0) var path_texture_strength := 0.9
+## Bewuchs (GroundCover): wie dicht kleine Halmbüschel in der Farbe des Bodens stehen
+## (0 = keine, 1 = karg, 3 = dichte Wiese), welche Blüten darin stehen und in wie vielen
+## Büscheln.
+@export_range(0.0, 4.0) var cover := 1.0
+## Farbe der Büschel. Ohne (Alpha 0) die des Bodens darunter, etwas heller — auf Sand und
+## Stein wäre das weißes Gras, dort steht eine eigene.
+@export var cover_color := Color(0.0, 0.0, 0.0, 0.0)
+@export var cover_flowers: Array[Color] = []
+@export_range(0.0, 1.0) var cover_flower_amount := 0.08
+## Sträucher um die Bäume: Farbe und wie viele (0 = keine, 1 = bis zu drei je Baum).
+@export var bush_color := Color(0.2, 0.36, 0.13)
+@export_range(0.0, 1.0) var bushes := 0.6
 ## Detailtextur des Bodens: Name einer grauen Kachel unter `assets/textures/ground/` (ohne
 ## Endung), die die Bodenfarben in der Helligkeit moduliert. Leer, oder die Datei fehlt
 ## noch: der Boden bleibt glatt wie ohne Thema. Was dort liegen soll, steht im BRIEF.md.
@@ -57,9 +84,11 @@ const DIR := "res://assets/battle_themes"
 ## Wie dunkel die Wolkenschatten über den Boden ziehen: der Anteil der Sonne, den eine
 ## Wolke nimmt (battle_ground.gdshader). 0 = wolkenlos.
 @export_range(0.0, 1.0) var clouds := 0.6
-## Was in der Luft treibt: eine Art aus AmbientParticles.KINDS ("leaves", "snow", "dust",
+## Was in der Luft treibt: eine Art aus AmbientParticles.KINDS ("leaves", "snow",
 ## "pollen", "fireflies"), leer heißt nichts.
 @export var particles := ""
+## Ab und zu rollt ein verdorrter Busch durchs Bild (Tumbleweeds) — Wüste, Steppe, Savanne.
+@export var tumbleweeds := false
 
 ## Die Deko je Platz: Modelle unter `assets/models/` (etwa "props/tree.glb"), aus denen der
 ## Kampf zufällig zieht. Größe und Menge gehören dem PLATZ, nicht dem Modell — ein Modell
@@ -166,12 +195,40 @@ func ground_color(t: float, height: float) -> Color:
 	return col
 
 
+## Wie weit der Boden an dieser Stelle in Kuppenfarbe liegt (0..1) — Schnee, auf dem kein
+## Gras wächst (GroundCover). Dieselben Übergänge wie in `ground_color`.
+func ground_snow(t: float, height: float) -> float:
+	var snow := 0.0
+	if height > peak_height:
+		snow = clampf((height - peak_height) / PEAK_BLEND, 0.0, 1.0)
+	if patches <= 1.0 + PATCH_BLEND:
+		snow = maxf(snow, smoothstep(patches - PATCH_BLEND, patches + PATCH_BLEND, t))
+	return snow
+
+
+## Der Streuwert `t` des Bodens bei (x,z) aus dem Rauschen des Terrains — für die Ecken des
+## Bodens (WaveRunner) und für den Bewuchs darauf (GroundCover) derselbe.
+static func ground_t(noise: FastNoiseLite, x: float, z: float) -> float:
+	return noise.get_noise_2d(x * 2.3 + 100.0, z * 2.3) * 0.5 + 0.5
+
+
 ## Material des Bodens: immer der Bodenshader; mit Detailtextur, wenn das Thema eine hat und
-## die Datei da ist, sonst glatt.
-func ground_material() -> Material:
+## die Datei da ist, sonst glatt. Mit `battle_path` liegt der Weg darauf, in Art und Farbe
+## dieses Themas.
+func ground_material(battle_path: BattlePath = null) -> Material:
 	var mat := ShaderMaterial.new()
 	mat.shader = GROUND_SHADER
-	var detail := _ground_detail()
+	mat.set_shader_parameter("patch_color", Vector3(ground_patch.r, ground_patch.g, ground_patch.b))
+	mat.set_shader_parameter("patch_amount", ground_patch_amount)
+	if battle_path != null:
+		battle_path.apply_to(mat)
+		mat.set_shader_parameter("path_color", Vector3(path_color.r, path_color.g, path_color.b))
+		var path_detail := _detail(path_texture if not path_texture.is_empty()
+				else str(BattlePath.TEXTURES.get(battle_path.kind, "")))
+		if path_detail != null:
+			mat.set_shader_parameter("path_detail", path_detail)
+		mat.set_shader_parameter("path_strength", path_texture_strength if path_detail != null else 0.0)
+	var detail := _detail(ground_texture)
 	if detail != null:
 		mat.set_shader_parameter("detail", detail)
 	mat.set_shader_parameter("strength", ground_texture_strength if detail != null else 0.0)
@@ -190,10 +247,11 @@ func ground_texture_path() -> String:
 ## Die Textur MIT Mipmaps. Aus der Ferne liegen mehrere Texel auf einem Bildpunkt; ohne
 ## Mipmaps flimmert der Boden, sobald die Kamera wackelt. Der Import legt sie nur an, wenn
 ## man ihn darum bittet — hier hängt es nicht davon ab, wie die Datei importiert wurde.
-func _ground_detail() -> Texture2D:
-	if ground_texture.is_empty() or not ResourceLoader.exists(ground_texture_path()):
+func _detail(texture_name: String) -> Texture2D:
+	var path := "%s/%s.png" % [GROUND_TEXTURE_DIR, texture_name]
+	if texture_name.is_empty() or not ResourceLoader.exists(path):
 		return null
-	var tex := load(ground_texture_path()) as Texture2D
+	var tex := load(path) as Texture2D
 	if tex == null:
 		return null
 	var img := tex.get_image()

@@ -27,3 +27,27 @@ func test_amount_grows_with_the_area() -> void:
 
 func test_no_kind_means_clear_air() -> void:
 	assert_object(AmbientParticles.build("", AREA)).is_null()
+
+
+## Laub fällt aus den Kronen, wenn es welche gibt: alle Startpunkte liegen in einer.
+func test_leaves_fall_from_the_crowns() -> void:
+	var crowns: Array[AABB] = [AABB(Vector3(-10.0, 3.0, 0.0), Vector3(3.0, 4.0, 3.0)),
+			AABB(Vector3(8.0, 2.0, -5.0), Vector3(2.0, 3.0, 2.0))]
+	var p := auto_free(AmbientParticles.build("leaves", AREA, crowns)) as CPUParticles3D
+	assert_int(p.emission_shape).is_equal(CPUParticles3D.EMISSION_SHAPE_POINTS)
+	assert_int(p.emission_points.size()).is_equal(crowns.size() * AmbientParticles.POINTS_PER_CROWN)
+	for point in p.emission_points:
+		assert_bool(crowns.any(func(c: AABB) -> bool: return c.grow(0.001).has_point(point))).is_true()
+	assert_object(p.mesh).is_instanceof(ArrayMesh)
+
+
+## Kirschblüten fallen aus den Kronen der Blütenbäume, kleiner als Laub; ohne Kronen keine.
+func test_blossoms_fall_from_blossom_crowns() -> void:
+	assert_object(AmbientParticles.blossoms([])).is_null()
+	var crowns: Array[AABB] = [AABB(Vector3(-4.0, 2.0, 1.0), Vector3(3.0, 3.0, 3.0))]
+	var p := auto_free(AmbientParticles.blossoms(crowns)) as CPUParticles3D
+	assert_int(p.emission_shape).is_equal(CPUParticles3D.EMISSION_SHAPE_POINTS)
+	for point in p.emission_points:
+		assert_bool(crowns[0].grow(0.001).has_point(point)).is_true()
+	assert_float(p.mesh.get_aabb().size.y).is_less(AmbientParticles.SPEC.leaves.size)
+	assert_bool(AmbientParticles.LEAF_TREES.has("blossom_tree")).is_false()

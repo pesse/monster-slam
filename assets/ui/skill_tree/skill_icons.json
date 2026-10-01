@@ -20,5 +20,6 @@
   "skill.time.deep": "res://assets/ui/skill_tree/icons/time_web.webp",
   "skill.time.still": "res://assets/ui/skill_tree/icons/time_pause.webp",
   "skill.time.rift": "res://assets/ui/skill_tree/icons/time_rift.webp",
-  "skill.scout.blast": "res://assets/ui/skill_tree/icons/scout_blast.webp"
+  "skill.scout.blast": "res://assets/ui/skill_tree/icons/scout_blast.webp",
+  "skill.armor.catapult": "res://assets/ui/skill_tree/icons/bulwark_catapult.webp"
 }

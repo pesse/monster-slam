@@ -4,7 +4,7 @@
 		"kind": "tree",
 		"order": 2,
 		"name": "Bollwerk",
-		"description": "Rüstung geht vor dem Leben auf. Der eine Ast vergrößert den Vorrat, der andere setzt ihn zu jeder Welle ein Stück instand.",
+		"description": "Rüstung geht vor dem Leben auf. Der eine Ast vergrößert den Vorrat, der andere setzt ihn zu jeder Welle ein Stück instand. Ganz außen wartet das Wachkatapult.",
 		"color": "#7fa8d8"
 	},
 	{
@@ -88,6 +88,23 @@
 		],
 		"effects": {
 			"armor_regen": 10
+		}
+	},
+	{
+		"id": "skill.armor.catapult",
+		"kind": "skill",
+		"tree": "tree.bulwark",
+		"name": "Wachkatapult",
+		"icon": "🪨",
+		"description": "Steht die Festung voll ausgebaut, schießen ihre Katapulte Monster ab, deren Aufgabe du schon gemeistert hast. So bleibt dir das letzte Stück einer Unit. Erfahrung und Punkte gibt es dafür keine.",
+		"cost": 8,
+		"tier": 4,
+		"branch": 2,
+		"requires": [
+			"skill.armor.root"
+		],
+		"effects": {
+			"auto_catapult": 1
 		}
 	}
 ]

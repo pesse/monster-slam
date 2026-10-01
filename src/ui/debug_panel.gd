@@ -17,7 +17,7 @@ func _ready() -> void:
 		queue_free()
 		return
 	var body: VBoxContainer = $Root/Body
-	($Root/Toggle as CheckButton).toggled.connect(func(on: bool) -> void: body.visible = on)
+	($Root/Toggle as Button).toggled.connect(func(on: bool) -> void: body.visible = on)
 	# Jeder Festung-Stufen-Button (0..4) setzt direkt seine Ausbaustufe.
 	var row := $Root/Body/TierRow
 	for tier in row.get_child_count():
