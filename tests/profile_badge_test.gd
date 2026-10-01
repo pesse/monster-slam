@@ -52,3 +52,43 @@ func test_gold_digits_group_by_thousands() -> void:
 	assert_str(Wallet.digits(0)).is_equal("0")
 	assert_str(Wallet.digits(1250)).is_equal("1.250")
 	assert_str(Wallet.digits(999999)).is_equal("999.999")
+
+
+## Im Hauptmenü stehen Fähigkeiten und Statistik als eigene Knöpfe; außerhalb (kompakt)
+## bleibt nur der Ring, kleiner zur rechten oberen Ecke hin. Daneben stehen Profil
+## wechseln, Fähigkeiten und Statistik; Name und Gold sagt die Karte am Ring.
+func test_compact_keeps_the_ring_with_three_buttons_beside_it() -> void:
+	var badge := _badge()
+	var actions := badge.get_node("%Actions") as Control
+	assert_bool(actions.visible).is_false()
+	assert_float(badge.scale.x).is_equal(1.0)
+	badge.compact = 1.0
+	assert_bool(actions.visible).is_true()
+	for part in ["%Plates", "%ProfileLabel", "%GoldLabel", "%SwitchButton"]:
+		assert_bool((badge.get_node(part) as Control).visible).is_false()
+	var medallion := badge.get_node("%Medallion") as Control
+	var slot := badge.get_node("%ActionsSlot") as Control
+	assert_float(slot.position.x + actions.position.x + actions.size.x) \
+			.is_less_equal(medallion.position.x)
+	assert_float(badge.scale.x).is_equal_approx(badge.compact_scale, 0.001)
+	assert_float(badge.scale.y).is_equal_approx(badge.compact_scale, 0.001)
+	assert_vector(badge.pivot_offset).is_equal(Vector2(badge.custom_minimum_size.x, 0.0))
+	var hint := Hints.hint_of(medallion)
+	assert_str(str(hint.get("title", ""))).contains(UserSettings.display_name())
+	assert_str(str(hint.get("note", ""))).contains(Wallet.label())
+	for pair in [["%CompactSwitchButton", "Profil wechseln"], ["%SkillsButton", "Fähigkeiten"],
+			["%StatsButton", "Statistik"]]:
+		assert_str(str(Hints.hint_of(badge.get_node(pair[0]) as Control).get("title", ""))) \
+				.is_equal(pair[1])
+	var fired := [0]
+	badge.switch_pressed.connect(func() -> void: fired[0] += 1)
+	(badge.get_node("%CompactSwitchButton") as BaseButton).pressed.emit()
+	assert_int(fired[0]).is_equal(1)
+
+
+## Buch- und Gebietskarte tragen dieselbe Plakette, von Anfang an kompakt.
+func test_the_maps_carry_the_compact_badge() -> void:
+	for path in [MapSelection.BOOK_SCENE, MapSelection.AREA_SCENE]:
+		var screen := auto_free((load(path) as PackedScene).instantiate()) as Control
+		var badge := screen.get_node("%ProfileBadge") as ProfileBadge
+		assert_float(badge.compact).is_equal(1.0)

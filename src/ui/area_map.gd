@@ -38,6 +38,11 @@ var _selected: Array = []
 
 func _ready() -> void:
 	(%BackButton as Button).pressed.connect(_back)
+	var badge := %ProfileBadge as ProfileBadge
+	badge.switch_pressed.connect(MapSelection.to_profile_pick.bind(self))
+	# Im Fähigkeitsbaum kann der Späherblick dazugekommen (oder verlernt) sein.
+	badge.window_closed.connect(func():
+			(%FirstPersonToggle as Button).visible = RunRequest.first_person_selectable())
 	_canvas.node_selected.connect(_on_level_clicked)
 	_play.pressed.connect(_start)
 	# Die Level sitzen klein auf den Plätzen des Bildes und wachsen unter dem Zeiger; das

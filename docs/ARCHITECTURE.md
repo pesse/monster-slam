@@ -431,8 +431,11 @@ Erspielte.
   `WindowButton` (die Rahmen der Hauptmenü-Knöpfe, klein), eine Auswahl wie die
   Standard-Schwierigkeit `ToolChoice` (Werkzeugrahmen, gedrückt golden) in einer
   `ButtonGroup`. Abschnitte trennt `StatRule`, eine Pack-Zeile ist kein Kasten mehr. Die
-  Rückfrage zum Zurücksetzen ist ein `ConfirmDialog` im Fenster. Nach dem Schließen liest
-  das Menü Plakette und Spielbarkeit neu — Umbenennen und Installieren melden kein Signal.
+  Rückfrage zum Zurücksetzen ist ein `ConfirmDialog` im Fenster. Geöffnet wird jedes über
+  `ProfileBadge.open_window` — auch aus Bibliothek und Karten, wo die kompakte Plakette
+  Fähigkeiten und Statistik anbietet; solange eines offen ist, fängt sie die Tasten ab, die
+  das Fenster nicht nimmt. Nach dem Schließen liest die Plakette sich neu, das Menü die
+  Spielbarkeit (`window_closed`) — Umbenennen und Installieren melden kein Signal.
   Werkbank: `menu_lab -- --shoot --content | --settings[=1..3]`.
 - **Karten im Kampf sind kleine Fenster** (Wellenabschluss, Vokabel-Auflösung,
   `ConfirmDialog`): derselbe Rahmen, dasselbe Titelband, aber so groß wie ihr Inhalt. Die
@@ -474,7 +477,7 @@ der umgekehrten Absicht: Gold ist Beute, Erfahrung ist Lernfortschritt.
 |---|---|---|
 | `Experience` | `src/progression/experience.gd` | reine Rechnung: XP je Monster, Stufenkosten, Skillpunkte |
 | `PlayerLevel` (Autoload) | `src/progression/player_level.gd` | Gesamt-Erfahrung des Profils, Aufstieg, Persistenz |
-| Anzeige | `hud.tscn` (Level + Erfahrungsring am Porträt), `wave_stats.gd` (Zuwachs der Welle), `profile_badge.gd` (Level, Bogen im Level, Gold; Menü und Bibliothek) / `stats_screen.gd` (Stand + offene Skillpunkte) | — |
+| Anzeige | `hud.tscn` (Level + Erfahrungsring am Porträt), `wave_stats.gd` (Zuwachs der Welle), `profile_badge.gd` (Level, Bogen im Level, Gold; Menü, Bibliothek und Karten) / `stats_screen.gd` (Stand + offene Skillpunkte) | — |
 
 - **10..15 XP je besiegtem Monster, aus seiner Schwierigkeit** — und zwar aus DERSELBEN,
   aus der auch Tempo und Punkte entstehen (`WaveGenerator`, das Netto-Maß `t - c` aus

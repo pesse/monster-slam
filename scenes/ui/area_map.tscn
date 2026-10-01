@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://src/ui/area_map.gd" id="1_screen"]
 [ext_resource type="Script" path="res://src/ui/map_canvas.gd" id="2_canvas"]
@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/fortress/small/medallion.webp" id="7_medal"]
 [ext_resource type="Texture2D" path="res://assets/ui/fortress/tiers/tier_0.webp" id="8_tier"]
 [ext_resource type="Texture2D" path="res://assets/ui/fortress/small/level_plate.webp" id="9_plate"]
+[ext_resource type="PackedScene" path="res://scenes/ui/profile_badge.tscn" id="12_badge"]
 
 [sub_resource type="Gradient" id="shade_g"]
 colors = PackedColorArray(0, 0, 0, 0.6, 0, 0, 0, 0)
@@ -252,3 +253,15 @@ text = "Spielen"
 icon = ExtResource("4_play")
 icon_alignment = 2
 expand_icon = true
+
+[node name="ProfileBadge" parent="Hud/Corners" instance=ExtResource("12_badge")]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -277.0
+offset_right = 0.0
+offset_bottom = 136.0
+grow_horizontal = 0
+compact = 1.0

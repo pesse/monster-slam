@@ -17,6 +17,7 @@ extends Control
 
 func _ready() -> void:
 	(%BackButton as Button).pressed.connect(_back_to_shelf)
+	(%ProfileBadge as ProfileBadge).switch_pressed.connect(MapSelection.to_profile_pick.bind(self))
 	_canvas.node_selected.connect(_on_unit_selected)
 	_canvas.cover = true
 	# Wie auf der Gebietskarte: kleine Orte, die unter dem Zeiger wachsen; was eine Unit

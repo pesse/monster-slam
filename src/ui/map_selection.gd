@@ -21,3 +21,13 @@ static var zoom_out := false
 ## Geht es gerade von der Buchkarte zurück in die Bibliothek? Dann beginnt der Start-Screen
 ## dort, im offenen Buch.
 static var to_shelf := false
+
+
+## „Profil wechseln" an der Plakette einer Karte: zurück zum Start-Screen, dort auf
+## „Wer spielt?" — wie im Menü, nur ohne die Fahrt dorthin.
+static func to_profile_pick(from: Node) -> void:
+	to_shelf = false
+	zoom_in = false
+	zoom_out = false
+	ProfileMenu.intro_done = false
+	from.get_tree().change_scene_to_file(BOOKS_SCENE)
