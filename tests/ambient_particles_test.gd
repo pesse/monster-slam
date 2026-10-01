@@ -25,6 +25,17 @@ func test_amount_grows_with_the_area() -> void:
 	assert_int(big.amount).is_between(small.amount * 2 - 1, small.amount * 2 + 1)
 
 
+## Zur Asche gehört Glut: sie steigt als eigener Schwarm über derselben Fläche auf.
+func test_ash_brings_embers() -> void:
+	var ash := auto_free(AmbientParticles.build("ash", AREA)) as CPUParticles3D
+	assert_int(ash.get_child_count()).is_equal(1)
+	var embers := ash.get_child(0) as CPUParticles3D
+	assert_float(embers.direction.y).is_greater(0.0)
+	assert_float(ash.direction.y).is_less(0.0)
+	assert_float((ash.position + embers.position).x).is_equal_approx(AREA.get_center().x, 0.001)
+	assert_float((ash.position + embers.position).z).is_equal_approx(AREA.get_center().y, 0.001)
+
+
 func test_no_kind_means_clear_air() -> void:
 	assert_object(AmbientParticles.build("", AREA)).is_null()
 

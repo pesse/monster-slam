@@ -122,6 +122,29 @@ func _initialize() -> void:
 	_export("lighthouse", _lighthouse(), 1.3)
 	_export("bandstand", _bandstand())
 	_export("eiffel_tower", _eiffel_tower(), 1.1)
+	# … Paris nach dem Brand: Ruinen, Wracks, Feuer
+	_export("haussmann_burnt", _haussmann_burnt())
+	_export("eiffel_broken", _eiffel_broken(), 1.1)
+	_export("charred_tree", _dead_tree(CHARRED_A, CHARRED_B, 367))
+	_export("car_wreck", _car_wreck(false))
+	_export("car_burning", _car_wreck(true))
+	_export("burning_barrel", _burning_barrel())
+	_export("rubble_heap", _rubble_heap())
+	_export("lamp_bent", _lamp_bent())
+	# … Loire, Alpen, Marseille: verlassen und verfallen, aber nicht verbrannt
+	_export("house_ruin_loire", _house_ruin(419, LOIRE_WALL_A, LOIRE_WALL_B, TILE_A, TILE_B))
+	_export("house_ruin_med", _house_ruin(421, MED_STONE_A, MED_STONE_B, TILE_A, RUST_A))
+	_export("chateau_ruin", _tower_ruin(431, LOIRE_WALL_A, LOIRE_WALL_B), 1.3)
+	_export("fort_ruin", _tower_ruin(433, MED_STONE_A, MED_STONE_B), 1.3)
+	_export("waterwheel", _waterwheel())
+	_export("greenhouse_ruin", _greenhouse_ruin())
+	_export("rail_wagon", _rail_wagon())
+	_export("brick_rubble", _rubble_heap(TILE_B, LOIRE_WALL_B, 439))
+	_export("pylon_broken", _pylon_broken())
+	_export("radar_dome", _radar_dome())
+	_export("gondola_fallen", _gondola_fallen())
+	_export("cabin_ruin", _cabin_ruin())
+	_export("boat_wreck", _boat_wreck())
 	quit()
 
 
@@ -133,6 +156,14 @@ func _export(model_name: String, forge: Forge, scale := 1.0) -> void:
 	inst.mesh = forge.commit(scale)
 	root.add_child(inst)
 	inst.owner = root
+	for k in forge.fires.size():
+		var fire := forge.fires[k]
+		var marker := Node3D.new()
+		marker.name = "%s%d" % [Fire.MARKER, k]
+		marker.position = Vector3(fire.x, fire.y, fire.z) * scale
+		marker.scale = Vector3.ONE * fire.w * scale
+		root.add_child(marker)
+		marker.owner = root
 	var doc := GLTFDocument.new()
 	var state := GLTFState.new()
 	var err := doc.append_from_scene(root, state)
@@ -340,13 +371,13 @@ const DEAD_B := Color(0.34, 0.29, 0.24)
 
 
 ## Abgestorbener Baum: geknickter Stamm, kahle Äste mit je einem Zweig. Etwa 5 hoch.
-func _dead_tree() -> Forge:
+func _dead_tree(bark_a := DEAD_A, bark_b := DEAD_B, seed_value := 41) -> Forge:
 	var f := Forge.new()
-	var rng := _rng(41)
+	var rng := _rng(seed_value)
 	var knee := Vector3(0.2, 2.6, 0.1)
 	var top := Vector3(-0.15, 4.5, 0.3)
-	f.frustum(Vector3.ZERO, knee, 0.34, 0.2, 6, DEAD_A, 0.0, DEAD_B)
-	f.frustum(knee, top, 0.2, 0.07, 6, DEAD_A, 0.3, DEAD_B)
+	f.frustum(Vector3.ZERO, knee, 0.34, 0.2, 6, bark_a, 0.0, bark_b)
+	f.frustum(knee, top, 0.2, 0.07, 6, bark_a, 0.3, bark_b)
 	var starts := [Vector3.ZERO.lerp(knee, 0.6), Vector3.ZERO.lerp(knee, 0.95),
 			knee.lerp(top, 0.35), knee.lerp(top, 0.7)]
 	for k in starts.size():
@@ -354,9 +385,9 @@ func _dead_tree() -> Forge:
 		var dir := Vector3(cos(yaw), rng.randf_range(0.5, 1.0), sin(yaw)).normalized()
 		var length := rng.randf_range(1.1, 1.7) * (1.0 - 0.15 * k)
 		var end: Vector3 = starts[k] + dir * length
-		f.frustum(starts[k], end, 0.12, 0.05, 5, DEAD_B)
+		f.frustum(starts[k], end, 0.12, 0.05, 5, bark_b)
 		var twig := (dir + Vector3(rng.randf_range(-0.7, 0.7), 0.6, rng.randf_range(-0.7, 0.7))).normalized()
-		f.frustum(end, end + twig * length * 0.55, 0.05, 0.02, 4, DEAD_A)
+		f.frustum(end, end + twig * length * 0.55, 0.05, 0.02, 4, bark_a)
 	return f
 
 
@@ -1949,7 +1980,7 @@ const FENCE_B := Color(0.44, 0.28, 0.15)
 func _fence() -> Forge:
 	var f := Forge.new()
 	var rng := _rng(61)
-	for x in [-1.1, 0.0, 1.1]:
+	for x: float in [-1.1, 0.0, 1.1]:
 		var h := rng.randf_range(1.0, 1.15)
 		f.box(Vector3(x, h * 0.5, 0), Vector3(0.14, h, 0.14), FENCE_B, rng.randf_range(-0.15, 0.15))
 		f.cone_cap(Vector3(x, h, 0), 0.1, 0.14, 4, FENCE_B, PI / 4.0 + rng.randf_range(-0.2, 0.2))
@@ -2407,6 +2438,543 @@ func _eiffel_tower() -> Forge:
 	return f
 
 
+const SOOT_A := Color(0.16, 0.15, 0.15)
+const SOOT_B := Color(0.10, 0.09, 0.09)
+const SCORCHED_A := Color(0.36, 0.34, 0.32)
+const SCORCHED_B := Color(0.27, 0.25, 0.24)
+const HOLLOW := Color(0.06, 0.05, 0.05)
+const CHAR_BEAM := Color(0.11, 0.09, 0.08)
+const CHARRED_A := Color(0.17, 0.15, 0.14)
+const CHARRED_B := Color(0.11, 0.10, 0.10)
+const FLAME_A := Color(1.0, 0.42, 0.10)
+const CINDER := Color(0.85, 0.22, 0.05)
+const CONCRETE_A := Color(0.50, 0.49, 0.47)
+const CONCRETE_B := Color(0.38, 0.37, 0.36)
+const FADED_PAINT := Color(0.34, 0.38, 0.40)
+const FLAT_TYRE := Color(0.08, 0.08, 0.08)
+
+
+## Ein Feuer bei `c`, `size` hoch: im Modell nur die Glut — ein paar glühende Brocken —,
+## die Flamme darüber brennt im Kampf (Forge.fire_at, Fire).
+func _flames(f: Forge, c: Vector3, size: float, rng: RandomNumberGenerator) -> void:
+	f.glow(FLAME_A, 1.1)
+	f.glow(CINDER, 1.1)
+	for k in 5:
+		f.blob(c + Vector3(rng.randf_range(-0.22, 0.22), 0.0, rng.randf_range(-0.22, 0.22)) * size,
+				size * rng.randf_range(0.06, 0.1), CINDER if k % 2 == 0 else FLAME_A, rng, 0.0)
+	f.fire_at(c, size)
+
+
+## Rußfahne über einer Öffnung: ein schmaler dunkler Streifen, der nach oben ausläuft.
+func _soot_streak(f: Forge, c: Vector3, width: float, height: float, facing: Vector3) -> void:
+	var across := Vector3(facing.z, 0, facing.x).abs()
+	var base := c + facing * 0.02
+	var tip := base + Vector3(0, height, 0)
+	var inside := base - facing
+	f.tri_out(base - across * width * 0.5, base + across * width * 0.5, tip + across * width * 0.1,
+			SOOT_A, inside)
+	f.tri_out(base - across * width * 0.5, tip + across * width * 0.1, tip - across * width * 0.15,
+			SOOT_A, inside)
+
+
+## Pariser Mietshaus nach dem Brand: nur noch die rußgeschwärzten Außenmauern, oben in
+## Stufen abgebrochen, das Dach eingestürzt. Von oben sieht man hinein auf Schutt und
+## verkohlte Balken, im Erdgeschoss glüht noch ein Feuer. Etwa 4.6 hoch, wie haussmann_ruin
+## für den Baumplatz.
+func _haussmann_burnt() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(373)
+	var w := 3.4
+	var d := 2.6
+	var t := 0.24
+	f.box(Vector3(0, 0.2, 0), Vector3(w + 0.3, 0.4, d + 0.3), SCORCHED_B, 0.0)
+	# Mauern in Abschnitten verschiedener Höhe: vorn (+z), hinten, links, rechts
+	var front := [3.9, 3.4, 2.7, 1.6]
+	var back := [4.4, 4.2, 3.0, 2.2]
+	var n := front.size()
+	var seg := w / n
+	for k in n:
+		var x := -w * 0.5 + seg * (k + 0.5)
+		f.box(Vector3(x, front[k] * 0.5, d * 0.5 - t * 0.5), Vector3(seg + 0.01, front[k], t),
+				SCORCHED_A if k % 2 == 0 else SCORCHED_B, 0.0)
+		f.box(Vector3(x, back[k] * 0.5, -d * 0.5 + t * 0.5), Vector3(seg + 0.01, back[k], t),
+				SCORCHED_B, 0.0)
+	for side: float in [-1.0, 1.0]:
+		var hs := [4.3, 3.6] if side < 0.0 else [2.2, 1.5]
+		for k in 2:
+			var z := -d * 0.5 + d * 0.25 * (2 * k + 1)
+			f.box(Vector3(side * (w * 0.5 - t * 0.5), hs[k] * 0.5, z), Vector3(t, hs[k], d * 0.5 + 0.01),
+					SCORCHED_A, 0.0)
+	# Gesims nur noch, wo die Mauer hoch genug steht
+	f.box(Vector3(-w * 0.25, 1.25, d * 0.5 + 0.02), Vector3(w * 0.5 + 0.1, 0.1, 0.1), SCORCHED_B, 0.0)
+	# Innen: Boden aus Schutt und Asche, darauf verkohlte Balken, die schräg herausragen
+	f.box(Vector3(0, 0.55, 0), Vector3(w - 2 * t, 0.3, d - 2 * t), SOOT_B, 0.0)
+	for k in 7:
+		f.rock(Vector3(rng.randf_range(-1.2, 1.2), 0.7, rng.randf_range(-0.8, 0.8)),
+				Vector3(0.35, 0.28, 0.3) * rng.randf_range(0.7, 1.2), rng, 3,
+				func(_m: Vector3, nn: Vector3) -> Color: return SOOT_A if nn.y > 0.4 else SCORCHED_B, 0.0)
+	for beam: Array in [[Vector3(-1.2, 0.8, -0.6), Vector3(-0.2, 3.6, -0.9)],
+			[Vector3(0.6, 0.8, 0.5), Vector3(-0.6, 2.9, 0.9)], [Vector3(1.1, 0.7, -0.4), Vector3(0.3, 2.4, 0.2)]]:
+		f.frustum(beam[0], beam[1], 0.09, 0.08, 4, CHAR_BEAM)
+	# Fensterlöcher vorn und links, darüber Rußfahnen; im Erdgeschoss rechts glüht es
+	for k in n:
+		var x := -w * 0.5 + seg * (k + 0.5)
+		for y in [0.95, 1.85, 2.9]:
+			if y + 0.35 > front[k]:
+				continue
+			f.box(Vector3(x, y, d * 0.5 + 0.005), Vector3(0.42, 0.62, 0.02), HOLLOW, 0.0)
+			_soot_streak(f, Vector3(x, y + 0.31, d * 0.5), 0.46, minf(0.8, front[k] - y - 0.4), Vector3.BACK)
+	for z in [-0.6, 0.6]:
+		for y in [1.0, 2.0, 3.0]:
+			f.box(Vector3(-w * 0.5 - 0.005, y, z), Vector3(0.02, 0.62, 0.42), HOLLOW, 0.0)
+	_flames(f, Vector3(0.85, 0.7, 0.35), 0.9, rng)
+	f.box(Vector3(w * 0.5 - seg * 0.5, 0.95, d * 0.5 + 0.006), Vector3(0.42, 0.62, 0.02), CINDER, 0.0)
+	# Rest des Mansarddachs: ein Stück Schiefer hängt hinten links schief herab
+	f.box(Vector3(-1.0, 4.25, -0.9), Vector3(1.3, 0.08, 0.9), SLATE_B, 0.2, -0.5)
+	f.frustum(Vector3(-1.5, 4.4, -1.2), Vector3(-1.5, 4.8, -1.2), 0.08, 0.07, 6, CHIMNEY_POT)
+	# Schutt vor der Tür
+	for k in 8:
+		f.blob(Vector3(rng.randf_range(-1.6, 1.8), 0.14, rng.randf_range(1.4, 2.0)),
+				rng.randf_range(0.12, 0.26), SCORCHED_A if k % 2 == 0 else SOOT_A, rng, 0.0)
+	return f
+
+
+## Eiffelturm nach dem Einsturz: die unteren beiden Etagen stehen, der obere Turm ist am
+## zweiten Absatz abgeknickt und hängt schräg zur Seite, Träger liegen am Fuß. Rostbraun.
+## Etwa 7.5 hoch (× 1.1 beim Export).
+func _eiffel_broken() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(379)
+	var corners: Array[Vector3] = [Vector3(1, 0, 1), Vector3(-1, 0, 1), Vector3(-1, 0, -1), Vector3(1, 0, -1)]
+	var levels: Array = [[0.0, 1.9], [2.6, 0.95], [5.2, 0.42], [8.3, 0.08]]
+	var radii := [0.3, 0.2, 0.12, 0.05]
+	# Abgeknickt: um die Kante des zweiten Absatzes nach +x gekippt
+	var hinge := Transform3D(Basis(Vector3.BACK, -0.5), Vector3.ZERO)
+	var pivot := Vector3(0.42, 5.2, 0)
+	var bend := func(p: Vector3) -> Vector3: return pivot + hinge * (p - pivot) if p.y > 5.15 else p
+	for s in 3:
+		var y0: float = levels[s][0]
+		var y1: float = levels[s + 1][0]
+		var h0: float = levels[s][1]
+		var h1: float = levels[s + 1][1]
+		for k in 4:
+			var c: Vector3 = corners[k]
+			var nxt: Vector3 = corners[(k + 1) % 4]
+			var a := Vector3(c.x * h0, y0, c.z * h0)
+			var b := Vector3(c.x * h1, y1, c.z * h1)
+			if s == 2:
+				# Oben fehlt ein Bein, das zweite ist kurz abgerissen
+				if k == 1:
+					continue
+				if k == 2:
+					b = a.lerp(b, 0.4)
+				a = bend.call(a + Vector3(0, 0.06, 0))
+				b = bend.call(b + Vector3(0, 0.06, 0))
+			f.frustum(a, b, radii[s], radii[s + 1], 4, RUST_A, PI / 4.0, RUST_B)
+			if s == 1:
+				f.frustum(a, Vector3(nxt.x * h1, y1, nxt.z * h1), 0.05, 0.04, 4, RUST_B)
+				f.frustum(Vector3(nxt.x * h0, y0, nxt.z * h0), b, 0.05, 0.04, 4, RUST_B)
+			if s == 0:
+				var mid := Vector3((c.x + nxt.x) * 0.5 * 1.55, 0.0, (c.z + nxt.z) * 0.5 * 1.55)
+				var along := (nxt - c).normalized()
+				var prev := Vector3.ZERO
+				for j in 9:
+					var ang := PI * j / 8.0
+					var p := mid + along * cos(ang) * 1.3 + Vector3(0, 0.5 + sin(ang) * 1.3, 0)
+					if j > 0 and j != 5:
+						f.frustum(prev, p, 0.06, 0.06, 4, RUST_B)
+					prev = p
+	f.box(Vector3(0, 2.7, 0), Vector3(2.3, 0.26, 2.3), RUST_B, 0.0)
+	f.box(Vector3(0.1, 5.28, 0), Vector3(1.1, 0.18, 1.1), RUST_B, 0.0, 0.08)
+	var top := pivot + hinge * (Vector3(0, 8.45, 0) - pivot)
+	f.box(top, Vector3(0.3, 0.3, 0.3), RUST_B, 0.0)
+	f.frustum(top, pivot + hinge * (Vector3(0, 9.4, 0) - pivot), 0.05, 0.02, 4, RUST_A)
+	# Herabgestürzte Träger am Fuß
+	for k in 5:
+		var at := Vector3(rng.randf_range(1.6, 3.2), 0.08, rng.randf_range(-1.6, 1.6))
+		var yaw := rng.randf_range(0.0, PI)
+		f.box(at, Vector3(rng.randf_range(0.9, 1.6), 0.12, 0.12), RUST_A if k % 2 == 0 else RUST_B, yaw)
+	for k in 4:
+		f.blob(Vector3(rng.randf_range(1.2, 2.8), 0.12, rng.randf_range(-1.2, 1.2)), 0.22, CONCRETE_B, rng, 0.0)
+	return f
+
+
+## Autowrack: verbeulte Karosserie in verblichenem Lack mit Rostflecken, Scheiben leer,
+## die Reifen platt. `burning`: aus der Motorhaube schlagen Flammen, der Lack ist verkohlt.
+## Etwa 3.1 lang (entlang x) und 1.2 hoch — Kram am Feldrand.
+func _car_wreck(burning: bool) -> Forge:
+	var f := Forge.new()
+	var rng := _rng(383 if burning else 389)
+	var paint := SOOT_A if burning else FADED_PAINT
+	var paint_b := SOOT_B if burning else RUST_A
+	# Platte Reifen: niedrig, die Karosserie sitzt fast auf
+	for x in [-0.95, 0.95]:
+		for z in [-0.64, 0.64]:
+			f.frustum(Vector3(x, 0.24, z * 0.92), Vector3(x, 0.24, z * 1.08), 0.26, 0.26, 8, FLAT_TYRE)
+	f.box(Vector3(0, 0.55, 0), Vector3(3.1, 0.5, 1.4), paint, 0.0)
+	f.box(Vector3(-0.15, 1.02, 0), Vector3(1.6, 0.46, 1.26), paint, 0.0)
+	# Eingedrücktes Dach und leere Scheiben
+	f.box(Vector3(-0.2, 1.27, 0.05), Vector3(1.2, 0.06, 1.0), paint_b, 0.0, 0.08)
+	for z in [-0.635, 0.635]:
+		for x in [-0.55, 0.25]:
+			f.box(Vector3(x, 1.04, z), Vector3(0.62, 0.3, 0.02), HOLLOW, 0.0)
+	f.box(Vector3(0.66, 1.02, 0), Vector3(0.02, 0.32, 1.06), HOLLOW, 0.2)
+	f.box(Vector3(-0.96, 1.02, 0), Vector3(0.02, 0.32, 1.06), HOLLOW, 0.0)
+	# Rostflecken und eine abgerissene Stoßstange
+	for k in 5:
+		var at := Vector3(rng.randf_range(-1.4, 1.4), rng.randf_range(0.4, 0.75), 0.705 * (1.0 if k % 2 == 0 else -1.0))
+		f.box(at, Vector3(rng.randf_range(0.25, 0.5), rng.randf_range(0.12, 0.25), 0.02), RUST_B, 0.0)
+	f.box(Vector3(1.62, 0.2, 0.3), Vector3(0.12, 0.12, 1.2), RUST_A, 0.5)
+	if burning:
+		f.box(Vector3(1.1, 0.82, 0), Vector3(0.8, 0.04, 1.2), CHAR_BEAM, 0.0, -0.5)
+		_flames(f, Vector3(1.15, 0.8, 0.0), 1.3, rng)
+		_flames(f, Vector3(-0.3, 1.25, 0.1), 0.55, rng)
+	return f
+
+
+## Rostige Öltonne, in der ein Feuer brennt — Licht und Wärme in der Ruinenstadt. Etwa
+## 1.6 hoch mit den Flammen.
+func _burning_barrel() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(397)
+	f.drum(Vector3.ZERO, 0.38, 0.95, 10, RUST_A, rng, 0.0, RUST_B)
+	for y in [0.3, 0.65]:
+		f.frustum(Vector3(0, y, 0), Vector3(0, y + 0.05, 0), 0.4, 0.4, 10, RUST_B)
+	f.frustum(Vector3(0, 0.9, 0), Vector3(0, 0.96, 0), 0.34, 0.34, 10, CHAR_BEAM)
+	_flames(f, Vector3(0, 0.92, 0), 0.75, rng)
+	return f
+
+
+## Schutthaufen: Betonbrocken, eine Platte, ein rostiger Stahlträger und verbogene
+## Bewehrungseisen. Etwa 1.1 breit und 0.6 hoch (Felsen stehen bei ~2.3).
+func _rubble_heap(top := CONCRETE_A, side := CONCRETE_B, seed_value := 401) -> Forge:
+	var f := Forge.new()
+	var rng := _rng(seed_value)
+	var paint := func(_m: Vector3, nn: Vector3) -> Color: return top if nn.y > 0.3 else side
+	f.rock(Vector3(0, 0.0, 0), Vector3(0.48, 0.34, 0.4), rng, 5, paint, 0.0)
+	f.rock(Vector3(0.35, 0.0, 0.22), Vector3(0.26, 0.2, 0.22), rng, 4, paint, 0.0)
+	f.rock(Vector3(-0.38, 0.0, -0.15), Vector3(0.22, 0.16, 0.2), rng, 4, paint, 0.0)
+	f.box(Vector3(-0.1, 0.32, 0.25), Vector3(0.6, 0.07, 0.4), side, 0.4, 0.35)
+	f.box(Vector3(0.05, 0.3, -0.12), Vector3(0.9, 0.08, 0.08), RUST_A, -0.6, 0.25)
+	for k in 3:
+		var a := Vector3(rng.randf_range(-0.2, 0.2), 0.25, rng.randf_range(-0.1, 0.2))
+		var mid := a + Vector3(rng.randf_range(-0.15, 0.15), 0.28, rng.randf_range(-0.15, 0.15))
+		var end := mid + Vector3(rng.randf_range(-0.2, 0.2), 0.06, rng.randf_range(-0.2, 0.2))
+		f.frustum(a, mid, 0.015, 0.015, 4, RUST_B)
+		f.frustum(mid, end, 0.015, 0.012, 4, RUST_B)
+	for k in 4:
+		f.blob(Vector3(rng.randf_range(-0.6, 0.6), 0.04, rng.randf_range(-0.5, 0.5)), 0.06, side, rng, 0.0)
+	return f
+
+
+## Straßenlaterne, umgeknickt: der Mast steht bis zur Mitte, darüber hängt er schräg ab,
+## das Glas ist zerbrochen und dunkel. Etwa 2.6 hoch.
+func _lamp_bent() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(409)
+	var knee := Vector3(0, 1.7, 0)
+	var head := knee + Vector3(1.05, 0.55, 0.15)
+	f.frustum(Vector3.ZERO, Vector3(0, 0.5, 0), 0.22, 0.14, 6, LAMP_POST)
+	f.frustum(Vector3(0, 0.5, 0), knee, 0.1, 0.09, 6, LAMP_POST)
+	f.frustum(knee, head, 0.09, 0.08, 6, LAMP_POST)
+	var down := head + Vector3(0.12, -0.3, 0)
+	f.frustum(head, down, 0.2, 0.26, 6, HOLLOW)
+	f.cone_cap(head - Vector3(0, 0.02, 0), 0.3, 0.18, 6, LAMP_POST, 0.0, true)
+	for k in 4:
+		f.blob(Vector3(rng.randf_range(0.6, 1.4), 0.03, rng.randf_range(-0.4, 0.4)), 0.05, LAMP_GLASS.darkened(0.4), rng, 0.0)
+	return f
+
+
+const LOIRE_WALL_A := Color(0.60, 0.54, 0.44)
+const LOIRE_WALL_B := Color(0.47, 0.42, 0.34)
+const MED_STONE_A := Color(0.76, 0.63, 0.46)
+const MED_STONE_B := Color(0.62, 0.50, 0.36)
+const GRIME := Color(0.40, 0.36, 0.28)
+const PANE := Color(0.62, 0.78, 0.80)
+const WAGON_A := Color(0.46, 0.22, 0.14)
+const GONDOLA_RED := Color(0.70, 0.18, 0.14)
+const DOME_A := Color(0.90, 0.90, 0.88)
+const DOME_B := Color(0.78, 0.78, 0.76)
+const HULL_PAINT := Color(0.24, 0.32, 0.42)
+
+
+## Verlassenes Steinhaus: Mauern oben in Stufen abgebrochen, das Dach zur Hälfte
+## eingestürzt — links liegen die Ziegel noch, rechts ragen nur die Sparren auf, darunter
+## Schutt. Leere Fenster, Efeu. Etwa 4.2 hoch, für den Baumplatz wie haussmann_ruin.
+func _house_ruin(seed_value: int, wall_a: Color, wall_b: Color, tile_a: Color, tile_b: Color) -> Forge:
+	var f := Forge.new()
+	var rng := _rng(seed_value)
+	var w := 3.4
+	var d := 2.6
+	var t := 0.22
+	var h := 2.5
+	f.box(Vector3(0, 0.12, 0), Vector3(w + 0.2, 0.24, d + 0.2), wall_b, 0.0)
+	var front := [h, h - 0.3, h - 1.2, 0.7]
+	var n := front.size()
+	var seg := w / n
+	for k in n:
+		var x := -w * 0.5 + seg * (k + 0.5)
+		f.box(Vector3(x, front[k] * 0.5, d * 0.5 - t * 0.5), Vector3(seg + 0.01, front[k], t), wall_a, 0.0)
+		f.box(Vector3(x, (front[k] + 0.2) * 0.5, -d * 0.5 + t * 0.5), Vector3(seg + 0.01, front[k] + 0.2, t), wall_b, 0.0)
+	for side: float in [-1.0, 1.0]:
+		var hh := h if side < 0.0 else h - 0.9
+		f.box(Vector3(side * (w * 0.5 - t * 0.5), hh * 0.5, 0), Vector3(t, hh, d), wall_a, 0.0)
+	# Feuchter, dreckiger Sockel
+	f.box(Vector3(0, 0.35, d * 0.5 + 0.01), Vector3(w, 0.5, 0.02), GRIME, 0.0)
+	f.box(Vector3(-w * 0.5 - 0.01, 0.35, 0), Vector3(0.02, 0.5, d), GRIME, 0.0)
+	# Giebel links mit dem Rest des Dachs
+	_gable(f, Vector3(-w * 0.25, h, 0), w * 0.25 + 0.15, d * 0.5 + 0.2, 1.1, tile_a, tile_b, wall_a, 4)
+	# Rechts nur noch Sparren, schräg und teils abgebrochen
+	for k in 4:
+		var x := 0.15 + k * 0.42
+		var top := Vector3(x, h + 1.1 - k * 0.22, rng.randf_range(-0.1, 0.1))
+		f.frustum(Vector3(x, h - 0.1, d * 0.5), top, 0.05, 0.05, 4, TIMBER_B)
+		if k % 2 == 0:
+			f.frustum(Vector3(x, h - 0.1, -d * 0.5), top.lerp(Vector3(x, h - 0.1, -d * 0.5), 0.3), 0.05, 0.05, 4, TIMBER_A)
+	# Innen Schutt und heruntergefallene Ziegel
+	f.box(Vector3(0.8, 0.35, 0), Vector3(w * 0.5 - t, 0.22, d - 2 * t), wall_b, 0.0)
+	for k in 6:
+		f.box(Vector3(rng.randf_range(0.3, 1.4), 0.5, rng.randf_range(-0.8, 0.8)),
+				Vector3(rng.randf_range(0.3, 0.6), 0.06, rng.randf_range(0.2, 0.4)),
+				tile_a if k % 2 == 0 else tile_b, rng.randf_range(0.0, PI), rng.randf_range(-0.3, 0.3))
+	# Leere Fenster und die Tür
+	for x: float in [-1.1, 0.0, 1.1]:
+		f.box(Vector3(x, 1.6, d * 0.5 + 0.005), Vector3(0.45, 0.6, 0.02), HOLLOW, 0.0)
+	f.box(Vector3(-0.55, 0.65, d * 0.5 + 0.005), Vector3(0.6, 1.1, 0.02), HOLLOW, 0.0)
+	f.box(Vector3(-w * 0.5 - 0.005, 1.5, 0.3), Vector3(0.02, 0.55, 0.42), HOLLOW, 0.0)
+	_ivy(f, Vector3(-1.35, 1.0, d * 0.5), Vector3(0.4, 0.9, 0), Vector3.BACK, rng)
+	_ivy(f, Vector3(-w * 0.5, 1.2, -0.6), Vector3(0, 1.0, 0.5), Vector3.LEFT, rng)
+	for k in 6:
+		f.blob(Vector3(rng.randf_range(0.6, 2.2), 0.12, rng.randf_range(1.4, 1.9)),
+				rng.randf_range(0.12, 0.22), wall_b if k % 2 == 0 else tile_b, rng, 0.0)
+	return f
+
+
+## Turmruine: runder Turm ohne Dach, die Krone schief abgebrochen, schmale Fenster, daneben
+## ein Mauerstumpf, Efeu und Schutt am Fuß. Etwa 5.2 hoch (× 1.3 beim Export) — Schloss an
+## der Loire oder Fort über dem Hafen, je nach Stein.
+func _tower_ruin(seed_value: int, stone_a: Color, stone_b: Color) -> Forge:
+	var f := Forge.new()
+	var rng := _rng(seed_value)
+	var tc := Vector3(-0.6, 0, 0)
+	f.drum(tc, 1.15, 4.0, 12, stone_a, rng, 0.0, stone_b)
+	f.drum(tc, 1.17, 0.6, 12, GRIME, rng, 0.0)
+	f.drum(tc + Vector3(0, 4.0, 0), 1.15, 1.2, 12, stone_a, rng, 1.1, stone_b)
+	# Von oben: das hohle Innere
+	f.drum(tc + Vector3(0, 0.2, 0), 0.85, 4.05, 12, HOLLOW, rng, 0.0)
+	for y: float in [1.3, 2.5, 3.6]:
+		f.box(tc + Vector3(0, y, 1.12), Vector3(0.24, 0.5, 0.1), HOLLOW, 0.0)
+	f.box(tc + Vector3(-0.8, 2.0, 0.78), Vector3(0.22, 0.45, 0.1), HOLLOW, PI / 4.0)
+	# Mauerstumpf nach +x
+	for k in 4:
+		var hh := 2.2 - k * 0.45 + rng.randf_range(-0.15, 0.15)
+		f.box(Vector3(0.85 + k * 0.5, hh * 0.5, 0), Vector3(0.52, hh, 0.65), stone_a if k % 2 == 0 else stone_b, 0.0)
+	_ivy(f, tc + Vector3(0.3, 1.4, 1.05), Vector3(0.45, 1.2, 0), Vector3.BACK, rng)
+	_ivy(f, Vector3(1.4, 0.8, 0.33), Vector3(0.5, 0.7, 0), Vector3.BACK, rng)
+	for k in 7:
+		f.blob(Vector3(rng.randf_range(0.6, 2.8), 0.12, rng.randf_range(0.5, 1.5)),
+				rng.randf_range(0.12, 0.26), stone_b, rng, 0.0)
+	return f
+
+
+## Mühlrad, verrostet und still: Felgen aus Eisen, Holzschaufeln (zwei fehlen), die Achse
+## auf einem Steinpfeiler. Etwa 2.9 hoch.
+func _waterwheel() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(443)
+	var hub := Vector3(0, 1.45, 0)
+	var r := 1.3
+	var n := 16
+	f.box(Vector3(0, 0.7, -0.75), Vector3(0.7, 1.4, 0.4), LOIRE_WALL_B, 0.0)
+	f.frustum(hub + Vector3(0, 0, -0.75), hub + Vector3(0, 0, 0.45), 0.1, 0.1, 6, RUST_B)
+	for side: float in [-0.35, 0.35]:
+		for k in n:
+			var a0 := TAU * k / n
+			var a1 := TAU * (k + 1) / n
+			f.frustum(hub + Vector3(cos(a0) * r, sin(a0) * r, side), hub + Vector3(cos(a1) * r, sin(a1) * r, side),
+					0.06, 0.06, 4, RUST_A)
+		for k in 6:
+			var a := TAU * k / 6.0
+			f.frustum(hub + Vector3(0, 0, side), hub + Vector3(cos(a) * r, sin(a) * r, side), 0.04, 0.04, 4, RUST_B)
+	for k in n:
+		if k == 3 or k == 9:
+			continue
+		var a := TAU * (k + 0.5) / n
+		var c := hub + Vector3(cos(a), sin(a), 0) * (r - 0.12)
+		f.box(c, Vector3(0.08, 0.32, 0.72), TIMBER_A if k % 2 == 0 else TIMBER_B, 0.0, 0.0)
+	for k in 3:
+		f.blob(Vector3(rng.randf_range(-1.0, 1.0), 0.06, rng.randf_range(0.3, 0.9)), 0.1, TIMBER_B, rng, 0.0)
+	return f
+
+
+## Gewächshaus, verfallen: niedriger Sockel, Rahmen aus rostigem Eisen mit Satteldach-Rippen,
+## nur noch wenige Scheiben darin, Scherben am Boden. Etwa 2.8 hoch, 3.6 lang.
+func _greenhouse_ruin() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(449)
+	var hx := 1.8
+	var hz := 1.1
+	var wall := 1.5
+	var ridge := 2.7
+	f.box(Vector3(0, 0.2, 0), Vector3(2 * hx, 0.4, 2 * hz), LOIRE_WALL_B, 0.0)
+	f.box(Vector3(0, 0.42, 0), Vector3(2 * hx - 0.3, 0.04, 2 * hz - 0.3), MOSS, 0.0)
+	for k in 7:
+		var x := -hx + k * (2 * hx / 6.0)
+		for side: float in [-1.0, 1.0]:
+			f.frustum(Vector3(x, 0.4, side * hz), Vector3(x, wall, side * hz), 0.03, 0.03, 4, RUST_B)
+			if k != 4 or side > 0.0:
+				f.frustum(Vector3(x, wall, side * hz), Vector3(x, ridge, 0), 0.03, 0.03, 4, RUST_B)
+	f.frustum(Vector3(-hx, ridge, 0), Vector3(hx * 0.3, ridge, 0), 0.04, 0.04, 4, RUST_A)
+	for side: float in [-1.0, 1.0]:
+		f.frustum(Vector3(-hx, wall, side * hz), Vector3(hx, wall, side * hz), 0.035, 0.035, 4, RUST_A)
+	# Ein paar Scheiben, schräg auf dem Dach und senkrecht in der Wand
+	for k: int in [0, 2, 5]:
+		var x := -hx + (k + 0.5) * (2 * hx / 6.0)
+		f.box(Vector3(x, (wall + ridge) * 0.5, hz * 0.5), Vector3(0.55, 0.02, 1.2), PANE, 0.0, 0.73)
+	for k: int in [1, 3]:
+		var x := -hx + (k + 0.5) * (2 * hx / 6.0)
+		f.box(Vector3(x, (0.4 + wall) * 0.5, -hz), Vector3(0.55, 1.05, 0.02), PANE, 0.0)
+	for k in 6:
+		f.box(Vector3(rng.randf_range(-1.5, 1.5), 0.45, rng.randf_range(-0.8, 0.8)),
+				Vector3(0.18, 0.015, 0.12), PANE, rng.randf_range(0.0, PI))
+	return f
+
+
+## Güterwagen, abgestellt und verrostet: Kasten auf zwei Drehgestellen, die Schiebetür
+## fehlt, das Dach eingedellt. Etwa 2.2 hoch, 4 lang.
+func _rail_wagon() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(457)
+	for x: float in [-1.3, 1.3]:
+		f.box(Vector3(x, 0.3, 0), Vector3(1.0, 0.25, 1.1), IRON, 0.0)
+		for dx: float in [-0.32, 0.32]:
+			f.frustum(Vector3(x + dx, 0.3, -0.6), Vector3(x + dx, 0.3, 0.6), 0.26, 0.26, 8, RUST_B)
+	f.box(Vector3(0, 0.55, 0), Vector3(4.0, 0.14, 1.3), RUST_B, 0.0)
+	f.box(Vector3(0, 1.35, 0), Vector3(3.9, 1.5, 1.35), WAGON_A, 0.0)
+	f.box(Vector3(0, 2.13, 0), Vector3(3.95, 0.08, 1.45), RUST_B, 0.0, 0.03)
+	f.box(Vector3(0, 1.3, 0.68), Vector3(1.0, 1.25, 0.02), HOLLOW, 0.0)
+	for k in 6:
+		f.box(Vector3(rng.randf_range(-1.8, 1.8), rng.randf_range(0.8, 1.9), 0.685 * (1.0 if k % 2 == 0 else -1.0)),
+				Vector3(rng.randf_range(0.2, 0.5), rng.randf_range(0.15, 0.3), 0.02), RUST_A, 0.0)
+	return f
+
+
+## Funkmast, verrostet: Gittermast auf drei Beinen, oben abgeknickt, zwei kleine Schüsseln.
+## Etwa 6.5 hoch — ein Wahrzeichen.
+func _pylon_broken() -> Forge:
+	var f := Forge.new()
+	var legs: Array[Vector3] = [Vector3(0.9, 0, 0), Vector3(-0.45, 0, 0.78), Vector3(-0.45, 0, -0.78)]
+	var top := 5.0
+	for k in 3:
+		var a: Vector3 = legs[k]
+		var b: Vector3 = a * 0.2 + Vector3(0, top, 0)
+		f.frustum(a, b, 0.07, 0.05, 4, RUST_A)
+		var na: Vector3 = legs[(k + 1) % 3]
+		var nb: Vector3 = na * 0.2 + Vector3(0, top, 0)
+		for j in 5:
+			var t0 := j / 5.0
+			var t1 := (j + 1) / 5.0
+			f.frustum(a.lerp(b, t0), na.lerp(nb, t1), 0.025, 0.025, 4, RUST_B)
+			f.frustum(a.lerp(b, t1), na.lerp(nb, t1), 0.025, 0.025, 4, RUST_B)
+	# Oben abgeknickt
+	var kink := Vector3(0, top, 0)
+	var tip := kink + Vector3(1.1, 1.1, 0.2)
+	f.frustum(kink, tip, 0.08, 0.04, 4, RUST_A)
+	for at: Vector3 in [Vector3(0.18, 3.6, 0.1), Vector3(-0.1, 4.4, -0.15)]:
+		f.cone_cap(at, 0.32, 0.12, 8, DOME_B, 0.0, true)
+	return f
+
+
+## Radarkuppel einer verlassenen Station: weiße Kugel aus Paneelen auf einem Betonbau,
+## einige Paneele fehlen, dort sieht man ins Dunkle. Etwa 4.3 hoch.
+func _radar_dome() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(463)
+	f.box(Vector3(0, 0.75, 0), Vector3(2.6, 1.5, 2.4), CONCRETE_A, 0.0)
+	f.box(Vector3(0, 1.55, 0), Vector3(2.7, 0.1, 2.5), CONCRETE_B, 0.0)
+	f.box(Vector3(0.5, 0.6, 1.205), Vector3(0.6, 1.0, 0.02), HOLLOW, 0.0)
+	var c := Vector3(0, 2.65, 0)
+	f.lump(c, Vector3(1.15, 1.15, 1.15), 5, 10, rng, 0.0,
+			func(m: Vector3, nn: Vector3) -> Color:
+				if nn.x > 0.35 and nn.y > -0.1 and nn.y < 0.55 and nn.z > -0.2:
+					return HOLLOW
+				return DOME_A if int(floor((m.x + m.y * 2.0) * 2.0)) % 2 == 0 else DOME_B,
+			-0.9)
+	for k in 4:
+		f.box(Vector3(rng.randf_range(1.4, 2.0), 0.05, rng.randf_range(-0.6, 0.9)), Vector3(0.4, 0.04, 0.3),
+				DOME_B, rng.randf_range(0.0, PI), rng.randf_range(-0.3, 0.3))
+	return f
+
+
+## Seilbahngondel, abgestürzt: rote Kabine schief im Schnee, das Gehänge abgerissen,
+## Schnee auf dem Dach. Etwa 1.8 hoch — Kram am Feldrand.
+func _gondola_fallen() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(467)
+	f.box(Vector3(0, 0.75, 0), Vector3(1.6, 1.3, 1.2), GONDOLA_RED, 0.3, 0.25)
+	f.box(Vector3(0.05, 1.45, 0.17), Vector3(1.5, 0.12, 1.05), SNOW, 0.3, 0.25)
+	for side: float in [-1.0, 1.0]:
+		f.box(Vector3(side * 0.12, 0.9, side * 0.58 + 0.17 * side), Vector3(1.2, 0.5, 0.02), WINDOW, 0.3, 0.25)
+	f.frustum(Vector3(0.0, 1.5, 0.2), Vector3(0.3, 2.1, 0.5), 0.04, 0.04, 4, IRON)
+	f.frustum(Vector3(0.3, 2.1, 0.5), Vector3(0.55, 2.05, 0.75), 0.04, 0.03, 4, IRON)
+	for k in 4:
+		f.blob(Vector3(rng.randf_range(-1.0, 1.0), 0.05, rng.randf_range(-0.9, 0.9)), 0.15, SNOW, rng, 0.0)
+	return f
+
+
+## Berghütte, eingestürzt: die Stämme stehen noch zwei Drittel hoch, eine Hälfte des Dachs
+## ist nach innen gebrochen und hängt schräg, Schnee darauf, kein Licht mehr. Etwa 3.6 hoch.
+func _cabin_ruin() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(479)
+	for i in 6:
+		var y := 0.18 + 0.3 * i
+		var col := LOG_A if i % 2 == 0 else LOG_B
+		var short := i >= 4
+		for z: float in [1.3, -1.3]:
+			f.frustum(Vector3(-1.95, y, z), Vector3(0.4 if short and z > 0.0 else 1.95, y, z), 0.17, 0.17, 6, col, 0.0)
+		for x: float in [1.7, -1.7]:
+			if short and x > 0.0:
+				continue
+			f.frustum(Vector3(x, y + 0.15, -1.55), Vector3(x, y + 0.15, 1.55), 0.17, 0.17, 6, col, 0.0)
+	f.box(Vector3(0, 0.3, 0), Vector3(3.3, 0.4, 2.5), LOG_B, 0.0)
+	var eave := 0.18 + 0.3 * 6
+	# Linke Dachhälfte steht, die rechte ist eingebrochen
+	_gable(f, Vector3(-1.1, eave, 0), 1.1, 1.85, 1.3, SNOW, SNOW_SHADE, LOG_A)
+	f.box(Vector3(0.9, eave - 0.5, 0.3), Vector3(1.8, 0.1, 2.6), SNOW_SHADE, 0.0, 0.0)
+	f.box(Vector3(0.9, eave - 0.6, 0.3), Vector3(1.8, 0.12, 2.6), LOG_B, 0.0, 0.0)
+	for k in 3:
+		f.frustum(Vector3(0.1 + k * 0.6, eave - 0.6, -1.0), Vector3(0.3 + k * 0.6, eave + 0.5, 0.0), 0.06, 0.06, 4, LOG_A)
+	f.frustum(Vector3(-0.5, eave + 1.0, -0.5), Vector3(-0.5, eave + 1.6, -0.5), 0.22, 0.2, 6, BOULDER_A)
+	f.box(Vector3(-0.5, 0.85, 1.48), Vector3(0.8, 1.5, 0.05), HOLLOW, 0.0)
+	f.box(Vector3(-1.2, 1.3, 1.48), Vector3(0.5, 0.45, 0.05), HOLLOW, 0.0)
+	for k in 4:
+		f.blob(Vector3(rng.randf_range(1.0, 2.4), 0.1, rng.randf_range(-0.8, 1.6)), 0.16, LOG_B, rng, 0.0)
+	return f
+
+
+## Fischkutter, gestrandet und verrostet: Rumpf mit Rostfahnen, das Steuerhaus ohne Scheiben,
+## der Mast abgeknickt. Etwa 2.8 hoch, 4.4 lang.
+func _boat_wreck() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(487)
+	_hull(f, 2.2, 0.85, 0.75, 0.35, HULL_PAINT, RUST_A, RUST_B)
+	f.box(Vector3(-0.5, 0.8, 0), Vector3(2.4, 0.06, 1.2), TIMBER_B, 0.0)
+	f.box(Vector3(-0.7, 1.35, 0), Vector3(1.0, 1.0, 0.95), DOME_B, 0.0)
+	f.box(Vector3(-0.7, 1.9, 0), Vector3(1.1, 0.08, 1.05), RUST_B, 0.0)
+	for z: float in [-0.48, 0.48]:
+		f.box(Vector3(-0.7, 1.5, z), Vector3(0.7, 0.35, 0.02), HOLLOW, 0.0)
+	f.box(Vector3(-0.19, 1.5, 0), Vector3(0.02, 0.35, 0.6), HOLLOW, 0.0)
+	f.frustum(Vector3(0.6, 0.8, 0), Vector3(0.6, 2.2, 0), 0.06, 0.05, 5, RUST_B)
+	f.frustum(Vector3(0.6, 2.2, 0), Vector3(1.5, 1.9, 0.3), 0.05, 0.04, 5, RUST_B)
+	for k in 5:
+		var x := rng.randf_range(-1.6, 1.6)
+		for side: float in [-1.0, 1.0]:
+			f.box(Vector3(x, 0.55, side * 0.8 * (1.0 - (x / 2.2) * (x / 2.2)) + side * 0.02),
+					Vector3(0.12, rng.randf_range(0.3, 0.55), 0.02), RUST_B, 0.0)
+	return f
+
+
 func _rng(seed_value: int) -> RandomNumberGenerator:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
@@ -2420,6 +2988,18 @@ func _rng(seed_value: int) -> RandomNumberGenerator:
 class Forge:
 	var _tris := {}      # Color -> Array[PackedVector3Array(a, b, c, n)]
 	var _two_sided := {} # Color -> true
+	var _glowing := {}   # Color -> Leuchtkraft
+	var fires: Array[Vector4] = []  # (x, y, z, Größe) — Fire.MARKER
+
+	## Hier brennt ein Feuer der Höhe `size` (Fire, im Kampf): ein leerer Knoten im Modell,
+	## an dem die Flamme und ihr Licht hängen. Das Modell trägt nur die Glut.
+	func fire_at(at: Vector3, size: float) -> void:
+		fires.append(Vector4(at.x, at.y, at.z, size))
+
+	## Flächen in `col` leuchten selbst (Flammen, Glut), mit `energy` über der Schwelle
+	## des Glows — so blühen sie im Kampf auf, ohne dass ein Licht nötig ist.
+	func glow(col: Color, energy: float) -> void:
+		_glowing[col] = energy
 
 	## Dreieck mit Normale weg von `inside`. Godot zeichnet im Uhrzeigersinn gewundene
 	## Flächen als Vorderseite — die Reihenfolge wird danach gedreht.
@@ -2660,6 +3240,10 @@ class Forge:
 			mat.roughness = 1.0
 			if _two_sided.has(col):
 				mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+			if _glowing.has(col):
+				mat.emission_enabled = true
+				mat.emission = col
+				mat.emission_energy_multiplier = _glowing[col]
 			st.set_material(mat)
 			st.commit(mesh)
 		return mesh

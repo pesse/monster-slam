@@ -60,6 +60,18 @@ static func cover(at := level()) -> float:
 	return 0.0
 
 
+## Wie viele Feuer der Deko (Fire) ein Licht bekommen. Jedes Punktlicht zeichnet im
+## Compatibility-Renderer alles noch einmal, was es trifft; die Flammen brennen in jeder
+## Stufe, ohne Licht leuchten sie nur.
+static func fire_lights(at := level()) -> int:
+	match at:
+		Level.FINE:
+			return 6
+		Level.MEDIUM:
+			return 3
+	return 0
+
+
 ## Kontrast und Sättigung des Environments (adjustment_*).
 static func grading(at := level()) -> bool:
 	return at != Level.FAST

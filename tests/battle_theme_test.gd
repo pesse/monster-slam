@@ -127,6 +127,49 @@ func test_light_from_takes_the_light_of_another_theme() -> void:
 	assert_that(raw.sun_color).is_equal(raw_sun)
 
 
+## Farbkorrektur und Dunst gehören zum Licht: ein Stop mit eigenem Boden spielt in derselben
+## Luft wie seine Unit.
+func test_light_from_takes_grading_and_haze() -> void:
+	var variant := _theme_files().filter(func(t: BattleTheme) -> bool: return not t.light_from.is_empty())
+	var raw: BattleTheme = variant[0]
+	var light := BattleTheme.named(raw.light_from)
+	var picked := BattleTheme.named(raw.resource_path.get_file().get_basename())
+	assert_float(picked.saturation).is_equal(light.saturation)
+	assert_float(picked.contrast).is_equal(light.contrast)
+	assert_float(picked.brightness).is_equal(light.brightness)
+	assert_float(picked.haze).is_equal(light.haze)
+	assert_that(picked.haze_color).is_equal(light.haze_color)
+
+
+## Ohne Thema sieht der Kampf aus wie die Szene: die Vorgaben der Farbkorrektur SIND die
+## des Environments in battle.tscn.
+func test_default_grading_is_that_of_the_scene() -> void:
+	var env := _scene_environment((load(BATTLE_SCENE) as PackedScene).get_state())
+	var theme := BattleTheme.new()
+	assert_float(theme.saturation).is_equal_approx(env.adjustment_saturation, 0.001)
+	assert_float(theme.contrast).is_equal_approx(env.adjustment_contrast, 0.001)
+	assert_float(theme.brightness).is_equal_approx(env.adjustment_brightness, 0.001)
+	assert_bool(env.fog_enabled).is_false()
+
+
+## Dunst schaltet den Nebel der Draufsicht ein, in seiner Farbe oder der des Hintergrunds;
+## ohne Dunst bleibt die Luft klar.
+func test_haze_turns_on_the_fog() -> void:
+	var env := Environment.new()
+	var theme := BattleTheme.new()
+	theme.apply_haze(env)
+	assert_bool(env.fog_enabled).is_false()
+	theme.haze = 0.01
+	theme.background = Color(0.2, 0.1, 0.1)
+	theme.apply_haze(env)
+	assert_bool(env.fog_enabled).is_true()
+	assert_float(env.fog_density).is_equal_approx(0.01, 0.0001)
+	assert_that(env.fog_light_color).is_equal(theme.background)
+	theme.haze_color = Color(0.3, 0.3, 0.3)
+	theme.apply_haze(env)
+	assert_that(env.fog_light_color).is_equal(theme.haze_color)
+
+
 ## Das flache Innenfeld trägt nur Töne zwischen den beiden Bodenfarben des Themas —
 ## der Boden kommt wirklich aus dem Thema und nicht aus einer Konstante daneben.
 func test_the_flat_field_uses_the_theme_ground_colors() -> void:

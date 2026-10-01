@@ -1,6 +1,6 @@
 class_name AmbientParticles
 extends RefCounted
-## Was in der Luft des Schlachtfelds treibt: Laub, Schnee, Pollen, Glühwürmchen.
+## Was in der Luft des Schlachtfelds treibt: Laub, Schnee, Pollen, Glühwürmchen, Asche, Glut.
 ##
 ## Welches, sagt das Thema (`BattleTheme.particles`); wie es aussieht, steht hier. Kleine
 ## einfarbige Plättchen ohne Textur, wie der Rest der Low-Poly-Welt. Nur was dort auch
@@ -15,9 +15,15 @@ extends RefCounted
 ## gl_compatibility die GPU-Partikel nur eingeschränkt kann; die paar hundert kosten nichts.
 ## Sie laufen mit dem skalierten delta, in der Zeitlupe also langsamer.
 ##
+## Asche und Glut haben ihren Grund in einem brennenden Gebiet (Ruinen nach der Katastrophe):
+## Asche rieselt langsam und taumelnd, Glut steigt leuchtend auf und flackert. Zur Asche
+## gehört immer etwas Glut (`with`), allein steigt nur Glut auf.
+##
 ## Dicht ist je 1000 m² Boden, damit ein breiteres Fenster nicht dünner schneit.
 
-const KINDS := ["leaves", "snow", "pollen", "fireflies"]
+const KINDS := ["leaves", "snow", "pollen", "fireflies", "ash", "embers"]
+## Arten, die beim Schweben aufblinken statt gleichmäßig zu leuchten.
+const BLINKING := ["fireflies", "embers"]
 
 ## Bäume, deren Kronen Laub abwerfen (Dateiname ohne Endung) — kein Nadelbaum, kein Haus.
 const LEAF_TREES := ["autumn_red", "autumn_orange", "autumn_yellow", "tree", "park_tree", "plane_tree", "vine_row"]
@@ -53,6 +59,14 @@ const SPEC := {
 	"fireflies": {"density": 14.0, "lifetime": 5.0, "y": [0.3, 2.5], "dir": Vector3(0.0, 1.0, 0.0),
 		"speed": [0.1, 0.4], "spread": 180.0, "size": 0.18, "spin": 0.0,
 		"colors": [Color(0.85, 1.0, 0.45), Color(1.0, 0.95, 0.5)], "glow": 2.2},
+	"ash": {"density": 60.0, "lifetime": 14.0, "y": [0.3, 10.0], "dir": Vector3(0.6, -1.0, 0.4),
+		"speed": [0.35, 0.75], "spread": 35.0, "size": 0.16, "spin": 140.0,
+		"colors": [Color(0.22, 0.21, 0.21), Color(0.34, 0.33, 0.32), Color(0.46, 0.45, 0.44)],
+		"glow": 1.0, "with": "embers"},
+	"embers": {"density": 10.0, "lifetime": 6.0, "y": [0.2, 3.5], "dir": Vector3(0.35, 1.0, 0.2),
+		"speed": [0.4, 1.0], "spread": 30.0, "size": 0.1, "spin": 0.0,
+		"colors": [Color(1.0, 0.45, 0.12), Color(1.0, 0.62, 0.2), Color(0.95, 0.3, 0.08)],
+		"glow": 2.6},
 }
 
 
@@ -91,10 +105,15 @@ static func build(kind: String, area: Rect2, crowns: Array[AABB] = []) -> CPUPar
 	p.scale_amount_min = 0.7
 	p.scale_amount_max = 1.3
 	p.color_initial_ramp = _palette(spec.colors)
-	p.color_ramp = _fade(kind == "fireflies")
+	p.color_ramp = _fade(BLINKING.has(kind))
 	p.mesh = _flake(spec.size, spec.glow)
 	if kind == "leaves":
 		_as_leaves(p, spec, crowns)
+	if spec.has("with"):
+		var other := build(str(spec.with), area, crowns)
+		# Der Begleiter liegt im Ursprung des Elternteils, nicht noch einmal versetzt.
+		other.position -= p.position
+		p.add_child(other)
 	return p
 
 
