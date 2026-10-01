@@ -37,6 +37,14 @@ const _OPTIONAL_PREFIXES := ["der ", "die ", "das ", "eine ", "ein ", "the ", "t
 ## Stelle mit zwei Lesarten, nicht zwei Stellen: "wait for sb", "wait for sth" und
 ## "wait for sb / sth" sind alle vollständig.
 ##
+## Wort-Alternativen mit Schrägstrich ("turn left/right", "einen Bus/eine Fähre nehmen",
+## "aus dem Bus/Boot/Flugzeug aussteigen") sind eine Wahl, keine Auslassung: jede
+## Alternative allein ist vollständig, die ganze Notation auch. Wie weit eine Alternative
+## reicht, steht nicht da — "Bus/eine Fähre" heißt "einen Bus" oder "eine Fähre", "links/
+## rechts" nur je ein Wort. Deshalb gilt jede Breite von 1 bis MAX_SLASH_WIDTH Wörtern je
+## Seite (`_slash_alternatives`). Die schiefen Lesarten ("einen eine Fähre nehmen") tippt
+## niemand; sie kosten nichts.
+##
 ## Auslassungspunkte sind KEIN Platzhalter: weggelassen wären sie sonst „unvollständig".
 ## Sie fallen schon in `_normalize` weg (ELLIPSIS_PATTERN).
 const WILDCARD := "•"
@@ -55,6 +63,10 @@ const GROUP_PATTERN := "\\(([^)]*)\\)"
 ## zwei Platzhaltern (10 Varianten); was darüber liegt, wird nur noch "behalten".
 const MAX_GROUPS := 3
 const MAX_PLACEHOLDERS := 4
+## Wörter je Seite einer Schrägstrich-Alternative, höchstens ("seit 10 Uhr/letzter Woche").
+const MAX_SLASH_WIDTH := 3
+## Schrägstrich-Stellen je Eintrag, höchstens; weitere bleiben wörtlich.
+const MAX_SLASHES := 2
 
 ## Längenzeichen des Lateinischen. Kein Kind tippt „ā", und das Buch fragt die Vokabel ab,
 ## nicht die Quantität: auf Eingabe UND hinterlegter Antwort auf den Grundbuchstaben
@@ -319,11 +331,13 @@ func variants(s: String, loose := false) -> Dictionary:
 	# werden. Zwei Stufen, weil sich die Bereiche sonst überlappen würden.
 	for group_form in _expand(base, _group_slots(base)):
 		for form in _expand(str(group_form[0]), _placeholder_slots(str(group_form[0]))):
-			var key := _strip_optional_prefix(str(form[0]))
-			if key.is_empty():
-				continue
 			var complete: bool = bool(group_form[1]) and bool(form[1])
-			result[key] = bool(result.get(key, false)) or complete
+			# Nach den Platzhaltern: "sb./sth." ist dann schon EIN Wildcard.
+			for alternative in _slash_alternatives(str(form[0])):
+				var key := _strip_optional_prefix(str(alternative))
+				if key.is_empty():
+					continue
+				result[key] = bool(result.get(key, false)) or complete
 	if result.is_empty():
 		result[base] = true
 	if not loose:
@@ -351,6 +365,68 @@ func _loosen(key: String) -> Array:
 			next.append(_collapse(str(f).replace(joiner, "")))
 		forms = next
 	return forms
+
+
+## Die Lesarten eines Strings mit Wort-Alternativen ("bus/eine fähre"): er selbst und je
+## Schrägstrich-Wort jede Alternative in jeder Breite (siehe MAX_SLASH_WIDTH). Ein Wort
+## mit mehr als zwei Teilen ("bus/boot/flugzeug") wechselt nur Einzelwörter. Ein leerer
+## Teil (eine weggekürzte Auslassung: "stunden/wochen/") ist keine Alternative.
+func _slash_alternatives(s: String) -> Array:
+	var words := s.split(" ", false)
+	# Ein Schrägstrich vor einer weggekürzten Auslassung („woche/…") hängt allein.
+	for k in words.size():
+		if words[k].length() > 1:
+			words[k] = words[k].trim_suffix("/").trim_prefix("/")
+	var forms: Array = [" ".join(words)]
+	var seen := 0
+	# Von rechts nach links: eine Alternative ändert nur Wörter ab ihrem Anfang, links davon
+	# stehen die Wörter dann noch an ihrer Stelle.
+	for k in range(words.size() - 1, -1, -1):
+		if not _is_slash_word(words[k]):
+			continue
+		seen += 1
+		if seen > MAX_SLASHES:
+			break
+		var head := words.slice(0, k + 1)
+		var next: Array = []
+		for f in forms:
+			next.append(f)
+			var fw := str(f).split(" ", false)
+			# Nur Formen, in denen das Wort und alles links davon noch an seiner Stelle steht.
+			if fw.size() <= k or fw.slice(0, k + 1) != head:
+				continue
+			next.append_array(_alternatives_at(fw, k))
+		forms = next
+	return forms
+
+
+func _is_slash_word(word: String) -> bool:
+	var parts := word.split("/")
+	return parts.size() > 1 and parts[0] != "" and parts[1] != "" and not word.begins_with("http")
+
+
+func _alternatives_at(words: PackedStringArray, k: int) -> Array:
+	var out: Array = []
+	var parts := words[k].split("/")
+	var widths := MAX_SLASH_WIDTH if parts.size() == 2 else 1
+	for w in range(1, widths + 1):
+		var first := k - w + 1
+		var last := k + w - 1
+		if first < 0 or last >= words.size():
+			break
+		var before := " ".join(words.slice(0, first))
+		var after := " ".join(words.slice(last + 1))
+		for i in parts.size():
+			if parts[i].is_empty():
+				continue
+			var middle: Array[String] = []
+			if i == 0:
+				middle.append_array(Array(words.slice(first, k)))
+			middle.append(parts[i])
+			if i == parts.size() - 1:
+				middle.append_array(Array(words.slice(k + 1, last + 1)))
+			out.append(_collapse("%s %s %s" % [before, " ".join(middle), after]))
+	return out
 
 
 ## Klammergruppen dreifach auflösen: behalten, entklammert, weggelassen. Nur das

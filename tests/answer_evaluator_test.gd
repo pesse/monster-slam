@@ -138,6 +138,22 @@ func test_two_placeholders_are_decided_separately() -> void:
 	assert_bool(_evaluator.evaluate(accepted, "prefer")["complete"]).is_false()
 
 
+## Wort-Alternativen mit Schrägstrich sind eine Wahl: jede allein ist vollständig, die
+## Breite einer Alternative steht nicht da („Bus/eine Fähre" = „einen Bus" | „eine Fähre").
+func test_slashed_words_are_alternatives() -> void:
+	for c in [["einen Bus/eine Fähre nehmen", "einen Bus nehmen"],
+			["einen Bus/eine Fähre nehmen", "eine Fähre nehmen"],
+			["einen Bus/eine Fähre nehmen", "einen Bus/eine Fähre nehmen"],
+			["catch a bus/ferry", "catch a ferry"], ["turn left/right", "turn right"],
+			["aus dem Bus/Boot/Flugzeug aussteigen", "aus dem Boot aussteigen"],
+			["seit 10 Uhr/letzter Woche/…", "seit letzter Woche"],
+			["stay (at/with)", "stay with"]]:
+		assert_bool(_evaluator.evaluate([c[0]], c[1])["complete"]) \
+				.override_failure_message("%s / %s" % c).is_true()
+	assert_bool(_evaluator.evaluate_answers(["einen Bus/eine Fähre nehmen"], "nehmen")).is_false()
+	assert_bool(_evaluator.evaluate_answers(["catch a bus/ferry"], "catch a bus ferry")).is_false()
+
+
 ## "sb./sth." ist eine Stelle mit zwei Lesarten: jede allein ist vollständig.
 func test_slashed_placeholders_are_one_slot() -> void:
 	var accepted := ["wait for sb./sth."]

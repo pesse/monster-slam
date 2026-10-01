@@ -214,7 +214,8 @@ auswählen: das Spiel sucht selbst das Monster, zu dem deine Antwort passt.
 deutsche Artikel („der/die/das“), das englische „the“ und das „to“ vor einem Verb. Was
 im Lehrbuch in Klammern steht, darfst du mittippen oder weglassen. Das englische „a“ wird
 dagegen **nicht** weggelassen, weil es manchmal den Unterschied zwischen zwei Vokabeln
-macht.
+macht. Stehen im Lehrbuch Alternativen mit Schrägstrich („einen Bus/eine Fähre nehmen“,
+„turn left/right“), reicht eine davon: „einen Bus nehmen“ ist vollständig.
 
 Dasselbe Wort steht nie zweimal gleichzeitig auf dem Feld.
 
