@@ -30,6 +30,7 @@ const FORM_LABELS := {
 	"past_simple": "Simple Past",
 	"past_participle": "Past Participle",
 	"present_participle": "-ing-Form",
+	"la_present_1sg": "1. Person Singular",
 	"la_genitive": "Genitiv",
 	"la_gender": "Genus",
 	"la_infinitive": "Infinitiv",
@@ -53,14 +54,20 @@ const GENDER_ANSWERS := {
 }
 
 ## Formen, die das Reveal einer lateinischen Übersetzung als Lexikonform dazuschreibt —
-## „Gen. amīcī · m" bzw. „Perf. …" —, damit man die Vokabel so sieht, wie das Buch sie
+## „Gen. amīcī · m" bzw. „clāmō · Perf. clāmāvī" —, damit man die Vokabel so sieht, wie das Buch sie
 ## lernen lässt. In dieser Reihenfolge.
 const DICTIONARY_FORMS := {
+	"la_present_1sg": "",
 	"la_genitive": "Gen.",
 	"la_gender": "",
 	"la_perfect": "Perf.",
 	"la_ppp": "PPP",
 }
+
+## Curriculum-Scope des Laufs: Formen, die das Buch erst später lehrt, stehen weder in der
+## Aufgabe noch im Reveal (ContentRegistry.form_in_scope). Setzt der WaveGenerator; leer
+## heißt alle Formen.
+var scope: Array = []
 
 
 func resolve(definition: Dictionary, source: Dictionary, extra: Dictionary = {}) -> Dictionary:
@@ -173,7 +180,7 @@ func _asks_foreign(direction: String, lex: Dictionary) -> bool:
 func _dictionary_form(lex: Dictionary) -> String:
 	var bits: Array = []
 	for form_type in DICTIONARY_FORMS:
-		var forms := ContentRegistry.forms_for(str(lex.get("id", "")), form_type)
+		var forms := ContentRegistry.forms_for(str(lex.get("id", "")), form_type, scope)
 		if forms.is_empty():
 			continue
 		var value := str(forms[0].get("value", ""))
@@ -218,7 +225,7 @@ func _resolve_confusables(definition: Dictionary, source: Dictionary, extra: Dic
 
 func _resolve_conjugation(definition: Dictionary, source: Dictionary, extra: Dictionary) -> Dictionary:
 	var form_type := str(extra.get("form_type", ""))
-	var forms := ContentRegistry.forms_for(str(source.get("id", "")), form_type)
+	var forms := ContentRegistry.forms_for(str(source.get("id", "")), form_type, scope)
 	if forms.is_empty():
 		push_warning("TaskResolver: keine Form '%s' für %s (%s)" % [form_type, source.get("id", ""), definition.get("id", "")])
 		return {}

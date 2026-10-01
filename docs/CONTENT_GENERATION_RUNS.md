@@ -1,17 +1,19 @@
 # Content-Generierung — Lauf-Protokoll
 
-Log über Ansätze zur Generierung des Vokabel-Contents, um **Qualität vs. Kosten**
-verschiedener Wege vergleichbar zu machen. Pro Lauf ein Eintrag; Vergleichstabelle unten.
+Log über Ansätze zur Generierung des Vokabel-Contents, um die **Qualität**
+verschiedener Wege vergleichbar zu machen. Generiert wird über das Abo auf dem stärksten
+verfügbaren Modell — Kosten werden nicht erfasst. Pro Lauf ein Eintrag; Vergleichstabelle unten.
 
 ## Vergleichstabelle
 
-| Lauf | Datum | Ansatz | Modell | Agenten | ~Agent-Tokens | ~Kosten | Output-Objekte | Validierung |
-|---|---|---|---|---|---|---|---|---|
-| #1 | 2026-07-03 | Parallel-Fan-out + Merge/Validate-Skript | Sonnet (Agenten), Opus (Orchestrierung) | 40 | ~2,0 Mio. | **~40 $** | 7.377 | 0 Fehler / 0 Dubletten |
-| #2 | 2026-09-03 | Ein-Kontext-Lauf aus Buchfotos (Vision) + Merge/Validate-Skript | Opus | 0 | ~2 Mio. (geschätzt) | ~30 $ (geschätzt) | 1.166 | 0 Fehler / 0 Dubletten |
-| #3 | 2026-09-14 | Ein-Kontext-Lauf aus Buchfotos, ohne Beispielsätze | Opus | 0 | ~0,2 Mio. | ~3 $ | 279 | 0 Fehler / 0 Dubletten |
-| #4 | 2026-09-25 | Sätze je Unit: Fan-out je Unit + Gegenlesung + Prüf-/Merge-Skript | Opus | 9 | ~0,85 Mio. | n. b. | 257 Sätze, 397 Verknüpfungen | 0 Fehler, Datentests grün |
-| #5 | 2026-10-01 | Ein-Kontext-Lauf aus Buchfotos, erste Französisch-Daten, Zeilen-Notation + Generator-Skript | Opus | 0 | n. b. | n. b. | 575 (320 Lexeme, 255 Formen) | 0 Fehler / 0 Dubletten |
+| Lauf | Datum | Ansatz | Modell | Agenten | ~Agent-Tokens | Output-Objekte | Validierung |
+|---|---|---|---|---|---|---|---|
+| #1 | 2026-07-03 | Parallel-Fan-out + Merge/Validate-Skript | Sonnet (Agenten), Opus (Orchestrierung) | 40 | ~2,0 Mio. | 7.377 | 0 Fehler / 0 Dubletten |
+| #2 | 2026-09-03 | Ein-Kontext-Lauf aus Buchfotos (Vision) + Merge/Validate-Skript | Opus | 0 | ~2 Mio. (geschätzt) | 1.166 | 0 Fehler / 0 Dubletten |
+| #3 | 2026-09-14 | Ein-Kontext-Lauf aus Buchfotos, ohne Beispielsätze | Opus | 0 | ~0,2 Mio. | 279 | 0 Fehler / 0 Dubletten |
+| #4 | 2026-09-25 | Sätze je Unit: Fan-out je Unit + Gegenlesung + Prüf-/Merge-Skript | Opus | 9 | ~0,85 Mio. | 257 Sätze, 397 Verknüpfungen | 0 Fehler, Datentests grün |
+| #5 | 2026-10-01 | Ein-Kontext-Lauf aus Buchfotos, erste Französisch-Daten, Zeilen-Notation + Generator-Skript | Opus | 0 | n. b. | 575 (320 Lexeme, 255 Formen) | 0 Fehler / 0 Dubletten |
+| #6 | 2026-10-01 | Ein-Kontext-Lauf aus Buchfotos, Lateinbuch Lektion 1–9 + Perfekttabelle, Zeilen-Notation + Generator-Skript | Opus | 0 | n. b. | 571 (259 Lexeme, 312 Formen) | 0 Fehler / 0 Dubletten |
 
 ---
 
@@ -39,9 +41,6 @@ verschiedener Wege vergleichbar zu machen. Pro Lauf ein Eintrag; Vergleichstabel
 | ~Agent-Tokens | ~0,92 Mio. | ~1,10 Mio. | ~2,0 Mio. |
 | Wall-clock (längster Agent) | ~8,7 min | ~9,8 min | 2 Wellen |
 
-**Gesamtkosten: ~40 $** (Agenten Sonnet + Orchestrierung Opus).
-Grobe Richtwerte: ~0,02 $/Agent-Objekt bzw. ~1 $ je 185 Output-Objekte.
-
 ### Output (7.377 Objekte)
 | Kategorie | Objekte | Kernzahlen |
 |---|---|---|
@@ -68,12 +67,12 @@ Grobe Richtwerte: ~0,02 $/Agent-Objekt bzw. ~1 $ je 185 Output-Objekte.
 - **−** Keine redaktionelle Qualitätssicherung der Sätze/Nuancen (nur strukturell geprüft).
 - **−** Agenten hinterließen vereinzelt Scratch-Dateien im Staging (mussten weggeräumt werden).
 
-### Ideen für Vergleichsläufe (Qualität ↔ Kosten)
-- **Opus-Agenten** statt Sonnet für Nuance/Übersetzungsqualität → Kosten/Qualität messen.
-- **Adversariales Review** (2. Agent prüft/kürzt je Batch) → weniger Draft, höhere Kosten.
+### Ideen für Vergleichsläufe
+- **Opus-Agenten** statt Sonnet für Nuance/Übersetzungsqualität → Qualität vergleichen.
+- **Adversariales Review** (2. Agent prüft/kürzt je Batch) → weniger Draft.
 - **Weniger Redundanz** durch vorab verteilte Wortlisten statt themen-überlappender Batches.
 - **Ein-Kontext-Lauf** (kein Fan-out) als Baseline für Konsistenz vs. Durchsatz.
-- Einheitliche Metriken je Lauf: $ gesamt, $/Objekt, Draft-Quote, Dublettenquote,
+- Einheitliche Metriken je Lauf: Draft-Quote, Dublettenquote,
   Referenzfehler, manuelle Korrekturzeit.
 
 ---
@@ -328,4 +327,54 @@ Formen: 255 (9 Verben in Dossier 1, 6 in Dossier 2), je Verb 7 Formtypen.
   beim Abtippen.
 - **−** Die Fotos kamen ungeordnet und ohne Seitenzahl im Dateinamen; die Reihenfolge
   musste aus den Seitenzahlen im Bild rekonstruiert werden.
+
+---
+
+## Lauf #6 — Lateinbuch, Lektion 1–9 (aus Buchfotos)
+
+**Datum:** 2026-10-01
+**Ziel:** Wortschatz der Lektionen 1–9 (Unit 1 ganz, Unit 2 Teil 1–3) und die Formen, die
+das Buch bis Lektion 11 lehrt; dazu 1. Person und Perfekt für die schon vorhandenen
+Lektionen 10–11.
+
+### Ansatz
+Wie Lauf #5: je Lektion Zeilen in der Notation `lektion|typ|latein|deutsch;alt|key=value`
+(Genus, Genitiv, 1. Person, Perfekt, `irr`), ein Generator-Skript macht Ids, Formen und
+die Lektion an der Form (ADR 0011).
+
+- **Formen nach Buch:** Genus ab Lektion 1, Genitiv ab Lektion 4 (vorher druckt das Buch
+  keinen), 1. Person ab Lektion 3, für Lektion 1–2 nach der Regel gebildet und mit
+  `"unit": 1, "part": 3`. Perfekt aus der Tabelle der Begleitgrammatik (S. 46 f.) mit
+  `"unit": 2, "part": 5`; nur *-v-*, *-u-* und *-s-*-Perfekt, wie die Tabelle.
+- **`irregular`** nach der Regel aus ADR 0009 (Nachtrag): Perfekt nicht nach der Regel
+  seiner Konjugation, dazu *esse*.
+- **Dubletten:** *in* mit Akk. (L3) und mit Abl. (L7) ist ein Lexem; *cum* als Präposition
+  (L7) neben der Subjunktion (L10) zwei, wie Homographen im Englischen.
+  Unterpunkte (*fugam petere*, *vītam agere* …) sind eigene `phrase`-Lexeme.
+- **Weggelassen:** *-ne?* (Fragesignal ohne Übersetzung), Wiederholungskästen,
+  Fremdwortzeilen, Randbeispiele.
+
+### Aufwand
+| | Lauf #6 |
+|---|---|
+| Agenten | 0 (ein Kontext) |
+| Bild-Eingaben | 13 Fotos (9 Wortschatzseiten, 2 Tabellenseiten), 2 ältere zum Abgleich |
+| ~Tokens | n. b. |
+
+### Output
+| Unit | Lexeme | L1/L7 | L2/L8 | L3/L9 | L4 | L5 | L6 |
+|---|---|---|---|---|---|---|---|
+| 1 | 175 | 30 | 29 | 28 | 28 | 30 | 30 |
+| 2 (neu) | 84 | 26 | 29 | 29 | | | |
+
+Formen: 282 neu in Unit 1–2 aus L1–9, dazu 30 für L10–11 (1. Person, Perfekt L10).
+
+### Qualität
+- **Automatisch:** 0 JSON-Fehler, 0 doppelte Ids, Datentests grün, Pack-Zuordnung eindeutig.
+- **Prompt-Kollisionen:** sieben, mit Glossen gelöst (*autem*, *avē*, *vīvere*,
+  *fortūna*, *asper*/*dūrus*, *quam*). *avē* „(feierlich)“ ist nicht aus dem Buch.
+- **Notation geprüft:** Mehrfach-Präfixe wie „(an-, er-, zu-)hören“ akzeptieren
+  „zuhören“ nicht; die Varianten stehen deshalb ausgeschrieben in `lemma_de_alt`.
+- **Lücken:** Lektion 12 fehlt. Perfekt fehlt für Verben mit anderer Bildung (u. a.
+  *esse*, *dare*, *venīre*, *addere*, *statuere*).
 

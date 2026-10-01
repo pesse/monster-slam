@@ -190,6 +190,10 @@ func _index_parts() -> void:
 ## Formen lassen sich nicht ableiten, sie SIND Teil des Wortes. Bei regelmäßigen ergibt sich
 ## die Form aus der Regel, dort bleibt es bei den beiden Übersetzungsrichtungen.
 ##
+## Eine Form, die das Buch erst in einer anderen Unit lehrt (`unit` an der Form, das
+## Perfekt der Verben aus Unit 1 in Lektion 11), zählt nicht mit: sonst ließe sich Unit 1
+## nur in Unit 2 meistern. Sie bleibt Wiederholung in der Lektion, die sie lehrt.
+##
 ## Als Index und nicht bei jeder Abfrage, weil forms_for den ganzen Formbestand durchläuft
 ## und die Karte die Meisterung beim Öffnen für alle Units braucht.
 func _index_form_requirements() -> void:
@@ -202,8 +206,11 @@ func _index_form_requirements() -> void:
 		return
 	for entry in lexeme_forms.values():
 		var lexeme_id := str(entry.get("lexeme_id", ""))
-		if form_types.has(lexeme_id):
-			form_types[lexeme_id][str(entry.get("form_type", ""))] = true
+		if not form_types.has(lexeme_id):
+			continue
+		if entry.has("unit") and int(entry["unit"]) != int(lexemes[lexeme_id].get("unit", -1)):
+			continue
+		form_types[lexeme_id][str(entry.get("form_type", ""))] = true
 	var resolver := TaskResolver.new()
 	for lexeme_id in form_types:
 		var lexeme: Dictionary = lexemes[lexeme_id]
@@ -422,6 +429,89 @@ func lexemes_scoped(scope: Array, tags: Array) -> Array:
 	return result
 
 
+## Die Lexeme, die ein Kampf über `scope` abfragt: die des Scopes und dazu die, von denen
+## eine Form genau in diesem Scope gelehrt wird (form_taught_in) — das Lateinbuch lehrt in
+## Lektion 11 die Perfekte aller Verben davor. Solche Lexeme kommen mit allen Aufgaben
+## ihres Scopes, auch den Übersetzungen, als Wiederholung dazu. Spätere Lektionen holen
+## sie nicht noch einmal.
+##
+## Nur für den Aufgabenpool. Festungsstufe, Statistik und Sätze zählen weiter über
+## lexemes_scoped: ein Wort gehört zur Unit, in der es steht.
+func lexemes_for_run(scope: Array, tags: Array) -> Array:
+	var result := lexemes_scoped(scope, tags)
+	if scope.is_empty():
+		return result
+	var seen: Dictionary = {}
+	for entry in result:
+		seen[str(entry.get("id", ""))] = true
+	var tagged: Dictionary = {}
+	for entry in lexemes_by_tags(tags):
+		tagged[str(entry.get("id", ""))] = true
+	for form in lexeme_forms.values():
+		var lexeme_id := str(form.get("lexeme_id", ""))
+		if seen.has(lexeme_id) or not tagged.has(lexeme_id) or not form.has("unit"):
+			continue
+		if form_taught_in(form, scope):
+			seen[lexeme_id] = true
+			result.append(lexemes[lexeme_id])
+	return result
+
+
+## Wird die Form genau in `scope` gelehrt — ihre Lektion (oder Unit, oder ihr Buch) steht
+## im Scope? Eine Form mit `unit` (und `part`) hat die Lektion, in der das Buch sie lehrt,
+## ohne Feld die ihres Lexems. Entscheidet, welche Lektion ein Lexem zur Wiederholung holt.
+func form_taught_in(form: Dictionary, scope: Array) -> bool:
+	var lesson := _form_lesson(form)
+	if lesson.is_empty():
+		return false
+	var keys := [lesson["book"], "%s/%d" % [lesson["book"], lesson["unit"]]]
+	if int(lesson["part"]) > 0:
+		keys.append("%s/%d/%d" % [lesson["book"], lesson["unit"], lesson["part"]])
+	for key in keys:
+		if key in scope:
+			return true
+	return false
+
+
+## Gilt die Form in `scope` als eingeführt? Ab der Lektion, die sie lehrt, gilt sie in
+## jeder späteren mit (das Buch führt Stammformen ab dort bei jeder Vokabel); vorher kommt
+## sie weder als Aufgabe noch im Reveal: in Lektion 1 gibt es noch kein Perfekt.
+## Verglichen wird mit der Lektion eines Scope-Schlüssels, eine Unit zählt bis zu ihrem
+## Ende, das ganze Buch und ein leerer Scope zählen alles.
+func form_in_scope(form: Dictionary, scope: Array) -> bool:
+	if scope.is_empty():
+		return true
+	var lesson := _form_lesson(form)
+	if lesson.is_empty():
+		return false
+	for key in scope:
+		var bits := str(key).split("/")
+		if bits[0] != lesson["book"]:
+			continue
+		if bits.size() == 1:
+			return true
+		var unit := int(bits[1])
+		if int(lesson["unit"]) < unit:
+			return true
+		if int(lesson["unit"]) == unit and (bits.size() == 2 \
+				or int(lesson["part"]) <= int(bits[2])):
+			return true
+	return false
+
+
+## Die Lektion einer Form: { book, unit, part } aus `unit`/`part` an der Form, sonst die
+## ihres Lexems (part 0 ohne Teil). Leer, wenn das Lexem zu keinem Buch gehört.
+func _form_lesson(form: Dictionary) -> Dictionary:
+	var lexeme_id := str(form.get("lexeme_id", ""))
+	var lexeme: Dictionary = lexemes.get(lexeme_id, {})
+	var book := str(lexeme.get("book", ""))
+	if book.is_empty() or not (form.has("unit") or lexeme.has("unit")):
+		return {}
+	if form.has("unit"):
+		return {"book": book, "unit": int(form["unit"]), "part": int(form.get("part", 0))}
+	return {"book": book, "unit": int(lexeme["unit"]), "part": part_of(lexeme_id)}
+
+
 ## Alle distinkten Lexem-Tags über den gesamten Katalog, alphabetisch sortiert.
 ## Für datengetriebene Auswahl-UIs (Session-Setup).
 func all_lexeme_tags() -> PackedStringArray:
@@ -459,13 +549,16 @@ func all_task_types() -> PackedStringArray:
 	return result
 
 
-## Alle Formen eines Lexems; optional auf einen form_type gefiltert.
-func forms_for(lexeme_id: String, form_type: String = "") -> Array:
+## Alle Formen eines Lexems; optional auf einen form_type und auf die in `scope`
+## gelehrten (form_in_scope) gefiltert.
+func forms_for(lexeme_id: String, form_type: String = "", scope: Array = []) -> Array:
 	var result: Array = []
 	for entry in lexeme_forms.values():
 		if entry.get("lexeme_id", "") != lexeme_id:
 			continue
 		if form_type != "" and entry.get("form_type", "") != form_type:
+			continue
+		if not form_in_scope(entry, scope):
 			continue
 		result.append(entry)
 	return result
