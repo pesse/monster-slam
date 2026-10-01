@@ -78,6 +78,28 @@ func test_a_reported_mastery_is_busy_before_it_starts() -> void:
 	assert_bool(_c.is_busy()).is_true()
 
 
+## Angehalten (das Standbild der Schreibweise läuft) wartet die Feier, bleibt aber
+## anstehend — und startet mit release().
+func test_a_held_celebration_waits_for_release() -> void:
+	_c.hold()
+	EventBus.task_mastered.emit(TASK)
+	await _frame()
+	assert_array(_started).is_empty()
+	assert_bool(_c.is_busy()).is_true()
+	assert_bool(_c.is_playing()).is_false()
+	_c.release()
+	assert_array(_started).is_equal([MasteryCelebration.TASK_MS])
+	assert_bool(_c.is_playing()).is_true()
+
+
+func test_release_without_a_waiting_celebration_does_nothing() -> void:
+	_c.hold()
+	_c.release()
+	await _frame()
+	assert_array(_started).is_empty()
+	assert_bool(_c.is_busy()).is_false()
+
+
 ## Der Weg des Debug-Panels: feiern ohne Signal auf dem EventBus.
 func test_celebrate_works_without_the_event_bus() -> void:
 	_c.celebrate(MasteryCelebration.Kind.WORD, "")

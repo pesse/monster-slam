@@ -128,6 +128,104 @@ func _best_match(accepted: Array, answer: String, loose: bool) -> Dictionary:
 	return result
 
 
+## Die Stellen in `canonical`, an denen `typed` von der Schreibweise abwich: Indizes der
+## Zeichen mit Akzent, Cédille oder Ligatur, die ohne getippt wurden, und der Bindestriche
+## und Apostrophe, die fehlten oder als Leerzeichen kamen. Für die Einblendung nach einem
+## nachsichtigen Treffer (ADR 0008, `exact` false): das Kind sieht die richtige Form mit
+## markierten Fehlern, nicht seine eigene.
+##
+## Ausgerichtet wird Zeichen für Zeichen (kleinste Kosten, wie eine Editierdistanz). Was
+## weggelassen werden durfte (Artikel, Klammerteile, Platzhalter), ist kein Schreibfehler
+## und bleibt unmarkiert — markiert wird nur, was `_loosen` nachsieht.
+static func spelling_marks(canonical: String, typed: String) -> PackedInt32Array:
+	var a := _spelling_chars(canonical)
+	var b := _spelling_chars(typed.strip_edges())
+	var m := a.size()
+	var n := b.size()
+	const INF := 1 << 20
+	# cost[i][j]: günstigste Ausrichtung von a[i..] gegen b[j..]; step[i][j] der Schritt dazu.
+	var cost: Array = []
+	var step: Array = []
+	for i in m + 1:
+		var cost_row: Array = []
+		cost_row.resize(n + 1)
+		cost.append(cost_row)
+		var step_row: Array = []
+		step_row.resize(n + 1)
+		step.append(step_row)
+	for i in range(m, -1, -1):
+		for j in range(n, -1, -1):
+			if i == m and j == n:
+				cost[i][j] = 0
+				continue
+			var best := INF
+			var best_step: Array = []
+			for option in _spelling_steps(a, b, i, j):
+				var total: int = int(option[2]) + int(cost[int(option[0])][int(option[1])])
+				if total < best:
+					best = total
+					best_step = option
+			cost[i][j] = best
+			step[i][j] = best_step
+	var marked: Array[int] = []
+	var typed_against: Array[bool] = []   # a[i] steht einem getippten Zeichen gegenüber
+	typed_against.resize(m)
+	var i := 0
+	var j := 0
+	while i < m or j < n:
+		var s: Array = step[i][j]
+		if i < m and int(s[0]) == i + 1:
+			typed_against[i] = int(s[1]) > j
+			if bool(s[3]):
+				marked.append(i)
+		i = int(s[0])
+		j = int(s[1])
+	# Ein ausgelassener Verbinder ist nur ein Fehler MITTEN im Getippten („lecole"), nicht
+	# am Rand eines weggelassenen Teils („école" für „l'école": der Artikel durfte fehlen).
+	var marks := PackedInt32Array()
+	for k in marked:
+		var dropped := not typed_against[k]
+		if dropped and not (k > 0 and typed_against[k - 1] and k + 1 < m and typed_against[k + 1]):
+			continue
+		marks.append(k)
+	return marks
+
+
+## Die möglichen Schritte von (i, j): [neues i, neues j, Kosten, markiert a[i]?].
+static func _spelling_steps(a: PackedStringArray, b: PackedStringArray, i: int, j: int) -> Array:
+	var out: Array = []
+	if i < a.size():
+		var c := a[i]
+		var joiner := c in _JOINERS
+		if j < b.size():
+			var t := b[j]
+			if c == t:
+				out.append([i + 1, j + 1, 0, false])
+			else:
+				var folded := str(_DIACRITICS.get(c, ""))
+				if folded.length() == 1 and folded == t:
+					out.append([i + 1, j + 1, 1, true])
+				elif joiner and t == " ":
+					out.append([i + 1, j + 1, 1, true])
+				else:
+					out.append([i + 1, j + 1, 3, false])
+				if folded.length() == 2 and j + 1 < b.size() and folded == t + b[j + 1]:
+					out.append([i + 1, j + 2, 1, true])
+		# Ein fehlender Verbinder ist ein Schreibfehler, ein fehlender Buchstabe ein
+		# weggelassener Bestandteil (Artikel, Klammer, Platzhalter).
+		out.append([i + 1, j, 1 if joiner else 2, joiner])
+	if j < b.size():
+		out.append([i, j + 1, 2, false])
+	return out
+
+
+static func _spelling_chars(s: String) -> PackedStringArray:
+	var chars := PackedStringArray()
+	for c in s.to_lower().replace("’", "'").replace("‘", "'").replace("–", "-"):
+		chars.append(c)
+	return chars
+
+
 ## Returns true if `answer` matches any accepted answer.
 ## Nimmt direkt die Liste gültiger Antworten (z. B. task.accepted_answers).
 func evaluate_answers(accepted: Array, answer: String) -> bool:

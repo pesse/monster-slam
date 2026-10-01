@@ -48,6 +48,9 @@ extends Node3D
 ##         Das Wachkatapult auf Stufe 4: Kranz dreht sich, Arm schlägt aus, der Stein fliegt
 ##         auf ein Monster und platzt, in Schritten nach dem Abschuss, als
 ##         reports/battle_themes/catapult_<ms>.png. Jeder Schritt ist ein eigener Wurf.
+##     … -- --spelling
+##         Das Standbild der Schreibweise (SpellingFreeze) nach einer Explosion, in beiden
+##         Sichten ganz herangefahren, als reports/battle_themes/spelling_<sicht>.png.
 ##     … -- --hitches [--warm]
 ##         Misst den längsten Frame beim ERSTEN Auftritt jedes Kampfeffekts (Explosion,
 ##         „+XP", Monster, Meister-Feier) und gibt ihn in ms aus; --warm wärmt vorher vor
@@ -215,6 +218,8 @@ func _ready() -> void:
 		_shoot_plates.call_deferred()
 	elif _has_arg("fps"):
 		_measure_fps.call_deferred()
+	elif _has_arg("spelling"):
+		_shoot_spelling.call_deferred()
 	elif _has_arg("hitches"):
 		_measure_hitches.call_deferred()
 	elif _has_arg("specimens"):
@@ -977,6 +982,37 @@ func _shoot_blast() -> void:
 		print("battle_theme_lab: ", path)
 		fx.queue_free()
 		await get_tree().create_timer(0.8).timeout
+	get_tree().quit()
+
+
+func _shoot_spelling() -> void:
+	var dir := ProjectSettings.globalize_path(SHOT_DIR)
+	DirAccess.make_dir_recursive_absolute(dir)
+	var freeze := (load("res://scenes/ui/spelling_freeze.tscn") as PackedScene).instantiate() as SpellingFreeze
+	$UI.add_child(freeze)
+	# Wie im Kampf: das Standbild hält den Baum an, die Explosion steht.
+	freeze.started.connect(func(_ms: int) -> void: get_tree().paused = true)
+	freeze.finished.connect(func() -> void: get_tree().paused = false)
+	var word := "l'élève"
+	for first: bool in [false, true]:
+		_set_first_person(first)
+		await get_tree().create_timer(0.6).timeout
+		var camera := _fp.camera if _fp != null else _camera
+		var at := Vector3(2.0, 0.0, _goal() - 12.0)
+		var fx := Blast.new()
+		fx.setup(WordTypePalette.color_for("noun"))
+		fx.position = at
+		add_child(fx)
+		freeze.play(word, AnswerEvaluator.spelling_marks(word, "l eleve"),
+				WaveRunnerScript.spelling_zoom(camera, at + Vector3(0.0, 1.0, 0.0)))
+		await get_tree().create_timer(
+				(SpellingFreeze.LEAD_MS + SpellingFreeze.ZOOM_IN_MS + 300) / 1000.0, true, false, true).timeout
+		await RenderingServer.frame_post_draw
+		var path := "%s/spelling_%s.png" % [dir, "first" if first else "iso"]
+		get_viewport().get_texture().get_image().save_png(path)
+		print("battle_theme_lab: ", path)
+		await freeze.finished
+		fx.queue_free()
 	get_tree().quit()
 
 

@@ -1,0 +1,58 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/ui/spelling_freeze.gd" id="1_freeze"]
+
+[node name="SpellingFreeze" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+visible = false
+script = ExtResource("1_freeze")
+
+[node name="Veil" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 0.55)
+
+[node name="Content" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Stack" type="VBoxContainer" parent="Content"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"Tight"
+
+[node name="Names" type="Control" parent="Content/Stack"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(1100, 32)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Word" type="RichTextLabel" parent="Content/Stack"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(1100, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"SpellingWord"
+bbcode_enabled = true
+text = "l'école"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+horizontal_alignment = 1

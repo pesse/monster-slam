@@ -322,6 +322,19 @@ und, wenn `mastered_lexeme_of()` ein Lexem nennt, `lexeme_mastered`. Kein neues 
   Dauer der Feier. Während der Feier abgeschickte Antworten werden aufgehoben und danach
   ausgewertet (`_held_answers`).
 
+### Standbild bei Schreibfehlern (ADR 0010)
+
+Ein nachsichtiger Treffer (`verdict.exact == false`) auf eine noch nicht gemeisterte
+Aufgabe merkt sich in `WaveRunner._score_hit` Form und Markierungen
+(`AnswerEvaluator.spelling_marks`) und hält die Feier an (`MasteryCelebration.hold()`).
+Nach der Explosion spielt `SpellingFreeze` (`scenes/ui/spelling_freeze.tscn`): kurzer
+Vorlauf, dann `started(ms)` → dieselbe Baum-Pause und Verschiebung von `spawned_at_ms`
+wie bei der Feier, Kamerafahrt über `WaveRunner.spelling_zoom(camera, ziel)` (k von 0
+nach 1 und zurück, bei 0 exakt der Ausgangszustand), `finished` → Pause aus,
+`release()`, aufgehobene Antworten. Mehrere Standbilder stellen sich an; solange eines
+ansteht (`is_busy`), wartet auch das Wellenende. Gemeisterte Aufgaben zeigen weiter nur
+das Formschild.
+
 ## Wirtschaft: Gold und Schatzkisten (`src/economy/`)
 
 Gold ist die erste Währung. Verdient wird es als **Schatzkiste am Wellenende**, gehalten

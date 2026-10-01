@@ -192,8 +192,12 @@ auswählen: das Spiel sucht selbst das Monster, zu dem deine Antwort passt.
   „jemanden“ gelten gleich.
 - **Richtig, aber anders geschrieben:** Fehlen nur Akzente (é, è, ê, ç …), oder hast du
   einen Bindestrich oder Apostroph weggelassen oder als Leerzeichen getippt („ecole“ für
-  „l’école“, „est ce que“ für „est-ce que“), zählt die Antwort voll. Die richtige
-  Schreibweise wird dann über dem Monster eingeblendet, damit sie sich einprägt.
+  „l’école“, „est ce que“ für „est-ce que“), zählt die Antwort voll. Das Monster
+  explodiert, dann steht das Spiel gut eine Sekunde still: die Kamera fährt heran und die
+  richtige Schreibweise steht groß im Bild. Was gefehlt hat, ist rot unterstrichen, und
+  über jedem Akzent steht klein sein Name („accent aigu“, „cédille“ …). Danach läuft das
+  Spiel von selbst weiter; was du in der Zeit tippst, zählt danach. Kannst du die Aufgabe
+  schon, gibt es kein Standbild, nur die Einblendung über dem Monster.
   Umlaute zählen nicht dazu: „schon“ ist nicht „schön“.
 - **Falsch:** Es blitzt rot und das Bild wackelt. Sonst passiert nichts. Eine falsche
   Eingabe wird keinem Wort als Fehler angerechnet, weil nicht klar ist, welches Monster

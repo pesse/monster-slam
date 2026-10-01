@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[node name="AccentName" type="Label"]
+mouse_filter = 2
+theme_type_variation = &"SpellingAccent"
+text = "accent aigu"

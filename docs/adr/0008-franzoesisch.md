@@ -20,7 +20,8 @@ Gespielt wird am Lehrbuch *À plus!* entlang, zunächst ohne Bosskampf.
    gefaltet. Bindestrich und Apostroph dürfen als Leerzeichen getippt werden oder
    ganz fehlen. Eine so getroffene Antwort gilt voll, zählt voll für den
    Lernstand, und die richtige Schreibweise wird sofort über dem Monster
-   eingeblendet (dasselbe Schild wie bei einer unvollständigen Antwort).
+   eingeblendet (dasselbe Schild wie bei einer unvollständigen Antwort; bei noch nicht
+   gemeisterten Aufgaben seit ADR 0010 ein kurzes Standbild).
    Umlaute und ß werden **nicht** gefaltet: Sie sind die deutsche Seite.
 2. **Exakt vor nachsichtig.** `AnswerEvaluator.evaluate(…, lenient)` vergleicht zuerst
    exakt und nur bei Bedarf gefaltet und meldet das im neuen Feld `exact`. Der Kampf
