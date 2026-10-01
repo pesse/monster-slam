@@ -81,3 +81,14 @@ text = "Wort"
 focus_mode = 0
 theme_type_variation = &"DebugButton"
 text = "Level"
+
+[node name="PicksLabel" type="Label" parent="Root/Body"]
+theme_type_variation = &"Caption"
+text = "Letzte Spawns — warum dieses Wort"
+
+[node name="Picks" type="Label" parent="Root/Body"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(440, 0)
+theme_type_variation = &"Caption"
+text = "noch keiner"
+autowrap_mode = 3

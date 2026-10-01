@@ -1,0 +1,23 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/icons/pause.webp" id="1_icon"]
+
+[node name="PauseButton" type="Button" groups=["word_plate_keep_clear"]]
+process_mode = 3
+texture_filter = 4
+custom_minimum_size = Vector2(40, 40)
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = 336.0
+offset_top = -47.0
+offset_right = 376.0
+offset_bottom = -7.0
+grow_vertical = 0
+focus_mode = 0
+accessibility_name = "Pause"
+theme_type_variation = &"HudRound"
+icon = ExtResource("1_icon")
+icon_alignment = 1
+expand_icon = true

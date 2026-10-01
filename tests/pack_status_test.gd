@@ -123,3 +123,19 @@ func test_felder_werden_uebernommen() -> void:
 	assert_str(status.file).is_equal("language-access2.enc")
 	assert_int(status.key_version).is_equal(2)
 	assert_str(status.installed_version).is_equal("alt")
+
+
+# --- Hinweis im Startmenü ---------------------------------------------------------------
+
+## Der Hinweis „Inhalte aktualisieren" zählt nur, was sich jetzt aktualisieren lässt: ein
+## Update hinter Schloss nicht, ein noch nicht installierter Pack auch nicht.
+func test_update_count_zaehlt_nur_holbare_updates() -> void:
+	var service: Node = auto_free(load("res://src/content/content_service.gd").new())
+	service.packs.assign([
+		PackStatus.evaluate(OPEN, _installed("alt999"), "0.2.0", {}),
+		PackStatus.evaluate(PROTECTED, _installed("alt999"), "0.2.0", {}),
+		PackStatus.evaluate(OPEN, {}, "0.2.0", {}),
+		PackStatus.evaluate(OPEN, _installed("abc123"), "0.2.0", {}),
+	])
+	assert_bool(service.packs[1].installable()).is_false()
+	assert_int(service.update_count()).is_equal(1)

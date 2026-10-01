@@ -10,7 +10,8 @@ extends Control
 ##
 ## Das Medaillon (ProfileBadge) gibt es einmal für Menü und Bibliothek: es liegt über den
 ## Seiten (BadgeLayer), fährt mit dem Menü herein und bleibt zwischen Menü und Bibliothek
-## stehen. Im Menü hält ein leerer Platz (BadgeSlot) ihm die Spalte frei.
+## stehen; auf dem Weg in die Bibliothek wird es kompakt. Im Menü hält ein leerer Platz
+## (BadgeSlot) ihm die Spalte frei.
 ##
 ## Das Layout liegt in profile_menu.tscn (im Editor sichtbar, Entwurf unter
 ## assets/ui/main_menu/sources/); hier wird nur bedient und angezeigt. Hinter dem Menü
@@ -19,8 +20,6 @@ extends Control
 
 const SESSION_SETUP_SCENE := "res://scenes/ui/session_setup.tscn"
 const SETTINGS_SCENE := "res://scenes/ui/settings_menu.tscn"
-const STATS_SCENE := "res://scenes/ui/stats_screen.tscn"
-const SKILL_SCENE := "res://scenes/ui/skill_tree.tscn"
 const CONTENT_SCENE := "res://scenes/ui/content_manager.tscn"
 ## So lange blendet die Kulisse auf (s).
 const VEIL_FADE := 0.6
@@ -43,6 +42,7 @@ static var intro_done := false
 @onready var _badge: ProfileBadge = %ProfileBadge
 @onready var _update_button: Button = %UpdateButton
 @onready var _content_button: Button = %ContentButton
+@onready var _content_update_button: Button = %ContentUpdateButton
 @onready var _play_button: Button = %PlayButton
 @onready var _play_hint: Label = %PlayHint
 @onready var _intro: ProfilePick = %Intro
@@ -57,24 +57,29 @@ var _slide: Tween
 
 func _ready() -> void:
 	_play_button.pressed.connect(_open_library)
-	_library.setup(_backdrop, %BadgeLayer)
+	_library.setup(_backdrop)
 	_library.back_requested.connect(func(): _slide_to(MENU))
 	(%ExpertButton as Button).pressed.connect(
 			func(): get_tree().change_scene_to_file(SESSION_SETUP_SCENE))
-	(%SkillButton as Button).pressed.connect(_open_skills)
-	(%StatsButton as Button).pressed.connect(_open_window.bind(STATS_SCENE, %StatsButton))
+	(%SkillButton as Button).pressed.connect(_open_window.bind(ProfileBadge.SKILL_SCENE, %SkillButton))
+	(%StatsButton as Button).pressed.connect(_open_window.bind(ProfileBadge.STATS_SCENE, %StatsButton))
 	(%SettingsButton as Button).pressed.connect(_open_window.bind(SETTINGS_SCENE, %SettingsButton))
 	_badge.switch_pressed.connect(_back_to_intro)
+	# Was ein Fenster geändert haben kann und kein Signal meldet: ob es nach einer
+	# Installation etwas zu spielen gibt (Inhalte).
+	_badge.window_closed.connect(_refresh_play_gate)
 	_intro.picked.connect(_play_as)
 	_update_button.pressed.connect((%UpdateDialog as Control).open)
 	_content_button.pressed.connect(_open_window.bind(CONTENT_SCENE, _content_button))
+	# Fokus danach auf „Inhalte": der Hinweis ist nach dem Aktualisieren verschwunden.
+	_content_update_button.pressed.connect(_open_window.bind(CONTENT_SCENE, _content_button))
 	UpdateService.changed.connect(_refresh_update_badge)
 	ContentService.changed.connect(_refresh_content_badge)
 	_refresh_update_badge()
 	_refresh_content_badge()
 	_refresh_play_gate()
 	# Beide Kanäle still prüfen: das Abzeichen soll dastehen, ohne dass jemand nachsieht.
-	# Netzfehler bleiben in der Konsole (siehe UpdateService._fail / ContentService._fail).
+	# Netzfehler bleiben in der Konsole (siehe UpdateService._fail / ContentService._fail_refresh).
 	ContentService.refresh()
 	if MapSelection.to_shelf:
 		MapSelection.to_shelf = false
@@ -102,22 +107,10 @@ func _play_as(id: String) -> void:
 
 
 ## Fähigkeiten, Statistik, Inhalte und Einstellungen öffnen als Fenster über dem Menü, nicht
-## als eigener Screen: die Kulisse bleibt stehen. Beim Schließen geht der Fokus an den Knopf
-## zurück, von dem es kam.
-func _open_skills() -> void:
-	_open_window(SKILL_SCENE, %SkillButton)
-
-
+## als eigener Screen: die Kulisse bleibt stehen. Geöffnet wird über die Plakette — dieselbe
+## Stelle, an der sie in Bibliothek und Karte Fähigkeiten und Statistik öffnet.
 func _open_window(path: String, opener: Control) -> void:
-	var window := (load(path) as PackedScene).instantiate()
-	add_child(window)
-	window.connect("closed", func() -> void:
-		window.queue_free()
-		# Was das Fenster geändert haben kann und kein Signal meldet: der Profilname
-		# (Einstellungen) und ob es nach einer Installation etwas zu spielen gibt (Inhalte).
-		_badge.refresh()
-		_refresh_play_gate()
-		opener.grab_focus())
+	_badge.open_window(path, opener)
 
 
 func _back_to_intro() -> void:
@@ -179,6 +172,7 @@ func _show_page(page: float) -> void:
 	layer.anchor_left = shift
 	layer.anchor_right = 1.0 + shift
 	layer.visible = page > INTRO
+	_badge.compact = clampf(page - MENU, 0.0, 1.0)
 	_backdrop.page = page
 
 
@@ -234,8 +228,14 @@ func _refresh_play_gate() -> void:
 	_play_hint.visible = not playable
 
 
-## Zeigt an, wenn Inhalte nachzuziehen sind. „Programm zu alt" zählt hier nicht mit — dagegen
-## hilft das Update-Abzeichen, nicht dieses.
+## Zeigt an, wenn sich Inhalte aktualisieren lassen — derselbe Knopf wie beim App-Update,
+## darunter. Er öffnet den Content-Manager, der die betroffenen Packs schon vorwählt.
+## „Programm zu alt" zählt hier nicht mit — dagegen hilft das Update-Abzeichen, nicht dieses.
 func _refresh_content_badge() -> void:
-	var count := ContentService.attention_count()
-	_content_button.text = "INHALTE (%d NEU)" % count if count > 0 else "INHALTE"
+	var count := ContentService.update_count()
+	_content_update_button.visible = count > 0
+	_content_update_button.text = content_update_text(count)
+
+
+static func content_update_text(count: int) -> String:
+	return "⬆ Inhalte aktualisieren" if count <= 1 else "⬆ %d Inhalte aktualisieren" % count

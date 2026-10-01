@@ -318,42 +318,36 @@ func test_area_nodes_show_tiers_and_lock_a_boss_without_sentences() -> void:
 	assert_str(str(AreaMap.hint_lines(nodes[3])["body"])).contains("keine Sätze")
 
 
-## Ein Teil zeigt Sterne, Gesamt nur Wörter; von der Festung spricht keiner — sie steht im
+## Ein Teil zählt bis zum goldenen Ring, Gesamt nur Wörter; von der Festung spricht keiner — sie steht im
 ## Kopf der Gebietskarte.
-func test_level_hints_speak_of_stars_and_never_of_the_fortress() -> void:
+func test_level_hints_speak_of_words_and_never_of_the_fortress() -> void:
 	var levels := MapLevel.levels_for("b", 1, 2)
 	var units := {"b/1": {"tier": 2, "done": 5, "total": 10}}
 	var parts := {"b/1/1": {"tier": 1, "done": 1, "total": 5}}
 	var nodes := AreaMap.nodes_for(levels, units, parts, 0, true, {})
 	var part := str(AreaMap.hint_lines(nodes[0])["body"])
-	# 1 von 5 Wörtern sind 20 %: der erste von fünf Sternen, egal welche Stufe dort steht.
-	assert_str(part).contains("1 von 5 Sternen")
-	assert_str(part).contains("Noch 1 Wort bis zum 2. Stern")
+	# Der Ring zählt die Wörter, egal welche Stufe dort steht.
+	assert_str(part).contains("1 von 5 Wörtern")
+	assert_str(part).contains("Noch 4 Wörter bis zum goldenen Ring")
 	var whole := str(AreaMap.hint_lines(nodes[2])["body"])
 	assert_str(whole).contains("5 von 10")
-	assert_str(whole).not_contains("Stern")
+	assert_str(whole).not_contains("Ring")
 	for text in [part, whole]:
 		assert_str(text).not_contains("Festung")
 		assert_str(text).not_contains("Stufe")
 		assert_str(text).not_contains("HP")
-	assert_bool(bool(nodes[0].get("stars", true))).is_true()
-	assert_bool(bool(nodes[2].get("stars", true))).is_false()
 
 
-## Fünf Sterne zu je 20 %, unabhängig von den Schwellen der Festung: bei 75 % ist die
-## Festung voll, die Sterne erst bei 100 %.
-func test_stars_count_mastered_words_in_fifths() -> void:
-	assert_int(MapCanvas.stars_for(0, 10)).is_equal(0)
-	assert_int(MapCanvas.stars_for(1, 10)).is_equal(0)
-	assert_int(MapCanvas.stars_for(2, 10)).is_equal(1)
-	assert_int(MapCanvas.stars_for(9, 10)).is_equal(4)
-	assert_int(MapCanvas.stars_for(10, 10)).is_equal(5)
-	assert_int(MapCanvas.stars_for(0, 0)).is_equal(0)
+## Der Ring ist bei 100 % voll, nicht bei der vollen Festung (75 %): erst dann leuchtet
+## der Ort. Ein Bonus-Stern leuchtet erst, wenn sein Bonus gemeistert ist.
+func test_a_node_shines_only_when_fully_mastered() -> void:
 	assert_int(FortressTier.tier_for(15, 20)).is_equal(FortressTier.MAX_TIER)
-	assert_int(MapCanvas.stars_for(15, 20)).is_equal(3)
-	# 80 % von 12 sind 9,6 — aufgerundet 10.
-	assert_dict(MapCanvas.next_star(8, 12)).is_equal({"star": 4, "needed": 2})
-	assert_dict(MapCanvas.next_star(12, 12)).is_empty()
+	assert_bool(MapCanvas.shines({"done": 15, "total": 20})).is_false()
+	assert_bool(MapCanvas.shines({"done": 20, "total": 20})).is_true()
+	assert_bool(MapCanvas.shines({"done": 0, "total": 0})).is_false()
+	assert_bool(MapCanvas.shines({"done": 20, "total": 20, "disabled": true})).is_false()
+	assert_bool(MapCanvas.shines({"done": 3, "total": 20, "bonus": [0.9]})).is_false()
+	assert_bool(MapCanvas.shines({"done": 3, "total": 20, "bonus": [0.2, 1.0]})).is_true()
 
 
 func test_the_fortress_badge_fills_from_one_tier_to_the_next() -> void:
@@ -368,6 +362,11 @@ func test_the_fortress_badge_fills_from_one_tier_to_the_next() -> void:
 	assert_str(str(top["count"])).is_empty()
 	assert_float(float(top["share"])).is_equal(1.0)
 	assert_int(int(AreaMap.fortress_state({})["tier"])).is_equal(0)
+	# Mit Schneller Erbauer (10 Wörter: Stufe 2 ab 3, Stufe 3 ab 5) zählt der Weg ab 3.
+	var early := AreaMap.fortress_state({"tier": 2, "done": 3, "total": 10}, 5)
+	assert_str("%s %s %s" % [early["before"], early["count"], early["after"]]).is_equal(
+			"Noch 2 Wörter bis Stufe 3")
+	assert_float(float(early["share"])).is_equal(0.0)
 
 
 ## Jede Stufe hat ihr Bild im Medaillon, gerendert aus derselben Festung wie im Kampf.
@@ -412,7 +411,6 @@ func test_an_empty_part_is_shown_locked() -> void:
 	var parts := {"b/1/2": {"tier": 1, "done": 1, "total": 5}}
 	var nodes := AreaMap.nodes_for(levels, {}, parts, 0, true, {})
 	assert_bool(bool(nodes[0].get("disabled", false))).is_true()
-	assert_bool(bool(nodes[0].get("stars", true))).is_false()
 	assert_str(str(AreaMap.hint_lines(nodes[0])["body"])).contains("keine Wörter")
 	assert_bool(bool(nodes[1].get("disabled", false))).is_false()
 
@@ -634,10 +632,18 @@ func test_every_area_image_has_a_point_for_every_level(do_skip := LanguageData.m
 			if MapLayout.unit_texture(book, int(unit)) == null:
 				continue
 			var points := MapLayout.area_points(layout, int(unit))
-			for level in MapLevel.levels_for(book, int(unit), ContentRegistry.parts_for(book, int(unit))):
+			var keys := {}
+			for level in AreaMap.levels_of(book, int(unit), layout):
+				keys[str(level["key"])] = true
 				assert_bool(points.has(str(level["key"]))) \
 						.override_failure_message("%s Unit %d: kein Punkt für %s" % [book, int(unit), level["key"]]) \
 						.is_true()
+			# Und umgekehrt: ein Bonus-Punkt ohne Bonus ist ein Ort, den es nicht gibt (ADR 0012).
+			for key in points:
+				if str(key).begins_with("bonus/"):
+					assert_bool(keys.has(str(key))) \
+							.override_failure_message("%s Unit %d: Punkt %s ohne Bonus" % [book, int(unit), key]) \
+							.is_true()
 
 
 ## Die Bibliothek stellt ihre Bücher in den Turm der Menü-Kulisse. Nach dem Hereinfahren
@@ -677,7 +683,7 @@ func test_every_real_level_is_playable(do_skip := LanguageData.missing(), skip_r
 		var has_sentences := ContentRegistry.units_for(book).any(
 				func(u): return AreaMap.has_boss_sentences(book, int(u)))
 		for unit in ContentRegistry.units_for(book):
-			for level in MapLevel.levels_for(book, int(unit), ContentRegistry.parts_for(book, int(unit))):
+			for level in AreaMap.levels_of(book, int(unit), MapLayout.data(book)):
 				# Ein Teil ohne Wörter steht gesperrt auf der Karte (Latein: Unit 2 beginnt
 				# mit Lektion 10, ihrem vierten Teil).
 				if str(level["kind"]) == MapLevel.KIND_PART \

@@ -106,5 +106,22 @@
 		"effects": {
 			"auto_catapult": 1
 		}
+	},
+	{
+		"id": "skill.armor.builder",
+		"kind": "skill",
+		"tree": "tree.bulwark",
+		"name": "Schneller Erbauer",
+		"icon": "🔨",
+		"description": "Deine Festung wächst schneller: Stufe 4 steht schon, wenn du 70 % der Wörter einer Unit gemeistert hast, statt bei 75 %. Die Stufen davor kommen auch entsprechend früher.",
+		"cost": 4,
+		"tier": 2,
+		"branch": 2,
+		"requires": [
+			"skill.armor.root"
+		],
+		"effects": {
+			"fortress_tier_drop": 5
+		}
 	}
 ]

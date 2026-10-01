@@ -183,6 +183,13 @@ func select(id: String) -> void:
 	node_selected.emit(_selected)
 
 
+## Hebt `id` hervor wie einen gewählten Knoten, ohne zu melden (Werkbank: der Knoten, der
+## gerade umgehängt wird). Leer nimmt die Hervorhebung weg.
+func mark(id: String) -> void:
+	_selected = id if _places.has(id) else ""
+	queue_redraw()
+
+
 ## Passt das ganze Netz in die sichtbare Fläche ein. Auch der Weg zurück, wenn man sich
 ## verzoomt hat — der Screen hängt ihn an einen Knopf.
 func fit() -> void:

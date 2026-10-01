@@ -37,8 +37,6 @@ const PAGE_TIME := 0.36
 
 @onready var _stage: Control = %Stage
 @onready var _ui: Control = %Ui
-## Das Medaillon des Start-Screens (setup), oder null.
-var _badge: Control
 @onready var _dive: Control = %Dive
 @onready var _dive_image: TextureRect = %Image
 @onready var _empty_hint: Label = %EmptyHint
@@ -66,10 +64,9 @@ func _ready() -> void:
 
 
 ## Die Kulisse, in deren Turm die Bücher stehen. ProfileMenu ruft das einmal auf.
-## `badge`: das Medaillon des Start-Screens — es steht über Menü und Bibliothek und blendet
-## beim Flug ins Buch mit der Kopfzeile aus.
-func setup(backdrop: MenuBackdrop, badge: Control = null) -> void:
-	_badge = badge
+## Das Medaillon des Start-Screens blendet beim Flug ins Buch NICHT mit aus: es steht auf
+## der Buchkarte an derselben Stelle.
+func setup(backdrop: MenuBackdrop) -> void:
 	_backdrop = backdrop
 	_camera = backdrop.camera()
 	_books = backdrop.library_books()
@@ -128,7 +125,7 @@ func _fill() -> void:
 		child.queue_free()
 	_selected = -1
 	var tiers := FortressTier.unit_tiers(ContentRegistry.lexemes.values(),
-			PlayerProgress.mastered_lexemes())
+			PlayerProgress.mastered_lexemes(), FortressTier.drop_of(SkillBook.bonuses()))
 	var shelves := BookMap.book_units(tiers)
 	var wins := BossRecord.wins(UserSettings.active_profile())
 	_empty_hint.visible = shelves.is_empty()
@@ -365,11 +362,9 @@ func _show_dive(t: float) -> void:
 	_dive.visible = blend > 0.0
 
 
-## Kopfzeile und Medaillon zusammen ein- und ausblenden.
+## Die Kopfzeile ein- und ausblenden.
 func _set_ui_alpha(alpha: float) -> void:
 	_ui.modulate.a = alpha
-	if _badge != null:
-		_badge.modulate.a = alpha
 
 
 ## Legt die flache Buchkarte über den ganzen Bildschirm, wie MapCanvas sie zeichnet.

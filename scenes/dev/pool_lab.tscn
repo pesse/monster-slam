@@ -1,0 +1,151 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/dev/pool_lab.gd" id="1_lab"]
+
+[node name="PoolLab" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_lab")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"ScreenMargin"
+
+[node name="Root" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_type_variation = &"ScreenStack"
+
+[node name="Title" type="Label" parent="Margin/Root"]
+layout_mode = 2
+theme_type_variation = &"Display"
+text = "Pool-Werkbank"
+
+[node name="Hint" type="Label" parent="Margin/Root"]
+layout_mode = 2
+theme_type_variation = &"Hint"
+text = "Was der Wellenkampf als Nächstes wählen würde — aus dem Lernstand des aktiven Profils, mit verstellbarer Uhr. Hier wird nichts gespeichert."
+autowrap_mode = 3
+
+[node name="Controls" type="HBoxContainer" parent="Margin/Root"]
+layout_mode = 2
+
+[node name="ScopeSelect" type="OptionButton" parent="Margin/Root/Controls"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+
+[node name="Plus10Min" type="Button" parent="Margin/Root/Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "+10 min"
+
+[node name="Plus1Hour" type="Button" parent="Margin/Root/Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "+1 h"
+
+[node name="Plus1Day" type="Button" parent="Margin/Root/Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "+1 Tag"
+
+[node name="Now" type="Button" parent="Margin/Root/Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Jetzt"
+
+[node name="Clock" type="Label" parent="Margin/Root/Controls"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+theme_type_variation = &"Caption"
+
+[node name="SimCount" type="SpinBox" parent="Margin/Root/Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 60.0
+value = 10.0
+
+[node name="Simulate" type="Button" parent="Margin/Root/Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Spawns simulieren"
+
+[node name="Summary" type="Label" parent="Margin/Root"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Caption"
+autowrap_mode = 3
+
+[node name="Columns" type="HBoxContainer" parent="Margin/Root"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_type_variation = &"SectionStack"
+
+[node name="Order" type="VBoxContainer" parent="Margin/Root/Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.4
+
+[node name="OrderTitle" type="Label" parent="Margin/Root/Columns/Order"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SectionTitle"
+text = "Reihenfolge der Kandidaten"
+
+[node name="Scroll" type="ScrollContainer" parent="Margin/Root/Columns/Order"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Gutter" type="MarginContainer" parent="Margin/Root/Columns/Order/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ScrollGutter"
+
+[node name="OrderList" type="VBoxContainer" parent="Margin/Root/Columns/Order/Scroll/Gutter"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"Tight"
+
+[node name="Sim" type="VBoxContainer" parent="Margin/Root/Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SimTitle" type="Label" parent="Margin/Root/Columns/Sim"]
+layout_mode = 2
+theme_type_variation = &"SectionTitle"
+text = "Simulierte Welle"
+
+[node name="Scroll" type="ScrollContainer" parent="Margin/Root/Columns/Sim"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Gutter" type="MarginContainer" parent="Margin/Root/Columns/Sim/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ScrollGutter"
+
+[node name="SimList" type="VBoxContainer" parent="Margin/Root/Columns/Sim/Scroll/Gutter"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"Tight"
+
+[node name="BackButton" type="Button" parent="Margin/Root"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+text = "⟵ Zurück zum Menü"

@@ -202,6 +202,13 @@ layout_mode = 2
 size_flags_horizontal = 8
 text = "⬆ Update verfügbar"
 
+[node name="ContentUpdateButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Right"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 8
+text = "⬆ Inhalte aktualisieren"
+
 [node name="Library" parent="Slide" instance=ExtResource("15_library")]
 unique_name_in_owner = true
 visible = false

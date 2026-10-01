@@ -42,6 +42,11 @@ const REWARD_SENSITIVITY := 0.6
 ## denn die Wiederholungen wählt der Scheduler, nicht der Spieler.
 const MASTERED_REWARD_FACTOR := 0.1
 
+## Die Gruppen der Auswahl (siehe ordered()), so auch in der Spur.
+const GROUP_DUE := "due"
+const GROUP_NEW := "new"
+const GROUP_REST := "rest"
+
 ## Globaler Tempo-Multiplikator, vom WaveRunner aus der gewählten Wellen-Schwierigkeit gesetzt
 ## (1.0 = neutral, >1 schneller/schwerer, <1 langsamer/leichter). Ist selbst eine
 ## Schwierigkeits-Quelle und wirkt daher multiplikativ auf das Referenztempo.
@@ -121,47 +126,163 @@ func has_playable(pool: Dictionary) -> bool:
 ## `shown_sources` (Lexem-id -> laufende Spawn-Nummer der letzten Zeigung) sind die in
 ## dieser Welle schon gezeigten Grundwörter; sie kommen erst dran, wenn der Rest des
 ## Pools erschöpft ist (siehe ordered()).
+##
+## Der Plan trägt in `task["pick"]` den Grund der Wahl (siehe pick_reason()); die Spur
+## schreibt ihn in jede spawn-Zeile.
 func pick(pool: Dictionary, exclude_sources: Dictionary = {}, shown_sources: Dictionary = {}) -> Dictionary:
-	var candidates := _candidates(pool)
-	if candidates.is_empty():
-		return {}
-	var ordered_candidates := ordered(candidates, PlayerProgress.due_task_ids(),
-		PlayerProgress.has_seen, shown_sources)
+	return pick_with(listing(pool, shown_sources, PlayerProgress.due_task_ids()), exclude_sources)
 
-	# Der Reihe nach durchprobieren, bis eine Aufgabe auflösbar ist.
-	# Erster Durchlauf meidet bereits sichtbare Grundwörter; findet sich damit nichts
-	# Spielbares, lässt der zweite Durchlauf die Sperre fallen (lieber ein Duplikat
-	# als eine hängende Welle).
+
+## Die Kandidaten des Pools in der Reihenfolge, in der pick() sie probiert, jeder mit
+## `group` und `repeat` (siehe ordered()). `due`: die fälligen learnable_ids — im Spiel
+## PlayerProgress.due_task_ids(), in der Werkbank die einer verstellten Uhr.
+## `now`: Bezugszeit für „zuletzt gesehen" (unix, -1 = jetzt).
+func listing(pool: Dictionary, shown_sources: Dictionary, due: Array, now := -1) -> Array:
+	if now < 0:
+		now = int(Time.get_unix_time_from_system())
+	return ordered(_candidates(pool), due, PlayerProgress.has_seen, shown_sources,
+			PlayerProgress.last_seen_at, now)
+
+
+## Wählt aus einer listing() den ersten spielbaren Kandidaten.
+##
+## Der Reihe nach durchprobieren, bis eine Aufgabe auflösbar ist. Erster Durchlauf meidet
+## bereits sichtbare Grundwörter; findet sich damit nichts Spielbares, lässt der zweite
+## Durchlauf die Sperre fallen (lieber ein Duplikat als eine hängende Welle).
+func pick_with(ordered_candidates: Array, exclude_sources: Dictionary = {}) -> Dictionary:
 	for respect_exclude in [true, false]:
-		for candidate in ordered_candidates:
+		for i in ordered_candidates.size():
+			var candidate: Dictionary = ordered_candidates[i]
 			if respect_exclude and exclude_sources.has(str(candidate["source"].get("id", ""))):
 				continue
 			var plan := _build_plan(candidate)
 			if not plan.is_empty():
+				plan["task"]["pick"] = pick_reason(ordered_candidates, i, not respect_exclude,
+						float(plan["net"]), PlayerProgress.due_at(candidate["learnable_id"]))
 				return plan
 	return {}
+
+
+## Warum der Kandidat an Stelle `index` gewählt wurde — für die Spur, das Debug-Panel und
+## die Werkbank. Nur Ids und Zahlen, keine Wörter: die stehen schon in der spawn-Zeile.
+##   group:    "due" | "new" | "rest" (siehe ordered())
+##   repeat:   das Wort war in dieser Welle schon dran (alle anderen sind verbraucht)
+##   pos:      Stelle in der Reihenfolge (0 = vorn); davor lagen Wörter auf dem Feld
+##             oder Unauflösbares
+##   pool:     Zahl der Kandidaten
+##   counts:   je Gruppe, wie viele noch nicht gezeigte es gab, dazu `repeat`
+##   fallback: die Sperre gegen Wörter auf dem Feld musste fallen
+##   net:      t - c des Monsters
+##   due_at:   Fälligkeit (unix), 0 = nie beantwortet
+##   last_seen: zuletzt beantwortet, über alle Aufgaben des Grundworts (unix), 0 = nie
+static func pick_reason(candidates: Array, index: int, fallback: bool, net: float,
+		due_at: int) -> Dictionary:
+	var counts := {GROUP_DUE: 0, GROUP_NEW: 0, GROUP_REST: 0, "repeat": 0}
+	for c in candidates:
+		if bool(c.get("repeat", false)):
+			counts["repeat"] += 1
+		else:
+			counts[str(c["group"])] += 1
+	var chosen: Dictionary = candidates[index]
+	return {
+		"group": str(chosen["group"]),
+		"repeat": bool(chosen.get("repeat", false)),
+		"pos": index,
+		"pool": candidates.size(),
+		"counts": counts,
+		"fallback": fallback,
+		"net": snappedf(net, 0.01),
+		"due_at": due_at,
+		"last_seen": int(chosen.get("last_seen", 0)),
+	}
+
+
+const GROUP_LABELS := {"due": "fällig", "new": "neu", "rest": "Rest"}
+
+
+## Der Grund als eine Zeile, z. B. „fällig (seit 2 T) · Platz 1 von 34 · fällig 3 / neu 12
+## / Rest 19 / gezeigt 0 · t−c +0.25". `now`: Bezugszeit für die Fälligkeit (unix).
+static func describe_reason(why: Dictionary, now: int) -> String:
+	if why.is_empty():
+		return ""
+	var group := str(GROUP_LABELS.get(str(why.get("group", "")), why.get("group", "")))
+	var due_at := int(why.get("due_at", 0))
+	if due_at > 0:
+		group += " (%s)" % due_text(due_at, now)
+	var last_seen := int(why.get("last_seen", 0))
+	if last_seen > 0:
+		group += ", zuletzt vor " + span_text(now - last_seen)
+	if bool(why.get("repeat", false)):
+		group = "Wiederholung, " + group
+	var counts: Dictionary = why.get("counts", {})
+	var parts: Array = [
+		group,
+		"Platz %d von %d" % [int(why.get("pos", 0)) + 1, int(why.get("pool", 0))],
+		"fällig %d / neu %d / Rest %d / schon gezeigt %d" % [int(counts.get("due", 0)),
+				int(counts.get("new", 0)), int(counts.get("rest", 0)), int(counts.get("repeat", 0))],
+		"t−c %+.2f" % float(why.get("net", 0.0)),
+	]
+	if bool(why.get("fallback", false)):
+		parts.append("trotz Wort auf dem Feld")
+	return " · ".join(parts)
+
+
+## „seit 2 T", „in 8 min" — die Fälligkeit relativ zu `now`.
+static func due_text(due_at: int, now: int) -> String:
+	var delta := due_at - now
+	return ("in " if delta > 0 else "seit ") + span_text(delta)
+
+
+## „8 min", „3 h", „2 T" für eine Spanne in Sekunden (Vorzeichen egal).
+static func span_text(seconds: int) -> String:
+	var span := absi(seconds)
+	if span < 3600:
+		return "%d min" % ceili(span / 60.0)
+	if span < 86400:
+		return "%d h" % roundi(span / 3600.0)
+	return "%d T" % roundi(span / 86400.0)
 
 
 ## Die Auswahlreihenfolge von pick(), statisch und ohne Autoload prüfbar.
 ##
 ## Oberste Stufe ist „in dieser Welle schon gezeigt" (Issue #24): erst alle Kandidaten,
-## deren Grundwort noch nicht dran war — darin fällige, dann neue, dann der Rest, je Stufe
-## gemischt. Danach die Wiederholungen, geordnet nach Grundwort: das am längsten nicht
+## deren Grundwort noch nicht dran war — darin fällige, dann neue, dann der Rest. Fällige
+## und neue sind gemischt; der Rest kommt nach Abstand (`by_staleness`): was am längsten
+## nicht beantwortet wurde, eher zuerst — ein kleines Spacing auch über Wellen und lange
+## Sitzungen, in denen sonst jede Welle wieder gleichverteilt aus dem Rest zöge. Danach die Wiederholungen, geordnet nach Grundwort: das am längsten nicht
 ## gezeigte (kleinste Nummer in `shown`) zuerst, innerhalb wieder fällig → neu → Rest.
 ## Die Sperre greift am Grundwort, nicht am learnable_id — sonst käme dasselbe Wort über
 ## eine andere Richtung oder Aufgabenart sofort wieder.
 ##
 ## `due`: learnable_ids, die heute fällig sind. `seen`: learnable_id -> bool.
-static func ordered(candidates: Array, due: Array, seen: Callable, shown: Dictionary) -> Array:
+## `last_seen`: learnable_id -> unix der letzten Antwort (0 = nie), `now` die Bezugszeit;
+## ohne `last_seen` wird auch der Rest nur gemischt.
+##
+## Jeder Kandidat bekommt dabei `group` ("due" | "new" | "rest"), `repeat` (Wort in
+## dieser Welle schon gezeigt) und `last_seen` (Grundwort zuletzt beantwortet) — der Grund der Wahl kommt so aus derselben Sortierung und
+## nicht aus einer zweiten Regel daneben.
+static func ordered(candidates: Array, due: Array, seen: Callable, shown: Dictionary,
+		last_seen := Callable(), now := 0) -> Array:
 	var due_set := {}
 	for id in due:
 		due_set[id] = true
+	# Am Grundwort, wie die Sperre: „convict" kam eben in der einen Richtung, also auch
+	# in der anderen nicht gleich wieder.
+	var word_seen := {}
+	if last_seen.is_valid():
+		for c in candidates:
+			var source := str(c["source"].get("id", ""))
+			word_seen[source] = maxi(int(word_seen.get(source, 0)),
+					int(last_seen.call(c["learnable_id"])))
 	var fresh: Array = [[], [], []]
 	var repeats := {} # Spawn-Nummer -> [fällig, neu, Rest]
 	for c in candidates:
 		var id: String = c["learnable_id"]
 		var rank := 0 if due_set.has(id) else (1 if not seen.call(id) else 2)
+		c["group"] = [GROUP_DUE, GROUP_NEW, GROUP_REST][rank]
 		var source_id := str(c["source"].get("id", ""))
+		c["repeat"] = shown.has(source_id)
+		c["last_seen"] = int(word_seen.get(source_id, 0))
 		if shown.has(source_id):
 			var key := int(shown[source_id])
 			if not repeats.has(key):
@@ -170,8 +291,12 @@ static func ordered(candidates: Array, due: Array, seen: Callable, shown: Dictio
 		else:
 			fresh[rank].append(c)
 	var out: Array = []
-	for bucket in fresh:
-		bucket.shuffle()
+	for rank in fresh.size():
+		var bucket: Array = fresh[rank]
+		if rank == 2 and last_seen.is_valid():
+			bucket = by_staleness(bucket, now)
+		else:
+			bucket.shuffle()
 		out.append_array(bucket)
 	var keys := repeats.keys()
 	keys.sort()
@@ -180,6 +305,27 @@ static func ordered(candidates: Array, due: Array, seen: Callable, shown: Dictio
 			bucket.shuffle()
 			out.append_array(bucket)
 	return out
+
+
+## Wie weit der Zufall den Abstand streckt oder staucht: der Abstand eines Kandidaten zählt
+## mit einem Faktor zwischen 1 − STALENESS_JITTER und 1 + STALENESS_JITTER. Bei 0.5 können
+## zwei Wörter nur tauschen, wenn ihre Abstände weniger als das Dreifache auseinander
+## liegen — vor einer Minute gezeigt kommt nie vor vor einer Stunde gezeigt, gestern und
+## vorgestern mischen sich.
+const STALENESS_JITTER := 0.5
+
+
+## Ordnet Kandidaten nach Abstand zur letzten Antwort (`last_seen`), der längste zuerst,
+## mit Zufall (STALENESS_JITTER). Nie beantwortet zählt als unendlich lange her.
+static func by_staleness(candidates: Array, now: int) -> Array:
+	var keyed: Array = []
+	for c in candidates:
+		var last := int(c.get("last_seen", 0))
+		var age := float(maxi(now - last, 1)) if last > 0 else INF
+		keyed.append([age * randf_range(1.0 - STALENESS_JITTER, 1.0 + STALENESS_JITTER), c])
+	keyed.shuffle()
+	keyed.sort_custom(func(a, b): return float(a[0]) > float(b[0]))
+	return keyed.map(func(k): return k[1])
 
 
 ## Erzeugt alle spielbaren Kandidaten (Definition × Lexeme [× Form/Relation]) für den
@@ -194,16 +340,26 @@ func _candidates(pool: Dictionary, limit: int = 0) -> Array:
 	var scope: Array = pool.get("scope", []) # leer -> alle Bücher/Units
 	var lexeme_types: Array = pool.get("lexeme_types", []) # leer -> alle Wortarten
 	var direction := str(pool.get("direction", "")) # "" = beliebige Richtung
-	# leerer scope/tags -> alle Lexeme; dazu die, deren Formen erst in diesem Scope gelehrt werden
+	# leerer scope/tags -> alle Lexeme; dazu die der Boni, die der Scope mitspielt
 	var lexemes := ContentRegistry.lexemes_for_run(scope, tags)
 	_resolver.scope = scope
 	if not lexeme_types.is_empty():
 		lexemes = lexemes.filter(func(lx): return str(lx.get("type", "")) in lexeme_types)
+	# Ein Wort, das nur über einen Bonus dabei ist, bringt nur seine Bonus-Formen mit — keine
+	# Übersetzung, keine andere Form (ADR 0012): der Bonus übt das Perfekt, nicht Lektion 1.
+	var bonus_only := {}
+	if not scope.is_empty():
+		var own := {}
+		for entry in ContentRegistry.lexemes_scoped(scope, tags):
+			own[str(entry.get("id", ""))] = true
+		for entry in lexemes:
+			if not own.has(str(entry.get("id", ""))):
+				bonus_only[str(entry.get("id", ""))] = true
 	var result: Array = []
 	for definition in ContentRegistry.task_definitions.values():
 		if not definition_allowed(definition, task_types, direction):
 			continue
-		_expand(definition, lexemes, result, limit, scope)
+		_expand(definition, lexemes, result, limit, scope, bonus_only)
 		if limit > 0 and result.size() >= limit:
 			break
 	return result
@@ -232,13 +388,30 @@ static func definition_allowed(definition: Dictionary, task_types: Array,
 ## Verbindet eine Definition mit allen kompatiblen Lexemen und hängt die Kandidaten an.
 ## Relations-/Formaufgaben expandieren über die tatsächlich vorhandenen Relationen/Formen,
 ## sodass nie eine unauflösbare Instanz entsteht.
+## `bonus_only` (Lexem-Id -> true) nennt die Wörter, die nur über einen Bonus dabei sind:
+## von ihnen kommen nur die Formaufgaben, deren Form in einem Bonus steht.
 func _expand(definition: Dictionary, lexemes: Array, result: Array, limit: int = 0,
-		scope: Array = []) -> void:
+		scope: Array = [], bonus_only: Dictionary = {}) -> void:
 	for source in lexemes:
 		if limit > 0 and result.size() >= limit:
 			return
+		if bonus_only.has(str(source.get("id", ""))) and not _bonus_task(definition, source, scope):
+			continue
 		for extra in _instances(definition, source, scope):
 			result.append(_candidate(definition, source, extra))
+
+
+## Ist die Definition für dieses Wort eine Bonus-Aufgabe — eine Formaufgabe, deren Form in
+## `scope` als Bonus mitspielt?
+func _bonus_task(definition: Dictionary, source: Dictionary, scope: Array) -> bool:
+	var form_type := str(definition.get("requires_form", ""))
+	if form_type.is_empty():
+		return false
+	for form in ContentRegistry.forms_for(str(source.get("id", "")), form_type, scope):
+		if not ContentRegistry.bonus_of_form(form).is_empty() \
+				and ContentRegistry.form_task_in_scope(form, scope):
+			return true
+	return false
 
 
 ## Die `extra`-Bausteine, mit denen eine Definition auf EIN Lexem passt — eine leere
@@ -259,8 +432,9 @@ func _expand(definition: Dictionary, lexemes: Array, result: Array, limit: int =
 ## Eine Definition gilt nur für Lexeme ihrer Sprache (`language`, ohne Feld englisch):
 ## sonst stellte die englische Übersetzung ein lateinisches Wort und umgekehrt.
 ##
-## `scope` lässt nur Formen zu, die dort schon gelehrt sind (ContentRegistry.form_in_scope);
-## leer, wie für die Statistik, zählt jede Form.
+## `scope` lässt nur Formen zu, die dort schon gelehrt sind und deren Bonus, wenn sie in
+## einem stehen, dort mitspielt (ContentRegistry.form_task_in_scope); leer, wie für die
+## Statistik, zählt jede Form.
 func _instances(definition: Dictionary, source: Dictionary, scope: Array = []) -> Array:
 	if Lexeme.language(definition) != Lexeme.language(source):
 		return []
@@ -279,7 +453,9 @@ func _instances(definition: Dictionary, source: Dictionary, scope: Array = []) -
 		return out
 	var form_req := str(definition.get("requires_form", ""))
 	if form_req != "":
-		return [{"form_type": form_req}] if not ContentRegistry.forms_for(source_id, form_req, scope).is_empty() else []
+		var forms := ContentRegistry.forms_for(source_id, form_req, scope)
+		return [{"form_type": form_req}] if forms.any(func(f):
+				return ContentRegistry.form_task_in_scope(f, scope)) else []
 	return [{}]
 
 
@@ -381,4 +557,5 @@ func _build_plan(candidate: Dictionary) -> Dictionary:
 		"damage": int(rule.get("base_damage", 10)),
 		"reward": reward,
 		"xp": xp,
+		"net": net,
 	}

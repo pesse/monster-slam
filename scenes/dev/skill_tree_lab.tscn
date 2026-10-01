@@ -26,25 +26,72 @@ unique_name_in_owner = true
 self_modulate = Color(1, 1, 1, 0.85)
 size_flags_horizontal = 4
 
-[node name="Items" type="HBoxContainer" parent="Arrange/Margin/Root/Bar"]
+[node name="Rows" type="VBoxContainer" parent="Arrange/Margin/Root/Bar"]
 theme_type_variation = &"Tight"
 
-[node name="ArrangeButton" type="Button" parent="Arrange/Margin/Root/Bar/Items"]
+[node name="Items" type="HBoxContainer" parent="Arrange/Margin/Root/Bar/Rows"]
+theme_type_variation = &"Tight"
+
+[node name="ArrangeButton" type="Button" parent="Arrange/Margin/Root/Bar/Rows/Items"]
 unique_name_in_owner = true
 focus_mode = 0
 toggle_mode = true
 text = "Knoten verschieben"
 
-[node name="SaveButton" type="Button" parent="Arrange/Margin/Root/Bar/Items"]
+[node name="EditButton" type="Button" parent="Arrange/Margin/Root/Bar/Rows/Items"]
+unique_name_in_owner = true
+focus_mode = 0
+toggle_mode = true
+text = "Bearbeiten"
+
+[node name="DiscardButton" type="Button" parent="Arrange/Margin/Root/Bar/Rows/Items"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "Daten verwerfen"
+
+[node name="SaveButton" type="Button" parent="Arrange/Margin/Root/Bar/Rows/Items"]
 unique_name_in_owner = true
 focus_mode = 0
 text = "Speichern"
 
-[node name="ResetButton" type="Button" parent="Arrange/Margin/Root/Bar/Items"]
+[node name="ResetButton" type="Button" parent="Arrange/Margin/Root/Bar/Rows/Items"]
 unique_name_in_owner = true
 focus_mode = 0
 text = "Alle berechnen"
 
-[node name="Status" type="Label" parent="Arrange/Margin/Root/Bar/Items"]
+[node name="Status" type="Label" parent="Arrange/Margin/Root/Bar/Rows"]
 unique_name_in_owner = true
 theme_type_variation = &"Hint"
+
+[node name="Editor" type="VBoxContainer" parent="Arrange/Margin/Root/Bar/Rows"]
+unique_name_in_owner = true
+visible = false
+theme_type_variation = &"Tight"
+
+[node name="NodeLabel" type="Label" parent="Arrange/Margin/Root/Bar/Rows/Editor"]
+unique_name_in_owner = true
+
+[node name="Controls" type="HBoxContainer" parent="Arrange/Margin/Root/Bar/Rows/Editor"]
+theme_type_variation = &"Tight"
+
+[node name="CostLabel" type="Label" parent="Arrange/Margin/Root/Bar/Rows/Editor/Controls"]
+theme_type_variation = &"Hint"
+text = "Kosten"
+
+[node name="CostSpin" type="SpinBox" parent="Arrange/Margin/Root/Bar/Rows/Editor/Controls"]
+unique_name_in_owner = true
+min_value = 1.0
+max_value = 20.0
+value = 1.0
+suffix = "P."
+
+[node name="RewireButton" type="Button" parent="Arrange/Margin/Root/Bar/Rows/Editor/Controls"]
+unique_name_in_owner = true
+focus_mode = 0
+toggle_mode = true
+text = "Umhängen an …"
+
+[node name="DeselectButton" type="Button" parent="Arrange/Margin/Root/Bar/Rows/Editor/Controls"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "Abwählen"

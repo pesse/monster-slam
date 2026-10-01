@@ -1,7 +1,8 @@
 extends GdUnitTestSuite
 ## Formen mit eigener Lektion (`unit`/`part` an lexeme_forms): das Lateinbuch lehrt das
 ## Perfekt erst in Lektion 11, für alle Verben davor mit. Eine solche Form gilt ab dieser
-## Lektion als eingeführt und zieht ihr Lexem genau dort als Wiederholung in den Pool.
+## Lektion als eingeführt (ADR 0011) und steht, weil sie später kommt als ihr Wort, in einem
+## Bonus der lehrenden Lektion (ADR 0012) — als Aufgabe nur dort und in „Gesamt".
 ##
 ## Testlexeme mit `zz-`Ids in einem eigenen Buch, danach wieder entfernt. Ein
 ## Allerweltswort als Beispiel, keine Wortliste.
@@ -27,7 +28,7 @@ func before_test() -> void:
 			"form_type": "la_perfect", "value": "clāmāvī", "unit": 2, "part": 5}
 	ContentRegistry.lexeme_forms[GENDER] = {"id": GENDER, "lexeme_id": LATER, "language": "la",
 			"form_type": "la_gender", "value": "f"}
-	ContentRegistry._index_parts()
+	_reindex()
 
 
 func after_test() -> void:
@@ -35,7 +36,21 @@ func after_test() -> void:
 		ContentRegistry.lexemes.erase(id)
 	for id in [PRESENT, PERFECT, GENDER]:
 		ContentRegistry.lexeme_forms.erase(id)
+	_reindex()
+
+
+func _reindex() -> void:
 	ContentRegistry._index_parts()
+	ContentRegistry._index_bonuses()
+	ContentRegistry._index_form_requirements()
+
+
+const PERFECT_BONUS := "bonus:%s/2/5/la_perfect" % BOOK
+const PRESENT_BONUS := "bonus:%s/1/3/la_present_1sg" % BOOK
+
+
+func _ids(scope: Array) -> Array:
+	return GENERATOR.new()._candidates({"scope": scope}).map(func(c): return c["learnable_id"])
 
 
 func _scope(key: String) -> Array:
@@ -62,25 +77,48 @@ func test_a_form_counts_from_the_lesson_that_teaches_it() -> void:
 	assert_bool(ContentRegistry.form_in_scope(form, [])).is_true()
 
 
-func test_the_teaching_lesson_pulls_the_lexeme_into_the_pool_but_not_into_its_unit() -> void:
-	var run := ContentRegistry.lexemes_for_run(_scope("/2/5"), [])
-	assert_array(run.map(func(lx): return lx["id"])).contains_exactly_in_any_order([VERB, LATER])
-	# Festung, Statistik und Karte zählen das Verb weiter nur in Lektion 1.
-	assert_array(ContentRegistry.lexemes_scoped(_scope("/2/5"), [])
+func test_a_form_taught_later_than_its_word_is_a_bonus_of_the_teaching_lesson() -> void:
+	assert_array(ContentRegistry.bonuses_of(BOOK, 1).map(func(b): return b["key"])) \
+			.contains_exactly([PRESENT_BONUS])
+	var perfect: Array = ContentRegistry.bonuses_of(BOOK, 2)
+	assert_array(perfect.map(func(b): return b["key"])).contains_exactly([PERFECT_BONUS])
+	assert_array(perfect[0]["lexeme_ids"]).contains_exactly([VERB])
+	assert_array(perfect[0]["task_ids"]).contains_exactly(["forms:%s:la_perfect" % VERB])
+	# Eine Form ohne eigene Lektion steht nie in einem Bonus.
+	assert_str(ContentRegistry.bonus_of_form(ContentRegistry.lexeme_forms[GENDER])).is_empty()
+
+
+func test_the_teaching_lesson_no_longer_pulls_old_words_into_the_pool() -> void:
+	assert_array(ContentRegistry.lexemes_for_run(_scope("/2/5"), [])
 			.map(func(lx): return lx["id"])).contains_exactly([LATER])
-	assert_array(ContentRegistry.lexemes_for_run(_scope("/2/4"), [])).is_empty()
-	# Spätere Lektionen holen es nicht noch einmal.
-	assert_array(ContentRegistry.lexemes_for_run(_scope("/2/6"), [])).is_empty()
+	assert_array(ContentRegistry.lexemes_for_run([PERFECT_BONUS], [])
+			.map(func(lx): return lx["id"])).contains_exactly([VERB])
+	# „Gesamt" spielt den Bonus mit, Festung, Statistik und Karte zählen das Verb weiter nur
+	# in Lektion 1.
+	assert_array(ContentRegistry.lexemes_for_run(_scope("/2"), [])
+			.map(func(lx): return lx["id"])).contains_exactly_in_any_order([VERB, LATER])
+	assert_array(ContentRegistry.lexemes_scoped(_scope("/2"), [])
+			.map(func(lx): return lx["id"])).contains_exactly([LATER])
 
 
-func test_the_review_brings_the_translations_and_every_form_taught_so_far() -> void:
-	var generator := GENERATOR.new()
-	var ids: Array = generator._candidates({"scope": _scope("/2/5")}) \
-			.map(func(c): return c["learnable_id"])
-	assert_array(ids).contains([
-		"translate:de_to_la:%s" % VERB, "translate:la_to_de:%s" % VERB,
-		"forms:%s:la_perfect" % VERB, "forms:%s:la_present_1sg" % VERB,
-	])
+func test_the_bonus_asks_only_its_forms() -> void:
+	assert_array(_ids([PERFECT_BONUS])).contains_exactly(["forms:%s:la_perfect" % VERB])
+	assert_array(_ids([PRESENT_BONUS])).contains_exactly(["forms:%s:la_present_1sg" % VERB])
+
+
+func test_whole_unit_plays_its_bonus_a_part_does_not() -> void:
+	assert_array(_ids(_scope("/2"))).contains(["forms:%s:la_perfect" % VERB])
+	assert_array(_ids(_scope("/2"))).not_contains(["translate:de_to_la:%s" % VERB,
+			"forms:%s:la_present_1sg" % VERB])
+	assert_array(_ids(_scope("/1"))).contains(["forms:%s:la_present_1sg" % VERB])
+	assert_array(_ids(_scope("/1"))).not_contains(["forms:%s:la_perfect" % VERB])
+	# Lektion 1 mit Lektion 4: die 1. Person ist eingeführt, aber als Aufgabe nur im Bonus.
+	var parts := _ids([BOOK + "/1/1", BOOK + "/1/4"])
+	assert_array(parts).contains(["translate:de_to_la:%s" % VERB])
+	assert_array(parts).not_contains(["forms:%s:la_present_1sg" % VERB])
+	# Ein Teil zusammen mit dem Bonus bringt beides.
+	assert_array(_ids([BOOK + "/1/1", PRESENT_BONUS])).contains([
+			"translate:de_to_la:%s" % VERB, "forms:%s:la_present_1sg" % VERB])
 
 
 func test_the_first_lesson_asks_neither_present_nor_perfect() -> void:
@@ -111,6 +149,10 @@ func test_the_reveal_shows_only_the_forms_taught_so_far() -> void:
 	resolver.scope = _scope("/2/5")
 	assert_str(str(resolver.resolve(definition, verb)["meaning"])) \
 			.is_equal("clāmō · Perf. clāmāvī")
+	# Im Bonus gilt, was bis zu seiner Lektion eingeführt ist.
+	resolver.scope = [PERFECT_BONUS]
+	assert_str(str(resolver.resolve(definition, verb)["meaning"])) \
+			.is_equal("clāmō · Perf. clāmāvī")
 
 
 func test_the_present_task_names_the_person() -> void:
@@ -121,12 +163,12 @@ func test_the_present_task_names_the_person() -> void:
 	assert_array(task["accepted_answers"]).contains_exactly(["clāmō"])
 
 
-func test_a_form_taught_in_another_unit_does_not_hold_back_the_mastery() -> void:
+func test_a_bonus_form_does_not_hold_back_the_mastery() -> void:
 	ContentRegistry.lexemes[VERB]["irregular"] = true
-	ContentRegistry._index_form_requirements()
+	_reindex()
 	var required: Array = ContentRegistry.form_requirements().get(VERB, [])
 	ContentRegistry.lexemes[VERB].erase("irregular")
-	ContentRegistry._index_form_requirements()
-	# Die 1. Person lehrt Unit 1 selbst (Lektion 3), das Perfekt erst Unit 2.
-	assert_array(required).contains(["forms:%s:la_present_1sg" % VERB])
-	assert_array(required).not_contains(["forms:%s:la_perfect" % VERB])
+	_reindex()
+	# Beide Formen kommen nach dem Wort (Lektion 3 und 11), beide sind Bonus — auch die aus
+	# der eigenen Unit. Ohne zählende Form braucht das Verb nur seine Übersetzungen.
+	assert_array(required).is_empty()

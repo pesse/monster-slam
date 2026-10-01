@@ -50,23 +50,44 @@ const SMOOTH_STEPS := 12
 ## Orte je Reihe, wenn die Karte sie selbst auslegt.
 const PER_ROW := 6
 
-## Füllung je Stufe 0..4: Baustelle, Holz, Stein, Burg, Vollausbau. Farben aus dem Code
-## und nicht aus dem Theme, aus demselben Grund wie in SkillGraph: es sind Zustände einer
-## Zeichnung, keine Typografie.
-const TIER_COLORS := [
+## Füllung nach dem Anteil gemeisterter Wörter (bzw. Aufgaben eines Bonus): dunkel, ab
+## FILL_PERCENT[n] Bronze, Silber, Gold. Bewusst NICHT die Festungsstufe — die gibt es für
+## einen Teil oder einen Bonus gar nicht. Farben aus dem Code und nicht aus dem Theme, aus
+## demselben Grund wie in SkillGraph: es sind Zustände einer Zeichnung, keine Typografie.
+const FILL_PERCENT := [25, 60, 100]
+const FILL_COLORS := [
 	Color(0.18, 0.2, 0.26),
-	Color(0.45, 0.32, 0.2),
-	Color(0.42, 0.46, 0.52),
-	Color(0.28, 0.42, 0.7),
-	Color(0.75, 0.58, 0.18),
+	Color(0.55, 0.34, 0.17),
+	Color(0.52, 0.56, 0.62),
+	Color(0.76, 0.58, 0.14),
 ]
 const BOSS_COLOR := Color(0.45, 0.12, 0.14)
 ## Ringfarbe je Medaille 1..3: Bronze, Silber, Gold.
 const MEDAL_COLORS := [Color(0.72, 0.45, 0.2), Color(0.8, 0.83, 0.88), Color(1.0, 0.8, 0.2)]
-## Ab so viel Prozent gemeisterter Wörter leuchtet Stern 1…5 unter einem Ort. Die Sterne
-## sind der Meisterungsstand und NICHT die Festungsstufe (ADR 0009): die ist bei 75 % voll,
-## die Sterne erst bei 100 % — das letzte Viertel bleibt sichtbar etwas wert.
-const STAR_PERCENT := [20, 40, 60, 80, 100]
+## Der Fortschrittsring füllt sich in Gold mit dem Anteil gemeisterter Wörter. Er ist der
+## Meisterungsstand und NICHT die Festungsstufe (ADR 0009): die ist bei 75 % voll, der Ring
+## erst bei 100 % — das letzte Viertel bleibt sichtbar etwas wert.
+const RING_GOLD := Color(1.0, 0.8, 0.2)
+## Heller Ton, zu dem ein gemeisterter Ring pulsiert.
+const RING_SHINE := Color(1.0, 0.95, 0.68)
+## Ein gemeisterter Ort pulsiert in diesem Takt (Hz) und sprüht Funken: so viele zugleich,
+## jeder so lange (s) unterwegs.
+const PULSE_HZ := 0.45
+const SPARKLES := 10
+const SPARKLE_LIFE := 1.6
+## Dazu ziehen so viele Funken in den Ort hinein, jeder so lange (s).
+const MOTES := 8
+const MOTE_LIFE := 1.3
+## Strahlen hinter einem gemeisterten Ort, und wie schnell sie kreisen (Umdrehungen/s).
+const RAYS := 10
+const RAY_SPEED := 0.05
+## Ein Glanzlicht läuft so schnell um den vollen Ring (Umdrehungen/s).
+const GLINT_SPEED := 0.55
+## Ein gemeisterter Bonus-Stern hat dieselben Funken wie der Ring, nur weniger.
+const STAR_SPARKLES := 4
+const STAR_MOTES := 3
+## Die Markierung (`set_selected`) wippt in diesem Takt (Hz) über dem Ort.
+const BOB_HZ := 1.2
 ## Füllung eines gesperrten Ortes — grau statt in der Farbe seiner Stufe.
 const DISABLED_COLOR := Color(0.34, 0.35, 0.38)
 const BLANK_COLOR := Color(0.16, 0.21, 0.18)
@@ -75,8 +96,9 @@ const PATH_COLOR := Color(0.98, 0.92, 0.75, 0.85)
 const SHADOW := Color(0, 0, 0, 0.45)
 const PLATE := Color(0.05, 0.06, 0.08, 0.72)
 
-## Ring um einen markierten Ort (`set_selected`).
-const SELECTED_COLOR := Color(1.0, 0.8, 0.2)
+## Pfeil über einem markierten Ort (`set_selected`). Weiß und nicht Gold: Gold ist der
+## Fortschritt, die Markierung soll damit nicht verwechselt werden.
+const SELECTED_COLOR := Color(1.0, 1.0, 1.0)
 ## So weit wächst ein markierter Ort zur Hover-Größe (0..1): sichtbar größer, ohne dass
 ## mehrere markierte Nachbarn ineinanderlaufen.
 const SELECTED_GROW := 0.5
@@ -94,14 +116,15 @@ var hover_radius := 0.0
 var cover := false
 
 var _texture: Texture2D
-## Die Orte: { key, pos (Vector2 in 0..1 oder INF), glyph, caption, tier, done, total,
-## medal, boss, disabled }.
+## Die Orte: { key, pos (Vector2 in 0..1 oder INF), glyph, caption, done, total, medal,
+## boss, disabled, bonus }. `bonus` ist je Bonus der Unit sein Anteil 0..1 — ein Stern unter
+## dem Ort, der erst bei 1 leuchtet.
 var _nodes: Array = []
 ## Wegpunkte in 0..1; leer = die Orte der Reihe nach verbinden.
 var _path: Array = []
 var _centers: Array = []
 var _hovered := -1
-## Die markierten Orte (Schlüssel → true): sie bleiben groß und tragen einen goldenen Ring.
+## Die markierten Orte (Schlüssel → true): sie bleiben groß, ein Pfeil wippt über ihnen.
 var _selected := {}
 ## Je Ort, wie weit er zur Hover-Größe gewachsen ist (0..1).
 var _grow: Array = []
@@ -113,12 +136,34 @@ var _zooming := false
 var _zoom_run := {}
 ## Zeit seit `appear`, oder < 0: alle Orte stehen da.
 var _appear_t := -1.0
+## Uhr für Pulsieren, Funken und den wippenden Pfeil.
+var _time := 0.0
+## Bewegt sich etwas auch ohne Zeiger (gemeisterter Ort, leuchtender Stern, Markierung)?
+## Dann läuft `_process` weiter; sonst ruht die Karte.
+var _alive := false
+## Weicher, runder Fleck für Schein und Funken — ein Verlauf statt harter Kreise.
+var _glow: Texture2D
+## Dunkle Leiste hinter den Bonus-Sternen — vor dem bunten Bild sähe man sie sonst nicht.
+## Ebene über den Orten, additiv gemischt wie die Meisterungs-Feier: Funken, Glanzlicht und
+## Schein des Rings addieren Licht, statt das Bild zu übermalen. Zeichnet `_draw_fx`.
+var _fx: Control
+## Die Zoom-Transformation des letzten `_draw` — die Effektebene zeichnet darin mit.
+var _base := Transform2D()
 
 
 func _ready() -> void:
 	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	resized.connect(_relayout)
 	mouse_exited.connect(func() -> void: _set_hovered(-1))
+	_fx = Control.new()
+	_fx.name = "Fx"
+	_fx.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fx.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var additive := CanvasItemMaterial.new()
+	additive.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	_fx.material = additive
+	_fx.draw.connect(_draw_fx)
+	add_child(_fx)
 	set_process(false)
 
 
@@ -193,9 +238,29 @@ func set_selected(keys: Array) -> void:
 	_selected.clear()
 	for key in keys:
 		_selected[str(key)] = true
-	if hover_radius > node_radius:
+	_update_alive()
+	if hover_radius > node_radius or _alive:
 		set_process(true)
 	queue_redraw()
+
+
+func _update_alive() -> void:
+	_alive = not _selected.is_empty() or _nodes.any(shines)
+
+
+## Leuchtet etwas an diesem Ort: der Ring voll, oder ein Bonus-Stern gemeistert?
+static func shines(node: Dictionary) -> bool:
+	if bool(node.get("disabled", false)) or bool(node.get("boss", false)):
+		return false
+	if is_mastered(node):
+		return true
+	return (node.get("bonus", []) as Array).any(func(share): return float(share) >= 1.0)
+
+
+## Ist der Ring voll — alles gemeistert?
+static func is_mastered(node: Dictionary) -> bool:
+	var total := int(node.get("total", 0))
+	return total > 0 and int(node.get("done", 0)) >= total
 
 
 func is_selected(key: String) -> bool:
@@ -257,6 +322,9 @@ func setup(texture: Texture2D, nodes: Array, path: Array, hint: Callable) -> voi
 			return {}
 		var i := index_at(local)
 		return hint.call(_nodes[i]) if i >= 0 else {})
+	_update_alive()
+	if _alive:
+		set_process(true)
 	_relayout()
 
 
@@ -396,8 +464,10 @@ func _set_hovered(index: int) -> void:
 	queue_redraw()
 
 
-## Lässt die Orte zu ihrer Größe wachsen oder schrumpfen; ruht, sobald alle angekommen sind.
+## Lässt die Orte zu ihrer Größe wachsen oder schrumpfen; ruht, sobald alle angekommen sind
+## und nichts leuchtet.
 func _process(delta: float) -> void:
+	_time += delta
 	if not _zoom_run.is_empty():
 		_step_zoom(delta)
 	var moving := _zooming
@@ -416,7 +486,7 @@ func _process(delta: float) -> void:
 		_grow[i] = now
 		moving = moving or now != target
 	queue_redraw()
-	if not moving:
+	if not moving and not _alive:
 		set_process(false)
 
 
@@ -429,6 +499,9 @@ func _draw() -> void:
 		var focus := to_local_point(_focus)
 		base = Transform2D(0.0, Vector2(_zoom, _zoom), 0.0, focus * (1.0 - _zoom))
 		draw_set_transform_matrix(base)
+	_base = base
+	if _fx != null:
+		_fx.queue_redraw.call_deferred()
 	if _texture != null:
 		draw_texture_rect(_texture, rect, false)
 	else:
@@ -522,102 +595,323 @@ func _draw_node(i: int) -> void:
 	var at: Vector2 = _centers[i]
 	var disabled := bool(node.get("disabled", false))
 	var boss := bool(node.get("boss", false))
-	var tier := clampi(int(node.get("tier", 0)), 0, TIER_COLORS.size() - 1)
 	var medal := clampi(int(node.get("medal", 0)), 0, MEDAL_COLORS.size())
 	var total := int(node.get("total", 0))
 	var done := int(node.get("done", 0))
+	var mastered := not boss and not disabled and is_mastered(node)
 	var dim := 0.45 if disabled else 1.0
 	var r := radius_of(i)
 	var k := r / NODE_RADIUS
-	var ring := maxf(RING_WIDTH * k, 2.5)
+	var ring := _ring_width(r, mastered)
+	var ring_r := _ring_radius(r, mastered)
+	var pulse := _pulse(i)
 
-	draw_circle(at + Vector2(0, 4.0 * k), r + 2.0 * k, SHADOW)
-	var fill: Color = BOSS_COLOR if boss else TIER_COLORS[tier]
-	if boss and medal > 0:
-		fill = (MEDAL_COLORS[medal - 1] as Color).darkened(0.35)
+	var shares: Array = [] if boss or disabled else node.get("bonus", [])
+	# Ein weicher Schatten um den Ort und unter seinen Sternen: hebt sie vom unruhigen Bild ab
+	# und gibt Tiefe. Zuerst gezeichnet — Schein, Ring und Sterne liegen darüber.
+	var outside := ring_r + ring * 0.5
+	_draw_soft_spot(i, at + Vector2(0, 3.0 * k), Vector2(outside * 1.75, outside * 1.75), 0.45)
+	_draw_star_shadow(at, ring_r + ring * 0.5, k, shares, i)
+
+	if mastered:
+		_draw_rays(at, ring_r, maxf(r * 2.8, 52.0), float(i))
+		var glow := maxf(r * 3.6, 56.0) * (1.0 + 0.12 * pulse)
+		_draw_halo(at, glow, Color(RING_GOLD, 0.45 + 0.25 * pulse))
+	draw_circle(at + Vector2(0, 4.0 * k), ring_r + ring * 0.5, SHADOW)
+	var fill: Color = FILL_COLORS[fill_level(done, total)]
+	if boss:
+		fill = BOSS_COLOR if medal == 0 else (MEDAL_COLORS[medal - 1] as Color).darkened(0.35)
 	if disabled:
 		fill = DISABLED_COLOR
 	# Gesperrt heißt grau, nicht durchsichtig: der Weg läuft sonst sichtbar durch den Ort.
 	draw_circle(at, r, fill)
 	var track := Color(0.07, 0.08, 0.11)
-	draw_arc(at, r, 0.0, TAU, 48, track, ring, true)
+	draw_arc(at, ring_r - 0.5, 0.0, TAU, 48, track, ring + 3.0, true)
 	if boss:
 		if medal > 0:
-			draw_arc(at, r, 0.0, TAU, 48, MEDAL_COLORS[medal - 1], ring + 1.0, true)
-	elif total > 0 and done >= total:
-		# Alles gemeistert: der volle Ring in Gold und breiter, wie die Medaille eines Bosses.
-		draw_arc(at, r, 0.0, TAU, 48, MEDAL_COLORS[2], ring + 1.0, true)
-	elif total > 0 and done > 0:
-		# Der Ring zeigt den Weg durchs Level, die Füllung die erreichte Stufe: zwischen zwei
-		# Stufen soll man sehen, dass sich etwas tut.
+			draw_arc(at, ring_r, 0.0, TAU, 48, MEDAL_COLORS[medal - 1], ring, true)
+	elif mastered:
+		# Alles gemeistert: ein breiter, massiver Ring — dunkle Außenkante, Gold, helle
+		# Innenkante wie ein gegossener Reif — der zum hellen Gold pulsiert.
+		draw_arc(at, ring_r, 0.0, TAU, 64, RING_GOLD.lerp(RING_SHINE, pulse * 0.6), ring, true)
+		draw_arc(at, ring_r + ring * 0.32, 0.0, TAU, 64, Color(0.62, 0.42, 0.06), ring * 0.28, true)
+		draw_arc(at, ring_r - ring * 0.3, 0.0, TAU, 64, Color(1.0, 0.98, 0.85), ring * 0.22, true)
+	elif total > 0 and done > 0 and not disabled:
+		# Der Ring füllt sich im Uhrzeigersinn von oben mit dem Anteil gemeisterter Wörter.
 		var share := float(done) / float(total)
-		draw_arc(at, r, -PI * 0.5, -PI * 0.5 + TAU * share, 48,
-				get_theme_color("font_color", "Accent"), ring, true)
-	if _selected.has(str(node["key"])) and not disabled:
-		draw_arc(at, r + 6.0 * k, 0.0, TAU, 48, SHADOW, 6.0, true)
-		draw_arc(at, r + 6.0 * k, 0.0, TAU, 48, SELECTED_COLOR, 3.5, true)
-	elif i == _hovered and not disabled:
-		draw_arc(at, r + 6.0 * k, 0.0, TAU, 48, Color(1, 1, 1, 0.8), 2.0, true)
+		draw_arc(at, ring_r, -PI * 0.5, -PI * 0.5 + TAU * share, 48, RING_GOLD, ring, true)
+	if i == _hovered and not disabled:
+		draw_arc(at, ring_r + ring * 0.5 + 4.0, 0.0, TAU, 48, Color(1, 1, 1, 0.8), 2.0, true)
 
 	var font := get_theme_default_font()
 	var glyph_size := maxi(roundi(get_theme_font_size("font_size", "SectionTitle") * k), 11)
 	draw_string(font, at + Vector2(-r, glyph_size * 0.35), str(node.get("glyph", "")),
 			HORIZONTAL_ALIGNMENT_CENTER, r * 2.0, glyph_size, Color(0.97, 0.97, 1.0, dim))
+	var top := at.y - ring_r - ring * 0.5
 	if boss and medal > 0:
 		draw_string(font, at + Vector2(-r, -r - 4.0 * k), "👑",
 				HORIZONTAL_ALIGNMENT_CENTER, r * 2.0, glyph_size)
+		top -= glyph_size
+	if _selected.has(str(node["key"])) and not disabled:
+		_draw_pointer(Vector2(at.x, top), k)
+	var below := ring_r + ring * 0.5
+	_draw_star_row(at, below, k, shares, i)
+	if not shares.is_empty():
+		below += 2.0 + _star_size(k) * 2.0 + _star_size(k) * 0.3
 	if show_captions:
-		_draw_caption(at, r, str(node.get("caption", "")), dim)
-	# Gesamt ist die ganze Unit und hat keine Sterne ("stars": false).
-	if not boss and bool(node.get("stars", true)):
-		_draw_stars(at, r, stars_for(done, total), dim)
+		_draw_caption(at, below + 4.0 * k, str(node.get("caption", "")), dim)
 
 
-## Die Beschriftung unter dem Ort, auf einer dunklen Platte — das Bild darunter ist bunt.
-func _draw_caption(at: Vector2, r: float, text: String, dim: float) -> void:
+## Ein flacher, weicher Fleck unter der Sternreihe, wie ein Schatten am Boden.
+func _draw_star_shadow(at: Vector2, below: float, k: float, shares: Array, seed: int) -> void:
+	if shares.is_empty():
+		return
+	var outer := _star_size(k)
+	var first := _star_center(at, below, k, 0, shares.size())
+	var last := _star_center(at, below, k, shares.size() - 1, shares.size())
+	_draw_soft_spot(seed, (first + last) * 0.5 + Vector2(0, outer * 0.2),
+			Vector2((last.x - first.x) * 0.5 + outer * 2.6, outer * 2.0), 0.45)
+
+
+## Die Bonus-Sterne unter einem Ort: grau, bis der Bonus gemeistert ist, dann golden.
+func _draw_star_row(at: Vector2, below: float, k: float, shares: Array, seed: int) -> void:
+	if shares.is_empty():
+		return
+	var outer := _star_size(k)
+	for s in shares.size():
+		var center := _star_center(at, below, k, s, shares.size())
+		var shape := star_points(center, outer, outer * 0.45)
+		var lit := float(shares[s]) >= 1.0
+		var closed := shape.duplicate()
+		closed.append(shape[0])
+		if lit:
+			_draw_halo(center, outer * 2.8, Color(RING_GOLD, 0.35 + 0.15 * _pulse(seed * 7 + s)))
+			draw_colored_polygon(shape, RING_GOLD)
+			draw_polyline(closed, Color(1.0, 0.95, 0.7), 1.2, true)
+		else:
+			draw_colored_polygon(shape, Color(0.22, 0.23, 0.26))
+			draw_polyline(closed, Color(0.6, 0.62, 0.66), 1.2, true)
+
+
+## Die Stufe der Füllung 0..3 (dunkel, Bronze, Silber, Gold) für `done` von `total`. In
+## Ganzzahlen verglichen wie FortressTier.tier_for: 1 von 4 sind genau 25 %.
+static func fill_level(done: int, total: int) -> int:
+	if total <= 0:
+		return 0
+	var level := 0
+	for pct in FILL_PERCENT:
+		if done * 100 >= int(pct) * total:
+			level += 1
+	return level
+
+
+## Breite und Radius des Rings um einen Ort vom Radius `r`. Er liegt außen um die Füllung,
+## durch eine dunkle Fuge getrennt — eine goldene Füllung soll ihn nicht verschlucken —
+## und wird gemeistert breiter.
+func _ring_width(r: float, mastered: bool) -> float:
+	var ring := maxf(RING_WIDTH * r / NODE_RADIUS, 3.5)
+	return ring * 1.6 if mastered else ring
+
+
+func _ring_radius(r: float, mastered: bool) -> float:
+	return r + 1.0 + _ring_width(r, mastered) * 0.5
+
+
+## 0..1, langsam auf und ab — derselbe Takt für Schein und Ring eines Ortes, versetzt
+## gegen die Nachbarn, damit die Karte nicht im Gleichschritt atmet.
+func _pulse(seed: int) -> float:
+	return 0.5 + 0.5 * sin(TAU * PULSE_HZ * _time + float(seed) * 1.7)
+
+
+func _star_size(k: float) -> float:
+	return maxf(12.0 * k, 8.0)
+
+
+## Die Mitte des Bonus-Sterns `s` von `count` unter einem Ort (`below` Pixel unter der Mitte).
+func _star_center(at: Vector2, below: float, k: float, s: int, count: int) -> Vector2:
+	var outer := _star_size(k)
+	return Vector2(at.x + (float(s) - float(count - 1) * 0.5) * outer * 2.4, at.y + below + 2.0 + outer)
+
+
+## Langsam kreisende Strahlen hinter einem gemeisterten Ort: von `inner` bis `length`
+## Pixel, innen golden, außen ausgeblendet.
+func _draw_rays(at: Vector2, inner: float, length: float, seed: float) -> void:
+	var turn := TAU * RAY_SPEED * _time + seed
+	var half := PI / float(RAYS) * 0.35
+	for n in RAYS:
+		var angle := turn + TAU * float(n) / float(RAYS)
+		var reach := length * (0.8 + 0.2 * sin(_time * 1.3 + float(n) * 2.0 + seed))
+		var points := PackedVector2Array([
+			at + Vector2.from_angle(angle - half) * inner,
+			at + Vector2.from_angle(angle) * reach,
+			at + Vector2.from_angle(angle + half) * inner,
+		])
+		draw_polygon(points, PackedColorArray([Color(RING_SHINE, 0.55), Color(RING_GOLD, 0.0),
+				Color(RING_SHINE, 0.55)]))
+
+
+## Ein weicher Schein um `at`, Durchmesser `diameter`, auf `item` (die Karte oder die
+## Effektebene).
+func _draw_halo(at: Vector2, diameter: float, color: Color, item: CanvasItem = self) -> void:
+	item.draw_texture_rect(_glow_texture(),
+			Rect2(at - Vector2(diameter, diameter) * 0.5, Vector2(diameter, diameter)), false, color)
+
+
+func _glow_texture() -> Texture2D:
+	if _glow == null:
+		# Von Hand gerechnet: weiß, nach außen weich auslaufend (quadratisch, damit die Mitte
+		# hell bleibt und der Rand ohne Kante verschwindet).
+		var side := 64
+		var image := Image.create(side, side, false, Image.FORMAT_RGBA8)
+		var half := float(side) * 0.5
+		for y in side:
+			for x in side:
+				var d := Vector2(float(x) + 0.5 - half, float(y) + 0.5 - half).length() / half
+				var a := clampf(1.0 - d, 0.0, 1.0)
+				image.set_pixel(x, y, Color(1, 1, 1, a * a))
+		_glow = ImageTexture.create_from_image(image)
+	return _glow
+
+
+## Ein weicher dunkler Fleck um `center` mit den Halbachsen `size`: gestapelte Ellipsen,
+## innen bis `strength` deckend, nach außen auslaufend.
+func _draw_soft_spot(i: int, center: Vector2, size: Vector2, strength: float) -> void:
+	const STEPS := 20
+	var around := _node_transform(i)
+	draw_set_transform_matrix(around * Transform2D(0.0, Vector2(1.0, size.y / size.x), 0.0, center))
+	for n in STEPS:
+		var t := float(n) / float(STEPS)
+		draw_circle(Vector2.ZERO, size.x * (1.0 - t * 0.6), Color(0, 0, 0, strength / float(STEPS) * 3.0))
+	draw_set_transform_matrix(around)
+
+
+## Die Transformation, in der Ort `i` gerade steht: Zoom der Karte und sein Aufspringen.
+func _node_transform(i: int) -> Transform2D:
+	var grow := appear_scale(i)
+	var at: Vector2 = _centers[i]
+	return _base * Transform2D(0.0, Vector2(grow, grow), 0.0, at * (1.0 - grow))
+
+
+## Die additive Ebene: was an gemeisterten Orten und Sternen Licht abgibt.
+func _draw_fx() -> void:
+	for i in _centers.size():
+		var node: Dictionary = _nodes[i]
+		if not shines(node) or appear_scale(i) <= 0.01:
+			continue
+		_fx.draw_set_transform_matrix(_node_transform(i))
+		var at: Vector2 = _centers[i]
+		var r := radius_of(i)
+		var k := r / NODE_RADIUS
+		if is_mastered(node):
+			var ring := _ring_width(r, true)
+			var ring_r := _ring_radius(r, true)
+			_draw_ring_bloom(at, ring_r, ring, _pulse(i))
+			_draw_glint(at, ring_r, ring, float(i))
+			_draw_motes(at, ring_r, maxf(r * 2.6, 48.0), i, MOTES, k)
+			_draw_sparks(at, ring_r, maxf(r * 1.8, 34.0), i, SPARKLES, k)
+		var shares: Array = node.get("bonus", [])
+		var below := _ring_radius(r, is_mastered(node)) + _ring_width(r, is_mastered(node)) * 0.5
+		for s in shares.size():
+			if float(shares[s]) < 1.0:
+				continue
+			# Dieselben Funken wie am Ring, im Maß des Sterns: hinein und hinaus.
+			var center := _star_center(at, below, k, s, shares.size())
+			var outer := _star_size(k)
+			_draw_motes(center, outer * 0.6, outer * 3.2, i * 7 + s, STAR_MOTES, k * 0.6)
+			_draw_sparks(center, outer, outer * 2.4, i * 7 + s, STAR_SPARKLES, k * 0.6)
+	_fx.draw_set_transform_matrix(Transform2D())
+
+
+## Schein in Ringform: breite, schwache Bögen über dem vollen Ring — er strahlt.
+func _draw_ring_bloom(at: Vector2, ring_r: float, ring: float, pulse: float) -> void:
+	var strength := 0.6 + 0.4 * pulse
+	for layer in [[2.0, 0.22], [3.6, 0.12], [5.5, 0.06]]:
+		_fx.draw_arc(at, ring_r, 0.0, TAU, 64, Color(RING_GOLD, float(layer[1]) * strength),
+				ring * float(layer[0]), true)
+
+
+## Ein heller Lichtpunkt mit Schweif, der um den Ring läuft.
+func _draw_glint(at: Vector2, ring_r: float, ring: float, seed: float) -> void:
+	var head := TAU * GLINT_SPEED * _time + seed * 1.3
+	var steps := 8
+	for n in steps:
+		var a := head - float(n) * 0.07
+		var fade := 1.0 - float(n) / float(steps)
+		_fx.draw_arc(at, ring_r, a - 0.07, a, 6, Color(1.0, 0.97, 0.85, 0.75 * fade), ring * 0.8, true)
+	_draw_halo(at + Vector2.from_angle(head) * ring_r, ring * 3.0, Color(1.0, 0.97, 0.85, 0.8), _fx)
+
+
+## Funken, die vom Rand (`from` Pixel um die Mitte) nach außen schießen, mit Schweif, und
+## verglühen. Ohne Zustand: Lage und Richtung folgen aus Uhr, Ort und Nummer, jeder
+## Durchgang würfelt neu.
+func _draw_sparks(at: Vector2, from: float, travel: float, seed: int, count: int, k: float) -> void:
+	for j in count:
+		var phase := _time / SPARKLE_LIFE + float(j) / float(count) + float(seed) * 0.37
+		var cycle := floori(phase)
+		var t := phase - float(cycle)
+		var dir := Vector2.from_angle(TAU * _noise(seed * 131 + j * 17 + cycle * 7))
+		# Schnell hinaus, dann langsamer: ease-out.
+		var out := 1.0 - (1.0 - t) * (1.0 - t)
+		var pos := at + dir * (from + travel * out) + Vector2(0.0, travel * 0.25 * t * t)
+		var alpha := (1.0 - t) * minf(1.0, t * 8.0)
+		var tail := maxf(10.0 * k, 6.0) * (1.0 - t)
+		_fx.draw_line(pos - dir * tail, pos, Color(RING_SHINE, alpha * 0.8), maxf(2.0 * k, 1.5), true)
+		_draw_halo(pos, maxf(14.0 * k, 9.0), Color(RING_SHINE, alpha), _fx)
+
+
+## Funken, die von außen (`reach` Pixel) spiralförmig in den Ort (`into`) gezogen werden,
+## immer schneller, und beim Ankommen aufblitzen.
+func _draw_motes(at: Vector2, into: float, reach: float, seed: int, count: int, k: float) -> void:
+	for j in count:
+		var phase := _time / MOTE_LIFE + float(j) / float(count) + float(seed) * 0.61
+		var cycle := floori(phase)
+		var t := phase - float(cycle)
+		var angle := TAU * _noise(seed * 977 + j * 31 + cycle * 13) + t * 1.2
+		var pos := at + Vector2.from_angle(angle) * lerpf(reach, into, t * t)
+		var alpha := t / 0.8 if t < 0.8 else (1.0 - t) / 0.2 * 1.6
+		var size := maxf(12.0 * k, 7.0) * (0.6 + 0.6 * t)
+		_draw_halo(pos, size, Color(RING_SHINE, clampf(alpha, 0.0, 1.0) * 0.9), _fx)
+
+
+## Eine feste Zufallszahl 0..1 für `n` — dieselbe in jedem Frame.
+static func _noise(n: int) -> float:
+	return fposmod(sin(float(n) * 12.9898) * 43758.5453, 1.0)
+
+
+## Der Pfeil über einem markierten Ort; `top` ist die Oberkante des Ortes (samt Krone).
+func _draw_pointer(top: Vector2, k: float) -> void:
+	var h := maxf(14.0 * k, 11.0)
+	var bob := (0.5 + 0.5 * sin(TAU * BOB_HZ * _time)) * maxf(4.0 * k, 3.0)
+	var tip := top + Vector2(0.0, -maxf(5.0 * k, 3.0) - bob)
+	var arrow := PackedVector2Array([tip, tip + Vector2(-h * 0.75, -h), tip + Vector2(h * 0.75, -h)])
+	var shadow := PackedVector2Array()
+	for p in arrow:
+		shadow.append(p + Vector2(0.0, 2.0))
+	draw_colored_polygon(shadow, SHADOW)
+	draw_colored_polygon(arrow, SELECTED_COLOR)
+	arrow.append(arrow[0])
+	draw_polyline(arrow, Color(0.1, 0.1, 0.12), 1.5, true)
+
+
+## Die Ecken eines fünfzackigen Sterns um `center`, Spitze oben.
+static func star_points(center: Vector2, outer: float, inner: float) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	for n in 10:
+		var radius := outer if n % 2 == 0 else inner
+		out.append(center + Vector2.from_angle(-PI * 0.5 + PI * float(n) / 5.0) * radius)
+	return out
+
+
+## Die Beschriftung `below` Pixel unter der Mitte des Ortes, auf einer dunklen Platte — das
+## Bild darunter ist bunt.
+func _draw_caption(at: Vector2, below: float, text: String, dim: float) -> void:
 	if text.is_empty():
 		return
 	var font := get_theme_default_font()
 	var font_size := get_theme_font_size("font_size", "Caption")
 	var width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x + 16.0
-	var top := at.y + r + 20.0 * r / NODE_RADIUS
+	var top := at.y + below
 	var plate := Rect2(at.x - width * 0.5, top, width, font_size + 8.0)
 	draw_rect(plate, Color(PLATE, PLATE.a * dim))
 	draw_string(font, Vector2(plate.position.x, top + font_size + 2.0), text,
 			HORIZONTAL_ALIGNMENT_CENTER, width, font_size, Color(0.95, 0.96, 1.0, dim))
-
-
-## Leuchtende Sterne 0…5 für `done` gemeisterte von `total` Wörtern (STAR_PERCENT). In
-## Ganzzahlen verglichen wie FortressTier.tier_for: 2 von 10 sind genau 20 %.
-static func stars_for(done: int, total: int) -> int:
-	if total <= 0:
-		return 0
-	var stars := 0
-	for pct in STAR_PERCENT:
-		if done * 100 >= int(pct) * total:
-			stars += 1
-	return stars
-
-
-## Der nächste Stern: { star, needed } — wie viele Wörter bis zu ihm fehlen. Leer, wenn alle
-## leuchten oder es keine Wörter gibt.
-static func next_star(done: int, total: int) -> Dictionary:
-	var stars := stars_for(done, total)
-	if total <= 0 or stars >= STAR_PERCENT.size():
-		return {}
-	# Aufgerundet und in Ganzzahlen, wie FortressTier.next_threshold.
-	@warning_ignore("integer_division")
-	var target := (int(STAR_PERCENT[stars]) * total + 99) / 100
-	return {"star": stars + 1, "needed": maxi(1, target - done)}
-
-
-## Der Meisterungsstand als fünf kleine Punkte zwischen Ort und Beschriftung.
-func _draw_stars(at: Vector2, r: float, stars: int, dim: float) -> void:
-	var gold: Color = MEDAL_COLORS[2]
-	var k := r / NODE_RADIUS
-	var y := at.y + r + 11.0 * k
-	var count := STAR_PERCENT.size()
-	for s in count:
-		var x := at.x + (float(s) - (count - 1) * 0.5) * maxf(11.0 * k, 7.0)
-		var lit := s < stars
-		draw_circle(Vector2(x, y), maxf(4.0 * k, 2.5), Color(gold, dim) if lit else Color(0.1, 0.1, 0.12, 0.8 * dim))

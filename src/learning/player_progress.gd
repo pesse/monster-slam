@@ -34,7 +34,7 @@ const CURVE_WEEKS := 12
 ## sind nicht darstellbar. Fortschrittsdateien von vor dieser Änderung haben die Felder nicht;
 ## fehlend heißt 0 = „unbekannt" und wird NICHT mit einem erfundenen Datum aufgefüllt.
 var _records: Dictionary = {}
-var _sr := SpacedRepetition.new()
+var _sr := _new_scheduler()
 var player_id: String = "default"
 
 
@@ -46,9 +46,16 @@ func _ready() -> void:
 	EventBus.wave_cleared.connect(func(_wave_id): save_progress())
 
 
-## Ganzzahliger Tageszähler als monotone Zeitbasis für den SM-2-Scheduler.
-func _today() -> int:
-	return int(Time.get_unix_time_from_system() / 86400.0)
+## Zeitbasis des SM-2-Schedulers (Unix-Sekunden).
+func _now() -> int:
+	return int(Time.get_unix_time_from_system())
+
+
+## Der Scheduler rechnet Tage ab lokaler Mitternacht (siehe SpacedRepetition).
+func _new_scheduler() -> SpacedRepetition:
+	var sr := SpacedRepetition.new()
+	sr.utc_offset = int(Time.get_time_zone_from_system().get("bias", 0)) * 60
+	return sr
 
 
 ## `initial_confidence` >= 0 setzt die Start-Confidence eines NEU angelegten Records
@@ -108,20 +115,28 @@ func record(task_id: String, correct: bool, response_time_ms: int = 0, initial_c
 	var quality := 2
 	if correct:
 		quality = 5 if (response_time_ms > 0 and response_time_ms < 4000) else 4
-	_sr.review(task_id, quality, _today())
-	rec["next_review_at"] = _due_day(task_id) * 86400
+	_sr.review(task_id, quality, _now())
+	rec["next_review_at"] = _sr.due_at(task_id)
 	return newly_mastered
 
 
-## Nächster Fälligkeitstag (Tageszähler) des Items laut Scheduler.
-func _due_day(task_id: String) -> int:
-	return int(_sr.to_dict().get(task_id, {}).get("due", _today()))
+## Fälligkeit (unix) einer Aufgabe laut Scheduler; 0, wenn sie nie beantwortet wurde.
+func due_at(task_id: String) -> int:
+	return _sr.due_at(task_id)
 
 
-## learnable_ids, die heute oder früher fällig sind (überfälligste zuerst).
+## Eine Kopie des Schedulers — für die Werkbank, die mit verstellter Uhr fragt, was fällig
+## wäre, ohne den Lernstand anzufassen.
+func scheduler_copy() -> SpacedRepetition:
+	var sr := _new_scheduler()
+	sr.from_dict(_sr.to_dict())
+	return sr
+
+
+## learnable_ids, die jetzt fällig sind (überfälligste zuerst).
 ## Nur bereits gesehene Aufgaben; neue (ohne Record) wählt der WaveGenerator separat.
 func due_task_ids() -> Array:
-	return _sr.due_items(_today())
+	return _sr.due_items(_now())
 
 
 ## Confidence 0..1 für eine Aufgabe. Für noch ungesehene Aufgaben liefert `default_value`
@@ -132,6 +147,11 @@ func confidence(task_id: String, default_value: float = DEFAULT_CONFIDENCE) -> f
 
 func has_seen(task_id: String) -> bool:
 	return _records.has(task_id)
+
+
+## Wann die Aufgabe zuletzt beantwortet wurde (unix); 0, wenn nie.
+func last_seen_at(task_id: String) -> int:
+	return int(_records.get(task_id, {}).get("last_seen_at", 0))
 
 
 ## Die Aufgabe sitzt: gesehen und über der Meisterungs-Schwelle — dieselbe Regel wie
@@ -153,7 +173,7 @@ func mastered_count(threshold := MASTERY_CONFIDENCE) -> int:
 
 func reset() -> void:
 	_records.clear()
-	_sr = SpacedRepetition.new()
+	_sr = _new_scheduler()
 
 
 ## Speichert den aktuellen Stand und wechselt zum Profil `id` (lädt dessen Fortschritt).

@@ -1,0 +1,40 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/ui/sort_bar.gd" id="1_sort_bar"]
+
+[sub_resource type="ButtonGroup" id="sort_group"]
+resource_local_to_scene = true
+
+[node name="SortBar" type="HBoxContainer"]
+script = ExtResource("1_sort_bar")
+
+[node name="Caption" type="Label" parent="."]
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"Hint"
+text = "Sortieren:"
+
+[node name="Best" type="Button" parent="."]
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"ToolChoice"
+toggle_mode = true
+button_pressed = true
+button_group = SubResource("sort_group")
+text = "Beste zuerst"
+
+[node name="Weakest" type="Button" parent="."]
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"ToolChoice"
+toggle_mode = true
+button_group = SubResource("sort_group")
+text = "Schwächste zuerst"
+
+[node name="Alpha" type="Button" parent="."]
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"ToolChoice"
+toggle_mode = true
+button_group = SubResource("sort_group")
+text = "A–Z"

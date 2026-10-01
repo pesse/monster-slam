@@ -24,6 +24,9 @@ var _room: Window
 var _content: Dictionary = {}
 ## 0 = Buchkarte, sonst die Unit.
 var _unit := 0
+## Bonus-Schlüssel -> Titel, wie ihn die Karte ohne eigenen Eintrag zeigt — für einen neu
+## gesetzten Bonus-Punkt, damit `title` in map.json gleich zum Anpassen dasteht.
+var _titles: Dictionary = {}
 
 
 func _ready() -> void:
@@ -71,8 +74,10 @@ func _pick_map() -> void:
 		for unit in ContentRegistry.units_for(_book()):
 			_point_select.add_item(str(int(unit)))
 	else:
-		for level in MapLevel.levels_for(_book(), _unit, AreaMap.part_count(_book(), _unit, _content)):
+		for level in AreaMap.levels_of(_book(), _unit, _content):
 			_point_select.add_item(str(level["key"]))
+			if str(level["kind"]) == MapLevel.KIND_BONUS:
+				_titles[str(level["key"])] = str(level["label"])
 	_point_select.add_item(PATH_KEY)
 	_redraw()
 
@@ -108,6 +113,12 @@ func _on_canvas_input(event: InputEvent) -> void:
 			points[PATH_KEY] = []
 		(points[PATH_KEY] as Array).append(at)
 	else:
+		# Ein Bonus-Punkt trägt seinen Titel (BonusLevel.title); Versetzen behält ihn.
+		var old: Variant = points.get(key)
+		if old is Dictionary and (old as Dictionary).has("title"):
+			at["title"] = old["title"]
+		elif _titles.has(key):
+			at["title"] = _titles[key]
 		points[key] = at
 		# Weiter zum nächsten Punkt: so setzt man eine Karte in einem Zug.
 		if _point_select.selected + 1 < _point_select.item_count:

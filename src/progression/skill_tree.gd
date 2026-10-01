@@ -120,6 +120,7 @@ const EFFECT_KEYS: Array[String] = [
 	"bow",
 	"explosive_arrow",
 	"auto_catapult",
+	"fortress_tier_drop",
 ]
 
 
@@ -474,6 +475,9 @@ static func effect_label(key: String, value: float) -> String:
 			return "Pfeile explodieren beim Treffer"
 		"auto_catapult":
 			return "Katapulte räumen Gemeistertes ab"
+		"fortress_tier_drop":
+			return "Festungsstufe 4 schon ab %d %%" % (
+					int(FortressTier.THRESHOLDS_PERCENT[-1]) - int(round(value)))
 	return ""
 
 

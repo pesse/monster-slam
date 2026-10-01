@@ -21,6 +21,9 @@ extends Node
 ##     … -- --shoot --badge-hint         die Karte am Medaillon der Plakette (Level, XP, Punkte)
 ##     … -- --shoot --map=book [--book=<id>]            die Buchkarte
 ##     … -- --shoot --map=area [--book=<id>] [--unit=N] die Gebietskarte einer Unit
+##     … -- --shoot --updates            beide Update-Hinweise sichtbar (App und Inhalte)
+##     … -- --shoot … --name=<Name> --gold=<n>       Name und Gold der Plakette, nur im Speicher
+##                                       (für Bilder ohne echten Profilnamen und Debug-Gold)
 ##
 ## Das Menü liest das aktive Profil nur (Name, Gold, Level); geschrieben wird nichts.
 ## Headless gibt es keinen Renderer — deshalb GODOT_WINDOW=1.
@@ -45,6 +48,12 @@ func _ready() -> void:
 				else (str(books[0]) if not books.is_empty() else "")
 		MapSelection.unit = int(_arg("unit")) if not _arg("unit").is_empty() else 1
 		path = MapSelection.AREA_SCENE if map == "area" else MapSelection.BOOK_SCENE
+	if not _arg("name").is_empty():
+		# Nur im Speicher: ohne _save() bleibt settings.cfg, wie es ist.
+		UserSettings._config.set_value("names", UserSettings.active_profile(), _arg("name"))
+	if not _arg("gold").is_empty():
+		Wallet.unlimited_gold = false
+		Wallet.gold = int(_arg("gold"))
 	ProfileMenu.intro_done = not _has_arg("intro")
 	var screen := (load(path) as PackedScene).instantiate()
 	add_child(screen)
@@ -81,6 +90,12 @@ func _ready() -> void:
 				await get_tree().process_frame
 				print("menu_lab: Fokus bei ", get_viewport().gui_get_focus_owner(),
 						", Fenster noch da: ", is_instance_valid(window) and window.is_inside_tree()))
+	if screen is ProfileMenu and _has_arg("updates"):
+		_force_updates(screen)
+		# Nach dem Menü verbunden, läuft also nach dessen Abzeichen: die echte Prüfung
+		# beim Laden blendet die Knöpfe sonst wieder aus.
+		UpdateService.changed.connect(_force_updates.bind(screen))
+		ContentService.changed.connect(_force_updates.bind(screen))
 	if screen is ProfileMenu and _has_arg("content"):
 		get_tree().create_timer(0.5).timeout.connect(
 				func(): (screen.get_node("%ContentButton") as Button).pressed.emit())
@@ -92,6 +107,16 @@ func _ready() -> void:
 			(window.get_node("%Tabs").get_child(tab - 1) as Button).button_pressed = true)
 	if _has_arg("shoot"):
 		_shoot.call_deferred()
+
+
+## Beide Update-Hinweise sichtbar, mit Beispieltext — nur das Bild, ohne echtes Update.
+func _force_updates(screen: Node) -> void:
+	var update := screen.get_node("%UpdateButton") as Button
+	update.text = "⬆ Update auf 9.9.9"
+	update.visible = true
+	var content := screen.get_node("%ContentUpdateButton") as Button
+	content.text = ProfileMenu.content_update_text(2)
+	content.visible = true
 
 
 func _shoot() -> void:
@@ -121,6 +146,8 @@ func _shoot() -> void:
 		what += "_badge_hint"
 	if _has_arg("content"):
 		what += "_content"
+	if _has_arg("updates"):
+		what += "_updates"
 	if _has_arg("settings") or not _arg("settings").is_empty():
 		what += "_settings" + _arg("settings")
 	var file := "%s/%s_%dx%d.png" % [dir, what,

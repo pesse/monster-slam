@@ -36,10 +36,21 @@ const _OPTIONAL_PREFIXES := ["der ", "die ", "das ", "eine ", "ein ", "the ", "t
 ## Mit Schrägstrich verbundene Platzhalter ("wait for sb./sth.", "jn./etwas") sind EINE
 ## Stelle mit zwei Lesarten, nicht zwei Stellen: "wait for sb", "wait for sth" und
 ## "wait for sb / sth" sind alle vollständig.
+##
+## Wort-Alternativen mit Schrägstrich ("turn left/right", "einen Bus/eine Fähre nehmen",
+## "aus dem Bus/Boot/Flugzeug aussteigen") sind eine Wahl, keine Auslassung: jede
+## Alternative allein ist vollständig, die ganze Notation auch. Wie weit eine Alternative
+## reicht, steht nicht da — "Bus/eine Fähre" heißt "einen Bus" oder "eine Fähre", "links/
+## rechts" nur je ein Wort. Deshalb gilt jede Breite von 1 bis MAX_SLASH_WIDTH Wörtern je
+## Seite (`_slash_alternatives`). Die schiefen Lesarten ("einen eine Fähre nehmen") tippt
+## niemand; sie kosten nichts.
+##
+## Auslassungspunkte sind KEIN Platzhalter: weggelassen wären sie sonst „unvollständig".
+## Sie fallen schon in `_normalize` weg (ELLIPSIS_PATTERN).
 const WILDCARD := "•"
 const _PLACEHOLDER_ATOM := \
 	"(?:quelque chose|quelqu'un|qch\\.?|qn\\.?|qc\\.?|somebody|someone|something|jemandem|jemanden|jemand|etwas|etw\\.?" \
-	+ "|sth\\.?|sb\\.?|jdm\\.?|jds\\.?|jmdn\\.?|jmdm\\.?|jmd\\.?|jdn\\.?|jm\\.?|jn\\.?|jd\\.?|…|\\.\\.\\.)(?!\\p{L})"
+	+ "|sth\\.?|sb\\.?|jdm\\.?|jds\\.?|jmdn\\.?|jmdm\\.?|jmd\\.?|jdn\\.?|jm\\.?|jn\\.?|jd\\.?)(?!\\p{L})"
 const PLACEHOLDER_PATTERN := \
 	"(?<!\\p{L})" + _PLACEHOLDER_ATOM + "(?:\\s*/\\s*" + _PLACEHOLDER_ATOM + ")*"
 
@@ -52,6 +63,10 @@ const GROUP_PATTERN := "\\(([^)]*)\\)"
 ## zwei Platzhaltern (10 Varianten); was darüber liegt, wird nur noch "behalten".
 const MAX_GROUPS := 3
 const MAX_PLACEHOLDERS := 4
+## Wörter je Seite einer Schrägstrich-Alternative, höchstens ("seit 10 Uhr/letzter Woche").
+const MAX_SLASH_WIDTH := 3
+## Schrägstrich-Stellen je Eintrag, höchstens; weitere bleiben wörtlich.
+const MAX_SLASHES := 2
 
 ## Längenzeichen des Lateinischen. Kein Kind tippt „ā", und das Buch fragt die Vokabel ab,
 ## nicht die Quantität: auf Eingabe UND hinterlegter Antwort auf den Grundbuchstaben
@@ -67,12 +82,19 @@ const _MACRONS := {"ā": "a", "ē": "e", "ī": "i", "ō": "o", "ū": "u", "ȳ": 
 const _DIACRITICS := {"à": "a", "â": "a", "á": "a", "é": "e", "è": "e", "ê": "e", "ë": "e",
 		"î": "i", "ï": "i", "í": "i", "ô": "o", "ó": "o", "û": "u", "ù": "u", "ú": "u",
 		"ÿ": "y", "ç": "c", "œ": "oe", "æ": "ae"}
-## Wortverbinder, die nachsichtig als Leerzeichen getippt werden oder fehlen dürfen
-## („est ce que", „aujourdhui").
-const _JOINERS := ["'", "-"]
+## Zeichen, die nachsichtig als Leerzeichen getippt werden oder fehlen dürfen: die
+## Wortverbinder („est ce que", „aujourdhui") und das Komma („yes please"). Ein Komma
+## ist Schreibweise wie ein Bindestrich — wer es weglässt, kennt das Wort trotzdem.
+const _JOINERS := ["'", "-", ","]
+
+## Auslassungspunkte („not only … but also", „either ... or"): eine Lücke im Eintrag,
+## kein Bestandteil. Wie ein Satzpunkt ganz wegnormalisiert, ob als „…", „..." oder
+## „..", getippt oder nicht — weglassen ist also vollständig.
+const ELLIPSIS_PATTERN := "…|\\.{2,}"
 
 static var _group_re: RegEx = RegEx.create_from_string(GROUP_PATTERN)
 static var _placeholder_re: RegEx = RegEx.create_from_string(PLACEHOLDER_PATTERN)
+static var _ellipsis_re: RegEx = RegEx.create_from_string(ELLIPSIS_PATTERN)
 
 
 ## Wertet `answer` gegen alle hinterlegten Antworten aus.
@@ -128,16 +150,11 @@ func _best_match(accepted: Array, answer: String, loose: bool) -> Dictionary:
 	return result
 
 
-## Die Stellen in `canonical`, an denen `typed` von der Schreibweise abwich: Indizes der
-## Zeichen mit Akzent, Cédille oder Ligatur, die ohne getippt wurden, und der Bindestriche
-## und Apostrophe, die fehlten oder als Leerzeichen kamen. Für die Einblendung nach einem
-## nachsichtigen Treffer (ADR 0008, `exact` false): das Kind sieht die richtige Form mit
-## markierten Fehlern, nicht seine eigene.
-##
-## Ausgerichtet wird Zeichen für Zeichen (kleinste Kosten, wie eine Editierdistanz). Was
-## weggelassen werden durfte (Artikel, Klammerteile, Platzhalter), ist kein Schreibfehler
-## und bleibt unmarkiert — markiert wird nur, was `_loosen` nachsieht.
-static func spelling_marks(canonical: String, typed: String) -> PackedInt32Array:
+## Richtet `typed` Zeichen für Zeichen an `canonical` aus (kleinste Kosten, wie eine
+## Editierdistanz). Rückgabe: `marked` — die Indizes in `canonical`, deren Schreibweise
+## nachgesehen wurde —, und `typed_against` — je Zeichen von `canonical`, ob ihm etwas
+## Getipptes gegenübersteht. Gemeinsame Grundlage von spelling_marks() und missing_marks().
+static func _align(canonical: String, typed: String) -> Dictionary:
 	var a := _spelling_chars(canonical)
 	var b := _spelling_chars(typed.strip_edges())
 	var m := a.size()
@@ -180,6 +197,23 @@ static func spelling_marks(canonical: String, typed: String) -> PackedInt32Array
 				marked.append(i)
 		i = int(s[0])
 		j = int(s[1])
+	return {"marked": marked, "typed_against": typed_against}
+
+
+## Die Stellen in `canonical`, an denen `typed` von der Schreibweise abwich: Indizes der
+## Zeichen mit Akzent, Cédille oder Ligatur, die ohne getippt wurden, und der Bindestriche
+## und Apostrophe, die fehlten oder als Leerzeichen kamen. Für die Einblendung nach einem
+## nachsichtigen Treffer (ADR 0008, `exact` false): das Kind sieht die richtige Form mit
+## markierten Fehlern, nicht seine eigene.
+##
+## Ausgerichtet wird Zeichen für Zeichen (kleinste Kosten, wie eine Editierdistanz). Was
+## weggelassen werden durfte (Artikel, Klammerteile, Platzhalter), ist kein Schreibfehler
+## und bleibt unmarkiert — markiert wird nur, was `_loosen` nachsieht.
+static func spelling_marks(canonical: String, typed: String) -> PackedInt32Array:
+	var aligned := _align(canonical, typed)
+	var marked: Array[int] = aligned["marked"]
+	var typed_against: Array[bool] = aligned["typed_against"]
+	var m := typed_against.size()
 	# Ein ausgelassener Verbinder ist nur ein Fehler MITTEN im Getippten („lecole"), nicht
 	# am Rand eines weggelassenen Teils („école" für „l'école": der Artikel durfte fehlen).
 	var marks := PackedInt32Array()
@@ -189,6 +223,39 @@ static func spelling_marks(canonical: String, typed: String) -> PackedInt32Array
 			continue
 		marks.append(k)
 	return marks
+
+
+## Die Stellen in `canonical`, die bei einem unvollständigen Treffer fehlten (ADR 0010):
+## Klammergruppen und Platzhalter, von denen nichts getippt wurde („etwas" in „die Meinung
+## (zu etwas)" für getipptes „meinung zu"). Was nicht zur Vollständigkeit zählt — Artikel,
+## „the", „to", Auslassungspunkte —, ist kein Bereich und bleibt unmarkiert; Leerzeichen
+## auch. Eine ganz weggelassene Klammergruppe ist samt ihren Klammern markiert.
+##
+## Dieselbe Ausrichtung wie spelling_marks(): ein Bereich fehlt, wenn keinem seiner Zeichen
+## etwas Getipptes gegenübersteht.
+static func missing_marks(canonical: String, typed: String) -> PackedInt32Array:
+	var typed_against: Array[bool] = _align(canonical, typed)["typed_against"]
+	var lower := "".join(_spelling_chars(canonical))
+	var regions: Array = []
+	for g in _group_re.search_all(lower):
+		regions.append([g.get_start(0), g.get_end(0)])
+	for p in _placeholder_re.search_all(lower):
+		regions.append([p.get_start(0), p.get_end(0)])
+	var marked := {}
+	for region in regions:
+		var omitted := true
+		for k in range(int(region[0]), int(region[1])):
+			if typed_against[k] and lower[k] != " ":
+				omitted = false
+				break
+		if not omitted:
+			continue
+		for k in range(int(region[0]), int(region[1])):
+			if lower[k] != " ":
+				marked[k] = true
+	var keys := marked.keys()
+	keys.sort()
+	return PackedInt32Array(keys)
 
 
 ## Die möglichen Schritte von (i, j): [neues i, neues j, Kosten, markiert a[i]?].
@@ -264,11 +331,13 @@ func variants(s: String, loose := false) -> Dictionary:
 	# werden. Zwei Stufen, weil sich die Bereiche sonst überlappen würden.
 	for group_form in _expand(base, _group_slots(base)):
 		for form in _expand(str(group_form[0]), _placeholder_slots(str(group_form[0]))):
-			var key := _strip_optional_prefix(str(form[0]))
-			if key.is_empty():
-				continue
 			var complete: bool = bool(group_form[1]) and bool(form[1])
-			result[key] = bool(result.get(key, false)) or complete
+			# Nach den Platzhaltern: "sb./sth." ist dann schon EIN Wildcard.
+			for alternative in _slash_alternatives(str(form[0])):
+				var key := _strip_optional_prefix(str(alternative))
+				if key.is_empty():
+					continue
+				result[key] = bool(result.get(key, false)) or complete
 	if result.is_empty():
 		result[base] = true
 	if not loose:
@@ -296,6 +365,68 @@ func _loosen(key: String) -> Array:
 			next.append(_collapse(str(f).replace(joiner, "")))
 		forms = next
 	return forms
+
+
+## Die Lesarten eines Strings mit Wort-Alternativen ("bus/eine fähre"): er selbst und je
+## Schrägstrich-Wort jede Alternative in jeder Breite (siehe MAX_SLASH_WIDTH). Ein Wort
+## mit mehr als zwei Teilen ("bus/boot/flugzeug") wechselt nur Einzelwörter. Ein leerer
+## Teil (eine weggekürzte Auslassung: "stunden/wochen/") ist keine Alternative.
+func _slash_alternatives(s: String) -> Array:
+	var words := s.split(" ", false)
+	# Ein Schrägstrich vor einer weggekürzten Auslassung („woche/…") hängt allein.
+	for k in words.size():
+		if words[k].length() > 1:
+			words[k] = words[k].trim_suffix("/").trim_prefix("/")
+	var forms: Array = [" ".join(words)]
+	var seen := 0
+	# Von rechts nach links: eine Alternative ändert nur Wörter ab ihrem Anfang, links davon
+	# stehen die Wörter dann noch an ihrer Stelle.
+	for k in range(words.size() - 1, -1, -1):
+		if not _is_slash_word(words[k]):
+			continue
+		seen += 1
+		if seen > MAX_SLASHES:
+			break
+		var head := words.slice(0, k + 1)
+		var next: Array = []
+		for f in forms:
+			next.append(f)
+			var fw := str(f).split(" ", false)
+			# Nur Formen, in denen das Wort und alles links davon noch an seiner Stelle steht.
+			if fw.size() <= k or fw.slice(0, k + 1) != head:
+				continue
+			next.append_array(_alternatives_at(fw, k))
+		forms = next
+	return forms
+
+
+func _is_slash_word(word: String) -> bool:
+	var parts := word.split("/")
+	return parts.size() > 1 and parts[0] != "" and parts[1] != "" and not word.begins_with("http")
+
+
+func _alternatives_at(words: PackedStringArray, k: int) -> Array:
+	var out: Array = []
+	var parts := words[k].split("/")
+	var widths := MAX_SLASH_WIDTH if parts.size() == 2 else 1
+	for w in range(1, widths + 1):
+		var first := k - w + 1
+		var last := k + w - 1
+		if first < 0 or last >= words.size():
+			break
+		var before := " ".join(words.slice(0, first))
+		var after := " ".join(words.slice(last + 1))
+		for i in parts.size():
+			if parts[i].is_empty():
+				continue
+			var middle: Array[String] = []
+			if i == 0:
+				middle.append_array(Array(words.slice(first, k)))
+			middle.append(parts[i])
+			if i == parts.size() - 1:
+				middle.append_array(Array(words.slice(k + 1, last + 1)))
+			out.append(_collapse("%s %s %s" % [before, " ".join(middle), after]))
+	return out
 
 
 ## Klammergruppen dreifach auflösen: behalten, entklammert, weggelassen. Nur das
@@ -357,7 +488,7 @@ func _expand(s: String, slots: Array) -> Array:
 
 
 ## Vereinheitlicht Schreibweise: Kleinschreibung, typografische Zeichen, Mehrfach-
-## Leerzeichen, Satzendzeichen ("That's fine by me." == "that's fine by me").
+## Leerzeichen, Auslassungspunkte, Satzendzeichen ("That's fine by me." == "that's fine by me").
 func _normalize(s: String) -> String:
 	var normalized := s.strip_edges().to_lower()
 	normalized = normalized.replace("’", "'").replace("‘", "'")
@@ -365,6 +496,7 @@ func _normalize(s: String) -> String:
 	normalized = normalized.replace("–", "-").replace("—", "-")
 	for mark in _MACRONS:
 		normalized = normalized.replace(mark, _MACRONS[mark])
+	normalized = _ellipsis_re.sub(normalized, " ", true).strip_edges()
 	while normalized.ends_with(".") or normalized.ends_with("!") or normalized.ends_with("?"):
 		normalized = normalized.substr(0, normalized.length() - 1).strip_edges()
 	return _strip_optional_prefix(_collapse(normalized))
@@ -379,10 +511,11 @@ func _strip_optional_prefix(s: String) -> String:
 
 ## Mehrfach-Leerzeichen zusammenziehen — entsteht beim Weglassen von Bestandteilen.
 ## Auch direkt an den Klammern, sonst bliebe aus "(to sth.)" ohne Platzhalter ein
-## "(to )" stehen, das die getippte Form "(to)" nicht mehr trifft.
+## "(to )" stehen, das die getippte Form "(to)" nicht mehr trifft. Ebenso vor dem Komma:
+## aus "les uns…, les autres" wird ohne Lücke "les uns, les autres", nicht "les uns , …".
 func _collapse(s: String) -> String:
 	var out := " ".join(s.split(" ", false))
-	return out.replace("( ", "(").replace(" )", ")")
+	return out.replace("( ", "(").replace(" )", ")").replace(" ,", ",")
 
 
 func _tokens(s: String) -> PackedStringArray:

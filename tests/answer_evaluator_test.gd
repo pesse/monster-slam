@@ -138,6 +138,22 @@ func test_two_placeholders_are_decided_separately() -> void:
 	assert_bool(_evaluator.evaluate(accepted, "prefer")["complete"]).is_false()
 
 
+## Wort-Alternativen mit Schrägstrich sind eine Wahl: jede allein ist vollständig, die
+## Breite einer Alternative steht nicht da („Bus/eine Fähre" = „einen Bus" | „eine Fähre").
+func test_slashed_words_are_alternatives() -> void:
+	for c in [["einen Bus/eine Fähre nehmen", "einen Bus nehmen"],
+			["einen Bus/eine Fähre nehmen", "eine Fähre nehmen"],
+			["einen Bus/eine Fähre nehmen", "einen Bus/eine Fähre nehmen"],
+			["catch a bus/ferry", "catch a ferry"], ["turn left/right", "turn right"],
+			["aus dem Bus/Boot/Flugzeug aussteigen", "aus dem Boot aussteigen"],
+			["seit 10 Uhr/letzter Woche/…", "seit letzter Woche"],
+			["stay (at/with)", "stay with"]]:
+		assert_bool(_evaluator.evaluate([c[0]], c[1])["complete"]) \
+				.override_failure_message("%s / %s" % c).is_true()
+	assert_bool(_evaluator.evaluate_answers(["einen Bus/eine Fähre nehmen"], "nehmen")).is_false()
+	assert_bool(_evaluator.evaluate_answers(["catch a bus/ferry"], "catch a bus ferry")).is_false()
+
+
 ## "sb./sth." ist eine Stelle mit zwei Lesarten: jede allein ist vollständig.
 func test_slashed_placeholders_are_one_slot() -> void:
 	var accepted := ["wait for sb./sth."]
@@ -273,3 +289,38 @@ func test_french_placeholders_are_wildcards() -> void:
 func test_german_placeholders_as_a_plus_writes_them() -> void:
 	assert_bool(_evaluator.evaluate(["jdm etw. versprechen"], "jemandem etwas versprechen")["complete"]).is_true()
 	assert_bool(_evaluator.evaluate(["jdm Bescheid sagen"], "jmdm. Bescheid sagen")["complete"]).is_true()
+
+
+# --- Auslassungspunkte und Komma ---
+
+
+func test_ellipsis_is_normalized_away() -> void:
+	# Die Lücke ist kein Bestandteil: weglassen ist vollständig, die Schreibweise egal.
+	for typed in ["not only but also", "not only ... but also", "not only … but also",
+			"not only .. but also", "not only…but also"]:
+		var verdict := _evaluator.evaluate(["not only … but also"], typed)
+		assert_bool(verdict["complete"]).override_failure_message(typed).is_true()
+		assert_bool(verdict["exact"]).override_failure_message(typed).is_true()
+	assert_bool(_evaluator.evaluate(["Moment mal …"], "Moment mal")["complete"]).is_true()
+	assert_bool(_evaluator.evaluate(["either ... or ..."], "either or")["complete"]).is_true()
+
+
+func test_ellipsis_before_comma_leaves_no_gap() -> void:
+	assert_bool(_evaluator.evaluate(["les uns…, les autres"], "les uns, les autres")["exact"]).is_true()
+
+
+func test_comma_is_lenient_spelling() -> void:
+	# Ein Leerzeichen vor dem Komma ist bloß Leerraum und trifft exakt.
+	assert_bool(_evaluator.evaluate(["yes, please"], "yes , please")["exact"]).is_true()
+	for typed in ["yes please", "yes,please"]:
+		var verdict := _evaluator.evaluate(["yes, please"], typed, true)
+		assert_bool(verdict["complete"]).override_failure_message(typed).is_true()
+		assert_bool(verdict["exact"]).override_failure_message(typed).is_false()
+		assert_bool(_evaluator.evaluate(["yes, please"], typed)["matched"]) \
+				.override_failure_message(typed).is_false()
+	assert_bool(_evaluator.evaluate(["salut, ça va ?"], "salut ca va", true)["complete"]).is_true()
+	assert_bool(_evaluator.evaluate(["yes please"], "yes, please", true)["matched"]).is_true()
+
+
+func test_missing_comma_is_marked() -> void:
+	assert_array(Array(AnswerEvaluator.spelling_marks("yes, please", "yes please"))).contains_exactly([3])

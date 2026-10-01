@@ -43,8 +43,9 @@ Eintrag ersetzt, ist der Zweck der Übung und bleibt still.
   `.relations_of(id, "opposite")`, `.monster_rule_for(task_type, direction)`.
 - Auswahl-Filter fürs Session-Setup: `.lexemes_scoped(scope, tags)` (Schnitt aus
   Curriculum-Scope UND Themen, siehe unten). Der Aufgabenpool nimmt
-  `.lexemes_for_run(scope, tags)`: dazu die Lexeme, von denen eine Form erst in diesem
-  Scope gelehrt wird (`unit`/`part` an der Form, ADR 0011). Dazu `.all_books()` / `.units_for(book)` /
+  `.lexemes_for_run(scope, tags)`: dazu die Lexeme der Boni, die der Scope mitspielt
+  (`.bonuses_of(book, unit)`, `.bonus_in_scope`, ADR 0012) — von ihnen fragt der Kampf nur
+  die Bonus-Formen. Dazu `.all_books()` / `.units_for(book)` /
   `.parts_for(book, unit)` für den Buch▸Unit▸Teil-Picker.
 - `reload()` scannt zur Laufzeit neu.
 
@@ -100,7 +101,11 @@ und die Auswahl fälliger/neuer Aufgaben + Monster-Mapping `src/battle/wave_gene
 Oberste Stufe der Auswahl ist „in dieser Welle schon gezeigt“ (am Grundwort, nicht am
 `learnable_id`): Wiederholungen erst, wenn der Pool erschöpft ist, dann das am längsten
 nicht gezeigte Wort zuerst (`WaveGenerator.ordered`). Die Menge führt der `WaveRunner`
-je Welle, gespeichert wird sie nicht.
+je Welle, gespeichert wird sie nicht. Darunter: fällig vor neu vor Rest; fällige und neue
+gemischt, der Rest nach Abstand zur letzten Antwort des Grundworts (`last_seen_at`), der
+längste zuerst, mit Zufall (`WaveGenerator.by_staleness`, Faktor 0,5–1,5 auf den
+Abstand). Das gibt auch über Wellen und lange Sitzungen etwas Spacing — vorher zog jede
+Welle wieder gleichverteilt aus dem Rest, und ein Wort kam in zwei Wellen hintereinander.
 
 ### Tempo = Schwierigkeit (Monster-Geschwindigkeit)
 Geschwindigkeit ist **kein eigenständiges Attribut**, sondern die sichtbare Projektion der
@@ -143,7 +148,9 @@ Score, aktive Welle) und reagiert selbst nur über EventBus-Signale.
 ## Lern-Module (`src/learning/`)
 
 - **`spaced_repetition.gd`** — SM-2-artiger Scheduler. Bestimmt, wann ein Item
-  wieder fällig ist. Persistierbar via `to_dict()`/`from_dict()`.
+  wieder fällig ist: nach einem Fehler in 10 Minuten, nach richtigen Antworten in Tagen
+  ab lokaler Mitternacht. Nur eine fällige Aufgabe rückt im Plan vor. Persistierbar via
+  `to_dict()`/`from_dict()`.
 - **`answer_evaluator.gd`** — normalisierter Exakt-/Alternativabgleich für schnellen
   Recall (offline, deterministisch). Hier wohnt die Normalisierung (Artikel,
   Platzhalter, Klammergruppen, Typografie); die Satzbewertung nimmt sie über `tokens()`.
@@ -281,8 +288,9 @@ Ein Verb mit `irregular: true` braucht dazu seine Formaufgaben (ADR 0009): die
 learnable_ids, die es braucht, sammelt `ContentRegistry.form_requirements()` beim Laden
 (Definitionen mit `requires_form`, deren Form das Lexem hat), und `mastered_lexemes_in`
 und `mastered_lexeme_in` bekommen sie übergeben, damit die Regel statisch prüfbar bleibt.
-Die Kartensterne (`MapCanvas.stars_for`, fünf zu je 20 %) rechnen aus denselben
-`done`/`total` wie `FortressTier` — mit eigenen Schwellen, aber ohne eigenen Zähler.
+Der Ring auf der Karte (`MapCanvas`, stetig bis 100 %, Füllfarbe nach
+`MapCanvas.FILL_PERCENT`) rechnet aus denselben `done`/`total` wie `FortressTier` — mit
+eigenen Schwellen, aber ohne eigenen Zähler (ADR 0009, Nachtrag).
 
 Die Kopplung macht den Balken **empfindlich gegen alles, was EINE Richtung stört**: fällt
 en→de aus, steht die Unit dauerhaft auf „0 von N", während „Gemeisterte Aufgaben" weiter
@@ -326,16 +334,17 @@ und, wenn `mastered_lexeme_of()` ein Lexem nennt, `lexeme_mastered`. Kein neues 
 
 ### Standbild bei Schreibfehlern (ADR 0010)
 
-Ein nachsichtiger Treffer (`verdict.exact == false`) auf eine noch nicht gemeisterte
-Aufgabe merkt sich in `WaveRunner._score_hit` Form und Markierungen
-(`AnswerEvaluator.spelling_marks`) und hält die Feier an (`MasteryCelebration.hold()`).
+Ein Treffer, der nicht exakt oder nicht vollständig war (`verdict.exact`/`complete`),
+merkt sich in `WaveRunner._score_hit` Form und Markierungen — Schreibfehler rot
+(`AnswerEvaluator.spelling_marks`), fehlende Klammergruppen und Platzhalter blau
+(`AnswerEvaluator.missing_marks`) — und hält die Feier an (`MasteryCelebration.hold()`).
 Nach der Explosion spielt `SpellingFreeze` (`scenes/ui/spelling_freeze.tscn`): kurzer
 Vorlauf, dann `started(ms)` → dieselbe Baum-Pause und Verschiebung von `spawned_at_ms`
 wie bei der Feier, Kamerafahrt über `WaveRunner.spelling_zoom(camera, ziel)` (k von 0
 nach 1 und zurück, bei 0 exakt der Ausgangszustand), `finished` → Pause aus,
 `release()`, aufgehobene Antworten. Mehrere Standbilder stellen sich an; solange eines
-ansteht (`is_busy`), wartet auch das Wellenende. Gemeisterte Aufgaben zeigen weiter nur
-das Formschild.
+ansteht (`is_busy`), wartet auch das Wellenende. Ein Formschild über dem Monster gibt es
+nicht mehr.
 
 ## Wirtschaft: Gold und Schatzkisten (`src/economy/`)
 
@@ -423,8 +432,11 @@ Erspielte.
   `WindowButton` (die Rahmen der Hauptmenü-Knöpfe, klein), eine Auswahl wie die
   Standard-Schwierigkeit `ToolChoice` (Werkzeugrahmen, gedrückt golden) in einer
   `ButtonGroup`. Abschnitte trennt `StatRule`, eine Pack-Zeile ist kein Kasten mehr. Die
-  Rückfrage zum Zurücksetzen ist ein `ConfirmDialog` im Fenster. Nach dem Schließen liest
-  das Menü Plakette und Spielbarkeit neu — Umbenennen und Installieren melden kein Signal.
+  Rückfrage zum Zurücksetzen ist ein `ConfirmDialog` im Fenster. Geöffnet wird jedes über
+  `ProfileBadge.open_window` — auch aus Bibliothek und Karten, wo die kompakte Plakette
+  Fähigkeiten und Statistik anbietet; solange eines offen ist, fängt sie die Tasten ab, die
+  das Fenster nicht nimmt. Nach dem Schließen liest die Plakette sich neu, das Menü die
+  Spielbarkeit (`window_closed`) — Umbenennen und Installieren melden kein Signal.
   Werkbank: `menu_lab -- --shoot --content | --settings[=1..3]`.
 - **Karten im Kampf sind kleine Fenster** (Wellenabschluss, Vokabel-Auflösung,
   `ConfirmDialog`): derselbe Rahmen, dasselbe Titelband, aber so groß wie ihr Inhalt. Die
@@ -466,7 +478,7 @@ der umgekehrten Absicht: Gold ist Beute, Erfahrung ist Lernfortschritt.
 |---|---|---|
 | `Experience` | `src/progression/experience.gd` | reine Rechnung: XP je Monster, Stufenkosten, Skillpunkte |
 | `PlayerLevel` (Autoload) | `src/progression/player_level.gd` | Gesamt-Erfahrung des Profils, Aufstieg, Persistenz |
-| Anzeige | `hud.tscn` (Level + Erfahrungsring am Porträt), `wave_stats.gd` (Zuwachs der Welle), `profile_badge.gd` (Level, Bogen im Level, Gold; Menü und Bibliothek) / `stats_screen.gd` (Stand + offene Skillpunkte) | — |
+| Anzeige | `hud.tscn` (Level + Erfahrungsring am Porträt), `wave_stats.gd` (Zuwachs der Welle), `profile_badge.gd` (Level, Bogen im Level, Gold; Menü, Bibliothek und Karten) / `stats_screen.gd` (Stand + offene Skillpunkte) | — |
 
 - **10..15 XP je besiegtem Monster, aus seiner Schwierigkeit** — und zwar aus DERSELBEN,
   aus der auch Tempo und Punkte entstehen (`WaveGenerator`, das Netto-Maß `t - c` aus
@@ -512,7 +524,7 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
 | `MapSelection` | `src/ui/map_selection.gd` | welches Buch, welche Unit gerade offen ist (überdauert den Szenenwechsel) |
 | `MapLayout` | `src/ui/map_layout.gd` | Bild und Punkte unter `assets/maps/<book>/` (`book.png`, `unit<n>.png`, `map.json`) |
 | `BookNaming` | `src/core/book_naming.gd` | Wie das Buch sich und seine Ebenen nennt („Dossier 2 · Partie A", „Abschnitt 2 · Lektion 10"); unter `naming` in `map.json`, ohne Eintrag „Unit"/„Teil" |
-| `MapCanvas` | `src/ui/map_canvas.gd` | zeichnet eine Karte: Bild letterboxed in 16:9, Weg, Orte mit Stufe, Ring, Medaille |
+| `MapCanvas` | `src/ui/map_canvas.gd` | zeichnet eine Karte: Bild letterboxed in 16:9, Weg, Orte mit Fortschrittsring, Bonus-Sternen, Medaille |
 | Screens | `book_select` (die Bibliothek), `book_map`, `area_map` (`src/ui/` + `scenes/ui/`) | die drei Ebenen; die Bibliothek ist kein eigener Screen, sondern die dritte Seite von `profile_menu.tscn` |
 | Bibliothek | `scenes/ui/library_room.tscn` in `menu_backdrop.tscn` | der Raum im Turm der Menü-Kulisse: Lesepult, Regale, Kerzen, `%Eye` (Kamerastand), `%Books` (dort stellt `BookSelect` die Bücher auf) |
 | `Book3D` | `src/ui/book_3d.gd` + `scenes/ui/book_3d.tscn` | ein gebundenes Buch auf dem Lesepult: leicht schräg (`SLOT_ANGLE`, Rücken links sichtbar), ausgewählt vom Pult genommen — nach vorn, gerade zur Kamera, ein Stück zur Bildmitte (`TOWARD`), mit Glanz (`book_glow.gdshader`) und Stand auf dem Cover —, beim Öffnen schlägt der vordere Deckel am Falz auf. Das Cover ist eine 2D-Szene im SubViewport (Einband `assets/ui/library/`, Karte im `OrnateFrame`, darunter der Stand); die Doppelseite trägt die Buchkarte. `spread_view` liefert den Kamerastand, aus dem die Doppelseite das Bild so füllt wie die Buchkarte — die Bibliothek fliegt die Kamera dorthin und blendet erst am Ende auf das flache Bild über |
@@ -538,12 +550,28 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
   und `BossFight` fragen dort. Ohne Level fällt `RunRequest` auf die gespeicherte Auswahl
   zurück — das ist der Expertenmodus, der beim Öffnen `start_expert()` ruft. Ein Level
   spielt alle Aufgaben- und Wortarten seines Scopes und keine Tags.
+- **Bonus-Level** (ADR 0012): Formen, die das Buch später lehrt als ihr Wort, bilden je
+  lehrender Lektion und Formart einen Bonus (`ContentRegistry._index_bonuses`, Scope-
+  Schlüssel `bonus:<book>/<unit>/<part>/<form_type>`). Er steht als eigener Ort zwischen
+  Gesamt und Boss (`MapLevel.KIND_BONUS`, Punkt `bonus/<part>/<form_type>` mit `title` in
+  map.json), zählt Aufgaben statt Wörter (`BonusLevel.counts`), nicht zur Festung und nicht
+  zur Meisterung eines Wortes. „Gesamt" und jeder Scope über die ganze Unit spielen ihn mit
+  (`form_task_in_scope`); der Bonus-Lauf steht mit der Festung seiner Unit da
+  (`bonus_units`). Auf der Buchkarte ein Stern je Bonus, in der Statistik eine Zeile unter
+  der Unit.
 - **Ein Klick markiert, „Spielen" startet.** `MapLevel.toggle` führt die Auswahl der
-  Gebietskarte: Teile beliebig zusammen, Gesamt und Boss allein. `MapLevel.combine` macht
+  Gebietskarte: Teile und Boni beliebig zusammen, Gesamt und Boss allein. `MapLevel.combine` macht
   daraus EIN Level für `RunRequest` — mehrere Teile mit allen ihren Scopes, `keys` nennt
   die Orte (Zoom hinein und zurück in ihre Mitte, Vorauswahl nach dem Kampf). Markiert
-  zeichnet `MapCanvas.set_selected`; der Knopf `%PlayButton` wird gesperrt statt
-  ausgeblendet.
+  zeichnet `MapCanvas.set_selected` als wippenden weißen Pfeil über dem Ort — Gold ist
+  der Fortschritt; der Knopf `%PlayButton` wird gesperrt statt ausgeblendet.
+- **Der Ring ist der Meisterungsstand.** Er füllt sich mit dem Anteil gemeisterter
+  Wörter, die Füllung wird bronze, silbern, golden (`MapCanvas.fill_level`). Bei 100 %
+  wird er massiv und pulsiert; Schein und Funken zeichnet eine additive Ebene (`_fx`,
+  `BLEND_MODE_ADD`), zustandslos aus der Zeit gerechnet. Bonus-Sterne unter einem Ort
+  (`node["bonus"]`) leuchten mit denselben Funken, wenn ihr Bonus gemeistert ist. Ein
+  weicher Schatten um Ort und Sternreihe hebt beides vom bunten Bild ab. Werkbank:
+  `scenes/dev/map_ring_lab.tscn`.
 - **Nichts wird gesperrt, nichts als Abschluss gespeichert.** Die Stufe eines Levels ist
   `FortressTier.part_tiers` (Teil) bzw. `unit_tiers` (Gesamt) — dieselbe Zählregel und
   dieselben Schwellen wie die Festung. Gespeichert wird nur, was sich nicht ableiten
@@ -818,7 +846,7 @@ Kamera frei; die Äste darunter heben nur das Lauftempo (`walk_speed`, Anteile a
   wartet, die Zahlen nicht. Das Monster steht (`Monster.halt`) und ist aus `_active`
   heraus, kann also weder die Festung erreichen noch eine zweite Antwort fangen;
   `_check_end` wartet laufende Anläufe und Pfeile ab (`_underway`). Ein zweiter Treffer während eines
-  Anlaufs lässt den ersten sofort ankommen. Aufsteigende Texte („+XP", Vollform) haben in
+  Anlaufs lässt den ersten sofort ankommen. Aufsteigende Texte („+XP") haben in
   der Ich-Sicht eine feste Bildgröße, sonst füllten sie aus der Nähe das Bild.
 - **Langbogen** (`bow`): dieselbe Buchung wie beim Sturmangriff, nur fliegt statt des
   Spielers ein Pfeil (`FirstPersonView.shoot_at`, `Arrow`), und das Monster platzt, wenn er
@@ -950,6 +978,14 @@ Zeile JSON.
 - **Wer eine Zeile braucht, die es nicht gibt, gibt dem EventBus ein Signal** — das Spiel
   ruft das Protokoll nie direkt. Ein Fehler darin darf kein Spiel kosten
   (`push_warning` und Stille, kein `push_error`).
+- **Jede `spawn`-Zeile sagt, warum das Wort kam** (`why`, aus
+  `WaveGenerator.pick_reason`): Gruppe (fällig/neu/Rest), ob das Wort in der Welle schon
+  dran war, Stelle in der Reihenfolge, Größe des Pools mit Summen je Gruppe, `t − c`,
+  Fälligkeit und letzte Antwort des Grundworts (`last_seen`). Die Gruppe kommt aus derselben Sortierung, die auch wählt
+  (`WaveGenerator.ordered`), nicht aus einer zweiten Regel. Dieselbe Zeile zeigt im
+  Debug-Build das Debug-Panel („Letzte Spawns") und die Konsole; ohne Spiel zeigt
+  `scenes/dev/pool_lab.tscn` den ganzen Pool in Wahlreihenfolge, mit verstellbarer Uhr
+  und einer simulierten Welle.
 - **Die Ansicht im Reiter ist ein Leser, keine Auswertung.** `TraceLog.recent()` liest nur
   das Ende beider Generationen, `TraceView.rows()` übersetzt Zeile für Zeile; verknüpft wird
   nur die learnable_id einer `answer`-Zeile mit dem Prompt der `spawn`-Zeile. Eine

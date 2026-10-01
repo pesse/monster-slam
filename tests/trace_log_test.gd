@@ -144,6 +144,17 @@ func test_the_spawn_line_carries_the_lexeme() -> void:
 	assert_array(line["answers"]).is_equal(["coral"])
 
 
+
+## Der Grund der Wahl (WaveGenerator.pick_reason) steht in jeder spawn-Zeile.
+func test_the_spawn_line_carries_why_it_was_picked() -> void:
+	var task: Dictionary = TASK.duplicate()
+	task["pick"] = {"group": "due", "repeat": false, "pos": 0, "pool": 3}
+	_log.note_spawn(task)
+	var line: Dictionary = _lines()[0]
+	assert_str(str(line["why"]["group"])).is_equal("due")
+	assert_int(int(line["why"]["pool"])).is_equal(3)
+
+
 ## Der Grund, aus dem es das Protokoll gibt: eine Eingabe, die auf kein Monster passte,
 ## wurde vorher restlos verworfen. Sie steht jetzt da — mit leerer id und dem, was auf dem
 ## Feld stand, als sie abgewiesen wurde.

@@ -120,6 +120,11 @@ var _warming := false
 @onready var _slow_motion: SlowMotion = $SlowMotion
 @onready var _fast_resolve_button: Button = $UI/FastResolveButton
 @onready var _fast_resolve_confirm: ConfirmDialog = $UI/FastResolveConfirm
+@onready var _pause_overlay: PauseOverlay = $UI/PauseOverlay
+@onready var _pause_button: Button = $UI/PauseButton
+## Seit wann der Spieler pausiert hat (Echtzeit, ms); -1 = keine Pause des Spielers. Die
+## Baum-Pause der Feiern ist eine andere und läuft nicht über diese Variable.
+var _paused_since_ms := -1
 @onready var _celebration: MasteryCelebration = $UI/MasteryCelebration
 @onready var _spelling: SpellingFreeze = $UI/SpellingFreeze
 @onready var _level_flare: LevelFlare = $UI/HUD.level_flare
@@ -198,6 +203,15 @@ func _ready() -> void:
 	_fast_resolve_button.pressed.connect(_on_fast_resolve_pressed)
 	_fast_resolve_confirm.confirmed.connect(_fast_resolve_wave)
 	_fast_resolve_confirm.cancelled.connect(_on_fast_resolve_cancelled)
+	_pause_overlay.toggle_requested.connect(_on_pause_key)
+	# Esc in der Pause beendet den Kampf wie sonst auch. Der Zoom hinaus braucht den
+	# laufenden Baum, also erst die Pause aufheben.
+	_pause_overlay.leave_requested.connect(func() -> void:
+		if _leaving:
+			return
+		_toggle_pause()
+		_abort_battle())
+	_pause_button.pressed.connect(_toggle_pause)
 	_celebration.started.connect(_on_celebration_started)
 	_celebration.finished.connect(_on_celebration_finished)
 	_spelling.started.connect(_on_spelling_started)
@@ -221,14 +235,12 @@ func _ready() -> void:
 func _warm_up() -> void:
 	var xp := xp_label(FxWarmup.GLYPHS)
 	_screen_size_in_first_person(xp, POPUP_SCREEN_SCALE)
-	var form := form_label(FxWarmup.GLYPHS)
-	_screen_size_in_first_person(form, 1.4)
 	var at := FxWarmup.point_in_view(get_viewport().get_camera_3d(),
 			Vector3(0.0, 1.0, VIEW_CENTER_Z))
 	_celebration.warm_up()
 	_spelling.warm_up()
 	_level_flare.warm_up()
-	var extras: Array[Node3D] = [xp, form]
+	var extras: Array[Node3D] = [xp]
 	# Der Pfeil fliegt erst nach der ersten Antwort; der Bogen hängt schon an der Kamera.
 	if _fp != null:
 		var arrow := Arrow.new()
@@ -683,12 +695,13 @@ func _build_fortress() -> void:
 
 ## Die Festungsstufe für den gewählten Bereich: die Units kommen aus Scope und Themen des
 ## Laufs (RunRequest, dieselben Achsen wie der Aufgaben-Pool), gewertet wird jede Unit als
-## Ganzes über den ganzen Katalog (siehe FortressTier.run_tier).
+## Ganzes über den ganzen Katalog (siehe FortressTier.run_tier). Ein Bonus steht mit
+## der Festung seiner Unit da.
 func _current_fortress_tier() -> int:
 	var scoped := ContentRegistry.lexemes_scoped(RunRequest.scope(), RunRequest.tags())
-	var units := FortressTier.unit_tiers(
-			ContentRegistry.lexemes.values(), PlayerProgress.mastered_lexemes())
-	return FortressTier.run_tier(scoped, units)
+	var units := FortressTier.unit_tiers(ContentRegistry.lexemes.values(),
+			PlayerProgress.mastered_lexemes(), FortressTier.drop_of(SkillBook.bonuses()))
+	return FortressTier.run_tier(scoped, units, ContentRegistry.bonus_units(RunRequest.scope()))
 
 
 ## Baut die Festung passend zur Stufe (0..4) neu auf; die Anordnung steht in
@@ -921,6 +934,44 @@ func _exit_tree() -> void:
 ## „Schnell auflösen" fragt erst nach. Solange die Frage steht, ist die Eingabe weg: sie
 ## holt sich sonst jeden Frame den Fokus zurück, und Enter ginge an sie statt an „Abbrechen".
 ## Das Spiel läuft dabei weiter — ein Pausieren hielten die Spawn-Timer ohnehin nicht an.
+## Strg+P immer, das nackte P nur in der Ich-Sicht, solange nicht getippt wird — in der
+## Iso-Sicht ist die Eingabe immer offen und das „p" ein Buchstabe.
+func _on_pause_key(bare: bool) -> void:
+	if bare and (_fp == null or _answer_input.is_typing()):
+		return
+	if _toggle_pause():
+		_pause_overlay.consume()
+
+
+## Pausiert oder setzt fort; false, wenn gerade keine Pause möglich ist. Hält den Baum an
+## wie eine Feier (Monster, Spawn-Timer, Tweens) und nimmt die Eingabe weg, sonst ließe
+## sich in Ruhe antworten. Die Pausenzeit zählt nicht als Bedenkzeit der Monster.
+func _toggle_pause() -> bool:
+	if _paused_since_ms >= 0:
+		var duration := Time.get_ticks_msec() - _paused_since_ms
+		_paused_since_ms = -1
+		for monster in _active:
+			monster.spawned_at_ms += duration
+		_pause_overlay.hide_pause()
+		get_tree().paused = false
+		_answer_input.visible = true
+		_fast_resolve_button.disabled = false
+		_set_view_active(true)
+		return true
+	# Keine Pause über eine Feier, das Standbild, die Rückfrage oder das Wellenende hinweg:
+	# die geben den Baum selbst wieder frei und nähmen die Pause dabei mit.
+	if _finished or _warming or _leaving or _fast_resolving or get_tree().paused \
+			or _fast_resolve_confirm.visible:
+		return false
+	_paused_since_ms = Time.get_ticks_msec()
+	get_tree().paused = true
+	_answer_input.visible = false
+	_fast_resolve_button.disabled = true
+	_set_view_active(false)
+	_pause_overlay.show_pause(_fp != null)
+	return true
+
+
 func _on_fast_resolve_pressed() -> void:
 	if _finished or _fast_resolving:
 		return
@@ -949,6 +1000,7 @@ func _fast_resolve_wave() -> void:
 	_fast_resolving = true
 	_answer_input.visible = false
 	_fast_resolve_button.disabled = true
+	_pause_button.disabled = true
 	# Ich-Sicht: zurück zum Laufen — die Frage hat die Maus freigegeben, und eine Eingabe
 	# gibt es im Zeitraffer nicht mehr.
 	_set_view_active(true)
@@ -989,6 +1041,8 @@ func _start_next_wave() -> void:
 	_celebration.release()
 	_fast_resolve_button.visible = true
 	_fast_resolve_button.disabled = false
+	_pause_button.visible = true
+	_pause_button.disabled = false
 	_set_view_active(true)
 
 	GameState.current_wave = "procedural_%d" % _wave_number
@@ -1055,6 +1109,7 @@ func _show_no_content() -> void:
 	_set_view_active(false)
 	_answer_input.visible = false
 	_fast_resolve_button.visible = false
+	_pause_button.visible = false
 	_stats.hide_stats()
 	_end_label.text = "Keine spielbaren Aufgaben.\n\nFilter prüfen oder über „Inhalte“\neinen Vokabel-Pack installieren.\n\n[Esc] zurück ins Menü"
 	_end_label.visible = true
@@ -1253,25 +1308,22 @@ func _setup_first_person(bonuses: Dictionary) -> void:
 ## Treffer verbuchen. `verdict` ist das Urteil des AnswerEvaluator, leer für einen Treffer
 ## ohne Abzug. War die Antwort richtig, ließ aber einen optionalen Bestandteil weg
 ## ("criticize" statt "criticize sb. (for)") oder stimmte die Schreibweise nicht ("ecole"
-## statt "l'école"), kostet das nichts — die richtige Form wird nur zusätzlich
-## eingeblendet, damit sie trotzdem einmal zu sehen war.
-##
-## Die Schreibweise bekommt mehr als das Schild: nach dem Zerplatzen steht das Bild, und die
-## richtige Form steht groß mit markierten Fehlern da (SpellingFreeze, ADR 0010) — erst danach
-## die Feier einer Meisterung. Bei einer schon gemeisterten Aufgabe bleibt es beim Schild:
-## wer das Wort sicher kann, soll für einen Akzent nicht jedes Mal angehalten werden.
+## statt "l'école"), kostet das nichts — die richtige Form wird nur zusätzlich gezeigt,
+## damit sie trotzdem einmal zu sehen war: nach dem Zerplatzen steht das Bild, und die
+## Form steht groß da, Schreibfehler rot, fehlende Teile blau (SpellingFreeze, ADR 0010) —
+## erst danach die Feier einer Meisterung.
 func _score_hit(monster: Monster, text: String = "", verdict: Dictionary = {}) -> void:
 	var complete := bool(verdict.get("complete", true))
 	var exact := bool(verdict.get("exact", true))
 	var full_form := "" if complete and exact else str(verdict.get("canonical", ""))
 	var rt := Time.get_ticks_msec() - monster.spawned_at_ms
 	var task_id := str(monster.task.get("learnable_id", ""))
-	var freeze := not exact and not full_form.is_empty() and not PlayerProgress.is_mastered(task_id)
-	if freeze:
+	if not full_form.is_empty():
 		# Vor record(): eine Meisterung durch DIESE Antwort feiert erst nach dem Standbild.
 		_celebration.hold()
 		_spelling_due[monster.get_instance_id()] = [full_form,
-				AnswerEvaluator.spelling_marks(full_form, text)]
+				AnswerEvaluator.spelling_marks(full_form, text),
+				AnswerEvaluator.missing_marks(full_form, text)]
 	var newly_mastered := PlayerProgress.record(task_id, true, rt,
 			float(monster.task.get("initial_confidence", -1.0)))
 	EventBus.item_reviewed.emit(task_id, true, rt)
@@ -1288,7 +1340,6 @@ func _score_hit(monster: Monster, text: String = "", verdict: Dictionary = {}) -
 		var lexeme_id := PlayerProgress.mastered_lexeme_of(task_id)
 		if not lexeme_id.is_empty():
 			EventBus.lexeme_mastered.emit(lexeme_id)
-	var pos := monster.position
 	var weapon := _fp.weapon if _fp != null else FirstPersonView.Weapon.NONE
 	if weapon == FirstPersonView.Weapon.CHARGE:
 		_defeat_by_charge(monster)
@@ -1297,8 +1348,6 @@ func _score_hit(monster: Monster, text: String = "", verdict: Dictionary = {}) -
 	else:
 		_defeat(monster)
 	_flash_feedback(FLASH_CORRECT)
-	if not full_form.is_empty() and not freeze:
-		_spawn_form_hint(pos + Vector3(0.0, 3.4, 0.0), full_form)
 
 
 ## Eine Meister-Feier beginnt: der Kampf pausiert (Baum-Pause). Monster, Animationen,
@@ -1332,7 +1381,7 @@ func _spell_out(key: int, at: Vector3) -> void:
 	_spelling_due.erase(key)
 	var target := at + Vector3(0.0, 1.0, 0.0)
 	_spelling.play(str(due[0]), due[1],
-			spelling_zoom(_fp.camera if _fp != null else _camera, target))
+			spelling_zoom(_fp.camera if _fp != null else _camera, target), due[2])
 
 
 ## Die Kamerafahrt des Standbilds auf `camera`: k = 0 ist das Spielbild, k = 1 ganz
@@ -1391,7 +1440,11 @@ func _on_spelling_finished() -> void:
 
 ## Debug-Panel: feiert mit dem Wort des ersten Monsters auf dem Feld (sonst ohne Wort),
 ## aber an der Meisterung vorbei — Lernstand und Spur bleiben unberührt.
+## Nicht in der Pause: das Debug-Panel ist dort bedienbar, aber die Feier gäbe am Ende den
+## Baum frei und nähme die Pause mit.
 func _on_debug_celebration(word: bool) -> void:
+	if _paused_since_ms >= 0:
+		return
 	var task: Dictionary = _active[0].task if not _active.is_empty() else {}
 	if word:
 		_celebration.celebrate(MasteryCelebration.Kind.WORD, str(task.get("source_id", "")))
@@ -1647,20 +1700,6 @@ func _spawn_xp_popup(pos: Vector3, amount: int) -> void:
 	tw.chain().tween_callback(label.queue_free)
 
 
-## Die vollständige Form nach einem nur im Kern richtigen Treffer. Bewusst ruhiger als
-## das "+XP"-Popup (kein Pop, längere Standzeit): es ist ein Hinweis, kein Tadel.
-func _spawn_form_hint(pos: Vector3, form: String) -> void:
-	var label := form_label(form)
-	_screen_size_in_first_person(label, 1.4)
-	label.position = pos
-	add_child(label)
-	var tw := create_tween()
-	tw.set_parallel(true)
-	tw.tween_property(label, "position:y", pos.y + 2.0, 1.8).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tw.tween_property(label, "modulate:a", 0.0, 0.6).set_delay(1.2)
-	tw.chain().tween_callback(label.queue_free)
-
-
 ## Das Schild des „+XP"-Popups, ohne Bewegung. Eigene Funktion, damit das Vorwärmen
 ## (FxWarmup) dieselbe Schrift in derselben Größe zeichnet.
 static func xp_label(text: String) -> Label3D:
@@ -1673,20 +1712,6 @@ static func xp_label(text: String) -> Label3D:
 	label.modulate = Color(1.0, 0.9, 0.25)
 	label.outline_size = 32
 	label.outline_modulate = Color(0.15, 0.08, 0.0, 1.0)
-	return label
-
-
-## Das Schild des Form-Hinweises, ohne Bewegung (wie xp_label).
-static func form_label(text: String) -> Label3D:
-	var label := Label3D.new()
-	label.text = text
-	label.font_size = 130
-	label.pixel_size = 0.02
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.no_depth_test = true
-	label.modulate = Color(0.85, 0.95, 1.0)
-	label.outline_size = 28
-	label.outline_modulate = Color(0.05, 0.1, 0.2, 1.0)
 	return label
 
 
@@ -1770,6 +1795,7 @@ func _finish_wave(won: bool) -> void:
 	_set_view_active(false)
 	_answer_input.visible = false
 	_fast_resolve_button.visible = false
+	_pause_button.visible = false
 	# Endet die Welle, während die Rückfrage offen ist, gibt es nichts mehr aufzulösen.
 	_fast_resolve_confirm.hide()
 	# Cutscene, Auflösung und Statistik immer in Normaltempo.

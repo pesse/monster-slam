@@ -64,6 +64,34 @@ func test_case_and_typographic_apostrophes_do_not_count() -> void:
 	assert_array(_marks("l'école", "L'ECOLE")).is_equal([2])
 
 
+# --- Fehlende Teile (blau) ----------------------------------------------------
+
+func _missing(canonical: String, typed: String) -> String:
+	var out := ""
+	for i in AnswerEvaluator.missing_marks(canonical, typed):
+		out += canonical[i]
+	return out
+
+
+func test_a_left_out_group_is_marked_with_its_brackets() -> void:
+	assert_str(_missing("die Meinung (zu etwas)", "meinung")).is_equal("(zuetwas)")
+
+
+func test_only_the_part_nobody_typed_is_missing() -> void:
+	assert_str(_missing("die Meinung (zu etwas)", "meinung zu")).is_equal("etwas")
+
+
+func test_placeholders_and_optional_groups_are_missing() -> void:
+	assert_str(_missing("criticize sb. (for)", "criticize")).is_equal("sb.(for)")
+
+
+## Artikel, Auslassungspunkte und ein vollständiger Treffer: nichts blau.
+func test_what_does_not_count_for_completeness_stays_unmarked() -> void:
+	assert_str(_missing("l'école", "ecole")).is_empty()
+	assert_str(_missing("not only … but also", "not only but also")).is_empty()
+	assert_str(_missing("die Meinung (zu etwas)", "meinung zu etwas")).is_empty()
+
+
 # --- Die Szene ----------------------------------------------------------------
 
 func test_markup_colors_and_underlines_only_the_marked_letters() -> void:
@@ -72,10 +100,18 @@ func test_markup_colors_and_underlines_only_the_marked_letters() -> void:
 	assert_str(SpellingFreeze.markup("[x]", PackedInt32Array(), Color.RED)).is_equal("[lb]x]")
 
 
+func test_markup_colors_missing_parts_in_their_own_color() -> void:
+	var text := SpellingFreeze.markup("ab", PackedInt32Array([0]), Color(1, 0, 0),
+			PackedInt32Array([1]), Color(0, 0, 1))
+	assert_str(text).is_equal("[color=#ff0000][u]a[/u][/color][color=#0000ff][u]b[/u][/color]")
+
+
 func test_the_styles_exist_in_the_theme() -> void:
 	var theme: Theme = load("res://scenes/ui/ui_theme.tres")
 	assert_str(theme.get_type_variation_base(&"SpellingWord")).is_equal("RichTextLabel")
 	assert_str(theme.get_type_variation_base(&"SpellingMark")).is_equal("Label")
+	assert_str(theme.get_type_variation_base(&"SpellingMissing")).is_equal("Label")
+	assert_bool(theme.has_color(&"font_color", &"SpellingMissing")).is_true()
 
 
 func test_the_freeze_runs_while_paused() -> void:

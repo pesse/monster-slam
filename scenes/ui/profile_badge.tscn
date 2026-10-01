@@ -1,29 +1,32 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene format=3 uid="uid://u1ox5aaff65i"]
 
-[ext_resource type="Script" path="res://src/ui/profile_badge.gd" id="1_badge"]
-[ext_resource type="Texture2D" path="res://assets/ui/player_badge/menu/avatar.webp" id="2_bust"]
-[ext_resource type="Texture2D" path="res://assets/ui/player_badge/menu/switch_profile.webp" id="3_switch"]
-[ext_resource type="Texture2D" path="res://assets/ui/player_badge/menu/level_overlay.webp" id="4_level"]
+[ext_resource type="Script" uid="uid://cd1jb0oi73h4s" path="res://src/ui/profile_badge.gd" id="1_badge"]
+[ext_resource type="Texture2D" uid="uid://cn4jymil5rgtl" path="res://assets/ui/player_badge/menu/avatar.webp" id="2_bust"]
+[ext_resource type="Texture2D" uid="uid://rsr6g6nvyacr" path="res://assets/ui/player_badge/menu/switch_profile.webp" id="3_switch"]
+[ext_resource type="Texture2D" uid="uid://bhj77mn8dpnat" path="res://assets/ui/player_badge/menu/level_overlay.webp" id="4_level"]
+[ext_resource type="Texture2D" uid="uid://bcxql8oegbj53" path="res://assets/ui/main_menu/icons/skills.webp" id="5_skills"]
+[ext_resource type="Texture2D" uid="uid://c5ry4fipkydc1" path="res://assets/ui/main_menu/icons/statistics.webp" id="6_stats"]
 
-[node name="ProfileBadge" type="Control"]
+[node name="ProfileBadge" type="Control" unique_id=993475752]
+texture_filter = 4
 custom_minimum_size = Vector2(277, 136)
 layout_mode = 3
 anchors_preset = 0
 offset_right = 276.8
 offset_bottom = 136.0
+pivot_offset = Vector2(277, 0)
 mouse_filter = 2
-texture_filter = 4
 script = ExtResource("1_badge")
 
-[node name="Medallion" type="Control" parent="."]
+[node name="Medallion" type="Control" parent="." unique_id=28892992]
 unique_name_in_owner = true
-layout_mode = 0
+anchors_preset = 0
 offset_left = 161.6
 offset_top = 8.8
 offset_right = 272.0
 offset_bottom = 119.2
 
-[node name="Avatar" type="TextureRect" parent="."]
+[node name="Avatar" type="TextureRect" parent="." unique_id=1003522501]
 layout_mode = 0
 offset_left = 176.4
 offset_top = 24.8
@@ -34,7 +37,7 @@ texture = ExtResource("2_bust")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="LevelPlate" type="TextureRect" parent="."]
+[node name="LevelPlate" type="TextureRect" parent="." unique_id=1796453316]
 layout_mode = 0
 offset_left = 192.0
 offset_top = 98.0
@@ -44,7 +47,7 @@ mouse_filter = 2
 texture = ExtResource("4_level")
 expand_mode = 1
 
-[node name="LevelLabel" type="Label" parent="."]
+[node name="LevelLabel" type="Label" parent="." unique_id=1103575688]
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = 196.0
@@ -56,15 +59,15 @@ text = "1"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Plates" type="Control" parent="."]
+[node name="Plates" type="Control" parent="." unique_id=438805012]
 unique_name_in_owner = true
-layout_mode = 0
+anchors_preset = 0
 offset_left = 54.4
 offset_top = 40.0
 offset_right = 156.8
 offset_bottom = 120.0
 
-[node name="ProfileLabel" type="Label" parent="."]
+[node name="ProfileLabel" type="Label" parent="." unique_id=1739612723]
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = 57.6
@@ -76,7 +79,7 @@ text = "Spieler"
 vertical_alignment = 1
 text_overrun_behavior = 3
 
-[node name="GoldLabel" type="Label" parent="."]
+[node name="GoldLabel" type="Label" parent="." unique_id=1934144698]
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = 50.0
@@ -89,7 +92,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 text_overrun_behavior = 1
 
-[node name="SwitchButton" type="Button" parent="."]
+[node name="SwitchButton" type="Button" parent="." unique_id=1997306575]
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = 3.2
@@ -98,5 +101,51 @@ offset_right = 51.2
 offset_bottom = 81.6
 theme_type_variation = &"BadgeSwitch"
 icon = ExtResource("3_switch")
+icon_alignment = 1
+expand_icon = true
+
+[node name="ActionsSlot" type="Control" parent="." unique_id=764536248]
+unique_name_in_owner = true
+anchors_preset = 0
+offset_left = -1.1692104
+offset_top = 42.0
+offset_right = 146.8308
+offset_bottom = 86.0
+mouse_filter = 2
+
+[node name="Actions" type="HBoxContainer" parent="ActionsSlot" unique_id=586052558]
+unique_name_in_owner = true
+layout_mode = 0
+offset_right = 148.0
+offset_bottom = 44.0
+mouse_filter = 2
+
+[node name="CompactSwitchButton" type="Button" parent="ActionsSlot/Actions" unique_id=479936309]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"BadgeAction"
+icon = ExtResource("3_switch")
+icon_alignment = 1
+expand_icon = true
+
+[node name="SkillsButton" type="Button" parent="ActionsSlot/Actions" unique_id=889399208]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"BadgeAction"
+icon = ExtResource("5_skills")
+icon_alignment = 1
+expand_icon = true
+
+[node name="StatsButton" type="Button" parent="ActionsSlot/Actions" unique_id=513805929]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"BadgeAction"
+icon = ExtResource("6_stats")
 icon_alignment = 1
 expand_icon = true

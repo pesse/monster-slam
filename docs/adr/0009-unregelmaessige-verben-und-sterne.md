@@ -21,7 +21,8 @@ sehen.
 1. **Ein unregelmäßiges Verb ist erst mit seinen Formen gemeistert.** Das Lexem trägt
    `irregular: true`. Dann gehören zur Meisterung neben beiden Richtungen alle
    Formaufgaben, die es zu ihm gibt: Definitionen mit `requires_form`, deren Form das
-   Lexem hat. Das gilt in allen Sprachen. Gesammelt wird das in
+   Lexem hat. Das gilt in allen Sprachen. *Nachtrag (ADR 0012): ausgenommen Formen, die das
+   Buch später lehrt als das Wort — sie stehen in einem Bonus und zählen für sich.* Gesammelt wird das in
    `ContentRegistry.form_requirements()`, gerechnet in
    `PlayerProgress.mastered_lexemes_in` und `mastered_lexeme_in`. Es bleibt eine Regel
    an einer Stelle, und Festung, Statistik und Karte bauen auf ihr auf. In der Wortliste
@@ -47,6 +48,17 @@ sehen.
    wird aus denselben `done`/`total` wie die Stufe, es gibt keinen neuen Zähler. Bei
    100 % wird der Ring um den Ort golden und breiter. Die Füllfarbe des Ortes zeigt
    weiter die Stufe.
+
+   **Nachtrag 2026-10-01: Ring statt Sterne.** Die fünf Sterne sind entfallen. Der Ring
+   um den Ort füllt sich stetig in Gold mit dem Anteil gemeisterter Wörter — jedes Wort
+   bewegt ihn, statt nur jedes fünfte. Bei 100 % wird er massiv, pulsiert und sprüht
+   Funken. Die Füllfarbe zeigt nicht mehr die Stufe, sondern grob denselben Anteil:
+   dunkel, ab 25 % Bronze, ab 60 % Silber, bei 100 % Gold (`MapCanvas.FILL_PERCENT`).
+   Die Festungsstufe steht damit nur noch an der Festung und oben im Kopf; einen Teil
+   einer Unit hat sie ohnehin nicht. Die Aussage von Punkt 4 bleibt: Die Karte zeigt den
+   Meisterungsstand, nicht die Stufe, aus denselben `done`/`total`. Sterne unter einem
+   Ort stehen jetzt für Bonus-Level (`node["bonus"]`, Anteil je Bonus), golden erst,
+   wenn der Bonus gemeistert ist.
 5. **Packs mit dem Feld heben `min_app_version` auf 0.19.0** (Access 2–4, Latein; *À plus!*
    lag schon dort). Eine ältere App kennt das Feld nicht und zählte unregelmäßige Verben
    nach den Richtungen allein.
@@ -54,11 +66,11 @@ sehen.
 ## Folgen
 
 - Bestehende Spieler können Stufen verlieren, in Units mit vielen unregelmäßigen Verben
-  auch einen Stern. Das ist gewollt: Die Anzeige sagt jetzt, was das Kind kann. Weil
+  auch Fortschritt auf der Karte. Das ist gewollt: Die Anzeige sagt jetzt, was das Kind kann. Weil
   Stufe 4 früher kommt, trifft der Verlust vor allem die oberen Prozente.
 - Die Feier „Wort gemeistert“ kommt bei einem unregelmäßigen Verb mit der letzten
   fehlenden Aufgabe, auch wenn das eine Form ist.
-- Das letzte Viertel einer Unit hat ein eigenes Ziel (Sterne 4 und 5, goldener Ring),
+- Das letzte Viertel einer Unit hat ein eigenes Ziel (der Ring füllt sich bis 100 %),
   ohne dass schon gemeisterte Wörter noch einmal geübt werden müssen.
 - Ein Verb, das nachträglich `irregular` bekommt oder neue Formen, verliert seine
   Meisterung, bis die neuen Aufgaben sitzen. Deshalb kommen Formen für unregelmäßige

@@ -258,6 +258,23 @@ func test_a_long_list_entry_wraps_inside_the_card() -> void:
 	assert_float(card.size.y).is_greater_equal(list.get_combined_minimum_size().y)
 
 
+## Ein langer WERT nimmt der Bezeichnung nicht den Platz: er bricht selbst um, statt die
+## mittlere Spalte auf null zu drücken (im Protokoll stand „take (on sth.)" sonst Buchstabe
+## für Buchstabe untereinander).
+func test_a_long_value_leaves_room_for_the_name() -> void:
+	var button := _button("A")
+	Hints.attach(button, "Nicht gewertet", "Auf dem Feld standen:", "", [
+		["", "take (on sth.)", "die Einstellung (zu etwas) / die Meinung (zu etwas)"],
+	])
+	var card := _over(button)
+	var cells := (card.get_node("%List") as GridContainer).get_children()
+	var name_label := cells[1] as Label
+	assert_float(name_label.custom_minimum_size.x).is_greater(100.0)
+	assert_int(name_label.get_line_count()).is_equal(1)
+	assert_int((cells[2] as Label).get_line_count()).is_greater(1)
+	assert_float(card.size.x).is_less_equal(HintCard.MAX_WIDTH)
+
+
 ## Ohne Liste steht auch keine leere Tabelle in der Karte.
 func test_no_list_no_table() -> void:
 	var button := _button("A")

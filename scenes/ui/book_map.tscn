@@ -1,8 +1,9 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://src/ui/book_map.gd" id="1_screen"]
 [ext_resource type="Script" path="res://src/ui/map_canvas.gd" id="2_canvas"]
 [ext_resource type="Texture2D" path="res://assets/ui/library/back.webp" id="3_back"]
+[ext_resource type="PackedScene" path="res://scenes/ui/profile_badge.tscn" id="4_badge"]
 
 [sub_resource type="Gradient" id="shade_g"]
 colors = PackedColorArray(0, 0, 0, 0.6, 0, 0, 0, 0)
@@ -115,3 +116,15 @@ grow_vertical = 2
 text = "Dieses Buch hat noch keine Units — im Start-Screen unter „Inhalte“ einen Vokabel-Pack installieren."
 horizontal_alignment = 1
 autowrap_mode = 3
+
+[node name="ProfileBadge" parent="Hud/Corners" instance=ExtResource("4_badge")]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -277.0
+offset_right = 0.0
+offset_bottom = 136.0
+grow_horizontal = 0
+compact = 1.0

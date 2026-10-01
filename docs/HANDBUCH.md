@@ -47,8 +47,10 @@ und kommt zurück (manchmal bis ins Bild von „Wer spielt?“). Spielen kann ma
 Rechts oben steht deine Plakette: rechts dein Bild im Ring, unten darauf dein Level. Der
 blaue Bogen um das Bild zeigt, wie weit du im Level bist; am Zeiger steht es genau
 („166 / 400 XP bis Level 5“), darunter, wie viele Skillpunkte du noch ausgeben kannst. Links daneben stehen dein Name und dein Gold, ganz links der
-Pfeil **„Profil wechseln“** (zurück zu „Wer spielt?“). Dieselbe Plakette steht in der
-Bibliothek.
+Pfeil **„Profil wechseln“** (zurück zu „Wer spielt?“). In der Bibliothek und auf
+den Karten steht nur noch dein Bild im Ring, kleiner; Name und Gold stehen dann am Zeiger.
+Links daneben liegen drei Knöpfe: **Profil wechseln**, **Fähigkeiten** und **Statistik** —
+so kommst du auch von dort hin, ohne zurück ins Menü zu gehen.
 
 Die Knöpfe links:
 
@@ -56,12 +58,13 @@ Die Knöpfe links:
   Level oder zum Boss einer Unit (Kapitel 10).
 - **„Fähigkeiten“** – Skillpunkte ausgeben (Kapitel 11).
 - **„Statistik“** – dein Lernstand (Kapitel 12).
-- **„Inhalte“** – Vokabel-Packs holen (Kapitel 15). Gibt es etwas Neues, steht die
-  Zahl dahinter, zum Beispiel „Inhalte (2 neu)“.
+- **„Inhalte“** – Vokabel-Packs holen (Kapitel 15).
 - **„Einstellungen“** – Profil, Tempo, Protokoll, Melden (Kapitel 13).
 
 Rechts unten erscheint **„⬆ Update auf …“** nur, wenn es eine neue Fassung des Spiels gibt
-(Kapitel 16).
+(Kapitel 16). Darunter steht **„⬆ Inhalte aktualisieren“** (bei mehreren „⬆ 2 Inhalte
+aktualisieren“), wenn es für einen installierten Pack eine neuere Fassung gibt, die du
+holen kannst. Der Knopf öffnet „Inhalte“, die betroffenen Packs sind schon ausgewählt.
 
 Links unten steht klein **„Eigene Runde – Expertenmodus“**. Er führt zu „Runde
 vorbereiten“, wo man selbst auswählt, was geübt wird (Kapitel 3).
@@ -189,18 +192,21 @@ auswählen: das Spiel sucht selbst das Monster, zu dem deine Antwort passt.
   wird dabei ein kleines Stück repariert (1 HP je besiegtem Monster, mit Fähigkeiten
   mehr).
 - **Richtig, aber unvollständig:** Hast du etwas weggelassen, das nur in Klammern steht
-  oder ein Platzhalter wie „sb.“ ist, zählt die Antwort trotzdem. Die vollständige Form
-  wird dann kurz über dem Monster eingeblendet, damit du sie einmal gesehen hast.
+  oder ein Platzhalter wie „sb.“ ist, zählt die Antwort trotzdem. Danach steht das Spiel
+  kurz still wie bei einem Schreibfehler (siehe unten): die vollständige Form steht groß
+  im Bild, und was du weggelassen hast, ist blau unterstrichen. Ein weggelassener Artikel
+  oder Auslassungspunkte werden nicht markiert — die braucht es nicht.
   Platzhalter darfst du schreiben, wie du willst: „sb“, „somebody“, „jn.“, „jmd.“ und
-  „jemanden“ gelten gleich.
+  „jemanden“ gelten gleich. Auslassungspunkte („not only … but also“) sind egal: ob du
+  „…“, „...“ oder gar nichts tippst, die Antwort ist vollständig.
 - **Richtig, aber anders geschrieben:** Fehlen nur Akzente (é, è, ê, ç …), oder hast du
-  einen Bindestrich oder Apostroph weggelassen oder als Leerzeichen getippt („ecole“ für
-  „l’école“, „est ce que“ für „est-ce que“), zählt die Antwort voll. Das Monster
+  einen Bindestrich, Apostroph oder ein Komma weggelassen oder als Leerzeichen getippt
+  („ecole“ für „l’école“, „est ce que“ für „est-ce que“, „yes please“ für „yes, please“),
+  zählt die Antwort voll. Das Monster
   explodiert, dann steht das Spiel gut eine Sekunde still: die Kamera fährt heran und die
   richtige Schreibweise steht groß im Bild. Was gefehlt hat, ist rot unterstrichen, und
   über jedem Akzent steht klein sein Name („accent aigu“, „cédille“ …). Danach läuft das
-  Spiel von selbst weiter; was du in der Zeit tippst, zählt danach. Kannst du die Aufgabe
-  schon, gibt es kein Standbild, nur die Einblendung über dem Monster.
+  Spiel von selbst weiter; was du in der Zeit tippst, zählt danach.
   Umlaute zählen nicht dazu: „schon“ ist nicht „schön“.
 - **Falsch:** Es blitzt rot und das Bild wackelt. Sonst passiert nichts. Eine falsche
   Eingabe wird keinem Wort als Fehler angerechnet, weil nicht klar ist, welches Monster
@@ -210,7 +216,8 @@ auswählen: das Spiel sucht selbst das Monster, zu dem deine Antwort passt.
 deutsche Artikel („der/die/das“), das englische „the“ und das „to“ vor einem Verb. Was
 im Lehrbuch in Klammern steht, darfst du mittippen oder weglassen. Das englische „a“ wird
 dagegen **nicht** weggelassen, weil es manchmal den Unterschied zwischen zwei Vokabeln
-macht.
+macht. Stehen im Lehrbuch Alternativen mit Schrägstrich („einen Bus/eine Fähre nehmen“,
+„turn left/right“), reicht eine davon: „einen Bus nehmen“ ist vollständig.
 
 Dasselbe Wort steht nie zweimal gleichzeitig auf dem Feld.
 
@@ -334,6 +341,17 @@ Monster angekommen sind.
 **Warum voller Schaden?** „Schnell auflösen“ soll Zeit sparen, aber keine verlorene Welle
 retten. Das Ergebnis ist dasselbe, das auch ohne Vorspulen herausgekommen wäre.
 
+### Pause
+
+Unter dem Vorspul-Knopf steht der kleine Knopf mit den **zwei Balken**. Er hält den Kampf
+an, ebenso **Strg+P**. In der Ich-Sicht reicht ein **P**, solange das Eingabefeld zu ist;
+sonst ist das P ein Buchstabe deiner Antwort.
+
+- Das Bild wird abgedunkelt und das Eingabefeld ist weg. Die Pause ist zum Durchatmen da,
+  nicht zum Nachdenken über die Wörter auf dem Feld.
+- Weiter geht es mit derselben Taste oder dem Knopf, **Esc** beendet den Kampf (Kapitel 7).
+- Die Pause zählt nicht als Bedenkzeit.
+
 ## 7. Abbrechen mit Escape
 
 Mit **Escape** kommst du während einer Welle sofort zurück zum Start-Screen.
@@ -362,9 +380,9 @@ Bedeutung. Hat ein Wort mehrere Übersetzungen, stehen sie auf beiden Seiten als
 dabei — unter der Aufgabe und unter der Antwort. Die Karten laufen von selbst durch, etwa
 drei Sekunden je Karte.
 
-Danach kannst du mit „◀“ und „▶“ blättern. „Alle anzeigen“ nimmt auch die Wörter dazu,
+Danach kannst du mit „◀“ und „▶“ blättern — oder mit den Pfeiltasten ← und →. „Alle anzeigen“ nimmt auch die Wörter dazu,
 die du richtig hattest. Das geht schon während des Durchlaufs: die richtigen kommen dann
-hinten dran, der Durchlauf zeigt aber erst alle durchgelassenen zu Ende. Mit „Weiter ▸“ geht es zur Statistik. Hast du nichts
+hinten dran, der Durchlauf zeigt aber erst alle durchgelassenen zu Ende. Mit „Weiter ▸“ (oder Enter) geht es zur Statistik. Hast du nichts
 durchgelassen, siehst du gleich alle Karten zum Durchblättern.
 
 Ist dort ein Wort falsch, kannst du es mit „⚑ Melden“ melden (Kapitel 14).
@@ -471,6 +489,10 @@ zählt erst, wenn auch seine Formen sitzen):
 | 3 | 53 % | eine Burg |
 | 4 | 75 % | Burg mit Nebengebäuden und Fahnen |
 
+Mit dem **Schnellen Erbauer** aus dem Bollwerk-Baum kommt jede Stufe früher: Stufe 4 schon
+bei 70 %, die anderen im selben Verhältnis (etwa 9 %, 30 %, 49 %). Karte, Statistik und
+Kampf rechnen dann alle mit den früheren Schwellen.
+
 **Jede Stufe gibt der Festung 25 HP mehr.** Auf Stufe 4 hat sie also 100 HP mehr als auf
 der Baustelle.
 
@@ -518,10 +540,10 @@ aktuelle Stand steigen um denselben Betrag.
    Festung dieser Unit, so wie sie im Kampf steht, und darunter ihre Stufe. Unten links
    geht es zurück zur Buchkarte; liegt dort ein Ort, rückt der Knopf nach oben.
 
-   **Auswählen und spielen.** Ein Klick auf einen Ort markiert ihn (er wird größer und
-   bekommt einen goldenen Ring), ein zweiter Klick nimmt die Markierung wieder weg. Teile
+   **Auswählen und spielen.** Ein Klick auf einen Ort markiert ihn (er wird größer, und
+   ein weißer Pfeil wippt über ihm), ein zweiter Klick nimmt die Markierung wieder weg. Teile
    lassen sich beliebig zusammen markieren – etwa nur Teil 2 und 3; dann kommen die Wörter
-   beider Teile in den Kampf. „Gesamt“ und der Boss stehen allein: wer sie markiert, hebt
+   beider Teile in den Kampf. Bonus-Orte (mit „+“) lassen sich genauso dazunehmen. „Gesamt“ und der Boss stehen allein: wer sie markiert, hebt
    die übrige Auswahl auf. Los geht es mit **„Spielen“** (golden) unten rechts (oder Enter); ohne
    Auswahl ist der Knopf grau. Nach dem Kampf ist das zuletzt Gespielte wieder markiert.
 
@@ -530,11 +552,20 @@ nur eine Reihenfolge vor. Ein Level läuft wie ein Kampf aus dem Expertenmodus �
 Welle, bis du aufhörst oder die Festung fällt. Es spielt alle Aufgaben und Wortarten seines
 Teils. „⟵ Zurück zur Karte“ führt wieder auf die Gebietskarte.
 
-**Wie weit ein Level ist**, zeigt die Karte an drei Stellen: die Füllfarbe steht für die
-Stufe 0 bis 4 (dieselben Schwellen wie bei der Festung), die fünf goldenen Sterne darunter
-leuchten je 20 % gemeisterter Wörter auf, und der Ring wächst mit jedem gemeisterten Wort –
-bei 100 % wird er golden. Nichts davon wird gespeichert – es wird jedes Mal aus dem
+**Wie weit ein Level ist**, zeigt der goldene Ring um den Ort: er wächst mit jedem
+gemeisterten Wort. Die Füllung wird ab einem Viertel bronzen, ab 60 % silbern und bei
+100 % golden – dann wird der Ring breit, pulsiert und sprüht Funken. Sterne unter einem
+Ort stehen für Bonus-Level; sie sind grau und leuchten golden, sobald ihr Bonus gemeistert
+ist. Nichts davon wird gespeichert – es wird jedes Mal aus dem
 Lernstand gerechnet.
+
+**Bonus-Level.** Manchmal bringt eine Lektion etwas Neues für Wörter, die du schon kennst –
+in Latein etwa das Perfekt aller Verben aus den Lektionen davor. Damit die neue Lektion
+nicht mit lauter alten Wörtern vollläuft, stehen diese Aufgaben in einem eigenen Ort mit
+„+“ auf der Gebietskarte. Die Karte am Zeiger sagt, was darin steckt. Ein Bonus fragt nur
+diese Formen ab, zählt seine eigenen Aufgaben und hat keinen Einfluss auf die Festung.
+„Gesamt“ spielt die Boni der Unit mit. In der Statistik steht jeder Bonus unter seiner
+Unit.
 
 **Boss-Medaillen.** Jeder Sieg über den Boss einer Unit wird gezählt. Ab 1 Sieg bekommt er
 einen bronzenen Ring und eine Krone, ab 3 einen silbernen, ab 5 einen goldenen. Die Zahl
@@ -563,12 +594,13 @@ Jeder Baum hat einen eigenen Anfangsknoten und verzweigt sich danach in zwei Äs
 baut einen Ast aus und kann den anderen liegen lassen. Knoten der ersten und zweiten
 Stufe kosten 1 Skillpunkt, die der dritten 2. Im Späher kosten der Anfang, der
 Sturmangriff und der Langbogen je 5, der Explosionspfeil danach 3. Das Wachkatapult im
-Bollwerk kostet 8 und hängt als dritter Ast direkt am Anfang.
+Bollwerk kostet 8 und hängt als dritter Ast direkt am Anfang, ebenso der Schnelle Erbauer
+für 4.
 
 | Baum | Was er tut |
 |---|---|
 | **Genesung** | Jedes besiegte Monster heilt die Festung um mehr HP. |
-| **Bollwerk** | Die Festung bekommt Rüstung. Ein Ast vergrößert den Vorrat, der andere setzt ihn zu jeder Welle ein Stück instand. Ganz außen wartet das **Wachkatapult**, das Monster mit gemeisterten Aufgaben abschießt. |
+| **Bollwerk** | Die Festung bekommt Rüstung. Ein Ast vergrößert den Vorrat, der andere setzt ihn zu jeder Welle ein Stück instand. Ganz außen wartet das **Wachkatapult**, das Monster mit gemeisterten Aufgaben abschießt. Direkt am Anfang hängt der **Schnelle Erbauer**: Stufe 4 der Festung kommt schon bei 70 % statt 75 %, die Stufen davor entsprechend früher. |
 | **Zeitwandler** | Die Zeitlupe beim Tippen hält länger nach (ein Ast) oder wird noch tiefer (der andere Ast). |
 | **Späher** | Der Anfang, der **Späherblick**, schaltet die Ich-Sicht frei (Kapitel 5). Beide Äste danach machen dich darin schneller, am Ende des einen warten der **Sturmangriff** und der **Langbogen**, nach dem Langbogen der **Explosionspfeil**. |
 
@@ -656,6 +688,10 @@ Die Zeichen:
 - **☆** – die Zusatzaufgabe gibt es, sie sitzt aber noch nicht.
 
 Zeigt die Maus auf ein Wort, stehen die Einzelstände jeder Richtung da.
+
+Oben wählst du die Reihenfolge der Wörter: **„Beste zuerst“** (so startet die Liste),
+**„Schwächste zuerst“** oder **„A–Z“**. Noch nie geübte Wörter stehen beim Sortieren nach
+Stand immer am Ende, auch hinter 0 %. Die Wahl gilt auch im Reiter „Aufgaben“.
 
 Welche Units und Themen hier stehen, richtet sich nach der Auswahl bei „Bücher & Units“
 aus „Runde vorbereiten“. Die Themen-Auswahl wird dabei bewusst nicht mitgerechnet: bei
@@ -781,8 +817,9 @@ Auch das graue „↺“ im Fähigkeiten-Screen sagt am Zeiger, warum es gerade 
 - **Jede Aufgabe hat ihren eigenen Lernstand.** Richtig beantwortet steigt er, entwischt
   das Monster, sinkt er. Eine Aufgabe gilt ab einem sicheren Stand (80 %) als
   gemeistert.
-- **Wiederholung nach Plan:** Unsichere Wörter kommen öfter und bald wieder, sichere
-  seltener. In der Statistik steht, wie viele Aufgaben heute fällig sind.
+- **Wiederholung nach Plan:** Ein falsch beantwortetes Wort ist nach zehn Minuten wieder
+  dran, sichere Wörter kommen nach Tagen und mit jedem Erfolg seltener. In der Statistik
+  steht, wie viele Aufgaben gerade fällig sind.
 - **Neue und schwere Wörter kommen langsam**, bekannte schneller. Der Zeitdruck soll
   das schnelle Abrufen von Bekanntem trainieren, nicht Neues unter Stress abfragen.
 - **Tippfehler-Frust wird klein gehalten:** Artikel, „the“, „to“, Klammerteile und
@@ -791,9 +828,9 @@ Auch das graue „↺“ im Fähigkeiten-Screen sagt am Zeiger, warum es gerade 
 - **Ein Wort zählt erst, wenn es in beide Richtungen sitzt**, ein unregelmäßiges Verb
   (*go – went – gone*, *recevoir*) erst mit seinen Formen. Die Balken im Reiter
   „Fortschritt“ sind deshalb die Zahl, nach der man vor einer Vokabelarbeit fragt.
-- **Die Festung ist bei drei Vierteln fertig, die Sterne erst bei allem.** Stufe 4 mit dem
-  Wachkatapult gibt es ab 75 %; die fünf goldenen Sterne auf der Karte stehen für je
-  20 %, und erst bei 100 % wird der Ring um den Ort golden.
+- **Die Festung ist bei drei Vierteln fertig, der Ring erst bei allem.** Stufe 4 mit dem
+  Wachkatapult gibt es ab 75 % (mit dem Schnellen Erbauer ab 70 %); der Ring um den Ort auf der Karte füllt sich bis 100 %,
+  und erst dann leuchtet er.
 - **Belohnung für Genauigkeit statt für Masse:** die Güte der Schatzkiste hängt nur davon
   ab, wie genau eine Welle war, nicht davon, wie lang sie war.
 - **Eine Niederlage kostet den Lauf, nicht das Erspielte.** Gold, Erfahrung und

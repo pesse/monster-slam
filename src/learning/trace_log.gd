@@ -147,6 +147,8 @@ func note_spawn(task: Dictionary) -> void:
 		"answers": task.get("accepted_answers", []),
 		"conf": _confidence(id, float(task.get("initial_confidence", -1.0))),
 		"diff": int(task.get("difficulty", 0)),
+		# Warum dieses Wort (WaveGenerator.pick_reason): Gruppe, Stelle, Größe des Pools.
+		"why": task.get("pick", {}),
 	})
 
 

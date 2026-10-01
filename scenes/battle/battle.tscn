@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3]
+[gd_scene load_steps=21 format=3]
 
 [ext_resource type="Script" path="res://src/battle/wave_runner.gd" id="1_battle"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="2_hud"]
@@ -15,6 +15,8 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/spelling_freeze.tscn" id="21_spelling"]
 [ext_resource type="PackedScene" path="res://scenes/ui/scene_zoom.tscn" id="20_zoom"]
 [ext_resource type="PackedScene" path="res://scenes/ui/fast_resolve_button.tscn" id="13_fast_resolve"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pause_overlay.tscn" id="22_pause"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pause_button.tscn" id="23_pause_button"]
 [ext_resource type="PackedScene" path="res://scenes/ui/word_plates.tscn" id="14_plates"]
 
 [sub_resource type="Environment" id="Env_1"]
@@ -94,8 +96,6 @@ process_mode = 3
 
 [node name="FastResolveButton" parent="UI" instance=ExtResource("13_fast_resolve")]
 
-[node name="DebugPanel" parent="UI" instance=ExtResource("4_debug")]
-
 [node name="WaveStats" parent="UI" instance=ExtResource("5_stats")]
 
 [node name="LeakReveal" parent="UI" instance=ExtResource("6_reveal")]
@@ -119,5 +119,12 @@ vertical_alignment = 1
 visible = false
 
 [node name="FastResolveConfirm" parent="UI" instance=ExtResource("11_confirm")]
+
+[node name="PauseOverlay" parent="UI" instance=ExtResource("22_pause")]
+
+[node name="PauseButton" parent="UI" instance=ExtResource("23_pause_button")]
+
+[node name="DebugPanel" parent="UI" instance=ExtResource("4_debug")]
+process_mode = 3
 
 [node name="SceneZoom" parent="." instance=ExtResource("20_zoom")]

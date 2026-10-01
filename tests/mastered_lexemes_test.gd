@@ -135,7 +135,7 @@ func test_the_word_row_of_an_irregular_verb_counts_its_forms() -> void:
 
 
 ## Die Daten: `irregular` steht nur an Verben, jedes davon hat Formaufgaben (sonst wäre das
-## Feld wirkungslos), und jedes Verb mit dem Thementag „irregular" der Access-Bände trägt es.
+## Feld wirkungslos; ausgenommen Formen, die alle in einem Bonus stehen), und jedes Verb mit dem Thementag „irregular" der Access-Bände trägt es.
 func test_irregular_verbs_in_the_catalog_have_form_tasks() -> void:
 	var requirements := ContentRegistry.form_requirements()
 	for id in ContentRegistry.lexemes:
@@ -148,6 +148,12 @@ func test_irregular_verbs_in_the_catalog_have_form_tasks() -> void:
 			assert_bool(requirements.has(id)).is_false()
 			continue
 		assert_str(str(entry.get("type", ""))).override_failure_message(str(id)).is_equal("verb")
+		# Stehen alle seine Formen in einem Bonus (später gelehrt, ADR 0012), zählt keine zur
+		# Meisterung — dann muss es aber Formen haben.
+		var forms := ContentRegistry.forms_for(str(id))
+		if not requirements.has(id) and not forms.is_empty() \
+				and forms.all(func(f): return not ContentRegistry.bonus_of_form(f).is_empty()):
+			continue
 		assert_bool(requirements.has(id)).override_failure_message("%s: keine Formaufgabe" % id).is_true()
 		var needed: Array = requirements.get(id, [])
 		assert_int(needed.filter(func(t): return str(t).begins_with("translate:")).size()).is_equal(2)
@@ -250,18 +256,43 @@ func test_an_untouched_word_has_no_percentage() -> void:
 	assert_str(str(lines[0]["mark"])).is_empty()
 
 
-func test_the_weakest_word_comes_first_and_untouched_ones_last() -> void:
-	var pool := [
+## Von Haus aus steht das Sicherste oben; nie Geübtes steht auch unter einem 0-%-Wort,
+## denn 0 % ist gemessen.
+func test_the_best_word_comes_first_and_untouched_ones_last() -> void:
+	var rows := STATS_SCREEN.word_rows(_sort_pool(), _sort_conf())
+	assert_array(_labels(rows)).is_equal(["stark", "schwach", "null", "neu"])
+
+
+func test_weakest_first_still_puts_untouched_words_last() -> void:
+	var rows := STATS_SCREEN.word_rows(_sort_pool(), _sort_conf(), Callable(), {},
+			STATS_SCREEN.SortMode.WEAKEST_FIRST)
+	assert_array(_labels(rows)).is_equal(["null", "schwach", "stark", "neu"])
+
+
+func test_alphabetical_ignores_the_confidence() -> void:
+	var rows := STATS_SCREEN.word_rows(_sort_pool(), _sort_conf(), Callable(), {},
+			STATS_SCREEN.SortMode.ALPHABETICAL)
+	assert_array(_labels(rows)).is_equal(["neu", "null", "schwach", "stark"])
+
+
+func _sort_pool() -> Array:
+	return [
 		_lexeme("stark", "access2", 6), _lexeme("neu", "access2", 6),
-		_lexeme("schwach", "access2", 6),
+		_lexeme("schwach", "access2", 6), _lexeme("null", "access2", 6),
 	]
-	var rows := STATS_SCREEN.word_rows(pool, _conf({
+
+
+func _sort_conf() -> Callable:
+	return _conf({
 		"translate:de_to_en:stark": 0.9, "translate:en_to_de:stark": 0.85,
 		"translate:de_to_en:schwach": 0.5, "translate:en_to_de:schwach": 0.6,
-	}))
-	assert_str(str(rows[0]["label"])).contains("schwach")
-	assert_str(str(rows[1]["label"])).contains("stark")
-	assert_str(str(rows[2]["label"])).contains("neu")
+		"translate:de_to_en:null": 0.0, "translate:en_to_de:null": 0.0,
+	})
+
+
+## Das Wort vor dem Strich — die Labels sind „fremd — deutsch".
+func _labels(rows: Array) -> Array:
+	return rows.map(func(row): return str(row["label"]).get_slice(" — ", 0))
 
 
 ## Der Haken steht genau ab der Schwelle, aus der auch die Meisterung kommt — sonst

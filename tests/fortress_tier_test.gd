@@ -48,6 +48,43 @@ func test_the_comparison_has_no_rounding_gap() -> void:
 	assert_int(FortressTier.tier_for(3, 30)).is_equal(1)
 
 
+## Schneller Erbauer (`drop` 5): Stufe 4 bei 70 %, die anderen im selben Verhältnis früher.
+func test_a_drop_pulls_every_threshold_forward() -> void:
+	# 20 Wörter, Schwellen ×70/75: 9,3 % = 1,9, 29,9 % = 6,0, 49,5 % = 9,9, 70 % = 14.
+	assert_int(FortressTier.tier_for(1, 20, 5)).is_equal(0)
+	assert_int(FortressTier.tier_for(2, 20, 5)).is_equal(1)
+	assert_int(FortressTier.tier_for(6, 20, 5)).is_equal(2)
+	assert_int(FortressTier.tier_for(9, 20, 5)).is_equal(2)
+	assert_int(FortressTier.tier_for(10, 20, 5)).is_equal(3)
+	assert_int(FortressTier.tier_for(13, 20, 5)).is_equal(3)
+	assert_int(FortressTier.tier_for(14, 20, 5)).is_equal(4)
+	assert_int(FortressTier.tier_for(70, 100, 5)).is_equal(4)
+	assert_int(FortressTier.tier_for(69, 100, 5)).is_equal(3)
+	assert_dict(FortressTier.next_threshold(10, 20, 5)).is_equal({"tier": 4, "needed": 4})
+
+
+func test_a_drop_never_gives_the_top_tier_away() -> void:
+	assert_int(FortressTier.tier_for(49, 100, 100)).is_equal(3)
+	assert_int(FortressTier.tier_for(50, 100, 100)).is_equal(4)
+	assert_int(FortressTier.tier_for(15, 20, -10)).is_equal(4)
+
+
+func test_the_drop_comes_from_the_skill_bonuses() -> void:
+	assert_int(FortressTier.drop_of({"fortress_tier_drop": 5.0})).is_equal(5)
+	assert_int(FortressTier.drop_of({})).is_equal(0)
+
+
+func test_unit_tiers_count_with_the_drop() -> void:
+	var unit: Array = []
+	var mastered := {}
+	for i in 20:
+		unit.append(_lexeme("w%d" % i, "access1", 1))
+		if i < 14:
+			mastered["w%d" % i] = true
+	assert_int(int(FortressTier.unit_tiers(unit, mastered)["access1/1"]["tier"])).is_equal(3)
+	assert_int(int(FortressTier.unit_tiers(unit, mastered, 5)["access1/1"]["tier"])).is_equal(4)
+
+
 func test_a_unit_without_words_is_tier_zero() -> void:
 	assert_int(FortressTier.tier_for(0, 0)).is_equal(0)
 	assert_dict(FortressTier.next_threshold(0, 0)).is_empty()
