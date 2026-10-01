@@ -1,6 +1,7 @@
 [
   { "id": "def.translate.de_la", "language": "la", "task_type": "translate", "direction": "de_to_la", "allowed_types": ["*"], "difficulty": 1 },
   { "id": "def.translate.la_de", "language": "la", "task_type": "translate", "direction": "la_to_de", "allowed_types": ["*"], "difficulty": 2 },
+  { "id": "def.forms.la_present_1sg", "language": "la", "task_type": "forms", "direction": "la", "requires_form": "la_present_1sg", "allowed_types": ["verb"], "difficulty": 2 },
   { "id": "def.forms.la_genitive", "language": "la", "task_type": "forms", "direction": "la", "requires_form": "la_genitive", "allowed_types": ["noun"], "difficulty": 2 },
   { "id": "def.forms.la_gender", "language": "la", "task_type": "forms", "direction": "la", "requires_form": "la_gender", "allowed_types": ["noun"], "difficulty": 2 },
   { "id": "def.forms.la_perfect", "language": "la", "task_type": "forms", "direction": "la", "requires_form": "la_perfect", "allowed_types": ["verb"], "difficulty": 3 },

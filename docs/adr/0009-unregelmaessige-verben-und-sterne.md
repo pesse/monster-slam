@@ -30,8 +30,10 @@ sehen.
    - Englisch: Past Simple oder Past Participle nicht nach der *-ed*-Regel.
    - Französisch: die Verben mit Konjugationsformen, denn nur unregelmäßige haben welche
      (ADR 0008).
-   - Latein: vorläufig die Verben, deren Perfekt nicht auf *-āvī*/*-uī* endet. Welche
-     lateinischen Verben zählen, ist noch offen.
+   - Latein: die Verben, deren Perfekt nicht nach der Regel ihrer Konjugation gebildet
+     ist (a: *-āvī*, e: *-uī*, i: *-īvī*): *-s-*-Perfekt, *-uī* bei konsonantischen Verben
+     (*imposuī*), *petīvī*, dazu *esse* (*sum*). Nachtrag 2026-10-01; zuvor hieß es
+     „nicht auf *-āvī*/*-uī*", was die i-Konjugation mitgezählt hätte.
 
    Gesetzt wird das Feld beim Erzeugen der Daten. Ein eigenes Feld statt des Thementags
    `irregular`, weil Tags die Achse des Themenfilters sind, nicht die der Regeln. Ein

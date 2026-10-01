@@ -42,7 +42,9 @@ Eintrag ersetzt, ist der Zweck der Übung und bleibt still.
   `.all("waves")`, `.lexemes_by_tags(["school"])`, `.forms_for(id, form_type)`,
   `.relations_of(id, "opposite")`, `.monster_rule_for(task_type, direction)`.
 - Auswahl-Filter fürs Session-Setup: `.lexemes_scoped(scope, tags)` (Schnitt aus
-  Curriculum-Scope UND Themen, siehe unten), plus `.all_books()` / `.units_for(book)` /
+  Curriculum-Scope UND Themen, siehe unten). Der Aufgabenpool nimmt
+  `.lexemes_for_run(scope, tags)`: dazu die Lexeme, von denen eine Form erst in diesem
+  Scope gelehrt wird (`unit`/`part` an der Form, ADR 0011). Dazu `.all_books()` / `.units_for(book)` /
   `.parts_for(book, unit)` für den Buch▸Unit▸Teil-Picker.
 - `reload()` scannt zur Laufzeit neu.
 

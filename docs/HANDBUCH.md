@@ -150,9 +150,12 @@ langsam tippen.
   Beispiel ein deutsches Wort, das du auf Englisch (oder Latein) schreiben sollst, oder ein
   englisches (lateinisches), das du auf Deutsch schreiben sollst.
 - **Latein** fragt außerdem die Formen ab, die du mit der Vokabel lernst: bei Nomen
-  Genitiv und Genus („m“, „f“, „n“ — oder „maskulin“ …), bei Verben das Perfekt. Die
-  Längenstriche (ā, ē …) musst du nie tippen; nach einer Übersetzung zeigt die Auflösung
-  die Lexikonform mit, etwa den Genitiv und das Genus.
+  Genitiv und Genus („m“, „f“, „n“ — oder „maskulin“ …), bei Verben die 1. Person
+  Singular und das Perfekt. Wie im Buch kommt eine Form erst ab der Lektion dran, die sie
+  lehrt: die 1. Person ab Lektion 3, das Perfekt ab Lektion 11. Dort wiederholst du die
+  Verben der Lektionen davor mit ihrem Perfekt. Die Längenstriche (ā, ē …) musst du nie
+  tippen; nach einer Übersetzung zeigt die Auflösung die Lexikonform mit, etwa den
+  Genitiv und das Genus.
 - **Französisch** fragt bei den unregelmäßigen Verben die Konjugation ab: das Präsens
   für eine Person („Präsens, nous") oder das Passé composé mit *je*. Du kannst die
   Person mitschreiben („nous recevons") oder nur das Verb („recevons"). Akzente musst

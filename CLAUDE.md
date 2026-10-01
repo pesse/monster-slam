@@ -62,7 +62,8 @@ urheberrechtlich geschütztem Lehrbuchmaterial und liegen im privaten Submodule
 - Nur lokal, nie committen: `assets/maps/*/drafts/` (steht in `.git/info/exclude`).
 - Jeder Content-Generierungslauf (Vokabeln, Formen, Relationen, Sätze) bekommt einen
   Eintrag und eine Tabellenzeile in `docs/CONTENT_GENERATION_RUNS.md` (Ansatz, Modell,
-  Agenten, Tokens, Kosten, Ergebnis) — Kosten beim Nutzer erfragen, wenn unbekannt.
+  Agenten, Ergebnis). Kosten werden nicht erfasst: generiert wird über das Abo auf dem
+  stärksten Modell, der Qualität wegen.
 - Die Spur (`user://logs/*_trace.jsonl`) enthält getippte Kindertexte und Lemmata — sie
   verlässt den Rechner nicht.
 

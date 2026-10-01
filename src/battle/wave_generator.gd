@@ -189,14 +189,16 @@ func _candidates(pool: Dictionary, limit: int = 0) -> Array:
 	var scope: Array = pool.get("scope", []) # leer -> alle Bücher/Units
 	var lexeme_types: Array = pool.get("lexeme_types", []) # leer -> alle Wortarten
 	var direction := str(pool.get("direction", "")) # "" = beliebige Richtung
-	var lexemes := ContentRegistry.lexemes_scoped(scope, tags) # leerer scope/tags -> alle Lexeme
+	# leerer scope/tags -> alle Lexeme; dazu die, deren Formen erst in diesem Scope gelehrt werden
+	var lexemes := ContentRegistry.lexemes_for_run(scope, tags)
+	_resolver.scope = scope
 	if not lexeme_types.is_empty():
 		lexemes = lexemes.filter(func(lx): return str(lx.get("type", "")) in lexeme_types)
 	var result: Array = []
 	for definition in ContentRegistry.task_definitions.values():
 		if not definition_allowed(definition, task_types, direction):
 			continue
-		_expand(definition, lexemes, result, limit)
+		_expand(definition, lexemes, result, limit, scope)
 		if limit > 0 and result.size() >= limit:
 			break
 	return result
@@ -225,11 +227,12 @@ static func definition_allowed(definition: Dictionary, task_types: Array,
 ## Verbindet eine Definition mit allen kompatiblen Lexemen und hängt die Kandidaten an.
 ## Relations-/Formaufgaben expandieren über die tatsächlich vorhandenen Relationen/Formen,
 ## sodass nie eine unauflösbare Instanz entsteht.
-func _expand(definition: Dictionary, lexemes: Array, result: Array, limit: int = 0) -> void:
+func _expand(definition: Dictionary, lexemes: Array, result: Array, limit: int = 0,
+		scope: Array = []) -> void:
 	for source in lexemes:
 		if limit > 0 and result.size() >= limit:
 			return
-		for extra in _instances(definition, source):
+		for extra in _instances(definition, source, scope):
 			result.append(_candidate(definition, source, extra))
 
 
@@ -250,7 +253,10 @@ func _expand(definition: Dictionary, lexemes: Array, result: Array, limit: int =
 ##
 ## Eine Definition gilt nur für Lexeme ihrer Sprache (`language`, ohne Feld englisch):
 ## sonst stellte die englische Übersetzung ein lateinisches Wort und umgekehrt.
-func _instances(definition: Dictionary, source: Dictionary) -> Array:
+##
+## `scope` lässt nur Formen zu, die dort schon gelehrt sind (ContentRegistry.form_in_scope);
+## leer, wie für die Statistik, zählt jede Form.
+func _instances(definition: Dictionary, source: Dictionary, scope: Array = []) -> Array:
 	if Lexeme.language(definition) != Lexeme.language(source):
 		return []
 	if str(definition.get("task_type", "")) in source.get("excluded_task_types", []):
@@ -268,7 +274,7 @@ func _instances(definition: Dictionary, source: Dictionary) -> Array:
 		return out
 	var form_req := str(definition.get("requires_form", ""))
 	if form_req != "":
-		return [{"form_type": form_req}] if not ContentRegistry.forms_for(source_id, form_req).is_empty() else []
+		return [{"form_type": form_req}] if not ContentRegistry.forms_for(source_id, form_req, scope).is_empty() else []
 	return [{}]
 
 

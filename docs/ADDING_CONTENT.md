@@ -72,7 +72,13 @@ Gebietskarte hat sechs Teil-Stationen, noch leere stehen gesperrt da.
 Makrons dürfen (und sollen, wie im Buch) in den Daten stehen — der `AnswerEvaluator` faltet
 sie auf beiden Seiten weg, getippt werden sie nie. Die Formen, die das Buch mitlernen
 lässt, stehen als `lexeme_forms` mit `language: "la"`: `la_genitive` und `la_gender`
-(`m`/`f`/`n`) am Nomen, `la_perfect` und `la_ppp` am Verb. Sie stellen je eine
+(`m`/`f`/`n`) am Nomen, `la_present_1sg`, `la_perfect` und `la_ppp` am Verb. Lehrt das
+Buch eine Form erst in einer späteren Lektion, trägt die Form diese Lektion als
+`unit`/`part` (ADR 0011): die 1. Person der Verben aus Lektion 1–2 `"unit": 1, "part": 3`,
+das Perfekt der Verben aus Lektion 1–10 `"unit": 2, "part": 5` (Begleitgrammatik zu
+Lektion 11). Eingetragen wird nur, was das Buch bis dahin lehrt: das Perfekt auf
+*-v-*, *-u-* und *-s-*; Dehnungs-, Reduplikations- und Stammperfekt erst mit ihrer
+Lektion. Sie stellen je eine
 `forms`-Aufgabe (`data/task_definitions/la_basics.json`) und erscheinen im Reveal der
 Übersetzung als Lexikonform („Gen. amīcī · m"). Die Aufgabendefinitionen einer Sprache
 tragen ebenfalls `language` und gelten nur für Lexeme dieser Sprache; jede neue Richtung
