@@ -74,7 +74,7 @@ static func build(parent: Node3D, tier: int, front_z: float, ground_y: Callable,
 		# Stufe 1 ohne Mauer: Turm an den hinteren Rand (+z), weg von der Front.
 		put.at("building_tower_A_blue", 0.0, fz + 3.0 * k)
 
-	# Vollausbau: Nebengebäude hinter der Mauer + Fahnen auf den Ecktürmen.
+	# Vollausbau: Nebengebäude hinter der Mauer.
 	if tier >= 4:
 		put.at("building_barracks_blue", -seg * 1.3, fz + 4.5 * k, 20.0)
 		put.at("building_blacksmith_blue", seg * 1.3, fz + 4.5 * k, -20.0)
@@ -82,11 +82,6 @@ static func build(parent: Node3D, tier: int, front_z: float, ground_y: Callable,
 		put.at("building_home_B_blue", seg * 0.6, fz + 6.5 * k)
 		put.at("building_church_blue", 0.0, fz + 8.0 * k)
 		put.at("building_windmill_blue", -seg * 1.9, fz + 2.5 * k)
-		var flag_y := 2.2 * scale
-		for sx: float in [-seg * 1.5, seg * 1.5]:
-			var flag := put.at("flag_blue", sx, fz)
-			if flag != null:
-				flag.position.y += flag_y
 
 
 ## Die Katapulte unter `parent`, die sich bewegen lassen: der Drehkranz jedes
