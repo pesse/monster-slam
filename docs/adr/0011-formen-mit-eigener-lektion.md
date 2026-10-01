@@ -22,7 +22,9 @@ Dublette mit zwei Fortschrittsständen.
    (`TaskResolver.scope`, gesetzt vom `WaveGenerator`). In Lektion 1 gibt es also weder
    Perfekt noch 1. Person, in Lektion 11 beides. Eine Unit zählt bis zu ihrem Ende, das
    Buch alles.
-3. **Nur die lehrende Lektion holt das Lexem als Wiederholung in den Pool**
+3. *Ersetzt durch ADR 0012 (Bonus-Level): die lehrende Lektion holt keine Wiederholung
+   mehr, die Formen älterer Wörter stehen in einem Bonus.*
+   **Nur die lehrende Lektion holt das Lexem als Wiederholung in den Pool**
    (`ContentRegistry.form_taught_in`, `lexemes_for_run`), mit allen seinen Aufgaben
    dort, auch den
    Übersetzungen. Gemeisterte, nicht fällige Aufgaben stehen in der Auswahl hinten.

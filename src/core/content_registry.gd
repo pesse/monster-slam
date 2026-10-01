@@ -86,6 +86,17 @@ var _parts: Dictionary = {}
 ## Siehe _index_form_requirements() und PlayerProgress.mastered_lexemes_in.
 var _form_requirements: Dictionary = {}
 
+## Die Bonus-Level (ADR 0012): Scope-Schlüssel (BONUS_PREFIX…) -> { key, book, unit, part,
+## form_type, lexeme_ids, task_ids }. Siehe _index_bonuses().
+var _bonuses: Dictionary = {}
+## Form-Id -> Schlüssel ihres Bonus, nur für Formen, die in einem Bonus stehen.
+var _bonus_of_form: Dictionary = {}
+
+## Ein Scope-Schlüssel mit diesem Präfix meint einen Bonus, nicht ein Stück Buch:
+## „bonus:<book>/<unit>/<part>/<form_type>". Das Präfix hält ihn aus jedem Vergleich mit
+## Buch, Unit und Lektion heraus (lexemes_scoped, form_in_scope).
+const BONUS_PREFIX := "bonus:"
+
 
 func _ready() -> void:
 	_by_category = {
@@ -130,6 +141,7 @@ func reload() -> void:
 		)
 
 	_index_parts()
+	_index_bonuses()
 	_index_form_requirements()
 	_apply_flags()
 
@@ -190,9 +202,9 @@ func _index_parts() -> void:
 ## Formen lassen sich nicht ableiten, sie SIND Teil des Wortes. Bei regelmäßigen ergibt sich
 ## die Form aus der Regel, dort bleibt es bei den beiden Übersetzungsrichtungen.
 ##
-## Eine Form, die das Buch erst in einer anderen Unit lehrt (`unit` an der Form, das
-## Perfekt der Verben aus Unit 1 in Lektion 11), zählt nicht mit: sonst ließe sich Unit 1
-## nur in Unit 2 meistern. Sie bleibt Wiederholung in der Lektion, die sie lehrt.
+## Eine Form aus einem Bonus (später gelehrt als ihr Wort, _index_bonuses) zählt nicht
+## mit, auch innerhalb derselben Unit: sonst ließe sich Unit 1 nur in Unit 2 meistern, und
+## die Festung hinge an Aufgaben, die gar nicht zu den Wörtern der Unit gehören (ADR 0012).
 ##
 ## Als Index und nicht bei jeder Abfrage, weil forms_for den ganzen Formbestand durchläuft
 ## und die Karte die Meisterung beim Öffnen für alle Units braucht.
@@ -208,31 +220,147 @@ func _index_form_requirements() -> void:
 		var lexeme_id := str(entry.get("lexeme_id", ""))
 		if not form_types.has(lexeme_id):
 			continue
-		if entry.has("unit") and int(entry["unit"]) != int(lexemes[lexeme_id].get("unit", -1)):
+		if _bonus_of_form.has(str(entry.get("id", ""))):
 			continue
 		form_types[lexeme_id][str(entry.get("form_type", ""))] = true
 	var resolver := TaskResolver.new()
 	for lexeme_id in form_types:
 		var lexeme: Dictionary = lexemes[lexeme_id]
-		var ids: Array = []
-		for definition in task_definitions.values():
-			var form_type := str(definition.get("requires_form", ""))
-			if form_type.is_empty() or not form_types[lexeme_id].has(form_type):
-				continue
-			var task_type := str(definition.get("task_type", ""))
-			if Lexeme.language(definition) != Lexeme.language(lexeme) \
-					or task_type in lexeme.get("excluded_task_types", []):
-				continue
-			var allowed: Array = definition.get("allowed_types", ["*"])
-			if not (allowed.is_empty() or "*" in allowed or str(lexeme.get("type", "")) in allowed):
-				continue
-			ids.append(resolver.learnable_id(task_type, str(definition.get("direction", "")),
-					lexeme_id, {"form_type": form_type}))
+		var ids := _form_task_ids(resolver, lexeme, form_types[lexeme_id])
 		if ids.is_empty():
 			continue
 		for direction in Lexeme.mastery_directions(Lexeme.language(lexeme)):
 			ids.push_front(resolver.learnable_id("translate", direction, lexeme_id))
 		_form_requirements[lexeme_id] = ids
+
+
+## Die learnable_ids der Formaufgaben zu `lexeme` für die Formarten in `form_types`
+## (form_type -> true): Definitionen mit `requires_form`, in der Sprache des Lexems, für
+## seine Wortart und nicht ausgeschlossen — dieselben, die WaveGenerator._instances spawnt.
+func _form_task_ids(resolver: TaskResolver, lexeme: Dictionary, form_types: Dictionary) -> Array:
+	var ids: Array = []
+	var lexeme_id := str(lexeme.get("id", ""))
+	for definition in task_definitions.values():
+		var form_type := str(definition.get("requires_form", ""))
+		if form_type.is_empty() or not form_types.has(form_type):
+			continue
+		var task_type := str(definition.get("task_type", ""))
+		if Lexeme.language(definition) != Lexeme.language(lexeme) \
+				or task_type in lexeme.get("excluded_task_types", []):
+			continue
+		var allowed: Array = definition.get("allowed_types", ["*"])
+		if not (allowed.is_empty() or "*" in allowed or str(lexeme.get("type", "")) in allowed):
+			continue
+		ids.append(resolver.learnable_id(task_type, str(definition.get("direction", "")),
+				lexeme_id, {"form_type": form_type}))
+	return ids
+
+
+## Sammelt die Bonus-Level (ADR 0012). Eine Form steht in einem Bonus, wenn das Buch sie
+## später lehrt als ihr Wort: ihre Lektion (`unit`/`part` an der Form, ADR 0011) liegt
+## hinter der ihres Lexems. Das Perfekt der Verben aus Lektion 1–10 ist so der Bonus der
+## Lektion 11, die 1. Person der Verben aus Lektion 1–2 der von Lektion 3.
+##
+## Ein Bonus je Lernthema: lehrende Lektion und Formart. Er gehört zu der Unit, in der die
+## Form gelehrt wird, zählt aber nicht zu ihrer Festung — seine Aufgaben haben eine eigene
+## Zählung (BonusLevel.counts). Abgeleitet, nicht gespeichert: was ein Bonus ist, folgt
+## allein aus den Daten. Eine Form ohne eigene Lektion steht nie in einem Bonus.
+func _index_bonuses() -> void:
+	_bonuses.clear()
+	_bonus_of_form.clear()
+	var resolver := TaskResolver.new()
+	for form_id in lexeme_forms:
+		var form: Dictionary = lexeme_forms[form_id]
+		if not form.has("unit"):
+			continue
+		var lexeme_id := str(form.get("lexeme_id", ""))
+		var lexeme: Dictionary = lexemes.get(lexeme_id, {})
+		var book := str(lexeme.get("book", ""))
+		if book.is_empty() or not lexeme.has("unit"):
+			continue
+		var unit := int(form["unit"])
+		var part := int(form.get("part", 0))
+		var own_unit := int(lexeme["unit"])
+		if unit < own_unit or (unit == own_unit and part <= part_of(lexeme_id)):
+			continue
+		var form_type := str(form.get("form_type", ""))
+		var task_ids := _form_task_ids(resolver, lexeme, {form_type: true})
+		if task_ids.is_empty():
+			continue
+		var key := bonus_key(book, unit, part, form_type)
+		if not _bonuses.has(key):
+			_bonuses[key] = {"key": key, "book": book, "unit": unit, "part": part,
+					"form_type": form_type, "lexeme_ids": [], "task_ids": []}
+		var bonus: Dictionary = _bonuses[key]
+		if not lexeme_id in bonus["lexeme_ids"]:
+			(bonus["lexeme_ids"] as Array).append(lexeme_id)
+		for id in task_ids:
+			if not id in bonus["task_ids"]:
+				(bonus["task_ids"] as Array).append(id)
+		_bonus_of_form[str(form_id)] = key
+
+
+## Der Scope-Schlüssel eines Bonus (BONUS_PREFIX).
+static func bonus_key(book: String, unit: int, part: int, form_type: String) -> String:
+	return "%s%s/%d/%d/%s" % [BONUS_PREFIX, book, unit, part, form_type]
+
+
+## Die Boni einer Unit, nach Lektion und Formart: [{ key, book, unit, part, form_type,
+## lexeme_ids, task_ids }].
+func bonuses_of(book: String, unit: int) -> Array:
+	var out: Array = _bonuses.values().filter(func(b):
+			return str(b["book"]) == book and int(b["unit"]) == unit)
+	out.sort_custom(func(a, b):
+			if int(a["part"]) != int(b["part"]):
+				return int(a["part"]) < int(b["part"])
+			return str(a["form_type"]) < str(b["form_type"]))
+	return out
+
+
+## Alle Boni: Schlüssel -> Bonus (wie bei bonuses_of).
+func bonuses() -> Dictionary:
+	return _bonuses
+
+
+## Der Bonus, in dem die Form steht, oder "".
+func bonus_of_form(form: Dictionary) -> String:
+	return str(_bonus_of_form.get(str(form.get("id", "")), ""))
+
+
+## Spielt `scope` den Bonus `key` mit? Wenn er selbst gewählt ist oder der Scope seine
+## ganze Unit oder sein ganzes Buch umfasst (Gesamt, ADR 0012). Ein einzelner Teil bringt
+## keinen Bonus mit.
+func bonus_in_scope(key: String, scope: Array) -> bool:
+	if key in scope:
+		return true
+	var bonus: Dictionary = _bonuses.get(key, {})
+	if bonus.is_empty():
+		return false
+	return str(bonus["book"]) in scope or "%s/%d" % [bonus["book"], int(bonus["unit"])] in scope
+
+
+## Kommt die Form in `scope` als Aufgabe dran? Eine Form aus einem Bonus nur, wo ihr Bonus
+## mitspielt (bonus_in_scope): das Perfekt eines Verbs aus Lektion 1 im Bonus und in
+## „Gesamt", nicht in einem Lauf über Lektion 1 und 12. Jede andere Form wie form_in_scope.
+func form_task_in_scope(form: Dictionary, scope: Array) -> bool:
+	if not form_in_scope(form, scope):
+		return false
+	var bonus := bonus_of_form(form)
+	return bonus.is_empty() or scope.is_empty() or bonus_in_scope(bonus, scope)
+
+
+## Die Units („<book>/<unit>") der Boni, die `scope` ausdrücklich nennt — ihre Festung gilt
+## im Bonus-Lauf (FortressTier.run_tier), obwohl die Wörter aus früheren Units stammen.
+func bonus_units(scope: Array) -> Array:
+	var out: Array = []
+	for key in scope:
+		var bonus: Dictionary = _bonuses.get(str(key), {})
+		if bonus.is_empty():
+			continue
+		var unit := "%s/%d" % [bonus["book"], int(bonus["unit"])]
+		if not unit in out:
+			out.append(unit)
+	return out
 
 
 ## Lexem-Id -> learnable_ids, die ein unregelmäßiges Verb für seine Meisterung braucht
@@ -429,11 +557,10 @@ func lexemes_scoped(scope: Array, tags: Array) -> Array:
 	return result
 
 
-## Die Lexeme, die ein Kampf über `scope` abfragt: die des Scopes und dazu die, von denen
-## eine Form genau in diesem Scope gelehrt wird (form_taught_in) — das Lateinbuch lehrt in
-## Lektion 11 die Perfekte aller Verben davor. Solche Lexeme kommen mit allen Aufgaben
-## ihres Scopes, auch den Übersetzungen, als Wiederholung dazu. Spätere Lektionen holen
-## sie nicht noch einmal.
+## Die Lexeme, die ein Kampf über `scope` abfragt: die des Scopes und dazu die der Boni,
+## die der Scope mitspielt (bonus_in_scope) — von denen fragt der Kampf nur die
+## Bonus-Formen ab, nicht die Übersetzungen (WaveGenerator._candidates). Die lehrende
+## Lektion holt keine Wiederholung mehr (ADR 0012, ersetzt ADR 0011 Punkt 3).
 ##
 ## Nur für den Aufgabenpool. Festungsstufe, Statistik und Sätze zählen weiter über
 ## lexemes_scoped: ein Wort gehört zur Unit, in der es steht.
@@ -447,45 +574,39 @@ func lexemes_for_run(scope: Array, tags: Array) -> Array:
 	var tagged: Dictionary = {}
 	for entry in lexemes_by_tags(tags):
 		tagged[str(entry.get("id", ""))] = true
-	for form in lexeme_forms.values():
-		var lexeme_id := str(form.get("lexeme_id", ""))
-		if seen.has(lexeme_id) or not tagged.has(lexeme_id) or not form.has("unit"):
+	for key in _bonuses:
+		if not bonus_in_scope(key, scope):
 			continue
-		if form_taught_in(form, scope):
+		for lexeme_id in _bonuses[key]["lexeme_ids"]:
+			if seen.has(lexeme_id) or not tagged.has(lexeme_id):
+				continue
 			seen[lexeme_id] = true
 			result.append(lexemes[lexeme_id])
 	return result
-
-
-## Wird die Form genau in `scope` gelehrt — ihre Lektion (oder Unit, oder ihr Buch) steht
-## im Scope? Eine Form mit `unit` (und `part`) hat die Lektion, in der das Buch sie lehrt,
-## ohne Feld die ihres Lexems. Entscheidet, welche Lektion ein Lexem zur Wiederholung holt.
-func form_taught_in(form: Dictionary, scope: Array) -> bool:
-	var lesson := _form_lesson(form)
-	if lesson.is_empty():
-		return false
-	var keys := [lesson["book"], "%s/%d" % [lesson["book"], lesson["unit"]]]
-	if int(lesson["part"]) > 0:
-		keys.append("%s/%d/%d" % [lesson["book"], lesson["unit"], lesson["part"]])
-	for key in keys:
-		if key in scope:
-			return true
-	return false
 
 
 ## Gilt die Form in `scope` als eingeführt? Ab der Lektion, die sie lehrt, gilt sie in
 ## jeder späteren mit (das Buch führt Stammformen ab dort bei jeder Vokabel); vorher kommt
 ## sie weder als Aufgabe noch im Reveal: in Lektion 1 gibt es noch kein Perfekt.
 ## Verglichen wird mit der Lektion eines Scope-Schlüssels, eine Unit zählt bis zu ihrem
-## Ende, das ganze Buch und ein leerer Scope zählen alles.
+## Ende, das ganze Buch und ein leerer Scope zählen alles. Ein Bonus zählt wie seine
+## Lektion: im Bonus der Lektion 11 ist die 1. Person aus Lektion 3 eingeführt.
+##
+## Ob eine Form aus einem Bonus auch als AUFGABE kommt, entscheidet nicht diese Regel,
+## sondern form_task_in_scope — eingeführt ist das Perfekt in Lektion 12 auch, geübt
+## wird es für die alten Verben nur im Bonus.
 func form_in_scope(form: Dictionary, scope: Array) -> bool:
 	if scope.is_empty():
 		return true
 	var lesson := _form_lesson(form)
 	if lesson.is_empty():
 		return false
-	for key in scope:
-		var bits := str(key).split("/")
+	for each in scope:
+		var key := str(each)
+		var bonus: Dictionary = _bonuses.get(key, {})
+		if not bonus.is_empty():
+			key = "%s/%d/%d" % [bonus["book"], int(bonus["unit"]), int(bonus["part"])]
+		var bits := key.split("/")
 		if bits[0] != lesson["book"]:
 			continue
 		if bits.size() == 1:

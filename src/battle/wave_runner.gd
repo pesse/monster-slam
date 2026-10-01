@@ -695,12 +695,13 @@ func _build_fortress() -> void:
 
 ## Die Festungsstufe für den gewählten Bereich: die Units kommen aus Scope und Themen des
 ## Laufs (RunRequest, dieselben Achsen wie der Aufgaben-Pool), gewertet wird jede Unit als
-## Ganzes über den ganzen Katalog (siehe FortressTier.run_tier).
+## Ganzes über den ganzen Katalog (siehe FortressTier.run_tier). Ein Bonus steht mit
+## der Festung seiner Unit da.
 func _current_fortress_tier() -> int:
 	var scoped := ContentRegistry.lexemes_scoped(RunRequest.scope(), RunRequest.tags())
 	var units := FortressTier.unit_tiers(ContentRegistry.lexemes.values(),
 			PlayerProgress.mastered_lexemes(), FortressTier.drop_of(SkillBook.bonuses()))
-	return FortressTier.run_tier(scoped, units)
+	return FortressTier.run_tier(scoped, units, ContentRegistry.bonus_units(RunRequest.scope()))
 
 
 ## Baut die Festung passend zur Stufe (0..4) neu auf; die Anordnung steht in

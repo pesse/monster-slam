@@ -21,7 +21,8 @@ sehen.
 1. **Ein unregelmäßiges Verb ist erst mit seinen Formen gemeistert.** Das Lexem trägt
    `irregular: true`. Dann gehören zur Meisterung neben beiden Richtungen alle
    Formaufgaben, die es zu ihm gibt: Definitionen mit `requires_form`, deren Form das
-   Lexem hat. Das gilt in allen Sprachen. Gesammelt wird das in
+   Lexem hat. Das gilt in allen Sprachen. *Nachtrag (ADR 0012): ausgenommen Formen, die das
+   Buch später lehrt als das Wort — sie stehen in einem Bonus und zählen für sich.* Gesammelt wird das in
    `ContentRegistry.form_requirements()`, gerechnet in
    `PlayerProgress.mastered_lexemes_in` und `mastered_lexeme_in`. Es bleibt eine Regel
    an einer Stelle, und Festung, Statistik und Karte bauen auf ihr auf. In der Wortliste

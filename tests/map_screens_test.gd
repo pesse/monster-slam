@@ -632,10 +632,18 @@ func test_every_area_image_has_a_point_for_every_level(do_skip := LanguageData.m
 			if MapLayout.unit_texture(book, int(unit)) == null:
 				continue
 			var points := MapLayout.area_points(layout, int(unit))
-			for level in MapLevel.levels_for(book, int(unit), ContentRegistry.parts_for(book, int(unit))):
+			var keys := {}
+			for level in AreaMap.levels_of(book, int(unit), layout):
+				keys[str(level["key"])] = true
 				assert_bool(points.has(str(level["key"]))) \
 						.override_failure_message("%s Unit %d: kein Punkt für %s" % [book, int(unit), level["key"]]) \
 						.is_true()
+			# Und umgekehrt: ein Bonus-Punkt ohne Bonus ist ein Ort, den es nicht gibt (ADR 0012).
+			for key in points:
+				if str(key).begins_with("bonus/"):
+					assert_bool(keys.has(str(key))) \
+							.override_failure_message("%s Unit %d: Punkt %s ohne Bonus" % [book, int(unit), key]) \
+							.is_true()
 
 
 ## Die Bibliothek stellt ihre Bücher in den Turm der Menü-Kulisse. Nach dem Hereinfahren
@@ -675,7 +683,7 @@ func test_every_real_level_is_playable(do_skip := LanguageData.missing(), skip_r
 		var has_sentences := ContentRegistry.units_for(book).any(
 				func(u): return AreaMap.has_boss_sentences(book, int(u)))
 		for unit in ContentRegistry.units_for(book):
-			for level in MapLevel.levels_for(book, int(unit), ContentRegistry.parts_for(book, int(unit))):
+			for level in AreaMap.levels_of(book, int(unit), MapLayout.data(book)):
 				# Ein Teil ohne Wörter steht gesperrt auf der Karte (Latein: Unit 2 beginnt
 				# mit Lektion 10, ihrem vierten Teil).
 				if str(level["kind"]) == MapLevel.KIND_PART \

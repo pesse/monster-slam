@@ -340,16 +340,26 @@ func _candidates(pool: Dictionary, limit: int = 0) -> Array:
 	var scope: Array = pool.get("scope", []) # leer -> alle Bücher/Units
 	var lexeme_types: Array = pool.get("lexeme_types", []) # leer -> alle Wortarten
 	var direction := str(pool.get("direction", "")) # "" = beliebige Richtung
-	# leerer scope/tags -> alle Lexeme; dazu die, deren Formen erst in diesem Scope gelehrt werden
+	# leerer scope/tags -> alle Lexeme; dazu die der Boni, die der Scope mitspielt
 	var lexemes := ContentRegistry.lexemes_for_run(scope, tags)
 	_resolver.scope = scope
 	if not lexeme_types.is_empty():
 		lexemes = lexemes.filter(func(lx): return str(lx.get("type", "")) in lexeme_types)
+	# Ein Wort, das nur über einen Bonus dabei ist, bringt nur seine Bonus-Formen mit — keine
+	# Übersetzung, keine andere Form (ADR 0012): der Bonus übt das Perfekt, nicht Lektion 1.
+	var bonus_only := {}
+	if not scope.is_empty():
+		var own := {}
+		for entry in ContentRegistry.lexemes_scoped(scope, tags):
+			own[str(entry.get("id", ""))] = true
+		for entry in lexemes:
+			if not own.has(str(entry.get("id", ""))):
+				bonus_only[str(entry.get("id", ""))] = true
 	var result: Array = []
 	for definition in ContentRegistry.task_definitions.values():
 		if not definition_allowed(definition, task_types, direction):
 			continue
-		_expand(definition, lexemes, result, limit, scope)
+		_expand(definition, lexemes, result, limit, scope, bonus_only)
 		if limit > 0 and result.size() >= limit:
 			break
 	return result
@@ -378,13 +388,30 @@ static func definition_allowed(definition: Dictionary, task_types: Array,
 ## Verbindet eine Definition mit allen kompatiblen Lexemen und hängt die Kandidaten an.
 ## Relations-/Formaufgaben expandieren über die tatsächlich vorhandenen Relationen/Formen,
 ## sodass nie eine unauflösbare Instanz entsteht.
+## `bonus_only` (Lexem-Id -> true) nennt die Wörter, die nur über einen Bonus dabei sind:
+## von ihnen kommen nur die Formaufgaben, deren Form in einem Bonus steht.
 func _expand(definition: Dictionary, lexemes: Array, result: Array, limit: int = 0,
-		scope: Array = []) -> void:
+		scope: Array = [], bonus_only: Dictionary = {}) -> void:
 	for source in lexemes:
 		if limit > 0 and result.size() >= limit:
 			return
+		if bonus_only.has(str(source.get("id", ""))) and not _bonus_task(definition, source, scope):
+			continue
 		for extra in _instances(definition, source, scope):
 			result.append(_candidate(definition, source, extra))
+
+
+## Ist die Definition für dieses Wort eine Bonus-Aufgabe — eine Formaufgabe, deren Form in
+## `scope` als Bonus mitspielt?
+func _bonus_task(definition: Dictionary, source: Dictionary, scope: Array) -> bool:
+	var form_type := str(definition.get("requires_form", ""))
+	if form_type.is_empty():
+		return false
+	for form in ContentRegistry.forms_for(str(source.get("id", "")), form_type, scope):
+		if not ContentRegistry.bonus_of_form(form).is_empty() \
+				and ContentRegistry.form_task_in_scope(form, scope):
+			return true
+	return false
 
 
 ## Die `extra`-Bausteine, mit denen eine Definition auf EIN Lexem passt — eine leere
@@ -405,8 +432,9 @@ func _expand(definition: Dictionary, lexemes: Array, result: Array, limit: int =
 ## Eine Definition gilt nur für Lexeme ihrer Sprache (`language`, ohne Feld englisch):
 ## sonst stellte die englische Übersetzung ein lateinisches Wort und umgekehrt.
 ##
-## `scope` lässt nur Formen zu, die dort schon gelehrt sind (ContentRegistry.form_in_scope);
-## leer, wie für die Statistik, zählt jede Form.
+## `scope` lässt nur Formen zu, die dort schon gelehrt sind und deren Bonus, wenn sie in
+## einem stehen, dort mitspielt (ContentRegistry.form_task_in_scope); leer, wie für die
+## Statistik, zählt jede Form.
 func _instances(definition: Dictionary, source: Dictionary, scope: Array = []) -> Array:
 	if Lexeme.language(definition) != Lexeme.language(source):
 		return []
@@ -425,7 +453,9 @@ func _instances(definition: Dictionary, source: Dictionary, scope: Array = []) -
 		return out
 	var form_req := str(definition.get("requires_form", ""))
 	if form_req != "":
-		return [{"form_type": form_req}] if not ContentRegistry.forms_for(source_id, form_req, scope).is_empty() else []
+		var forms := ContentRegistry.forms_for(source_id, form_req, scope)
+		return [{"form_type": form_req}] if forms.any(func(f):
+				return ContentRegistry.form_task_in_scope(f, scope)) else []
 	return [{}]
 
 

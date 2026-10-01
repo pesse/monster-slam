@@ -150,13 +150,19 @@ static func count_into(groups: Dictionary, key: String, entry: Dictionary, maste
 ## oder ein Thema daraus gespielt wird. Sonst ließe sich die Festung hochziehen, indem man
 ## den Bereich auf die schon gekonnten Wörter einengt.
 ##
-## Kommt keine Unit vor (nur Grundwortschatz), ist die Stufe 0.
-static func run_tier(scoped: Array, unit_stats: Dictionary) -> int:
-	var lowest := -1
+## `units` nennt Units, die dazu ohne eigene Wörter im Bereich stehen: die eines Bonus
+## (ContentRegistry.bonus_units). Seine Wörter stammen aus früheren Units, die Festung ist
+## aber immer die der Unit, in der er steht (ADR 0012).
+##
+## Kommt keine Unit vor, ist die Stufe 0.
+static func run_tier(scoped: Array, unit_stats: Dictionary, units: Array = []) -> int:
+	var keys := units.duplicate()
 	for entry in scoped:
 		var key := unit_key(entry)
-		if key.is_empty():
-			continue
+		if not key.is_empty() and not key in keys:
+			keys.append(key)
+	var lowest := -1
+	for key in keys:
 		var tier := int((unit_stats.get(key, {}) as Dictionary).get("tier", 0))
 		lowest = tier if lowest < 0 else mini(lowest, tier)
 	return maxi(0, lowest)

@@ -502,6 +502,8 @@ func _refresh_progress() -> void:
 	for row in units:
 		var tier := int((tiers.get(str(row["key"]), {}) as Dictionary).get("tier", 0))
 		row["label"] = "%s  · 🏰 Stufe %d" % [row["label"], tier]
+	units = with_bonus_rows(units, ContentRegistry.bonuses_of, PlayerProgress.is_mastered,
+			func(book): return MapLayout.data(str(book)))
 	_fill_progress(_unit_list, units, "Keine Units im gewählten Bereich.")
 	_fill_progress(_tag_list, tag_rows(pool, mastered), "Noch keine Themen im gewählten Bereich.")
 
@@ -534,6 +536,41 @@ static func unit_rows(lexemes: Array, mastered: Dictionary, book_label: Callable
 			"lexemes": group["lexemes"],
 		})
 	return rows
+
+
+## Setzt unter jede Unit-Zeile je Bonus der Unit eine eigene Zeile (ADR 0012): { key,
+## label, done, total, bonus } — gezählt in Aufgaben (BonusLevel.counts), getrennt von den
+## Wörtern der Unit, die davon unberührt bleiben. `bonuses_of(book, unit)` ist
+## ContentRegistry.bonuses_of, `layout(book)` MapLayout.data (für den Titel).
+static func with_bonus_rows(units: Array, bonuses_of: Callable, is_mastered: Callable,
+		layout: Callable) -> Array:
+	var out: Array = []
+	for row in units:
+		out.append(row)
+		var key := str(row.get("key", ""))
+		var book := key.get_slice("/", 0)
+		for bonus in bonuses_of.call(book, int(key.get_slice("/", 1))):
+			var counted := BonusLevel.counts(bonus, is_mastered)
+			out.append({
+				"key": str(bonus["key"]),
+				"label": "Bonus: %s" % BonusLevel.title(bonus, layout.call(book)),
+				"done": int(counted["done"]), "total": int(counted["total"]), "bonus": bonus,
+			})
+	return out
+
+
+## Die Aufgaben eines Bonus mit ihrem Prozentstand, die sichersten zuerst — was hinter
+## seiner Zeile steht. `conf` und `describe` wie bei word_lines.
+static func bonus_lines(bonus: Dictionary, conf: Callable, describe: Callable) -> Array:
+	var rows: Array = []
+	for id in bonus.get("task_ids", []):
+		rows.append({"id": str(id), "confidence": float(conf.call(str(id)))})
+	rows.sort_custom(func(a, b): return float(a["confidence"]) > float(b["confidence"]))
+	return rows.map(func(r): return {
+		"label": str(describe.call(str(r["id"]))),
+		"value": percent_label(float(r["confidence"])),
+		"mark": "✓" if float(r["confidence"]) >= PROGRESS.MASTERY_CONFIDENCE else "",
+	})
 
 
 ## Fortschrittszeilen je Thema (Lexem-Tag), alphabetisch. Ein Lexem mit mehreren Tags
@@ -728,6 +765,12 @@ func _fill_progress(box: VBoxContainer, rows: Array, empty_text: String) -> void
 	for row in rows:
 		var bar := PROGRESS_ROW_SCENE.instantiate() as ProgressRow
 		box.add_child(bar)
+		if row.has("bonus"):
+			var bonus: Dictionary = row["bonus"]
+			bar.setup(str(row["label"]), int(row["done"]), int(row["total"]),
+					func(): return bonus_lines(bonus, PlayerProgress.confidence.bind(-1.0),
+							_resolver.describe_learnable), true)
+			continue
 		var lexemes: Array = row.get("lexemes", [])
 		# Erst beim Aufklappen gerufen: siehe ProgressRow.
 		bar.setup(str(row["label"]), int(row["done"]), int(row["total"]),

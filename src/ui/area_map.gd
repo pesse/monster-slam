@@ -1,11 +1,11 @@
 class_name AreaMap
 extends Control
-## Gebietskarte: die Level einer Unit — T1 … T4, Gesamt, Boss (ADR 0006, MapLevel).
+## Gebietskarte: die Level einer Unit — T1 … T4, Gesamt, Boni, Boss (ADR 0006, MapLevel).
 ##
 ## Jeder Ort zeigt die Stufe 0..4 seines Levels aus der Meisterung (FortressTier), der Boss
 ## seine Medaille aus den gezählten Siegen (BossRecord). Alle Level sind frei wählbar; nur
 ## ein Boss ohne Sätze ist gesperrt und sagt warum. Ein Klick markiert einen Ort
-## (MapLevel.toggle): mehrere Teile zusammen, Gesamt und Boss allein. „Spielen" unten
+## (MapLevel.toggle): mehrere Teile und Boni zusammen, Gesamt und Boss allein. „Spielen" unten
 ## rechts setzt die Auswahl als ein Level in RunRequest (MapLevel.combine) und startet den
 ## Kampf — der kommt über RunRequest.return_scene hierher zurück.
 
@@ -132,7 +132,7 @@ func _fill() -> void:
 	var book := MapSelection.book
 	var unit := MapSelection.unit
 	var layout := MapLayout.data(book)
-	_levels = MapLevel.levels_for(book, unit, part_count(book, unit, layout))
+	_levels = levels_of(book, unit, layout)
 	var lexemes := ContentRegistry.lexemes.values()
 	var mastered := PlayerProgress.mastered_lexemes()
 	var drop := FortressTier.drop_of(SkillBook.bonuses())
@@ -147,7 +147,7 @@ func _fill() -> void:
 	_fortress_image.texture = fortress_image(int(fortress["tier"]))
 	var wins := int(BossRecord.wins(UserSettings.active_profile()).get("%s/%d" % [book, unit], 0))
 	var nodes := nodes_for(_levels, units, parts, wins, has_boss_sentences(book, unit),
-			MapLayout.area_points(layout, unit))
+			MapLayout.area_points(layout, unit), bonus_counts(ContentRegistry.bonuses_of(book, unit)))
 	_canvas.setup(MapLayout.unit_texture(book, unit), nodes, MapLayout.area_path(layout, unit),
 			hint_lines)
 	_select(_initial_selection(nodes))
@@ -177,6 +177,24 @@ static func played_keys() -> Array:
 	return [] if key.is_empty() else [key]
 
 
+## Die Level der Unit samt ihren Boni, die ihren Titel aus der Karte haben (BonusLevel.title).
+static func levels_of(book: String, unit: int, layout: Dictionary) -> Array:
+	var bonuses: Array = []
+	for bonus in ContentRegistry.bonuses_of(book, unit):
+		var named: Dictionary = bonus.duplicate()
+		named["title"] = BonusLevel.title(bonus, layout)
+		bonuses.append(named)
+	return MapLevel.levels_for(book, unit, part_count(book, unit, layout), bonuses)
+
+
+## Stand je Bonus: Scope-Schlüssel -> { done, total } (BonusLevel.counts) aus dem Lernstand.
+static func bonus_counts(bonuses: Array) -> Dictionary:
+	var out := {}
+	for bonus in bonuses:
+		out[str(bonus["key"])] = BonusLevel.counts(bonus, PlayerProgress.is_mastered)
+	return out
+
+
 ## Wie viele Teil-Level die Unit zeigt: so viele, wie der Inhalt hat, oder — wenn die Karte
 ## mehr Stationen hat — so viele wie die Karte. Die leeren stehen dann gesperrt da.
 static func part_count(book: String, unit: int, layout: Dictionary) -> int:
@@ -187,12 +205,13 @@ static func part_count(book: String, unit: int, layout: Dictionary) -> int:
 
 
 ## Die Orte der Gebietskarte, einer je Level. Ein Teil ohne Wörter ist gesperrt.
+## `bonuses` ist der Stand je Bonus (bonus_counts).
 static func nodes_for(levels: Array, units: Dictionary, parts: Dictionary, wins: int,
-		boss_ready: bool, points: Dictionary) -> Array:
+		boss_ready: bool, points: Dictionary, bonuses: Dictionary = {}) -> Array:
 	var out: Array = []
 	for level in levels:
 		var kind := str(level["kind"])
-		var counts := MapLevel.counts_of(level, units, parts)
+		var counts := MapLevel.counts_of(level, units, parts, bonuses)
 		var node := {
 			"key": str(level["key"]), "kind": kind, "unit": int(level["unit"]),
 			"unit_label": BookNaming.unit_label(str(level["book"]), int(level["unit"])),
@@ -209,6 +228,10 @@ static func nodes_for(levels: Array, units: Dictionary, parts: Dictionary, wins:
 					node["disabled"] = true
 			MapLevel.KIND_ALL:
 				node["glyph"] = "★"
+			MapLevel.KIND_BONUS:
+				node["glyph"] = "+"
+				node["caption"] = "Bonus"
+				node["title"] = str(level["label"])
 			MapLevel.KIND_BOSS:
 				node["glyph"] = "💀"
 				node["boss"] = true
@@ -272,6 +295,10 @@ static func hint_lines(node: Dictionary) -> Dictionary:
 		return {"title": title, "body": body}
 	var done := int(node.get("done", 0))
 	var total := int(node.get("total", 0))
+	if str(node.get("kind", "")) == MapLevel.KIND_BONUS:
+		var body := "%d von %d Aufgaben gemeistert" % [done, total]
+		body += "\nAlles gemeistert ✨" if done >= total else "\nZählt nicht zur Festung."
+		return {"title": "%s · Bonus: %s" % [unit_label, str(node.get("title", ""))], "body": body}
 	if bool(node.get("disabled", false)):
 		return {"title": title, "body": "Für %s gibt es noch keine Wörter." % str(node.get("caption", ""))}
 	var body := ""
@@ -331,7 +358,7 @@ func _select(keys: Array) -> void:
 	_lock_first_person(not level.is_empty() and str(level["kind"]) == MapLevel.KIND_BOSS)
 	if level.is_empty():
 		Hints.attach(_play, "Spielen", "Wähle auf der Karte, was du spielen willst.",
-				"Mehrere Teile lassen sich zusammen markieren; Gesamt und Boss stehen allein.")
+				"Mehrere Teile und Boni lassen sich zusammen markieren; Gesamt und Boss stehen allein.")
 	else:
 		Hints.attach(_play, "Spielen", "%s · %s" % [
 				BookNaming.unit_label(MapSelection.book, MapSelection.unit), str(level["label"])])

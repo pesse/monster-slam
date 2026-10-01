@@ -7,12 +7,13 @@ extends Control
 ## (`PresetSelect`); der Regler füllt den ersten Ort, damit man den Sprung auf 100 % sieht.
 ## Ein Klick auf der Buchkarte geht ins Gebiet wie im Spiel; dort wählt ein Klick aus wie
 ## im Spiel (MapLevel.toggle): Teile und Boni mehrfach, Gesamt und Boss allein.
-## Die Bonus-Level stehen noch in keiner map.json und kennt MapLevel noch nicht — die
-## Werkbank legt sie zwischen „Gesamt" und Boss und lässt sie wie Teile wählen.
+## Die Bonus-Level sind die echten der Unit (ContentRegistry.bonuses_of) an ihren Punkten aus
+## map.json; nur ihr Stand ist ausgedacht. Eine Unit ohne Boni zeigt keine.
 ##
 ##     GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/map_ring_lab.tscn -- --shoot
 ##         speichert reports/map_rings/book.png und beendet sich.
 ##     … -- --shoot --area        die Gebietskarte der ersten Unit (area.png)
+##     … -- --shoot --area --unit=2   die Gebietskarte von Unit 2 (area2.png)
 ##     … -- --shoot --big         große Orte mit Beschriftung (…_big.png)
 ##     … -- --shoot --select      mit markiertem ersten Ort und erstem Bonus (nur --area)
 ##     … -- --shoot --crop        nur die ersten beiden Orte, doppelt groß
@@ -28,10 +29,8 @@ const MIXED := [60, 100, 35, 82, 0, 100, 15, 55]
 ## Bonus-Anteile je Unit für „Gemischt", der Reihe nach: einer gemeistert, zwei davon einer,
 ## keiner, einer offen.
 const MIXED_BONUS := [[1.0], [1.0, 0.4], [], [0.0]]
-## Bonus-Level auf der Gebietskarte — ein Bonus je Lernthema, mit dem Titel, den der
-## Hinweis zeigt.
-const BONUS_TITLES := ["Perfekt der Verben aus Lektion 1–10", "1. Person der Verben aus Lektion 1–2"]
-## Ihr Anteil für „Gemischt": einer gemeistert, einer offen.
+## Anteil der Bonus-Level einer Gebietskarte für „Gemischt", der Reihe nach: einer
+## gemeistert, einer offen.
 const BONUS_SHARES := [1.0, 0.4]
 
 @onready var _book_select: OptionButton = %BookSelect
@@ -49,8 +48,7 @@ var _room: Window
 var _unit := 0
 ## Die markierten Orte (Schlüssel), nur auf der Gebietskarte.
 var _selected: Array = []
-## Die Level der Gebietskarte, samt den Boni (als Teile, damit MapLevel.toggle sie mehrfach
-## wählen lässt).
+## Die Level der Gebietskarte, samt den Boni (AreaMap.levels_of).
 var _levels: Array = []
 
 
@@ -169,13 +167,22 @@ func _book_nodes() -> Array:
 func _area_nodes() -> Array:
 	var book := _book()
 	var layout := MapLayout.data(book)
-	var levels := MapLevel.levels_for(book, _unit, AreaMap.part_count(book, _unit, layout))
-	_levels = levels.duplicate()
+	var levels := AreaMap.levels_of(book, _unit, layout)
+	_levels = levels
 	var unit_key := "%s/%d" % [book, _unit]
 	var parts := {}
+	var bonuses := {}
 	var index := 0
 	var sum := 0
 	for level in levels:
+		if str(level["kind"]) == MapLevel.KIND_BONUS:
+			var share := float(BONUS_SHARES[bonuses.size() % BONUS_SHARES.size()])
+			if _bonus_toggle.button_pressed or _preset_select.selected == 2:
+				share = 1.0
+			elif _preset_select.selected == 1:
+				share = 0.0
+			bonuses[str(level["bonus"])] = {"done": roundi(share * 40.0), "total": 40}
+			continue
 		if str(level["kind"]) != MapLevel.KIND_PART:
 			continue
 		var done := _percent(index)
@@ -185,34 +192,11 @@ func _area_nodes() -> Array:
 		index += 1
 	var total := 100 * maxi(index, 1)
 	var units := {unit_key: {"done": sum, "total": total, "tier": FortressTier.tier_for(sum, total)}}
-	var points := MapLayout.area_points(layout, _unit)
-	var nodes := AreaMap.nodes_for(levels, units, parts, 2, true, points)
-	var boss_at := nodes.size() - 1
-	var from: Vector2 = points.get("all", Vector2.INF)
-	var to: Vector2 = points.get("boss", Vector2.INF)
-	for b in BONUS_TITLES.size():
-		# Zwischen Gesamt und Boss, etwas abseits des Weges.
-		var t := float(b + 1) / float(BONUS_TITLES.size() + 1)
-		var pos := from.lerp(to, t) + Vector2(0.0, -0.09) if from.is_finite() and to.is_finite() \
-				else Vector2.INF
-		var share := float(BONUS_SHARES[b % BONUS_SHARES.size()])
-		if _bonus_toggle.button_pressed or _preset_select.selected == 2:
-			share = 1.0
-		elif _preset_select.selected == 1:
-			share = 0.0
-		var key := "bonus%d" % (b + 1)
-		nodes.insert(boss_at + b, {"key": key, "kind": "bonus", "unit": _unit, "glyph": "+",
-				"caption": "Bonus", "title": str(BONUS_TITLES[b]), "pos": pos,
-				"done": roundi(share * 40.0), "total": 40})
-		_levels.insert(boss_at + b, {"key": key, "kind": MapLevel.KIND_PART})
-	return nodes
+	return AreaMap.nodes_for(levels, units, parts, 2, true, MapLayout.area_points(layout, _unit),
+			bonuses)
 
 
 func _hint(node: Dictionary) -> Dictionary:
-	if str(node.get("kind", "")) == "bonus":
-		return {"title": "Bonus: %s" % str(node["title"]),
-				"body": "%d von %d Aufgaben gemeistert\nZählt nicht zur Festung." % [
-					int(node["done"]), int(node["total"])]}
 	if _unit == 0:
 		return BookMap.hint_lines(node, _book())
 	return AreaMap.hint_lines(node)
@@ -233,14 +217,19 @@ func _on_node_selected(key: String) -> void:
 func _shoot() -> void:
 	var tag := "book"
 	if _has_arg("area"):
-		_map_select.select(1)
+		var unit := int(_arg("unit")) if not _arg("unit").is_empty() else -1
+		_map_select.select(maxi(1, _map_select.get_item_index(unit)) if unit > 0 else 1)
 		_pick_map()
-		tag = "area"
+		tag = "area%s" % _arg("unit")
 	if _has_arg("big"):
 		_big_toggle.button_pressed = true
 		tag += "_big"
 	if _has_arg("select") and _unit != 0:
-		_selected = ["t1", "bonus1"]
+		_selected = ["t1"]
+		for level in _levels:
+			if str(level["kind"]) == MapLevel.KIND_BONUS:
+				_selected.append(str(level["key"]))
+				break
 		_redraw()
 		tag += "_select"
 	await get_tree().create_timer(SETTLE).timeout

@@ -543,7 +543,7 @@ aktuelle Stand steigen um denselben Betrag.
    **Auswählen und spielen.** Ein Klick auf einen Ort markiert ihn (er wird größer, und
    ein weißer Pfeil wippt über ihm), ein zweiter Klick nimmt die Markierung wieder weg. Teile
    lassen sich beliebig zusammen markieren – etwa nur Teil 2 und 3; dann kommen die Wörter
-   beider Teile in den Kampf. „Gesamt“ und der Boss stehen allein: wer sie markiert, hebt
+   beider Teile in den Kampf. Bonus-Orte (mit „+“) lassen sich genauso dazunehmen. „Gesamt“ und der Boss stehen allein: wer sie markiert, hebt
    die übrige Auswahl auf. Los geht es mit **„Spielen“** (golden) unten rechts (oder Enter); ohne
    Auswahl ist der Knopf grau. Nach dem Kampf ist das zuletzt Gespielte wieder markiert.
 
@@ -558,6 +558,14 @@ gemeisterten Wort. Die Füllung wird ab einem Viertel bronzen, ab 60 % silbern u
 Ort stehen für Bonus-Level; sie sind grau und leuchten golden, sobald ihr Bonus gemeistert
 ist. Nichts davon wird gespeichert – es wird jedes Mal aus dem
 Lernstand gerechnet.
+
+**Bonus-Level.** Manchmal bringt eine Lektion etwas Neues für Wörter, die du schon kennst –
+in Latein etwa das Perfekt aller Verben aus den Lektionen davor. Damit die neue Lektion
+nicht mit lauter alten Wörtern vollläuft, stehen diese Aufgaben in einem eigenen Ort mit
+„+“ auf der Gebietskarte. Die Karte am Zeiger sagt, was darin steckt. Ein Bonus fragt nur
+diese Formen ab, zählt seine eigenen Aufgaben und hat keinen Einfluss auf die Festung.
+„Gesamt“ spielt die Boni der Unit mit. In der Statistik steht jeder Bonus unter seiner
+Unit.
 
 **Boss-Medaillen.** Jeder Sieg über den Boss einer Unit wird gezählt. Ab 1 Sieg bekommt er
 einen bronzenen Ring und eine Krone, ab 3 einen silbernen, ab 5 einen goldenen. Die Zahl

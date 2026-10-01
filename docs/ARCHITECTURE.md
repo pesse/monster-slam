@@ -43,8 +43,9 @@ Eintrag ersetzt, ist der Zweck der Übung und bleibt still.
   `.relations_of(id, "opposite")`, `.monster_rule_for(task_type, direction)`.
 - Auswahl-Filter fürs Session-Setup: `.lexemes_scoped(scope, tags)` (Schnitt aus
   Curriculum-Scope UND Themen, siehe unten). Der Aufgabenpool nimmt
-  `.lexemes_for_run(scope, tags)`: dazu die Lexeme, von denen eine Form erst in diesem
-  Scope gelehrt wird (`unit`/`part` an der Form, ADR 0011). Dazu `.all_books()` / `.units_for(book)` /
+  `.lexemes_for_run(scope, tags)`: dazu die Lexeme der Boni, die der Scope mitspielt
+  (`.bonuses_of(book, unit)`, `.bonus_in_scope`, ADR 0012) — von ihnen fragt der Kampf nur
+  die Bonus-Formen. Dazu `.all_books()` / `.units_for(book)` /
   `.parts_for(book, unit)` für den Buch▸Unit▸Teil-Picker.
 - `reload()` scannt zur Laufzeit neu.
 
@@ -549,8 +550,17 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
   und `BossFight` fragen dort. Ohne Level fällt `RunRequest` auf die gespeicherte Auswahl
   zurück — das ist der Expertenmodus, der beim Öffnen `start_expert()` ruft. Ein Level
   spielt alle Aufgaben- und Wortarten seines Scopes und keine Tags.
+- **Bonus-Level** (ADR 0012): Formen, die das Buch später lehrt als ihr Wort, bilden je
+  lehrender Lektion und Formart einen Bonus (`ContentRegistry._index_bonuses`, Scope-
+  Schlüssel `bonus:<book>/<unit>/<part>/<form_type>`). Er steht als eigener Ort zwischen
+  Gesamt und Boss (`MapLevel.KIND_BONUS`, Punkt `bonus/<part>/<form_type>` mit `title` in
+  map.json), zählt Aufgaben statt Wörter (`BonusLevel.counts`), nicht zur Festung und nicht
+  zur Meisterung eines Wortes. „Gesamt" und jeder Scope über die ganze Unit spielen ihn mit
+  (`form_task_in_scope`); der Bonus-Lauf steht mit der Festung seiner Unit da
+  (`bonus_units`). Auf der Buchkarte ein Stern je Bonus, in der Statistik eine Zeile unter
+  der Unit.
 - **Ein Klick markiert, „Spielen" startet.** `MapLevel.toggle` führt die Auswahl der
-  Gebietskarte: Teile beliebig zusammen, Gesamt und Boss allein. `MapLevel.combine` macht
+  Gebietskarte: Teile und Boni beliebig zusammen, Gesamt und Boss allein. `MapLevel.combine` macht
   daraus EIN Level für `RunRequest` — mehrere Teile mit allen ihren Scopes, `keys` nennt
   die Orte (Zoom hinein und zurück in ihre Mitte, Vorauswahl nach dem Kampf). Markiert
   zeichnet `MapCanvas.set_selected` als wippenden weißen Pfeil über dem Ort — Gold ist

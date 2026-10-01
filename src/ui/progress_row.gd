@@ -36,7 +36,8 @@ func _ready() -> void:
 
 
 ## `words` ist optional: ohne sie bleibt die Zeile ein reiner Balken (und der Pfeil weg).
-func setup(name_text: String, done: int, total: int, words := Callable()) -> void:
+## `tasks` zählt Aufgaben statt Wörter — die Zeile eines Bonus (BonusLevel).
+func setup(name_text: String, done: int, total: int, words := Callable(), tasks := false) -> void:
 	_title = name_text
 	_words = words
 	var bar := $Row/Bar as ProgressBar
@@ -49,8 +50,9 @@ func setup(name_text: String, done: int, total: int, words := Callable()) -> voi
 	# Kopf-Knopf —, weil Godots Tooltip-Suche am ersten Kind mit `MOUSE_FILTER_STOP`
 	# abbricht und deshalb nie bei der Zeile ankam. `Hints` sucht ohne diesen Abbruch nach
 	# oben weiter, und damit spricht die Zeile auch für ihren Knopf und ihren Balken.
-	Hints.attach(self, name_text, "%d von %d Wörtern gemeistert" % [done, total],
-			"Klick zeigt die Wörter." if _words.is_valid() else "")
+	Hints.attach(self, name_text, "%d von %d %s gemeistert" % [done, total,
+			"Aufgaben" if tasks else "Wörtern"],
+			("Klick zeigt die %s." % ("Aufgaben" if tasks else "Wörter")) if _words.is_valid() else "")
 
 
 func is_expanded() -> bool:

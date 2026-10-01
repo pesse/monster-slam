@@ -76,6 +76,7 @@ func _fill() -> void:
 	var layout := MapLayout.data(book)
 	var nodes := nodes_for(book, units, MapLayout.unit_points(layout),
 			BossRecord.wins(UserSettings.active_profile()))
+	add_bonuses(nodes, book, layout, PlayerProgress.is_mastered)
 	# Die Gebietskarten schon jetzt im Hintergrund laden, auch die gesperrter Units: die
 	# Hinweiskarte zeigt sie als Vorschau, und der Zoom hinein soll nicht auf das Bild warten.
 	MapLayout.preload_unit_textures(book, nodes.map(func(n): return int(n["unit"])))
@@ -132,6 +133,25 @@ static func nodes_for(book: String, units: Array, points: Dictionary, wins: Dict
 	return out
 
 
+## Hängt an jede Unit mit Boni (ContentRegistry.bonuses_of) je Bonus einen Stern
+## (`bonus`, sein Anteil 0..1, BonusLevel) und für die Hinweiskarte seine Zeile
+## (`bonus_lines`). Der Ring bleibt bei den Wörtern ohne Bonus (ADR 0012).
+static func add_bonuses(nodes: Array, book: String, layout: Dictionary, is_mastered: Callable) -> void:
+	for node in nodes:
+		if bool(node.get("missing", false)):
+			continue
+		var shares: Array = []
+		var lines: Array = []
+		for bonus in ContentRegistry.bonuses_of(book, int(node["unit"])):
+			var counted := BonusLevel.counts(bonus, is_mastered)
+			shares.append(BonusLevel.share(counted))
+			lines.append("%s Bonus: %s · %d von %d" % ["★" if BonusLevel.share(counted) >= 1.0 else "☆",
+					BonusLevel.title(bonus, layout), int(counted["done"]), int(counted["total"])])
+		if not shares.is_empty():
+			node["bonus"] = shares
+			node["bonus_lines"] = lines
+
+
 ## Die Karte am Zeiger für eine Unit: ihr Stand, wie oft ihr Boss besiegt ist, und ein
 ## Blick auf ihre Gebietskarte. Die Festungsstufe steht erst im Kopf der Gebietskarte.
 static func hint_lines(unit: Dictionary, book_name: String) -> Dictionary:
@@ -141,6 +161,8 @@ static func hint_lines(unit: Dictionary, book_name: String) -> Dictionary:
 	if bool(unit.get("missing", false)):
 		# Gesperrt, aber zu sehen: das Gebiet zeigt schon, wohin das Buch führt.
 		body = "Für %s gibt es noch keine Wörter." % unit_label
+	for line in unit.get("bonus_lines", []):
+		body += "\n" + str(line)
 	var wins := int(unit.get("wins", 0))
 	if wins > 0:
 		body += "\n👑 Boss %d× besiegt" % wins
