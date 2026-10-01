@@ -43,5 +43,8 @@ func test_the_wave_factor_lifts_the_points_but_not_the_experience(
 	var generator := WaveGenerator.new()
 	generator.speed_scale = HARSH_WAVE
 	var plan := generator.pick({})
-	assert_int(int(plan["reward"])).is_greater(Experience.MONSTER_XP_MAX)
 	assert_int(int(plan["xp"])).is_less_equal(Experience.MONSTER_XP_MAX)
+	# Eine schon gemeisterte Aufgabe bringt nur einen Bruchteil der Punkte
+	# (WaveGenerator.MASTERED_REWARD_FACTOR) — der Vergleich gilt für die offenen.
+	if int(plan["xp"]) != Experience.MASTERED_XP:
+		assert_int(int(plan["reward"])).is_greater(Experience.MONSTER_XP_MAX)

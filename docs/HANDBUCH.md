@@ -311,7 +311,8 @@ längste Serie steht als Rekord in der Statistik („Längste Serie ohne Durchla
 Nicht jedes Monster ist gleich viel wert. **Ein schweres Monster ist langsamer und bringt
 mehr Punkte**: schwere Aufgaben (zum Beispiel Englisch→Deutsch oder Zusatzaufgaben) und
 Wörter, die du noch nicht sicher kannst. Ein Wort, das du schon gut kannst, kommt
-schneller und bringt weniger. Die Punkte siehst du nirgends – sie zählen im Hintergrund
+schneller und bringt weniger. Eine Aufgabe, die du schon gemeistert hast, bringt nur noch ein
+Zehntel der Punkte. Die Punkte siehst du nirgends – sie zählen im Hintergrund
 und bestimmen, wie viel Gold in der Schatzkiste liegt. So lohnt es sich, gerade die unsicheren Wörter zu erwischen,
 und die sicheren Wörter werden zum Tempo-Training.
 
@@ -394,7 +395,8 @@ Rechts steht die **Schatzkiste**.
 - **Die Menge Gold kommt aus den Punkten der Welle.** Etwa ein Goldstück je zehn Punkte;
   eine bessere Kiste legt etwas drauf (die Goldkiste am meisten), eine Holzkiste zieht
   etwas ab. Wer mindestens ein Monster besiegt hat, bekommt immer mindestens 1 Gold. Weil
-  schwere Monster mehr Punkte bringen, bringen sie auch mehr Gold.
+  schwere Monster mehr Punkte bringen, bringen sie auch mehr Gold – und eine schon
+  gemeisterte Aufgabe fast keins.
 - **Kein Monster besiegt?** Dann gibt es keine Kiste. An ihrer Stelle steht „Kein Monster
   besiegt – aller Anfang ist schwer“, und du bekommst trotzdem 1 Gold, ohne etwas öffnen
   zu müssen. Warum keine Kiste: die Kiste ist die Belohnung für das Gewusste. Warum
