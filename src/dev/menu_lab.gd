@@ -22,6 +22,8 @@ extends Node
 ##     … -- --shoot --map=book [--book=<id>]            die Buchkarte
 ##     … -- --shoot --map=area [--book=<id>] [--unit=N] die Gebietskarte einer Unit
 ##     … -- --shoot --updates            beide Update-Hinweise sichtbar (App und Inhalte)
+##     … -- --shoot … --name=<Name> --gold=<n>       Name und Gold der Plakette, nur im Speicher
+##                                       (für Bilder ohne echten Profilnamen und Debug-Gold)
 ##
 ## Das Menü liest das aktive Profil nur (Name, Gold, Level); geschrieben wird nichts.
 ## Headless gibt es keinen Renderer — deshalb GODOT_WINDOW=1.
@@ -46,6 +48,12 @@ func _ready() -> void:
 				else (str(books[0]) if not books.is_empty() else "")
 		MapSelection.unit = int(_arg("unit")) if not _arg("unit").is_empty() else 1
 		path = MapSelection.AREA_SCENE if map == "area" else MapSelection.BOOK_SCENE
+	if not _arg("name").is_empty():
+		# Nur im Speicher: ohne _save() bleibt settings.cfg, wie es ist.
+		UserSettings._config.set_value("names", UserSettings.active_profile(), _arg("name"))
+	if not _arg("gold").is_empty():
+		Wallet.unlimited_gold = false
+		Wallet.gold = int(_arg("gold"))
 	ProfileMenu.intro_done = not _has_arg("intro")
 	var screen := (load(path) as PackedScene).instantiate()
 	add_child(screen)

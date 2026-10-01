@@ -231,6 +231,8 @@ func _ready() -> void:
 		_shoot_level_up.call_deferred()
 	elif _has_arg("plates"):
 		_shoot_plates.call_deferred()
+	elif _has_arg("pitch"):
+		_shoot_pitch.call_deferred()
 	elif _has_arg("fps"):
 		_measure_fps.call_deferred()
 	elif _has_arg("spelling"):
@@ -852,6 +854,67 @@ func _shoot_plates() -> void:
 		get_viewport().get_texture().get_image().save_png(path)
 		print("battle_theme_lab: ", path)
 		group.free()
+	get_tree().quit()
+
+
+## Ein Bild für den Pitch: HUD, Monster mit lateinischen Wörtern und ein Treffer, als
+## reports/battle_themes/pitch_<ms>.png. Werte stehen nur im Speicher, wie bei --hud.
+func _shoot_pitch() -> void:
+	var dir := ProjectSettings.globalize_path(SHOT_DIR)
+	DirAccess.make_dir_recursive_absolute(dir)
+	$UI/Margin.visible = false
+	GameState.reset()
+	GameState.fortress_max_health = 200
+	GameState.fortress_health = 170
+	GameState.fortress_armor_max = 100
+	GameState.fortress_armor = 60
+	GameState.wave_number = 3
+	GameState.wave_total = 20
+	GameState.wave_resolved = 9
+	GameState.monsters_defeated = 41
+	var pieces: Array[Node] = []
+	for path in ["res://scenes/ui/hud.tscn", "res://scenes/ui/answer_input.tscn",
+			"res://scenes/ui/word_type_legend.tscn"]:
+		var piece := (load(path) as PackedScene).instantiate()
+		$UI.add_child(piece)
+		pieces.append(piece)
+	var hud := pieces[0] as Control
+	hud.call("set_player_name", "Felix")
+	(hud.get_node("%XpRing") as XpRing).ratio = 0.7
+	(hud.get_node("%LevelText") as Label).text = "7"
+	(hud.get_node("%Mastered") as Label).text = "12 gemeistert"
+	(pieces[1] as LineEdit).text = "Wass"
+	var defs := FxWarmup.monster_defs()
+	var words := [["villa", "noun"], ["servus", "noun"], ["laudare", "verb"], ["magnus", "adjective"],
+			["aqua", "noun"], ["semper", "adverb"]]
+	# Über die ganze Bahn verteilt, vom Spawn bis kurz vor die Mauer.
+	var spots := [Vector3(-7.0, 0.0, _goal() - 33.0), Vector3(7.5, 0.0, _goal() - 31.0),
+			Vector3(0.0, 0.0, _goal() - 26.0), Vector3(-7.5, 0.0, _goal() - 19.0),
+			Vector3(7.5, 0.0, _goal() - 16.0), Vector3(-3.0, 0.0, _goal() - 8.0)]
+	var types := WordTypePalette.COLORS.keys()
+	for i in spots.size():
+		var monster := FxWarmup.MONSTER_SCENE.instantiate() as Monster
+		var type: String = words[i][1] if types.has(words[i][1]) else str(types[i % types.size()])
+		monster.setup(defs[i % defs.size()], {"prompt": words[i][0], "lexeme_type": type}, 1000.0, 0.0)
+		monster.position = spots[i]
+		add_child(monster)
+		monster.halt()
+	var at := Vector3(-2.5, 0.0, _goal() - 17.0)
+	await FxWarmup.run(self, at, [], [Blast.new()])
+	await get_tree().create_timer(1.0).timeout
+	for ms: int in [120]:
+		var fx := Blast.new()
+		fx.setup(WordTypePalette.color_for("noun"))
+		fx.position = at
+		add_child(fx)
+		await get_tree().create_timer(ms / 1000.0).timeout
+		await RenderingServer.frame_post_draw
+		var path := "%s/pitch_%s_%s_%04d.png" % [dir, _names[0], _arg("hour"), ms]
+		get_viewport().get_texture().get_image().save_png(path)
+		print("battle_theme_lab: ", path)
+		fx.queue_free()
+		await get_tree().create_timer(0.8).timeout
+	GameState.reset()
 	get_tree().quit()
 
 
