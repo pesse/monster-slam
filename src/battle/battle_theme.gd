@@ -75,9 +75,21 @@ const DIR := "res://assets/battle_themes"
 @export var ambient_energy := 1.0
 @export var sun_color := Color(1.0, 1.0, 1.0)
 @export var sun_energy := 1.0
-## Thema, dessen Licht (Hintergrund, Umgebungslicht, Sonne) dieses übernimmt — die Farben
-## oben gelten dann nicht. Leer: das eigene. Nur eine Stufe: das Licht dort zählt, wie es
-## in der Datei steht.
+## Farbkorrektur des ganzen Bilds (Environment.adjustment_*): unter 1 entsättigt — der
+## stärkste Hebel für ein düsteres Gebiet, ohne dass die Monster im Dunkel verschwinden.
+## Die Vorgaben sind die der Kampfszene.
+@export_range(0.0, 2.0) var saturation := 1.08
+@export_range(0.5, 2.0) var contrast := 1.08
+@export_range(0.5, 1.5) var brightness := 1.0
+## Dunst über dem Feld, auch in der Draufsicht: Dichte des Nebels (0 = klare Luft, 0.02
+## ≈ Rauch über einer Stadt) und seine Farbe — ohne (Alpha 0) die des Hintergrunds. Er
+## liegt am Boden dichter als oben (`HAZE_HEIGHT`): Türme und Monster ragen heraus. In der
+## Ich-Sicht gilt deren eigener Nebel.
+@export_range(0.0, 0.1) var haze := 0.0
+@export var haze_color := Color(0.0, 0.0, 0.0, 0.0)
+## Thema, dessen Licht (Hintergrund, Umgebungslicht, Sonne, Farbkorrektur, Dunst) dieses
+## übernimmt — die Werte oben gelten dann nicht. Leer: das eigene. Nur eine Stufe: das
+## Licht dort zählt, wie es in der Datei steht.
 @export var light_from := ""
 ## Wie stark Bäume und Gras im Wind schwanken (Wind.sway), 1 = wie in Wind.SWAY, 0 = still.
 @export_range(0.0, 3.0) var wind := 1.0
@@ -89,6 +101,11 @@ const DIR := "res://assets/battle_themes"
 @export var particles := ""
 ## Ab und zu rollt ein verdorrter Busch durchs Bild (Tumbleweeds) — Wüste, Steppe, Savanne.
 @export var tumbleweeds := false
+
+## Wie mitgenommen die Festung aussieht (FortressModel, fortress_wear.gdshader): 0 wie im
+## Pack, 1 verrußt, ausgeblichen und fleckig — ein Gebiet nach der Katastrophe. Gespielt
+## wird davon nichts.
+@export_range(0.0, 1.0) var fortress_wear := 0.0
 
 ## Die Deko je Platz: Modelle unter `assets/models/` (etwa "props/tree.glb"), aus denen der
 ## Kampf zufällig zieht. Größe und Menge gehören dem PLATZ, nicht dem Modell — ein Modell
@@ -104,6 +121,9 @@ const DIR := "res://assets/battle_themes"
 ## Wenige große Stücke (Ruinen, Felsnadeln) an den Seitenstreifen und im Umland.
 @export var landmarks: Array[String] = []
 
+## Unter dieser Höhe wird der Dunst dichter (Environment.fog_height), und wie sehr.
+const HAZE_HEIGHT := 3.0
+const HAZE_HEIGHT_DENSITY := 0.25
 ## Wie weit ein Hügel höchstens zur Hügelfarbe kippt — der Rest bleibt Bodenfarbe.
 const HILL_MIX_MAX := 0.55
 ## Über wie viel Höhe eine Kuppe von Boden zu voller Kuppenfarbe übergeht.
@@ -161,6 +181,11 @@ static func named(theme_name: String) -> BattleTheme:
 	out.ambient_energy = light.ambient_energy
 	out.sun_color = light.sun_color
 	out.sun_energy = light.sun_energy
+	out.saturation = light.saturation
+	out.contrast = light.contrast
+	out.brightness = light.brightness
+	out.haze = light.haze
+	out.haze_color = light.haze_color
 	return out
 
 
@@ -273,6 +298,26 @@ func apply(world: WorldEnvironment, sun: DirectionalLight3D) -> void:
 	env.background_color = background
 	env.ambient_light_color = ambient
 	env.ambient_light_energy = ambient_energy
+	env.adjustment_saturation = saturation
+	env.adjustment_contrast = contrast
+	env.adjustment_brightness = brightness
+	apply_haze(env)
 	world.environment = env
 	sun.light_color = sun_color
 	sun.light_energy = sun_energy
+
+
+## Der Dunst der Draufsicht auf `env` (eine eigene Kopie, nicht die der Szene): ohne Dunst
+## aus. Die Ich-Sicht stellt danach ihren eigenen Nebel.
+func apply_haze(env: Environment) -> void:
+	env.fog_enabled = haze > 0.0
+	if not env.fog_enabled:
+		return
+	env.fog_mode = Environment.FOG_MODE_EXPONENTIAL
+	env.fog_density = haze
+	env.fog_light_color = haze_color if haze_color.a > 0.0 else background
+	env.fog_light_energy = 1.0
+	env.fog_sun_scatter = 0.0
+	env.fog_sky_affect = 0.0
+	env.fog_height = HAZE_HEIGHT
+	env.fog_height_density = HAZE_HEIGHT_DENSITY

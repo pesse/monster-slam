@@ -328,6 +328,39 @@ step = 5.0
 allow_greater = true
 allow_lesser = true
 
+[node name="HazeCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+theme_type_variation = &"Hint"
+text = "Thema: Dunst"
+
+[node name="HazeSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+unique_name_in_owner = true
+min_value = 0.0
+max_value = 0.03
+step = 0.0005
+allow_greater = true
+
+[node name="BrightnessCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+theme_type_variation = &"Hint"
+text = "Thema: Helligkeit"
+
+[node name="BrightnessSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+unique_name_in_owner = true
+min_value = 0.5
+max_value = 1.5
+step = 0.02
+allow_greater = true
+
+[node name="SaturationCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+theme_type_variation = &"Hint"
+text = "Thema: Sättigung"
+
+[node name="SaturationSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht"]
+unique_name_in_owner = true
+min_value = 0.0
+max_value = 2.0
+step = 0.02
+allow_greater = true
+
 [node name="HUD" type="GridContainer" parent="UI/Margin/Root/Menu/Items/Tabs"]
 visible = false
 columns = 6

@@ -4,7 +4,7 @@ extends Node
 ## tief, und dazwischen wandert sie um SWEEP Grad weiter — im Bild von links nach rechts:
 ## morgens fallen lange Schatten nach rechts, mittags kurze nach hinten (die Sonne steht
 ## hinter der Kamera), abends lange nach links. Die Himmelsrichtung zählt nicht, nur der Blick.
-## Ein Tag im Spiel dauert ein Viertel des echten (DAY_SPEED), es gibt keine Nacht: nach dem
+## Ein Tag im Spiel dauert eine echte Stunde (DAY_SPEED), es gibt keine Nacht: nach dem
 ## Abend springt sie auf den Morgen.
 ##
 ## Ein SunCycle-Knoten im Baum stellt jedes Bild `sun` und den globalen Shader-Parameter
@@ -20,10 +20,10 @@ extends Node
 ## sie nur vorwärts — der Sprung auf den Morgen wartet, bis die Welle vorbei ist.
 
 ## So viel schneller als der echte Tag läuft der im Spiel.
-const DAY_SPEED := 4.0
+const DAY_SPEED := 24.0
 ## Höhe über dem Horizont morgens und abends, und mittags (Grad).
-const LOW := 10.0
-const HIGH := 55.0
+const LOW := 5.0
+const HIGH := 45.0
 ## So weit wandert die Richtung vom Morgen bis zum Abend (Grad), mittags steht sie auf `noon_yaw`.
 const SWEEP := 180.0
 ## Farbe der Sonne mittags und ganz tief (morgens, abends) — mal `color`.
@@ -67,7 +67,7 @@ static func attach(parent: Node, light: DirectionalLight3D, view: Node3D) -> Sun
 	return cycle
 
 
-## Der Tag nach der Uhr dieses Rechners: um Mitternacht beginnt einer, alle sechs Stunden
+## Der Tag nach der Uhr dieses Rechners: um Mitternacht beginnt einer, jede volle Stunde
 ## der nächste.
 static func clock_phase(unix_local: float) -> float:
 	return fposmod(unix_local * DAY_SPEED / 86400.0, 1.0)

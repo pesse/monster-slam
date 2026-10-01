@@ -1109,14 +1109,14 @@
       "t2": "paris_garden"
     },
     "2": {
-      "default": "autumn_forest",
-      "t1": "vineyard",
+      "default": "autumn_forest_dusty",
+      "t1": "vineyard_dusty",
       "all": "chateau"
     },
     "3": {
-      "default": "snowforest",
-      "t3": "mountain_hut",
-      "all": "ice"
+      "default": "snowforest_dusty",
+      "t3": "mountain_hut_dusty",
+      "all": "ice_dusty"
     },
     "4": {
       "default": "port_town",

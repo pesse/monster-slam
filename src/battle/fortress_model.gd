@@ -35,17 +35,24 @@ const CATAPULT_SWING_TIME := 0.14
 const CATAPULT_SWING_DEG := 110.0
 const CATAPULT_HOLD_TIME := 0.12
 const CATAPULT_RETURN_TIME := 0.7
+## Die Festung vom Krieg gezeichnet (BattleTheme.fortress_wear): ein Material für alle Teile,
+## denn alle tragen denselben Atlas des Packs.
+const WEAR_SHADER := preload("res://assets/shaders/fortress_wear.gdshader")
+## Je Grad der Abnutzung ein Material, geteilt von allen Teilen — eins für die ganze Festung,
+## nicht eins je Turm.
+static var _wear_materials := {}
 
 
 ## Setzt die Teile der Stufe unter `parent`; `front_z` ist die Mauerfront, `ground_y(x, z)`
 ## gibt die Höhe des Geländes (ohne Gelände: `func(_x, _z): return 0.0`). `scale` weicht nur
-## in der Werkbank von SCALE ab (battle_theme_lab, Regler Festungsgröße).
+## in der Werkbank von SCALE ab (battle_theme_lab, Regler Festungsgröße). `wear` (0..1) ist
+## die Abnutzung des Themas: über 0 tragen alle Teile Ruß und Schmutz (fortress_wear.gdshader).
 static func build(parent: Node3D, tier: int, front_z: float, ground_y: Callable,
-		scale: float = SCALE) -> void:
+		scale: float = SCALE, wear := 0.0) -> void:
 	var k := scale / LAYOUT_SCALE
 	var fz := front_z + WALL_HALF_DEPTH * (scale - LAYOUT_SCALE)
 	var seg := 2.0 * scale   # Weltbreite eines Mauersegments
-	var put := _Put.new(parent, ground_y, scale)
+	var put := _Put.new(parent, ground_y, scale, wear)
 
 	if tier <= 0:
 		# Baustelle: Turmstumpf + Baugerüst. Kleine Stufe an den hinteren Rand
@@ -132,11 +139,13 @@ class _Put:
 	var _parent: Node3D
 	var _ground_y: Callable
 	var _scale: float
+	var _wear: float
 
-	func _init(parent: Node3D, ground_y: Callable, scale: float) -> void:
+	func _init(parent: Node3D, ground_y: Callable, scale: float, wear: float) -> void:
 		_parent = parent
 		_ground_y = ground_y
 		_scale = scale
+		_wear = wear
 
 	func at(model: String, x: float, z: float, yaw := 0.0) -> Node3D:
 		var path := "%s/%s.gltf" % [HEX_DIR, model]
@@ -146,5 +155,31 @@ class _Put:
 		inst.position = Vector3(x, float(_ground_y.call(x, z)), z)
 		inst.rotation_degrees.y = yaw
 		inst.scale = Vector3.ONE * _scale
+		if _wear > 0.0:
+			FortressModel.wear_down(inst, _wear)
 		_parent.add_child(inst)
 		return inst
+
+
+## Legt das Material der Abnutzung `wear` über alle Meshes von `part`. Als Override: das
+## Material des Packs bleibt, wie es ist (geladene Ressourcen sind geteilt).
+static func wear_down(part: Node3D, wear: float) -> void:
+	for mi: MeshInstance3D in part.find_children("*", "MeshInstance3D", true, false):
+		var atlas := _atlas_of(mi)
+		if atlas == null:
+			continue
+		var key := "%s|%.3f" % [atlas.resource_path, wear]
+		if not _wear_materials.has(key):
+			var mat := ShaderMaterial.new()
+			mat.shader = WEAR_SHADER
+			mat.set_shader_parameter("atlas", atlas)
+			mat.set_shader_parameter("wear", wear)
+			_wear_materials[key] = mat
+		mi.material_override = _wear_materials[key]
+
+
+static func _atlas_of(mi: MeshInstance3D) -> Texture2D:
+	if mi.mesh == null or mi.mesh.get_surface_count() == 0:
+		return null
+	var mat := mi.get_active_material(0) as BaseMaterial3D
+	return mat.albedo_texture if mat != null else null

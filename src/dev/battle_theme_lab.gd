@@ -336,6 +336,7 @@ func _fill_controls() -> void:
 		%SunSpeedSpin.editable = not on)
 	%CopyButton.pressed.connect(_copy_layout)
 	_fill_cover_controls()
+	_fill_grading_controls()
 	_fill_spelling_controls()
 	%HudCheck.toggled.connect(_show_hud)
 	%LevelUpButton.pressed.connect(_level_up)
@@ -350,6 +351,28 @@ func _fill_controls() -> void:
 	var batch := ["shoot", "specimens", "bow", "blast", "catapult", "hitches", "fps", "fortress",
 			"levelup", "spelling"].any(_has_arg)
 	%MenuToggle.visible = not batch
+
+
+## Reiter Licht, Thema: Dunst und Farbkorrektur. Wirkt sofort aufs Bild, ohne die Deko neu
+## zu bauen. Ein Thema mit `light_from` zeigt die Werte seiner Quelle — dort gehören sie hin.
+func _fill_grading_controls() -> void:
+	var knobs := {
+		%HazeSpin: func(v: float) -> void: _theme.haze = v,
+		%BrightnessSpin: func(v: float) -> void: _theme.brightness = v,
+		%SaturationSpin: func(v: float) -> void: _theme.saturation = v,
+	}
+	for spin: SpinBox in knobs:
+		var apply: Callable = knobs[spin]
+		spin.value_changed.connect(func(v: float) -> void:
+			apply.call(v)
+			_apply_grading())
+
+
+func _apply_grading() -> void:
+	_apply_fog()
+	var env := _world.environment
+	env.adjustment_brightness = _theme.brightness
+	env.adjustment_saturation = _theme.saturation
 
 
 ## Reiter Bewuchs: drei Werte des Themas, der Rest sind die Konstanten von GroundCover.
@@ -627,6 +650,10 @@ func _copy_layout() -> void:
 		"cover = %.2f" % _theme.cover,
 		"cover_flower_amount = %.2f" % _theme.cover_flower_amount,
 		"bushes = %.2f" % _theme.bushes,
+		"# assets/battle_themes/%s.tres" % (_theme.light_from if not _theme.light_from.is_empty() else _names[_index]),
+		"saturation = %.2f" % _theme.saturation,
+		"brightness = %.2f" % _theme.brightness,
+		"haze = %.4f" % _theme.haze,
 	])
 	DisplayServer.clipboard_set(text)
 	print("battle_theme_lab: Bahn %.1f m\n%s" % [_goal_z - _spawn_z, text])
@@ -662,12 +689,12 @@ func _set_first_person(on: bool) -> void:
 ## eine geteilte Ressource der Kampfszene.
 func _apply_fog() -> void:
 	var env := _world.environment
-	if _fp == null:
-		env.fog_enabled = false
-		return
 	if env == _scene_env:
 		env = env.duplicate() as Environment
 		_world.environment = env
+	if _fp == null:
+		_theme.apply_haze(env)
+		return
 	env.fog_enabled = true
 	env.fog_mode = Environment.FOG_MODE_DEPTH
 	env.fog_light_color = env.background_color
@@ -684,6 +711,9 @@ func _update_label() -> void:
 	%CoverSpin.set_value_no_signal(_theme.cover)
 	%FlowersSpin.set_value_no_signal(_theme.cover_flower_amount)
 	%BushesSpin.set_value_no_signal(_theme.bushes)
+	%HazeSpin.set_value_no_signal(_theme.haze)
+	%BrightnessSpin.set_value_no_signal(_theme.brightness)
+	%SaturationSpin.set_value_no_signal(_theme.saturation)
 	_tier_select.select(_tier)
 	_view_select.select(1 if _fp != null else 0)
 	%LaneLength.text = "Bahn %.1f m" % (_goal_z - _spawn_z)
@@ -1337,6 +1367,7 @@ func _battle_environment() -> Environment:
 ## Deko wie im Kampf, vereinfacht: Bäume und Felsen im Umland und an den Seitenstreifen,
 ## Gras auf dem Feld, die Burg an der Front.
 func _build_decor(noise: FastNoiseLite, theme: BattleTheme) -> void:
+	_fire_lights = GraphicsQuality.fire_lights(_quality)
 	if _decor != null:
 		_decor.free()
 	_decor = Node3D.new()
@@ -1383,7 +1414,7 @@ func _build_decor(noise: FastNoiseLite, theme: BattleTheme) -> void:
 	# Die Festung, wie sie im Kampf steht (FortressModel), in der gewählten Stufe.
 	FortressModel.build(_decor, _tier, _goal(),
 			func(x: float, z: float) -> float: return WaveRunnerScript.terrain_height(x, z, noise),
-			_fortress_scale)
+			_fortress_scale, theme.fortress_wear)
 	var site := GroundCover.Site.new()
 	site.area = area
 	site.on_screen = func(x: float, z: float) -> bool: return WaveRunnerScript.tile_on_screen(_camera, x, z)
@@ -1439,6 +1470,7 @@ func _shoot_specimens() -> void:
 		_decor.free()
 		_decor = Node3D.new()
 		add_child(_decor)
+		_fire_lights = GraphicsQuality.fire_lights(_quality)
 		var row: Array = REFERENCE.duplicate()
 		for slot: String in SLOT_SCALE:
 			for model: String in theme.get(slot):
@@ -1468,6 +1500,10 @@ func _shoot_specimens() -> void:
 	get_tree().quit()
 
 
+## Wie viele Feuer der Deko noch ein Licht bekommen, wie im Kampf.
+var _fire_lights := 0
+
+
 ## `model` ist ein Pfad unter assets/models/, wie in BattleTheme.
 func _place(model: String, x: float, z: float, noise: FastNoiseLite, yaw: float, scale: float) -> Node3D:
 	var path := "%s/%s" % [BattleTheme.MODEL_DIR, model]
@@ -1479,6 +1515,7 @@ func _place(model: String, x: float, z: float, noise: FastNoiseLite, yaw: float,
 	inst.scale = Vector3.ONE * scale
 	_decor.add_child(inst)
 	Wind.sway(inst, model, _wind_strength)
+	_fire_lights -= Fire.kindle(inst, _fire_lights)
 	return inst
 
 

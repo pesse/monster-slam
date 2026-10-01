@@ -220,6 +220,12 @@ void fragment() {
 }
 
 void light() {
-	float facing = clamp(dot(NORMAL, LIGHT), 0.0, 1.0) / sun_sin;
-	DIFFUSE_LIGHT += ambient_light * (shadow_depth / (1.0 - shadow_depth)) * facing * ATTENUATION * sun_left * sun_tint.rgb;
+	if (!LIGHT_IS_DIRECTIONAL) {
+		// Ein Punktlicht (Feuer der Deko, Fire): färbt den Boden ringsum in seiner Farbe,
+		// unabhängig von Sonne und Wolken.
+		DIFFUSE_LIGHT += LIGHT_COLOR * ATTENUATION * clamp(dot(NORMAL, LIGHT), 0.0, 1.0);
+	} else {
+		float facing = clamp(dot(NORMAL, LIGHT), 0.0, 1.0) / sun_sin;
+		DIFFUSE_LIGHT += ambient_light * (shadow_depth / (1.0 - shadow_depth)) * facing * ATTENUATION * sun_left * sun_tint.rgb;
+	}
 }

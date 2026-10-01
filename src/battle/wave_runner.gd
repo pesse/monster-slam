@@ -307,6 +307,8 @@ var _sun_cycle: SunCycle
 var _path: BattlePath
 ## Fußpunkte der gestreuten Bäume, für die Sträucher darum (GroundCover).
 var _tree_feet: Array[Vector3] = []
+## Wie viele Feuer der Deko noch ein Licht bekommen (Fire, GraphicsQuality.fire_lights).
+var _fire_lights := GraphicsQuality.fire_lights()
 ## Kronen der Laubbäume darunter, aus denen das Laub fällt (AmbientParticles).
 var _leaf_crowns: Array[AABB] = []
 var _blossom_crowns: Array[AABB] = []
@@ -490,6 +492,7 @@ func _scatter(parent: Node3D, slot: Array[String], x: float, z: float, scale: fl
 	var inst := _place_model(parent, model.get_file(), at,
 			_rng.randf_range(0.0, 360.0), Vector3.ONE * scale, model.get_base_dir())
 	Wind.sway(inst, model, _theme.wind)
+	_fire_lights -= Fire.kindle(inst, _fire_lights)
 	if slot == _theme.trees:
 		_tree_feet.append(at)
 		if AmbientParticles.LEAF_TREES.has(model.get_file().get_basename()):
@@ -696,7 +699,7 @@ func _spawn_fortress(tier: int) -> void:
 	add_child(fort)
 	_fortress = fort
 	print("[FORTRESS] Stufe %d (+%d HP)" % [tier, FortressTier.health_bonus(tier)])
-	FortressModel.build(fort, tier, GOAL_Z, _ground_y)
+	FortressModel.build(fort, tier, GOAL_Z, _ground_y, FortressModel.SCALE, _theme.fortress_wear)
 	_catapults = FortressModel.catapults(fort)
 
 

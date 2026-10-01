@@ -13,11 +13,11 @@ func _cycle() -> SunCycle:
 	return cycle
 
 
-func test_a_day_in_the_game_lasts_a_quarter_of_a_real_one() -> void:
+func test_a_day_in_the_game_lasts_an_hour() -> void:
 	assert_float(SunCycle.clock_phase(0.0)).is_equal_approx(0.0, 1e-6)
-	assert_float(SunCycle.clock_phase(3.0 * 3600.0)).is_equal_approx(0.5, 1e-6)
-	# Nach sechs Stunden beginnt der nächste Tag.
-	assert_float(SunCycle.clock_phase(6.0 * 3600.0 + 60.0)).is_less(0.01)
+	assert_float(SunCycle.clock_phase(30.0 * 60.0)).is_equal_approx(0.5, 1e-6)
+	# Nach einer Stunde beginnt der nächste Tag.
+	assert_float(SunCycle.clock_phase(3600.0 + 10.0)).is_less(0.01)
 
 
 func test_the_sun_stands_low_in_the_morning_and_high_at_noon() -> void:

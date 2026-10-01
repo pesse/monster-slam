@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="BattleTheme" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/battle/battle_theme.gd" id="1_theme"]
+
+[resource]
+script = ExtResource("1_theme")
+ground_patch = Color(0.78, 0.82, 0.9, 1)
+ground_patch_amount = 0.25
+path = "trail"
+path_color = Color(0.7, 0.74, 0.82, 1)
+ground_texture = "snow"
+ground_texture_strength = 0.4
+ground_low = Color(0.86, 0.89, 0.94, 1)
+ground_high = Color(0.96, 0.97, 1.0, 1)
+hill = Color(0.56, 0.58, 0.62, 1)
+peak = Color(1.0, 1.0, 1.0, 1)
+peak_height = 2.4
+background = Color(0.07, 0.09, 0.14, 1)
+ambient = Color(0.66, 0.7, 0.8, 1)
+ambient_energy = 1.05
+sun_color = Color(0.94, 0.96, 1.0, 1)
+sun_energy = 1.25
+trees = Array[String](["forge/pine_snow.glb"])
+rocks = Array[String](["forge/boulder_snow.glb"])
+grass = Array[String]([])
+particles = "snow"
+cover = 0.0
+bushes = 0.0
+props = Array[String](["forge/gondola_fallen.glb"])
+landmarks = Array[String](["forge/pylon_broken.glb", "forge/radar_dome.glb"])
+fortress_wear = 0.6
+saturation = 0.95
+contrast = 1.04
+brightness = 0.84
+haze = 0.001
+haze_color = Color(0.42, 0.44, 0.5, 1)
