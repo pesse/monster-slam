@@ -40,7 +40,7 @@ var _preselected := false
 func _ready() -> void:
 	(%CloseButton as BaseButton).pressed.connect(close)
 	Hints.attach(%CloseButton as Control, "Schließen", "", "Esc")
-	_refresh.pressed.connect(func(): ContentService.refresh())
+	_refresh.pressed.connect(func(): ContentService.refresh(true))
 	_install.pressed.connect(_on_install)
 	_adopt.pressed.connect(func(): ContentService.install_many(ContentService.needs_adopt, true))
 	_model_button.pressed.connect(func(): ModelService.install())
@@ -50,7 +50,7 @@ func _ready() -> void:
 	_render()
 	_render_model()
 	if ContentService.packs.is_empty():
-		ContentService.refresh()
+		ContentService.refresh(true)
 	if not ModelService.available():
 		ModelService.refresh()
 	modulate.a = 0.0

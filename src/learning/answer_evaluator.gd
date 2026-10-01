@@ -36,10 +36,13 @@ const _OPTIONAL_PREFIXES := ["der ", "die ", "das ", "eine ", "ein ", "the ", "t
 ## Mit Schrägstrich verbundene Platzhalter ("wait for sb./sth.", "jn./etwas") sind EINE
 ## Stelle mit zwei Lesarten, nicht zwei Stellen: "wait for sb", "wait for sth" und
 ## "wait for sb / sth" sind alle vollständig.
+##
+## Auslassungspunkte sind KEIN Platzhalter: weggelassen wären sie sonst „unvollständig".
+## Sie fallen schon in `_normalize` weg (ELLIPSIS_PATTERN).
 const WILDCARD := "•"
 const _PLACEHOLDER_ATOM := \
 	"(?:quelque chose|quelqu'un|qch\\.?|qn\\.?|qc\\.?|somebody|someone|something|jemandem|jemanden|jemand|etwas|etw\\.?" \
-	+ "|sth\\.?|sb\\.?|jdm\\.?|jds\\.?|jmdn\\.?|jmdm\\.?|jmd\\.?|jdn\\.?|jm\\.?|jn\\.?|jd\\.?|…|\\.\\.\\.)(?!\\p{L})"
+	+ "|sth\\.?|sb\\.?|jdm\\.?|jds\\.?|jmdn\\.?|jmdm\\.?|jmd\\.?|jdn\\.?|jm\\.?|jn\\.?|jd\\.?)(?!\\p{L})"
 const PLACEHOLDER_PATTERN := \
 	"(?<!\\p{L})" + _PLACEHOLDER_ATOM + "(?:\\s*/\\s*" + _PLACEHOLDER_ATOM + ")*"
 
@@ -67,12 +70,19 @@ const _MACRONS := {"ā": "a", "ē": "e", "ī": "i", "ō": "o", "ū": "u", "ȳ": 
 const _DIACRITICS := {"à": "a", "â": "a", "á": "a", "é": "e", "è": "e", "ê": "e", "ë": "e",
 		"î": "i", "ï": "i", "í": "i", "ô": "o", "ó": "o", "û": "u", "ù": "u", "ú": "u",
 		"ÿ": "y", "ç": "c", "œ": "oe", "æ": "ae"}
-## Wortverbinder, die nachsichtig als Leerzeichen getippt werden oder fehlen dürfen
-## („est ce que", „aujourdhui").
-const _JOINERS := ["'", "-"]
+## Zeichen, die nachsichtig als Leerzeichen getippt werden oder fehlen dürfen: die
+## Wortverbinder („est ce que", „aujourdhui") und das Komma („yes please"). Ein Komma
+## ist Schreibweise wie ein Bindestrich — wer es weglässt, kennt das Wort trotzdem.
+const _JOINERS := ["'", "-", ","]
+
+## Auslassungspunkte („not only … but also", „either ... or"): eine Lücke im Eintrag,
+## kein Bestandteil. Wie ein Satzpunkt ganz wegnormalisiert, ob als „…", „..." oder
+## „..", getippt oder nicht — weglassen ist also vollständig.
+const ELLIPSIS_PATTERN := "…|\\.{2,}"
 
 static var _group_re: RegEx = RegEx.create_from_string(GROUP_PATTERN)
 static var _placeholder_re: RegEx = RegEx.create_from_string(PLACEHOLDER_PATTERN)
+static var _ellipsis_re: RegEx = RegEx.create_from_string(ELLIPSIS_PATTERN)
 
 
 ## Wertet `answer` gegen alle hinterlegten Antworten aus.
@@ -357,7 +367,7 @@ func _expand(s: String, slots: Array) -> Array:
 
 
 ## Vereinheitlicht Schreibweise: Kleinschreibung, typografische Zeichen, Mehrfach-
-## Leerzeichen, Satzendzeichen ("That's fine by me." == "that's fine by me").
+## Leerzeichen, Auslassungspunkte, Satzendzeichen ("That's fine by me." == "that's fine by me").
 func _normalize(s: String) -> String:
 	var normalized := s.strip_edges().to_lower()
 	normalized = normalized.replace("’", "'").replace("‘", "'")
@@ -365,6 +375,7 @@ func _normalize(s: String) -> String:
 	normalized = normalized.replace("–", "-").replace("—", "-")
 	for mark in _MACRONS:
 		normalized = normalized.replace(mark, _MACRONS[mark])
+	normalized = _ellipsis_re.sub(normalized, " ", true).strip_edges()
 	while normalized.ends_with(".") or normalized.ends_with("!") or normalized.ends_with("?"):
 		normalized = normalized.substr(0, normalized.length() - 1).strip_edges()
 	return _strip_optional_prefix(_collapse(normalized))
@@ -379,10 +390,11 @@ func _strip_optional_prefix(s: String) -> String:
 
 ## Mehrfach-Leerzeichen zusammenziehen — entsteht beim Weglassen von Bestandteilen.
 ## Auch direkt an den Klammern, sonst bliebe aus "(to sth.)" ohne Platzhalter ein
-## "(to )" stehen, das die getippte Form "(to)" nicht mehr trifft.
+## "(to )" stehen, das die getippte Form "(to)" nicht mehr trifft. Ebenso vor dem Komma:
+## aus "les uns…, les autres" wird ohne Lücke "les uns, les autres", nicht "les uns , …".
 func _collapse(s: String) -> String:
 	var out := " ".join(s.split(" ", false))
-	return out.replace("( ", "(").replace(" )", ")")
+	return out.replace("( ", "(").replace(" )", ")").replace(" ,", ",")
 
 
 func _tokens(s: String) -> PackedStringArray:

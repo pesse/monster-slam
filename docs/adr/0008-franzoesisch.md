@@ -18,7 +18,9 @@ Gespielt wird am Lehrbuch *À plus!* entlang, zunächst ohne Bosskampf.
 1. **Schreibweise wird nachgesehen und gezeigt.** Akzente, Cédille und Trema (à â é è ê ë
    î ï ô û ù ÿ ç, dazu œ→oe, æ→ae) werden in einem zweiten, nachsichtigen Vergleich
    gefaltet. Bindestrich und Apostroph dürfen als Leerzeichen getippt werden oder
-   ganz fehlen. Eine so getroffene Antwort gilt voll, zählt voll für den
+   ganz fehlen, ebenso das Komma (nachgetragen, in jeder Sprache: „yes please“).
+   Auslassungspunkte („…“, „...“, „..“) fallen schon in der Normalisierung weg — sie
+   markieren eine Lücke, keinen Bestandteil, und Weglassen ist vollständig. Eine so getroffene Antwort gilt voll, zählt voll für den
    Lernstand, und die richtige Schreibweise wird sofort über dem Monster
    eingeblendet (dasselbe Schild wie bei einer unvollständigen Antwort; bei noch nicht
    gemeisterten Aufgaben seit ADR 0010 ein kurzes Standbild).

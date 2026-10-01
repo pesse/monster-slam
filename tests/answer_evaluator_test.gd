@@ -273,3 +273,38 @@ func test_french_placeholders_are_wildcards() -> void:
 func test_german_placeholders_as_a_plus_writes_them() -> void:
 	assert_bool(_evaluator.evaluate(["jdm etw. versprechen"], "jemandem etwas versprechen")["complete"]).is_true()
 	assert_bool(_evaluator.evaluate(["jdm Bescheid sagen"], "jmdm. Bescheid sagen")["complete"]).is_true()
+
+
+# --- Auslassungspunkte und Komma ---
+
+
+func test_ellipsis_is_normalized_away() -> void:
+	# Die Lücke ist kein Bestandteil: weglassen ist vollständig, die Schreibweise egal.
+	for typed in ["not only but also", "not only ... but also", "not only … but also",
+			"not only .. but also", "not only…but also"]:
+		var verdict := _evaluator.evaluate(["not only … but also"], typed)
+		assert_bool(verdict["complete"]).override_failure_message(typed).is_true()
+		assert_bool(verdict["exact"]).override_failure_message(typed).is_true()
+	assert_bool(_evaluator.evaluate(["Moment mal …"], "Moment mal")["complete"]).is_true()
+	assert_bool(_evaluator.evaluate(["either ... or ..."], "either or")["complete"]).is_true()
+
+
+func test_ellipsis_before_comma_leaves_no_gap() -> void:
+	assert_bool(_evaluator.evaluate(["les uns…, les autres"], "les uns, les autres")["exact"]).is_true()
+
+
+func test_comma_is_lenient_spelling() -> void:
+	# Ein Leerzeichen vor dem Komma ist bloß Leerraum und trifft exakt.
+	assert_bool(_evaluator.evaluate(["yes, please"], "yes , please")["exact"]).is_true()
+	for typed in ["yes please", "yes,please"]:
+		var verdict := _evaluator.evaluate(["yes, please"], typed, true)
+		assert_bool(verdict["complete"]).override_failure_message(typed).is_true()
+		assert_bool(verdict["exact"]).override_failure_message(typed).is_false()
+		assert_bool(_evaluator.evaluate(["yes, please"], typed)["matched"]) \
+				.override_failure_message(typed).is_false()
+	assert_bool(_evaluator.evaluate(["salut, ça va ?"], "salut ca va", true)["complete"]).is_true()
+	assert_bool(_evaluator.evaluate(["yes please"], "yes, please", true)["matched"]).is_true()
+
+
+func test_missing_comma_is_marked() -> void:
+	assert_array(Array(AnswerEvaluator.spelling_marks("yes, please", "yes please"))).contains_exactly([3])

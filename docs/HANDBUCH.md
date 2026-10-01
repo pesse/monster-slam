@@ -56,12 +56,13 @@ Die Knöpfe links:
   Level oder zum Boss einer Unit (Kapitel 10).
 - **„Fähigkeiten“** – Skillpunkte ausgeben (Kapitel 11).
 - **„Statistik“** – dein Lernstand (Kapitel 12).
-- **„Inhalte“** – Vokabel-Packs holen (Kapitel 15). Gibt es etwas Neues, steht die
-  Zahl dahinter, zum Beispiel „Inhalte (2 neu)“.
+- **„Inhalte“** – Vokabel-Packs holen (Kapitel 15).
 - **„Einstellungen“** – Profil, Tempo, Protokoll, Melden (Kapitel 13).
 
 Rechts unten erscheint **„⬆ Update auf …“** nur, wenn es eine neue Fassung des Spiels gibt
-(Kapitel 16).
+(Kapitel 16). Darunter steht **„⬆ Inhalte aktualisieren“** (bei mehreren „⬆ 2 Inhalte
+aktualisieren“), wenn es für einen installierten Pack eine neuere Fassung gibt, die du
+holen kannst. Der Knopf öffnet „Inhalte“, die betroffenen Packs sind schon ausgewählt.
 
 Links unten steht klein **„Eigene Runde – Expertenmodus“**. Er führt zu „Runde
 vorbereiten“, wo man selbst auswählt, was geübt wird (Kapitel 3).
@@ -192,10 +193,12 @@ auswählen: das Spiel sucht selbst das Monster, zu dem deine Antwort passt.
   oder ein Platzhalter wie „sb.“ ist, zählt die Antwort trotzdem. Die vollständige Form
   wird dann kurz über dem Monster eingeblendet, damit du sie einmal gesehen hast.
   Platzhalter darfst du schreiben, wie du willst: „sb“, „somebody“, „jn.“, „jmd.“ und
-  „jemanden“ gelten gleich.
+  „jemanden“ gelten gleich. Auslassungspunkte („not only … but also“) sind egal: ob du
+  „…“, „...“ oder gar nichts tippst, die Antwort ist vollständig.
 - **Richtig, aber anders geschrieben:** Fehlen nur Akzente (é, è, ê, ç …), oder hast du
-  einen Bindestrich oder Apostroph weggelassen oder als Leerzeichen getippt („ecole“ für
-  „l’école“, „est ce que“ für „est-ce que“), zählt die Antwort voll. Das Monster
+  einen Bindestrich, Apostroph oder ein Komma weggelassen oder als Leerzeichen getippt
+  („ecole“ für „l’école“, „est ce que“ für „est-ce que“, „yes please“ für „yes, please“),
+  zählt die Antwort voll. Das Monster
   explodiert, dann steht das Spiel gut eine Sekunde still: die Kamera fährt heran und die
   richtige Schreibweise steht groß im Bild. Was gefehlt hat, ist rot unterstrichen, und
   über jedem Akzent steht klein sein Name („accent aigu“, „cédille“ …). Danach läuft das

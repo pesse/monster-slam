@@ -68,7 +68,12 @@ func gate_version() -> String:
 
 
 ## Holt das Verzeichnis und verschneidet es mit dem lokalen Stand.
-func refresh() -> void:
+##
+## Still (`loud` false, die Prüfung beim Laden des Startmenüs) endet ein Netzfehler in
+## IDLE und nur in der Konsole — wie UpdateService.check: offline soll niemand bei jedem
+## Menübesuch eine Warnung bekommen. Laut (Knopf im Content-Manager) wird er ein ERROR
+## mit Text.
+func refresh(loud := false) -> void:
 	if _busy:
 		return
 	_busy = true
@@ -79,15 +84,15 @@ func refresh() -> void:
 	var response := await _fetch("%s/index.json" % release_base)
 	_busy = false
 	if not response["error"].is_empty():
-		_fail(response["error"])
+		_fail_refresh(response["error"], loud)
 		return
 	if response["body"].size() > MAX_INDEX_BYTES:
-		_fail("Pack-Verzeichnis unplausibel groß — verworfen.")
+		_fail_refresh("Pack-Verzeichnis unplausibel groß — verworfen.", loud)
 		return
 
 	var parsed: Variant = JSON.parse_string(response["body"].get_string_from_utf8())
 	if not parsed is Dictionary or not (parsed as Dictionary).has("packs"):
-		_fail("Pack-Verzeichnis unlesbar.")
+		_fail_refresh("Pack-Verzeichnis unlesbar.", loud)
 		return
 
 	_entries.clear()
@@ -131,11 +136,14 @@ func rebuild() -> void:
 	changed.emit()
 
 
-## Anzahl Packs, die einen Hinweis wert sind — trägt das Abzeichen im Startmenü.
-func attention_count() -> int:
+## Anzahl Packs, die sich jetzt aktualisieren lassen — trägt den Hinweis im Startmenü.
+## Ein Update hinter Schloss oder abgelaufenem Code zählt nicht: der Hinweis verspräche
+## etwas, das der Knopf nicht hält. „Programm zu alt" zählt auch nicht (wants_attention) —
+## dagegen hilft das App-Update.
+func update_count() -> int:
 	var count := 0
 	for pack in packs:
-		if pack.wants_attention():
+		if pack.wants_attention() and pack.installable():
 			count += 1
 	return count
 
@@ -326,6 +334,14 @@ func _set_state(next: State) -> void:
 	if next != State.ERROR:
 		error = ""
 	changed.emit()
+
+
+func _fail_refresh(text: String, loud: bool) -> void:
+	if loud:
+		_fail(text)
+		return
+	print("ContentService: %s" % text)
+	_set_state(State.IDLE)
 
 
 func _fail(text: String) -> void:

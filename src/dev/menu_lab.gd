@@ -21,6 +21,7 @@ extends Node
 ##     … -- --shoot --badge-hint         die Karte am Medaillon der Plakette (Level, XP, Punkte)
 ##     … -- --shoot --map=book [--book=<id>]            die Buchkarte
 ##     … -- --shoot --map=area [--book=<id>] [--unit=N] die Gebietskarte einer Unit
+##     … -- --shoot --updates            beide Update-Hinweise sichtbar (App und Inhalte)
 ##
 ## Das Menü liest das aktive Profil nur (Name, Gold, Level); geschrieben wird nichts.
 ## Headless gibt es keinen Renderer — deshalb GODOT_WINDOW=1.
@@ -96,6 +97,15 @@ func _ready() -> void:
 
 func _shoot() -> void:
 	await get_tree().create_timer(SETTLE).timeout
+	if _has_arg("updates"):
+		# Erst hier: die echte Prüfung beim Laden kann die Knöpfe sonst wieder ausblenden.
+		var update := get_tree().root.find_child("UpdateButton", true, false) as Button
+		var content := get_tree().root.find_child("ContentUpdateButton", true, false) as Button
+		update.text = "⬆ Update auf 9.9.9"
+		update.visible = true
+		content.text = ProfileMenu.content_update_text(2)
+		content.visible = true
+		await get_tree().process_frame
 	if _has_arg("badge-hint"):
 		var medallion := get_tree().root.find_child("Medallion", true, false) as Control
 		if medallion != null:
@@ -121,6 +131,8 @@ func _shoot() -> void:
 		what += "_badge_hint"
 	if _has_arg("content"):
 		what += "_content"
+	if _has_arg("updates"):
+		what += "_updates"
 	if _has_arg("settings") or not _arg("settings").is_empty():
 		what += "_settings" + _arg("settings")
 	var file := "%s/%s_%dx%d.png" % [dir, what,
