@@ -117,7 +117,7 @@ func _place_header() -> void:
 ## rechnet.
 func _show_image() -> void:
 	_book.text = ContentRegistry.book_label(MapSelection.book)
-	_title.text = "Unit %d" % MapSelection.unit
+	_title.text = BookNaming.unit_label(MapSelection.book, MapSelection.unit)
 	for part: Control in [_fortress, _medal, _actions]:
 		part.modulate.a = 0.0
 	_canvas.setup(MapLayout.unit_texture(MapSelection.book, MapSelection.unit), [], [], hint_lines)
@@ -189,6 +189,7 @@ static func nodes_for(levels: Array, units: Dictionary, parts: Dictionary, wins:
 		var counts := MapLevel.counts_of(level, units, parts)
 		var node := {
 			"key": str(level["key"]), "kind": kind, "unit": int(level["unit"]),
+			"unit_label": BookNaming.unit_label(str(level["book"]), int(level["unit"])),
 			"pos": points.get(str(level["key"]), Vector2.INF),
 			"caption": str(level["label"]),
 			"tier": MapLevel.tier_of(level, units, parts),
@@ -196,7 +197,8 @@ static func nodes_for(levels: Array, units: Dictionary, parts: Dictionary, wins:
 		}
 		match kind:
 			MapLevel.KIND_PART:
-				node["glyph"] = str(int(level["part"]))
+				node["glyph"] = BookNaming.part_glyph(str(level["book"]), int(level["unit"]),
+						int(level["part"]))
 				if int(counts["total"]) == 0:
 					node["disabled"] = true
 					node["stars"] = false
@@ -248,14 +250,14 @@ static func fortress_image(tier: int) -> Texture2D:
 
 ## Die Karte am Zeiger für ein Level.
 static func hint_lines(node: Dictionary) -> Dictionary:
-	var unit := int(node.get("unit", 0))
-	var title := "Unit %d · %s" % [unit, str(node.get("caption", ""))]
+	var unit_label := str(node.get("unit_label", ""))
+	var title := "%s · %s" % [unit_label, str(node.get("caption", ""))]
 	if bool(node.get("boss", false)):
 		if bool(node.get("disabled", false)):
-			return {"title": title, "body": "Für diese Unit gibt es noch keine Sätze."}
+			return {"title": title, "body": "Für %s gibt es noch keine Sätze." % unit_label}
 		var wins := int(node.get("wins", 0))
 		var medal := int(node.get("medal", 0))
-		var body := "Der Satzmeister prüft ganze Sätze aus dieser Unit."
+		var body := "Der Satzmeister prüft ganze Sätze aus %s." % unit_label
 		if wins == 0:
 			body += "\nNoch nicht besiegt."
 		else:
@@ -267,11 +269,11 @@ static func hint_lines(node: Dictionary) -> Dictionary:
 	var done := int(node.get("done", 0))
 	var total := int(node.get("total", 0))
 	if bool(node.get("disabled", false)):
-		return {"title": title, "body": "Für diesen Teil gibt es noch keine Wörter."}
+		return {"title": title, "body": "Für %s gibt es noch keine Wörter." % str(node.get("caption", ""))}
 	var body := ""
 	if str(node.get("kind", "")) == MapLevel.KIND_ALL:
 		# Gesamt hat keine Sterne: es ist die ganze Unit, ihre Stufe steht oben im Kopf.
-		body = "Alle Wörter der Unit · %d von %d gemeistert" % [done, total]
+		body = "Alle Wörter aus %s · %d von %d gemeistert" % [unit_label, done, total]
 	else:
 		var next := FortressTier.next_threshold(done, total)
 		var needed := int(next.get("needed", 0))
@@ -328,7 +330,8 @@ func _select(keys: Array) -> void:
 		Hints.attach(_play, "Spielen", "Wähle auf der Karte, was du spielen willst.",
 				"Mehrere Teile lassen sich zusammen markieren; Gesamt und Boss stehen allein.")
 	else:
-		Hints.attach(_play, "Spielen", "Unit %d · %s" % [MapSelection.unit, str(level["label"])])
+		Hints.attach(_play, "Spielen", "%s · %s" % [
+				BookNaming.unit_label(MapSelection.book, MapSelection.unit), str(level["label"])])
 
 
 func _start() -> void:

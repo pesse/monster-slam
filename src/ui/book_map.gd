@@ -115,7 +115,7 @@ static func nodes_for(book: String, units: Array, points: Dictionary, wins: Dict
 		out.append({
 			"key": str(unit["key"]), "unit": number,
 			"pos": points.get(str(number), Vector2.INF),
-			"glyph": str(number), "caption": "Unit %d" % number,
+			"glyph": str(number), "caption": BookNaming.unit_label(book, number),
 			"tier": int(unit["tier"]), "done": int(unit["done"]), "total": int(unit["total"]),
 			"wins": won, "medal": BossRecord.medal(won),
 		})
@@ -124,7 +124,7 @@ static func nodes_for(book: String, units: Array, points: Dictionary, wins: Dict
 			continue
 		out.append({
 			"key": "%s/%s" % [book, number], "unit": int(number), "pos": points[number],
-			"glyph": str(number), "caption": "Unit %s" % number,
+			"glyph": str(number), "caption": BookNaming.unit_label(book, int(number)),
 			"tier": 0, "done": 0, "total": 0, "disabled": true, "missing": true, "stars": false,
 		})
 	out.sort_custom(func(a, b): return int(a["unit"]) < int(b["unit"]))
@@ -135,15 +135,16 @@ static func nodes_for(book: String, units: Array, points: Dictionary, wins: Dict
 ## Blick auf ihre Gebietskarte. Die Festungsstufe steht erst im Kopf der Gebietskarte.
 static func hint_lines(unit: Dictionary, book_name: String) -> Dictionary:
 	var book := str(unit.get("key", "")).get_slice("/", 0)
+	var unit_label := BookNaming.unit_label(book, int(unit["unit"]))
 	var body := "%d von %d Wörtern gemeistert" % [int(unit["done"]), int(unit["total"])]
 	if bool(unit.get("missing", false)):
 		# Gesperrt, aber zu sehen: das Gebiet zeigt schon, wohin das Buch führt.
-		body = "Für diese Unit gibt es noch keine Wörter."
+		body = "Für %s gibt es noch keine Wörter." % unit_label
 	var wins := int(unit.get("wins", 0))
 	if wins > 0:
 		body += "\n👑 Boss %d× besiegt" % wins
 	return {
-		"title": "%s, Unit %d" % [book_name, int(unit["unit"])],
+		"title": "%s, %s" % [book_name, unit_label],
 		"image": MapLayout.unit_texture(book, int(unit["unit"])) if not book.is_empty() else null,
 		"body": body,
 	}

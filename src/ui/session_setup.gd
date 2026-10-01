@@ -150,7 +150,7 @@ func _add_unit_row(book: String, unit: int, selected: PackedStringArray) -> void
 	var row := HBoxContainer.new()
 	_scope_list.add_child(row)
 	var check := CheckBox.new()
-	check.text = "Unit %d" % unit
+	check.text = BookNaming.unit_label(book, unit)
 	check.focus_mode = Control.FOCUS_NONE
 	check.set_meta("value", unit_key)
 	row.add_child(check)
@@ -171,7 +171,7 @@ func _add_unit_row(book: String, unit: int, selected: PackedStringArray) -> void
 				continue
 			var part_key := "%s/%d" % [unit_key, part]
 			var part_check := CheckBox.new()
-			part_check.text = str(part)
+			part_check.text = BookNaming.part_glyph(book, unit, part)
 			part_check.focus_mode = Control.FOCUS_NONE
 			part_check.set_meta("value", part_key)
 			part_check.set_pressed_no_signal(unit_on or part_key in selected)

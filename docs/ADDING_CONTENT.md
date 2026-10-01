@@ -93,6 +93,9 @@ Ids `lex.fr.<buch>.…` und Dateien `fr_<buch>_unit<n>.json`. Die Aufgaben stehe
   (*der Freund* / *die Freundin*) werden zwei Lexeme. Ein Adjektiv trägt die männliche
   Form als `lemma_fr` und die weibliche in `lemma_fr_alt`, wenn das Buch beide nennt.
 - Platzhalter wie im Buch (*qn*, *qc*). Der Evaluator kennt sie.
+- Dossier → `unit`, Partie A/B/C → `part` 1/2/3 (wie die Lektionen im Lateinbuch).
+  Die Anzeige („Dossier 2 · Partie A") steht unter `naming` in
+  `assets/maps/<buch>/map.json` (`BookNaming`).
 - Formen (`fr_*`) erst, wenn die Unit sie lernen lässt, samt Label in
   `TaskResolver.FORM_LABELS` und einer Definition in `fr_basics.json`.
 

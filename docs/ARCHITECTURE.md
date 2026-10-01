@@ -489,6 +489,7 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
 | `BossRecord` | `src/progression/boss_record.gd` | Boss-Siege je Unit (Ursprungswert), Medaille bei 1/3/5 Siegen |
 | `MapSelection` | `src/ui/map_selection.gd` | welches Buch, welche Unit gerade offen ist (überdauert den Szenenwechsel) |
 | `MapLayout` | `src/ui/map_layout.gd` | Bild und Punkte unter `assets/maps/<book>/` (`book.png`, `unit<n>.png`, `map.json`) |
+| `BookNaming` | `src/core/book_naming.gd` | Wie das Buch sich und seine Ebenen nennt („Dossier 2 · Partie A", „Abschnitt 2 · Lektion 10"); unter `naming` in `map.json`, ohne Eintrag „Unit"/„Teil" |
 | `MapCanvas` | `src/ui/map_canvas.gd` | zeichnet eine Karte: Bild letterboxed in 16:9, Weg, Orte mit Stufe, Ring, Medaille |
 | Screens | `book_select` (die Bibliothek), `book_map`, `area_map` (`src/ui/` + `scenes/ui/`) | die drei Ebenen; die Bibliothek ist kein eigener Screen, sondern die dritte Seite von `profile_menu.tscn` |
 | Bibliothek | `scenes/ui/library_room.tscn` in `menu_backdrop.tscn` | der Raum im Turm der Menü-Kulisse: Lesepult, Regale, Kerzen, `%Eye` (Kamerastand), `%Books` (dort stellt `BookSelect` die Bücher auf) |

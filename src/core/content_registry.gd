@@ -262,7 +262,12 @@ func all_books() -> PackedStringArray:
 ## Titel. Die Buch-Ids sind klein und ohne Trennzeichen, für die Anzeige taugen sie nicht.
 ## Steht hier und nicht in einem Screen, weil inzwischen mehrere Screens Bücher benennen
 ## (Session-Setup, Statistik) und zwei Regeln irgendwann auseinanderlaufen.
+##
+## Nennt die Karte des Buchs einen Titel (BookNaming, „À plus!"), gilt der.
 func book_label(book: String) -> String:
+	var titled := BookNaming.title(book)
+	if not titled.is_empty():
+		return titled
 	var i := book.length()
 	while i > 0 and book[i - 1] >= "0" and book[i - 1] <= "9":
 		i -= 1

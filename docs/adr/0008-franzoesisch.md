@@ -43,7 +43,14 @@ Gespielt wird am Lehrbuch *À plus!* entlang, zunächst ohne Bosskampf.
    (`ami(e)`, `petit, e`), siehe `docs/prompts/vocab_generation.md`.
 7. **Formen am Buch entlang.** Neue `fr_*`-Formtypen kommen erst, wenn eine Unit sie
    lernen lässt, und nicht vorab als Konjugationstabelle.
-8. **Die Spur bekommt `exact`.** Eine Antwort, die nur nachsichtig traf, schreibt
+8. **Jedes Buch nennt seine Ebenen selbst.** Intern bleiben es Unit und Teil, als Zahlen.
+   Was dasteht, kommt aus `naming` in `assets/maps/<book>/map.json` (`BookNaming`):
+   *À plus!* zeigt „Dossier 2 · Partie A" (Teile als Buchstaben), Latein „Abschnitt 2 ·
+   Lektion 10" (Lektionen über das Buch durchgezählt, `parts_per_unit`), Access ohne
+   Eintrag „Unit 2 · Teil 1". Dort steht auch der Titel des Buchs („À plus!"). Das gehört
+   zur EXE wie die Karte, nicht in einen Pack. Überschriften über mehrere Bücher
+   („Nach Unit") bleiben allgemein.
+9. **Die Spur bekommt `exact`.** Eine Antwort, die nur nachsichtig traf, schreibt
    `"exact": false` und die richtige Schreibweise nach `canonical`. `full` bleibt, wie
    es war.
 

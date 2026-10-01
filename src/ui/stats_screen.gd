@@ -502,7 +502,8 @@ static func unit_rows(lexemes: Array, mastered: Dictionary, book_label: Callable
 		var group: Dictionary = groups[key]
 		rows.append({
 			"key": key,
-			"label": "%s, Unit %d" % [book_label.call(group["book"]), int(group["unit"])],
+			"label": "%s, %s" % [book_label.call(group["book"]),
+					BookNaming.unit_label(str(group["book"]), int(group["unit"]))],
 			"done": int(group["done"]), "total": int(group["total"]),
 			"lexemes": group["lexemes"],
 		})
