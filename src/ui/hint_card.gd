@@ -168,15 +168,30 @@ func _list_names() -> Array:
 	return names
 
 
-## Breite der Liste ohne ihre mittlere Spalte: Zeichen, Werte und die zwei Abstände.
-func _list_frame_width() -> float:
+## Die Werte der Liste — die rechte Spalte.
+func _list_values() -> Array:
+	var values := []
+	var cells := _list.get_children()
+	for i in range(2, cells.size(), 3):
+		values.append(cells[i])
+	return values
+
+
+## Breite der Zeichen-Spalte samt der zwei Abstände.
+func _list_mark_width() -> float:
 	var cells := _list.get_children()
 	var mark := 0.0
-	var value := 0.0
 	for i in range(0, cells.size(), 3):
 		mark = maxf(mark, (cells[i] as Control).get_combined_minimum_size().x)
-		value = maxf(value, (cells[i + 2] as Control).get_combined_minimum_size().x)
-	return mark + value + 2.0 * _list.get_theme_constant("h_separation")
+	return mark + 2.0 * _list.get_theme_constant("h_separation")
+
+
+## Breite der Werte-Spalte, ungebrochen gemessen.
+func _list_value_width() -> float:
+	var value := 0.0
+	for label: Label in _list_values():
+		value = maxf(value, label.get_combined_minimum_size().x)
+	return value
 
 
 ## Die Breitenregel, in der einzigen Reihenfolge, in der sie funktioniert.
@@ -188,9 +203,10 @@ func _list_frame_width() -> float:
 func _fit() -> void:
 	var labels := [_title, _subtitle, _body, _note]
 	var names := _list_names()
+	var values := _list_values()
 	# 1. Ohne Umbruch messen — und die Breite des VORIGEN Aufrufs vorher weg. Ohne diese
 	#    Null wäre jede Karte so breit wie die breiteste, die je zu sehen war.
-	for label: Label in labels + names:
+	for label: Label in labels + names + values:
 		label.autowrap_mode = TextServer.AUTOWRAP_OFF
 		label.custom_minimum_size.x = 0.0
 	_image.custom_minimum_size = Vector2.ZERO
@@ -217,8 +233,18 @@ func _fit() -> void:
 		label.custom_minimum_size.x = width
 		label.size.x = width
 	# Die Bezeichnungen der Liste bekommen, was neben Zeichen und Werten übrig bleibt —
-	# damit rücken die Werte zugleich an den rechten Rand, in eine Flucht.
-	var name_width := maxf(0.0, inner - _list_frame_width())
+	# damit rücken die Werte zugleich an den rechten Rand, in eine Flucht. Die Werte nehmen
+	# höchstens die Hälfte und brechen sonst selbst um: ein langer Wert („die Einstellung
+	# (zu etwas) / die Meinung (zu etwas)") ließ der Bezeichnung sonst keinen Pixel, und
+	# sie stand Buchstabe für Buchstabe untereinander.
+	var mark_width := _list_mark_width()
+	var value_width := minf(_list_value_width(), maxf(0.0, inner / 2.0 - mark_width))
+	if value_width < _list_value_width():
+		for label: Label in values:
+			label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			label.custom_minimum_size.x = value_width
+			label.size.x = value_width
+	var name_width := maxf(0.0, inner - mark_width - value_width)
 	for label: Label in names:
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		label.custom_minimum_size.x = name_width
@@ -228,7 +254,7 @@ func _fit() -> void:
 	#    vorhin. `get_line_count()` bricht dagegen sofort um; ohne diese Schleife meldete
 	#    die Karte die Höhe für die Breite der VORIGEN Karte (beim ersten Mal: für einen
 	#    Pixel, also 2056 statt 133).
-	for label: Label in labels + names:
+	for label: Label in labels + names + values:
 		label.get_line_count()
 	# 4. Erst jetzt die Höhe lesen: sie ist für DIESE Breite gerechnet.
 	size = Vector2(outer, get_combined_minimum_size().y)
