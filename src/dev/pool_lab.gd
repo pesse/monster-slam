@@ -9,8 +9,8 @@ extends Control
 ##
 ## Gelesen wird der Lernstand des aktiven Profils, aber nichts geschrieben: die Uhr
 ## verstellt nur eine Kopie des Schedulers (PlayerProgress.scheduler_copy), und die
-## Simulation beantwortet keine Aufgabe. Die Reihenfolge ist je Gruppe gemischt wie im
-## Spiel — jedes Neuzeichnen würfelt neu.
+## Simulation beantwortet keine Aufgabe. Die Reihenfolge würfelt wie im Spiel (fällige und
+## neue gemischt, der Rest nach Abstand mit Zufall) — jedes Neuzeichnen würfelt neu.
 ##
 ## Starten: `tools/godot.sh res://scenes/dev/pool_lab.tscn` (zum Ansehen mit
 ## GODOT_WINDOW=1). `-- --shoot [--scope=<buch/unit>] [--days=<n>]` speichert ein Bild nach
@@ -109,11 +109,11 @@ func _shift(seconds: int) -> void:
 func _refresh() -> void:
 	_clock.text = "Uhr: " + Time.get_datetime_string_from_unix_time(
 			_now() + _sr.utc_offset, true) + ("" if _offset == 0 else " (verstellt)")
-	var listing := _gen.listing(_pool(), {}, _sr.due_items(_now()))
+	var listing := _gen.listing(_pool(), {}, _sr.due_items(_now()), _now())
 	var counts := {"due": 0, "new": 0, "rest": 0}
 	for c in listing:
 		counts[str(c["group"])] += 1
-	_summary.text = "%d Kandidaten · fällig %d · neu %d · Rest %d — gewählt wird von oben, fällige zuerst, je Gruppe gemischt." % [
+	_summary.text = "%d Kandidaten · fällig %d · neu %d · Rest %d — gewählt wird von oben, fällige zuerst; fällige und neue gemischt, der Rest nach Abstand mit Zufall." % [
 			listing.size(), counts["due"], counts["new"], counts["rest"]]
 	_order_title.text = "Reihenfolge der Kandidaten" + (
 			" (erste %d)" % MAX_ROWS if listing.size() > MAX_ROWS else "")
@@ -125,6 +125,8 @@ func _refresh() -> void:
 		var due_at := _sr.due_at(id)
 		if due_at > 0:
 			info += " · fällig " + WaveGenerator.due_text(due_at, _now())
+		if int(c.get("last_seen", 0)) > 0:
+			info += " · zuletzt vor " + WaveGenerator.span_text(_now() - int(c["last_seen"]))
 		_add_row(_order_list, "%d. %s" % [i + 1, _group_label(c)], _prompt(c),
 				"%s · %s" % [info, id])
 	_clear(_sim_list)
@@ -137,7 +139,7 @@ func _simulate() -> void:
 	var shown := {}
 	var due := _sr.due_items(_now())
 	for i in int(_sim_count.value):
-		var plan := _gen.pick_with(_gen.listing(_pool(), shown, due))
+		var plan := _gen.pick_with(_gen.listing(_pool(), shown, due, _now()))
 		if plan.is_empty():
 			_add_row(_sim_list, "—", "nichts Spielbares", "")
 			return

@@ -44,3 +44,31 @@ func test_a_repeat_and_the_fallback_are_named() -> void:
 	var text: String = GENERATOR.describe_reason(why, NOW)
 	assert_str(text).starts_with("Wiederholung, Rest (in 8 min)")
 	assert_str(text).ends_with("trotz Wort auf dem Feld")
+
+
+## Der Rest nach Abstand: vor einer Minute Beantwortetes kommt nie vor dem, was eine
+## Stunde her ist, auch mit Zufall; der Abstand gilt am Grundwort, über alle Richtungen.
+func test_the_rest_comes_by_staleness() -> void:
+	var last := {"old.de": NOW - 3600, "old.en": NOW - 3600, "fresh.de": NOW - 60,
+			"fresh.en": NOW - 30000}
+	var seen := func(_id: String) -> bool: return true
+	var at := func(id: String) -> int: return int(last.get(id, 0))
+	for i in 20:
+		var order: Array = GENERATOR.ordered(
+				[_cand("fresh", "fresh.de"), _cand("fresh", "fresh.en"), _cand("mid", "mid.de"),
+				_cand("old", "old.de")], [], seen, {}, at, NOW)
+		# „fresh" hat über seine andere Richtung (vor 30000 s) den jüngsten Abstand
+		# nicht — am Grundwort zählt die letzte Antwort: vor 60 s.
+		assert_str(str(order[-1]["source"]["id"])).is_equal("fresh")
+		assert_str(str(order[-2]["source"]["id"])).is_equal("fresh")
+		assert_int(int(order[-1]["last_seen"])).is_equal(NOW - 60)
+		# Nie beantwortet (mid) steht vorn.
+		assert_str(str(order[0]["source"]["id"])).is_equal("mid")
+
+
+func test_the_reason_names_when_the_word_was_last_answered() -> void:
+	var c := _cand("a", "a.de")
+	c["group"] = "rest"
+	c["last_seen"] = NOW - 7200
+	var why: Dictionary = GENERATOR.pick_reason([c], 0, false, 0.0, NOW + 86400)
+	assert_str(GENERATOR.describe_reason(why, NOW)).starts_with("Rest (in 1 T), zuletzt vor 2 h ·")

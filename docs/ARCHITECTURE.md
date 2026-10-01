@@ -100,7 +100,11 @@ und die Auswahl fälliger/neuer Aufgaben + Monster-Mapping `src/battle/wave_gene
 Oberste Stufe der Auswahl ist „in dieser Welle schon gezeigt“ (am Grundwort, nicht am
 `learnable_id`): Wiederholungen erst, wenn der Pool erschöpft ist, dann das am längsten
 nicht gezeigte Wort zuerst (`WaveGenerator.ordered`). Die Menge führt der `WaveRunner`
-je Welle, gespeichert wird sie nicht.
+je Welle, gespeichert wird sie nicht. Darunter: fällig vor neu vor Rest; fällige und neue
+gemischt, der Rest nach Abstand zur letzten Antwort des Grundworts (`last_seen_at`), der
+längste zuerst, mit Zufall (`WaveGenerator.by_staleness`, Faktor 0,5–1,5 auf den
+Abstand). Das gibt auch über Wellen und lange Sitzungen etwas Spacing — vorher zog jede
+Welle wieder gleichverteilt aus dem Rest, und ein Wort kam in zwei Wellen hintereinander.
 
 ### Tempo = Schwierigkeit (Monster-Geschwindigkeit)
 Geschwindigkeit ist **kein eigenständiges Attribut**, sondern die sichtbare Projektion der
@@ -963,8 +967,8 @@ Zeile JSON.
   (`push_warning` und Stille, kein `push_error`).
 - **Jede `spawn`-Zeile sagt, warum das Wort kam** (`why`, aus
   `WaveGenerator.pick_reason`): Gruppe (fällig/neu/Rest), ob das Wort in der Welle schon
-  dran war, Stelle in der Reihenfolge, Größe des Pools mit Summen je Gruppe, `t − c` und
-  Fälligkeit. Die Gruppe kommt aus derselben Sortierung, die auch wählt
+  dran war, Stelle in der Reihenfolge, Größe des Pools mit Summen je Gruppe, `t − c`,
+  Fälligkeit und letzte Antwort des Grundworts (`last_seen`). Die Gruppe kommt aus derselben Sortierung, die auch wählt
   (`WaveGenerator.ordered`), nicht aus einer zweiten Regel. Dieselbe Zeile zeigt im
   Debug-Build das Debug-Panel („Letzte Spawns") und die Konsole; ohne Spiel zeigt
   `scenes/dev/pool_lab.tscn` den ganzen Pool in Wahlreihenfolge, mit verstellbarer Uhr
