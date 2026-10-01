@@ -114,6 +114,14 @@ func _initialize() -> void:
 	_export("bookcase", _bookcase())
 	_export("candles", _candles())
 	_export("reading_desk", _reading_desk())
+
+	_export("plane_tree", _round_tree(359, PLANE_BARK, PLANE_A, PLANE_B, 1.15))
+	_export("haussmann_ruin", _haussmann_ruin())
+	_export("dock_crane", _dock_crane(), 1.4)
+	_export("chateau_tower", _chateau_tower(), 1.3)
+	_export("lighthouse", _lighthouse(), 1.3)
+	_export("bandstand", _bandstand())
+	_export("eiffel_tower", _eiffel_tower(), 1.1)
 	quit()
 
 
@@ -2117,6 +2125,285 @@ func _reading_desk() -> Forge:
 	for x in [-w * 0.5 + 0.2, w * 0.5 - 0.2]:
 		for z in [-d * 0.5 + 0.18, d * 0.5 - 0.18]:
 			f.box(Vector3(x, -0.6, z), Vector3(0.16, 1.1, 0.16), CASE_B, 0.0)
+	return f
+
+
+# --- Französisch: Frankreich nach den Menschen, von der Natur zurückgeholt -----------
+
+const LIMESTONE_A := Color(0.80, 0.72, 0.58)
+const LIMESTONE_B := Color(0.68, 0.60, 0.48)
+const SLATE_A := Color(0.36, 0.40, 0.47)
+const SLATE_B := Color(0.28, 0.31, 0.38)
+const IVY_A := Color(0.30, 0.44, 0.16)
+const IVY_B := Color(0.22, 0.35, 0.12)
+const IRON := Color(0.16, 0.18, 0.18)
+const PLANE_BARK := Color(0.52, 0.48, 0.40)
+const PLANE_A := Color(0.28, 0.42, 0.14)
+const PLANE_B := Color(0.21, 0.33, 0.10)
+const CHIMNEY_POT := Color(0.66, 0.36, 0.24)
+
+
+## Efeu: ein flaches Polster auf einer Wand, `facing` die Wandnormale (nur x oder z).
+func _ivy(f: Forge, c: Vector3, size: Vector3, facing: Vector3, rng: RandomNumberGenerator) -> void:
+	var radii := Vector3(size.x if facing.x == 0.0 else 0.12, size.y, size.z if facing.z == 0.0 else 0.12)
+	f.lump(c + facing * 0.04, radii, 3, 7, rng, 0.2,
+			func(_m: Vector3, n: Vector3) -> Color: return IVY_A if n.y > 0.1 else IVY_B)
+
+
+## Mansarddach: steile Flanken vom Rechteck ±`hx0`/±`hz0` auf ±`hx1`/±`hz1` in Höhe
+## `rise`, oben flach in `top`.
+func _mansard(f: Forge, c: Vector3, hx0: float, hz0: float, hx1: float, hz1: float, rise: float,
+		col: Color, top: Color) -> void:
+	var lo: Array[Vector3] = [c + Vector3(-hx0, 0, -hz0), c + Vector3(hx0, 0, -hz0),
+			c + Vector3(hx0, 0, hz0), c + Vector3(-hx0, 0, hz0)]
+	var hi: Array[Vector3] = [c + Vector3(-hx1, rise, -hz1), c + Vector3(hx1, rise, -hz1),
+			c + Vector3(hx1, rise, hz1), c + Vector3(-hx1, rise, hz1)]
+	var inside := c + Vector3(0, rise * 0.5, 0)
+	for j in 4:
+		var k := (j + 1) % 4
+		f.tri_out(lo[j], lo[k], hi[k], col, inside)
+		f.tri_out(lo[j], hi[k], hi[j], col, inside)
+	f.tri_out(hi[0], hi[1], hi[2], top, inside)
+	f.tri_out(hi[0], hi[2], hi[3], top, inside)
+
+
+## Pariser Mietshaus als Ruine: Kalksteinblock mit Gesimsen, drei Fensterachsen, ein
+## eiserner Balkon, darüber das Mansarddach mit Gauben und Schornsteinen. Die rechte Ecke
+## ist eingestürzt, Efeu wächst die Fassade hoch, unten liegt Schutt. Etwa 5 hoch.
+func _haussmann_ruin() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(331)
+	var h := 3.4
+	var d := 2.6
+	f.box(Vector3(0, 0.3, 0), Vector3(3.7, 0.6, d + 0.1), LIMESTONE_B, 0.0)
+	f.box(Vector3(-0.5, h * 0.5, 0), Vector3(2.6, h, d), LIMESTONE_A, 0.0)
+	# Eingestürzte Ecke: niedriger, oben in Stufen abgebrochen
+	f.box(Vector3(1.3, 1.25, 0), Vector3(1.0, 2.5, d), LIMESTONE_A, 0.0)
+	f.box(Vector3(1.05, 2.8, -0.3), Vector3(0.5, 0.6, d - 0.6), LIMESTONE_A, 0.0)
+	f.box(Vector3(1.55, 2.6, 0.5), Vector3(0.45, 0.25, 1.2), LIMESTONE_B, 0.0)
+	for y in [1.25, 2.35]:
+		f.box(Vector3(-0.5, y, 0), Vector3(2.72, 0.1, d + 0.12), LIMESTONE_B, 0.0)
+	f.box(Vector3(1.3, 1.25, 0), Vector3(1.06, 0.1, d + 0.12), LIMESTONE_B, 0.0)
+	f.box(Vector3(-0.5, h, 0), Vector3(2.84, 0.16, d + 0.24), LIMESTONE_B, 0.0)
+	# Fenster vorn (+z) und an der Seite (-x); unten die Tür
+	for x in [-1.4, -0.5, 0.4, 1.3]:
+		for y in [1.75, 2.85]:
+			if x > 1.0 and y > 2.0:
+				continue
+			f.box(Vector3(x, y, d * 0.5 + 0.01), Vector3(0.42, 0.62, 0.04), DOOR, 0.0)
+		if absf(x + 0.5) > 0.1:
+			f.box(Vector3(x, 0.95, d * 0.5 + 0.01), Vector3(0.5, 0.5, 0.04), DOOR, 0.0)
+	f.box(Vector3(-0.5, 0.8, d * 0.5 + 0.01), Vector3(0.6, 1.0, 0.04), DOOR, 0.0)
+	for z in [-0.7, 0.0, 0.7]:
+		f.box(Vector3(-1.81, 1.75, z), Vector3(0.04, 0.62, 0.4), DOOR, 0.0)
+		f.box(Vector3(-1.81, 2.85, z), Vector3(0.04, 0.62, 0.4), DOOR, 0.0)
+	# Balkon im ersten Stock über die ganze Front
+	f.box(Vector3(-0.5, 1.35, d * 0.5 + 0.18), Vector3(2.6, 0.08, 0.36), LIMESTONE_B, 0.0)
+	f.box(Vector3(-0.5, 1.68, d * 0.5 + 0.34), Vector3(2.6, 0.05, 0.04), IRON, 0.0)
+	for k in 9:
+		f.box(Vector3(-1.75 + k * 0.31, 1.52, d * 0.5 + 0.34), Vector3(0.03, 0.32, 0.03), IRON, 0.0)
+	# Mansarddach mit Zinkdeckel, zwei Gauben vorn, zwei Schornsteine
+	_mansard(f, Vector3(-0.5, h + 0.08, 0), 1.38, 1.38, 1.0, 0.95, 1.0, SLATE_A, SLATE_B)
+	for x in [-1.0, 0.0]:
+		f.box(Vector3(x, h + 0.55, 1.12), Vector3(0.42, 0.55, 0.4), LIMESTONE_A, 0.0)
+		f.box(Vector3(x, h + 0.55, 1.33), Vector3(0.24, 0.34, 0.03), DOOR, 0.0)
+		f.cone_cap(Vector3(x, h + 0.83, 1.12), 0.33, 0.3, 4, SLATE_B, PI / 4.0, true)
+	for x in [-1.3, 0.3]:
+		f.box(Vector3(x, h + 1.25, -0.5), Vector3(0.4, 0.5, 0.3), LIMESTONE_B, 0.0)
+		for dx in [-0.1, 0.1]:
+			f.frustum(Vector3(x + dx, h + 1.5, -0.5), Vector3(x + dx, h + 1.68, -0.5), 0.06, 0.05, 6, CHIMNEY_POT)
+	# Efeu und Schutt
+	_ivy(f, Vector3(1.2, 1.6, d * 0.5), Vector3(0.6, 1.1, 0), Vector3.BACK, rng)
+	_ivy(f, Vector3(-1.5, 0.9, d * 0.5), Vector3(0.35, 0.7, 0), Vector3.BACK, rng)
+	_ivy(f, Vector3(-1.8, 1.8, 0.5), Vector3(0, 1.2, 0.6), Vector3.LEFT, rng)
+	for k in 6:
+		f.blob(Vector3(rng.randf_range(1.0, 2.2), 0.12, rng.randf_range(-0.6, 1.8)),
+				rng.randf_range(0.12, 0.24), LIMESTONE_B if k % 2 == 0 else LIMESTONE_A, rng, 0.0)
+	return f
+
+
+const RUST_A := Color(0.40, 0.19, 0.10)
+const RUST_B := Color(0.30, 0.14, 0.08)
+
+
+## Rostiger Hafenkran aus Stahl: ein Portal auf vier Beinen, oben Maschinenhaus und Bock,
+## davon der Gitterausleger schräg hinaus, am Seil der Haken. Etwa 6.6 hoch (× 1.4 beim Export).
+func _dock_crane() -> Forge:
+	var f := Forge.new()
+	var top := 3.0
+	for x: float in [-1.2, 1.2]:
+		for z: float in [-1.0, 1.0]:
+			f.frustum(Vector3(x, 0.2, z), Vector3(x * 0.6, top, z * 0.6), 0.11, 0.09, 4, RUST_A)
+		f.frustum(Vector3(x, 0.15, -1.15), Vector3(x, 0.15, 1.15), 0.16, 0.16, 4, RUST_B)
+		f.frustum(Vector3(x, 0.4, -1.0), Vector3(x * 0.6, top - 0.2, 0.6), 0.05, 0.05, 4, RUST_B)
+		f.frustum(Vector3(x, 0.4, 1.0), Vector3(x * 0.6, top - 0.2, -0.6), 0.05, 0.05, 4, RUST_B)
+	f.box(Vector3(0, top + 0.12, 0), Vector3(1.8, 0.24, 1.4), RUST_B, 0.0)
+	f.box(Vector3(-0.2, top + 0.85, 0), Vector3(1.6, 1.2, 1.1), RUST_A, 0.0)
+	f.box(Vector3(0.61, top + 1.0, 0), Vector3(0.04, 0.5, 0.8), WINDOW, 0.0)
+	f.box(Vector3(-0.2, top + 1.5, 0), Vector3(1.7, 0.1, 1.2), RUST_B, 0.0)
+	f.box(Vector3(-1.25, top + 0.7, 0), Vector3(0.6, 0.9, 1.0), RUST_B, 0.0)
+	var apex := Vector3(-0.4, top + 2.6, 0)
+	for z: float in [-0.45, 0.45]:
+		f.frustum(Vector3(-0.9, top + 1.55, z), apex, 0.07, 0.05, 4, RUST_B)
+		f.frustum(Vector3(0.4, top + 1.55, z), apex, 0.07, 0.05, 4, RUST_B)
+	var foot := Vector3(0.6, top + 0.5, 0)
+	var tip := Vector3(4.2, top + 3.4, 0)
+	for z: float in [-0.3, 0.3]:
+		f.frustum(foot + Vector3(0, 0, z), tip, 0.07, 0.05, 4, RUST_A)
+	for k in range(1, 7):
+		var t := k / 7.0
+		var p := foot.lerp(tip, t)
+		var w := 0.3 * (1.0 - t)
+		f.frustum(p + Vector3(0, 0, -w), p + Vector3(0, 0, w), 0.03, 0.03, 4, RUST_B)
+		if k < 6:
+			var q := foot.lerp(tip, (k + 1) / 7.0)
+			f.frustum(p + Vector3(0, 0, w), q - Vector3(0, 0, 0.3 * (1.0 - (k + 1) / 7.0)), 0.025, 0.025, 4, RUST_B)
+	f.frustum(apex, tip, 0.025, 0.025, 4, NET)
+	f.frustum(tip, Vector3(tip.x, 1.5, 0), 0.02, 0.02, 4, NET)
+	f.box(Vector3(tip.x, 1.38, 0), Vector3(0.3, 0.22, 0.3), IRON, 0.0)
+	f.cone_cap(Vector3(tip.x, 1.0, 0), 0.12, 0.27, 4, IRON, 0.0, true)
+	return f
+
+
+const TUFFEAU_A := Color(0.92, 0.88, 0.78)
+const TUFFEAU_B := Color(0.82, 0.78, 0.67)
+
+
+## Schlossruine an der Loire: runder Turm aus hellem Tuffstein mit Pechnasenkranz und
+## spitzem Schieferhelm, daneben ein Stück Mauer mit Bogenfenster, oben abgebrochen,
+## Efeu an Turm und Mauer. Etwa 7.4 hoch (× 1.3 beim Export).
+func _chateau_tower() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(341)
+	var tc := Vector3(-0.9, 0, 0)
+	f.frustum(tc, tc + Vector3(0, 4.4, 0), 1.15, 1.0, 12, TUFFEAU_A, 0.0, TUFFEAU_B)
+	f.frustum(tc + Vector3(0, 4.3, 0), tc + Vector3(0, 4.7, 0), 1.05, 1.22, 12, TUFFEAU_B)
+	f.frustum(tc + Vector3(0, 4.7, 0), tc + Vector3(0, 4.85, 0), 1.22, 1.22, 12, TUFFEAU_A)
+	f.cone_cap(tc + Vector3(0, 4.85, 0), 1.28, 2.2, 12, SLATE_A, 0.0, true)
+	f.frustum(tc + Vector3(0, 7.0, 0), tc + Vector3(0, 7.4, 0), 0.04, 0.02, 4, IRON)
+	for y: float in [1.4, 2.7, 3.8]:
+		f.box(tc + Vector3(0, y, 1.06), Vector3(0.26, 0.5, 0.12), DOOR, 0.0)
+	f.box(tc + Vector3(-0.75, 2.2, 0.72), Vector3(0.24, 0.44, 0.12), DOOR, PI / 4.0)
+	# Die Mauer entlang +x mit einem Bogenfenster
+	var depth := 0.7
+	f.box(Vector3(0.6, 1.3, 0), Vector3(0.9, 2.6, depth), TUFFEAU_A, 0.0)
+	f.box(Vector3(2.55, 1.0, 0), Vector3(0.9, 2.0, depth), TUFFEAU_A, 0.0)
+	f.box(Vector3(1.6, 0.6, 0), Vector3(1.0, 1.2, depth), TUFFEAU_A, 0.0)
+	_arch(f, Vector3(1.6, 1.2, 0), 0.4, 0.5, depth, TUFFEAU_B, TUFFEAU_A, TUFFEAU_A)
+	f.box(Vector3(1.6, 1.95, 0), Vector3(1.0, 0.5, depth), TUFFEAU_A, 0.0)
+	for k in 5:
+		var x := 0.35 + k * 0.5
+		var hh := rng.randf_range(0.15, 0.5)
+		var base := 2.6 if x < 1.1 else (2.0 if x > 2.1 else 2.2)
+		f.box(Vector3(x, base + hh * 0.5, rng.randf_range(-0.1, 0.1)), Vector3(0.42, hh, depth - 0.1),
+				TUFFEAU_B if k % 2 == 0 else TUFFEAU_A, rng.randf_range(-0.1, 0.1))
+	_ivy(f, Vector3(-0.2, 1.3, 0.6), Vector3(0.45, 1.2, 0), Vector3.BACK, rng)
+	_ivy(f, Vector3(2.5, 0.9, depth * 0.5), Vector3(0.45, 0.8, 0), Vector3.BACK, rng)
+	_ivy(f, Vector3(1.0, 1.9, -depth * 0.5), Vector3(0.5, 0.7, 0), Vector3.FORWARD, rng)
+	for k in 5:
+		f.blob(Vector3(rng.randf_range(1.2, 3.2), 0.12, rng.randf_range(0.5, 1.4)),
+				rng.randf_range(0.12, 0.22), TUFFEAU_B, rng, 0.0)
+	return f
+
+
+const LIGHTHOUSE_WHITE := Color(0.92, 0.90, 0.85)
+const LIGHTHOUSE_RED := Color(0.72, 0.24, 0.16)
+
+
+## Leuchtturm auf der Klippe: Kalksteinsockel, weißer achteckiger Schaft, Galerie mit
+## Geländer, die Laterne unter rotem Dach. Etwa 6.4 hoch (× 1.3 beim Export).
+func _lighthouse() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(347)
+	f.box(Vector3(0, 0.3, 0), Vector3(2.0, 0.6, 2.0), LIMESTONE_B, 0.0)
+	f.frustum(Vector3(0, 0.6, 0), Vector3(0, 4.8, 0), 0.85, 0.6, 8, LIGHTHOUSE_WHITE, PI / 8.0)
+	f.box(Vector3(0, 1.1, 0.8), Vector3(0.4, 0.9, 0.12), DOOR, 0.0)
+	for y: float in [2.4, 3.6]:
+		f.box(Vector3(0, y, 0.72 - (y - 0.6) * 0.06), Vector3(0.18, 0.32, 0.12), DOOR, 0.0)
+	f.frustum(Vector3(0, 4.8, 0), Vector3(0, 4.95, 0), 0.95, 0.95, 8, IRON, PI / 8.0)
+	for k in 8:
+		var a := TAU * k / 8.0
+		f.frustum(Vector3(cos(a) * 0.9, 4.95, sin(a) * 0.9), Vector3(cos(a) * 0.9, 5.3, sin(a) * 0.9), 0.025, 0.025, 4, IRON)
+	f.frustum(Vector3(0, 5.28, 0), Vector3(0, 5.33, 0), 0.92, 0.92, 8, IRON, PI / 8.0)
+	f.frustum(Vector3(0, 4.95, 0), Vector3(0, 5.75, 0), 0.45, 0.45, 8, LAMP_GLASS, PI / 8.0)
+	f.cone_cap(Vector3(0, 5.75, 0), 0.6, 0.55, 8, LIGHTHOUSE_RED, PI / 8.0, true)
+	f.blob(Vector3(0, 6.35, 0), 0.08, IRON, rng, 0.0)
+	return f
+
+
+const COPPER_A := Color(0.40, 0.62, 0.54)
+const COPPER_B := Color(0.31, 0.51, 0.45)
+
+
+## Musikpavillon im Pariser Park: achteckiger Steinsockel mit Stufe, schlanke grüne
+## Eisenstützen mit Geländer, ein Dach aus Grünspan-Kupfer mit Knauf. Etwa 4.4 hoch.
+func _bandstand() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(349)
+	f.frustum(Vector3.ZERO, Vector3(0, 0.5, 0), 1.8, 1.75, 8, LIMESTONE_B, PI / 8.0, LIMESTONE_A)
+	f.box(Vector3(0, 0.15, 1.85), Vector3(0.9, 0.3, 0.4), LIMESTONE_B, 0.0)
+	var posts: Array[Vector3] = []
+	for k in 8:
+		var a := TAU * k / 8.0 + PI / 8.0
+		posts.append(Vector3(cos(a) * 1.55, 0.5, sin(a) * 1.55))
+	for k in 8:
+		var p := posts[k]
+		f.frustum(p, p + Vector3(0, 2.5, 0), 0.06, 0.05, 6, LAMP_POST)
+		var q := posts[(k + 1) % 8]
+		if p.z < 1.4 or q.z < 1.4:
+			f.frustum(p + Vector3(0, 0.6, 0), q + Vector3(0, 0.6, 0), 0.03, 0.03, 4, LAMP_POST)
+		f.frustum(p + Vector3(0, 2.4, 0), q + Vector3(0, 2.4, 0), 0.05, 0.05, 4, LAMP_POST)
+	f.frustum(Vector3(0, 3.0, 0), Vector3(0, 3.15, 0), 1.9, 1.9, 8, COPPER_B, PI / 8.0)
+	f.cone_cap(Vector3(0, 3.15, 0), 1.9, 0.95, 8, COPPER_A, PI / 8.0, true)
+	f.frustum(Vector3(0, 4.0, 0), Vector3(0, 4.25, 0), 0.08, 0.05, 6, LAMP_POST)
+	f.blob(Vector3(0, 4.3, 0), 0.1, LAMP_POST, rng, 0.0)
+	return f
+
+
+const EIFFEL_A := Color(0.42, 0.32, 0.24)
+const EIFFEL_B := Color(0.34, 0.26, 0.19)
+
+
+## Der Eiffelturm, verrostet und unten zugewachsen: vier Beine, die sich über die beiden
+## Plattformen zur Spitze krümmen, Bögen zwischen den Füßen, Kreuzstreben im Mittelteil.
+## Etwa 9.6 hoch (× 1.1 beim Export) — ein Wahrzeichen in der Ferne, nicht am Feld.
+func _eiffel_tower() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(353)
+	var corners: Array[Vector3] = [Vector3(1, 0, 1), Vector3(-1, 0, 1), Vector3(-1, 0, -1), Vector3(1, 0, -1)]
+	var levels: Array = [[0.0, 1.9], [2.6, 0.95], [5.2, 0.42], [8.3, 0.08]]
+	var radii := [0.3, 0.2, 0.12, 0.05]
+	for s in 3:
+		var y0: float = levels[s][0]
+		var y1: float = levels[s + 1][0]
+		var h0: float = levels[s][1]
+		var h1: float = levels[s + 1][1]
+		for k in 4:
+			var c: Vector3 = corners[k]
+			var n: Vector3 = corners[(k + 1) % 4]
+			var a := Vector3(c.x * h0, y0, c.z * h0)
+			var b := Vector3(c.x * h1, y1, c.z * h1)
+			f.frustum(a, b, radii[s], radii[s + 1], 4, EIFFEL_A, PI / 4.0, EIFFEL_B)
+			if s == 1:
+				f.frustum(a, Vector3(n.x * h1, y1, n.z * h1), 0.05, 0.04, 4, EIFFEL_B)
+				f.frustum(Vector3(n.x * h0, y0, n.z * h0), b, 0.05, 0.04, 4, EIFFEL_B)
+			if s == 0:
+				# Bogen zwischen zwei Füßen, aus Stücken entlang eines Halbkreises
+				var mid := Vector3((c.x + n.x) * 0.5 * 1.55, 0.0, (c.z + n.z) * 0.5 * 1.55)
+				var along := (n - c).normalized()
+				var prev := Vector3.ZERO
+				for j in 9:
+					var ang := PI * j / 8.0
+					var p := mid + along * cos(ang) * 1.3 + Vector3(0, 0.5 + sin(ang) * 1.3, 0)
+					if j > 0:
+						f.frustum(prev, p, 0.06, 0.06, 4, EIFFEL_B)
+					prev = p
+	f.box(Vector3(0, 2.7, 0), Vector3(2.3, 0.26, 2.3), EIFFEL_B, 0.0)
+	f.box(Vector3(0, 5.28, 0), Vector3(1.1, 0.18, 1.1), EIFFEL_B, 0.0)
+	f.box(Vector3(0, 8.45, 0), Vector3(0.3, 0.3, 0.3), EIFFEL_B, 0.0)
+	f.frustum(Vector3(0, 8.6, 0), Vector3(0, 9.6, 0), 0.05, 0.02, 4, EIFFEL_A)
+	for c: Vector3 in corners:
+		_ivy(f, Vector3(c.x * 1.6, 0.6, c.z * 1.6), Vector3(0.35, 0.6, 0.35), Vector3.ZERO, rng)
 	return f
 
 

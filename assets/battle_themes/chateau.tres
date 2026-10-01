@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="BattleTheme" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/battle/battle_theme.gd" id="1_theme"]
+
+[resource]
+script = ExtResource("1_theme")
+ground_patch = Color(0.82, 0.76, 0.62, 1)
+ground_patch_amount = 0.3
+path = "cobble"
+path_color = Color(0.8, 0.76, 0.66, 1)
+ground_texture = "autumn_leaves"
+ground_texture_strength = 0.7
+ground_low = Color(0.74, 0.6, 0.34, 1)
+ground_high = Color(0.82, 0.7, 0.42, 1)
+hill = Color(0.74, 0.7, 0.6, 1)
+background = Color(0.1, 0.07, 0.08, 1)
+light_from = "autumn_forest"
+trees = Array[String](["forge/autumn_orange.glb", "forge/autumn_yellow.glb", "forge/cypress.glb", "forge/cypress.glb"])
+rocks = Array[String](["forge/boulder_grey.glb", "forge/marble_rubble.glb"])
+grass = Array[String](["forge/dry_grass.glb", "forge/fern.glb"])
+props = Array[String](["props/barrel_large.gltf", "props/crates_stacked.gltf"])
+landmarks = Array[String](["forge/chateau_tower.glb", "forge/chateau_tower.glb", "forge/vine_row.glb"])
+particles = "leaves"
+cover = 1.2
+bush_color = Color(0.62, 0.34, 0.12, 1)
+bushes = 0.7

@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="BattleTheme" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/battle/battle_theme.gd" id="1_theme"]
+
+[resource]
+script = ExtResource("1_theme")
+ground_patch = Color(0.5, 0.56, 0.28, 1)
+ground_patch_amount = 0.3
+path = "cobble"
+path_color = Color(0.84, 0.76, 0.62, 1)
+ground_texture = "flagstone"
+ground_texture_strength = 0.8
+ground_low = Color(0.84, 0.74, 0.56, 1)
+ground_high = Color(0.9, 0.8, 0.62, 1)
+hill = Color(0.86, 0.76, 0.6, 1)
+background = Color(0.05, 0.1, 0.22, 1)
+ambient = Color(0.64, 0.66, 0.7, 1)
+ambient_energy = 1.1
+sun_color = Color(1.0, 0.94, 0.8, 1)
+sun_energy = 1.25
+trees = Array[String](["forge/stone_pine.glb", "forge/cypress.glb", "forge/roman_house.glb", "forge/roman_house.glb"])
+rocks = Array[String](["forge/boulder_grey.glb", "forge/marble_rubble.glb"])
+grass = Array[String](["forge/dry_grass.glb"])
+props = Array[String](["props/crates_stacked.gltf", "props/barrel_large.gltf", "forge/net_rack.glb"])
+landmarks = Array[String](["forge/dock_crane.glb", "forge/dock_crane.glb", "forge/harbour_basin.glb", "forge/lighthouse.glb"])
+cover = 0.5
+cover_color = Color(0.5, 0.56, 0.28, 1)
+bush_color = Color(0.26, 0.38, 0.18, 1)
+bushes = 0.4
