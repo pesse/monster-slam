@@ -784,8 +784,9 @@ Auch das graue „↺“ im Fähigkeiten-Screen sagt am Zeiger, warum es gerade 
 - **Jede Aufgabe hat ihren eigenen Lernstand.** Richtig beantwortet steigt er, entwischt
   das Monster, sinkt er. Eine Aufgabe gilt ab einem sicheren Stand (80 %) als
   gemeistert.
-- **Wiederholung nach Plan:** Unsichere Wörter kommen öfter und bald wieder, sichere
-  seltener. In der Statistik steht, wie viele Aufgaben heute fällig sind.
+- **Wiederholung nach Plan:** Ein falsch beantwortetes Wort ist nach zehn Minuten wieder
+  dran, sichere Wörter kommen nach Tagen und mit jedem Erfolg seltener. In der Statistik
+  steht, wie viele Aufgaben gerade fällig sind.
 - **Neue und schwere Wörter kommen langsam**, bekannte schneller. Der Zeitdruck soll
   das schnelle Abrufen von Bekanntem trainieren, nicht Neues unter Stress abfragen.
 - **Tippfehler-Frust wird klein gehalten:** Artikel, „the“, „to“, Klammerteile und

@@ -143,7 +143,9 @@ Score, aktive Welle) und reagiert selbst nur über EventBus-Signale.
 ## Lern-Module (`src/learning/`)
 
 - **`spaced_repetition.gd`** — SM-2-artiger Scheduler. Bestimmt, wann ein Item
-  wieder fällig ist. Persistierbar via `to_dict()`/`from_dict()`.
+  wieder fällig ist: nach einem Fehler in 10 Minuten, nach richtigen Antworten in Tagen
+  ab lokaler Mitternacht. Nur eine fällige Aufgabe rückt im Plan vor. Persistierbar via
+  `to_dict()`/`from_dict()`.
 - **`answer_evaluator.gd`** — normalisierter Exakt-/Alternativabgleich für schnellen
   Recall (offline, deterministisch). Hier wohnt die Normalisierung (Artikel,
   Platzhalter, Klammergruppen, Typografie); die Satzbewertung nimmt sie über `tokens()`.
