@@ -4,3 +4,27 @@
 
 [node name="MenuLab" type="Node"]
 script = ExtResource("1_lab")
+
+[node name="Overlay" type="CanvasLayer" parent="."]
+layer = 100
+
+[node name="Margin" type="MarginContainer" parent="Overlay"]
+theme_type_variation = &"ScreenMargin"
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Clock" type="PanelContainer" parent="Overlay/Margin"]
+unique_name_in_owner = true
+visible = false
+theme_type_variation = &"DebugPanel"
+size_flags_horizontal = 8
+size_flags_vertical = 8
+mouse_filter = 2
+
+[node name="ClockText" type="Label" parent="Overlay/Margin/Clock"]
+unique_name_in_owner = true
+theme_type_variation = &"Hint"
+text = "12:00"

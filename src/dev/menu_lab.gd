@@ -23,6 +23,14 @@ extends Node
 ##     … -- --shoot --map=area [--book=<id>] [--unit=N] die Gebietskarte einer Unit
 ##     … -- --shoot --map=area --stats   … mit dem Statistik-Fenster der Plakette darüber
 ##     … -- --shoot --updates            beide Update-Hinweise sichtbar (App und Inhalte)
+##     … -- --shoot … --hour=<h>         Sonne fest auf diese Stunde (6–18, SunCycle) statt
+##                                       nach der Uhr — für Vergleichsbilder des Lichts
+##     … -- --timelapse=<n>              Zeitraffer: die Sonne läuft n-mal so schnell wie nach
+##                                       der Uhr (dort ein Tag je Stunde; 60 = ein Tag je
+##                                       Minute), ab --hour oder ab der Uhrzeit
+##
+## Ohne --shoot bleibt das Fenster offen und lässt sich bedienen; unten rechts steht die
+## Uhrzeit der Sonne (auf den Bildern nicht).
 ##     … -- --shoot … --name=<Name> --gold=<n>       Name und Gold der Plakette, nur im Speicher
 ##                                       (für Bilder ohne echten Profilnamen und Debug-Gold)
 ##
@@ -34,6 +42,14 @@ const BACKDROP_SCENE := "res://scenes/ui/menu_backdrop.tscn"
 const SHOT_DIR := "res://reports/menu"
 ## So lange steht das Bild, bevor es gespeichert wird: Einblenden und ein Stück Idle.
 const SETTLE := 2.0
+
+@onready var _clock: Control = %Clock
+@onready var _clock_text: Label = %ClockText
+
+## Die Sonne der Kulisse, falls die gezeigte Szene eine hat (Karten haben keine).
+var _cycle: SunCycle
+## Wie viel schneller als nach der Uhr sie läuft; 0 = sie folgt der Uhr oder steht.
+var _timelapse := 0.0
 
 
 func _ready() -> void:
@@ -110,8 +126,31 @@ func _ready() -> void:
 			var tab := int(_arg("settings")) if not _arg("settings").is_empty() else 1
 			var window := screen.get_node("SettingsMenu")
 			(window.get_node("%Tabs").get_child(tab - 1) as Button).button_pressed = true)
+	_cycle = screen.find_child("SunCycle", true, false) as SunCycle
+	if _cycle != null:
+		if not _arg("hour").is_empty():
+			_cycle.follow_clock = false
+			_cycle.phase = SunCycle.phase_of(float(_arg("hour")))
+			_cycle.apply()
+		if not _arg("timelapse").is_empty():
+			_timelapse = maxf(float(_arg("timelapse")), 0.0)
+			_cycle.follow_clock = false
+	_clock.visible = _cycle != null and not _has_arg("shoot")
 	if _has_arg("shoot"):
 		_shoot.call_deferred()
+
+
+func _process(delta: float) -> void:
+	if _cycle == null:
+		return
+	if _timelapse > 0.0:
+		# Nach der Uhr ein Tag je Stunde (SunCycle.clock_phase); hier n-mal so schnell.
+		var step := delta * _timelapse * SunCycle.DAY_SPEED / 86400.0
+		_cycle.advance(fposmod(_cycle.phase + step, 1.0))
+	var hour := SunCycle.hour_of(_cycle.phase)
+	var mode := "nach der Uhr" if _cycle.follow_clock \
+			else ("Zeitraffer ×%s" % String.num(_timelapse) if _timelapse > 0.0 else "fest")
+	_clock_text.text = "%02d:%02d · %s" % [int(hour), int(fmod(hour, 1.0) * 60.0), mode]
 
 
 ## Beide Update-Hinweise sichtbar, mit Beispieltext — nur das Bild, ohne echtes Update.
@@ -149,6 +188,8 @@ func _shoot() -> void:
 		what += "_stats" + ("_closed" if _arg("stats") == "close" else "")
 	if _has_arg("badge-hint"):
 		what += "_badge_hint"
+	if not _arg("hour").is_empty():
+		what += "_h" + _arg("hour")
 	if _has_arg("content"):
 		what += "_content"
 	if _has_arg("updates"):
