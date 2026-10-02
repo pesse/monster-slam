@@ -43,6 +43,10 @@ const FORGET_GOLD_PER_NODE := 15
 ## käme nie zum Ende. Der Baum darf also beliebig tief gehen, nur nicht bis zum Stillstand.
 const MIN_SLOW_FACTOR := 0.05
 
+## Untergrenze des Lauftempos der Monster (`monster_speed`, Zeitwandler). Auch das ruhigste
+## Feld soll noch ein Feld mit Druck sein: halbes Tempo, nicht weniger.
+const MIN_MONSTER_PACE := 0.5
+
 ## --- Wo ein Knoten im Netz steht ------------------------------------------------
 ##
 ## Der Screen zeichnet kein Raster aus Karten, sondern ein Netz: jeder Baum hat seinen
@@ -121,6 +125,8 @@ const EFFECT_KEYS: Array[String] = [
 	"explosive_arrow",
 	"auto_catapult",
 	"fortress_tier_drop",
+	"monster_speed",
+	"spawn_gap",
 ]
 
 
@@ -267,6 +273,20 @@ static func bonuses(entries: Array, unlocked: PackedStringArray) -> Dictionary:
 			if key in out:
 				out[key] = float(out[key]) + float(effects[key])
 	return out
+
+
+## Faktor auf das Lauftempo jedes Monsters (`monster_speed`, negativ = langsamer), geklemmt
+## auf MIN_MONSTER_PACE..1. Wirkt NACH der Tempo-Formel des WaveGenerators und bewusst nicht
+## auf Punkte und Erfahrung: die kommen aus `t - c`, und ein gelernter Skill ist Können des
+## Spielers, keine leichtere Aufgabe — wie Rüstung oder Zeitlupe kostet er keine Beute.
+static func monster_pace(bonuses: Dictionary) -> float:
+	return clampf(1.0 + float(bonuses.get("monster_speed", 0.0)), MIN_MONSTER_PACE, 1.0)
+
+
+## Faktor auf den Abstand zwischen zwei Spawns (`spawn_gap`, Anteil). Nie unter 1: der
+## Skill zieht die Folge nur auseinander.
+static func spawn_gap_scale(bonuses: Dictionary) -> float:
+	return maxf(1.0, 1.0 + float(bonuses.get("spawn_gap", 0.0)))
 
 
 ## Was das Umlernen kostet: Gold je zurückgegebenem Punkt. Ohne ausgegebene Punkte gibt es
@@ -478,6 +498,10 @@ static func effect_label(key: String, value: float) -> String:
 		"fortress_tier_drop":
 			return "Festungsstufe 4 schon ab %d %%" % (
 					int(FortressTier.THRESHOLDS_PERCENT[-1]) - int(round(value)))
+		"monster_speed":
+			return "Monster %d %% langsamer" % int(round(absf(value) * 100.0))
+		"spawn_gap":
+			return "+%d %% Abstand zwischen den Monstern" % int(round(value * 100.0))
 	return ""
 
 

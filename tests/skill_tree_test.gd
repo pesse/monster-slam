@@ -228,3 +228,29 @@ func test_forgetting_is_cheaper_than_respec() -> void:
 			"skill.test.left2", "skill.test.right", "skill.test.right2"])
 	assert_int(SkillTree.forget_cost(_entries, "skill.test.root", learned)).is_less(
 			SkillTree.respec_cost(SkillTree.spent(_entries, learned)))
+
+
+# --- Ruhiger Ast des Zeitwandlers ------------------------------------------------
+
+func test_monster_pace_is_neutral_without_a_skill() -> void:
+	assert_float(SkillTree.monster_pace({})).is_equal(1.0)
+	assert_float(SkillTree.spawn_gap_scale({})).is_equal(1.0)
+
+
+func test_monster_pace_slows_and_stops_at_the_floor() -> void:
+	assert_float(SkillTree.monster_pace({"monster_speed": -0.3})).is_equal_approx(0.7, 0.0001)
+	assert_float(SkillTree.monster_pace({"monster_speed": -5.0})) \
+			.is_equal(SkillTree.MIN_MONSTER_PACE)
+	# Ein positiver Wert macht nicht schneller: der Ast bremst nur.
+	assert_float(SkillTree.monster_pace({"monster_speed": 0.5})).is_equal(1.0)
+
+
+func test_spawn_gap_only_widens() -> void:
+	assert_float(SkillTree.spawn_gap_scale({"spawn_gap": 0.3})).is_equal_approx(1.3, 0.0001)
+	assert_float(SkillTree.spawn_gap_scale({"spawn_gap": -0.5})).is_equal(1.0)
+
+
+func test_calm_effects_have_a_readable_line() -> void:
+	assert_str(SkillTree.effect_label("monster_speed", -0.3)).is_equal("Monster 30 % langsamer")
+	assert_str(SkillTree.effect_label("spawn_gap", 0.3)) \
+			.is_equal("+30 % Abstand zwischen den Monstern")

@@ -89,5 +89,56 @@
 		"effects": {
 			"slow_factor": -0.04
 		}
+	},
+	{
+		"id": "skill.time.heavy",
+		"kind": "skill",
+		"tree": "tree.timeweaver",
+		"name": "Schwere Schritte",
+		"icon": "🐌",
+		"description": "Alle Monster laufen 15 % langsamer — nicht nur, solange du tippst.",
+		"cost": 2,
+		"tier": 2,
+		"branch": 2,
+		"requires": [
+			"skill.time.root"
+		],
+		"effects": {
+			"monster_speed": -0.15
+		}
+	},
+	{
+		"id": "skill.time.mire",
+		"kind": "skill",
+		"tree": "tree.timeweaver",
+		"name": "Zäher Boden",
+		"icon": "🪨",
+		"description": "Nochmal 15 % langsamer.",
+		"cost": 2,
+		"tier": 3,
+		"branch": 2,
+		"requires": [
+			"skill.time.heavy"
+		],
+		"effects": {
+			"monster_speed": -0.15
+		}
+	},
+	{
+		"id": "skill.time.lull",
+		"kind": "skill",
+		"tree": "tree.timeweaver",
+		"name": "Späte Horde",
+		"icon": "🌙",
+		"description": "Die Monster kommen in größerem Abstand: 30 % mehr Zeit bis zum nächsten.",
+		"cost": 3,
+		"tier": 3,
+		"branch": 3,
+		"requires": [
+			"skill.time.heavy"
+		],
+		"effects": {
+			"spawn_gap": 0.3
+		}
 	}
 ]

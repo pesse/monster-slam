@@ -1,0 +1,5 @@
+Tool: built-in image_gen.imagegen
+transparent_background: true
+Reference: assets/ui/skill_tree/icons/time_hourglass.webp, time_web.webp (style, palette, lighting)
+
+Polished fantasy game inventory icon in exactly the style of the other Timeweaver icons: a plump low-poly snail seen in three-quarter view, its spiral shell made of soft violet crystal with a small golden hourglass set into the centre of the spiral. The snail leaves a short glistening lilac trail behind it. Calm, slow, friendly silhouette, readable at 40 px. Same materials, lighting, outline weight and perspective as the reference icons. Actual transparent background, not black. Square canvas, all elements inside central 81.25% with at least 9.375% fully transparent margins on every side. No floor shadow, no background glow, no text.

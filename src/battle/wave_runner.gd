@@ -82,6 +82,10 @@ var _underway := 0
 ## Wachkatapult gelernt (Bollwerk, `auto_catapult`): Monster mit gemeisterter Aufgabe
 ## werden abgeschossen.
 var _catapult := false
+## Zeitwandler, ruhiger Ast (SkillTree.monster_pace / spawn_gap_scale): Faktor auf das
+## Lauftempo jedes Monsters und auf den Abstand zwischen zwei Spawns. Punkte bleiben unberührt.
+var _monster_pace := 1.0
+var _spawn_gap_scale := 1.0
 ## Die Katapulte der Festung (FortressModel.catapults) — erst ab FortressModel.CATAPULT_TIER
 ## gibt es welche, und nur dann wirft das Wachkatapult.
 var _catapults: Array[Node3D] = []
@@ -177,6 +181,8 @@ func _ready() -> void:
 	GameState.apply_skills(skill_bonuses)
 	_slow_motion.apply_skills(skill_bonuses)
 	_catapult = float(skill_bonuses.get("auto_catapult", 0.0)) > 0.0
+	_monster_pace = SkillTree.monster_pace(skill_bonuses)
+	_spawn_gap_scale = SkillTree.spawn_gap_scale(skill_bonuses)
 	if _first_person_run:
 		_setup_first_person(skill_bonuses)
 	# Der Lauf beginnt hier, nicht mit der ersten Welle: alles, was über die Wellen hinweg
@@ -1083,6 +1089,7 @@ func _generate_wave(difficulty: int, wave_number: int) -> Array:
 	# je Stufe darüber/darunter +/- 2 Monster). Mindestens 2 Monster pro Welle.
 	var count := maxi(2, 2 + wave_number + (difficulty - 3) * 2)
 	var interval := maxf(1.5, 4.0 - 0.3 * difficulty)  # härter ⇒ schnellere Folge
+	interval *= _spawn_gap_scale
 	return [{
 		"count": count,
 		"interval": interval,
@@ -1159,7 +1166,9 @@ func _spawn(entry: Dictionary) -> void:
 		return
 
 	var monster := MONSTER_SCENE.instantiate() as Monster
-	monster.setup(plan["monster_def"], plan["task"], GOAL_Z, plan["speed"])
+	# Der Zeitwandler-Skill bremst erst hier, hinter der Formel: `plan["reward"]` und
+	# `plan["xp"]` bleiben, was `t - c` sagt.
+	monster.setup(plan["monster_def"], plan["task"], GOAL_Z, plan["speed"] * _monster_pace)
 	monster.damage = plan["damage"]
 	monster.reward = plan["reward"]
 	monster.xp = plan["xp"]

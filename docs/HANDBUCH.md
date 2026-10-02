@@ -601,7 +601,7 @@ für 4.
 |---|---|
 | **Genesung** | Jedes besiegte Monster heilt die Festung um mehr HP. |
 | **Bollwerk** | Die Festung bekommt Rüstung. Ein Ast vergrößert den Vorrat, der andere setzt ihn zu jeder Welle ein Stück instand. Ganz außen wartet das **Wachkatapult**, das Monster mit gemeisterten Aufgaben abschießt. Direkt am Anfang hängt der **Schnelle Erbauer**: Stufe 4 der Festung kommt schon bei 70 % statt 75 %, die Stufen davor entsprechend früher. |
-| **Zeitwandler** | Die Zeitlupe beim Tippen hält länger nach (ein Ast) oder wird noch tiefer (der andere Ast). |
+| **Zeitwandler** | Die Zeitlupe beim Tippen hält länger nach (ein Ast) oder wird noch tiefer (der zweite Ast). Der dritte Ast bremst die Monster die ganze Zeit: **Schwere Schritte** und **Zäher Boden** machen sie je 15 % langsamer, mit **Späte Horde** kommen sie in größerem Abstand. Punkte gibt es dafür nicht weniger. |
 | **Späher** | Der Anfang, der **Späherblick**, schaltet die Ich-Sicht frei (Kapitel 5). Beide Äste danach machen dich darin schneller, am Ende des einen warten der **Sturmangriff** und der **Langbogen**, nach dem Langbogen der **Explosionspfeil**. |
 
 Alle Wirkungen zählen zusammen: zwei Knoten, die je 1 HP mehr heilen, heilen zusammen

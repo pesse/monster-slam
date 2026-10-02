@@ -841,6 +841,12 @@ Kamera frei; die Äste darunter heben nur das Lauftempo (`walk_speed`, Anteile a
   verschwindet. Die Nachwirkung des Zeitwandlers (`slow_hold_ms`) hat damit in der
   Ich-Sicht nichts zu verlängern; das ist gewollt, dafür kostet der Späherblick. Die Tiefe
   (`slow_factor`) gilt weiter.
+- **Ruhiger Ast des Zeitwandlers** (`monster_speed`, `spawn_gap`): `WaveRunner` nimmt die
+  Faktoren aus `SkillTree.monster_pace`/`spawn_gap_scale` und legt sie auf `plan["speed"]`
+  beim Spawn und auf den Spawn-Abstand der Welle — **hinter** `WaveGenerator._build_plan`,
+  nicht in `speed_scale`. Sonst sänken Punkte und Gold mit, und ein gelernter Skill
+  kostete Beute. Schwierigkeit bleibt `t - c`; der Skill ist Können des Spielers wie die
+  Rüstung.
 - **Sturmangriff** (`charge`): bei einem Treffer rast der Spieler auf das Monster zu
   (`FirstPersonView.charge_at`), erst beim Aufprall platzt es (`WaveRunner._burst`).
   Gebucht wird trotzdem sofort (`_book_defeat`: Lernstand, XP, Punkte, Spur) — das Bild

@@ -346,7 +346,10 @@ Eine Datei je Baum. Der erste Eintrag ist der Baum-Kopf, die übrigen sind seine
   der Ich-Sicht; mit `charge` zusammen wechselt Tab) und `explosive_arrow` (> 0: ein
   Bogentreffer platzt als Feuerball mit Rauch, nur das Bild) und `auto_catapult` (> 0: die
   Katapulte der vollen Festung schießen Monster mit gemeisterter Aufgabe ab, ohne Lernstand
-  und Erfahrung). Ein neuer
+  und Erfahrung) und `monster_speed` (Anteil aufs Lauftempo aller Monster, negativ =
+  langsamer, ab −50 % geklemmt) und `spawn_gap` (Anteil mehr Abstand zwischen zwei Spawns).
+  Die letzten beiden wirken hinter der Tempo-Formel und lassen Punkte und Erfahrung
+  unberührt. Ein neuer
   Schlüssel braucht einen Eintrag dort **und** ein `apply_skills`, das ihn liest.
 
 Die Beträge sind reine Balance und ohne Code-Änderung justierbar. Was sich nicht ändern

@@ -232,6 +232,27 @@
       "height": 256,
       "notes": "Isolated Schneller Erbauer; 256 px canvas, <=208 px centered motif; genuine alpha; lossless WebP RGBA. Grey stone-headed hammer with gold rivet on a wooden handle with blue binding and pennant, striking a grey stone block; golden motion arcs and angular sparks. Source: sources/bulwark_builder.png.",
       "sha256": "4fa04f908682fa2f3e56baf866a4cb415abe0c288f8248d18cea6f3bfd6fb185"
+    },
+    "icons/time_heavy": {
+      "path": "res://assets/ui/skill_tree/icons/time_heavy.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated Schwere Schritte; 256 px canvas, <=208 px centered motif; genuine alpha; lossless WebP RGBA. Violet crystal snail with a golden hourglass and lilac trail. Source: sources/time_heavy.png.",
+      "sha256": "05c922be3ef5ac8062dff7a25ce0dc33238a1c24b8a7bec05bf402a26849fbe4"
+    },
+    "icons/time_mire": {
+      "path": "res://assets/ui/skill_tree/icons/time_mire.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated Zäher Boden; 256 px canvas, <=208 px centered motif; genuine alpha; lossless WebP RGBA. Bubbling violet mire with a three-toed monster footprint and golden sand. Source: sources/time_mire.png.",
+      "sha256": "30cd720d63263f8401ae6548ccfb5e35910fa9b78b1f0df1c27f7062a578c487"
+    },
+    "icons/time_lull": {
+      "path": "res://assets/ui/skill_tree/icons/time_lull.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated Späte Horde; 256 px canvas, <=208 px centered motif; genuine alpha; lossless WebP RGBA. Golden crescent with violet stars and a hanging hourglass. Source: sources/time_lull.png.",
+      "sha256": "265ca7f86aa80874cc59c223d61633674f10e3fbe9eae90a04949ce3e603d602"
     }
   },
   "skill_icons": {
@@ -354,6 +375,21 @@
       "name": "Schneller Erbauer",
       "tree": "tree.bulwark",
       "path": "res://assets/ui/skill_tree/icons/bulwark_builder.webp"
+    },
+    "skill.time.heavy": {
+      "name": "Schwere Schritte",
+      "tree": "tree.timeweaver",
+      "path": "res://assets/ui/skill_tree/icons/time_heavy.webp"
+    },
+    "skill.time.mire": {
+      "name": "Zäher Boden",
+      "tree": "tree.timeweaver",
+      "path": "res://assets/ui/skill_tree/icons/time_mire.webp"
+    },
+    "skill.time.lull": {
+      "name": "Späte Horde",
+      "tree": "tree.timeweaver",
+      "path": "res://assets/ui/skill_tree/icons/time_lull.webp"
     }
   },
   "tree_colors": {
