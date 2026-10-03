@@ -739,6 +739,11 @@ Richtung sitzt.
 - **„Grund-Geschwindigkeit“** (50 % bis 150 %): macht alle Monster langsamer oder
   schneller, unabhängig von der Schwierigkeit. Gut für Kinder, die noch langsam tippen
   oder lesen.
+- **„Updates“**: **„Auf Updates prüfen“** schaut sofort nach, ob es eine neue Fassung des
+  Spiels oder neue Vokabel-Packs gibt (das Spiel schaut auch beim Start selbst nach).
+  Darunter steht je eine Zeile für das Spiel und die Inhalte. Gibt es etwas Neues, wird
+  der passende Knopf hell: **„Spiel aktualisieren“** öffnet den Update-Dialog (Kapitel 16),
+  **„Inhalte aktualisieren“** holt die neuen Packs. Sonst bleiben beide grau.
 - **„Fortschritt zurücksetzen“**: löscht nach einer Rückfrage den Lernstand der Wörter
   dieses Profils. Gold, Erfahrung und gelernte Fähigkeiten sind davon nicht betroffen.
 
@@ -805,7 +810,8 @@ dem Menü; „✕“ oder **Esc** schließt es.
 ## 16. Updates des Spiels
 
 Beim Start prüft das Spiel still, ob es eine neue Fassung gibt. Nur dann erscheint auf dem
-Start-Screen der Knopf „⬆ Update auf …“. Ohne Internet passiert einfach nichts.
+Start-Screen der Knopf „⬆ Update auf …“. Ohne Internet passiert einfach nichts. Sofort
+nachsehen kannst du unter „Einstellungen“ → „Profil“ → „Auf Updates prüfen“ (Kapitel 13).
 
 1. Der Knopf öffnet ein Fenster mit den Neuigkeiten. „Herunterladen“ lädt die neue
    Fassung, „Später“ schließt das Fenster.

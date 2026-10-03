@@ -80,3 +80,45 @@ func test_the_window_fits_the_reference_size() -> void:
 		assert_float(need.x).is_less_equal(1152.0)
 		assert_float(need.y).is_less_equal(648.0)
 	remove_child(screen)
+
+
+## „Updates" (Issue #53): der Prüfknopf und die beiden Aktionsknöpfe stehen immer da; ohne
+## Angebot sind die Aktionen gesperrt, und der Update-Dialog ist zu. Geklickt wird der
+## Prüfknopf nicht — kein Test spricht mit dem Netz.
+func test_the_update_section_stands_without_an_offer() -> void:
+	var screen := _window()
+	assert_bool((screen.get_node("%UpdateCheckButton") as Button).visible).is_true()
+	assert_bool((screen.get_node("%UpdateDialog") as Control).visible).is_false()
+	if UpdateService.state == UpdateService.State.IDLE:
+		assert_bool((screen.get_node("%AppUpdateButton") as Button).disabled).is_true()
+		assert_str((screen.get_node("%AppStatus") as Label).text).contains(SemVer.app_version())
+	if ContentService.update_count() == 0:
+		assert_bool((screen.get_node("%ContentUpdateButton") as Button).disabled).is_true()
+	remove_child(screen)
+
+
+func test_the_app_line_names_the_state() -> void:
+	var menu := preload("res://src/ui/settings_menu.gd")
+	assert_str(menu.app_status_text(UpdateService.State.IDLE, "", "0.22.0", "", false)) \
+			.is_equal("Spiel: Version 0.22.0")
+	assert_str(menu.app_status_text(UpdateService.State.IDLE, "", "0.22.0", "", true)) \
+			.is_equal("Spiel: Version 0.22.0 ist aktuell.")
+	assert_str(menu.app_status_text(UpdateService.State.AVAILABLE, "0.23.0", "0.22.0", "", true)) \
+			.contains("0.23.0 ist da")
+	assert_str(menu.app_status_text(UpdateService.State.ERROR, "", "0.22.0", "Server weg.", true)) \
+			.is_equal("Spiel: Server weg.")
+
+
+func test_the_content_line_names_the_state() -> void:
+	var menu := preload("res://src/ui/settings_menu.gd")
+	var idle := ContentService.State.IDLE
+	assert_str(menu.content_status_text(idle, 0, false, "", "", false)) \
+			.is_equal("Inhalte: noch nicht geprüft.")
+	assert_str(menu.content_status_text(ContentService.State.READY, 0, true, "", "", true)) \
+			.is_equal("Inhalte: alles aktuell.")
+	assert_str(menu.content_status_text(ContentService.State.READY, 2, true, "", "", true)) \
+			.is_equal("Inhalte: 2 Packs mit neuem Stand.")
+	assert_str(menu.content_status_text(ContentService.State.READY, 1, true, "", "", true)) \
+			.is_equal("Inhalte: 1 Pack mit neuem Stand.")
+	assert_str(menu.content_status_text(ContentService.State.LOADING, 0, true, "", "", true)) \
+			.is_equal("Inhalte: werden geprüft …")
