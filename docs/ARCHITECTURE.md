@@ -560,6 +560,12 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
   (`form_task_in_scope`); der Bonus-Lauf steht mit der Festung seiner Unit da
   (`bonus_units`). Auf der Buchkarte ein Stern je Bonus, in der Statistik eine Zeile unter
   der Unit.
+- **Wort-Bonus** (ADR 0013): Lexeme mit `bonus: "<thema>"` sind Zusatzstoff ihrer Unit
+  (Schlüssel `bonus:<book>/<unit>/0/<thema>`, Punkt `bonus/0/<thema>`). Sie stehen nur
+  unter diesem Schlüssel (`_scope_keys`), also in keinem Teil, nicht in der Festung
+  (`FortressTier.unit_key`) und nicht in den Sätzen; im Bonus und in „Gesamt" kommen sie
+  mit allen Aufgaben (`in_word_bonus`). Ein vorhandenes Wort spielt über
+  `also_bonus` mit, ohne Dublette.
 - **Ein Klick markiert, „Spielen" startet.** `MapLevel.toggle` führt die Auswahl der
   Gebietskarte: Teile und Boni beliebig zusammen, Gesamt und Boss allein. `MapLevel.combine` macht
   daraus EIN Level für `RunRequest` — mehrere Teile mit allen ihren Scopes, `keys` nennt

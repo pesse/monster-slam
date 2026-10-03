@@ -14,6 +14,7 @@ verfügbaren Modell — Kosten werden nicht erfasst. Pro Lauf ein Eintrag; Vergl
 | #4 | 2026-09-25 | Sätze je Unit: Fan-out je Unit + Gegenlesung + Prüf-/Merge-Skript | Opus | 9 | ~0,85 Mio. | 257 Sätze, 397 Verknüpfungen | 0 Fehler, Datentests grün |
 | #5 | 2026-10-01 | Ein-Kontext-Lauf aus Buchfotos, erste Französisch-Daten, Zeilen-Notation + Generator-Skript | Opus | 0 | n. b. | 575 (320 Lexeme, 255 Formen) | 0 Fehler / 0 Dubletten |
 | #6 | 2026-10-01 | Ein-Kontext-Lauf aus Buchfotos, Lateinbuch Lektion 1–9 + Perfekttabelle, Zeilen-Notation + Generator-Skript | Opus | 0 | n. b. | 571 (259 Lexeme, 312 Formen) | 0 Fehler / 0 Dubletten |
+| #7 | 2026-10-03 | Ein-Kontext-Lauf aus einem Scan (2 Seiten), Wort-Bonus zu Dossier 1 + Generator-Skript | Opus | 0 | n. b. | 56 (39 Lexeme, 17 Formen, 3 Verweise) | 0 Fehler / 0 Dubletten |
 
 ---
 
@@ -378,3 +379,28 @@ Formen: 282 neu in Unit 1–2 aus L1–9, dazu 30 für L10–11 (1. Person, Perf
 - **Lücken:** Lektion 12 fehlt. Perfekt fehlt für Verben mit anderer Bildung (u. a.
   *esse*, *dare*, *venīre*, *addere*, *statuere*).
 
+---
+
+## Lauf #7 — À plus!, Wort-Bonus zu Dossier 1
+
+**Datum:** 2026-10-03
+**Ziel:** Eine Seite aus einem anderen Band (Unité 3, Volet 2 und Module A), die zu
+Dossier 1 mitgelernt wird, als Wort-Bonus (ADR 0013).
+
+### Ansatz
+- Ein Scan mit zwei Wortschatzseiten, im selben Kontext gelesen und als Zeilen in ein
+  Generator-Skript übertragen (Notation wie Lauf #5: beide Formen ausgeschrieben, Nomen
+  mit Artikel, *qn*/*qc* wie im Buch).
+- Aufgenommen: Lernwortschatz und Module A („Lerne sie wie Lernwortschatz“).
+  **Weggelassen:** die als „kein Lernwortschatz“ markierten Kästen, Eigennamen und
+  Infokästen (Orte, Fluss), Querverweise auf Wörter früherer Bände (→ *croire*,
+  → *le policier*).
+- **Dubletten:** *gris*, *marron* (Dossier 1) und *l'enquête* (Dossier 2) stehen schon im
+  Bestand. Sie bekommen `also_bonus`, statt neu angelegt zu werden.
+- *disparaître* ist unregelmäßig („wird wie *connaître* konjugiert“) und bekommt Präsens
+  und Passé composé wie die übrigen unregelmäßigen Verben.
+
+### Qualität
+- **Automatisch:** 0 JSON-Fehler, 0 doppelte Ids, Datentests grün, Pack-Zuordnung eindeutig.
+- **Prompt-Kollision:** *la disparition* / *disparaître* („das Verschwinden“ /
+  „verschwinden“), gelöst mit der Glosse „(Nomen)“.

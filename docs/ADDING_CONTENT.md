@@ -114,6 +114,13 @@ Ids `lex.fr.<buch>.…` und Dateien `fr_<buch>_unit<n>.json`. Die Aufgaben stehe
   und *-er* mit Stammwechsel (*gérer*, *effacer*), selbst wenn das Buch „wird wie …
   konjugiert" dazuschreibt.
 
+**Zusätzliche Vokabeln zu einer Unit** (Wort-Bonus, ADR 0013), etwa eine Seite aus einem
+anderen Band: eigene Datei `fr_<buch>_unit<n>_bonus.json`, jedes Lexem mit `book`, `unit`
+der Unit, zu der der Bonus gehört, und `"bonus": "<thema>"`, ohne `part`. Dazu ein Punkt
+`bonus/0/<thema>` mit `title` unter `areas` in `map.json`. Steht ein Wort schon im Buch,
+bekommt das vorhandene Lexem `"also_bonus": [{"unit": <n>, "bonus": "<thema>"}]` statt
+einer Dublette. Der Pack hebt sein `min_app_version` (ab 0.22.0).
+
 **Keine Dubletten.** Dasselbe Wort unter zwei Lexem-Ids hat zwei Fortschrittsstände; die
 Treffer verteilen sich, und keine der beiden Ids wird je gemeistert. Vor dem Anlegen
 prüfen, ob das Wort schon existiert (auch in anderen Units und Büchern).

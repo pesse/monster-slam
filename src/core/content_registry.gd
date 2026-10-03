@@ -86,14 +86,15 @@ var _parts: Dictionary = {}
 ## Siehe _index_form_requirements() und PlayerProgress.mastered_lexemes_in.
 var _form_requirements: Dictionary = {}
 
-## Die Bonus-Level (ADR 0012): Scope-Schlüssel (BONUS_PREFIX…) -> { key, book, unit, part,
-## form_type, lexeme_ids, task_ids }. Siehe _index_bonuses().
+## Die Bonus-Level (ADR 0012, 0013): Scope-Schlüssel (BONUS_PREFIX…) -> { key, book, unit,
+## part, topic, form_type, lexeme_ids, task_ids }. Siehe _index_bonuses().
 var _bonuses: Dictionary = {}
 ## Form-Id -> Schlüssel ihres Bonus, nur für Formen, die in einem Bonus stehen.
 var _bonus_of_form: Dictionary = {}
 
 ## Ein Scope-Schlüssel mit diesem Präfix meint einen Bonus, nicht ein Stück Buch:
-## „bonus:<book>/<unit>/<part>/<form_type>". Das Präfix hält ihn aus jedem Vergleich mit
+## „bonus:<book>/<unit>/<part>/<topic>" (Thema: die Formart, bei einem Wort-Bonus das Feld
+## `bonus` der Lexeme, Teil 0). Das Präfix hält ihn aus jedem Vergleich mit
 ## Buch, Unit und Lektion heraus (lexemes_scoped, form_in_scope).
 const BONUS_PREFIX := "bonus:"
 
@@ -167,7 +168,7 @@ func _index_parts() -> void:
 	for id in lexemes:
 		var entry: Dictionary = lexemes[id]
 		var book := str(entry.get("book", ""))
-		if book.is_empty() or not entry.has("unit"):
+		if book.is_empty() or not entry.has("unit") or not Lexeme.bonus(entry).is_empty():
 			continue
 		var key := "%s/%d" % [book, int(entry["unit"])]
 		if not by_unit.has(key):
@@ -290,7 +291,7 @@ func _index_bonuses() -> void:
 		var key := bonus_key(book, unit, part, form_type)
 		if not _bonuses.has(key):
 			_bonuses[key] = {"key": key, "book": book, "unit": unit, "part": part,
-					"form_type": form_type, "lexeme_ids": [], "task_ids": []}
+					"topic": form_type, "form_type": form_type, "lexeme_ids": [], "task_ids": []}
 		var bonus: Dictionary = _bonuses[key]
 		if not lexeme_id in bonus["lexeme_ids"]:
 			(bonus["lexeme_ids"] as Array).append(lexeme_id)
@@ -298,22 +299,89 @@ func _index_bonuses() -> void:
 			if not id in bonus["task_ids"]:
 				(bonus["task_ids"] as Array).append(id)
 		_bonus_of_form[str(form_id)] = key
+	_index_word_bonuses(resolver)
 
 
-## Der Scope-Schlüssel eines Bonus (BONUS_PREFIX).
-static func bonus_key(book: String, unit: int, part: int, form_type: String) -> String:
-	return "%s%s/%d/%d/%s" % [BONUS_PREFIX, book, unit, part, form_type]
+## Sammelt die Wort-Boni (ADR 0013): Lexeme mit dem Feld `bonus` sind zusätzlicher Stoff zu
+## ihrer Unit, etwa eine Seite aus einem anderen Band. Ein Bonus je Unit und Thema, ohne
+## Teil (0). Ein Wort, das schon anderswo im Buch steht, wird nicht doppelt angelegt: es
+## nennt den Bonus unter `also_bonus` und bleibt ein Wort seiner Unit. Seine Aufgaben sind die, an denen die Meisterung eines Wortes hängt: beide
+## Übersetzungsrichtungen, bei einem unregelmäßigen Verb dazu seine Formaufgaben — dieselbe
+## Regel wie _index_form_requirements, damit der Stern golden wird, wenn die Wörter sitzen.
+func _index_word_bonuses(resolver: TaskResolver) -> void:
+	for lexeme_id in lexemes:
+		var lexeme: Dictionary = lexemes[lexeme_id]
+		var book := str(lexeme.get("book", ""))
+		var keys := word_bonus_keys(lexeme)
+		if keys.is_empty() or "translate" in lexeme.get("excluded_task_types", []):
+			continue
+		var task_ids: Array = []
+		for direction in Lexeme.mastery_directions(Lexeme.language(lexeme)):
+			task_ids.append(resolver.learnable_id("translate", direction, lexeme_id))
+		if bool(lexeme.get("irregular", false)):
+			var form_types := {}
+			for form in lexeme_forms.values():
+				if str(form.get("lexeme_id", "")) == lexeme_id:
+					form_types[str(form.get("form_type", ""))] = true
+			task_ids.append_array(_form_task_ids(resolver, lexeme, form_types))
+		for key in keys:
+			if not _bonuses.has(key):
+				var bits := str(key).trim_prefix(BONUS_PREFIX).split("/")
+				_bonuses[key] = {"key": key, "book": book, "unit": int(bits[1]), "part": 0,
+						"topic": bits[3], "form_type": "", "lexeme_ids": [], "task_ids": []}
+			var bonus: Dictionary = _bonuses[key]
+			(bonus["lexeme_ids"] as Array).append(lexeme_id)
+			(bonus["task_ids"] as Array).append_array(task_ids)
 
 
-## Die Boni einer Unit, nach Lektion und Formart: [{ key, book, unit, part, form_type,
-## lexeme_ids, task_ids }].
+## Der Scope-Schlüssel eines Bonus (BONUS_PREFIX). `topic` ist die Formart, bei einem
+## Wort-Bonus sein Thema.
+static func bonus_key(book: String, unit: int, part: int, topic: String) -> String:
+	return "%s%s/%d/%d/%s" % [BONUS_PREFIX, book, unit, part, topic]
+
+
+## Der Scope-Schlüssel des Wort-Bonus, in dem das Lexem steht, leer ohne Feld `bonus`.
+static func word_bonus_key(lexeme: Dictionary) -> String:
+	var topic := Lexeme.bonus(lexeme)
+	if topic.is_empty():
+		return ""
+	return bonus_key(str(lexeme.get("book", "")), int(lexeme.get("unit", 0)), 0, topic)
+
+
+## Die Wort-Boni, in denen das Lexem mitspielt: sein eigener (`bonus`) und die unter
+## `also_bonus` ([{ unit, bonus }], derselbe Band) — ein Wort, das schon anderswo steht.
+static func word_bonus_keys(lexeme: Dictionary) -> Array:
+	var book := str(lexeme.get("book", ""))
+	if book.is_empty() or not lexeme.has("unit"):
+		return []
+	var out: Array = []
+	var own := word_bonus_key(lexeme)
+	if not own.is_empty():
+		out.append(own)
+	var also: Variant = lexeme.get("also_bonus", [])
+	for ref in (also if also is Array else []):
+		if ref is Dictionary and not str(ref.get("bonus", "")).is_empty():
+			var key := bonus_key(book, int(ref.get("unit", 0)), 0, str(ref["bonus"]))
+			if not key in out:
+				out.append(key)
+	return out
+
+
+## Spielt das Lexem in `scope` über einen Wort-Bonus mit (ADR 0013)? Dann kommt es mit
+## allen seinen Aufgaben, nicht nur mit Bonus-Formen (WaveGenerator._candidates).
+func in_word_bonus(lexeme: Dictionary, scope: Array) -> bool:
+	return word_bonus_keys(lexeme).any(func(key): return bonus_in_scope(str(key), scope))
+
+
+## Die Boni einer Unit, nach Lektion und Thema: [{ key, book, unit, part, topic, form_type,
+## lexeme_ids, task_ids }]. Wort-Boni (Teil 0) stehen vorn.
 func bonuses_of(book: String, unit: int) -> Array:
 	var out: Array = _bonuses.values().filter(func(b):
 			return str(b["book"]) == book and int(b["unit"]) == unit)
 	out.sort_custom(func(a, b):
 			if int(a["part"]) != int(b["part"]):
 				return int(a["part"]) < int(b["part"])
-			return str(a["form_type"]) < str(b["form_type"]))
+			return str(a["topic"]) < str(b["topic"]))
 	return out
 
 
@@ -498,7 +566,15 @@ func _scope_keys(entry: Dictionary) -> Array:
 		return []
 	if not entry.has("unit"):
 		return [book]
+	# Ein Wort aus einem Wort-Bonus steht nur in seinem Bonus (ADR 0013). In die Unit und
+	# das Buch holt es lexemes_for_run, wo der Bonus mitspielt; Festung, Teile, Statistik
+	# und Sätze sehen es nicht.
+	var bonus := word_bonus_key(entry)
+	if not bonus.is_empty():
+		return [bonus]
 	var keys := [book, "%s/%d" % [book, int(entry["unit"])]]
+	# Ein Wort seiner Unit, das zusätzlich in einem Wort-Bonus steht (`also_bonus`).
+	keys.append_array(word_bonus_keys(entry))
 	var part: int = _parts.get(str(entry.get("id", "")), 0)
 	if part > 0:
 		keys.append("%s/%d/%d" % [book, int(entry["unit"]), part])
@@ -519,7 +595,8 @@ func parts_for(book: String, unit: int) -> int:
 	var highest := 0
 	for id in lexemes:
 		var entry: Dictionary = lexemes[id]
-		if str(entry.get("book", "")) == book and entry.has("unit") and int(entry["unit"]) == unit:
+		if str(entry.get("book", "")) == book and entry.has("unit") and int(entry["unit"]) == unit \
+				and Lexeme.bonus(entry).is_empty():
 			count += 1
 			if entry.has("part"):
 				highest = maxi(highest, part_of(str(id)))
@@ -559,7 +636,8 @@ func lexemes_scoped(scope: Array, tags: Array) -> Array:
 
 ## Die Lexeme, die ein Kampf über `scope` abfragt: die des Scopes und dazu die der Boni,
 ## die der Scope mitspielt (bonus_in_scope) — von denen fragt der Kampf nur die
-## Bonus-Formen ab, nicht die Übersetzungen (WaveGenerator._candidates). Die lehrende
+## Bonus-Formen ab, nicht die Übersetzungen (WaveGenerator._candidates); die Wörter eines
+## Wort-Bonus (ADR 0013) spielen dagegen mit allen ihren Aufgaben. Die lehrende
 ## Lektion holt keine Wiederholung mehr (ADR 0012, ersetzt ADR 0011 Punkt 3).
 ##
 ## Nur für den Aufgabenpool. Festungsstufe, Statistik und Sätze zählen weiter über

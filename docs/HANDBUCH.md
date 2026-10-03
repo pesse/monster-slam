@@ -565,7 +565,9 @@ nicht mit lauter alten Wörtern vollläuft, stehen diese Aufgaben in einem eigen
 „+“ auf der Gebietskarte. Die Karte am Zeiger sagt, was darin steckt. Ein Bonus fragt nur
 diese Formen ab, zählt seine eigenen Aufgaben und hat keinen Einfluss auf die Festung.
 „Gesamt“ spielt die Boni der Unit mit. In der Statistik steht jeder Bonus unter seiner
-Unit.
+Unit. Ein Bonus kann auch zusätzliche Vokabeln bringen, etwa eine Seite aus einem anderen
+Buch: Dann fragt er diese Wörter in beide Richtungen ab, und auch sie zählen nicht zur
+Festung.
 
 **Boss-Medaillen.** Jeder Sieg über den Boss einer Unit wird gezählt. Ab 1 Sieg bekommt er
 einen bronzenen Ring und eine Krone, ab 3 einen silbernen, ab 5 einen goldenen. Die Zahl

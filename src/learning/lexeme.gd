@@ -35,6 +35,12 @@ static func foreign_alt(entry: Dictionary) -> Array:
 	return entry.get("lemma_%s_alt" % language(entry), [])
 
 
+## Das Thema des Wort-Bonus, in dem das Lexem steht (Feld `bonus`, ADR 0013), leer ohne.
+## Ein solches Wort gehört nicht zu den Wörtern seiner Unit, sondern zu ihrem Bonus.
+static func bonus(entry: Dictionary) -> String:
+	return str(entry.get("bonus", ""))
+
+
 ## „de_to_la": Deutsch gefragt, Fremdsprache getippt.
 static func to_foreign(lang: String) -> String:
 	return "de_to_%s" % lang

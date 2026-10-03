@@ -72,10 +72,10 @@ static func drop_of(bonuses: Dictionary) -> int:
 
 ## Der Unit-Schlüssel eines Lexems, „<book>/<unit>" — dieselbe Form wie der Scope-Schlüssel
 ## einer Unit (ContentRegistry._scope_keys). Leer, wenn das Lexem keine Unit hat
-## (Grundwortschatz).
+## (Grundwortschatz) oder in einem Wort-Bonus steht: der zählt nicht zur Festung (ADR 0013).
 static func unit_key(entry: Dictionary) -> String:
 	var book := str(entry.get("book", ""))
-	if book.is_empty() or not entry.has("unit"):
+	if book.is_empty() or not entry.has("unit") or not Lexeme.bonus(entry).is_empty():
 		return ""
 	return "%s/%d" % [book, int(entry["unit"])]
 

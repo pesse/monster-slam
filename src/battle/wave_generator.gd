@@ -412,13 +412,15 @@ func _candidates(pool: Dictionary, limit: int = 0) -> Array:
 		lexemes = lexemes.filter(func(lx): return str(lx.get("type", "")) in lexeme_types)
 	# Ein Wort, das nur über einen Bonus dabei ist, bringt nur seine Bonus-Formen mit — keine
 	# Übersetzung, keine andere Form (ADR 0012): der Bonus übt das Perfekt, nicht Lektion 1.
+	# Ein Wort aus einem Wort-Bonus (ADR 0013) ist dagegen selbst der Stoff des Bonus.
 	var bonus_only := {}
 	if not scope.is_empty():
 		var own := {}
 		for entry in ContentRegistry.lexemes_scoped(scope, tags):
 			own[str(entry.get("id", ""))] = true
 		for entry in lexemes:
-			if not own.has(str(entry.get("id", ""))):
+			if not own.has(str(entry.get("id", ""))) \
+					and not ContentRegistry.in_word_bonus(entry, scope):
 				bonus_only[str(entry.get("id", ""))] = true
 	var result: Array = []
 	for definition in ContentRegistry.task_definitions.values():
