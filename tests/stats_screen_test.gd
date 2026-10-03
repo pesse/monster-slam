@@ -322,3 +322,55 @@ func test_the_window_fits_the_reference_size() -> void:
 	assert_float(need.x).is_less_equal(1152.0)
 	assert_float(need.y).is_less_equal(648.0)
 	remove_child(screen)
+
+
+## Zur Wahl stehen die Sprachen der Bücher, in der Reihenfolge des Bücherregals:
+## Englisch zuerst, je Sprache ein Knopf.
+func test_language_choices_come_from_the_books() -> void:
+	var books := {"zz-latein": "la", "zz-access1": "en", "zz-aplusx": "fr", "zz-access2": "en"}
+	var choices := STATS_SCREEN.language_choices(books.keys(), func(b): return books[b])
+	assert_array(choices).is_equal(["en", "fr", "la"])
+
+
+func test_filtered_titles_name_the_languages() -> void:
+	assert_str(STATS_SCREEN.filtered_title("Lernkurve", [])).is_equal("Lernkurve")
+	assert_str(STATS_SCREEN.filtered_title("Lernkurve", ["la"])).is_equal("Lernkurve · Latein")
+	assert_str(STATS_SCREEN.filtered_title("Lernkurve", ["fr", "la"])).is_equal(
+			"Lernkurve · Französisch, Latein")
+
+
+## Sind alle Sprachen gewählt, wird nicht gefiltert — dann zählt auch, was keiner Sprache
+## zugeordnet ist.
+func test_all_languages_selected_means_no_filter() -> void:
+	assert_array(STATS_SCREEN.language_filter(["en", "fr", "la"], ["en", "fr", "la"])).is_empty()
+	assert_array(STATS_SCREEN.language_filter(["en", "la"], ["en", "fr", "la"])).is_equal(["en", "la"])
+
+
+## Flaggen statt Text, mehrere zugleich; die letzte lässt sich nicht abschalten. Die Wahl
+## benennt die gefilterten Abschnitte und lässt das Fenster gleich groß.
+func test_the_language_flags_toggle_without_resizing() -> void:
+	var screen: Control = auto_free(STATS_SCENE.instantiate())
+	add_child(screen)
+	var bar := screen.get_node("%LanguageBar") as LanguageBar
+	if not bar.visible:
+		remove_child(screen)
+		return  # Nur eine Sprache im Katalog: keine Wahl.
+	var flags: Array = bar.get_children().filter(func(c): return c is Button)
+	assert_int(flags.size()).is_greater_equal(2)
+	for flag: Button in flags:
+		assert_object(flag.icon).is_not_null()
+		assert_str(flag.text).is_empty()
+		assert_bool(flag.button_pressed).is_true()
+	var before := (screen.get_node("%Window") as Control).size
+	(flags[0] as Button).button_pressed = false
+	assert_str((screen.get_node("%CurveTitle") as Label).text).contains(" · ")
+	assert_str((screen.get_node("%AccuracyWhich") as Label).text).contains("alle Sprachen")
+	assert_vector((screen.get_node("%Window") as Control).size).is_equal(before)
+	# Bis auf eine abschalten — die letzte bleibt gedrückt.
+	for flag: Button in flags:
+		flag.button_pressed = false
+	assert_array(bar.selected()).has_size(1)
+	for flag: Button in flags:
+		flag.button_pressed = true
+	assert_str((screen.get_node("%CurveTitle") as Label).text).is_equal("Lernkurve")
+	remove_child(screen)

@@ -647,6 +647,22 @@ verloren ist er aber nie: mit Gold lässt er sich zurückholen.
 wieder, oder du drückst **Esc**. Das Fenster hat drei Reiter. Kopf und Reiter bleiben
 stehen, der Inhalt darunter lässt sich scrollen.
 
+### Sprache wählen
+
+Lernst du mehr als eine Sprache, steht rechts neben den Reitern **„Sprache:“** mit einer
+Flagge für jede Sprache, zu der es ein Buch gibt (Latein: rotes Banner mit Lorbeerkranz).
+Am Anfang sind alle an. Ein Klick schaltet eine Sprache aus oder wieder an, du kannst also
+auch zwei von drei wählen. Eine Flagge bleibt immer an. Ausgeschaltete Flaggen sind blass.
+
+Ist nicht jede Sprache an, zählt alles, was an Wörtern hängt, nur noch für die gewählten:
+gemeisterte und fällige Aufgaben, die Lernkurve, „Frisch gemeistert“, „Comeback“, die
+Fahndungsliste, die Wortwerte unter „Insgesamt“ und die Reiter „Fortschritt“ und
+„Aufgaben“. Diese Überschriften tragen dann die Namen der Sprachen („Lernkurve · Latein“).
+
+Für alle Sprachen zusammen zählen weiter: Level, XP, Gold, Schatzkisten, Skillpunkte,
+Rekorde, die Tages-Serie, die Monatsreihe und die Genauigkeit der letzten Sitzung (dort
+steht dann „alle Sprachen“). Die Wahl bleibt, bis du das Spiel schließt.
+
 ### Reiter „Überblick“
 
 - **Flamme: „… Tage in Folge“** – deine Tages-Serie. Darunter steht, ob heute schon

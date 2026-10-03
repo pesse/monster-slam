@@ -426,7 +426,16 @@ Erspielte.
   `TabContainer` — dessen Reiter nähmen die Bilder des Fensterpakets nur über das ganze
   Theme an. Alle Seiten liegen übereinander in `Pages`, das Fenster ändert beim Umschalten
   seine Größe nicht. Den Tag unter dem Tastaturfokus erklärt `Hints.show_for`. Werkbank:
-  `scenes/dev/stats_lab.tscn -- --shoot [--tab=N] [--day=N] [--scroll=N] [--sizes]`.
+  `scenes/dev/stats_lab.tscn -- --shoot [--tab=N] [--day=N] [--scroll=N] [--language=fr,la] [--sizes]`.
+- **Der Sprachfilter der Statistik rechnet, er speichert nicht** (Issue #45, `LanguageBar`):
+  die Sprache einer Aufgabe kommt aus ihrer Richtung, bei Formen und Relationen aus dem Buch
+  ihres Lexems (`Lexeme.language_of_learnable`, `ContentRegistry.book_language`); die Zähler
+  in `PlayerProgress` nehmen optional eine Liste von Sprachen (`_records_in`). Zur Wahl steht
+  je Sprache eines Buchs eine Flagge (`assets/ui/flags/<sprache>.svg`, Variation
+  `FlagChoice`), in der Reihenfolge des Regals (`BookSelect.shelf_rows`), mehrere zugleich;
+  sind alle an, wird nicht gefiltert. Profilwerte
+  und `SessionLog` bleiben sprachübergreifend — Sitzungen tragen keine Sprache. Die Wahl
+  ist ein `static var` wie die Sortierung: Ansicht, kein Zustand neben dem Scope.
 - **Inhalte und Einstellungen sind dasselbe Fenster** (`content_manager.tscn`,
   `settings_menu.tscn`), die Einstellungen mit denselben Reitern. Knöpfe mit Text tragen
   `WindowButton` (die Rahmen der Hauptmenü-Knöpfe, klein), eine Auswahl wie die

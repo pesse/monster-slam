@@ -1,0 +1,12 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/ui/language_bar.gd" id="1_language_bar"]
+
+[node name="LanguageBar" type="HBoxContainer"]
+script = ExtResource("1_language_bar")
+
+[node name="Caption" type="Label" parent="."]
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"Hint"
+text = "Sprache:"

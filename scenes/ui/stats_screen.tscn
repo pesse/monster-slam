@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3]
+[gd_scene load_steps=20 format=3]
 
 [ext_resource type="Script" path="res://src/ui/stats_screen.gd" id="1_r"]
 [ext_resource type="Script" path="res://src/ui/stats_chart.gd" id="2_r"]
@@ -17,6 +17,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/statistics/icons/gold_coins.webp" id="15_r"]
 [ext_resource type="Texture2D" path="res://assets/ui/statistics/icons/treasure_chest.webp" id="16_r"]
 [ext_resource type="PackedScene" path="res://scenes/ui/sort_bar.tscn" id="17_r"]
+[ext_resource type="PackedScene" path="res://scenes/ui/language_bar.tscn" id="18_r"]
 
 [sub_resource type="ButtonGroup" id="tab_group"]
 
@@ -163,6 +164,15 @@ theme_type_variation = &"WindowTab"
 toggle_mode = true
 button_group = SubResource("tab_group")
 text = "Aufgaben"
+
+[node name="TabSpacer" type="Control" parent="Window/Layout/Content/Body/Tabs"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="LanguageBar" parent="Window/Layout/Content/Body/Tabs" instance=ExtResource("18_r")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
 
 [node name="TabRule" type="HSeparator" parent="Window/Layout/Content/Body"]
 layout_mode = 2
@@ -657,6 +667,7 @@ layout_mode = 2
 theme_type_variation = &"Tight"
 
 [node name="CurveTitle" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/CurveSection"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"StatHeading"
 text = "Lernkurve"
@@ -694,6 +705,7 @@ theme_type_variation = &"Tight"
 size_flags_horizontal = 3
 
 [node name="FreshTitle" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/ListRow/FreshSection"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"StatHeading"
 text = "Frisch gemeistert"
@@ -719,6 +731,7 @@ theme_type_variation = &"Tight"
 size_flags_horizontal = 3
 
 [node name="ComebackTitle" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/ListRow/ComebackSection"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"StatHeading"
 text = "Comeback"
@@ -744,6 +757,7 @@ theme_type_variation = &"Tight"
 size_flags_horizontal = 3
 
 [node name="WantedTitle" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/WantedSection"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"StatHeading"
 text = "Fahndungsliste"
@@ -768,6 +782,7 @@ layout_mode = 2
 theme_type_variation = &"Tight"
 
 [node name="TotalTitle" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TotalSection"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"StatHeading"
 text = "Insgesamt"

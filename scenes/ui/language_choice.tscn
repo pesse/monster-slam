@@ -1,0 +1,7 @@
+[gd_scene format=3]
+
+[node name="LanguageChoice" type="Button"]
+focus_mode = 0
+theme_type_variation = &"FlagChoice"
+toggle_mode = true
+button_pressed = true

@@ -69,6 +69,31 @@ static func language_of_direction(direction: String) -> String:
 	return ""
 
 
+## Die Fremdsprache einer Aufgabe aus ihrer learnable_id (TaskResolver.learnable_id), leer
+## wenn sie sich nicht bestimmen lässt (Lexem fehlt im Katalog).
+##
+## Eine Übersetzung trägt die Sprache in der Richtung und braucht keinen Katalog; Formen und
+## Relationen („conjugation:<lexem>:<form>", „opposite:<lexem>:<ziel>") erben sie vom Buch
+## ihres Lexems — ein Buch hat genau eine Sprache. Gerechnet und nicht im Record
+## gespeichert. `lexemes` ist ContentRegistry.lexemes (Id -> Eintrag), `book_language`
+## ContentRegistry.book_language; ein Lexem ohne Buch fällt auf sein eigenes Feld zurück.
+static func language_of_learnable(id: String, lexemes: Dictionary, book_language: Callable) -> String:
+	var parts := id.split(":")
+	if parts.size() != 3:
+		return ""
+	var lexeme_id := parts[1]
+	if parts[0] not in ["opposite", "synonym", "confusables", "conjugation", "tense", "forms"]:
+		var lang := language_of_direction(parts[1])
+		if not lang.is_empty():
+			return lang
+		lexeme_id = parts[2]
+	var entry: Variant = lexemes.get(lexeme_id)
+	if not entry is Dictionary:
+		return ""
+	var book := str(entry.get("book", ""))
+	return language(entry) if book.is_empty() else str(book_language.call(book))
+
+
 ## „de_to_la" -> „de → la" (mit `separator`), unbekanntes unverändert.
 static func direction_label(direction: String, separator := " → ") -> String:
 	var parts := direction.split("_to_")

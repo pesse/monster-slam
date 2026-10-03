@@ -26,6 +26,17 @@ extends Control
 ## Die Reiter sind eigene Knöpfe und kein `TabContainer`: dessen Reiter lassen sich nicht
 ## mit den Bildern des Fensterpakets belegen, ohne das ganze Theme umzustellen. Alle drei
 ## Seiten liegen übereinander in `Pages`, sichtbar ist eine — das Fenster behält seine Größe.
+##
+## Neben den Reitern steht die Sprachwahl (Issue #45, `LanguageBar`), eine Flagge je Sprache,
+## mehrere zugleich: was an Wörtern und Aufgaben hängt, gilt dann nur für die gewählten —
+## Gemeistert und Fällig, Lernkurve, die drei Wortlisten, die Wortwerte unter „Insgesamt",
+## „Fortschritt" und „Aufgaben". Die Sprache
+## kommt aus dem Buch (ContentRegistry.book_language), gespeichert wird sie nirgends.
+## Sprachübergreifend bleiben die Profilwerte (Level, Gold, Kisten, Punkte, Rekorde,
+## Tages-Serie) und die Genauigkeit der Sitzung: SessionLog kennt keine Sprache, und eine
+## Sitzung spielt meist ohnehin nur eine. Die gefilterten Überschriften tragen die
+## Sprachnamen, die übrigen Stellen sagen „alle Sprachen" — man soll ablesen können, was
+## die Wahl trifft.
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 const ROW_SCENE := preload("res://scenes/ui/stat_row.tscn")
@@ -61,6 +72,15 @@ enum SortMode { BEST_FIRST, WEAKEST_FIRST, ALPHABETICAL }
 ## Die Wahl bleibt, solange das Spiel läuft — wer zweimal hineinschaut, will nicht zweimal
 ## umstellen. Gespeichert wird sie nicht: sie ist eine Ansicht, kein Lernstand.
 static var _sort_mode := SortMode.BEST_FIRST
+## Die gewählten Sprachen (leer = noch nie gewählt, also alle), aus demselben Grund und
+## genauso flüchtig wie `_sort_mode` — eine Ansicht, kein zweiter Zustand neben dem Scope.
+static var _languages: Array = []
+
+## Was die Sprachwahl trifft — am Mauszeiger über jedem Sprachknopf.
+const LANGUAGE_HINT := "Ein Klick schaltet die Sprache an oder aus, mehrere zugleich gehen. " \
+		+ "Gilt für alles, was an Wörtern hängt: gemeistert, fällig, Lernkurve, " \
+		+ "die Wortlisten, „Insgesamt“, „Fortschritt“ und „Aufgaben“. Level, Gold, Rekorde, " \
+		+ "Tages-Serie und die Genauigkeit der Sitzung zählen immer alle Sprachen."
 
 ## Das Fenster will zu. Wer es geöffnet hat, nimmt es weg; hängt niemand daran (der Screen
 ## läuft allein, etwa aus dem Editor), geht es zurück ins Startmenü.
@@ -88,6 +108,19 @@ var _resolver := TaskResolver.new()
 @onready var _tag_list: VBoxContainer = %TagList
 @onready var _task_list: VBoxContainer = %TaskList
 @onready var _sort_bars: Array[SortBar] = [%WordSort as SortBar, %TaskSort as SortBar]
+@onready var _language_bar: LanguageBar = %LanguageBar
+## Überschrift -> Text ohne Sprache; diese Abschnitte folgen der Sprachwahl.
+@onready var _filtered_titles := {
+	%CurveTitle: "Lernkurve", %FreshTitle: "Frisch gemeistert", %ComebackTitle: "Comeback",
+	%WantedTitle: "Fahndungsliste", %TotalTitle: "Insgesamt",
+}
+## Buch -> Sprache, einmal beim Öffnen (ContentRegistry.book_language läuft über den Katalog).
+var _book_languages := {}
+## Die Sprachen, auf die gerade gefiltert wird — leer, solange alle gewählt sind. Dann zählt
+## auch, was sich keiner Sprache zuordnen lässt, und keine Überschrift trägt einen Namen.
+var _filter: Array = []
+## Die Sprachen zur Wahl (language_choices), einmal beim Öffnen.
+var _language_choices: Array = []
 ## Reiter → Seite, in der Reihenfolge der Knöpfe.
 @onready var _pages := {
 	%OverviewTab: %OverviewPage,
@@ -106,6 +139,7 @@ func _ready() -> void:
 	for bar in _sort_bars:
 		bar.set_mode(_sort_mode)
 		bar.changed.connect(_on_sort_changed)
+	_setup_languages()
 	Hints.attach(%StreakCard as Control, "Tage in Folge",
 			"Jeder Tag mit mindestens einem Lauf zählt. Heute ist keine Lücke, solange der "
 			+ "Tag läuft — die Serie reißt erst, wenn ein ganzer Tag fehlt.")
@@ -145,6 +179,49 @@ func _on_sort_changed(mode: int) -> void:
 	_refresh_tasks()
 
 
+## Baut die Sprachwahl vor dem Anzeigen: je Sprache mit einem Buch im Katalog eine Flagge, in
+## der Reihenfolge des Bücherregals, mehrere zugleich wählbar. Mit einer einzigen Sprache gibt
+## es nichts zu wählen — die Leiste bleibt dann weg (entschieden, bevor das Fenster steht).
+func _setup_languages() -> void:
+	for book in ContentRegistry.all_books():
+		_book_languages[book] = ContentRegistry.book_language(book)
+	_language_choices = language_choices(_book_languages.keys(), func(b): return _book_languages[b])
+	var languages := _language_choices
+	if languages.size() < 2:
+		_language_bar.visible = false
+		return
+	# Was es nicht mehr gibt (ein Pack wurde entfernt), fällt aus der Wahl; bleibt nichts,
+	# gelten wieder alle.
+	var kept := _languages.filter(func(lang): return lang in languages)
+	_language_bar.setup(languages, LANGUAGE_HINT)
+	_language_bar.set_languages(kept if not kept.is_empty() else languages)
+	_language_bar.changed.connect(_on_languages_changed)
+	_filter = language_filter(_language_bar.selected(), languages)
+
+
+## Die Sprachen zur Wahl, je eine pro Sprache mit mindestens einem Buch — in der Reihenfolge
+## von BookSelect.shelf_rows (Englisch zuerst). `book_language` ist
+## ContentRegistry.book_language.
+static func language_choices(books: Array, book_language: Callable) -> Array:
+	var out: Array = []
+	for row in BookSelect.shelf_rows(books, book_language):
+		var lang := str(book_language.call((row as Array)[0]))
+		if not lang.is_empty():
+			out.append(lang)
+	return out
+
+
+func _on_languages_changed(languages: Array) -> void:
+	_languages = languages
+	_filter = language_filter(languages, _language_choices)
+	_refresh()
+
+
+## Der Filter zu einer Wahl: leer, wenn alle Sprachen gewählt sind — sonst die Wahl.
+static func language_filter(selected: Array, choices: Array) -> Array:
+	return [] if choices.all(func(lang): return lang in selected) else selected.duplicate()
+
+
 ## Zeigt die Seite zu `tab`. Der Knopf selbst steht schon gedrückt (ButtonGroup).
 func _show_page(tab: Button) -> void:
 	for each: Button in _pages:
@@ -152,6 +229,8 @@ func _show_page(tab: Button) -> void:
 
 
 func _refresh() -> void:
+	for title: Label in _filtered_titles:
+		title.text = filtered_title(str(_filtered_titles[title]), _filter)
 	_refresh_streak()
 	_refresh_accuracy()
 	_refresh_numbers()
@@ -162,6 +241,14 @@ func _refresh() -> void:
 	_refresh_wanted()
 	_refresh_progress()
 	_refresh_tasks()
+
+
+## „Lernkurve · Französisch, Latein": die Überschrift eines Abschnitts, der der Sprachwahl
+## folgt. Ohne Filter steht sie ohne Namen da.
+static func filtered_title(title: String, languages: Array) -> String:
+	if languages.is_empty():
+		return title
+	return "%s · %s" % [title, ", ".join(languages.map(Lexeme.language_name))]
 
 
 ## Tages-Serie und Monatsreihe (Issue #6).
@@ -202,15 +289,17 @@ func _refresh_numbers() -> void:
 	(%PointsText as Label).text = "Skillpunkt%s offen" % ("" if points == 1 else "e")
 	# Keine Festungsstufe daneben: sie hängt an der Unit, nicht am Profil, und steht im
 	# Reiter „Fortschritt" an jeder Unit-Zeile und auf der Landkarte.
-	(%MasteredValue as Label).text = str(PlayerProgress.mastered_count())
-	(%DueValue as Label).text = str(PlayerProgress.due_count())
+	(%MasteredValue as Label).text = str(PlayerProgress.mastered_count(
+			PROGRESS.MASTERY_CONFIDENCE, _filter))
+	(%DueValue as Label).text = str(PlayerProgress.due_count(_filter))
 
 
 ## Genauigkeit der letzten Sitzung mit Trendpfeil (Issue #13) — die Kopfzahl.
 func _refresh_accuracy() -> void:
 	var lines := accuracy_lines(SessionLog.session_accuracy())
 	_accuracy_label.text = str(lines["title"])
-	_accuracy_which.text = str(lines["which"])
+	# Die Sitzung kennt keine Sprache (SessionLog) — gefiltert wird sie nicht, und das steht da.
+	_accuracy_which.text = str(lines["which"]) + ("" if _filter.is_empty() else " · alle Sprachen")
 	_accuracy_trend.text = str(lines["detail"])
 
 
@@ -222,11 +311,14 @@ func _refresh_accuracy() -> void:
 func _refresh_totals() -> void:
 	_clear(_total_lines)
 	var days := SessionLog.played_day_count()
-	_add_line(_total_lines, "Geübt an %d Tag%s" % [days, "" if days == 1 else "en"])
-	_add_line(_total_lines, "Gesamt-Genauigkeit: %d %%" % int(round(PlayerProgress.overall_accuracy() * 100.0)))
+	# Die Tage zählt SessionLog, ohne Sprache — die übrigen Zeilen folgen der Sprachwahl.
+	_add_line(_total_lines, "Geübt an %d Tag%s%s" % [days, "" if days == 1 else "en",
+			"" if _filter.is_empty() else " (alle Sprachen)"])
+	_add_line(_total_lines, "Gesamt-Genauigkeit: %d %%" % int(round(
+			PlayerProgress.overall_accuracy(_filter) * 100.0)))
 	_add_line(_total_lines, "Gesehene Wörter: %d    Versuche: %d" % [
-		PlayerProgress.seen_count(), PlayerProgress.total_attempts()])
-	var streak := _add_line(_total_lines, "Längste Wort-Serie: %d" % PlayerProgress.best_streak_overall())
+		PlayerProgress.seen_count(_filter), PlayerProgress.total_attempts(_filter)])
+	var streak := _add_line(_total_lines, "Längste Wort-Serie: %d" % PlayerProgress.best_streak_overall(_filter))
 	# „Wort-Serie", weil es drei Serien gibt: die Tages-Serie oben, die „Längste Serie
 	# ohne Durchlass" bei den Rekorden — und diese hier, die an EINER Aufgabe hängt
 	# (PlayerProgress.best_streak_overall), über Sitzungen und Tage hinweg.
@@ -353,7 +445,7 @@ static func record_rows(records: Dictionary) -> Array:
 ## eine Linie, die nicht zurückgeht. Die Bilanzzeile darunter sagt, was im Zeitraum
 ## dazugekommen ist: eine Kurve ohne Zahl liest sich, aber man nimmt nichts mit.
 func _refresh_curve() -> void:
-	var curve := PlayerProgress.mastery_curve()
+	var curve := PlayerProgress.mastery_curve(PROGRESS.CURVE_WEEKS, -1, _filter)
 	var values: Array = []
 	for point in curve:
 		values.append(int(point["count"]))
@@ -419,7 +511,7 @@ static func comeback_rows(rows: Array, limit := LIST_COUNT, min_misses := COMEBA
 ## Genauigkeit" sagt darüber nichts. Beide Listen haben einen freundlichen Leertext statt
 ## einer leeren Fläche; beim Comeback ist leer der Normalfall.
 func _refresh_lists() -> void:
-	var rows := PlayerProgress.records_for_display()
+	var rows := PlayerProgress.records_for_display(_filter)
 	var since := int(Time.get_unix_time_from_system()) - FRESH_DAYS * 86400
 
 	_clear(_fresh_list)
@@ -474,7 +566,7 @@ static func wanted_rows(rows: Array, limit := WANTED_COUNT) -> Array:
 
 func _refresh_wanted() -> void:
 	_clear(_wanted_list)
-	var wanted := wanted_rows(PlayerProgress.records_for_display())
+	var wanted := wanted_rows(PlayerProgress.records_for_display(_filter))
 	if wanted.is_empty():
 		_add_line(_wanted_list, "Noch ist dir kein Wort entwischt. 👏")
 		return
@@ -490,9 +582,13 @@ func _refresh_wanted() -> void:
 ## Katalog. Die Themen-Auswahl (die zweite Achse) bleibt hier bewusst außen vor — sonst
 ## stünde bei „Unit 6: 8 von 12" nur der ausgewählte Teil der Unit, und die Zahl wäre
 ## nicht die, nach der ein Elternteil oder eine Lehrkraft fragt.
+##
+## Die Sprachwahl lässt nur die Bücher ihrer Sprache stehen.
 func _refresh_progress() -> void:
 	var pool := ContentRegistry.lexemes_scoped(UserSettings.selected_scope(), []) \
-			.filter(PROGRESS.masterable)
+			.filter(PROGRESS.masterable) \
+			.filter(func(e): return _filter.is_empty() \
+					or _book_languages.get(str(e.get("book", "")), "") in _filter)
 	var mastered := PlayerProgress.mastered_lexemes()
 	# Die Festungsstufe wertet die GANZE Unit, auch wenn der Bereich nur ein Viertel davon
 	# zeigt (FortressTier.run_tier) — deshalb über den Katalog und nicht über `pool`.
@@ -788,7 +884,7 @@ func _fill_progress(box: VBoxContainer, rows: Array, empty_text: String) -> void
 ## Haken behauptete etwas anderes als der Haken im Fortschritt (dort: das WORT sitzt).
 func _refresh_tasks() -> void:
 	_clear(_task_list)
-	var rows := sort_rows(PlayerProgress.records_for_display(), _sort_mode)
+	var rows := sort_rows(PlayerProgress.records_for_display(_filter), _sort_mode)
 	if rows.is_empty():
 		_add_line(_task_list, "Noch keine Aufgabe geübt.")
 		return

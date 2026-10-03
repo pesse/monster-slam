@@ -8,6 +8,7 @@ extends Node
 ##     … -- --shoot --tab=1            zweiter Reiter (0 Überblick, 1 Fortschritt, 2 Aufgaben)
 ##     … -- --shoot --day=29           Karte des Tages 29, als hätte er den Tastaturfokus
 ##     … -- --shoot --scroll=400       Überblick um so viele Pixel nach unten geschoben
+##     … -- --shoot --language=fr,la   Sprachwahl auf diese Sprachen gestellt (Issue #45)
 ##     … -- --sizes                    druckt die Mindestgrößen der Überblick-Abschnitte —
 ##                                     wer das Fenster breiter drückt als das Bild
 ##
@@ -49,6 +50,11 @@ func _shoot(screen: Node) -> void:
 		var tabs := screen.get_node("%Tabs").get_children()
 		(tabs[int(_arg("tab"))] as Button).button_pressed = true
 		tag += "_tab" + _arg("tab")
+	if not _arg("language").is_empty():
+		var languages := Array(_arg("language").split(","))
+		(screen.get_node("%LanguageBar") as LanguageBar).set_languages(languages)
+		screen._on_languages_changed(languages)
+		tag += "_" + _arg("language").replace(",", "-")
 	await get_tree().create_timer(SETTLE).timeout
 	if not _arg("scroll").is_empty():
 		(screen.get_node("%OverviewPage") as ScrollContainer).scroll_vertical = int(_arg("scroll"))
