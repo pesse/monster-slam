@@ -17,6 +17,11 @@ extends Control
 ## assets/ui/main_menu/sources/); hier wird nur bedient und angezeigt. Hinter dem Menü
 ## steht die 3D-Kulisse (menu_backdrop.tscn). Einstellungen (Profil, Standard-Schwierigkeit, Reset) liegen im
 ## Einstellungs-Fenster (settings_menu), der Lernstand im Statistik-Fenster (stats_screen).
+##
+## Unten rechts steht immer „Auf Updates prüfen" mit der laufenden Version (Issue #53): ein
+## Klick prüft beide Kanäle laut (UpdateService.check, ContentService.refresh). Was es gibt,
+## erscheint wie nach der stillen Startprüfung als Abzeichen darüber; der Link selbst sagt
+## nur, ob er sucht, ob alles aktuell ist oder ob die Prüfung nicht durchkam.
 
 const SESSION_SETUP_SCENE := "res://scenes/ui/session_setup.tscn"
 const SETTINGS_SCENE := "res://scenes/ui/settings_menu.tscn"
@@ -43,6 +48,7 @@ static var intro_done := false
 @onready var _update_button: Button = %UpdateButton
 @onready var _content_button: Button = %ContentButton
 @onready var _content_update_button: Button = %ContentUpdateButton
+@onready var _update_check: Button = %UpdateCheckButton
 @onready var _play_button: Button = %PlayButton
 @onready var _play_hint: Label = %PlayHint
 @onready var _intro: ProfilePick = %Intro
@@ -52,6 +58,9 @@ static var intro_done := false
 @onready var _shade: Control = %Shade
 
 var _page := MENU
+## Ob in diesem Besuch geklickt wurde — erst dann sagt der Link „Alles aktuell" oder benennt
+## einen Fehlschlag; die stille Startprüfung behelligt niemanden.
+var _checked := false
 var _slide: Tween
 
 
@@ -75,6 +84,13 @@ func _ready() -> void:
 	_content_update_button.pressed.connect(_open_window.bind(CONTENT_SCENE, _content_button))
 	UpdateService.changed.connect(_refresh_update_badge)
 	ContentService.changed.connect(_refresh_content_badge)
+	_update_check.pressed.connect(_on_update_check)
+	UpdateService.changed.connect(_refresh_update_check)
+	ContentService.changed.connect(_refresh_update_check)
+	Hints.attach(_update_check, "Auf Updates prüfen",
+			"Schaut nach einer neuen Fassung des Spiels und nach neuen Vokabel-Packs. Was es "
+			+ "gibt, erscheint darüber als Knopf.", "beim Start schaut das Spiel auch selbst")
+	_refresh_update_check()
 	_refresh_update_badge()
 	_refresh_content_badge()
 	_refresh_play_gate()
@@ -235,6 +251,40 @@ func _refresh_content_badge() -> void:
 	var count := ContentService.update_count()
 	_content_update_button.visible = count > 0
 	_content_update_button.text = content_update_text(count)
+
+
+func _on_update_check() -> void:
+	_checked = true
+	UpdateService.check(true)
+	ContentService.refresh(true)
+	_refresh_update_check()
+
+
+## Der Link unten rechts: gesperrt, solange gesucht wird; danach sagt er, was herauskam.
+func _refresh_update_check() -> void:
+	var busy := UpdateService.state == UpdateService.State.CHECKING \
+			or ContentService.state == ContentService.State.LOADING
+	_update_check.disabled = busy
+	var found := UpdateService.state in [UpdateService.State.AVAILABLE, UpdateService.State.READY] \
+			or ContentService.update_count() > 0
+	var failed := UpdateService.state == UpdateService.State.ERROR \
+			or ContentService.state == ContentService.State.ERROR
+	_update_check.text = update_check_text(busy, found, failed, _checked, SemVer.app_version())
+
+
+## Zwei Zeilen wie „Eigene Runde / Expertenmodus" gegenüber: oben, was der Link tut oder was
+## herauskam, unten die laufende Version. Ein Fund steht nicht hier, sondern als Abzeichen
+## darüber — hier steht dann wieder das Angebot, noch einmal zu prüfen.
+static func update_check_text(busy: bool, found: bool, failed: bool, checked: bool,
+		version: String) -> String:
+	var first := "Auf Updates prüfen"
+	if busy:
+		first = "Suche nach Updates …"
+	elif checked and failed:
+		first = "Prüfen ging nicht – nochmal"
+	elif checked and not found:
+		first = "Alles aktuell"
+	return "%s\nVersion %s" % [first, version]
 
 
 static func content_update_text(count: int) -> String:

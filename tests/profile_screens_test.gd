@@ -65,3 +65,33 @@ func test_the_settings_rename_but_do_not_pick() -> void:
 	var screen := auto_free(SETTINGS_SCENE.instantiate()) as Control
 	assert_object(screen.find_child("RenameInput", true, false)).is_not_null()
 	assert_object(screen.find_child("ProfileSelect", true, false)).is_null()
+
+
+## „Auf Updates prüfen" steht immer unten rechts, unter den beiden Abzeichen (Issue #53).
+## Das Menü kommt nicht in den Baum: sein _ready prüft still die Inhalte, und kein Test
+## spricht mit dem Netz.
+func test_the_update_check_is_always_in_the_menu() -> void:
+	var screen := auto_free(MENU_SCENE.instantiate()) as Control
+	var link := screen.get_node("%UpdateCheckButton") as Button
+	assert_bool(link.visible).is_true()
+	assert_str(link.theme_type_variation).is_equal("MenuLink")
+	var column := link.get_parent()
+	assert_int(link.get_index()).is_equal(column.get_child_count() - 1)
+	assert_int(link.get_index()).is_greater(screen.get_node("%ContentUpdateButton").get_index())
+
+
+func test_the_update_check_says_what_came_out() -> void:
+	assert_str(ProfileMenu.update_check_text(false, false, false, false, "1.2.3")) \
+			.is_equal("Auf Updates prüfen\nVersion 1.2.3")
+	assert_str(ProfileMenu.update_check_text(true, false, false, true, "1.2.3")) \
+			.starts_with("Suche nach Updates")
+	assert_str(ProfileMenu.update_check_text(false, false, false, true, "1.2.3")) \
+			.starts_with("Alles aktuell")
+	assert_str(ProfileMenu.update_check_text(false, false, true, true, "1.2.3")) \
+			.starts_with("Prüfen ging nicht")
+	# Ein Fund steht als Abzeichen darüber — der Link bietet wieder das Prüfen an.
+	assert_str(ProfileMenu.update_check_text(false, true, false, true, "1.2.3")) \
+			.starts_with("Auf Updates prüfen")
+	# Ohne Klick benennt er keinen Fehlschlag der stillen Startprüfung.
+	assert_str(ProfileMenu.update_check_text(false, false, true, false, "1.2.3")) \
+			.starts_with("Auf Updates prüfen")

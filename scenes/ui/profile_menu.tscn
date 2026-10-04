@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3]
+[gd_scene load_steps=19 format=3]
 
 [ext_resource type="Script" path="res://src/ui/profile_menu.gd" id="1_menu"]
 [ext_resource type="PackedScene" path="res://scenes/ui/update_dialog.tscn" id="2_update"]
@@ -10,6 +10,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/content.webp" id="8_content"]
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/settings.webp" id="9_settings"]
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/expert.webp" id="10_expert"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/update_check.svg" id="10_update_check"]
 [ext_resource type="PackedScene" path="res://scenes/ui/profile_pick.tscn" id="13_pick"]
 [ext_resource type="PackedScene" path="res://scenes/ui/profile_badge.tscn" id="14_badge"]
 [ext_resource type="PackedScene" path="res://scenes/ui/book_select.tscn" id="15_library"]
@@ -208,6 +209,18 @@ visible = false
 layout_mode = 2
 size_flags_horizontal = 8
 text = "⬆ Inhalte aktualisieren"
+
+[node name="UpdateCheckButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Right"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 8
+theme_type_variation = &"MenuLink"
+text = "Auf Updates prüfen
+Version 0.0.0"
+icon = ExtResource("10_update_check")
+flat = true
+alignment = 2
+icon_alignment = 2
 
 [node name="Library" parent="Slide" instance=ExtResource("15_library")]
 unique_name_in_owner = true

@@ -18,7 +18,6 @@ extends Node
 ##     … -- --shoot --content            drückt „Inhalte": das Fenster über der Kulisse
 ##     … -- --shoot --settings[=<reiter>] drückt „Einstellungen", Reiter 1–3 (Profil, Melden,
 ##                                       Protokoll)
-##     … -- --shoot --settings --scroll=<px>  … die Seite so weit nach unten geschoben
 ##     … -- --shoot --badge-hint         die Karte am Medaillon der Plakette (Level, XP, Punkte)
 ##     … -- --shoot --map=book [--book=<id>]            die Buchkarte
 ##     … -- --shoot --map=area [--book=<id>] [--unit=N] die Gebietskarte einer Unit
@@ -126,10 +125,7 @@ func _ready() -> void:
 			(screen.get_node("%SettingsButton") as Button).pressed.emit()
 			var tab := int(_arg("settings")) if not _arg("settings").is_empty() else 1
 			var window := screen.get_node("SettingsMenu")
-			(window.get_node("%Tabs").get_child(tab - 1) as Button).button_pressed = true
-			if not _arg("scroll").is_empty():
-				await get_tree().process_frame
-				(window.get_node("%ProfilePage") as ScrollContainer).scroll_vertical = int(_arg("scroll")))
+			(window.get_node("%Tabs").get_child(tab - 1) as Button).button_pressed = true)
 	_cycle = screen.find_child("SunCycle", true, false) as SunCycle
 	if _cycle != null:
 		if not _arg("hour").is_empty():
@@ -199,7 +195,7 @@ func _shoot() -> void:
 	if _has_arg("updates"):
 		what += "_updates"
 	if _has_arg("settings") or not _arg("settings").is_empty():
-		what += "_settings" + _arg("settings") + ("_scroll" + _arg("scroll") if not _arg("scroll").is_empty() else "")
+		what += "_settings" + _arg("settings")
 	var file := "%s/%s_%dx%d.png" % [dir, what,
 			img.get_width(), img.get_height()]
 	img.save_png(file)

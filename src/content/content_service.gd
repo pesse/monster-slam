@@ -141,16 +141,11 @@ func rebuild() -> void:
 ## etwas, das der Knopf nicht hält. „Programm zu alt" zählt auch nicht (wants_attention) —
 ## dagegen hilft das App-Update.
 func update_count() -> int:
-	return update_ids().size()
-
-
-## Die Packs hinter update_count() — was „Inhalte aktualisieren" in den Einstellungen holt.
-func update_ids() -> Array:
-	var ids: Array = []
+	var count := 0
 	for pack in packs:
 		if pack.wants_attention() and pack.installable():
-			ids.append(pack.id)
-	return ids
+			count += 1
+	return count
 
 
 func find(pack_id: String) -> PackStatus:

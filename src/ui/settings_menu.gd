@@ -1,6 +1,6 @@
 extends Control
 ## Einstellungs-Fenster (Profilname, Standard-Schwierigkeit, Grund-Geschwindigkeit, Grafik,
-## Updates, Reset, Melden, Protokoll).
+## Reset, Melden, Protokoll).
 ##
 ## Öffnet als Fenster über dem Hauptmenü wie Statistik und Fähigkeiten
 ## (`profile_menu._open_window`): derselbe Rahmen, dasselbe Titelband, dasselbe
@@ -20,13 +20,6 @@ extends Control
 ## (siehe ReportService, docs/adr/0002-melde-rueckkanal.md). Er bleibt deshalb immer
 ## sichtbar; die Liste der Meldungen darunter erscheint erst mit hinterlegtem Token —
 ## ohne Rückkanal gibt es auch nichts zu melden.
-##
-## „Updates" (Issue #53) prüft beide Kanäle auf Klick — `UpdateService.check(true)` für das
-## Spiel, `ContentService.refresh(true)` für die Packs — und zeigt je Kanal eine Zeile. Die
-## beiden Aktionsknöpfe stehen immer da und sind gesperrt, solange es nichts zu tun gibt:
-## das Fenster soll nicht springen. „Spiel aktualisieren" öffnet denselben Update-Dialog wie
-## das Abzeichen im Startmenü, „Inhalte aktualisieren" holt genau die Packs, die das Abzeichen
-## „Inhalte" zählt (ContentService.update_ids). Laden und Prüfen bleiben in den Diensten.
 ##
 ## Welches Profil spielt, entscheidet „Wer spielt?" (profile_pick) — hier wird das aktive
 ## Profil nur umbenannt.
@@ -64,14 +57,6 @@ signal closed()
 @onready var _trace_open: Button = %TraceOpen
 @onready var _trace_clear: Button = %TraceClear
 @onready var _trace_list: VBoxContainer = %TraceList
-@onready var _update_check: Button = %UpdateCheckButton
-@onready var _app_update: Button = %AppUpdateButton
-@onready var _content_update: Button = %ContentUpdateButton
-@onready var _app_status: Label = %AppStatus
-@onready var _content_status: Label = %ContentStatus
-## Erst nach einem Klick auf „Auf Updates prüfen" heißt ein ruhiger Dienst „aktuell" — die
-## stille Startprüfung kann auch gar nicht gelaufen (Editor) oder gescheitert sein.
-var _checked := false
 ## Reiter → Seite, in der Reihenfolge der Knöpfe.
 @onready var _pages := {
 	%ProfileTab: %ProfilePage,
@@ -115,11 +100,6 @@ func _ready() -> void:
 			"bleibt auf diesem Rechner")
 	Hints.attach(_trace_open, "Ordner öffnen", "zeigt die Protokolldatei im Dateimanager")
 	Hints.attach(_trace_clear, "Protokoll leeren", "löscht beide Dateien; das laufende Spiel schreibt danach neu")
-	_update_check.pressed.connect(_on_update_check)
-	_app_update.pressed.connect((%UpdateDialog as Control).open)
-	_content_update.pressed.connect(func(): ContentService.install_many(ContentService.update_ids()))
-	UpdateService.changed.connect(_refresh_updates)
-	ContentService.changed.connect(_refresh_updates)
 	_refresh()
 	modulate.a = 0.0
 	create_tween().tween_property(self, "modulate:a", 1.0, FADE_IN)
@@ -153,7 +133,6 @@ func _refresh() -> void:
 	_refresh_difficulty()
 	_refresh_speed()
 	_refresh_graphics()
-	_refresh_updates()
 	_refresh_report()
 	_refresh_trace()
 
@@ -184,74 +163,6 @@ func _refresh_graphics() -> void:
 	(%GraphicsFine as Button).set_pressed_no_signal(level == GraphicsQuality.Level.FINE)
 	(%GraphicsMedium as Button).set_pressed_no_signal(level == GraphicsQuality.Level.MEDIUM)
 	(%GraphicsFast as Button).set_pressed_no_signal(level == GraphicsQuality.Level.FAST)
-
-
-func _on_update_check() -> void:
-	_checked = true
-	UpdateService.check(true)
-	ContentService.refresh(true)
-	_refresh_updates()
-
-
-## Abschnitt „Updates": je Kanal eine Zeile, die Knöpfe gesperrt statt ausgeblendet.
-func _refresh_updates() -> void:
-	var app_busy := UpdateService.state in [UpdateService.State.CHECKING,
-			UpdateService.State.DOWNLOADING, UpdateService.State.VERIFYING,
-			UpdateService.State.INSTALLING]
-	var content_busy := ContentService.state in [ContentService.State.LOADING,
-			ContentService.State.WORKING]
-	var updates := ContentService.update_count()
-	_update_check.disabled = app_busy or content_busy
-	_app_update.disabled = UpdateService.state not in [UpdateService.State.AVAILABLE,
-			UpdateService.State.READY]
-	_content_update.disabled = content_busy or updates == 0
-	_app_status.text = app_status_text(UpdateService.state, UpdateService.version,
-			SemVer.app_version(), UpdateService.error, _checked)
-	_content_status.text = content_status_text(ContentService.state, updates,
-			not ContentService.packs.is_empty(), ContentService.error, ContentService.message,
-			_checked)
-
-
-## Die Zeile zum Spiel. `offered` ist die angebotene Fassung, `installed` die laufende.
-## Statisch, damit die Texte ohne Netz prüfbar sind.
-static func app_status_text(state: int, offered: String, installed: String, error: String,
-		checked: bool) -> String:
-	match state:
-		UpdateService.State.CHECKING:
-			return "Spiel: wird geprüft …"
-		UpdateService.State.AVAILABLE:
-			return "Spiel: Version %s ist da (installiert: %s)." % [offered, installed]
-		UpdateService.State.DOWNLOADING, UpdateService.State.VERIFYING:
-			return "Spiel: Version %s wird geladen …" % offered
-		UpdateService.State.READY:
-			return "Spiel: Version %s ist geladen und bereit." % offered
-		UpdateService.State.INSTALLING:
-			return "Spiel: wird ersetzt …"
-		UpdateService.State.ERROR:
-			return "Spiel: " + error
-	if checked:
-		return "Spiel: Version %s ist aktuell." % installed
-	return "Spiel: Version %s" % installed
-
-
-## Die Zeile zu den Inhalten. `known` heißt: das Pack-Verzeichnis ist schon geholt (still
-## beim Start oder auf Klick), `message` ist das Ergebnis des letzten Vorgangs.
-static func content_status_text(state: int, updates: int, known: bool, error: String,
-		message: String, checked: bool) -> String:
-	match state:
-		ContentService.State.LOADING:
-			return "Inhalte: werden geprüft …"
-		ContentService.State.WORKING:
-			return "Inhalte: werden aktualisiert …"
-		ContentService.State.ERROR:
-			return "Inhalte: " + error
-	if updates > 0:
-		return "Inhalte: %d Pack%s mit neuem Stand." % [updates, "" if updates == 1 else "s"]
-	if not message.is_empty():
-		return "Inhalte: %s." % message.trim_suffix(".")
-	if known or checked:
-		return "Inhalte: alles aktuell."
-	return "Inhalte: noch nicht geprüft."
 
 
 func _update_speed_label(value: float) -> void:

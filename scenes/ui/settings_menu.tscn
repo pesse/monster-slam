@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://src/ui/settings_menu.gd" id="1_settings"]
 [ext_resource type="Texture2D" path="res://assets/ui/windows/window_surface.webp" id="2_surface"]
@@ -9,7 +9,6 @@
 [ext_resource type="Texture2D" path="res://assets/ui/windows/title_joint_right.webp" id="7_joint_right"]
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/settings.webp" id="8_icon"]
 [ext_resource type="PackedScene" path="res://scenes/ui/confirm_dialog.tscn" id="9_confirm"]
-[ext_resource type="PackedScene" path="res://scenes/ui/update_dialog.tscn" id="10_update"]
 
 [sub_resource type="ButtonGroup" id="tab_group"]
 
@@ -357,61 +356,6 @@ autowrap_mode = 3
 layout_mode = 2
 theme_type_variation = &"StatRule"
 
-[node name="UpdateLabel" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
-layout_mode = 2
-theme_type_variation = &"StatHeading"
-text = "Updates"
-
-[node name="UpdateRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
-layout_mode = 2
-
-[node name="UpdateCheckButton" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/UpdateRow"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 44)
-layout_mode = 2
-theme_type_variation = &"WindowButton"
-text = "Auf Updates prüfen"
-
-[node name="AppUpdateButton" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/UpdateRow"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 44)
-layout_mode = 2
-theme_type_variation = &"WindowButton"
-disabled = true
-text = "Spiel aktualisieren"
-
-[node name="ContentUpdateButton" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/UpdateRow"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 44)
-layout_mode = 2
-theme_type_variation = &"WindowButton"
-disabled = true
-text = "Inhalte aktualisieren"
-
-[node name="AppStatus" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"StatSubline"
-text = "Spiel: Version 0.0.0"
-autowrap_mode = 3
-
-[node name="ContentStatus" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"StatSubline"
-text = "Inhalte: noch nicht geprüft"
-autowrap_mode = 3
-
-[node name="UpdateNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
-layout_mode = 2
-theme_type_variation = &"Caption"
-text = "Das Spiel schaut beim Start selbst nach. Hier prüfst du sofort, ob es eine neue Fassung des Spiels oder neue Vokabel-Packs gibt."
-autowrap_mode = 3
-
-[node name="UpdateRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
-layout_mode = 2
-theme_type_variation = &"StatRule"
-
 [node name="ResetLabel" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
 layout_mode = 2
 theme_type_variation = &"StatHeading"
@@ -618,6 +562,3 @@ stretch_mode = 5
 [node name="ResetDialog" parent="." instance=ExtResource("9_confirm")]
 unique_name_in_owner = true
 visible = false
-
-[node name="UpdateDialog" parent="." instance=ExtResource("10_update")]
-unique_name_in_owner = true
