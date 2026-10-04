@@ -429,6 +429,13 @@ Rechts steht die **Schatzkiste**.
 
 Mit „Weiter ▸“ (oder Enter, sobald die Kiste offen ist) geht es zur zweiten Stufe.
 
+**Zurückblättern:** „◂ Zurück“ in der Mitte (oder die Rücktaste) geht einen Schritt
+zurück: von der Wahl der nächsten Welle zum Ergebnis, vom Ergebnis zu den Karten mit
+den richtigen Antworten. Die Karten laufen dann nicht noch einmal von allein durch, sie
+sind gleich aufgedeckt, und du blätterst selbst. Mit „Weiter ▸“ kommst du wieder
+zurück. Dabei geht nichts verloren: die Kiste bleibt, wie sie war, und deine Wahl
+bleibt gewählt.
+
 ### Stufe 2: Die nächste Welle
 
 Oben steht die **Bilanz dieses Laufs** („Dieser Lauf“): wie viele Wellen geräumt sind,

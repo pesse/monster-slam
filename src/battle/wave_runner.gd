@@ -202,6 +202,8 @@ func _ready() -> void:
 		_stats.next_wave_requested.connect(_on_next_wave_requested)
 	if _stats.has_signal("back_to_menu_requested"):
 		_stats.back_to_menu_requested.connect(_on_back_to_menu)
+	if _stats.has_signal("review_requested"):
+		_stats.review_requested.connect(_on_review_requested)
 	if _stats.has_signal("reward_collected"):
 		_stats.reward_collected.connect(_on_reward_collected)
 	if _stats.has_signal("consolation_collected"):
@@ -1856,6 +1858,7 @@ func _finish_wave(won: bool) -> void:
 		# Erfahrung: der Zuwachs DIESER Welle und die Zahl der Aufstiege darin. Den
 		# Gesamtstand liest der Screen bei PlayerLevel — verbucht ist er längst (siehe
 		# _defeat), hier steht nur, was die Welle daran geändert hat.
+		"review": not _wave_played_tasks.is_empty(),
 		"xp_gained": _wave_xp,
 		"levels_gained": PlayerLevel.level - _level_at_start,
 		# Sitzungsbilanz für Stufe 2 (Issue #12). Gebaut JETZT und nicht beim Rückweg ins
@@ -1864,6 +1867,17 @@ func _finish_wave(won: bool) -> void:
 		"session": RunBalance.build(SessionLog.current(),
 				PlayerProgress.records_for_display(), _wave_number),
 	})
+
+
+## „◂ Zurück" auf dem Ergebnis: die Antworten der Welle noch einmal, ohne Durchlauf
+## (Issue #52). Der Screen wird nur ausgeblendet, nicht neu befüllt — Kiste und Wahl
+## bleiben, wie sie waren.
+func _on_review_requested() -> void:
+	if _wave_played_tasks.is_empty():
+		return
+	_stats.hide_stats()
+	await _leak_reveal.play(_wave_played_tasks, true)
+	_stats.resume()
 
 
 ## Der Spieler hat die Schatzkiste aufgedrückt: das Gold gehört ihm. Verbucht wird hier

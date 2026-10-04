@@ -21,6 +21,12 @@ extends PanelContainer
 ## Bei perfekter Welle (0 durchgelassen) erscheint der Screen ohne Animation und
 ## geht direkt in den freien Blätter-Modus über alle gespielten Vokabeln.
 ##
+## **Zurück aus dem Ergebnis** (Issue #52, „◂ Zurück" im WaveStats): die Antworten sind
+## das, woran gelernt wird, und nach einem Blick auf die Zahlen will man sie noch einmal
+## sehen. `play(played, true)` zeigt sie ohne Durchlauf — die durchgelassenen schon
+## aufgedeckt, frei zu blättern, „Weiter" sofort frei. Der Durchlauf ist die erste
+## Begegnung mit der Lösung; beim zweiten Mal wäre er nur Warten.
+##
 ## Die statische Hülle (Titel, Bühne, Fortschritt, Nav-/Aktions-Buttons) liegt in
 ## leak_reveal.tscn; hier bleibt nur das dynamische Karten-Karussell. Die Nav-/
 ## Aktions-Controls haben focus_mode=FOCUS_NONE (in der Szene gesetzt); das
@@ -70,7 +76,8 @@ func _ready() -> void:
 ## Awaitbar: zeigt das Karussell, spielt die falschen einmal automatisch durch und
 ## kehrt erst zurück, wenn der Spieler "Weiter" klickt. Erwartet je Eintrag:
 ## {"prompt", "answers", "lexeme_type", "source_id", "learnable_id", "leaked"}.
-func play(played: Array) -> void:
+## `again`: der Rückweg aus dem Ergebnis — ohne Durchlauf (siehe Kopf).
+func play(played: Array, again := false) -> void:
 	if played.is_empty():
 		return
 	_leaked = played.filter(func(t): return bool(t.get("leaked", false)))
@@ -96,6 +103,9 @@ func play(played: Array) -> void:
 		_showing_all = true
 		_items = _all_ordered
 		_index = 0
+		_place_card(0, true, false)
+	elif again:
+		_items = _leaked
 		_place_card(0, true, false)
 	else:
 		_items = _leaked

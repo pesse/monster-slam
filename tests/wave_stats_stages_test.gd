@@ -242,6 +242,64 @@ func test_back_and_forward_share_one_row() -> void:
 	assert_bool(_visible("StartButton")).is_true()
 
 
+
+## Zwischen den Stufen geht es hin und her (Issue #52): von der Wahl zurück zum Ergebnis,
+## und dort steht noch alles — die Kiste offen, die Wahl gewählt.
+func test_the_choice_leads_back_to_the_result() -> void:
+	var deltas: Array = []
+	_stats.next_wave_requested.connect(func(delta: int) -> void: deltas.append(delta))
+	_stats.show_stats(_wave_data())
+	assert_bool(_button("StageBack").disabled).is_true()
+	var chest := _stats.get_node("%Chest") as TreasureChest
+	chest.begin_hold()
+	chest.hold(TreasureChest.HOLD_TIME)
+	_button("ResultContinue").pressed.emit()
+	(_stats.get_node("%ChoiceRow").get_child(1) as Button).pressed.emit()
+	assert_bool(_button("StageBack").disabled).is_false()
+	_button("StageBack").pressed.emit()
+	assert_bool(_visible("ResultPage")).is_true()
+	assert_bool(_visible("NextPage")).is_false()
+	assert_bool(chest.is_open()).is_true()
+	assert_bool(_button("ResultContinue").disabled).is_false()
+	_button("ResultContinue").pressed.emit()
+	_button("StartButton").pressed.emit()
+	assert_array(deltas).is_equal([-1])
+
+
+## Vom Ergebnis geht es zurück zu den Antworten (Issue #52) — auch an einer noch
+## geschlossenen Kiste: sie bleibt, wie sie ist. Den Weg geht der WaveRunner; der Screen
+## meldet nur und kommt mit resume() unverändert zurück.
+func test_the_result_leads_back_to_the_answers() -> void:
+	var asked: Array = []
+	_stats.review_requested.connect(func() -> void: asked.append(true))
+	_stats.show_stats(_wave_data({"review": true}))
+	assert_bool(_button("StageBack").disabled).is_false()
+	_button("StageBack").pressed.emit()
+	assert_array(asked).has_size(1)
+	_stats.hide_stats()
+	_stats.resume()
+	assert_bool(_stats.visible).is_true()
+	assert_bool(_visible("ResultPage")).is_true()
+	assert_bool(_button("ResultContinue").disabled).is_true()
+
+
+## Ohne gespielte Aufgaben gibt es keine Antworten — der Knopf ist auf dem Ergebnis
+## gesperrt, auf der Wahl führt er weiter zum Ergebnis.
+func test_without_answers_the_result_has_no_way_back() -> void:
+	_stats.show_stats(_wave_data({"chest": {}}))
+	assert_bool(_button("StageBack").disabled).is_true()
+	_button("ResultContinue").pressed.emit()
+	assert_bool(_button("StageBack").disabled).is_false()
+
+
+## Der Knopf für den Rückweg steht auf beiden Stufen da — gesperrt statt ausgeblendet.
+func test_the_back_button_keeps_its_place() -> void:
+	_stats.show_stats(_wave_data({"chest": {}}))
+	assert_bool(_visible("StageBack")).is_true()
+	_button("ResultContinue").pressed.emit()
+	assert_bool(_visible("StageBack")).is_true()
+
+
 # --- Enter ----------------------------------------------------------------------
 
 func _press_enter() -> void:
@@ -275,6 +333,29 @@ func test_enter_waits_a_moment_after_each_stage() -> void:
 	_stats.show_stats(_wave_data({"chest": {}}))
 	_press_enter()
 	assert_bool(_visible("ResultPage")).is_true()
+
+
+func _press_backspace() -> void:
+	var key := InputEventKey.new()
+	key.keycode = KEY_BACKSPACE
+	key.pressed = true
+	get_viewport().push_input(key)
+
+
+## Die Rücktaste geht Schritt für Schritt zurück: von der Wahl zum Ergebnis, vom Ergebnis
+## zu den Antworten — auch nach einer Niederlage.
+func test_backspace_goes_back_step_by_step() -> void:
+	var asked: Array = []
+	_stats.review_requested.connect(func() -> void: asked.append(true))
+	_stats.enter_grace_ms = 0
+	_stats.show_stats(_wave_data({"won": false, "chest": {}, "review": true}))
+	_press_enter()
+	assert_bool(_visible("NextPage")).is_true()
+	_press_backspace()
+	assert_bool(_visible("ResultPage")).is_true()
+	assert_array(asked).is_empty()
+	_press_backspace()
+	assert_array(asked).has_size(1)
 
 
 ## Nach einer Niederlage führt Enter auf Stufe 2 zurück — es gibt keine nächste Welle.

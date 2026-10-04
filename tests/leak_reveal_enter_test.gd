@@ -63,3 +63,19 @@ func test_arrow_keys_turn_the_cards() -> void:
 	assert_str(progress.text).is_equal("Karte 2 / 2")
 	reveal._input(_key(KEY_LEFT))
 	assert_str(progress.text).is_equal("Karte 1 / 2")
+
+
+## Zurück aus dem Ergebnis (Issue #52): kein zweiter Durchlauf — die durchgelassenen
+## stehen sofort aufgedeckt da, und „Weiter" ist gleich frei.
+func test_coming_back_skips_the_walkthrough() -> void:
+	var layer: CanvasLayer = auto_free(CanvasLayer.new())
+	add_child(layer)
+	var reveal := auto_free(REVEAL_SCENE.instantiate()) as PanelContainer
+	layer.add_child(reveal)
+	reveal.play([_item("a", true), _item("b", true), _item("c", false)], true)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	assert_bool((reveal.get_node("%ContinueBtn") as Button).disabled).is_false()
+	assert_bool((reveal.get_node("%NextBtn") as Button).disabled).is_false()
+	assert_str((reveal.get_node("%Progress") as Label).text).is_equal("Karte 1 / 2")
+	assert_bool((reveal.get_node("%ShowAllBtn") as Button).visible).is_true()

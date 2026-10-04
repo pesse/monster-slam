@@ -230,6 +230,21 @@ layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
+[node name="StageBack" type="Button" parent="Layout/Content/Root/Footer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 44)
+layout_mode = 2
+size_flags_vertical = 4
+focus_mode = 0
+theme_type_variation = &"WindowButton"
+disabled = true
+text = "◂ Zurück"
+
+[node name="Spacer2" type="Control" parent="Layout/Content/Root/Footer"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
 [node name="ResultContinue" type="Button" parent="Layout/Content/Root/Footer"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(240, 44)

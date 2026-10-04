@@ -49,6 +49,14 @@ extends PanelContainer
 ## Wiederholungen und geht deshalb nicht weiter — erst ein neuer Druck. Die Leertaste geht
 ## nicht weiter: sie ist an der Kiste die Haltetaste und sonst nichts.
 ##
+## **Zurück geht es Schritt für Schritt** (Issue #52): „◂ Zurück" in der Mitte der Fußzeile
+## (oder die Rücktaste) führt von der Wahl zum Ergebnis und vom Ergebnis zu den Antworten
+## der Welle (LeakReveal) — die sind das, woran gelernt wird. Den Weg zu den Antworten
+## geht der WaveRunner (`review_requested`): er blendet diesen Screen aus, zeigt das
+## Reveal noch einmal und holt ihn mit `resume()` zurück. Der Rückweg lässt alles stehen:
+## die Kiste bleibt, wie sie war, die gewählte Schwierigkeit gewählt. Ohne gespielte
+## Aufgaben (`review` fehlt) ist der Knopf auf dem Ergebnis gesperrt statt ausgeblendet.
+##
 ## Das Layout liegt in wave_stats.tscn; hier nur die Befüllung (show_stats), der
 ## Stufenwechsel und die Auswahl-Logik. Interaktive Controls haben focus_mode=FOCUS_NONE
 ## (in der Szene gesetzt), sonst reißt die Antwort-LineEdit (die sich per _process den
@@ -60,6 +68,9 @@ signal next_wave_requested(difficulty_delta: int)
 
 ## Der Spieler will zurück zum Profil-/Statistik-Menü (verlässt die laufende Partie).
 signal back_to_menu_requested
+
+## Der Spieler will die Antworten der Welle noch einmal sehen (siehe Kopf).
+signal review_requested
 
 ## Die Schatzkiste ist offen: `gold` ist verdient und will verbucht werden. Der Screen
 ## bucht nicht selbst, der Empfänger (WaveRunner -> Wallet) tut es. Den Gesamtstand
@@ -102,6 +113,7 @@ enum Stage {
 @onready var _chest_name: Label = %ChestName
 @onready var _reward_line: Label = %RewardLine
 @onready var _result_continue: Button = %ResultContinue
+@onready var _stage_back: Button = %StageBack
 @onready var _balance: VBoxContainer = %Balance
 @onready var _balance_lines: VBoxContainer = %BalanceLines
 @onready var _balance_template: Label = %BalanceLineTemplate
@@ -118,6 +130,7 @@ var _won: bool = true
 var _wave_number: int = 0
 var _chest_gold: int = 0
 var _stage_since_ms: int = 0
+var _can_review: bool = false
 
 
 func _ready() -> void:
@@ -129,6 +142,7 @@ func _ready() -> void:
 	if RunRequest.is_level():
 		_menu_button.text = "⟵ Zurück zur Karte"
 	_result_continue.pressed.connect(func(): _goto_stage(Stage.NEXT))
+	_stage_back.pressed.connect(_on_stage_back)
 	_chest.opened.connect(_on_chest_opened)
 	_update_choice_highlight()
 
@@ -136,11 +150,13 @@ func _ready() -> void:
 ## Befüllt den Screen mit den Statistiken einer Welle und zeigt ihn an (Stufe 1).
 ## Erwartete Felder in `data`: won, wave_number, difficulty, correct, leaked, total,
 ## accuracy, fortress_health, mastered, fortress_tier,
-## xp_gained, levels_gained, optional chest = { tier, gold, name } (siehe
+## xp_gained, levels_gained, optional review (gibt es Antworten zum Zurückblättern?),
+## optional chest = { tier, gold, name } (siehe
 ## ChestReward.for_wave) und optional session = Sitzungsbilanz (siehe RunBalance.build;
 ## leer oder fehlend = keine Bilanz).
 func show_stats(data: Dictionary) -> void:
 	_won = bool(data.get("won", true))
+	_can_review = bool(data.get("review", false))
 	_wave_number = int(data.get("wave_number", 0))
 
 	for child in _lines.get_children():
@@ -218,6 +234,14 @@ func hide_stats() -> void:
 	visible = false
 
 
+## Zurück von den Antworten: derselbe Screen in derselben Stufe, nichts neu befüllt.
+## Enter zählt erst nach der Schonfrist — das Enter auf „Weiter" im Reveal soll nicht
+## gleich hier durchklicken.
+func resume() -> void:
+	_stage_since_ms = Time.get_ticks_msec()
+	visible = true
+
+
 ## Aktuelle Stufe — für Tests und für den WaveRunner, der wissen will, ob der Screen
 ## noch etwas vom Spieler will.
 func stage() -> Stage:
@@ -235,6 +259,7 @@ func _goto_stage(next: Stage) -> void:
 	# Knöpfe der Zeile sind gleich hoch — fehlt der Startknopf, wächst der Screen nicht.
 	_result_continue.visible = next == Stage.RESULT
 	_start_button.visible = next == Stage.NEXT and _won
+	_stage_back.disabled = next == Stage.RESULT and not _can_review
 	_title.text = _title_for(next)
 	# Ergebnis-Titel einfärben (passt zu den grün/rot-Feedbackfarben des Spiels); die
 	# Folgestufe nimmt die Theme-Farbe zurück — sie ist kein Urteil über die Welle, und
@@ -252,11 +277,12 @@ func _input(event: InputEvent) -> void:
 	if not is_visible_in_tree():
 		return
 	var key := event as InputEventKey
-	if key == null or not key.pressed or key.echo or not key.keycode in [KEY_ENTER, KEY_KP_ENTER]:
+	if key == null or not key.pressed or key.echo \
+			or not key.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_BACKSPACE]:
 		return
 	if Time.get_ticks_msec() - _stage_since_ms < enter_grace_ms:
 		return
-	var button := _forward_button()
+	var button := _stage_back if key.keycode == KEY_BACKSPACE else _forward_button()
 	if not button.visible or button.disabled:
 		return
 	accept_event()
@@ -269,6 +295,13 @@ func _forward_button() -> Button:
 	if _stage == Stage.RESULT:
 		return _result_continue
 	return _start_button if _won else _menu_button
+
+
+func _on_stage_back() -> void:
+	if _stage == Stage.NEXT:
+		_goto_stage(Stage.RESULT)
+	else:
+		review_requested.emit()
 
 
 func _title_for(stage_value: Stage) -> String:
