@@ -134,6 +134,9 @@ func test_thunder_clears_the_field_and_only_resolves() -> void:
 	assert_bool(not is_instance_valid(a) or a.is_queued_for_deletion()).is_true()
 	assert_bool(not is_instance_valid(b) or b.is_queued_for_deletion()).is_true()
 	assert_int(battle.get("_underway")).is_equal(0)
+	# Eingeschlagen, aber noch zu sehen: die Welle wartet mit dem Abschluss auf das Bild.
+	assert_bool((battle.get("_spell_fx") as SpellFx).is_busy()).is_true()
+	assert_bool(battle.get("_finished")).is_false()
 	assert_int(GameState.wave_resolved).is_equal(2)
 	assert_int(GameState.monsters_defeated).is_equal(0)
 	assert_int(GameState.score).is_equal(0)

@@ -946,6 +946,10 @@ Ein Zauber ist ein Verbrauchsgegenstand: `price` in Gold, `effect` aus
 - **Donnerschlag** nimmt jedes Monster auf dem Feld über `WaveRunner._strike` sofort vom
   Feld (aus `_active`, angehalten) und sendet `monster_struck`; das Bild geht erst, wenn
   sein Blitz einschlägt (`SpellFx.bolt`), bis dahin hält `_underway` das Wellenende auf.
+  Danach wartet es noch, bis das Bild durch ist (`SpellFx.is_busy`/`settled`, Dauern in
+  `SpellFx.SETTLE` und `STRIKE_SETTLE`) — das gilt für jeden Zauber, damit die Abrechnung
+  ihn nicht verdeckt. Ebenso jede Explosion eines Treffers (`WaveRunner._settle`,
+  `EXPLOSION_SETTLE`, `BLAST_SETTLE`).
   Gezählt wird wie beim Katapult: `GameState` zählt
   `wave_resolved`, die Spur schreibt `struck`, sonst nichts — kein Lernstand, keine
   Erfahrung, kein Gold, kein Eintrag in der Auflösung.

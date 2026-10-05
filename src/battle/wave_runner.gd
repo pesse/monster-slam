@@ -79,6 +79,9 @@ var _fp: FirstPersonView = null
 var _first_person_run := false
 ## Laufende Sturmangriffe, fliegende Pfeile und Steine: so lange wartet das Wellenende.
 var _underway := 0
+## Explosionen, die noch zu sehen sind: auch darauf wartet das Wellenende (`_settle`), damit
+## die Abrechnung den letzten Treffer nicht verdeckt.
+var _settling := 0
 ## Wachkatapult gelernt (Bollwerk, `auto_catapult`): Monster mit gemeisterter Aufgabe
 ## werden abgeschossen.
 var _catapult := false
@@ -95,6 +98,11 @@ const ARROW_AIM_Y := 1.2
 ## Explosionspfeil: so groß der Knall (Blast), und bis hierhin zucken die Nachbarn.
 const BLAST_SCALE := 1.0
 const BLAST_FLINCH_RADIUS := 5.0
+## So lange ist eine Explosion zu sehen, bevor das Wellenende sie verdecken darf (s): die
+## Wolke der Explosion (ihre Partikel leben 0,9 s), beim Blast Feuerball und Druckwelle —
+## der Rauch danach zählt nicht.
+const EXPLOSION_SETTLE := 0.9
+const BLAST_SETTLE := 1.2
 ## Wachkatapult (Bollwerk): so lange nach dem Spawn wirft es, zufällig dazwischen — bis
 ## dahin kann der Spieler das Monster auch selbst treffen.
 const CATAPULT_DELAY_MIN := 1.0
@@ -233,6 +241,7 @@ func _ready() -> void:
 	_spelling.finished.connect(_on_spelling_finished)
 	_spells.strike = _strike
 	_spells.reveal_delay = _spell_fx.reveal_delay
+	_spell_fx.settled.connect(_check_end)
 	_spell_fx.veil = $UI/SpellVeil as ColorRect
 	_spell_fx.shake = _shake
 	_spell_fx.front_z = GOAL_Z
@@ -1684,6 +1693,7 @@ func _blast_at(monster: Monster) -> void:
 	fx.setup(monster.word_color(), BLAST_SCALE)
 	fx.position = monster.position
 	add_child(fx)
+	_settle(BLAST_SETTLE)
 	for other in _active:
 		if other.position.distance_to(monster.position) <= BLAST_FLINCH_RADIUS:
 			other.flinch(monster.global_position)
@@ -1848,6 +1858,15 @@ func _spawn_explosion(pos: Vector3, color: Color, scale: float) -> void:
 	fx.setup(color, scale)
 	fx.position = pos
 	add_child(fx)
+	_settle(EXPLOSION_SETTLE)
+
+
+## Hält das Wellenende `seconds` lang auf (Spielzeit) und fragt danach erneut.
+func _settle(seconds: float) -> void:
+	_settling += 1
+	await get_tree().create_timer(seconds, false).timeout
+	_settling -= 1
+	_check_end()
 
 
 ## Monster hat sich beim Erreichen der Festung selbst freigegeben.
@@ -1888,6 +1907,10 @@ func _check_end() -> void:
 	# Meistert das letzte Monster etwas, wird erst gefeiert und dann abgerechnet —
 	# _on_celebration_finished ruft hierher zurück.
 	if _celebration.is_busy() or _spelling.is_busy():
+		return
+	# Ein Zauber oder eine Explosion ist noch zu sehen: SpellFx.settled bzw. _settle ruft
+	# hierher zurück.
+	if _spell_fx.is_busy() or _settling > 0:
 		return
 	if _spawned >= _total and _active.is_empty():
 		EventBus.wave_cleared.emit(GameState.current_wave)

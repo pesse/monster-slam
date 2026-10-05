@@ -63,6 +63,21 @@ const STRIKE_WINDUP := 0.35
 const STRIKE_STAGGER := 0.09
 ## Wie lange ein Brandfleck liegt (s).
 const SCORCH_TIME := 5.0
+## So lange läuft das Bild eines Zaubers, bis das Wellenende es nicht mehr verdeckt (s):
+## je Wirkung ab dem Wirken, beim Donnerschlag ab dem letzten Einschlag (Blitz, Plasma,
+## Aufhellen). Der Brandfleck und der Nebel zählen nicht, sie liegen nur.
+const SETTLE := {
+	"reveal_alts": SWEEP_TIME + 0.6,
+	"slow": 1.0,
+	"freeze": 1.2,
+	"heal": 1.5,
+	"armor": 1.5,
+}
+const STRIKE_SETTLE := 1.1
+
+## Das letzte laufende Zauberbild ist durch (`is_busy` wieder false). Das Wellenende wartet
+## darauf (WaveRunner._check_end), damit die Abrechnung den Zauber nicht verdeckt.
+signal settled
 
 ## Die Fläche über dem Bild, die sich verdunkelt und aufleuchtet (eine ColorRect über dem
 ## Feld, unter dem HUD). Ohne sie bleibt das Bild, wie es ist.
@@ -78,6 +93,7 @@ var fortress := Vector3(0.0, 0.0, 20.0)
 
 var _haze: Node3D
 var _haze_mats: Array[ShaderMaterial] = []
+var _busy := 0
 var _veil_tween: Tween
 
 
@@ -89,6 +105,8 @@ func play(spell: Dictionary, field: Array[Monster]) -> void:
 	var color: Color = COLORS.get(effect, Color.WHITE)
 	if SOUNDS.has(effect):
 		Sfx.play(SOUNDS[effect])
+	if SETTLE.has(effect):
+		_hold(SETTLE[effect])
 	match effect:
 		"reveal_alts":
 			_sweep(color, whole_wave)
@@ -105,12 +123,28 @@ func play(spell: Dictionary, field: Array[Monster]) -> void:
 			_veil(color, 0.35, 0.06, 0.25, 0.9)
 			shake.call(0.3)
 		"strike":
+			# Bis der erste Blitz fällt; danach hält jeder Blitz selbst (`bolt`).
+			_hold(STRIKE_WINDUP)
 			# Anlauf: das Bild wird dunkel, die Erde grollt.
 			_veil(Color(0.03, 0.04, 0.12), 0.65, STRIKE_WINDUP, 0.0, 0.0)
 			shake.call(0.25)
 		"heal", "armor":
 			_restore(color)
 			_veil(color, 0.22, 0.08, 0.15, 0.9)
+
+
+## Läuft noch ein Zauberbild, das das Wellenende abwarten soll?
+func is_busy() -> bool:
+	return _busy > 0
+
+
+## Hält `is_busy` `seconds` lang (Spielzeit: in der Pause steht auch das Bild).
+func _hold(seconds: float) -> void:
+	_busy += 1
+	await get_tree().create_timer(seconds, false).timeout
+	_busy -= 1
+	if _busy == 0:
+		settled.emit()
 
 
 ## Wann das Schild von `monster` aufgeht: wenn der Lichtvorhang es erreicht (s).
@@ -121,6 +155,7 @@ func reveal_delay(monster: Monster) -> float:
 ## Der `index`-te Blitz des Donnerschlags auf `monster`. Es steht schon (halt) und gilt als
 ## erledigt; wenn der Blitz einschlägt, ruft `landed` den Aufrufer, der es freigibt.
 func bolt(monster: Monster, index: int, landed: Callable) -> void:
+	_busy += 1
 	var at := monster.position
 	var tint := Color(0.45, 0.62, 1.0)
 	await get_tree().create_timer(STRIKE_WINDUP + index * STRIKE_STAGGER, false).timeout
@@ -137,6 +172,8 @@ func bolt(monster: Monster, index: int, landed: Callable) -> void:
 	shake.call(1.1 if index == 0 else 0.6)
 	Sfx.play(&"fortress_hit" if index == 0 else &"monster_kill")
 	landed.call()
+	_busy -= 1
+	_hold(STRIKE_SETTLE)
 
 
 ## Ein Monster erscheint und bekommt, was für die ganze Welle gewirkt wurde (`effects`, aus
