@@ -6,7 +6,7 @@
 		"description": "Die Monster auf dem Feld zeigen auch die anderen Bedeutungen ihres Worts.",
 		"effect": "reveal_alts",
 		"params": { "scope": "field" },
-		"price": 6
+		"price": 30
 	},
 	{
 		"id": "spell.insight",
@@ -15,7 +15,7 @@
 		"description": "Alle Monster dieser Welle zeigen auch die anderen Bedeutungen ihres Worts, auch die, die erst noch kommen.",
 		"effect": "reveal_alts",
 		"params": { "scope": "wave" },
-		"price": 15
+		"price": 75
 	},
 	{
 		"id": "spell.mire",
@@ -24,7 +24,7 @@
 		"description": "Die Monster auf dem Feld laufen nur noch halb so schnell.",
 		"effect": "slow",
 		"params": { "scope": "field", "factor": 0.5 },
-		"price": 8
+		"price": 40
 	},
 	{
 		"id": "spell.lull",
@@ -33,7 +33,7 @@
 		"description": "Alle Monster dieser Welle laufen nur noch halb so schnell, auch die, die erst noch kommen.",
 		"effect": "slow",
 		"params": { "scope": "wave", "factor": 0.5 },
-		"price": 20
+		"price": 100
 	},
 	{
 		"id": "spell.frost",
@@ -42,7 +42,7 @@
 		"description": "Die Monster auf dem Feld frieren zehn Sekunden lang ein.",
 		"effect": "freeze",
 		"params": { "duration": 10.0 },
-		"price": 15
+		"price": 75
 	},
 	{
 		"id": "spell.thunder",
@@ -50,7 +50,7 @@
 		"icon": "⚡",
 		"description": "Ein Blitz fegt alle Monster vom Feld. Sie bringen nichts ein, weder Erfahrung noch Gold, aber sie kommen auch nicht durch.",
 		"effect": "strike",
-		"price": 40
+		"price": 200
 	},
 	{
 		"id": "spell.mend",
@@ -59,7 +59,7 @@
 		"description": "Die Festung bekommt 25 Leben zurück.",
 		"effect": "heal",
 		"params": { "amount": 25 },
-		"price": 12
+		"price": 60
 	},
 	{
 		"id": "spell.plate",
@@ -68,6 +68,6 @@
 		"description": "Die Rüstung der Festung bekommt 25 Punkte zurück. Wirkt nur mit Rüstung aus dem Bollwerk.",
 		"effect": "armor",
 		"params": { "amount": 25 },
-		"price": 12
+		"price": 60
 	}
 ]
