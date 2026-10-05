@@ -966,8 +966,9 @@ Ein Zauber ist ein Verbrauchsgegenstand: `price` in Gold, `effect` aus
   neues Feld höbe `min_app_version`). Alles davon zeigt `FxWarmup` vorab
   (`SpellFx.specimens`). Bilder der Zauber: `SpellIcons`
   (`assets/ui/spells/spell_icons.json`), ohne Bild das Emoji. Töne: `SpellFx.SOUNDS` (Ids in
-  `Sfx.SOUNDS`, Dateien unter `assets/audio/sfx/spell_*`); was noch fehlt, bestellt
-  `assets/audio/sfx/SPELLS_BRIEF.md`.
+  `Sfx.SOUNDS`, Dateien unter `assets/audio/sfx/spell_*`, Bestellung und Auswahl in
+  `assets/audio/sfx/SPELLS_BRIEF.md`). Der Anlauf des Donnerschlags (`STRIKE_WINDUP`) ist so
+  lang wie sein Ton, der deshalb ohne Tonhöhen-Streuung spielt (`"spread": 0.0`).
 - Kein Zauber verschiebt `spawned_at_ms` oder geht in die Planung einer Welle ein (`t - c`).
 - Spur: `{"e":"spell","spell","wave"}` und `{"e":"struck","id","lex","prompt"}`.
 - Werkbänke: `battle_theme_lab -- --shoot --hud` (Vorrat), `--plates` (Alternativen),

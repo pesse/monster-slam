@@ -22,6 +22,10 @@ denselben Commit.
 | `sfx/spell_freeze.wav` | https://freesound.org/people/Relenzo2/sounds/160420/ | CC0 | Relenzo2 |
 | `sfx/spell_shatter.wav` | https://freesound.org/people/Aurelon/sounds/422620/ | CC0 | Aurelon |
 | `sfx/spell_armor.wav` | https://freesound.org/people/nekoninja/sounds/370203/ | CC0 | nekoninja |
+| `sfx/spell_haze.wav` | https://freesound.org/people/Breviceps/sounds/445968/ | CC0 | Breviceps |
+| `sfx/spell_thunder_windup.wav` | https://freesound.org/people/magnuswaker/sounds/592573/ | CC0 | magnuswaker |
+| `sfx/spell_thunder.wav` | https://freesound.org/people/SGAK/sounds/467777/ | CC0 | SGAK |
+| `sfx/spell_heal.wav` | https://freesound.org/people/cellokratzer/sounds/502947/ | CC0 | cellokratzer |
 
 `sfx/wave_cleared.wav` ist die verlustfreie WAV-Fassung der dort angebotenen FLAC-Datei —
 Godot 4.7 lädt FLAC nicht („No loader found for resource"). Die Quelle ist innen bereits

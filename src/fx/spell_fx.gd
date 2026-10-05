@@ -45,21 +45,25 @@ const HAZE_COLOR := Color(0.55, 0.6, 0.72)
 ## die Stufe klein.
 const HAZE_LAYERS := [0.1, 0.28, 0.46, 0.64, 0.82, 1.0]
 const HAZE_DENSITY := [0.42, 0.36, 0.3, 0.24, 0.16, 0.09]
-## Der Ton je Wirkung. Noch ohne eigenen Ton: Schwere Luft (klingt wie Sumpf), Lebensquell
-## und der Donnerschlag (Bestand); bestellt in assets/audio/sfx/SPELLS_BRIEF.md.
+## Der Ton je Wirkung beim Wirken. Schwere Luft (`slow` für die ganze Welle) klingt anders
+## als der Sumpf (`HAZE_SOUND`); der Donnerschlag lädt auf (`STRIKE_WINDUP`), den Donner
+## spielt der erste Blitz (`bolt`).
 const SOUNDS := {
 	"reveal_alts": &"spell_reveal",
 	"slow": &"spell_slow",
 	"freeze": &"spell_freeze",
-	"heal": &"slow_mo_out",
+	"strike": &"spell_thunder_windup",
+	"heal": &"spell_heal",
 	"armor": &"spell_armor",
 }
+const HAZE_SOUND := &"spell_haze"
 
 ## So lange fährt der Lichtvorhang von der Festung bis zum Spawn (s).
 const SWEEP_TIME := 0.9
 ## Donnerschlag: so lange verdunkelt sich das Bild, bevor der erste Blitz fällt, und so viel
-## später fällt jeder weitere (s).
-const STRIKE_WINDUP := 0.35
+## später fällt jeder weitere (s). Der Anlauf ist so lang wie sein Ton (`spell_thunder_windup`,
+## 1,1 s) — wer den Ton tauscht, passt ihn an.
+const STRIKE_WINDUP := 1.1
 const STRIKE_STAGGER := 0.09
 ## Wie lange ein Brandfleck liegt (s).
 const SCORCH_TIME := 5.0
@@ -103,7 +107,9 @@ func play(spell: Dictionary, field: Array[Monster]) -> void:
 	var effect := str(spell.get("effect", ""))
 	var whole_wave := str((spell.get("params", {}) as Dictionary).get("scope", "field")) == "wave"
 	var color: Color = COLORS.get(effect, Color.WHITE)
-	if SOUNDS.has(effect):
+	if effect == "slow" and whole_wave:
+		Sfx.play(HAZE_SOUND)
+	elif SOUNDS.has(effect):
 		Sfx.play(SOUNDS[effect])
 	if SETTLE.has(effect):
 		_hold(SETTLE[effect])
@@ -170,7 +176,7 @@ func bolt(monster: Monster, index: int, landed: Callable) -> void:
 	# Jeder Einschlag hellt das dunkle Bild auf; der erste am stärksten.
 	_veil(Color(0.7, 0.8, 1.0), 0.5 if index == 0 else 0.3, 0.0, 0.03, 0.45 if index == 0 else 0.25)
 	shake.call(1.1 if index == 0 else 0.6)
-	Sfx.play(&"fortress_hit" if index == 0 else &"monster_kill")
+	Sfx.play(&"spell_thunder" if index == 0 else &"monster_kill")
 	landed.call()
 	_busy -= 1
 	_hold(STRIKE_SETTLE)

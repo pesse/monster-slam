@@ -4,10 +4,11 @@ Die Zauber (ADR 0014) klingen bisher nach dem Bestand (`slow_mo_in`/`_out`, beim
 `fortress_hit` und `monster_kill`). Jede Wirkung soll ihren eigenen Ton bekommen, passend zum
 Bild in `SpellFx` (Werkbank: `battle_theme_lab`, Reiter „Zauber").
 
-**Stand 2026-10-05:** eingebaut sind `spell_reveal`, `spell_slow`, `spell_freeze`,
-`spell_shatter` und `spell_armor` (Credits in `../CREDITS.md`). Offen: `spell_haze`,
-`spell_thunder_windup`, `spell_thunder`, `spell_heal` — die erste Kandidatenrunde unten
-war dafür nicht gut genug.
+**Stand 2026-10-05:** alle neun Töne sind eingebaut (Credits in `../CREDITS.md`). Gewählt
+wurde nach Gehör aus den Kandidaten unten: `spell_haze` = „So slimy!", `spell_thunder_windup`
+= „Laser Charge Up (Stronger)" (1,1 s — der Anlauf des Donnerschlags wurde darauf verlängert),
+`spell_thunder` = „thunder.wav" (SGAK), `spell_heal` = „Vocal_chord.wav" (cellokratzer).
+Die Tabelle darunter ist die ursprüngliche Bestellung.
 
 **Herkunft:** nur Dateien mit belegter Quelle und Lizenz (CC0 bevorzugt, z. B. freesound.org).
 Jede Datei bekommt im selben Commit eine Zeile in `assets/audio/CREDITS.md`. Keine selbst

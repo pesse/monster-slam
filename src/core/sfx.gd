@@ -62,6 +62,14 @@ const SOUNDS := {
 	# Taut das ganze Feld auf einmal auf, spielt der Cooldown ihn nur einmal.
 	&"spell_shatter": {"file": "spell_shatter.wav", "db": 1.0},
 	&"spell_armor": {"file": "spell_armor.wav", "db": -1.0},
+	# Schwere Luft kommt leise und lückig aus der Quelle (-27 dBFS RMS, Spitzen bei -3).
+	&"spell_haze": {"file": "spell_haze.wav", "db": 3.0},
+	# Das Aufladen ist so lang wie das Verdunkeln (SpellFx.STRIKE_WINDUP) — ohne Streuung,
+	# sonst endet es bis zu einer Zehntelsekunde neben dem ersten Blitz.
+	&"spell_thunder_windup": {"file": "spell_thunder_windup.wav", "db": 2.0, "spread": 0.0},
+	# Der Donner trägt alle Blitze; die Quelle steht an der Grenze (-15 dBFS RMS).
+	&"spell_thunder": {"file": "spell_thunder.wav", "db": -1.5},
+	&"spell_heal": {"file": "spell_heal.wav", "db": 0.0},
 }
 
 const BUS_SFX := &"SFX"
@@ -71,7 +79,8 @@ const POOL_SIZE := 8
 ## Mindestabstand zweier Ausgaben DERSELBEN Id. Zwei fast gleichzeitige Monster-Kills
 ## klingen sonst nicht doppelt, sondern nach Kammfilter (Phasing).
 const COOLDOWN_MS := 40
-## Streuung der Tonhöhe je Ausgabe — ohne sie klingt der zehnte Kill mechanisch.
+## Streuung der Tonhöhe je Ausgabe — ohne sie klingt der zehnte Kill mechanisch. Sie
+## streckt auch die Länge; ein Ton, der auf ein Bild getimt ist, setzt `"spread": 0.0`.
 const PITCH_SPREAD := 0.1
 
 ## Test-Seam: zuletzt ANGENOMMENE Id und der Pegel, mit dem sie ausgegeben wird
@@ -130,7 +139,8 @@ func play(id: StringName) -> void:
 	player.stream = stream
 	# Jedes Mal setzen: ein Player kommt aus dem Pool mit dem Pegel seines Vorgängers.
 	player.volume_db = last_volume_db
-	player.pitch_scale = randf_range(1.0 - PITCH_SPREAD, 1.0 + PITCH_SPREAD)
+	var spread := float((SOUNDS[id] as Dictionary).get("spread", PITCH_SPREAD))
+	player.pitch_scale = randf_range(1.0 - spread, 1.0 + spread)
 	player.play()
 
 
