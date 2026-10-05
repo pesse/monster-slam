@@ -280,6 +280,11 @@
         "y": 0.21,
         "title": "Unité 3: Farben, Oase und Ermittlung"
       },
+      "bonus/0/auftakt": {
+        "x": 0.1,
+        "y": 0.84,
+        "title": "Auftakt und Mots en contexte"
+      },
       "path": [
         {
           "x": 0.17916666666666667,
@@ -447,6 +452,11 @@
       "boss": {
         "x": 0.8104166666666667,
         "y": 0.7287037037037037
+      },
+      "bonus/0/auftakt": {
+        "x": 0.08,
+        "y": 0.4,
+        "title": "Auftakt und Mots en contexte"
       },
       "path": [
         {

@@ -87,3 +87,17 @@ func test_a_word_from_elsewhere_plays_in_the_bonus_and_stays_in_its_unit() -> vo
 	assert_int(ContentRegistry.part_of(LATER)).is_equal(1)
 	var tiers := FortressTier.unit_tiers([ContentRegistry.lexemes[LATER]], {})
 	assert_int(int(tiers[BOOK + "/2"]["total"])).is_equal(1)
+
+
+func test_a_bonus_word_can_stand_in_a_second_bonus() -> void:
+	var twice := "zz-lex.fr.test.gris"
+	ContentRegistry.lexemes[twice] = {"id": twice, "language": "fr", "type": "adjective",
+			"book": BOOK, "unit": 2, "bonus": "zz-auftakt",
+			"also_bonus": [{"unit": 1, "bonus": "zz-thema"}], "lemma_fr": "gris", "lemma_de": "grau"}
+	_reindex()
+	var auftakt := "bonus:%s/2/0/zz-auftakt" % BOOK
+	assert_array(_ids(ContentRegistry.lexemes_scoped([auftakt], []))).contains([twice])
+	assert_array(_ids(ContentRegistry.lexemes_scoped([BONUS], []))).contains([twice])
+	assert_array(_ids(ContentRegistry.lexemes_scoped([BOOK + "/2"], []))).not_contains([twice])
+	assert_array(_tasks([auftakt])).contains(["translate:de_to_fr:" + twice])
+	ContentRegistry.lexemes.erase(twice)

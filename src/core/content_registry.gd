@@ -568,10 +568,10 @@ func _scope_keys(entry: Dictionary) -> Array:
 		return [book]
 	# Ein Wort aus einem Wort-Bonus steht nur in seinem Bonus (ADR 0013). In die Unit und
 	# das Buch holt es lexemes_for_run, wo der Bonus mitspielt; Festung, Teile, Statistik
-	# und Sätze sehen es nicht.
-	var bonus := word_bonus_key(entry)
-	if not bonus.is_empty():
-		return [bonus]
+	# und Sätze sehen es nicht. Steht es zugleich in einem zweiten Bonus (`also_bonus`),
+	# gehört es auch dorthin.
+	if not word_bonus_key(entry).is_empty():
+		return word_bonus_keys(entry)
 	var keys := [book, "%s/%d" % [book, int(entry["unit"])]]
 	# Ein Wort seiner Unit, das zusätzlich in einem Wort-Bonus steht (`also_bonus`).
 	keys.append_array(word_bonus_keys(entry))

@@ -121,6 +121,11 @@ der Unit, zu der der Bonus gehört, und `"bonus": "<thema>"`, ohne `part`. Dazu 
 bekommt das vorhandene Lexem `"also_bonus": [{"unit": <n>, "bonus": "<thema>"}]` statt
 einer Dublette. Der Pack hebt sein `min_app_version` (ab 0.22.0).
 
+**Einstiegsseiten einer Unit** (bei *À plus!* Auftaktseite und *Mots en contexte*) sind
+immer ein Wort-Bonus `auftakt` der Unit, Datei `fr_<buch>_unit<n>_auftakt.json`, Titel
+auf der Karte „Auftakt und Mots en contexte“. Kein Teil, keine Wörter ohne `part` in der
+Unit-Datei.
+
 **Keine Dubletten.** Dasselbe Wort unter zwei Lexem-Ids hat zwei Fortschrittsstände; die
 Treffer verteilen sich, und keine der beiden Ids wird je gemeistert. Vor dem Anlegen
 prüfen, ob das Wort schon existiert (auch in anderen Units und Büchern).

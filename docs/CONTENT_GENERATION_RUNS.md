@@ -272,7 +272,11 @@ Wie Lauf #3 (ein Kontext, ohne Beispielsätze), aber nicht direkt als JSON:
   Slug, Id, Artikel-Abtrennung für die Id, Dubletten über beide Units, Typ-Feinzuordnung.
   Eine Korrektur ist eine geänderte Zeile und ein neuer Lauf, kein Suchen im JSON.
 - **Dossier → Unit, Partie A/B/C → Teil 1/2/3.** Auftaktseite und *Mots en contexte*
-  bekommen keinen Teil; ihre Wörter erscheinen nur im Gesamt-Level der Unit.
+  bekamen keinen Teil; ihre Wörter erschienen nur im Gesamt-Level der Unit.
+  *Revidiert 2026-10-05:* Sie sind jetzt je Dossier ein Wort-Bonus `auftakt` (ADR 0013,
+  eigene Datei `fr_aplusx_unit<n>_auftakt.json`, Punkt auf der Gebietskarte), Ids
+  unverändert. Abgeglichen an den Fotos: D1 28, D2 53 Wörter, alle aus diesen beiden
+  Abschnitten, keines aus einer Partie.
 - **Formen nach den Regeln aus ADDING_CONTENT:** männlich und weiblich mit eigener
   deutscher Seite als zwei Lexeme. Sind beide Formen gleich und nur der Artikel
   unterscheidet sich, gibt es ein Lexem mit beiden Artikeln (z. B. *le/la bénévole*), denn
