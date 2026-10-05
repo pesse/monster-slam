@@ -79,6 +79,14 @@ extends Node3D
 ##         Sieben Monster dicht beieinander auf der Bahn, in beiden Sichten — die Wortschilder
 ##         dürfen sich nicht überdecken, jedes dritte zeigt Alternativen (Zauber, ADR 0014) —
 ##         als reports/battle_themes/plates_<sicht>.png.
+##     … -- --spells [--spell=<name>] [--view=first]
+##         Jeder Zauber (Reiter Zauber, SpellFx) auf ein Feld mit sechs Monstern, in Schritten
+##         nach dem Wirken, als reports/battle_themes/spell_<name>_<ms>.png; Frost dazu mit
+##         Rissen und beim Auftauen (auf 3 s verkürzt). Jeder Schritt ist ein eigener Zauber.
+##         Im Fenster: Reiter Zauber — „Feld füllen" stellt sechs Monster auf die Bahn,
+##         „Zaubern" wirkt den gewählten Zauber auf alle, die laufen (ohne Vorrat, ohne Spur;
+##         Lebensquell und Eisenhaut nehmen der Festung vorher etwas, nur im Speicher), „Feld
+##         leeren" räumt auf und nimmt den Dunst von Schwere Luft weg.
 ##     … -- --fps [--theme=<name>] [--windowed]
 ##         Misst im Vollbild und ohne VSync die mittlere Bildzeit mit allem an, jeweils ohne
 ##         eine Zutat (MSAA, Wolken, Teilchen, Wind, Schatten, Glow, Farbgebung, Weg+Flecken)
@@ -174,6 +182,11 @@ var _sun_cycle: SunCycle
 var _sun_speed := 0.0
 ## Die gespawnten Monster — eigener Knoten, damit sie einen Umbau der Deko überstehen.
 var _walkers: Node3D
+## Reiter Zauber: dasselbe Bild wie im Kampf (SpellFx), die Wirkung aus dem SpellCaster.
+var _spell_fx: SpellFx
+var _caster := SpellCaster.new()
+var _strike_index := 0
+var _spell_list: Array = []
 ## Das Kampf-HUD für den Aufstieg (L), oder null, solange es nicht gebraucht wurde.
 var _hud: Control
 ## Das Level, das das HUD zeigt — nur hier, PlayerLevel bleibt unberührt.
@@ -220,6 +233,7 @@ func _ready() -> void:
 	if QUALITY_ARGS.has(_arg("quality")):
 		_quality = QUALITY_ARGS[_arg("quality")]
 	_fill_controls()
+	_setup_spells()
 	_show(0)
 	if _arg("view") == "first":
 		_set_first_person(true)
@@ -241,6 +255,8 @@ func _ready() -> void:
 		_measure_fps.call_deferred()
 	elif _has_arg("spelling"):
 		_shoot_spelling.call_deferred()
+	elif _has_arg("spells"):
+		_shoot_spells.call_deferred()
 	elif _has_arg("hitches"):
 		_measure_hitches.call_deferred()
 	elif _has_arg("specimens"):
@@ -355,7 +371,7 @@ func _fill_controls() -> void:
 		%Menu.visible = on
 		%MenuToggle.text = "Regler ▾" if on else "Regler ▸")
 	var batch := ["shoot", "specimens", "bow", "blast", "catapult", "hitches", "fps", "fortress",
-			"levelup", "spelling"].any(_has_arg)
+			"levelup", "spelling", "spells"].any(_has_arg)
 	%MenuToggle.visible = not batch
 
 
@@ -540,7 +556,8 @@ func _spawn_monster() -> void:
 		_walkers = Node3D.new()
 		add_child(_walkers)
 	var monster := FxWarmup.MONSTER_SCENE.instantiate() as Monster
-	monster.setup(defs.pick_random(), {"prompt": "house",
+	# Mit Alternativen, damit „Drittes Auge" etwas aufzudecken hat (Reiter Zauber).
+	monster.setup(defs.pick_random(), {"prompt": "house", "prompt_alt": ["home", "building"],
 			"lexeme_type": WordTypePalette.COLORS.keys().pick_random()}, _goal() + 1000.0,
 			_monster_speed)
 	monster.screen_sized_label = _fp != null
@@ -1614,6 +1631,138 @@ func _place(model: String, x: float, z: float, noise: FastNoiseLite, yaw: float,
 	Wind.sway(inst, model, _wind_strength)
 	_fire_lights -= Fire.kindle(inst, _fire_lights)
 	return inst
+
+
+## Reiter Zauber: SpellFx wie im Kampf, die Zauber aus der Registry.
+func _setup_spells() -> void:
+	_spell_fx = SpellFx.new()
+	_spell_fx.veil = $UI/SpellVeil as ColorRect
+	_spell_fx.shake = _shake
+	add_child(_spell_fx)
+	_caster.reveal_delay = _spell_fx.reveal_delay
+	_caster.strike = func(monster: Monster) -> void:
+		monster.set_meta(&"struck", true)
+		monster.halt()
+		_spell_fx.bolt(monster, _strike_index, func() -> void:
+			if is_instance_valid(monster):
+				monster.queue_free())
+		_strike_index += 1
+	_spell_list = ContentRegistry.all("spells")
+	for spell: Dictionary in _spell_list:
+		%CastSelect.add_item(str(spell.get("name", spell.get("id", ""))))
+	%CastButton.pressed.connect(func() -> void:
+		if not _spell_list.is_empty():
+			_cast_spell(_spell_list[%CastSelect.selected], %ShortFrostCheck.button_pressed))
+	%FillFieldButton.pressed.connect(_fill_field)
+	%ClearFieldButton.pressed.connect(_clear_field)
+
+
+## Wirkt `spell` auf alle Monster, die laufen, wie WaveRunner._use_spell — ohne Vorrat und
+## ohne Spur. Ein leeres Feld wird erst gefüllt. `short_frost`: Frost taut nach 3 s.
+func _cast_spell(spell: Dictionary, short_frost := false) -> void:
+	var effect := str(spell.get("effect", ""))
+	if short_frost and effect == "freeze":
+		spell = spell.duplicate(true)
+		(spell["params"] as Dictionary)["duration"] = 3.0
+	# Etwas zum Auffüllen, nur im Speicher (wie die Felder im Reiter HUD).
+	if effect == "heal":
+		GameState.fortress_health = maxi(1, GameState.fortress_max_health - 40)
+	elif effect == "armor":
+		GameState.fortress_armor_max = maxi(GameState.fortress_armor_max, 50)
+		GameState.fortress_armor = 10
+	if _field().is_empty() and effect in ["reveal_alts", "slow", "freeze", "strike"]:
+		_fill_field()
+	_spell_fx.front_z = _goal()
+	_spell_fx.back_z = _spawn_z
+	_spell_fx.half_width = _lane_half
+	_spell_fx.fortress = Vector3(0.0, 0.0, _goal() + 2.0 * WaveRunnerScript.FORTRESS_GROW)
+	var field := _field()
+	($UI/SpellBanner as SpellBanner).play(spell)
+	_spell_fx.play(spell, field)
+	_strike_index = 0
+	_caster.cast(spell, field, 0)
+	if _hud != null:
+		_show_tally()
+
+
+## Die Monster, die noch laufen: nicht freigegeben, nicht vom Donnerschlag getroffen.
+func _field() -> Array[Monster]:
+	var out: Array[Monster] = []
+	if _walkers == null:
+		return out
+	for node in _walkers.get_children():
+		var monster := node as Monster
+		if monster != null and not monster.is_queued_for_deletion() \
+				and not monster.has_meta(&"struck"):
+			out.append(monster)
+	return out
+
+
+## Sechs Monster verteilt über die Bahn, vorne dichter.
+func _fill_field() -> void:
+	var spots := [[-5.0, 0.15], [1.5, 0.25], [-1.5, 0.42], [4.5, 0.5], [-4.0, 0.7], [2.5, 0.85]]
+	for spot: Array in spots:
+		var z := lerpf(_goal() - 5.0, _spawn_z + 4.0, float(spot[1]))
+		_walker_at(Vector3(float(spot[0]) * _lane_half / 8.0, 0.0, z))
+
+
+func _clear_field() -> void:
+	if _walkers != null:
+		for node in _walkers.get_children():
+			node.queue_free()
+	_spell_fx.haze(false)
+	_caster.reset_wave()
+
+
+## Kamerawackeln wie im Kampf, nur kurz über den Versatz der Kamera, die gerade zeigt.
+func _shake(magnitude: float) -> void:
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return
+	var tw := create_tween()
+	for i in 6:
+		var k := magnitude * (1.0 - i / 6.0)
+		tw.tween_property(cam, "h_offset", randf_range(-k, k), 0.05)
+		tw.parallel().tween_property(cam, "v_offset", randf_range(-k, k), 0.05)
+	tw.tween_property(cam, "h_offset", 0.0, 0.05)
+	tw.parallel().tween_property(cam, "v_offset", 0.0, 0.05)
+
+
+## Bildlauf --spells: jeder Zauber in Schritten nach dem Wirken, jeder Schritt ein eigener
+## Zauber auf ein frisches Feld.
+const SPELL_SHOTS := [150, 450, 1000]
+const FROST_THAW_SHOTS := [2300, 3080]
+
+func _shoot_spells() -> void:
+	var dir := ProjectSettings.globalize_path(SHOT_DIR)
+	DirAccess.make_dir_recursive_absolute(dir)
+	$UI/Margin.visible = false
+	var at := Vector3(0.0, 1.0, _goal() - 10.0)
+	await FxWarmup.run(self, at, FxWarmup.monster_defs(), SpellFx.specimens(at),
+			_fp != null)
+	var only := _arg("spell")
+	for spell: Dictionary in _spell_list:
+		var name := str(spell.get("id", "")).trim_prefix("spell.")
+		if only != "" and name != only:
+			continue
+		var steps: Array = SPELL_SHOTS.duplicate()
+		if str(spell.get("effect", "")) == "freeze":
+			steps.append_array(FROST_THAW_SHOTS)
+		for ms: int in steps:
+			_clear_field()
+			await get_tree().create_timer(0.2).timeout
+			_fill_field()
+			# Die Schilder gleiten an ihren Platz.
+			await get_tree().create_timer(0.6).timeout
+			_cast_spell(spell, true)
+			await get_tree().create_timer(ms / 1000.0).timeout
+			await RenderingServer.frame_post_draw
+			var path := "%s/spell_%s_%04d.png" % [dir, name, ms]
+			get_viewport().get_texture().get_image().save_png(path)
+			print("battle_theme_lab: ", path)
+			# Der Zauber zu Ende, bevor der nächste anfängt.
+			await get_tree().create_timer(1.5).timeout
+	get_tree().quit()
 
 
 func _has_arg(key: String) -> bool:

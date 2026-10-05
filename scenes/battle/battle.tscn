@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3]
+[gd_scene load_steps=23 format=3]
 
 [ext_resource type="Script" path="res://src/battle/wave_runner.gd" id="1_battle"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="2_hud"]
@@ -19,6 +19,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/pause_button.tscn" id="23_pause_button"]
 [ext_resource type="PackedScene" path="res://scenes/ui/word_plates.tscn" id="14_plates"]
 [ext_resource type="PackedScene" path="res://scenes/ui/spell_slots.tscn" id="24_spell_slots"]
+[ext_resource type="PackedScene" path="res://scenes/ui/spell_banner.tscn" id="25_spell_banner"]
 
 [sub_resource type="Environment" id="Env_1"]
 background_mode = 1
@@ -82,6 +83,15 @@ mouse_filter = 2
 color = Color(1, 0, 0, 0.35)
 modulate = Color(1, 1, 1, 0)
 
+[node name="SpellVeil" type="ColorRect" parent="UI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0)
+
 [node name="WordPlates" parent="UI" instance=ExtResource("14_plates")]
 
 [node name="SlowMoVignette" parent="UI" instance=ExtResource("9_vignette")]
@@ -89,6 +99,8 @@ modulate = Color(1, 1, 1, 0)
 [node name="SpellingFreeze" parent="UI" instance=ExtResource("21_spelling")]
 
 [node name="MasteryCelebration" parent="UI" instance=ExtResource("12_celebration")]
+
+[node name="SpellBanner" parent="UI" instance=ExtResource("25_spell_banner")]
 
 [node name="HUD" parent="UI" instance=ExtResource("2_hud")]
 

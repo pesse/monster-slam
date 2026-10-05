@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://src/dev/battle_theme_lab.gd" id="1_lab"]
+[ext_resource type="PackedScene" path="res://scenes/ui/spell_banner.tscn" id="2_banner"]
 
 [node name="BattleThemeLab" type="Node3D"]
 script = ExtResource("1_lab")
@@ -18,6 +19,17 @@ current = true
 [node name="Ground" type="MeshInstance3D" parent="."]
 
 [node name="UI" type="CanvasLayer" parent="."]
+
+[node name="SpellVeil" type="ColorRect" parent="UI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0)
+
+[node name="SpellBanner" parent="UI" instance=ExtResource("2_banner")]
 
 [node name="Margin" type="MarginContainer" parent="UI"]
 theme_type_variation = &"ScreenMargin"
@@ -653,6 +665,39 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(320, 0)
 theme_type_variation = &"Hint"
 autowrap_mode = 3
+
+[node name="Zauber" type="GridContainer" parent="UI/Margin/Root/Menu/Items/Tabs"]
+visible = false
+columns = 4
+metadata/_tab_index = 6
+
+[node name="CastCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Zauber"]
+theme_type_variation = &"Hint"
+text = "Zauber"
+
+[node name="CastSelect" type="OptionButton" parent="UI/Margin/Root/Menu/Items/Tabs/Zauber"]
+unique_name_in_owner = true
+focus_mode = 0
+
+[node name="CastButton" type="Button" parent="UI/Margin/Root/Menu/Items/Tabs/Zauber"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "Zaubern"
+
+[node name="ShortFrostCheck" type="CheckBox" parent="UI/Margin/Root/Menu/Items/Tabs/Zauber"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "Frost nur 3 s"
+
+[node name="FillFieldButton" type="Button" parent="UI/Margin/Root/Menu/Items/Tabs/Zauber"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "Feld füllen"
+
+[node name="ClearFieldButton" type="Button" parent="UI/Margin/Root/Menu/Items/Tabs/Zauber"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "Feld leeren"
 
 [node name="Buttons" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items"]
 

@@ -10,6 +10,9 @@ extends Node3D
 ##
 ## Der Ursprung liegt am Boden unter dem Monster; der Feuerball sitzt auf Rumpfhöhe.
 ## Alle Zeiten laufen nach `Engine.time_scale` — die Zeitlupe dehnt den Knall.
+##
+## `plasma` ist der Einschlag des Donnerschlags (ADR 0014): kein Feuerball, sondern ein
+## blauweißer Lichtball, blaue Funken und Druckwelle, und der Rauch glimmt blau statt orange.
 
 const FIREBALL_SHADER := preload("res://assets/shaders/fireball.gdshader")
 const SMOKE_SHADER := preload("res://assets/shaders/smoke.gdshader")
@@ -24,17 +27,23 @@ const LIFETIME := 2.6
 
 var _debris_color: Color = Color(0.7, 1.0, 0.4)
 var _scale: float = 1.0
+var _plasma := false
+
+## Die Farben des Donnerschlags.
+const PLASMA_COLOR := Color(0.6, 0.78, 1.0)
 
 
 ## `debris_color`: die Brocken, die fliegen — die Wortfarbe des getroffenen Monsters.
-func setup(debris_color: Color, scale: float = 1.0) -> void:
+func setup(debris_color: Color, scale: float = 1.0, plasma := false) -> void:
 	_debris_color = debris_color
 	_scale = scale
+	_plasma = plasma
 
 
 func _ready() -> void:
 	_flash()
-	_fireball()
+	if not _plasma:
+		_fireball()
 	_shockwave()
 	_sparks()
 	_debris()
@@ -58,21 +67,24 @@ func _flash() -> void:
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.albedo_color = Color(1.0, 1.0, 0.95, 1.0)
 	mat.emission_enabled = true
-	mat.emission = Color(1.0, 0.95, 0.8)
-	mat.emission_energy_multiplier = 6.0
+	mat.emission = Color(0.8, 0.9, 1.0) if _plasma else Color(1.0, 0.95, 0.8)
+	mat.emission_energy_multiplier = 9.0 if _plasma else 6.0
 	core.mesh = sphere
 	core.material_override = mat
 	core.position = Vector3(0.0, CORE_HEIGHT, 0.0)
 	core.scale = Vector3.ONE * 1.2 * _scale
 	add_child(core)
+	# Das Plasma steht länger und größer: es ersetzt den Feuerball.
+	var grow := 4.0 if _plasma else 2.6
+	var hold := 0.22 if _plasma else 0.12
 	var tw := create_tween().set_parallel(true)
-	tw.tween_property(core, "scale", Vector3.ONE * 2.6 * _scale, 0.12).set_ease(Tween.EASE_OUT)
-	tw.tween_property(mat, "albedo_color:a", 0.0, 0.12).set_delay(0.04)
+	tw.tween_property(core, "scale", Vector3.ONE * grow * _scale, hold).set_ease(Tween.EASE_OUT)
+	tw.tween_property(mat, "albedo_color:a", 0.0, hold).set_delay(0.04)
 	tw.chain().tween_callback(core.queue_free)
 
 	var light := OmniLight3D.new()
-	light.light_color = Color(1.0, 0.7, 0.35)
-	light.light_energy = 14.0 * _scale
+	light.light_color = PLASMA_COLOR if _plasma else Color(1.0, 0.7, 0.35)
+	light.light_energy = (20.0 if _plasma else 14.0) * _scale
 	light.omni_range = 14.0 * _scale
 	light.position = Vector3(0.0, CORE_HEIGHT, 0.0)
 	add_child(light)
@@ -119,6 +131,9 @@ func _shockwave() -> void:
 	var mat := ShaderMaterial.new()
 	mat.shader = SHOCKWAVE_SHADER
 	mat.set_shader_parameter("progress", 0.0)
+	if _plasma:
+		mat.set_shader_parameter("color", PLASMA_COLOR)
+		mat.set_shader_parameter("energy", 4.0)
 	ring.mesh = quad
 	ring.material_override = mat
 	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -132,7 +147,7 @@ func _shockwave() -> void:
 
 ## Schnelle, weiche Glutstreifen (spark.gdshader), die in Flugrichtung zeigen und fallen.
 func _sparks() -> void:
-	var p := _streaks(80, 0.9, Color(1.0, 0.7, 0.3), 6.0)
+	var p := _streaks(80, 0.9, PLASMA_COLOR if _plasma else Color(1.0, 0.7, 0.3), 6.0)
 	p.emission_sphere_radius = 0.3 * _scale
 	p.spread = 180.0
 	p.initial_velocity_min = 9.0 * _scale
@@ -194,6 +209,8 @@ func _smoke() -> void:
 		var mat := ShaderMaterial.new()
 		mat.shader = SMOKE_SHADER
 		mat.set_shader_parameter("ember", 0.3 if ring == 0 else 0.15)
+		if _plasma:
+			mat.set_shader_parameter("ember_color", Vector3(0.4, 0.6, 1.0))
 		quad.material = mat
 		p.mesh = quad
 		p.emission_sphere_radius = (0.5 if ring == 0 else 1.0) * _scale

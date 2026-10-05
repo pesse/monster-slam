@@ -1,7 +1,7 @@
 class_name SpellCaster
 extends RefCounted
 ## Was ein Zauber im Wellenkampf tut (docs/adr/0014-zauber-zum-verbrauchen.md). Ohne Bild:
-## Blitz, Flash und Ton macht der WaveRunner, das Einfrieren zeigt das Monster selbst.
+## Blitze, Licht und Ton macht SpellFx, Eis und Schlamm zeigt das Monster selbst.
 ##
 ## Zwei Schritte, damit nur verbraucht wird, was auch wirkt: `can_cast` fragt, ob der
 ## Zauber jetzt etwas bewirken würde, `cast` tut es. Dazwischen nimmt der WaveRunner den
@@ -14,13 +14,16 @@ extends RefCounted
 ##
 ## Kein Zauber rührt den Lernstand an: Antwortzeiten (`spawned_at_ms`) bleiben, wie sie
 ## sind, und der Donnerschlag nimmt Monster über denselben Weg vom Feld wie das Katapult
-## (`strike`, im WaveRunner `_dismiss`).
+## (`strike`, im WaveRunner `_strike`).
 
 ## Die Wirkungen, die es gibt — was in `effect` eines Zaubers stehen darf.
 const EFFECTS := ["reveal_alts", "slow", "freeze", "strike", "heal", "armor"]
 
 ## Nimmt ein Monster per Blitz vom Feld (WaveRunner).
 var strike: Callable
+## Nach wie vielen Sekunden das Schild eines Monsters aufgeht (WaveRunner: wenn der
+## Lichtvorhang es erreicht, SpellFx.reveal_delay). Ohne: sofort.
+var reveal_delay := func(_monster: Monster) -> float: return 0.0
 ## Tempo-Anteil für den Rest der Welle (1 = ungebremst).
 var wave_pace := 1.0
 ## Zeigen alle Monster dieser Welle ihre Alternativen?
@@ -82,7 +85,7 @@ func cast(spell: Dictionary, field: Array[Monster], to_come: int) -> void:
 			if whole_wave:
 				wave_alts = true
 			for monster in field:
-				monster.show_alts()
+				monster.show_alts(reveal_delay.call(monster))
 		"slow":
 			var factor := float(params.get("factor", 0.5))
 			if whole_wave:

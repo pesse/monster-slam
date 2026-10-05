@@ -133,10 +133,12 @@ var _paused_since_ms := -1
 @onready var _spelling: SpellingFreeze = $UI/SpellingFreeze
 @onready var _level_flare: LevelFlare = $UI/HUD.level_flare
 @onready var _spell_slots: SpellSlots = $UI/SpellSlots
-## Was ein Zauber aus dem Vorrat tut (ADR 0014); das Bild dazu macht `_use_spell`.
+@onready var _spell_banner: SpellBanner = $UI/SpellBanner
+## Was ein Zauber aus dem Vorrat tut (ADR 0014); wie es aussieht, macht `_spell_fx`.
 var _spells := SpellCaster.new()
-## So hell blitzt der Donnerschlag, und in dieser Farbe platzen seine Monster.
-const STRIKE_FLASH := Color(0.75, 0.85, 1.0)
+var _spell_fx := SpellFx.new()
+## Der wievielte Blitz des laufenden Donnerschlags als nächster fällt (`_strike`).
+var _strike_index := 0
 
 
 func _ready() -> void:
@@ -230,6 +232,14 @@ func _ready() -> void:
 	_spelling.started.connect(_on_spelling_started)
 	_spelling.finished.connect(_on_spelling_finished)
 	_spells.strike = _strike
+	_spells.reveal_delay = _spell_fx.reveal_delay
+	_spell_fx.veil = $UI/SpellVeil as ColorRect
+	_spell_fx.shake = _shake
+	_spell_fx.front_z = GOAL_Z
+	_spell_fx.back_z = SPAWN_Z
+	_spell_fx.half_width = LANE_HALF_WIDTH
+	_spell_fx.fortress = Vector3(0.0, 0.0, GOAL_Z + 2.0 * FORTRESS_GROW)
+	add_child(_spell_fx)
 	# Startschwierigkeit aus den persistenten Einstellungen des aktiven Profils.
 	_difficulty = UserSettings.default_difficulty()
 	_start_next_wave()
@@ -270,9 +280,10 @@ func _warm_up() -> void:
 		extras.append(Tumbleweeds.specimen())
 	if _catapult:
 		extras.append(CatapultStone.new())
-	# Den Knall braucht auch der Donnerschlag (ADR 0014) — er kann in jedem Kampf kommen.
 	if _fp == null or not _fp.explosive:
 		extras.append(Blast.new())
+	# Die Zauber (ADR 0014) können in jedem Kampf kommen.
+	extras.append_array(SpellFx.specimens(at))
 	await FxWarmup.run(self, at, FxWarmup.monster_defs(), extras, _fp != null)
 	_celebration.cool_down()
 	_spelling.cool_down()
@@ -957,34 +968,41 @@ func _use_spell(index: int) -> void:
 	# VOR der Wirkung: die Spur führt den Zauber vor den Monstern, die er trifft.
 	EventBus.spell_activated.emit(id)
 	_spell_slots.pulse(index)
-	var effect := str(spell.get("effect", ""))
-	match effect:
-		"strike":
-			_flash_feedback(STRIKE_FLASH)
-			_shake(0.8)
-			Sfx.play(&"monster_kill")
-		"freeze", "slow":
-			Sfx.play(&"slow_mo_in")
+	_spell_banner.play(spell)
+	_spell_fx.play(spell, _active)
+	_strike_index = 0
 	_spells.cast(spell, _active, to_come)
-	if effect == "strike":
-		_check_end()
 
 
-## Donnerschlag: das Monster ist erledigt, nicht beantwortet — wie beim Katapult.
+## Donnerschlag: das Monster ist erledigt, nicht beantwortet — wie beim Katapult. Vom Feld
+## ist es sofort (keine Antwort trifft es mehr, es erreicht die Festung nicht); das Bild
+## folgt mit seinem Blitz (SpellFx.bolt), und erst danach wird abgerechnet (`_underway`).
 func _strike(monster: Monster) -> void:
 	if not _active.has(monster):
 		return
-	EventBus.monster_struck.emit(monster.task)
-	_dismiss(monster, STRIKE_FLASH)
-
-
-## Nimmt ein Monster vom Feld, ohne dass es beantwortet ist (Katapult, Donnerschlag): kein
-## Lernstand, keine Erfahrung, keine Punkte, kein Eintrag in der Auflösung. Was es zählt,
-## meldet der Aufrufer (monster_catapulted, monster_struck); hier nur Feld und Bild.
-func _dismiss(monster: Monster, color := Color(0, 0, 0, 0)) -> void:
 	_active.erase(monster)
 	monster.halt()
-	_blast_at(monster, color)
+	EventBus.monster_struck.emit(monster.task)
+	_underway += 1
+	_spell_fx.bolt(monster, _strike_index, func() -> void:
+		_underway -= 1
+		if is_instance_valid(monster):
+			for other in _active:
+				if other.position.distance_to(monster.position) <= BLAST_FLINCH_RADIUS:
+					other.flinch(monster.global_position)
+			monster.queue_free()
+		_check_end())
+	_strike_index += 1
+
+
+## Nimmt ein Monster vom Feld, ohne dass es beantwortet ist (Katapult): kein Lernstand,
+## keine Erfahrung, keine Punkte, kein Eintrag in der Auflösung. Was es zählt, meldet der
+## Aufrufer (monster_catapulted); hier nur Feld und Bild. Der Donnerschlag geht denselben
+## Weg mit eigenem Bild (`_strike`).
+func _dismiss(monster: Monster) -> void:
+	_active.erase(monster)
+	monster.halt()
+	_blast_at(monster)
 	monster.queue_free()
 
 
@@ -1130,6 +1148,7 @@ func _start_next_wave() -> void:
 	_fast_resolve_button.visible = true
 	_fast_resolve_button.disabled = false
 	_spells.reset_wave()
+	_spell_fx.haze(false)
 	_spell_slots.visible = true
 	_pause_button.visible = true
 	_pause_button.disabled = false
@@ -1658,11 +1677,11 @@ func _blast(monster: Monster) -> void:
 	_leave(monster)
 
 
-## Nur der Knall: Blast in der Wortfarbe (oder `color`, wenn gesetzt), und die Nachbarn
-## zucken. Explosionspfeil, Wachkatapult und Donnerschlag teilen ihn.
-func _blast_at(monster: Monster, color := Color(0, 0, 0, 0)) -> void:
+## Nur der Knall: Blast in der Wortfarbe, und die Nachbarn zucken. Explosionspfeil und
+## Wachkatapult teilen ihn.
+func _blast_at(monster: Monster) -> void:
 	var fx := Blast.new()
-	fx.setup(color if color.a > 0.0 else monster.word_color(), BLAST_SCALE)
+	fx.setup(monster.word_color(), BLAST_SCALE)
 	fx.position = monster.position
 	add_child(fx)
 	for other in _active:
@@ -1888,6 +1907,7 @@ func _finish_wave(won: bool) -> void:
 	_fast_resolve_button.visible = false
 	_spell_slots.visible = false
 	_spells.reset_wave()
+	_spell_fx.haze(false)
 	_pause_button.visible = false
 	# Endet die Welle, während die Rückfrage offen ist, gibt es nichts mehr aufzulösen.
 	_fast_resolve_confirm.hide()

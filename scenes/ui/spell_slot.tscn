@@ -8,6 +8,13 @@ mouse_filter = 2
 theme_type_variation = &"SpellSlotFrame"
 script = ExtResource("1_slot")
 
+[node name="Picture" type="TextureRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
 [node name="Icon" type="Label" parent="."]
 unique_name_in_owner = true
 layout_mode = 2

@@ -11,6 +11,8 @@ extends Control
 const POINTER_SIZE := Vector2(24.0, 12.0)
 const POINTER_OVERLAP := 2.0
 const TEXT_LIGHTEN := 0.35
+## So leuchtet ein Schild auf, das der Zauber aufdeckt (die Farbe von SpellFx, überhellt).
+const REVEAL_GLOW := Color(1.6, 1.25, 2.0)
 
 var monster: Monster
 ## Geglättete Verschiebung gegenüber dem Wunschplatz über dem Kopf.
@@ -45,9 +47,23 @@ func setup(of: Monster, large: bool) -> void:
 	_fit()
 
 
-func _on_alts_revealed() -> void:
+## Der Zauber deckt auf: nach `delay` (der Lichtvorhang erreicht das Monster, SpellFx) springt
+## das Schild mit der zweiten Zeile auf und leuchtet kurz in der Farbe des Zaubers. Ohne
+## Verzögerung (FxWarmup, ein neues Monster im Orakelblick) steht die Zeile sofort da.
+func _on_alts_revealed(delay: float) -> void:
+	if delay > 0.0:
+		await get_tree().create_timer(delay, false).timeout
+		if not is_instance_valid(monster):
+			return
 	_alt.visible = true
 	_fit()
+	pivot_offset = Vector2(size.x / 2.0, plate_size().y)
+	scale = Vector2.ONE * 1.35
+	modulate = REVEAL_GLOW
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(self, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK) \
+			.set_ease(Tween.EASE_OUT)
+	tw.tween_property(self, "modulate", Color.WHITE, 0.6)
 
 
 ## Die zweite Zeile: „auch: walk, run" — dieselbe Lesart wie im Reveal.

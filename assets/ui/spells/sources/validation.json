@@ -1,0 +1,114 @@
+[
+  {
+    "icon": "glimpse",
+    "alpha_bounds": [
+      24,
+      45,
+      232,
+      210
+    ],
+    "size": [
+      256,
+      256
+    ],
+    "lossless_verified": true
+  },
+  {
+    "icon": "insight",
+    "alpha_bounds": [
+      34,
+      24,
+      221,
+      232
+    ],
+    "size": [
+      256,
+      256
+    ],
+    "lossless_verified": true
+  },
+  {
+    "icon": "mire",
+    "alpha_bounds": [
+      24,
+      49,
+      232,
+      207
+    ],
+    "size": [
+      256,
+      256
+    ],
+    "lossless_verified": true
+  },
+  {
+    "icon": "lull",
+    "alpha_bounds": [
+      24,
+      25,
+      232,
+      230
+    ],
+    "size": [
+      256,
+      256
+    ],
+    "lossless_verified": true
+  },
+  {
+    "icon": "frost",
+    "alpha_bounds": [
+      44,
+      24,
+      212,
+      232
+    ],
+    "size": [
+      256,
+      256
+    ],
+    "lossless_verified": true
+  },
+  {
+    "icon": "thunder",
+    "alpha_bounds": [
+      24,
+      29,
+      232,
+      226
+    ],
+    "size": [
+      256,
+      256
+    ],
+    "lossless_verified": true
+  },
+  {
+    "icon": "mend",
+    "alpha_bounds": [
+      33,
+      24,
+      223,
+      232
+    ],
+    "size": [
+      256,
+      256
+    ],
+    "lossless_verified": true
+  },
+  {
+    "icon": "plate",
+    "alpha_bounds": [
+      26,
+      24,
+      230,
+      232
+    ],
+    "size": [
+      256,
+      256
+    ],
+    "lossless_verified": true
+  }
+]

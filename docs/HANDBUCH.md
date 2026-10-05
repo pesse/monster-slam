@@ -252,9 +252,9 @@ Bosskampf gibt es keine Zauber.
 - **Sumpf / Schwere Luft** – die Monster laufen halb so schnell, wieder auf dem Feld oder
   für die ganze Welle.
 - **Frost** – die Monster auf dem Feld frieren zehn Sekunden lang ein.
-- **Donnerschlag** – ein Blitz fegt alle Monster vom Feld. Sie zählen als erledigt, aber
-  nicht als besiegt: keine Punkte, keine Erfahrung, kein Gold, und an der Festung kommen sie
-  auch nicht an.
+- **Donnerschlag** – in jedes Monster auf dem Feld schlägt ein Blitz ein. Sie zählen als
+  erledigt, aber nicht als besiegt: keine Punkte, keine Erfahrung, kein Gold, und an der
+  Festung kommen sie auch nicht an.
 - **Lebensquell** – die Festung bekommt 25 HP zurück.
 - **Eisenhaut** – die Rüstung füllt sich um 25 auf (nur mit Rüstung, Kapitel 11).
 

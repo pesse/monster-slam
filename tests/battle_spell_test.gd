@@ -126,8 +126,14 @@ func test_thunder_clears_the_field_and_only_resolves() -> void:
 	var a := _monster(battle)
 	var b := _monster(battle)
 	battle._input(_digit(1))
+	# Vom Feld sofort, das Bild kommt mit dem Blitz: bis dahin stehen sie nur.
 	assert_array(battle.get("_active") as Array).is_empty()
-	assert_bool(a.is_queued_for_deletion() and b.is_queued_for_deletion()).is_true()
+	assert_vector(a.velocity()).is_equal(Vector3.ZERO)
+	assert_int(battle.get("_underway")).is_equal(2)
+	await get_tree().create_timer(SpellFx.STRIKE_WINDUP + SpellFx.STRIKE_STAGGER + 0.3).timeout
+	assert_bool(not is_instance_valid(a) or a.is_queued_for_deletion()).is_true()
+	assert_bool(not is_instance_valid(b) or b.is_queued_for_deletion()).is_true()
+	assert_int(battle.get("_underway")).is_equal(0)
 	assert_int(GameState.wave_resolved).is_equal(2)
 	assert_int(GameState.monsters_defeated).is_equal(0)
 	assert_int(GameState.score).is_equal(0)

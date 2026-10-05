@@ -943,13 +943,28 @@ Ein Zauber ist ein Verbrauchsgegenstand: `price` in Gold, `effect` aus
   eisblau, Animation steht. `Monster.velocity()` kennt beides, der Vorhalt des Katapults
   also auch. Die Alternativen (`prompt_alt` der Aufgabe) zeigt das Wortschild als zweite
   Zeile (`WordPlate.alt_line`, Signal `alts_revealed`).
-- **Donnerschlag** nimmt jedes Monster auf dem Feld über `WaveRunner._dismiss` vom Feld,
-  denselben Weg wie das Katapult, und sendet `monster_struck`: `GameState` zählt
+- **Donnerschlag** nimmt jedes Monster auf dem Feld über `WaveRunner._strike` sofort vom
+  Feld (aus `_active`, angehalten) und sendet `monster_struck`; das Bild geht erst, wenn
+  sein Blitz einschlägt (`SpellFx.bolt`), bis dahin hält `_underway` das Wellenende auf.
+  Gezählt wird wie beim Katapult: `GameState` zählt
   `wave_resolved`, die Spur schreibt `struck`, sonst nichts — kein Lernstand, keine
   Erfahrung, kein Gold, kein Eintrag in der Auflösung.
+- **Bild** (`SpellFx`, `src/fx/spell_fx.gd`, im Kampf und in der Werkbank dasselbe):
+  Schleier über dem ganzen Bild (`SpellVeil`), Banner mit Bild und Name
+  (`SpellBanner`), dazu je Wirkung ein Effekt im Feld — Lichtvorhang, nach dem die
+  Schilder der Reihe nach aufspringen (`SpellCaster.reveal_delay`), Schlamm-Spritzer,
+  Dunst für die ganze Welle, Eisring und Schnee, verdunkeltes Bild mit gestaffelten
+  Blitzen (`LightningBolt`, Plasma-`Blast`, Brandfleck), Lichtsäule an der Festung. Am
+  Monster hängen `FrostShell` (wächst, reißt in den letzten Sekunden, zerspringt) und
+  `SlowAura`. Die Farbe je Wirkung steht in `SpellFx.COLORS`, nicht in den Daten (ein
+  neues Feld höbe `min_app_version`). Alles davon zeigt `FxWarmup` vorab
+  (`SpellFx.specimens`). Bilder der Zauber: `SpellIcons`
+  (`assets/ui/spells/spell_icons.json`), ohne Bild das Emoji. Eigene Töne sind bestellt
+  (`assets/audio/SPELLS_BRIEF.md`).
 - Kein Zauber verschiebt `spawned_at_ms` oder geht in die Planung einer Welle ein (`t - c`).
 - Spur: `{"e":"spell","spell","wave"}` und `{"e":"struck","id","lex","prompt"}`.
 - Werkbänke: `battle_theme_lab -- --shoot --hud` (Vorrat), `--plates` (Alternativen),
+  `--spells [--spell=<name>]` (jeder Zauber in Schritten; im Fenster Reiter „Zauber"),
   `menu_lab -- --shoot --spells [--stock=…]` (Laden).
 
 ## Datenpersistenz

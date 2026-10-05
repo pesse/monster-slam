@@ -1,6 +1,6 @@
 class_name SpellTile
 extends Button
-## Ein Zauber im Laden als Kachel (scenes/ui/spell_tile.tscn): groß das Zeichen, unten
+## Ein Zauber im Laden als Kachel (scenes/ui/spell_tile.tscn): groß das Bild (oder das Zeichen, `SpellIcons`), unten
 ## rechts, wie viele im Vorrat liegen. Name, Wirkung und Preis stehen im Hinweis. Ein Klick kauft einen; die Kachel meldet ihn nur, gekauft wird im SpellShop.
 
 signal buy_pressed(spell: Dictionary)
@@ -11,6 +11,7 @@ const PULSE := 0.25
 var spell: Dictionary = {}
 var _note := ""
 
+@onready var _picture: TextureRect = %Picture
 @onready var _icon: Label = %Icon
 @onready var _count: Label = %Count
 
@@ -21,7 +22,7 @@ func _ready() -> void:
 
 func setup(entry: Dictionary) -> void:
 	spell = entry
-	_icon.text = str(entry.get("icon", "?"))
+	SpellIcons.show(entry, _picture, _icon)
 	refresh()
 
 

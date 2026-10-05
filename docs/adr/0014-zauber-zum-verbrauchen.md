@@ -74,8 +74,9 @@ werden. Deshalb gibt kein Zauber etwas, das beim Lernen zählt.
    - Ein Blitz behandelt Monster wie das Wachkatapult: erledigt für den Wellenbalken,
      sonst nichts. Kein Lernstand, keine Erfahrung, keine Punkte, kein Gold, kein Eintrag
      in der Auflösung. Dafür gibt es ein eigenes Signal `monster_struck`, damit die Spur
-     den Blitz nicht als Katapult führt. Katapult und Blitz nehmen das Monster über
-     denselben Weg vom Feld.
+     den Blitz nicht als Katapult führt. Katapult und Blitz nehmen das Monster gleich vom
+     Feld (aus `_active`, angehalten); beim Blitz verschwindet nur das Bild später, wenn
+     sein Strahl einschlägt.
 
    Die Schwierigkeit bleibt bei ihrem einen Maß (`t - c`): kein Zauber geht in die Planung
    einer Welle ein.

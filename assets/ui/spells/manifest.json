@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "format": "lossless WebP RGBA",
+  "assets": {
+    "icons/glimpse": {
+      "path": "res://assets/ui/spells/icons/glimpse.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated spell icon; centered <=208 px motif, genuine alpha. Source: sources/glimpse.png; extracted from sources/spells_atlas.png.",
+      "sha256": "98561215eb6da0a1d93734f2c5f69ddb6bcb701afd07dfc7aa776b97de440f01"
+    },
+    "icons/insight": {
+      "path": "res://assets/ui/spells/icons/insight.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated spell icon; centered <=208 px motif, genuine alpha. Source: sources/insight.png; extracted from sources/spells_atlas.png.",
+      "sha256": "1cee3ecf26b1dbe9de7e31cfc5951129661d1725b50ab0151a4ea37bd81fe691"
+    },
+    "icons/mire": {
+      "path": "res://assets/ui/spells/icons/mire.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated spell icon; centered <=208 px motif, genuine alpha. Source: sources/mire.png; extracted from sources/spells_atlas.png.",
+      "sha256": "32794136a07908b5e806abe4d78d24e50bd7db64b10cddf9a2150e9bfad7ee57"
+    },
+    "icons/lull": {
+      "path": "res://assets/ui/spells/icons/lull.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated spell icon; centered <=208 px motif, genuine alpha. Source: sources/lull.png; extracted from sources/spells_atlas.png.",
+      "sha256": "0c2426a36644c2bc27d74d93f393ace3ca7a5309beacfe577900227d595c43d0"
+    },
+    "icons/frost": {
+      "path": "res://assets/ui/spells/icons/frost.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated spell icon; centered <=208 px motif, genuine alpha. Source: sources/frost.png; extracted from sources/spells_atlas.png.",
+      "sha256": "c6fde6aa18441adf4e0a8ee998ff5bbb953f210868f657c5b045d810547e05f0"
+    },
+    "icons/thunder": {
+      "path": "res://assets/ui/spells/icons/thunder.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated spell icon; centered <=208 px motif, genuine alpha. Source: sources/thunder.png; extracted from sources/spells_atlas.png.",
+      "sha256": "973775dd7099f9791a44ed2360623e67370b1d7a006719fad2bcd6161e9344e6"
+    },
+    "icons/mend": {
+      "path": "res://assets/ui/spells/icons/mend.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated spell icon; centered <=208 px motif, genuine alpha. Source: sources/mend.png; extracted from sources/spells_atlas.png.",
+      "sha256": "9db053a5a5580d526c09dc4a26e4baf2fb34ecc1cf4b55913d2d558dd14225c6"
+    },
+    "icons/plate": {
+      "path": "res://assets/ui/spells/icons/plate.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated spell icon; centered <=208 px motif, genuine alpha. Source: sources/plate.png; extracted from sources/spells_atlas.png.",
+      "sha256": "1dd8a03ad6a1a42b0e2b2ce6f1e10d5baed1e78edb80f046ae8f5008271895d7"
+    }
+  }
+}

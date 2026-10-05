@@ -7,8 +7,9 @@ extends Node3D
 
 ## Wird ausgelöst, wenn dieses Monster die Festung erreicht (Node-Handling im WaveRunner).
 signal reached_goal(monster: Monster)
-## Das Schild soll jetzt auch die Alternativen der Aufgabe zeigen (Zauber, ADR 0014).
-signal alts_revealed
+## Das Schild soll jetzt auch die Alternativen der Aufgabe zeigen (Zauber, ADR 0014) —
+## nach `delay` Sekunden, wenn der Lichtvorhang des Zaubers es erreicht (SpellFx).
+signal alts_revealed(delay: float)
 
 var monster_def: Dictionary = {}
 var task: Dictionary = {}
@@ -40,6 +41,10 @@ var pace := 1.0
 var alts_shown := false
 ## Wie lange es noch eingefroren ist (s Spielzeit).
 var _frozen_left := 0.0
+## Das Eis, solange es eingefroren ist, und der Schlamm, solange es gebremst ist — das Bild
+## der Zauber am Monster (FrostShell, SlowAura).
+var _frost: FrostShell
+var _aura: SlowAura
 var _anim: AnimationPlayer
 var _outline: ShaderMaterial
 var _outline_color := Color.WHITE
@@ -97,12 +102,13 @@ func alts() -> Array:
 	return task.get("prompt_alt", []) as Array
 
 
-## Zeigt die Alternativen am Schild. False, wenn es keine gibt oder sie schon stehen.
-func show_alts() -> bool:
+## Zeigt die Alternativen am Schild, sichtbar nach `delay` Sekunden. False, wenn es keine
+## gibt oder sie schon stehen.
+func show_alts(delay := 0.0) -> bool:
 	if alts_shown or alts().is_empty():
 		return false
 	alts_shown = true
-	alts_revealed.emit()
+	alts_revealed.emit(delay)
 	return true
 
 
@@ -113,6 +119,9 @@ func slow_to(factor: float) -> bool:
 		return false
 	pace = clampf(factor, 0.0, 1.0)
 	_update_animation()
+	if _aura == null:
+		_aura = SlowAura.new()
+		add_child(_aura)
 	return true
 
 
@@ -123,6 +132,10 @@ func freeze(seconds: float) -> void:
 		return
 	_frozen_left = maxf(_frozen_left, seconds)
 	_update_animation()
+	if _frost == null:
+		_frost = FrostShell.new()
+		_frost.setup(body_box())
+		add_child(_frost)
 
 
 func is_frozen() -> bool:
@@ -213,20 +226,31 @@ const DEFAULT_HEAD_HEIGHT := 2.4
 const HEAD_SHARE := 0.82
 
 
-## Wie hoch über dem Boden der Kopf ist: aus der Hülle aller Meshes des Modells, in Metern
-## der Welt (model_scale steckt in den Transformen). Ein Skinned Mesh meldet die Hülle der
-## Ruhepose — für ein Ziel genau genug.
+## Wie hoch über dem Boden der Kopf ist: aus der Hülle des Körpers (`body_box`).
 func head_height() -> float:
-	var top := -INF
+	var box := body_box()
+	return DEFAULT_HEAD_HEIGHT if box.size == Vector3.ZERO else box.end.y * HEAD_SHARE
+
+
+## Die Hülle aller Meshes des Modells im Rahmen des Monsters, in Metern der Welt
+## (model_scale steckt in den Transformen). Ein Skinned Mesh meldet die Hülle der Ruhepose —
+## für Ziel und Eishülle genau genug. Ohne Modell: eine leere Hülle (Größe 0). Die Effekte
+## am Monster (Eis, Schlamm) zählen nicht mit.
+func body_box() -> AABB:
+	var box := AABB()
+	var found := false
 	for node in find_children("*", "MeshInstance3D", true, false):
 		var mi := node as MeshInstance3D
 		if mi == _placeholder or mi.mesh == null or not mi.visible:
 			continue
-		var box := global_transform.affine_inverse() * mi.global_transform * mi.get_aabb()
-		top = maxf(top, box.end.y)
-	if top == -INF or top <= 0.0:
-		return DEFAULT_HEAD_HEIGHT
-	return top * HEAD_SHARE
+		if (_frost != null and _frost.is_ancestor_of(mi)) or (_aura != null and _aura.is_ancestor_of(mi)):
+			continue
+		var part := global_transform.affine_inverse() * mi.global_transform * mi.get_aabb()
+		box = part if not found else box.merge(part)
+		found = true
+	if not found or box.end.y <= 0.0:
+		return AABB()
+	return box
 
 
 ## Wie schnell und wohin es gerade läuft (Einheiten je Sekunde Spielzeit): geradeaus auf die
@@ -274,8 +298,13 @@ func _physics_process(delta: float) -> void:
 		return
 	if is_frozen():
 		_frozen_left = maxf(0.0, _frozen_left - delta)
+		if _frost != null:
+			_frost.tick(_frozen_left)
 		if not is_frozen():
 			_update_animation()
+			if _frost != null:
+				_frost.shatter()
+				_frost = null
 		return
 	position.z += _speed * pace * delta
 	if position.z >= _target_z:
