@@ -1,44 +1,73 @@
 [
-  {
-	"id": "spell.first_letter",
-	"name": "Erster Buchstabe",
-	"description": "Zeigt den ersten Buchstaben der Lösung an.",
-	"effect": "reveal_first_letter",
-	"cooldown": 12.0,
-	"cost": 0
-  },
-  {
-	"id": "spell.grammar_hint",
-	"name": "Grammatikhinweis",
-	"description": "Zeigt Zeitform oder Wortart der geforderten Antwort.",
-	"effect": "show_grammar_hint",
-	"cooldown": 20.0,
-	"cost": 0
-  },
-  {
-	"id": "spell.slow_time",
-	"name": "Zeitlupe",
-	"description": "Verlangsamt alle Monster kurzzeitig.",
-	"effect": "slow_monsters",
-	"params": { "factor": 0.4, "duration": 4.0 },
-	"cooldown": 30.0,
-	"cost": 0
-  },
-  {
-	"id": "spell.freeze",
-	"name": "Einfrieren",
-	"description": "Friert das nächste Monster kurz ein.",
-	"effect": "freeze_nearest",
-	"params": { "duration": 3.0 },
-	"cooldown": 25.0,
-	"cost": 0
-  },
-  {
-	"id": "spell.retry",
-	"name": "Zweite Chance",
-	"description": "Erlaubt einen erneuten Versuch nach einer falschen Antwort.",
-	"effect": "retry_answer",
-	"cooldown": 40.0,
-	"cost": 0
-  }
+	{
+		"id": "spell.glimpse",
+		"name": "Drittes Auge",
+		"icon": "👁",
+		"description": "Die Monster auf dem Feld zeigen auch die anderen Bedeutungen ihres Worts.",
+		"effect": "reveal_alts",
+		"params": { "scope": "field" },
+		"price": 6
+	},
+	{
+		"id": "spell.insight",
+		"name": "Orakelblick",
+		"icon": "🔭",
+		"description": "Alle Monster dieser Welle zeigen auch die anderen Bedeutungen ihres Worts, auch die, die erst noch kommen.",
+		"effect": "reveal_alts",
+		"params": { "scope": "wave" },
+		"price": 15
+	},
+	{
+		"id": "spell.mire",
+		"name": "Sumpf",
+		"icon": "🐌",
+		"description": "Die Monster auf dem Feld laufen nur noch halb so schnell.",
+		"effect": "slow",
+		"params": { "scope": "field", "factor": 0.5 },
+		"price": 8
+	},
+	{
+		"id": "spell.lull",
+		"name": "Schwere Luft",
+		"icon": "💨",
+		"description": "Alle Monster dieser Welle laufen nur noch halb so schnell, auch die, die erst noch kommen.",
+		"effect": "slow",
+		"params": { "scope": "wave", "factor": 0.5 },
+		"price": 20
+	},
+	{
+		"id": "spell.frost",
+		"name": "Frost",
+		"icon": "❄",
+		"description": "Die Monster auf dem Feld frieren zehn Sekunden lang ein.",
+		"effect": "freeze",
+		"params": { "duration": 10.0 },
+		"price": 15
+	},
+	{
+		"id": "spell.thunder",
+		"name": "Donnerschlag",
+		"icon": "⚡",
+		"description": "Ein Blitz fegt alle Monster vom Feld. Sie bringen nichts ein, weder Erfahrung noch Gold, aber sie kommen auch nicht durch.",
+		"effect": "strike",
+		"price": 40
+	},
+	{
+		"id": "spell.mend",
+		"name": "Lebensquell",
+		"icon": "❤",
+		"description": "Die Festung bekommt 25 Leben zurück.",
+		"effect": "heal",
+		"params": { "amount": 25 },
+		"price": 12
+	},
+	{
+		"id": "spell.plate",
+		"name": "Eisenhaut",
+		"icon": "🛡",
+		"description": "Die Rüstung der Festung bekommt 25 Punkte zurück. Wirkt nur mit Rüstung aus dem Bollwerk.",
+		"effect": "armor",
+		"params": { "amount": 25 },
+		"price": 12
+	}
 ]

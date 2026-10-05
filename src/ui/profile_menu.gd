@@ -71,6 +71,7 @@ func _ready() -> void:
 	(%ExpertButton as Button).pressed.connect(
 			func(): get_tree().change_scene_to_file(SESSION_SETUP_SCENE))
 	(%SkillButton as Button).pressed.connect(_open_window.bind(ProfileBadge.SKILL_SCENE, %SkillButton))
+	(%SpellButton as Button).pressed.connect(_open_window.bind(ProfileBadge.SHOP_SCENE, %SpellButton))
 	(%StatsButton as Button).pressed.connect(_open_window.bind(ProfileBadge.STATS_SCENE, %StatsButton))
 	(%SettingsButton as Button).pressed.connect(_open_window.bind(SETTINGS_SCENE, %SettingsButton))
 	_badge.switch_pressed.connect(_back_to_intro)

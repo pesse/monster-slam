@@ -11,9 +11,10 @@ und lädt jede `.json`-Datei. Kategorien: `lexemes`, `lexeme_forms`,
 `lexeme_relations`, `sentences`, `sentence_lexemes`, `task_definitions`,
 `monster_task_rules`, `monsters`, `bosses`, `spells`, `skills`, `waves`.
 
-`spells` und `skills` sind **zwei Dinge**: Spells sind die aktiven Fähigkeiten mit
-Abklingzeit, Skills die Knoten der Fähigkeitsbäume. Warum sie so heißen und was das für
-`min_app_version` bedeutet, steht in `docs/adr/0003-skills-und-spells.md`.
+`spells` und `skills` sind **zwei Dinge**: Spells sind Zauber zum Verbrauchen, mit Gold
+gekauft und im Kampf eingesetzt (`docs/adr/0014-zauber-zum-verbrauchen.md`), Skills die
+Knoten der Fähigkeitsbäume. Warum sie so heißen und was das für `min_app_version` bedeutet,
+steht in `docs/adr/0003-skills-und-spells.md`.
 
 **Drei Roots, in Vorrangfolge** (`_roots()`): bei gleicher `id` gewinnt der spätere.
 
@@ -911,18 +912,45 @@ Kamera frei; die Äste darunter heben nur das Lauftempo (`walk_speed`, Anteile a
 | Neuer Boss | JSON in `data/bosses/` | nein |
 | Neue Welle | JSON in `data/waves/` | nein |
 | Neuer Zauber (Daten) | JSON in `data/spells/` | nein |
-| Neuer Zauber-*Effekt* (Verhalten) | Effect-Handler ergänzen (siehe unten) | nur additiv |
+| Neuer Zauber-*Effekt* (Verhalten) | `SpellCaster.EFFECTS` + je ein Zweig in `can_cast`/`cast` (siehe unten) | nur additiv |
 | Neuer Skill-Knoten oder ganzer Ast | JSON in `data/skills/` (`tier`/`branch`/`requires`/`effects`) | nein |
 | Neuer Baum | JSON in `data/skills/` (ein `kind: "tree"`-Kopf plus Knoten) | nein |
 | Neuer Skill-*Effekt-Schlüssel* | `SkillTree.EFFECT_KEYS` + ein `apply_skills`, das ihn liest | nur additiv |
 | Neue Mechanik | Neues System, das EventBus-Signale abonniert | nein |
 
-### Zauber-Effekte
-Ein Zauber trägt in den Daten ein `effect`-Feld (z. B. `slow_monsters`).
-Die reine Definition ist datengetrieben; Verhalten, das Code braucht, wird über
-ein Effekt-Handler-Muster ergänzt: jeder Effekt registriert sich selbst unter
-seinem `effect`-Schlüssel. Ein neuer Effekt = neuer Handler, keine Änderung an
-vorhandenen Handlern. (Noch zu implementieren — siehe `docs/ADDING_CONTENT.md`.)
+### Zauber (ADR 0014)
+Ein Zauber ist ein Verbrauchsgegenstand: `price` in Gold, `effect` aus
+`SpellCaster.EFFECTS`, `params` je Wirkung (Tabelle im ADR). Keine Abklingzeit.
+
+- **Vorrat** (`Inventory`, Autoload, `user://progress/<profil>_inventory.json`): nur die
+  Plätze in ihrer Reihenfolge. Die Zahl der Plätze wird gerechnet (`BASE_SLOTS` plus
+  `item_slots` aus `SkillBook.bonuses()`), ein leerer Platz rückt nicht nach, damit die
+  Taste bleibt. Bezahlt wird über `Inventory.wallet` (das Autoload `Wallet`, im Test eine
+  eigene Instanz).
+- **Laden** (`SpellShop`, `scenes/ui/spell_shop.tscn`, je Zauber eine quadratische Kachel
+  aus `spell_tile.tscn`; Beschreibung und Preis stehen im Hinweis, ein Klick kauft): über
+  „Zauber" im Hauptmenü und in der Knopfreihe der kompakten Plakette, nicht im Kampf.
+- **Einsatz** (`WaveRunner._use_spell`): Ziffer 1 bis n, aber nur bei leerem Antwortfeld
+  (`WaveRunner.spell_key`). Keine Antwort beginnt mit einer Ziffer — `build_packs.py`
+  prüft das (`check_no_digit_answers`). Im Bosskampf gibt es keine Zauber.
+- **Wirkung** (`SpellCaster`, ohne Bild): `can_cast` vor `cast`. Was nichts bewirken
+  würde, wird nicht verbraucht, der Platz zittert (`SpellSlots.refuse`). Dazwischen nimmt
+  der WaveRunner den Zauber aus dem Vorrat und sendet `spell_activated`, damit er in der
+  Spur vor seinen Folgen steht. `scope: wave` merkt sich der SpellCaster
+  (`wave_pace`, `wave_alts`) und gibt es über `on_spawn` jedem neuen Monster der Welle mit.
+- **Am Monster**: Verlangsamen über `Monster.pace` (der kleinere Faktor gewinnt), nie über
+  `Engine.time_scale`. Einfrieren zählt `_frozen_left` in Spielzeit herunter, Umriss
+  eisblau, Animation steht. `Monster.velocity()` kennt beides, der Vorhalt des Katapults
+  also auch. Die Alternativen (`prompt_alt` der Aufgabe) zeigt das Wortschild als zweite
+  Zeile (`WordPlate.alt_line`, Signal `alts_revealed`).
+- **Donnerschlag** nimmt jedes Monster auf dem Feld über `WaveRunner._dismiss` vom Feld,
+  denselben Weg wie das Katapult, und sendet `monster_struck`: `GameState` zählt
+  `wave_resolved`, die Spur schreibt `struck`, sonst nichts — kein Lernstand, keine
+  Erfahrung, kein Gold, kein Eintrag in der Auflösung.
+- Kein Zauber verschiebt `spawned_at_ms` oder geht in die Planung einer Welle ein (`t - c`).
+- Spur: `{"e":"spell","spell","wave"}` und `{"e":"struck","id","lex","prompt"}`.
+- Werkbänke: `battle_theme_lab -- --shoot --hud` (Vorrat), `--plates` (Alternativen),
+  `menu_lab -- --shoot --spells [--stock=…]` (Laden).
 
 ## Datenpersistenz
 

@@ -31,9 +31,22 @@ layout_mode = 0
 mouse_filter = 2
 theme_type_variation = &"HudWordPlate"
 
-[node name="Text" type="Label" parent="Frame"]
+[node name="Lines" type="VBoxContainer" parent="Frame"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"HudStack"
+
+[node name="Text" type="Label" parent="Frame/Lines"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HudPlateText"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Alt" type="Label" parent="Frame/Lines"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"HudPlateAlt"
 horizontal_alignment = 1
 vertical_alignment = 1

@@ -49,7 +49,8 @@ blaue Bogen um das Bild zeigt, wie weit du im Level bist; am Zeiger steht es gen
 („166 / 400 XP bis Level 5“), darunter, wie viele Skillpunkte du noch ausgeben kannst. Links daneben stehen dein Name und dein Gold, ganz links der
 Pfeil **„Profil wechseln“** (zurück zu „Wer spielt?“). In der Bibliothek und auf
 den Karten steht nur noch dein Bild im Ring, kleiner; Name und Gold stehen dann am Zeiger.
-Links daneben liegen drei Knöpfe: **Profil wechseln**, **Fähigkeiten** und **Statistik** —
+Links daneben liegen vier Knöpfe: **Profil wechseln**, **Fähigkeiten**, **Zauber** und
+**Statistik** —
 so kommst du auch von dort hin, ohne zurück ins Menü zu gehen.
 
 Die Knöpfe links:
@@ -57,6 +58,7 @@ Die Knöpfe links:
 - **„Spielen“** (golden) – in die Bibliothek und von dort über die Landkarte des Buchs in ein
   Level oder zum Boss einer Unit (Kapitel 10).
 - **„Fähigkeiten“** – Skillpunkte ausgeben (Kapitel 11).
+- **„Zauber“** – Zauber mit Gold kaufen (Kapitel 5, „Zauber“).
 - **„Statistik“** – dein Lernstand (Kapitel 12).
 - **„Inhalte“** – Vokabel-Packs holen (Kapitel 15).
 - **„Einstellungen“** – Profil, Tempo, Protokoll, Melden (Kapitel 13).
@@ -188,6 +190,8 @@ langsam tippen.
   - Darunter die **besiegten** Monster in diesem Lauf und mit dem goldenen Buch, wie viele
     Aufgaben du **in dieser Sitzung gemeistert** hast. Das Buch erscheint erst, wenn es
     die erste gibt.
+- **Links unten** stehen deine Zauberplätze, je mit Ziffer, Zeichen und Anzahl (siehe
+  „Zauber“ weiter unten).
 
 ### Was du tust
 
@@ -226,6 +230,33 @@ macht. Stehen im Lehrbuch Alternativen mit Schrägstrich („einen Bus/eine Fäh
 „turn left/right“), reicht eine davon: „einen Bus nehmen“ ist vollständig.
 
 Dasselbe Wort steht nie zweimal gleichzeitig auf dem Feld.
+
+### Zauber
+
+Zauber kaufst du mit Gold unter **„Zauber“** im Hauptmenü oder über den Knopf an der
+kleinen Plakette auf den Karten. Im Kampf kann man nicht einkaufen. Ein Zauber hilft
+einmal und ist dann verbraucht. Er bringt dir nichts beim Lernen: keine Erfahrung, kein
+Gold, kein gemeistertes Wort. Er ist für den Moment, in dem eine Welle zu kippen droht.
+
+Du hast **vier Plätze**. Gleiche Zauber liegen auf einem Platz übereinander, beliebig
+viele; für einen anderen Zauber brauchst du einen freien Platz. Im Kampf stehen die Plätze
+links unten, mit Ziffer und Anzahl. **Drück die Ziffer des Platzes (1 bis 4), solange das
+Antwortfeld leer ist**, dann wirkt der Zauber. Steht schon etwas im Feld, ist die Ziffer
+ein getipptes Zeichen. Würde ein Zauber gerade nichts bewirken (die Festung ist schon heil,
+kein Monster ist auf dem Feld), zittert der Platz, und der Zauber bleibt dir. Im
+Bosskampf gibt es keine Zauber.
+
+- **Drittes Auge / Orakelblick** – die Monster zeigen unter ihrem Wort auch die anderen
+  Bedeutungen („auch: …“). Drittes Auge wirkt auf die Monster auf dem Feld, Orakelblick auf
+  die ganze Welle, auch auf die, die erst noch kommen. Richtig ist richtig, auch mit Hilfe.
+- **Sumpf / Schwere Luft** – die Monster laufen halb so schnell, wieder auf dem Feld oder
+  für die ganze Welle.
+- **Frost** – die Monster auf dem Feld frieren zehn Sekunden lang ein.
+- **Donnerschlag** – ein Blitz fegt alle Monster vom Feld. Sie zählen als erledigt, aber
+  nicht als besiegt: keine Punkte, keine Erfahrung, kein Gold, und an der Festung kommen sie
+  auch nicht an.
+- **Lebensquell** – die Festung bekommt 25 HP zurück.
+- **Eisenhaut** – die Rüstung füllt sich um 25 auf (nur mit Rüstung, Kapitel 11).
 
 ### Ich-Sicht
 
@@ -467,8 +498,8 @@ Gold und Erfahrung bleiben dir über den Lauf hinaus, aber sie meinen Verschiede
 
 - Du verdienst es in den Schatzkisten am Ende einer Welle.
 - Es wird sofort gespeichert, sobald die Kiste offen ist.
-- Du gibst es im Fähigkeiten-Screen aus, um gelernte Fähigkeiten zurückzunehmen
-  (Kapitel 11).
+- Du gibst es für Zauber aus (Kapitel 5, „Zauber“) und im Fähigkeiten-Screen, um
+  gelernte Fähigkeiten zurückzunehmen (Kapitel 11).
 
 ### Erfahrung (XP)
 

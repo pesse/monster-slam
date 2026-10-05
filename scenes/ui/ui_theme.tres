@@ -1,5 +1,6 @@
 [gd_resource type="Theme" format=3 uid="uid://cl05typg0mkgi"]
 
+[ext_resource type="Texture2D" path="res://assets/ui/frames/silver_gold/frame@2x.webp" id="silver_gold_frame_tex"]
 [ext_resource type="Texture2D" uid="uid://c66m10uwdhhbi" path="res://assets/ui/windows/tab_highlighted.webp" id="card_gold_tex"]
 [ext_resource type="FontFile" uid="uid://80iavrpdub4p" path="res://assets/fonts/fira_sans/FiraSans-Bold.ttf" id="fira_bold"]
 [ext_resource type="FontFile" uid="uid://bx3d1j6e813vy" path="res://assets/fonts/fira_sans/FiraSans-SemiBold.ttf" id="fira_semibold"]
@@ -561,6 +562,101 @@ texture_margin_left = 8.0
 texture_margin_top = 8.0
 texture_margin_right = 8.0
 texture_margin_bottom = 8.0
+
+[sub_resource type="StyleBox" id="spell_tile"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
+script = ExtResource("frame_style")
+texture = ExtResource("silver_gold_frame_tex")
+slice_left = 64.0
+slice_top = 64.0
+slice_right = 64.0
+slice_bottom = 64.0
+scale = 0.5
+modulate = Color(1, 1, 1, 1)
+crop_middle = true
+fill = Color(0.06, 0.1, 0.2, 0.96)
+fill_inset = 14.0
+
+[sub_resource type="StyleBox" id="spell_tile_hover"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
+script = ExtResource("frame_style")
+texture = ExtResource("silver_gold_frame_tex")
+slice_left = 64.0
+slice_top = 64.0
+slice_right = 64.0
+slice_bottom = 64.0
+scale = 0.5
+modulate = Color(1.25, 1.15, 0.85, 1)
+crop_middle = true
+fill = Color(0.1, 0.16, 0.3, 0.96)
+fill_inset = 14.0
+
+[sub_resource type="StyleBox" id="spell_tile_pressed"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
+script = ExtResource("frame_style")
+texture = ExtResource("silver_gold_frame_tex")
+slice_left = 64.0
+slice_top = 64.0
+slice_right = 64.0
+slice_bottom = 64.0
+scale = 0.5
+modulate = Color(0.9, 0.85, 0.75, 1)
+crop_middle = true
+fill = Color(0.04, 0.07, 0.15, 0.96)
+fill_inset = 14.0
+
+[sub_resource type="StyleBox" id="spell_tile_disabled"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
+script = ExtResource("frame_style")
+texture = ExtResource("silver_gold_frame_tex")
+slice_left = 64.0
+slice_top = 64.0
+slice_right = 64.0
+slice_bottom = 64.0
+scale = 0.5
+modulate = Color(0.55, 0.57, 0.62, 1)
+crop_middle = true
+fill = Color(0.05, 0.07, 0.12, 0.9)
+fill_inset = 14.0
+
+[sub_resource type="StyleBox" id="spell_slot"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = 12.0
+content_margin_top = 12.0
+content_margin_right = 12.0
+content_margin_bottom = 12.0
+script = ExtResource("frame_style")
+texture = ExtResource("silver_gold_frame_tex")
+slice_left = 64.0
+slice_top = 64.0
+slice_right = 64.0
+slice_bottom = 64.0
+scale = 0.375
+modulate = Color(1, 1, 1, 1)
+crop_middle = true
+fill = Color(0.06, 0.1, 0.2, 0.96)
+fill_inset = 14.0
 
 [sub_resource type="StyleBox" id="hud_legend"]
 resource_local_to_scene = false
@@ -1367,6 +1463,9 @@ HudNamePlate/base_type = &"PanelContainer"
 HudNamePlate/styles/panel = SubResource("hud_name")
 HudPanel/base_type = &"PanelContainer"
 HudPanel/styles/panel = SubResource("hud_panel")
+HudPlateAlt/base_type = &"HudText"
+HudPlateAltLarge/base_type = &"HudText"
+HudPlateAltLarge/font_sizes/font_size = 20
 HudPlateText/base_type = &"HudText"
 HudPlateText/font_sizes/font_size = 18
 HudPlateTextLarge/base_type = &"HudText"
@@ -1380,6 +1479,9 @@ HudRound/styles/hover = SubResource("hud_round_hover")
 HudRound/styles/hover_pressed = SubResource("hud_round_pressed")
 HudRound/styles/normal = SubResource("hud_round")
 HudRound/styles/pressed = SubResource("hud_round_pressed")
+HudSlotGrid/base_type = &"GridContainer"
+HudSlotGrid/constants/h_separation = 8
+HudSlotGrid/constants/v_separation = 8
 HudStack/base_type = &"BoxContainer"
 HudStack/constants/separation = 0
 HudTallyRow/base_type = &"BoxContainer"
@@ -1537,6 +1639,21 @@ Shout/constants/outline_size = 16
 Shout/font_sizes/font_size = 72
 SkillIcon/base_type = &"Label"
 SkillIcon/font_sizes/font_size = 26
+SpellTile/base_type = &"Button"
+SpellTile/colors/font_disabled_color = Color(0.5, 0.53, 0.6, 1)
+SpellTile/styles/disabled = SubResource("spell_tile_disabled")
+SpellTile/styles/focus = SubResource("spell_tile_hover")
+SpellTile/styles/hover = SubResource("spell_tile_hover")
+SpellTile/styles/hover_pressed = SubResource("spell_tile_pressed")
+SpellTile/styles/normal = SubResource("spell_tile")
+SpellTile/styles/pressed = SubResource("spell_tile_pressed")
+SpellTileGrid/base_type = &"GridContainer"
+SpellTileGrid/constants/h_separation = 16
+SpellTileGrid/constants/v_separation = 16
+SpellSlotFrame/base_type = &"PanelContainer"
+SpellSlotFrame/styles/panel = SubResource("spell_slot")
+SpellTileIcon/base_type = &"Label"
+SpellTileIcon/font_sizes/font_size = 56
 SpellingAccent/base_type = &"Label"
 SpellingAccent/colors/font_color = Color(0.86, 0.16, 0.1, 1)
 SpellingAccent/colors/font_outline_color = Color(1, 1, 1, 1)

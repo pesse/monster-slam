@@ -7,6 +7,8 @@ extends Node3D
 
 ## Wird ausgelöst, wenn dieses Monster die Festung erreicht (Node-Handling im WaveRunner).
 signal reached_goal(monster: Monster)
+## Das Schild soll jetzt auch die Alternativen der Aufgabe zeigen (Zauber, ADR 0014).
+signal alts_revealed
 
 var monster_def: Dictionary = {}
 var task: Dictionary = {}
@@ -31,12 +33,25 @@ var screen_sized_label := false
 const PLATE_GROUP := &"word_plate"
 
 var _speed: float = 2.0
+## Anteil des eigenen Tempos, mit dem es läuft — unter 1 nach einem Zauber (`slow_to`).
+## Das Tempo selbst bleibt die Schwierigkeit; das hier bremst nur.
+var pace := 1.0
+## Zeigt das Schild die Alternativen der Aufgabe (`reveal_alts`)?
+var alts_shown := false
+## Wie lange es noch eingefroren ist (s Spielzeit).
+var _frozen_left := 0.0
+var _anim: AnimationPlayer
+var _outline: ShaderMaterial
+var _outline_color := Color.WHITE
 var _target_z: float = 0.0
 var _done: bool = false
 ## Was sichtbar ist — das Modell oder der Platzhalter. `flinch` wackelt nur daran, damit
 ## Position, Schild und Bahn unberührt bleiben.
 var _body: Node3D
 var _flinch: Tween = null
+
+## So färbt sich der Rand, solange es eingefroren ist.
+const FROZEN_OUTLINE := Color(0.62, 0.86, 1.0)
 
 ## Wortart-Outline: Inverted-Hull-Shader, Farbe je Wortart (siehe WordTypePalette).
 const OUTLINE_SHADER := preload("res://assets/shaders/monster_outline.gdshader")
@@ -74,6 +89,52 @@ func prompt() -> String:
 ## Die Farbe der Wortart, wie die Outline am Modell (WordTypePalette).
 func word_color() -> Color:
 	return WordTypePalette.color_for(str(task.get("lexeme_type", "")))
+
+
+## Die Alternativen der Aufgabe („go, auch: walk"), wie sie das Reveal zeigt. Nur
+## Übersetzungen haben welche.
+func alts() -> Array:
+	return task.get("prompt_alt", []) as Array
+
+
+## Zeigt die Alternativen am Schild. False, wenn es keine gibt oder sie schon stehen.
+func show_alts() -> bool:
+	if alts_shown or alts().is_empty():
+		return false
+	alts_shown = true
+	alts_revealed.emit()
+	return true
+
+
+## Bremst auf `factor` des eigenen Tempos. Zwei Bremsen multiplizieren sich nicht: es
+## gilt die stärkere. False, wenn es schon so langsam ist.
+func slow_to(factor: float) -> bool:
+	if factor >= pace:
+		return false
+	pace = clampf(factor, 0.0, 1.0)
+	_update_animation()
+	return true
+
+
+## Friert `seconds` lang ein (Spielzeit, steht also auch in der Pause). Ein zweites
+## Einfrieren verlängert nicht über das längere hinaus.
+func freeze(seconds: float) -> void:
+	if _done:
+		return
+	_frozen_left = maxf(_frozen_left, seconds)
+	_update_animation()
+
+
+func is_frozen() -> bool:
+	return _frozen_left > 0.0
+
+
+func _update_animation() -> void:
+	if _anim != null:
+		_anim.speed_scale = 0.0 if is_frozen() else pace
+	if _outline != null:
+		_outline.set_shader_parameter("outline_color",
+				FROZEN_OUTLINE if is_frozen() else _outline_color)
 
 
 ## Der Punkt über dem Kopf, auf den der Zipfel des Wortschilds zeigt.
@@ -119,6 +180,8 @@ func _apply_model() -> void:
 ## Die Welt-Dicke bleibt trotz model_scale konstant, indem sie herausgerechnet wird.
 func _apply_outline(root: Node3D, color: Color, model_scale: float) -> void:
 	var mat := ShaderMaterial.new()
+	_outline = mat
+	_outline_color = color
 	mat.shader = OUTLINE_SHADER
 	mat.set_shader_parameter("outline_color", color)
 	mat.set_shader_parameter("outline_width", OUTLINE_WORLD_WIDTH / maxf(model_scale, 0.001))
@@ -136,6 +199,7 @@ func _setup_animation(model_root: Node3D) -> void:
 	if lib == null:
 		return
 	var anim := RigAnimations.attach_player(model_root, {"": lib})
+	_anim = anim
 	for candidate in ["Walking_A", "Walking_B", "Walking_C", "Running_A"]:
 		if lib.has_animation(candidate):
 			lib.get_animation(candidate).loop_mode = Animation.LOOP_LINEAR
@@ -168,7 +232,7 @@ func head_height() -> float:
 ## Wie schnell und wohin es gerade läuft (Einheiten je Sekunde Spielzeit): geradeaus auf die
 ## Festung zu, oder gar nicht, wenn es steht. Das Wachkatapult hält damit vor.
 func velocity() -> Vector3:
-	return Vector3.ZERO if _done else Vector3(0.0, 0.0, _speed)
+	return Vector3.ZERO if _done or is_frozen() else Vector3(0.0, 0.0, _speed * pace)
 
 
 ## Bleibt stehen, wo es ist, und erreicht die Festung nicht mehr — getroffen, aber das
@@ -208,7 +272,12 @@ func _lean(rest: Transform3D, axis: Vector3, t: float) -> void:
 func _physics_process(delta: float) -> void:
 	if _done:
 		return
-	position.z += _speed * delta
+	if is_frozen():
+		_frozen_left = maxf(0.0, _frozen_left - delta)
+		if not is_frozen():
+			_update_animation()
+		return
+	position.z += _speed * pace * delta
 	if position.z >= _target_z:
 		_done = true
 		EventBus.monster_reached_fortress.emit(monster_def, task, damage)

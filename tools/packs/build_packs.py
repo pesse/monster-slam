@@ -317,6 +317,42 @@ def check_references(cfg: dict, sources: dict[str, Path], per_pack: dict[str, li
         )
 
 
+def digit_answer_problems(base: Path, files: list[str]) -> list[str]:
+    """Keine Antwort im Wellenkampf beginnt mit einer Ziffer (ADR 0014).
+
+    Dort setzt eine Ziffer bei leerem Antwortfeld einen Zauber ein, statt getippt zu werden.
+    Geprueft werden, woraus Aufgaben und Antworten entstehen: die `lemma*`-Felder der Lexeme
+    (auch die Listen der Alternativen) und `value` der Formen. Saetze (Boss) nicht — dort
+    gibt es keine Zauber, und Jahreszahlen gehoeren hinein.
+    """
+    problems: list[str] = []
+    for rel in files:
+        category = rel.split("/")[0]
+        if category not in ("lexemes", "lexeme_forms"):
+            continue
+        for entry in load_entries(base, rel):
+            if not isinstance(entry, dict):
+                continue
+            for field, value in entry.items():
+                if not (field.startswith("lemma") or (category == "lexeme_forms" and field == "value")):
+                    continue
+                for text in value if isinstance(value, list) else [value]:
+                    if isinstance(text, str) and text.strip()[:1].isdigit():
+                        problems.append(f"  {rel}: '{entry.get('id', '?')}' — {field} '{text}'")
+    return problems
+
+
+def check_no_digit_answers(cfg: dict, sources: dict[str, Path], per_pack: dict[str, list[str]]) -> None:
+    problems: list[str] = []
+    for pack_id, pack in cfg["packs"].items():
+        problems += digit_answer_problems(sources[pack["root"]], per_pack[pack_id])
+    if problems:
+        raise BuildError(
+            "Antwort beginnt mit einer Ziffer — im Kampf ist die Ziffer bei leerem Feld ein "
+            "Zauber (ADR 0014):\n" + "\n".join(problems)
+        )
+
+
 # --- Packen ----------------------------------------------------------------------------
 
 
@@ -416,6 +452,7 @@ def main() -> int:
         check_categories_match_installer()
         per_pack = assign(cfg, sources)
         check_references(cfg, sources, per_pack)
+        check_no_digit_answers(cfg, sources, per_pack)
         index = {"schemaVersion": INDEX_SCHEMA_VERSION, "packs": []}
 
         for pack_id, pack in cfg["packs"].items():

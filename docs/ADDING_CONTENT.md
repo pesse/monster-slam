@@ -298,21 +298,28 @@ ausgewertet.
 Eine Boss-Welle nutzt statt `spawns` das Feld `"boss": "<boss-id>"`.
 
 ## Zauber hinzufügen → `data/spells/…json`
-Zauber sind die **aktiven** Fähigkeiten mit Abklingzeit — nicht zu verwechseln mit den
-Skills des Fähigkeitsbaums weiter unten (`docs/adr/0003-skills-und-spells.md`).
+Zauber sind Verbrauchsgegenstände: im Laden mit Gold gekauft, im Kampf mit der Ziffer
+ihres Platzes eingesetzt, danach weg (`docs/adr/0014-zauber-zum-verbrauchen.md`). Nicht zu
+verwechseln mit den Skills des Fähigkeitsbaums weiter unten.
 ```json
 {
-  "id": "spell.highlight_word",
-  "name": "Wort hervorheben",
-  "description": "Hebt ein schwieriges Wort hervor.",
-  "effect": "highlight_word",
-  "cooldown": 18.0,
-  "cost": 0
+  "id": "spell.frost",
+  "name": "Frost",
+  "description": "Die Monster auf dem Feld frieren zehn Sekunden lang ein.",
+  "icon": "❄",
+  "effect": "freeze",
+  "params": { "duration": 10.0 },
+  "price": 15
 }
 ```
-Nutzt ein Zauber einen **neuen** `effect`, muss zusätzlich ein Effekt-Handler
-für diesen Schlüssel ergänzt werden (rein additiv, bestehende Handler bleiben
-unberührt). Verwendet er einen vorhandenen Effekt, genügt die JSON-Datei.
+`description` steht im Laden und spricht den Spieler an; `icon` ist ein Zeichen, das die
+Schrift kennt (im Laden prüfen: `menu_lab -- --shoot --spells`). Die Wirkungen und ihre
+`params` stehen im ADR: `reveal_alts` und `slow` mit `scope` (`field` oder `wave`), `slow`
+dazu `factor`, `freeze` mit `duration`, `strike` ohne, `heal` und `armor` mit `amount`.
+Ein vorhandener Effekt braucht nur die JSON-Datei. Ein **neuer** `effect` kommt in
+`SpellCaster.EFFECTS` und bekommt je einen Zweig in `can_cast` (bewirkt er gerade etwas?)
+und `cast`; `tests/spell_caster_test.gd` prüft, dass jeder Zauber der Daten einen
+bekannten Effekt hat. Ein neues Feld heißt: `min_app_version` des `game`-Packs heben.
 
 ## Skill-Knoten hinzufügen → `data/skills/…json`
 Eine Datei je Baum. Der erste Eintrag ist der Baum-Kopf, die übrigen sind seine Knoten:

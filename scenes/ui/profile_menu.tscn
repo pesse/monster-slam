@@ -96,7 +96,7 @@ layout_mode = 2
 layout_mode = 2
 
 [node name="Logo" type="TextureRect" parent="Slide/MenuPage/Margin/Layout/Left"]
-custom_minimum_size = Vector2(352, 168)
+custom_minimum_size = Vector2(352, 144)
 layout_mode = 2
 texture = ExtResource("4_logo")
 expand_mode = 1
@@ -104,7 +104,7 @@ stretch_mode = 5
 
 [node name="PlayButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Left"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(352, 64)
+custom_minimum_size = Vector2(352, 56)
 layout_mode = 2
 theme_type_variation = &"MainMenuPlay"
 text = "SPIELEN"
@@ -114,7 +114,7 @@ expand_icon = true
 
 [node name="SkillButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Left"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(352, 64)
+custom_minimum_size = Vector2(352, 56)
 layout_mode = 2
 theme_type_variation = &"MainMenuButton"
 text = "FÄHIGKEITEN"
@@ -122,9 +122,19 @@ icon = ExtResource("6_skills")
 alignment = 0
 expand_icon = true
 
+[node name="SpellButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Left"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(352, 56)
+layout_mode = 2
+theme_type_variation = &"MainMenuButton"
+text = "ZAUBER"
+icon = ExtResource("8_content")
+alignment = 0
+expand_icon = true
+
 [node name="StatsButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Left"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(352, 64)
+custom_minimum_size = Vector2(352, 56)
 layout_mode = 2
 theme_type_variation = &"MainMenuButton"
 text = "STATISTIK"
@@ -134,7 +144,7 @@ expand_icon = true
 
 [node name="ContentButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Left"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(352, 64)
+custom_minimum_size = Vector2(352, 56)
 layout_mode = 2
 theme_type_variation = &"MainMenuButton"
 text = "INHALTE"
@@ -144,7 +154,7 @@ expand_icon = true
 
 [node name="SettingsButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Left"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(352, 64)
+custom_minimum_size = Vector2(352, 56)
 layout_mode = 2
 theme_type_variation = &"MainMenuButton"
 text = "EINSTELLUNGEN"

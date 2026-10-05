@@ -1,0 +1,217 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/ui/spell_shop.gd" id="1_shop"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/window_surface.webp" id="2_surface"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/close.webp" id="3_close"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/close_hover.webp" id="4_close_hover"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/close_pressed.webp" id="5_close_pressed"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/title_joint_left.webp" id="6_joint_left"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/title_joint_right.webp" id="7_joint_right"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/content.webp" id="8_icon"]
+
+[ext_resource type="Texture2D" path="res://assets/ui/statistics/icons/gold_coins.webp" id="gold_icon"]
+
+[node name="SpellShop" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_shop")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.03, 0.06, 0.6)
+
+[node name="Window" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+
+[node name="Frame" type="PanelContainer" parent="Window"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"GameWindow"
+
+[node name="Surface" type="TextureRect" parent="Window"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 9.0
+offset_top = 9.0
+offset_right = -9.0
+offset_bottom = -9.0
+mouse_filter = 2
+texture = ExtResource("2_surface")
+expand_mode = 1
+stretch_mode = 1
+
+[node name="Layout" type="VBoxContainer" parent="Window"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TitleBar" type="PanelContainer" parent="Window/Layout"]
+layout_mode = 2
+theme_type_variation = &"WindowTitleBar"
+
+[node name="Header" type="HBoxContainer" parent="Window/Layout/TitleBar"]
+layout_mode = 2
+theme_type_variation = &"ScreenStack"
+
+[node name="TitleIcon" type="TextureRect" parent="Window/Layout/TitleBar/Header"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("8_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Title" type="Label" parent="Window/Layout/TitleBar/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"WindowTitle"
+text = "ZAUBER"
+vertical_alignment = 1
+
+[node name="CloseButton" type="TextureButton" parent="Window/Layout/TitleBar/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 4
+texture_filter = 4
+texture_normal = ExtResource("3_close")
+texture_pressed = ExtResource("5_close_pressed")
+texture_hover = ExtResource("4_close_hover")
+texture_focused = ExtResource("4_close_hover")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Content" type="MarginContainer" parent="Window/Layout"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_type_variation = &"WindowContent"
+
+[node name="Body" type="VBoxContainer" parent="Window/Layout/Content"]
+layout_mode = 2
+theme_type_variation = &"ScreenStack"
+
+[node name="StockRow" type="HBoxContainer" parent="Window/Layout/Content/Body"]
+layout_mode = 2
+theme_type_variation = &"ScreenStack"
+
+[node name="StockLabel" type="Label" parent="Window/Layout/Content/Body/StockRow"]
+layout_mode = 2
+theme_type_variation = &"SectionTitle"
+text = "Dein Vorrat"
+vertical_alignment = 1
+
+[node name="Stock" type="GridContainer" parent="Window/Layout/Content/Body/StockRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudSlotGrid"
+columns = 4
+
+[node name="StockNote" type="Label" parent="Window/Layout/Content/Body/StockRow"]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"Hint"
+text = "Im Kampf setzt die Ziffer eines Platzes seinen Zauber ein, solange das Antwortfeld leer ist."
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="GoldRow" type="HBoxContainer" parent="Window/Layout/Content/Body/StockRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Tight"
+
+[node name="GoldIcon" type="TextureRect" parent="Window/Layout/Content/Body/StockRow/GoldRow"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("gold_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Gold" type="Label" parent="Window/Layout/Content/Body/StockRow/GoldRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatGold"
+text = "0"
+vertical_alignment = 1
+
+[node name="Rule" type="HSeparator" parent="Window/Layout/Content/Body"]
+layout_mode = 2
+
+[node name="OfferScroll" type="ScrollContainer" parent="Window/Layout/Content/Body"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Gutter" type="MarginContainer" parent="Window/Layout/Content/Body/OfferScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ScrollGutter"
+
+[node name="Offers" type="GridContainer" parent="Window/Layout/Content/Body/OfferScroll/Gutter"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+theme_type_variation = &"SpellTileGrid"
+columns = 4
+
+[node name="JointLeft" type="TextureRect" parent="Window"]
+layout_mode = 0
+offset_top = 51.0
+offset_right = 24.0
+offset_bottom = 75.0
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("6_joint_left")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="JointRight" type="TextureRect" parent="Window"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -24.0
+offset_top = 51.0
+offset_bottom = 75.0
+grow_horizontal = 0
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("7_joint_right")
+expand_mode = 1
+stretch_mode = 5

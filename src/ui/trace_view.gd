@@ -80,6 +80,15 @@ static func describe(line: Dictionary, tasks: Dictionary = {}) -> Dictionary:
 			return _entry("🪨 Katapult: %s" % str(line.get("prompt", "")), "Hint",
 					{"title": "Vom Wachkatapult abgeschossen",
 					"body": "Die Aufgabe war schon gemeistert.", "note": str(line.get("id", ""))})
+		"struck":
+			return _entry("⚡ Donnerschlag: %s" % str(line.get("prompt", "")), "Hint",
+					{"title": "Vom Donnerschlag getroffen",
+					"body": "Erledigt, aber nicht beantwortet.", "note": str(line.get("id", ""))})
+		"spell":
+			var spell := ContentRegistry.get_entry("spells", str(line.get("spell", "")))
+			return _entry("✨ Zauber: %s" % str(spell.get("name", line.get("spell", ""))), "",
+					{"title": str(spell.get("name", line.get("spell", ""))),
+					"body": str(spell.get("description", "")), "note": str(line.get("spell", ""))})
 		"mastered":
 			var id := str(line.get("id", ""))
 			var prompt := str((tasks.get(id, {}) as Dictionary).get("prompt", id))

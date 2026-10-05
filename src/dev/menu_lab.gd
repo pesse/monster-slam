@@ -16,6 +16,10 @@ extends Node
 ##     … -- --shoot --stats              drückt „Statistik": das Fenster über der Kulisse
 ##     … -- --shoot --stats=close        … und schließt es wieder; druckt, wer den Fokus hat
 ##     … -- --shoot --content            drückt „Inhalte": das Fenster über der Kulisse
+##     … -- --shoot --spells             drückt „Zauber": der Laden über der Kulisse (auf einer
+##                                       Karte über die Knopfreihe der Plakette)
+##     … -- --shoot … --stock=<id>:<n>,…  Vorrat für das Bild, nur im Speicher
+##                                       (z. B. --stock=spell.frost:3,,spell.mend:1)
 ##     … -- --shoot --settings[=<reiter>] drückt „Einstellungen", Reiter 1–3 (Profil, Melden,
 ##                                       Protokoll)
 ##     … -- --shoot --badge-hint         die Karte am Medaillon der Plakette (Level, XP, Punkte)
@@ -71,6 +75,13 @@ func _ready() -> void:
 	if not _arg("gold").is_empty():
 		Wallet.unlimited_gold = false
 		Wallet.gold = int(_arg("gold"))
+	if _has_arg("stock") or not _arg("stock").is_empty():
+		# Nur im Speicher wie Name und Gold: ohne buy/take schreibt Inventory nichts.
+		Inventory.slots.clear()
+		for part in _arg("stock").split(","):
+			var bits := part.split(":")
+			Inventory.slots.append({} if bits.size() < 2 \
+					else {"id": bits[0], "count": int(bits[1])})
 	ProfileMenu.intro_done = not _has_arg("intro")
 	var screen := (load(path) as PackedScene).instantiate()
 	add_child(screen)
@@ -111,6 +122,11 @@ func _ready() -> void:
 		var stats_button := screen.find_child("ProfileBadge", true, false) \
 				.get_node("%StatsButton") as Button
 		get_tree().create_timer(0.5).timeout.connect(func(): stats_button.pressed.emit())
+	if _has_arg("spells"):
+		var spell_button := screen.get_node("%SpellButton") as Button \
+				if screen is ProfileMenu \
+				else screen.find_child("ProfileBadge", true, false).get_node("%SpellButton") as Button
+		get_tree().create_timer(0.5).timeout.connect(func(): spell_button.pressed.emit())
 	if screen is ProfileMenu and _has_arg("updates"):
 		_force_updates(screen)
 		# Nach dem Menü verbunden, läuft also nach dessen Abzeichen: die echte Prüfung
@@ -192,6 +208,8 @@ func _shoot() -> void:
 		what += "_h" + _arg("hour")
 	if _has_arg("content"):
 		what += "_content"
+	if _has_arg("spells"):
+		what += "_spells"
 	if _has_arg("updates"):
 		what += "_updates"
 	if _has_arg("settings") or not _arg("settings").is_empty():

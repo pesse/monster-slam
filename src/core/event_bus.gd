@@ -56,11 +56,12 @@ signal boss_ended(boss_id: String, won: bool)
 ## zusätzlich zu `boss_ended`, nicht statt ihm.
 signal boss_won(boss_id: String, unit_key: String)
 
-## --- Zauber (aktive Fähigkeiten mit Abklingzeit) ---
+## --- Zauber (Verbrauchsgegenstände, ADR 0014) ---
 ## Nicht zu verwechseln mit den Skills des Fähigkeitsbaums: die sind dauerhaft, werden
 ## mit Skillpunkten gekauft und wirken über SkillBook auf den Lauf (kein Signal nötig).
+## Ein Zauber aus dem Vorrat hat gewirkt und ist verbraucht. Ein Zauber, der nichts
+## bewirkt hätte, wird nicht verbraucht und meldet sich nicht.
 signal spell_activated(spell_id: String)
-signal spell_ready(spell_id: String)
 
 ## --- Lauf (Sitzung) ---
 ## Ein neuer Lauf beginnt: Kampfszene betreten, GameState zurückgesetzt. Die Welle
@@ -85,3 +86,6 @@ signal lexeme_mastered(lexeme_id: String)
 ## Das Wachkatapult (Bollwerk) hat ein Monster mit gemeisterter Aufgabe abgeschossen. Es ist
 ## erledigt, aber nicht beantwortet: kein Lernstand, keine Erfahrung, keine Punkte.
 signal monster_catapulted(task: Dictionary)
+## Der Donnerschlag (Zauber, ADR 0014) hat ein Monster vom Feld genommen. Wie beim Katapult
+## erledigt, aber nicht beantwortet — ein eigenes Signal, damit die Spur die beiden trennt.
+signal monster_struck(task: Dictionary)

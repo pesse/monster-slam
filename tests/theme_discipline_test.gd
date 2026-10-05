@@ -145,6 +145,7 @@ func test_scenes_reference_only_declared_variations() -> void:
 	declared.append_array(theme.get_type_variation_list("PanelContainer"))
 	declared.append_array(theme.get_type_variation_list("ProgressBar"))
 	declared.append_array(theme.get_type_variation_list("FlowContainer"))
+	declared.append_array(theme.get_type_variation_list("GridContainer"))
 	declared.append_array(theme.get_type_variation_list("HSeparator"))
 	declared.append_array(theme.get_type_variation_list("VSeparator"))
 	var files: Array = []

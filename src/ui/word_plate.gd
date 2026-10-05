@@ -18,6 +18,8 @@ var push := Vector2.ZERO
 
 @onready var _frame: PanelContainer = $Frame
 @onready var _text: Label = %Text
+## Die Alternativen der Aufgabe in einer zweiten Zeile, erst nach dem Zauber (ADR 0014).
+@onready var _alt: Label = %Alt
 @onready var _pointer: TextureRect = $Pointer
 
 
@@ -27,7 +29,11 @@ func setup(of: Monster, large: bool) -> void:
 	if large:
 		_frame.theme_type_variation = &"HudWordPlateLarge"
 		_text.theme_type_variation = &"HudPlateTextLarge"
+		_alt.theme_type_variation = &"HudPlateAltLarge"
 	_text.text = of.prompt()
+	_alt.text = alt_line(of.alts())
+	_alt.visible = of.alts_shown
+	of.alts_revealed.connect(_on_alts_revealed)
 	# Die Wortart in Rand und Schrift, wie die Outline am Modell. Der Rand nimmt die Farbe
 	# voll an (word_plate.gdshader), die Schrift aufgehellt — auf der dunklen Fläche wäre
 	# etwa das Nomen-Blau sonst zu schwach.
@@ -35,7 +41,18 @@ func setup(of: Monster, large: bool) -> void:
 	_frame.self_modulate = color
 	_pointer.self_modulate = color
 	_text.self_modulate = color.lerp(Color.WHITE, TEXT_LIGHTEN)
+	_alt.self_modulate = _text.self_modulate
 	_fit()
+
+
+func _on_alts_revealed() -> void:
+	_alt.visible = true
+	_fit()
+
+
+## Die zweite Zeile: „auch: walk, run" — dieselbe Lesart wie im Reveal.
+static func alt_line(alts: Array) -> String:
+	return "auch: %s" % ", ".join(alts.map(func(a: Variant) -> String: return str(a)))
 
 
 ## Plakette und Zipfel zusammen; der Zipfel hängt unten über den Rand hinaus.

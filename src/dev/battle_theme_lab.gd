@@ -68,7 +68,7 @@ extends Node3D
 ##         Jede Festungsstufe in beiden Sichten (Ich-Sicht vor der Mauer, zur Festung
 ##         gedreht) als reports/battle_themes/fortress_<stufe>_<sicht>.png.
 ##     … -- --hud [--theme=<name>]
-##         Das Kampf-HUD (Kopfleiste, Antwortfeld, Legende, Auflösen-Knopf) über dem ersten
+##         Das Kampf-HUD (Kopfleiste, Antwortfeld, Legende, Auflösen-Knopf, Zaubervorrat) über dem ersten
 ##         Thema mit Beispielwerten: voll (Rüstung, Meisterungen) und schmal (ohne beides,
 ##         langer Name, geschlossene Eingabe der Ich-Sicht), als
 ##         reports/battle_themes/hud_<fall>.png. Werte stehen nur im Speicher.
@@ -77,7 +77,8 @@ extends Node3D
 ##         reports/battle_themes/levelup_<ms>.png. Jeder Schritt ist ein eigener Aufstieg.
 ##     … -- --plates
 ##         Sieben Monster dicht beieinander auf der Bahn, in beiden Sichten — die Wortschilder
-##         dürfen sich nicht überdecken — als reports/battle_themes/plates_<sicht>.png.
+##         dürfen sich nicht überdecken, jedes dritte zeigt Alternativen (Zauber, ADR 0014) —
+##         als reports/battle_themes/plates_<sicht>.png.
 ##     … -- --fps [--theme=<name>] [--windowed]
 ##         Misst im Vollbild und ohne VSync die mittlere Bildzeit mit allem an, jeweils ohne
 ##         eine Zutat (MSAA, Wolken, Teilchen, Wind, Schatten, Glow, Farbgebung, Weg+Flecken)
@@ -856,12 +857,15 @@ func _shoot_plates() -> void:
 		for i in spots.size():
 			var monster := FxWarmup.MONSTER_SCENE.instantiate() as Monster
 			var types := WordTypePalette.COLORS.keys()
-			monster.setup(defs[i % defs.size()], {"prompt": prompts[i],
+			# Jedes dritte zeigt Alternativen wie nach dem Zauber „Drittes Auge".
+			var alts := ["Alternative", "noch eine"] if i % 3 == 0 else []
+			monster.setup(defs[i % defs.size()], {"prompt": prompts[i], "prompt_alt": alts,
 					"lexeme_type": types[i % types.size()]}, 1000.0, 0.0)
 			monster.screen_sized_label = _fp != null
 			monster.position = spots[i]
 			group.add_child(monster)
 			monster.halt()
+			monster.show_alts()
 		# Die Schilder gleiten an ihren Platz; eine halbe Sekunde reicht.
 		for i in 30:
 			await get_tree().process_frame
@@ -943,6 +947,10 @@ func _shoot_hud() -> void:
 		"bare": {"name": "Bartholomäus-Maximilian von Hohenstein", "armor": 0,
 				"mastered": false, "closed": true},
 	}
+	# Ein Vorrat für das Bild, nur im Speicher (ohne buy/take schreibt Inventory nichts).
+	var stock := Inventory.slots.duplicate()
+	Inventory.slots.assign([{"id": "spell.frost", "count": 3}, {},
+			{"id": "spell.mend", "count": 12}, {"id": "spell.thunder", "count": 1}])
 	for case in cases:
 		var c: Dictionary = cases[case]
 		GameState.reset()
@@ -957,7 +965,8 @@ func _shoot_hud() -> void:
 		var pieces: Array[Node] = []
 		for path in ["res://scenes/ui/hud.tscn", "res://scenes/ui/answer_input.tscn",
 				"res://scenes/ui/word_type_legend.tscn", "res://scenes/ui/fast_resolve_button.tscn",
-				"res://scenes/ui/pause_button.tscn", "res://scenes/ui/pause_overlay.tscn"]:
+				"res://scenes/ui/pause_button.tscn", "res://scenes/ui/pause_overlay.tscn",
+				"res://scenes/ui/spell_slots.tscn"]:
 			var piece := (load(path) as PackedScene).instantiate()
 			$UI.add_child(piece)
 			pieces.append(piece)
@@ -980,6 +989,7 @@ func _shoot_hud() -> void:
 		for piece in pieces:
 			piece.queue_free()
 		await get_tree().process_frame
+	Inventory.slots.assign(stock)
 	GameState.reset()
 	get_tree().quit()
 

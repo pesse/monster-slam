@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://bhj77mn8dpnat" path="res://assets/ui/player_badge/menu/level_overlay.webp" id="4_level"]
 [ext_resource type="Texture2D" uid="uid://bcxql8oegbj53" path="res://assets/ui/main_menu/icons/skills.webp" id="5_skills"]
 [ext_resource type="Texture2D" uid="uid://c5ry4fipkydc1" path="res://assets/ui/main_menu/icons/statistics.webp" id="6_stats"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/content.webp" id="7_spells"]
 
 [node name="ProfileBadge" type="Control" unique_id=993475752]
 texture_filter = 4
@@ -107,7 +108,7 @@ expand_icon = true
 [node name="ActionsSlot" type="Control" parent="." unique_id=764536248]
 unique_name_in_owner = true
 anchors_preset = 0
-offset_left = -1.1692104
+offset_left = -49.16921
 offset_top = 42.0
 offset_right = 146.8308
 offset_bottom = 86.0
@@ -116,7 +117,7 @@ mouse_filter = 2
 [node name="Actions" type="HBoxContainer" parent="ActionsSlot" unique_id=586052558]
 unique_name_in_owner = true
 layout_mode = 0
-offset_right = 148.0
+offset_right = 196.0
 offset_bottom = 44.0
 mouse_filter = 2
 
@@ -137,6 +138,16 @@ layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"BadgeAction"
 icon = ExtResource("5_skills")
+icon_alignment = 1
+expand_icon = true
+
+[node name="SpellButton" type="Button" parent="ActionsSlot/Actions" unique_id=513805930]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"BadgeAction"
+icon = ExtResource("7_spells")
 icon_alignment = 1
 expand_icon = true
 

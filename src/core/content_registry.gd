@@ -57,7 +57,7 @@ var task_definitions: Dictionary = {}
 var monster_task_rules: Dictionary = {}
 var monsters: Dictionary = {}
 var bosses: Dictionary = {}
-## Zauber: die aktiven Fähigkeiten mit Abklingzeit (data/spells/).
+## Zauber: Verbrauchsgegenstände, gekauft mit Gold (data/spells/, docs/adr/0014-zauber-zum-verbrauchen.md).
 var spells: Dictionary = {}
 ## Skills: die Knoten der Fähigkeitsbäume, gekauft mit Skillpunkten (data/skills/).
 ## Zwei Kategorien, weil es zwei Dinge sind — siehe docs/adr/0003-skills-und-spells.md.

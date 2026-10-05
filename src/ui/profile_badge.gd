@@ -10,8 +10,8 @@ extends Control
 ## Außerhalb des Hauptmenüs ist sie KOMPAKT (`compact`): nur noch der Ring, kleiner und an
 ## der rechten oberen Ecke festgehalten. Namens- und Goldschild verschwinden (`_draw` schneidet
 ## den Ring rund aus dem Rahmen), Name und Gold stehen dann in der Karte am Ring. Links neben dem
-## Ring kommen Profil wechseln, Fähigkeiten und Statistik hervor — das Hauptmenü hat die
-## beiden letzten als eigene Knöpfe, sonst führte von Bibliothek und Karte kein Weg dorthin.
+## Ring kommen Profil wechseln, Fähigkeiten, Zauber und Statistik hervor — das Hauptmenü hat
+## die drei letzten als eigene Knöpfe, sonst führte von Bibliothek und Karte kein Weg dorthin.
 ## Zwischen Menü und Bibliothek läuft `compact` mit der Fahrt.
 ##
 ## Justiert wird die kompakte Form im Editor (`@tool`): in profile_badge.tscn an der Wurzel
@@ -42,6 +42,7 @@ signal window_closed
 
 const SKILL_SCENE := "res://scenes/ui/skill_tree.tscn"
 const STATS_SCENE := "res://scenes/ui/stats_screen.tscn"
+const SHOP_SCENE := "res://scenes/ui/spell_shop.tscn"
 ## So weit rutschen die Knöpfe hinter dem Ring nach links hervor (px), bis an ihren Platz
 ## (`ActionsSlot`).
 const ACTIONS_SLIDE := 32.0
@@ -106,8 +107,11 @@ func _ready() -> void:
 			func(): open_window(SKILL_SCENE, %SkillsButton as Control))
 	(%StatsButton as BaseButton).pressed.connect(
 			func(): open_window(STATS_SCENE, %StatsButton as Control))
+	(%SpellButton as BaseButton).pressed.connect(
+			func(): open_window(SHOP_SCENE, %SpellButton as Control))
 	Hints.attach(%SkillsButton as Control, "Fähigkeiten")
 	Hints.attach(%StatsButton as Control, "Statistik")
+	Hints.attach(%SpellButton as Control, "Zauber", "kaufen mit Gold")
 	_show_compact()
 	PlayerLevel.changed.connect(func(_total_xp, _level): refresh())
 	Wallet.changed.connect(func(_gold): refresh())

@@ -12,9 +12,9 @@ extends RefCounted
 ## sie selbst zu holen: so lässt sich jede Regel mit einer handvoll erfundener Knoten
 ## prüfen, ohne Autoload und ohne installierte Inhalte.
 ##
-## Nicht zu verwechseln mit den ZAUBERN (data/spells/, ContentRegistry.spells): die sind
-## aktiv, haben eine Abklingzeit und werden im Kampf ausgelöst. Skills sind dauerhaft und
-## werden mit Skillpunkten gekauft (docs/adr/0003-skills-und-spells.md).
+## Nicht zu verwechseln mit den ZAUBERN (data/spells/, ContentRegistry.spells): die werden
+## mit Gold gekauft und verbrauchen sich im Kampf (docs/adr/0014-zauber-zum-verbrauchen.md).
+## Skills sind dauerhaft und werden mit Skillpunkten gekauft (docs/adr/0003-skills-und-spells.md).
 
 ## Was der Spieler mit einem Knoten tun kann. Die Reihenfolge der Prüfung steckt in
 ## `state_of` und ist eine Regel, keine Anzeige-Entscheidung — deshalb steht sie hier und

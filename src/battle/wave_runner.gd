@@ -132,6 +132,11 @@ var _paused_since_ms := -1
 @onready var _celebration: MasteryCelebration = $UI/MasteryCelebration
 @onready var _spelling: SpellingFreeze = $UI/SpellingFreeze
 @onready var _level_flare: LevelFlare = $UI/HUD.level_flare
+@onready var _spell_slots: SpellSlots = $UI/SpellSlots
+## Was ein Zauber aus dem Vorrat tut (ADR 0014); das Bild dazu macht `_use_spell`.
+var _spells := SpellCaster.new()
+## So hell blitzt der Donnerschlag, und in dieser Farbe platzen seine Monster.
+const STRIKE_FLASH := Color(0.75, 0.85, 1.0)
 
 
 func _ready() -> void:
@@ -224,6 +229,7 @@ func _ready() -> void:
 	_celebration.finished.connect(_on_celebration_finished)
 	_spelling.started.connect(_on_spelling_started)
 	_spelling.finished.connect(_on_spelling_finished)
+	_spells.strike = _strike
 	# Startschwierigkeit aus den persistenten Einstellungen des aktiven Profils.
 	_difficulty = UserSettings.default_difficulty()
 	_start_next_wave()
@@ -264,8 +270,9 @@ func _warm_up() -> void:
 		extras.append(Tumbleweeds.specimen())
 	if _catapult:
 		extras.append(CatapultStone.new())
-		if _fp == null or not _fp.explosive:
-			extras.append(Blast.new())
+	# Den Knall braucht auch der Donnerschlag (ADR 0014) — er kann in jedem Kampf kommen.
+	if _fp == null or not _fp.explosive:
+		extras.append(Blast.new())
 	await FxWarmup.run(self, at, FxWarmup.monster_defs(), extras, _fp != null)
 	_celebration.cool_down()
 	_spelling.cool_down()
@@ -898,6 +905,11 @@ func _process(delta: float) -> void:
 ## die Antwort-Eingabe hält den Fokus, und eine LineEdit verbraucht Escape für das Ende
 ## ihres Editier-Zustands — dasselbe Muster wie im UpdateDialog.
 func _input(event: InputEvent) -> void:
+	var slot := spell_key(event)
+	if slot >= 0 and _answer_input.text.strip_edges().is_empty():
+		get_viewport().set_input_as_handled()
+		_use_spell(slot)
+		return
 	if not event.is_action_pressed("ui_cancel"):
 		return
 	# Nach dem Wellenende führen Auflösung und Statistik-Screen selbst zurück; nur der
@@ -910,6 +922,70 @@ func _input(event: InputEvent) -> void:
 	# der WaveRunner ist ein Node3D.
 	get_viewport().set_input_as_handled()
 	_abort_battle()
+
+
+## Welcher Platz des Zaubervorrats zu `event` gehört: die Ziffern 1–9 (auch am Ziffernblock)
+## als 0–8, sonst -1. Gilt nur bei leerem Antwortfeld (`_input`): keine Antwort beginnt mit
+## einer Ziffer (build_packs.py prüft das), mitten in einer Antwort ist sie ein Zeichen.
+static func spell_key(event: InputEvent) -> int:
+	var key := event as InputEventKey
+	if key == null or not key.pressed or key.echo:
+		return -1
+	if key.keycode >= KEY_1 and key.keycode <= KEY_9:
+		return key.keycode - KEY_1
+	if key.keycode >= KEY_KP_1 and key.keycode <= KEY_KP_9:
+		return key.keycode - KEY_KP_1
+	return -1
+
+
+## Setzt den Zauber auf Platz `index` ein (ADR 0014). Hätte er nichts bewirkt (leerer
+## Platz, kein Monster auf dem Feld, Festung heil), bleibt er im Vorrat und der Platz
+## zittert. Nur, solange gekämpft wird: nicht im Zeitraffer, nicht nach dem Wellenende.
+func _use_spell(index: int) -> void:
+	if index >= Inventory.slot_count():
+		return
+	if _finished or _fast_resolving or _warming or _leaving \
+			or _celebration.is_busy() or _spelling.is_busy():
+		return
+	var id := str(Inventory.slot(index).get("id", ""))
+	var spell := ContentRegistry.get_entry("spells", id)
+	var to_come := maxi(0, _total - _spawned)
+	if spell.is_empty() or not _spells.can_cast(spell, _active, to_come):
+		_spell_slots.refuse(index)
+		return
+	Inventory.take(index)
+	# VOR der Wirkung: die Spur führt den Zauber vor den Monstern, die er trifft.
+	EventBus.spell_activated.emit(id)
+	_spell_slots.pulse(index)
+	var effect := str(spell.get("effect", ""))
+	match effect:
+		"strike":
+			_flash_feedback(STRIKE_FLASH)
+			_shake(0.8)
+			Sfx.play(&"monster_kill")
+		"freeze", "slow":
+			Sfx.play(&"slow_mo_in")
+	_spells.cast(spell, _active, to_come)
+	if effect == "strike":
+		_check_end()
+
+
+## Donnerschlag: das Monster ist erledigt, nicht beantwortet — wie beim Katapult.
+func _strike(monster: Monster) -> void:
+	if not _active.has(monster):
+		return
+	EventBus.monster_struck.emit(monster.task)
+	_dismiss(monster, STRIKE_FLASH)
+
+
+## Nimmt ein Monster vom Feld, ohne dass es beantwortet ist (Katapult, Donnerschlag): kein
+## Lernstand, keine Erfahrung, keine Punkte, kein Eintrag in der Auflösung. Was es zählt,
+## meldet der Aufrufer (monster_catapulted, monster_struck); hier nur Feld und Bild.
+func _dismiss(monster: Monster, color := Color(0, 0, 0, 0)) -> void:
+	_active.erase(monster)
+	monster.halt()
+	_blast_at(monster, color)
+	monster.queue_free()
 
 
 ## Zurück ins Menü, ohne die Welle zu beenden.
@@ -1053,6 +1129,8 @@ func _start_next_wave() -> void:
 	_celebration.release()
 	_fast_resolve_button.visible = true
 	_fast_resolve_button.disabled = false
+	_spells.reset_wave()
+	_spell_slots.visible = true
 	_pause_button.visible = true
 	_pause_button.disabled = false
 	_set_view_active(true)
@@ -1184,6 +1262,7 @@ func _spawn(entry: Dictionary) -> void:
 	monster.reached_goal.connect(_on_monster_reached_goal)
 	_monsters.add_child(monster)
 	_active.append(monster)
+	_spells.on_spawn(monster)
 	_wave_shown[str(plan["task"].get("source_id", ""))] = _spawned
 	_spawned += 1
 	EventBus.monster_spawned.emit(plan["monster_def"], plan["task"])
@@ -1579,11 +1658,11 @@ func _blast(monster: Monster) -> void:
 	_leave(monster)
 
 
-## Nur der Knall: Blast in der Wortfarbe, und die Nachbarn zucken. Explosionspfeil und
-## Wachkatapult teilen ihn.
-func _blast_at(monster: Monster) -> void:
+## Nur der Knall: Blast in der Wortfarbe (oder `color`, wenn gesetzt), und die Nachbarn
+## zucken. Explosionspfeil, Wachkatapult und Donnerschlag teilen ihn.
+func _blast_at(monster: Monster, color := Color(0, 0, 0, 0)) -> void:
 	var fx := Blast.new()
-	fx.setup(monster.word_color(), BLAST_SCALE)
+	fx.setup(color if color.a > 0.0 else monster.word_color(), BLAST_SCALE)
 	fx.position = monster.position
 	add_child(fx)
 	for other in _active:
@@ -1623,13 +1702,10 @@ func _catapult_later(monster: Monster, gen: int) -> void:
 	if _finished or gen != _wave_gen:
 		return
 	if is_instance_valid(monster) and _active.has(monster):
-		_active.erase(monster)
-		monster.halt()
 		_shake(0.5)
-		_blast_at(monster)
 		Sfx.play(&"monster_kill")
 		EventBus.monster_catapulted.emit(monster.task)
-		monster.queue_free()
+		_dismiss(monster)
 	else:
 		# Schon getroffen oder durchgekommen: der Stein schlägt trotzdem ein.
 		var fx := Blast.new()
@@ -1810,6 +1886,8 @@ func _finish_wave(won: bool) -> void:
 	_set_view_active(false)
 	_answer_input.visible = false
 	_fast_resolve_button.visible = false
+	_spell_slots.visible = false
+	_spells.reset_wave()
 	_pause_button.visible = false
 	# Endet die Welle, während die Rückfrage offen ist, gibt es nichts mehr aufzulösen.
 	_fast_resolve_confirm.hide()

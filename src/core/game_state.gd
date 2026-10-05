@@ -33,7 +33,6 @@ var current_wave: String = ""
 ## Laufende Nummer der Welle für die Anzeige. Gezählt wird im WaveRunner (_wave_number),
 ## hier steht nur der Stand, den das HUD liest.
 var wave_number: int = 0
-var active_spells: Array[String] = []
 
 ## Lauf-Statistik (für HUD-Zähler und Statistik-Screen).
 var monsters_defeated: int = 0   # per korrekter Antwort erledigt
@@ -60,6 +59,7 @@ func _ready() -> void:
 	EventBus.fortress_damaged.connect(_on_fortress_damaged)
 	EventBus.monster_defeated.connect(_on_monster_defeated)
 	EventBus.monster_catapulted.connect(_on_monster_catapulted)
+	EventBus.monster_struck.connect(_on_monster_struck)
 	# HP wird NICHT pro Welle zurückgesetzt (siehe _on_wave_started) — der Stand wird
 	# über gewonnene Wellen hinweg mitgenommen.
 	EventBus.wave_started.connect(_on_wave_started)
@@ -78,7 +78,6 @@ func reset() -> void:
 	score = 0
 	current_wave = ""
 	wave_number = 0
-	active_spells.clear()
 	monsters_defeated = 0
 	monsters_leaked = 0
 	no_leak_streak = 0
@@ -173,3 +172,29 @@ func _on_monster_defeated(monster: Dictionary, was_correct: bool) -> void:
 ## beantwortet heißt keine Punkte, keine Serie und kein Heilen.
 func _on_monster_catapulted(_task: Dictionary) -> void:
 	wave_resolved += 1
+
+
+## Vom Donnerschlag getroffen (ADR 0014): wie das Katapult — erledigt, aber nicht beantwortet.
+func _on_monster_struck(_task: Dictionary) -> void:
+	wave_resolved += 1
+
+
+## Lebensquell (ADR 0014): bis zu `amount` Leben zurück, höchstens bis zum Maximum. Gibt
+## zurück, wie viel es wirklich war — 0 heißt, der Zauber hätte nichts bewirkt. Eine
+## gefallene Festung heilt nicht, wie beim Heilen durch Treffer.
+func heal(amount: int) -> int:
+	if fortress_health <= 0:
+		return 0
+	var gained := clampi(amount, 0, fortress_max_health - fortress_health)
+	fortress_health += gained
+	return gained
+
+
+## Eisenhaut (ADR 0014): bis zu `amount` Rüstung zurück, höchstens bis zum Vorrat.
+## Ohne Bollwerk-Rüstung (`fortress_armor_max` 0) bleibt es bei 0.
+func restore_armor(amount: int) -> int:
+	if fortress_health <= 0:
+		return 0
+	var gained := clampi(amount, 0, fortress_armor_max - fortress_armor)
+	fortress_armor += gained
+	return gained

@@ -67,13 +67,15 @@ static func monster_defs() -> Array:
 
 
 ## Ein stehendes Monster mit Modell, Outline, Laufanimation und Schild — dieselbe Szene wie
-## im Kampf, nur ohne Tempo und ohne Verbindung zum WaveRunner.
+## im Kampf, nur ohne Tempo und ohne Verbindung zum WaveRunner. Das Schild zeigt auch die
+## Zeile der Alternativen (Zauber, ADR 0014): eigene Schriftgröße.
 static func _monster(parent: Node3D, def: Dictionary, at: Vector3, screen_sized: bool) -> Node3D:
 	var monster := MONSTER_SCENE.instantiate() as Monster
-	monster.setup(def, {"prompt": GLYPHS}, at.z + 1000.0, 0.0)
+	monster.setup(def, {"prompt": GLYPHS, "prompt_alt": [GLYPHS]}, at.z + 1000.0, 0.0)
 	monster.screen_sized_label = screen_sized
 	monster.position = at
 	parent.add_child(monster)
+	monster.show_alts()
 	return monster
 
 

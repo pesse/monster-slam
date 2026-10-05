@@ -41,6 +41,10 @@ func _ready() -> void:
 	EventBus.fortress_damaged.connect(func(_amount): _refresh())
 	EventBus.monster_defeated.connect(func(_monster, _correct): _refresh())
 	EventBus.monster_catapulted.connect(func(_task): _refresh())
+	EventBus.monster_struck.connect(func(_task): _refresh())
+	# Aufgeschoben: das Signal kommt VOR der Wirkung (Spur), Lebensquell und Eisenhaut
+	# haben HP und Rüstung erst danach geändert.
+	EventBus.spell_activated.connect(func(_id): _refresh(), CONNECT_DEFERRED)
 	# Gemeistert wird in PlayerProgress.record(), und das läuft VOR diesem Signal.
 	EventBus.item_reviewed.connect(func(_id, _correct, _rt): _refresh())
 	# Wellenstart setzt wave_total/wave_resolved zurück -> sofort auffrischen.

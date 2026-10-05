@@ -54,6 +54,8 @@ func _ready() -> void:
 	EventBus.answer_judged.connect(note_answer)
 	EventBus.monster_reached_fortress.connect(func(_monster, task, damage): note_leak(task, damage))
 	EventBus.monster_catapulted.connect(note_catapult)
+	EventBus.monster_struck.connect(note_struck)
+	EventBus.spell_activated.connect(note_spell)
 	EventBus.task_mastered.connect(note_task_mastered)
 	EventBus.lexeme_mastered.connect(note_lexeme_mastered)
 	EventBus.boss_started.connect(note_boss_start)
@@ -206,6 +208,22 @@ func note_catapult(task: Dictionary) -> void:
 		"prompt": str(task.get("prompt", "")),
 		"conf": _confidence(id, float(task.get("initial_confidence", -1.0))),
 	})
+
+
+## Der Donnerschlag (ADR 0014) hat ein Monster vom Feld genommen. Keine Antwort, kein
+## Lernstand — wie beim Katapult, aber nicht weil die Aufgabe gemeistert war.
+func note_struck(task: Dictionary) -> void:
+	_write({
+		"e": "struck", "id": str(task.get("learnable_id", "")),
+		"lex": str(task.get("source_id", "")),
+		"prompt": str(task.get("prompt", "")),
+	})
+
+
+## Ein Zauber aus dem Vorrat hat gewirkt (ADR 0014). Steht VOR den Folgen, die er hat
+## (struck-Zeilen des Donnerschlags).
+func note_spell(spell_id: String) -> void:
+	_write({"e": "spell", "spell": spell_id, "wave": GameState.current_wave})
 
 
 ## Eine Aufgabe ist zum ersten Mal gemeistert (Issue #23). Steht direkt hinter der
