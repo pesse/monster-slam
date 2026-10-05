@@ -2,29 +2,29 @@ extends LineEdit
 ## Texteingabe für Übersetzungen. Bei Enter wird die Antwort entkoppelt über den
 ## EventBus verschickt; die Kampf-Logik entscheidet, ob sie passt.
 ##
-## Wichtig: In Godot 4 sind "Fokus" und "Editier-Zustand" getrennt. Eine LineEdit
-## beendet bei Enter standardmäßig das Editieren (Cursor verschwindet, obwohl
-## has_focus() weiter true ist). keep_editing_on_text_submit=true hält das
-## Editieren aktiv, sodass man direkt weitertippen kann.
-## Zusätzlich: mouse_filter=IGNORE auf den Welt-ColorRects verhindert Fokusklau,
-## und der _process-Guard holt den Fokus im Zweifel zurück.
+## Eine Eingabe für beide Sichten (ADR 0016): zwischen zwei Antworten ist sie zu, Enter
+## öffnet sie, das zweite Enter schickt ab und schließt, Escape schließt ohne abzuschicken.
+## Solange sie offen ist, gehört jede Taste dem Wort — auch Ziffern und P; zu sind die
+## Ziffern Zauber und P die Pause (WaveRunner), in der Ich-Sicht die Buchstaben das Laufen.
+## Solange sie offen ist, hält die Zeitlupe (typing_started bis typing_stopped). Gesperrt
+## und umbeschriftet statt ausgeblendet — das Feld steht in der Bildmitte und behält seine
+## Größe.
 ##
-## In der Ich-Sicht (`gated`) gehören die Buchstaben zwischen zwei Antworten dem Laufen:
-## die Eingabe ist zu, Enter öffnet sie, das zweite Enter schickt ab und schließt, Escape
-## schließt ohne abzuschicken. Solange sie offen ist, hält die Zeitlupe (typing_started
-## bis typing_stopped). Gesperrt und umbeschriftet statt ausgeblendet — das Feld
-## steht in der Bildmitte und behält seine Größe.
+## Wichtig: In Godot 4 sind "Fokus" und "Editier-Zustand" getrennt. mouse_filter=IGNORE
+## auf den Welt-ColorRects verhindert Fokusklau, und der _process-Guard holt den Fokus der
+## offenen Eingabe im Zweifel zurück.
 
 const PLACEHOLDER_OPEN := "Übersetzung eingeben…"
-const PLACEHOLDER_CLOSED := "Enter: antworten · WASD: laufen · Alt: Maus"
+const PLACEHOLDER_CLOSED := "Enter: antworten"
+const PLACEHOLDER_CLOSED_WALK := "Enter: antworten · WASD: laufen · Alt: Maus"
 const PLACEHOLDER_CLOSED_TAB := "Enter: antworten · Tab: Waffe · Alt: Maus"
 
-## Ich-Sicht: zu, bis Enter sie öffnet.
-var gated := false:
+## Ich-Sicht: die geschlossene Eingabe nennt auch Laufen und Maus.
+var first_person := false:
 	set(value):
-		gated = value
-		keep_editing_on_text_submit = not gated
-		_set_open(not gated)
+		first_person = value
+		if not _open:
+			placeholder_text = _closed_text()
 
 ## Ich-Sicht mit zwei gelernten Waffen: die geschlossene Eingabe nennt auch Tab. Dafür
 ## fällt WASD weg — mit allen vier passt es nicht in das Feld, und Laufen kennt man, bevor
@@ -35,29 +35,26 @@ var weapon_switch := false:
 		if not _open:
 			placeholder_text = _closed_text()
 
-var _open := true
+var _open := false
 
 
 func _ready() -> void:
-	placeholder_text = PLACEHOLDER_OPEN
-	keep_editing_on_text_submit = not gated
+	keep_editing_on_text_submit = false
 	text_submitted.connect(_on_text_submitted)
 	text_changed.connect(_on_text_changed)
-	# Taucht die Eingabe nach einer Pause wieder auf (Rückfrage, Wellenende), fängt sie in
-	# der Ich-Sicht zu an: sonst stünde der Spieler nach „Abbrechen" mit offenem Feld da.
-	# Offen verschwunden heißt: auch die Zeitlupe, die das Öffnen gestartet hat, endet.
+	# Taucht die Eingabe nach einer Pause wieder auf (Rückfrage, Wellenende), fängt sie
+	# zu an: sonst stünde der Spieler nach „Abbrechen" mit offenem Feld da. Offen
+	# verschwunden heißt: auch die Zeitlupe, die das Öffnen gestartet hat, endet.
 	visibility_changed.connect(func() -> void:
-		if gated:
-			if _open:
-				EventBus.typing_stopped.emit()
-			_set_open(false))
-	grab_focus()
+		if _open:
+			EventBus.typing_stopped.emit()
+		_set_open(false))
+	_set_open(false)
 
 
-## Tippt der Spieler gerade? Nur in der Ich-Sicht eine Frage — sonst tippt er immer, und
-## gelaufen wird nicht.
+## Tippt der Spieler gerade? Nur dann ist eine Ziffer ein Zeichen und P ein Buchstabe.
 func is_typing() -> bool:
-	return gated and _open and visible
+	return _open and visible
 
 
 func _process(_delta: float) -> void:
@@ -72,7 +69,7 @@ func _process(_delta: float) -> void:
 ## sonst schickte es sofort ein leeres Feld ab. Escape im offenen Feld schließt nur;
 ## erst das nächste bricht den Kampf ab (WaveRunner._input läuft nach diesem hier).
 func _input(event: InputEvent) -> void:
-	if not gated or not visible:
+	if not visible:
 		return
 	var key := event as InputEventKey
 	if key == null or not key.pressed or key.echo:
@@ -104,7 +101,9 @@ func _set_open(on: bool) -> void:
 
 
 func _closed_text() -> String:
-	return PLACEHOLDER_CLOSED_TAB if weapon_switch else PLACEHOLDER_CLOSED
+	if not first_person:
+		return PLACEHOLDER_CLOSED
+	return PLACEHOLDER_CLOSED_TAB if weapon_switch else PLACEHOLDER_CLOSED_WALK
 
 
 ## Nur bei nicht-leerem Feld: das clear() nach dem Absenden löst selbst ein
@@ -121,5 +120,4 @@ func _on_text_submitted(new_text: String) -> void:
 	if not answer.is_empty():
 		EventBus.answer_submitted.emit(answer)
 	clear()
-	if gated:
-		_set_open(false)
+	_set_open(false)

@@ -90,12 +90,15 @@ func test_the_digit_casts_from_its_slot() -> void:
 	assert_int(Inventory.count_of("spell.mend")).is_equal(1)
 
 
-## Mit Text im Feld ist die Ziffer ein Zeichen der Antwort.
-func test_the_digit_types_while_the_field_has_text() -> void:
+## In der offenen Eingabe ist die Ziffer ein Zeichen der Antwort — auch im leeren Feld.
+func test_the_digit_types_while_the_field_is_open() -> void:
 	var battle := await _battle()
 	_stock([{"id": "spell.mend", "count": 1}])
 	GameState.fortress_health = GameState.fortress_max_health - 40
-	(battle.get_node("UI/AnswerInput") as LineEdit).text = "abc"
+	var enter := InputEventKey.new()
+	enter.keycode = KEY_ENTER
+	enter.pressed = true
+	(battle.get_node("UI/AnswerInput") as LineEdit).call("_input", enter)
 	battle._input(_digit(1))
 	assert_int(Inventory.count_of("spell.mend")).is_equal(1)
 	assert_int(GameState.fortress_health).is_equal(GameState.fortress_max_health - 40)

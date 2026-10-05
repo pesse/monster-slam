@@ -8,38 +8,6 @@
 		"color": "#b38ce6"
 	},
 	{
-		"id": "skill.time.root",
-		"kind": "skill",
-		"tree": "tree.timeweaver",
-		"name": "Atempause",
-		"icon": "⏳",
-		"description": "Die Zeitlupe wirkt 0,3 s länger nach.",
-		"cost": 1,
-		"tier": 1,
-		"branch": 0,
-		"requires": [],
-		"effects": {
-			"slow_hold_ms": 300
-		}
-	},
-	{
-		"id": "skill.time.long",
-		"kind": "skill",
-		"tree": "tree.timeweaver",
-		"name": "Langer Atem",
-		"icon": "🌬",
-		"description": "Nochmal 0,4 s längere Nachwirkung.",
-		"cost": 1,
-		"tier": 2,
-		"branch": 0,
-		"requires": [
-			"skill.time.root"
-		],
-		"effects": {
-			"slow_hold_ms": 400
-		}
-	},
-	{
 		"id": "skill.time.deep",
 		"kind": "skill",
 		"tree": "tree.timeweaver",
@@ -47,30 +15,11 @@
 		"icon": "🕸",
 		"description": "Die Monster werden während des Tippens noch langsamer.",
 		"cost": 1,
-		"tier": 2,
-		"branch": 1,
-		"requires": [
-			"skill.time.root"
-		],
+		"tier": 1,
+		"branch": 0,
+		"requires": [],
 		"effects": {
 			"slow_factor": -0.04
-		}
-	},
-	{
-		"id": "skill.time.still",
-		"kind": "skill",
-		"tree": "tree.timeweaver",
-		"name": "Stillstand",
-		"icon": "⏸",
-		"description": "Und nochmal 0,5 s längere Nachwirkung.",
-		"cost": 2,
-		"tier": 3,
-		"branch": 0,
-		"requires": [
-			"skill.time.long"
-		],
-		"effects": {
-			"slow_hold_ms": 500
 		}
 	},
 	{
@@ -81,8 +30,8 @@
 		"icon": "🌀",
 		"description": "Die Zeit steht beim Tippen fast still.",
 		"cost": 2,
-		"tier": 3,
-		"branch": 1,
+		"tier": 2,
+		"branch": 0,
 		"requires": [
 			"skill.time.deep"
 		],
@@ -99,9 +48,9 @@
 		"description": "Alle Monster laufen 15 % langsamer — nicht nur, solange du tippst.",
 		"cost": 2,
 		"tier": 2,
-		"branch": 2,
+		"branch": 1,
 		"requires": [
-			"skill.time.root"
+			"skill.time.deep"
 		],
 		"effects": {
 			"monster_speed": -0.15
@@ -116,7 +65,7 @@
 		"description": "Nochmal 15 % langsamer.",
 		"cost": 2,
 		"tier": 3,
-		"branch": 2,
+		"branch": 1,
 		"requires": [
 			"skill.time.heavy"
 		],
@@ -133,7 +82,7 @@
 		"description": "Die Monster kommen in größerem Abstand: 30 % mehr Zeit bis zum nächsten.",
 		"cost": 3,
 		"tier": 3,
-		"branch": 3,
+		"branch": 2,
 		"requires": [
 			"skill.time.heavy"
 		],

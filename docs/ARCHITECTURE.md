@@ -809,6 +809,24 @@ Start-Screen (`🌳 Fähigkeiten`), nicht am Kampf: gelernt wird zwischen den L�
   Schriftgrößen liest `_draw()` aus dem Theme (`SkillIcon`, `SectionTitle`, `Hint`,
   `Caption`), Farbe und Zeichen kommen aus den Daten.
 
+### Eingabe und Zeitlupe (ADR 0016)
+
+Beide Sichten haben dieselbe Eingabe (`AnswerInput`), daran hängen Zeitlupe und
+Tasten des Kampfs:
+
+- **Zwei Zustände**: zu, bis Enter sie öffnet; Enter schickt ab und schließt, Escape
+  schließt nur (das nächste bricht über `WaveRunner._input` ab). Gesperrt und
+  umbeschriftet statt ausgeblendet, das Feld behält seine Größe.
+- **Offen gehört jede Taste dem Wort**, auch Ziffern und P. Zu sind die Ziffern Zauber
+  (`WaveRunner.spell_key`) und das nackte P die Pause (`WaveRunner._on_pause_key`). Beide
+  fragen `AnswerInput.is_typing()` — kein Blick auf den Feldinhalt, keine Sonderregel je
+  Sicht, und eine Antwort darf mit einer Ziffer beginnen.
+- **Die Zeitlupe hält, solange die Eingabe offen ist**: das öffnende Enter sendet
+  `EventBus.typing_started`, SlowMotion hält (`hold_open`), bis `typing_stopped` kommt —
+  beim Abschicken, bei Escape und wenn die offene Eingabe verschwindet. Keine Haltedauer
+  je Zeichen; der Zeitwandler vertieft nur (`slow_factor`). `typing_activity` (jede
+  Zeichenänderung) spannt nur noch den Bogen.
+
 ### Ich-Sicht (Späher-Baum)
 
 Der Späherblick (`first_person`, 5 Punkte) schaltet für den **Wellenkampf** eine zweite
@@ -848,17 +866,11 @@ Kamera frei; die Äste darunter heben nur das Lauftempo (`walk_speed`, Anteile a
   Eine richtige Antwort auf ein Monster außerhalb ist eine Falscheingabe; die Spur trägt
   dafür bei der Falscheingabe das Feld `unseen`. Pfeile am Bildrand (`OffscreenMarkers`)
   zeigen, wohin man sich drehen muss.
-- **Eingabe mit zwei Zuständen** (`AnswerInput.gated`): zu, bis Enter sie öffnet; Enter
-  schickt ab und schließt, Escape schließt nur. Solange sie zu ist, gehören WASD/Pfeile
-  dem Laufen, solange sie offen ist, den Buchstaben — die Bewegung fragt
-  `AnswerInput.is_typing()` ausdrücklich, weil `Input.is_physical_key_pressed` den Fokus
-  nicht kennt.
-- **Die Zeitlupe hält, solange die Eingabe offen ist**: das öffnende Enter sendet
-  `EventBus.typing_started`, SlowMotion hält dann ohne Haltedauer (`hold_open`), bis
-  `typing_stopped` kommt — beim Abschicken, bei Escape und wenn die offene Eingabe
-  verschwindet. Die Nachwirkung des Zeitwandlers (`slow_hold_ms`) hat damit in der
-  Ich-Sicht nichts zu verlängern; das ist gewollt, dafür kostet der Späherblick. Die Tiefe
-  (`slow_factor`) gilt weiter.
+- **Eingabe mit zwei Zuständen** — dieselbe wie von oben (ADR 0016, „Eingabe und
+  Zeitlupe" unten). Solange sie zu ist, gehören WASD/Pfeile dem Laufen, solange sie offen
+  ist, den Buchstaben — die Bewegung fragt `AnswerInput.is_typing()` ausdrücklich, weil
+  `Input.is_physical_key_pressed` den Fokus nicht kennt. `AnswerInput.first_person`
+  beschriftet die geschlossene Eingabe mit Laufen und Maus.
 - **Ruhiger Ast des Zeitwandlers** (`monster_speed`, `spawn_gap`): `WaveRunner` nimmt die
   Faktoren aus `SkillTree.monster_pace`/`spawn_gap_scale` und legt sie auf `plan["speed"]`
   beim Spawn und auf den Spawn-Abstand der Welle — **hinter** `WaveGenerator._build_plan`,
@@ -932,9 +944,9 @@ Ein Zauber ist ein Verbrauchsgegenstand: `price` in Gold, `effect` aus
 - **Laden** (`SpellShop`, `scenes/ui/spell_shop.tscn`, je Zauber eine quadratische Kachel
   aus `spell_tile.tscn`; Beschreibung und Preis stehen im Hinweis, ein Klick kauft): über
   „Zauber" im Hauptmenü und in der Knopfreihe der kompakten Plakette, nicht im Kampf.
-- **Einsatz** (`WaveRunner._use_spell`): Ziffer 1 bis n, aber nur bei leerem Antwortfeld
-  (`WaveRunner.spell_key`). Keine Antwort beginnt mit einer Ziffer — `build_packs.py`
-  prüft das (`check_no_digit_answers`). Im Bosskampf gibt es keine Zauber.
+- **Einsatz** (`WaveRunner._use_spell`): Ziffer 1 bis n, aber nur bei geschlossener
+  Eingabe (`WaveRunner.spell_key`, `AnswerInput.is_typing`); offen ist die Ziffer ein
+  Zeichen (ADR 0016). Im Bosskampf gibt es keine Zauber.
 - **Wirkung** (`SpellCaster`, ohne Bild): `can_cast` vor `cast`. Was nichts bewirken
   würde, wird nicht verbraucht, der Platz zittert (`SpellSlots.refuse`). Dazwischen nimmt
   der WaveRunner den Zauber aus dem Vorrat und sendet `spell_activated`, damit er in der

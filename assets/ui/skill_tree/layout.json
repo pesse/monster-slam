@@ -6,11 +6,8 @@
   "skill.scout.blast": [-555, -235],
   "skill.scout.bow": [-461, -140],
   "skill.scout.sprint": [-425, 180],
-  "skill.time.deep": [0, 235],
   "skill.time.heavy": [-170, 205],
-  "skill.time.long": [170, 205],
   "skill.time.lull": [-320, 300],
   "skill.time.mire": [-110, 330],
-  "skill.time.rift": [110, 330],
-  "skill.time.still": [320, 300]
+  "skill.time.rift": [170, 205]
 }

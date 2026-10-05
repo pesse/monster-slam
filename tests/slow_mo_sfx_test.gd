@@ -47,7 +47,7 @@ func test_swoosh_out_at_zero() -> void:
 
 func test_interrupted_ramp_down_does_not_swoosh_in_again() -> void:
 	EventBus.slow_motion_changed.emit(1.0)
-	# Ausrampen beginnt, wird aber vom nächsten Zeichen aufgefangen, bevor 0 erreicht ist.
+	# Ausrampen beginnt, wird aber vom nächsten Öffnen der Eingabe aufgefangen, bevor 0 erreicht ist.
 	EventBus.slow_motion_changed.emit(0.4)
 	Sfx.last_played = &""
 	EventBus.slow_motion_changed.emit(1.0)
@@ -60,7 +60,7 @@ func test_leaving_the_tree_stays_silent() -> void:
 	var sm := SlowMotion.new()
 	sm.add_child(_sfx)
 	add_child(sm)
-	EventBus.typing_activity.emit()
+	EventBus.typing_started.emit()
 	await _pump(250)
 	assert_str(String(Sfx.last_played)).is_equal("slow_mo_in")
 	Sfx.last_played = &""

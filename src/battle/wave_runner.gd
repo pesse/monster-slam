@@ -921,12 +921,14 @@ func _process(delta: float) -> void:
 		_camera.position = _cam_base + Vector3(offset.x, offset.y, 0.0)
 
 
-## Escape bricht den laufenden Kampf ab. Bewusst `_input` und nicht `_unhandled_input`:
-## die Antwort-Eingabe hält den Fokus, und eine LineEdit verbraucht Escape für das Ende
-## ihres Editier-Zustands — dasselbe Muster wie im UpdateDialog.
+## Escape bricht den laufenden Kampf ab — das erste im offenen Feld hat AnswerInput schon
+## verschluckt, es schließt nur die Eingabe. Bewusst `_input` und nicht `_unhandled_input`:
+## eine LineEdit verbraucht Escape für das Ende ihres Editier-Zustands — dasselbe Muster
+## wie im UpdateDialog. Eine Ziffer zaubert nur bei geschlossener Eingabe; offen ist sie
+## ein Zeichen und geht an die LineEdit weiter.
 func _input(event: InputEvent) -> void:
 	var slot := spell_key(event)
-	if slot >= 0 and _answer_input.text.strip_edges().is_empty():
+	if slot >= 0 and not _answer_input.is_typing():
 		get_viewport().set_input_as_handled()
 		_use_spell(slot)
 		return
@@ -945,8 +947,7 @@ func _input(event: InputEvent) -> void:
 
 
 ## Welcher Platz des Zaubervorrats zu `event` gehört: die Ziffern 1–9 (auch am Ziffernblock)
-## als 0–8, sonst -1. Gilt nur bei leerem Antwortfeld (`_input`): keine Antwort beginnt mit
-## einer Ziffer (build_packs.py prüft das), mitten in einer Antwort ist sie ein Zeichen.
+## als 0–8, sonst -1. Gilt nur bei geschlossener Eingabe (`_input`).
 static func spell_key(event: InputEvent) -> int:
 	var key := event as InputEventKey
 	if key == null or not key.pressed or key.echo:
@@ -1049,10 +1050,10 @@ func _exit_tree() -> void:
 ## „Schnell auflösen" fragt erst nach. Solange die Frage steht, ist die Eingabe weg: sie
 ## holt sich sonst jeden Frame den Fokus zurück, und Enter ginge an sie statt an „Abbrechen".
 ## Das Spiel läuft dabei weiter — ein Pausieren hielten die Spawn-Timer ohnehin nicht an.
-## Strg+P immer, das nackte P nur in der Ich-Sicht, solange nicht getippt wird — in der
-## Iso-Sicht ist die Eingabe immer offen und das „p" ein Buchstabe.
+## Strg+P immer, das nackte P nur, solange nicht getippt wird — in der offenen Eingabe
+## ist das „p" ein Buchstabe.
 func _on_pause_key(bare: bool) -> void:
-	if bare and (_fp == null or _answer_input.is_typing()):
+	if bare and _answer_input.is_typing():
 		return
 	if _toggle_pause():
 		_pause_overlay.consume()
@@ -1083,7 +1084,7 @@ func _toggle_pause() -> bool:
 	_answer_input.visible = false
 	_fast_resolve_button.disabled = true
 	_set_view_active(false)
-	_pause_overlay.show_pause(_fp != null)
+	_pause_overlay.show_pause()
 	return true
 
 
@@ -1424,7 +1425,7 @@ func _setup_first_person(bonuses: Dictionary) -> void:
 	env.fog_depth_begin = FirstPersonView.FOG_BEGIN
 	env.fog_depth_end = FirstPersonView.FOG_END
 	world.environment = env
-	_answer_input.gated = true
+	_answer_input.first_person = true
 	_answer_input.weapon_switch = _fp.weapons.size() > 1
 
 

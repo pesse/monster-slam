@@ -61,10 +61,26 @@ func test_ctrl_p_pauses_and_resumes() -> void:
 	assert_bool(input.visible).is_true()
 
 
-## In der Iso-Sicht ist das „p" ein Buchstabe der Antwort.
-func test_bare_p_does_not_pause_in_the_iso_view() -> void:
+func _enter() -> InputEventKey:
+	var key := InputEventKey.new()
+	key.keycode = KEY_ENTER
+	key.pressed = true
+	return key
+
+
+## Bei geschlossener Eingabe pausiert das nackte P — auch in der Iso-Sicht (ADR 0016).
+func test_bare_p_pauses_while_the_input_is_closed() -> void:
 	var battle := await _battle()
 	var overlay := battle.get_node("UI/PauseOverlay") as PauseOverlay
+	overlay.toggle_requested.emit(true)
+	assert_bool(get_tree().paused).is_true()
+
+
+## In der offenen Eingabe ist das „p" ein Buchstabe der Antwort.
+func test_bare_p_types_while_the_input_is_open() -> void:
+	var battle := await _battle()
+	var overlay := battle.get_node("UI/PauseOverlay") as PauseOverlay
+	(battle.get_node("UI/AnswerInput") as LineEdit).call("_input", _enter())
 	overlay.toggle_requested.emit(true)
 	assert_bool(get_tree().paused).is_false()
 

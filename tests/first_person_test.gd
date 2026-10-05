@@ -1,6 +1,6 @@
 extends GdUnitTestSuite
 ## Die Ich-Sicht (Späher-Baum): Freischaltung, Laufen, „nur was im Bild ist" und die
-## Eingabe, die zwischen zwei Antworten zu ist. Ohne Welle — geprüft werden die Regeln
+## Maus bei offener Eingabe (die Eingabe selbst: answer_input_test.gd). Ohne Welle — geprüft werden die Regeln
 ## und die Eingabe für sich (kein Test fährt eine ganze Welle).
 
 const AnswerInputScene := preload("res://scenes/ui/answer_input.tscn")
@@ -320,82 +320,13 @@ func test_marker_sits_on_the_edge() -> void:
 	assert_vector(OffscreenMarkers.edge_point(rect, Vector2.UP)).is_equal(Vector2(100.0, 0.0))
 
 
-# --- Eingabe: Enter auf, Enter ab ----------------------------------------------
+# --- Eingabe und Maus ----------------------------------------------
 
 func _enter() -> InputEventKey:
 	var key := InputEventKey.new()
 	key.keycode = KEY_ENTER
 	key.pressed = true
 	return key
-
-
-func test_gated_input_opens_on_enter_and_closes_on_submit() -> void:
-	var input := auto_free(AnswerInputScene.instantiate()) as LineEdit
-	add_child(input)
-	await await_idle_frame()
-	input.set("gated", true)
-	assert_bool(input.call("is_typing")).is_false()
-	assert_bool(input.editable).is_false()
-	var started: Array = []
-	var on_start := func() -> void: started.append(true)
-	EventBus.typing_started.connect(on_start)
-	input.call("_input", _enter())
-	EventBus.typing_started.disconnect(on_start)
-	assert_bool(input.call("is_typing")).is_true()
-	# Das Öffnen startet die Zeitlupe, nicht erst der erste Buchstabe.
-	assert_int(started.size()).is_equal(1)
-	var answers: Array = []
-	var catch := func(text: String) -> void: answers.append(text)
-	EventBus.answer_submitted.connect(catch)
-	input.text = "house"
-	input.text_submitted.emit(input.text)
-	EventBus.answer_submitted.disconnect(catch)
-	assert_array(answers).contains_exactly(["house"])
-	assert_bool(input.call("is_typing")).is_false()
-	assert_str(input.text).is_empty()
-
-
-## Verschwindet die offene Eingabe (Rückfrage „Schnell auflösen", Wellenende), endet auch
-## die Zeitlupe, die ihr Öffnen gestartet hat.
-func test_hiding_the_open_input_stops_slow_motion() -> void:
-	var input := auto_free(AnswerInputScene.instantiate()) as LineEdit
-	add_child(input)
-	await await_idle_frame()
-	input.set("gated", true)
-	input.call("_input", _enter())
-	var stopped: Array = []
-	var on_stop := func() -> void: stopped.append(true)
-	EventBus.typing_stopped.connect(on_stop)
-	input.visible = false
-	EventBus.typing_stopped.disconnect(on_stop)
-	assert_int(stopped.size()).is_equal(1)
-	assert_bool(input.call("is_typing")).is_false()
-
-
-func test_escape_closes_without_sending() -> void:
-	var input := auto_free(AnswerInputScene.instantiate()) as LineEdit
-	add_child(input)
-	await await_idle_frame()
-	input.set("gated", true)
-	input.call("_input", _enter())
-	input.text = "hou"
-	var escape := InputEventKey.new()
-	escape.keycode = KEY_ESCAPE
-	escape.pressed = true
-	input.call("_input", escape)
-	assert_bool(input.call("is_typing")).is_false()
-	assert_str(input.text).is_empty()
-
-
-## Ohne Ich-Sicht bleibt alles wie immer: die Eingabe ist offen und bleibt es.
-func test_ungated_input_stays_open() -> void:
-	var input := auto_free(AnswerInputScene.instantiate()) as LineEdit
-	add_child(input)
-	await await_idle_frame()
-	assert_bool(input.editable).is_true()
-	assert_bool(input.call("is_typing")).is_false()
-	input.text_submitted.emit("x")
-	assert_bool(input.editable).is_true()
 
 
 ## Bei offener Eingabe ist die Maus frei — für „Schnell auflösen"; beim Laufen gefangen.
@@ -405,7 +336,7 @@ func test_mouse_is_free_while_typing() -> void:
 	var input := auto_free(AnswerInputScene.instantiate()) as LineEdit
 	add_child(input)
 	await await_idle_frame()
-	input.set("gated", true)
+	input.set("first_person", true)
 	view.answer_input = input
 	view.set_active(true)
 	assert_bool(view.mouse_captured()).is_true()

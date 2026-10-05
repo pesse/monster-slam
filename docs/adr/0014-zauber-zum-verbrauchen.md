@@ -40,10 +40,10 @@ werden. Deshalb gibt kein Zauber etwas, das beim Lernen zählt.
    Knopfreihe der kompakten Plakette, also überall außer im Kampf. Im Debug-Build kostet
    ein Kauf nichts (`Wallet.unlimited_gold`).
 
-4. **Eingesetzt wird im Wellenkampf mit den Ziffertasten 1 bis n**, aber nur, solange das
-   Antwortfeld leer ist. Sonst ist die Ziffer ein getipptes Zeichen. Das geht, weil keine
-   Antwort mit einer Ziffer beginnt, und `tools/packs/build_packs.py` bricht ab, sobald
-   doch eine das tut. Im Bosskampf gibt es vorerst keine Zauber, denn dort enthalten
+4. **Eingesetzt wird im Wellenkampf mit den Ziffertasten 1 bis n**, aber nur, solange die
+   Eingabe zu ist; offen ist die Ziffer ein getipptes Zeichen (ADR 0016). Bis dahin galt
+   „solange das Antwortfeld leer ist", gestützt auf eine Prüfung in `build_packs.py`, dass
+   keine Antwort mit einer Ziffer beginnt — beides ist mit ADR 0016 entfallen. Im Bosskampf gibt es vorerst keine Zauber, denn dort enthalten
    Lösungen Jahreszahlen. Die Plätze stehen als Raster unten links im Kampf-HUD, zwei
    Reihen hoch (2×2, mit mehr Plätzen 3×2, 4×2), mit Symbol, Anzahl und Taste. Hinweise
    gibt es dort keine (CLAUDE.md), die Erklärung steht im Laden.
