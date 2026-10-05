@@ -18,8 +18,16 @@ extends Node3D
 const IDLE := &"general/Idle_A"
 const LOOK_AROUND := &"general/Idle_B"
 const SWORD := preload("res://assets/models/forge/sword.glb")
-## Die Klinge zeigt im Modell nach +y; so gedreht steht sie in der Hand schräg nach oben.
-const SWORD_TURN := Vector3(-PI / 4.0, 0.0, PI / 8.0)
+## Die Klinge zeigt im Modell nach +y; so gedreht steht sie in der Hand schräg nach oben
+## (eingestellt in scenes/dev/sword_lab.tscn).
+const SWORD_TURN := Vector3(deg_to_rad(-30.0), deg_to_rad(-21.5), deg_to_rad(22.5))
+## Beim Gehen schwingt Walking_A die Schwerthand vor die Brust, und die Klinge stäche in den
+## Hals. Dann senkt es den Oberarm und dreht das Handgelenk — die Klinge bleibt oben, zeigt
+## aber nach vorn vom Kopf weg. Eingestellt in scenes/dev/sword_lab.tscn.
+const WALK_ARM := {"upperarm.r": Vector3(deg_to_rad(-30.0), 0.0, 0.0),
+		"wrist.r": Vector3(deg_to_rad(5.5), deg_to_rad(-24.5), deg_to_rad(-28.0))}
+## Wie schnell es die Hand dahin nimmt und zurück (1/s).
+const WALK_ARM_BLEND := 5.0
 ## Kapuze und Umhang des Rogue — ihre Textur ist grau-violett, der Entwurf will Rot.
 const CLOTH_MESHES := ["Skeleton_Rogue_Hood", "Skeleton_Rogue_Cape"]
 const CLOTH_TINT := Color(1.0, 0.22, 0.2)
@@ -94,6 +102,10 @@ var _stroll_left := STROLL_MAX
 var _route: Array[Vector3] = []
 ## Am Ziel schaut es sich einmal um, bevor es zurückgeht.
 var _looking := false
+## Hält beim Gehen die Schwerthand vom Hals weg (`WALK_ARM`); null ohne Skelett.
+var _walk_arm: BoneBend
+## Das Schwert in der Hand; null ohne handslot. Die Werkbank (sword_lab) dreht daran.
+var _sword: Node3D
 
 
 func _ready() -> void:
@@ -142,6 +154,9 @@ func _process(delta: float) -> void:
 		view.origin += Vector3(sin(phase) * SWAY.x, sin(phase * 2.0) * SWAY.y, 0.0)
 		_camera.transform = view
 	_stroll(delta)
+	if _walk_arm != null:
+		var walking := 1.0 if _anim.current_animation == WALK else 0.0
+		_walk_arm.influence = move_toward(_walk_arm.influence, walking, WALK_ARM_BLEND * delta)
 	if not _route.is_empty():
 		return
 	_look_left -= delta
@@ -256,6 +271,10 @@ func _arm() -> void:
 	var slot := BoneAttachment3D.new()
 	slot.bone_name = "handslot.r"
 	skeleton.add_child(slot)
-	var sword := SWORD.instantiate() as Node3D
-	sword.rotation = SWORD_TURN
-	slot.add_child(sword)
+	_sword = SWORD.instantiate() as Node3D
+	_sword.rotation = SWORD_TURN
+	slot.add_child(_sword)
+	_walk_arm = BoneBend.new()
+	_walk_arm.bends = WALK_ARM
+	_walk_arm.influence = 0.0
+	skeleton.add_child(_walk_arm)
