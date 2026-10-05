@@ -11,6 +11,7 @@ extends RefCounted
 ##   4. monster_task_rules mappt (task_type, direction) -> monster_type + Basiswerte.
 ##   5. Tempo, Punkte und Erfahrung = Schwierigkeit: aus Aufgaben-Grundschwierigkeit +
 ##      Confidence (+ Wellenfaktor, der die Erfahrung bewusst NICHT anhebt).
+##   6. Schaden = base_damage der Regel × Wellennummer-Faktor (wave_damage_scale).
 ##
 ## pick(pool) -> {
 ##   "task": Dictionary,          # aufgelöste Laufzeit-Aufgabe
@@ -42,6 +43,12 @@ const REWARD_SENSITIVITY := 0.6
 ## denn die Wiederholungen wählt der Scheduler, nicht der Spieler.
 const MASTERED_REWARD_FACTOR := 0.1
 
+## Schadensfaktor der ersten Wellen (Welle 1, 2): zum Hineinfinden weniger als
+## `base_damage`, das genau in Welle 3 gilt. Danach wächst er je Welle um
+## DAMAGE_GROWTH_PER_WAVE, ohne Deckel (Issue #51).
+const EARLY_WAVE_DAMAGE: Array[float] = [0.6, 0.8]
+const DAMAGE_GROWTH_PER_WAVE := 0.15
+
 ## Die Gruppen der Auswahl (siehe ordered()), so auch in der Spur.
 const GROUP_DUE := "due"
 const GROUP_NEW := "new"
@@ -51,6 +58,17 @@ const GROUP_REST := "rest"
 ## (1.0 = neutral, >1 schneller/schwerer, <1 langsamer/leichter). Ist selbst eine
 ## Schwierigkeits-Quelle und wirkt daher multiplikativ auf das Referenztempo.
 var speed_scale: float = 1.0
+## Schadens-Multiplikator, vom WaveRunner je Welle aus wave_damage_scale() gesetzt. Trifft
+## nur den Schaden — Tempo, Punkte und Erfahrung bleiben bei `t - c`.
+var damage_scale: float = 1.0
+
+
+## Schadensfaktor einer Welle: 0,6 · 0,8 · 1,0 · 1,15 · 1,3 · … Welle ≤ 0 zählt als Welle 1.
+static func wave_damage_scale(wave_number: int) -> float:
+	var n := maxi(1, wave_number)
+	if n <= EARLY_WAVE_DAMAGE.size():
+		return EARLY_WAVE_DAMAGE[n - 1]
+	return 1.0 + DAMAGE_GROWTH_PER_WAVE * (n - EARLY_WAVE_DAMAGE.size() - 1)
 
 ## Start-Confidence (Prior) für eine noch ungesehene Aufgabe, abgeleitet aus den
 ## deskriptiven Lexem-Metadaten `cefr` / `frequency_band`. Das bricht NICHT das Prinzip
@@ -624,7 +642,7 @@ func _build_plan(candidate: Dictionary) -> Dictionary:
 		"task": task,
 		"monster_def": monster_def,
 		"speed": speed,
-		"damage": int(rule.get("base_damage", 10)),
+		"damage": maxi(1, roundi(int(rule.get("base_damage", 10)) * damage_scale)),
 		"reward": reward,
 		"xp": xp,
 		"net": net,

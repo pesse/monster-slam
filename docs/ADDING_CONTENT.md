@@ -254,7 +254,8 @@ Schwierigkeit, siehe unten). Welcher Aufgabentyp welches Monster spawnt, legt ei
 ```json
 { "id": "mrule.opposite.en_en", "task_type": "opposite", "direction": "en_to_en", "monster_type": "monster.skeleton_warrior", "base_damage": 12, "weight": 1.0 }
 ```
-Die Regel trägt **weder Tempo noch Punkte**. Beide sind Projektionen der Schwierigkeit und
+`base_damage` ist der Schaden in Welle 3; die Wellen davor machen weniger, jede danach mehr
+(`WaveGenerator.wave_damage_scale`). Die Regel trägt **weder Tempo noch Punkte**. Beide sind Projektionen der Schwierigkeit und
 entstehen ausschließlich aus `task_definition.difficulty` + der `PlayerProgress.confidence`
 der konkreten Aufgabe + der Wellen-Schwierigkeit (siehe `docs/ARCHITECTURE.md`,
 „Tempo = Schwierigkeit"):

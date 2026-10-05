@@ -326,7 +326,8 @@ mit dem letzten Monster einer Welle – die Welle endet erst danach.
 ### Festung, Schaden und Rüstung
 
 Erreicht ein Monster die Festung, explodiert es dort und die Festung verliert HP. Wie viel,
-hängt von der Art der Aufgabe ab.
+hängt von der Art der Aufgabe ab – und von der Welle: In den ersten beiden Wellen richten
+Monster weniger Schaden an, ab der dritten mit jeder Welle ein Stück mehr.
 
 - **Die HP bleiben über die Wellen hinweg.** Eine neue Welle füllt die Festung nicht auf.
   Reparieren kannst du sie nur, indem du Monster besiegst. Voll ist sie erst wieder beim

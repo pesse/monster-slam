@@ -87,6 +87,8 @@ Darstellung unabhängig wachsen können (siehe `docs/ADDING_CONTENT.md`):
 - **monster_task_rules** — *Wie* eine Aufgabe dargestellt wird: `(task_type, direction)
   → monster_type` + `base_damage/weight`. **Kein** Tempo und **keine** Punkte —
   beide sind Projektionen der Schwierigkeit (siehe unten), keine Darstellungswerte.
+  `base_damage` gilt in Welle 3; davor und danach skaliert ihn
+  `WaveGenerator.wave_damage_scale` (0,6 · 0,8 · 1,0 · +0,15 je Welle, Issue #51).
 - **player_progress** — *Wie gut* der Spieler eine konkrete Aufgabe kann, adressiert über
   einen kanonischen **`learnable_id`** (Task-Typ + Richtung + Lexeme/Form/Relation; Schema
   in `TaskResolver.learnable_id()`). Nicht im Content, sondern beschreibbar in `user://`.

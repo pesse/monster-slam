@@ -1167,6 +1167,7 @@ func _start_next_wave() -> void:
 	GameState.wave_number = _wave_number
 	# Tempo = Schwierigkeit × profilweite Grund-Geschwindigkeit (Barrierefreiheit / Grundtempo).
 	_generator.speed_scale = _difficulty_to_speed(_difficulty) * UserSettings.base_speed()
+	_generator.damage_scale = WaveGenerator.wave_damage_scale(_wave_number)
 	var spawns := _generate_wave(_difficulty, _wave_number)
 	# Gar nicht erst anfangen, wenn der Pool nichts hergibt: ein Spawn ohne Plan zählt
 	# nicht mit (_spawned), _check_end() wird nie wahr und das leere Schlachtfeld hätte
