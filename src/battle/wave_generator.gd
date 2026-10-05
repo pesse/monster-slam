@@ -212,8 +212,24 @@ func has_playable(pool: Dictionary) -> bool:
 ##
 ## Der Plan trägt in `task["pick"]` den Grund der Wahl (siehe pick_reason()); die Spur
 ## schreibt ihn in jede spawn-Zeile.
-func pick(pool: Dictionary, exclude_sources: Dictionary = {}, shown_sources: Dictionary = {}) -> Dictionary:
-	return pick_with(listing(pool, shown_sources, PlayerProgress.due_task_ids()), exclude_sources)
+##
+## `order` (Grundwort-Ids) ist die Playlist einer Testliste (TestPlaylist.wave_order): dann
+## kommt das Wort nach seinem Platz darin, nicht nach Fälligkeit.
+func pick(pool: Dictionary, exclude_sources: Dictionary = {}, shown_sources: Dictionary = {},
+		order: Array = []) -> Dictionary:
+	var candidates := listing(pool, shown_sources, PlayerProgress.due_task_ids())
+	if not order.is_empty():
+		candidates = TestPlaylist.arrange(candidates, order)
+	var plan := pick_with(candidates, exclude_sources)
+	if not order.is_empty() and not plan.is_empty():
+		plan["task"]["pick"]["playlist"] = true
+	return plan
+
+
+## Alle Kandidaten des Pools, ungeordnet — für die Playlist einer Testliste, die daraus
+## die Grundwörter und ihre Aufgaben nimmt.
+func candidates(pool: Dictionary) -> Array:
+	return _candidates(pool)
 
 
 ## Die Kandidaten des Pools in der Reihenfolge, in der pick() sie probiert, jeder mit
@@ -440,9 +456,20 @@ func _candidates(pool: Dictionary, limit: int = 0) -> Array:
 			if not own.has(str(entry.get("id", ""))) \
 					and not ContentRegistry.in_word_bonus(entry, scope):
 				bonus_only[str(entry.get("id", ""))] = true
+	# Eine Testliste nennt ihre Wörter selbst; dazu kommen die Wörter ihrer Form-Boni.
+	if pool.has("lexeme_ids"):
+		var listed := {}
+		for id in pool["lexeme_ids"]:
+			listed[str(id)] = true
+		lexemes = lexemes.filter(func(lx):
+			var id := str(lx.get("id", ""))
+			return listed.has(id) or bonus_only.has(id))
+	var direction_mode := str(pool.get("direction_mode", ""))
 	var result: Array = []
 	for definition in ContentRegistry.task_definitions.values():
 		if not definition_allowed(definition, task_types, direction):
+			continue
+		if not TestLists.direction_allows(direction_mode, str(definition.get("direction", ""))):
 			continue
 		_expand(definition, lexemes, result, limit, scope, bonus_only)
 		if limit > 0 and result.size() >= limit:

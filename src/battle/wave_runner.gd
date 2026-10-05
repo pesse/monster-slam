@@ -61,6 +61,10 @@ var _spelling_due: Dictionary = {}
 ## Zeigung. WaveGenerator.pick() nimmt sie erst, wenn der Pool erschöpft ist (Issue #24).
 ## Gilt nur für die laufende Welle und wird nicht gespeichert.
 var _wave_shown: Dictionary = {}
+## Testliste (RunRequest.is_test): die Grundwörter der vorigen Welle und die Reihenfolge
+## der Wörter in dieser (TestPlaylist). Leer außerhalb eines Testlaufs.
+var _previous_shown: Dictionary = {}
+var _playlist_order: Array = []
 
 var _cam_base: Vector3
 var _shake_left: float = 0.0
@@ -162,7 +166,7 @@ func _ready() -> void:
 	_camera.size = view_size / SceneZoom.FROM
 	# Das Thema VOR Boden und Ich-Sicht: der Boden nimmt seine Farben, der Nebel der
 	# Ich-Sicht die Hintergrundfarbe des schon gefärbten Environments.
-	_theme = BattleTheme.for_level(RunRequest.level())
+	_theme = BattleTheme.for_level(RunRequest.theme_level())
 	_theme.apply($WorldEnvironment as WorldEnvironment, $Sun as DirectionalLight3D)
 	GraphicsQuality.apply_environment($WorldEnvironment as WorldEnvironment)
 	_setup_ground()
@@ -1137,6 +1141,7 @@ func _start_next_wave() -> void:
 	_no_content = false
 	_wave_correct = 0
 	_wave_leaked = 0
+	_previous_shown = _wave_shown.duplicate()
 	_wave_shown.clear()
 	_wave_leaked_tasks.clear()
 	_wave_played_tasks.clear()
@@ -1175,6 +1180,7 @@ func _start_next_wave() -> void:
 	if _nothing_playable(spawns):
 		_show_no_content()
 		return
+	_plan_playlist(spawns)
 	for entry in spawns:
 		_total += int(entry.get("count", 0))
 	# Löst den Wellenstart in GameState + HUD-Refresh aus. Die Festungs-HP bleiben dabei
@@ -1187,6 +1193,30 @@ func _start_next_wave() -> void:
 	EventBus.wave_totals.emit(_total)
 	for entry in spawns:
 		_run_spawn_batch(entry, gen)
+
+
+## Testliste: die Reihenfolge der Wörter in dieser Welle (TestPlaylist). Ist der Beutel
+## leer — oder die Liste noch nie gespielt —, beginnt hier eine neue Runde; eine Runde
+## wechselt also nur an einer Wellengrenze, dauert aber beliebig viele Wellen.
+func _plan_playlist(spawns: Array) -> void:
+	_playlist_order = []
+	if not RunRequest.is_test() or spawns.is_empty():
+		return
+	var words := {}
+	for c in _generator.candidates(spawns[0].get("task_pool", {})):
+		var source := str(c["source"].get("id", ""))
+		if not words.has(source):
+			words[source] = []
+		words[source].append(c["learnable_id"])
+	var list := RunRequest.test_list()
+	var round_start := int(list.get("round_started_at", 0))
+	var open := TestPlaylist.unplayed(words, PlayerProgress.last_seen_at,
+			PlayerProgress.last_correct, round_start)
+	if open.is_empty() or round_start <= 0:
+		list["round_started_at"] = int(Time.get_unix_time_from_system())
+		RunRequest.update_test(TestLists.store(list, UserSettings.active_profile()))
+		open = words.keys()
+	_playlist_order = TestPlaylist.wave_order(open, words.keys(), _previous_shown)
 
 
 ## Schwierigkeit (1..5) -> Tempo-Multiplikator auf die Basis-Geschwindigkeit
@@ -1266,7 +1296,8 @@ func _spawn(entry: Dictionary) -> void:
 	var active_sources := {}
 	for m in _active:
 		active_sources[str(m.task.get("source_id", ""))] = true
-	var plan: Dictionary = _generator.pick(entry.get("task_pool", {}), active_sources, _wave_shown)
+	var plan: Dictionary = _generator.pick(entry.get("task_pool", {}), active_sources, _wave_shown,
+			_playlist_order)
 	if plan.is_empty():
 		# Kein Plan heißt „im Pool ist nichts Spielbares" und NICHT „steht gerade alles
 		# auf dem Feld": WaveGenerator.pick() lässt im zweiten Durchlauf die

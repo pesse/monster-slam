@@ -154,6 +154,11 @@ func last_seen_at(task_id: String) -> int:
 	return int(_records.get(task_id, {}).get("last_seen_at", 0))
 
 
+## War die letzte Antwort auf die Aufgabe richtig? false, wenn nie beantwortet.
+func last_correct(task_id: String) -> bool:
+	return bool(_records.get(task_id, {}).get("last_correct", false))
+
+
 ## Die Aufgabe sitzt: gesehen und über der Meisterungs-Schwelle — dieselbe Regel wie
 ## mastered_count(). Der Prior einer ungesehenen Aufgabe zählt nicht, gemeistert wird im
 ## Kampf. Das Wachkatapult (Bollwerk) räumt solche Monster ab.

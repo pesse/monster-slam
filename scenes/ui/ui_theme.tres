@@ -35,6 +35,9 @@
 [ext_resource type="Texture2D" uid="uid://cduuweh2lcac2" path="res://assets/ui/windows/window_panel_compact.webp" id="window_tex"]
 [ext_resource type="Texture2D" uid="uid://djgdoxp4hpreu" path="res://assets/ui/main_menu/buttons/small/button_highlighted.webp" id="win_btn_gold_tex"]
 [ext_resource type="Texture2D" uid="uid://d3shf1enaqe34" path="res://assets/ui/main_menu/buttons/small/button_normal.webp" id="win_btn_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/checks/on.svg" id="check_on_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/checks/off.svg" id="check_off_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/checks/mixed.svg" id="check_mixed_tex"]
 
 [sub_resource type="StyleBoxFlat" id="action_disabled"]
 content_margin_left = 16.0
@@ -1253,6 +1256,24 @@ texture_margin_top = 14.0
 texture_margin_right = 16.0
 texture_margin_bottom = 14.0
 
+[sub_resource type="StyleBoxFlat" id="drop_panel"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.12, 0.14, 0.22, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.5, 0.56, 0.7, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxEmpty" id="tree_focus"]
+
 [resource]
 default_font_size = 18
 Accent/base_type = &"Label"
@@ -1368,6 +1389,8 @@ DebugButton/styles/normal = SubResource("dbg_btn_normal")
 DebugButton/styles/pressed = SubResource("dbg_btn_pressed")
 DebugPanel/base_type = &"PanelContainer"
 DebugPanel/styles/panel = SubResource("dbg_panel")
+DropPanel/base_type = &"PanelContainer"
+DropPanel/styles/panel = SubResource("drop_panel")
 Display/base_type = &"Label"
 Display/font_sizes/font_size = 40
 FlagChoice/base_type = &"ToolChoice"
@@ -1599,6 +1622,8 @@ MenuNote/colors/font_outline_color = Color(0.06, 0.07, 0.12, 1)
 MenuNote/constants/outline_size = 6
 MenuNote/font_sizes/font_size = 14
 PanelContainer/styles/panel = SubResource("panel")
+PopupMenu/icons/checked = ExtResource("check_on_tex")
+PopupMenu/icons/unchecked = ExtResource("check_off_tex")
 PlayerBubble/base_type = &"PanelContainer"
 PlayerBubble/styles/panel = SubResource("bubble_player")
 ProfileLink/base_type = &"MenuLink"
@@ -1708,6 +1733,10 @@ TabContainer/styles/tab_unselected = SubResource("tab_unselected")
 TabContainer/styles/tabbar_background = SubResource("tabbar_bg")
 Tight/base_type = &"BoxContainer"
 Tight/constants/separation = 4
+Tree/icons/checked = ExtResource("check_on_tex")
+Tree/icons/indeterminate = ExtResource("check_mixed_tex")
+Tree/icons/unchecked = ExtResource("check_off_tex")
+Tree/styles/focus = SubResource("tree_focus")
 Title/base_type = &"Label"
 Title/font_sizes/font_size = 28
 ToolButton/base_type = &"Button"

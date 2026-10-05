@@ -13,6 +13,7 @@ extends RefCounted
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 const AREA_SCENE := "res://scenes/ui/area_map.tscn"
+const TEST_SCENE := "res://scenes/ui/test_prep.tscn"
 
 ## Das Level von der Karte (MapLevel.levels_for), oder leer im Expertenmodus.
 static var _level: Dictionary = {}
@@ -21,15 +22,45 @@ static var _level: Dictionary = {}
 ## `first_person()` mit dem Skill-Baum. Hält wie das Level nur bis zum Programmende.
 static var _first_person_wanted := false
 
+## Die Testliste (TestLists), wenn der Lauf eine Arbeit vorbereitet — sonst leer. Ein
+## Testlauf ist weder Level noch Expertenmodus: er spielt genau die Wörter der Liste.
+static var _test: Dictionary = {}
+## Ihr Scope (TestLists.run_scope), beim Start einmal gerechnet.
+static var _test_scope: Array = []
+
 
 ## Der nächste Kampf spielt dieses Level (von der Gebietskarte).
 static func start_level(level: Dictionary) -> void:
 	_level = level.duplicate(true)
+	_test = {}
 
 
 ## Der nächste Kampf spielt die Auswahl des Profils (Expertenmodus).
 static func start_expert() -> void:
 	_level = {}
+	_test = {}
+
+
+## Der nächste Kampf übt die Wörter einer Testliste.
+static func start_test(list: Dictionary) -> void:
+	_level = {}
+	_test = list.duplicate(true)
+	_test_scope = TestLists.run_scope(_test, ContentRegistry.lexemes,
+			ContentRegistry.narrowest_scope)
+
+
+static func is_test() -> bool:
+	return not _test.is_empty()
+
+
+static func test_list() -> Dictionary:
+	return _test
+
+
+## Die Liste hat sich im Lauf geändert (neue Runde) — der Stand wird mitgeführt.
+static func update_test(list: Dictionary) -> void:
+	if is_test():
+		_test = list.duplicate(true)
 
 
 ## Auf der Gebietskarte gewählt oder abgewählt.
@@ -76,6 +107,8 @@ static func level() -> Dictionary:
 
 ## Der Curriculum-Scope des Laufs.
 static func scope() -> Array:
+	if is_test():
+		return _test_scope.duplicate()
 	if is_level():
 		return Array(_level.get("scope", []))
 	return Array(UserSettings.selected_scope())
@@ -83,7 +116,7 @@ static func scope() -> Array:
 
 ## Die Themen-Tags des Laufs. Ein Level filtert nicht nach Themen: es ist ein Stück Buch.
 static func tags() -> Array:
-	if is_level():
+	if is_level() or is_test():
 		return []
 	return Array(UserSettings.selected_tags())
 
@@ -91,6 +124,15 @@ static func tags() -> Array:
 ## Der Aufgaben-Pool des Wellenkampfs. Ein Level spielt alle Aufgaben- und Wortarten
 ## seines Bereichs; der Expertenmodus die Auswahl des Profils (WaveGenerator).
 static func task_pool() -> Dictionary:
+	if is_test():
+		return {
+			"task_types": [],
+			"lexeme_types": [],
+			"scope": scope(),
+			"tags": [],
+			"lexeme_ids": Array(_test.get("lexeme_ids", [])),
+			"direction_mode": str(_test.get("direction", "")),
+		}
 	if not is_level():
 		return WaveGenerator.pool_from_settings()
 	return {
@@ -111,4 +153,15 @@ static func unit_key() -> String:
 
 ## Wohin „Zurück" nach dem Kampf führt: auf die Gebietskarte des Levels oder ins Menü.
 static func return_scene() -> String:
+	if is_test():
+		return TEST_SCENE
 	return AREA_SCENE if is_level() else MENU_SCENE
+
+
+## Wo der Kampf steht (BattleTheme.for_level): das Level, im Testlauf die Unit mit den
+## meisten Wörtern der Liste.
+static func theme_level() -> Dictionary:
+	if is_test():
+		return {"book": str(_test.get("book", "")),
+				"unit": TestLists.main_unit(_test, ContentRegistry.lexemes), "key": ""}
+	return _level

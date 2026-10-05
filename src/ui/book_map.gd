@@ -17,6 +17,10 @@ extends Control
 
 func _ready() -> void:
 	(%BackButton as Button).pressed.connect(_back_to_shelf)
+	(%TestButton as Button).pressed.connect(func():
+		get_tree().change_scene_to_file(RunRequest.TEST_SCENE))
+	Hints.attach(%TestButton, "Für eine Arbeit üben",
+			"Wörter aus beliebigen Units und Teilen auswählen, als Liste speichern und üben.")
 	(%ProfileBadge as ProfileBadge).switch_pressed.connect(MapSelection.to_profile_pick.bind(self))
 	_canvas.node_selected.connect(_on_unit_selected)
 	_canvas.cover = true

@@ -581,6 +581,21 @@ func _scope_keys(entry: Dictionary) -> Array:
 	return keys
 
 
+## Der engste Scope-Schlüssel eines Lexems: sein Wort-Bonus, sein Teil oder seine Unit (für
+## Testlisten, TestLists.run_scope). Ein Teil bringt keinen Form-Bonus mit.
+func narrowest_scope(entry: Dictionary) -> String:
+	var bonus := word_bonus_key(entry)
+	if not bonus.is_empty():
+		return bonus
+	var keys := _scope_keys(entry)
+	if keys.is_empty():
+		return ""
+	var part: int = _parts.get(str(entry.get("id", "")), 0)
+	if part > 0:
+		return str(keys[-1])
+	return str(keys[1]) if keys.size() > 1 else str(keys[0])
+
+
 ## Der Teil eines Lexems innerhalb seiner Unit (1…PART_COUNT, oder sein Feld `part`),
 ## 0 ohne Teil.
 func part_of(lexeme_id: String) -> int:

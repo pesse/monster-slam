@@ -1,0 +1,194 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/ui/test_prep.gd" id="1_screen"]
+[ext_resource type="PackedScene" path="res://scenes/ui/confirm_dialog.tscn" id="2_confirm"]
+[ext_resource type="Script" path="res://src/ui/check_menu.gd" id="3_check"]
+[ext_resource type="Script" path="res://src/ui/check_tree_drop.gd" id="4_drop"]
+
+[node name="TestPrep" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_screen")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.05, 0.06, 0.1, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+theme_type_variation = &"ScreenMargin"
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Root" type="VBoxContainer" parent="Margin"]
+theme_type_variation = &"ScreenStack"
+layout_mode = 2
+
+[node name="Header" type="HBoxContainer" parent="Margin/Root"]
+layout_mode = 2
+
+[node name="BackButton" type="Button" parent="Margin/Root/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "◀ Karte"
+
+[node name="Title" type="Label" parent="Margin/Root/Header"]
+unique_name_in_owner = true
+theme_type_variation = &"Title"
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Für eine Arbeit üben"
+text_overrun_behavior = 3
+
+[node name="ListBar" type="HBoxContainer" parent="Margin/Root"]
+layout_mode = 2
+
+[node name="ListPick" type="OptionButton" parent="Margin/Root/ListBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+clip_text = true
+
+[node name="NameEdit" type="LineEdit" parent="Margin/Root/ListBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Name der Liste"
+
+[node name="SaveButton" type="Button" parent="Margin/Root/ListBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Speichern"
+
+[node name="DeleteButton" type="Button" parent="Margin/Root/ListBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Löschen"
+
+[node name="Filters" type="HBoxContainer" parent="Margin/Root"]
+layout_mode = 2
+
+[node name="Search" type="LineEdit" parent="Margin/Root/Filters"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Suchen …"
+clear_button_enabled = true
+
+[node name="PlacesButton" type="Button" parent="Margin/Root/Filters"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+clip_text = true
+text = "Units, Teile ▾"
+
+[node name="TypePick" type="MenuButton" parent="Margin/Root/Filters"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+clip_text = true
+flat = false
+script = ExtResource("3_check")
+label = "Wortarten"
+
+[node name="StatePick" type="MenuButton" parent="Margin/Root/Filters"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+clip_text = true
+flat = false
+script = ExtResource("3_check")
+label = "Stand"
+
+[node name="OnlyMarked" type="CheckBox" parent="Margin/Root/Filters"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "nur ✓"
+
+[node name="Words" type="Tree" parent="Margin/Root"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+columns = 6
+column_titles_visible = true
+hide_root = true
+select_mode = 1
+
+[node name="Footer" type="HBoxContainer" parent="Margin/Root"]
+layout_mode = 2
+
+[node name="MarkVisible" type="Button" parent="Margin/Root/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "☑ Sichtbare"
+
+[node name="UnmarkVisible" type="Button" parent="Margin/Root/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "☐ Sichtbare"
+
+[node name="Count" type="Label" parent="Margin/Root/Footer"]
+unique_name_in_owner = true
+theme_type_variation = &"Accent"
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "0 Wörter"
+horizontal_alignment = 1
+text_overrun_behavior = 3
+
+[node name="DirectionPick" type="OptionButton" parent="Margin/Root/Footer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+clip_text = true
+
+[node name="RoundButton" type="Button" parent="Margin/Root/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Neue Runde"
+
+[node name="PlayButton" type="Button" parent="Margin/Root/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "▶ Spielen"
+
+[node name="PlaceDrop" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("4_drop")
+
+[node name="DropPanel" type="PanelContainer" parent="PlaceDrop"]
+unique_name_in_owner = true
+theme_type_variation = &"DropPanel"
+custom_minimum_size = Vector2(400, 400)
+layout_mode = 0
+
+[node name="DropTree" type="Tree" parent="PlaceDrop/DropPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+hide_root = true
+
+[node name="Confirm" parent="." instance=ExtResource("2_confirm")]
+unique_name_in_owner = true
+layout_mode = 1

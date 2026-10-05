@@ -141,6 +141,8 @@ func _ready() -> void:
 	# Ein Level von der Karte führt auf die Karte zurück (RunRequest.return_scene).
 	if RunRequest.is_level():
 		_menu_button.text = "⟵ Zurück zur Karte"
+	elif RunRequest.is_test():
+		_menu_button.text = "⟵ Zurück zur Liste"
 	_result_continue.pressed.connect(func(): _goto_stage(Stage.NEXT))
 	_stage_back.pressed.connect(_on_stage_back)
 	_chest.opened.connect(_on_chest_opened)
