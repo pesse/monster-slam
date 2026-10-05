@@ -205,6 +205,11 @@ func is_spread_open() -> bool:
 	return _open >= 1.0
 
 
+## Ist der Deckel zu? Erst dann darf ein anderes Buch heraus.
+func is_closed() -> bool:
+	return _open <= 0.0
+
+
 func _process(delta: float) -> void:
 	var dt := minf(delta, MapCanvas.MAX_ZOOM_STEP)
 	var step := dt / LIFT_TIME

@@ -15,7 +15,8 @@ extends Control
 ## gerade zur Kamera, und auf dem Cover erscheint sein Stand (Book3D). Ein Klick schlägt das Buch auf; die Doppelseite trägt
 ## die Buchkarte, und die Kamera fliegt in sie hinein, bis die Karte den Bildschirm füllt —
 ## dort steht die Buchkarte, und der Wechsel fällt nicht auf. Zurück geht es denselben Weg
-## rückwärts (`return_from_book`).
+## rückwärts (`return_from_book`); erst wenn das Buch wieder zu ist, lässt sich ein anderes
+## nehmen — sonst stünden zwei vorn.
 ##
 ## Die Zahlen kommen aus FortressTier.unit_tiers und BossRecord — derselben Zählung wie
 ## Karte und Kampf.
@@ -320,6 +321,10 @@ func _process(delta: float) -> void:
 		if book.is_spread_open():
 			_start_dive(book, false)
 		return
+	if _run.has("closing"):
+		if (_run["closing"] as Book3D).is_closed():
+			_run = {}
+		return
 	var t := minf(1.0, float(_run["t"]) + minf(delta, MapCanvas.MAX_ZOOM_STEP) / DIVE_TIME)
 	_run["t"] = t
 	_show_dive(1.0 - t if bool(_run["back"]) else t)
@@ -331,6 +336,8 @@ func _process(delta: float) -> void:
 		_dive.visible = false
 		_backdrop.hold_camera = false
 		(run["book"] as Book3D).hold_forward(false)
+		# Bis der Deckel zu ist, bleibt das Buch vorn; so lange nimmt der Zeiger kein anderes.
+		_run = {"closing": run["book"]}
 	else:
 		get_tree().change_scene_to_file(MapSelection.BOOK_SCENE)
 
