@@ -333,15 +333,14 @@ Eine Datei je Baum. Der erste Eintrag ist der Baum-Kopf, die übrigen sind seine
 [
   { "id": "tree.timeweaver", "kind": "tree", "order": 3, "name": "Zeitwandler",
 	"description": "Solange du tippst, dehnt sich die Zeit.", "color": "#b38ce6" },
-  { "id": "skill.time.root", "kind": "skill", "tree": "tree.timeweaver",
-	"tier": 1, "branch": 0,
-	"name": "Atempause", "icon": "⏳",
-	"description": "Die Zeitlupe wirkt 0,3 s länger nach.",
-	"cost": 1, "requires": [], "effects": { "slow_hold_ms": 300 } },
   { "id": "skill.time.deep", "kind": "skill", "tree": "tree.timeweaver",
-	"tier": 2, "branch": 1,
+	"tier": 1, "branch": 0,
 	"name": "Zähe Zeit", "icon": "🕸", "description": "Die Zeit wird zäher.",
-	"cost": 1, "requires": ["skill.time.root"], "effects": { "slow_factor": -0.04 } }
+	"cost": 1, "requires": [], "effects": { "slow_factor": -0.04 } },
+  { "id": "skill.time.rift", "kind": "skill", "tree": "tree.timeweaver",
+	"tier": 2, "branch": 0,
+	"name": "Zeitriss", "icon": "🌀", "description": "Die Zeit steht beim Tippen fast still.",
+	"cost": 2, "requires": ["skill.time.deep"], "effects": { "slow_factor": -0.04 } }
 ]
 ```
 - `tier` ist der **Abstand vom Anfangspunkt**, `branch` die Stelle im Fächer: der Screen
@@ -360,7 +359,7 @@ Eine Datei je Baum. Der erste Eintrag ist der Baum-Kopf, die übrigen sind seine
 - `cost` sind Skillpunkte; ein großer Knoten kostet mehrere.
 - `effects` ist ein Dictionary und **additiv** auf den Grundwert. Erlaubt sind nur die
   Schlüssel aus `SkillTree.EFFECT_KEYS`: `heal_per_correct`, `fortress_armor` (Vorrat),
-  `armor_regen` (Instandsetzung je Wellenstart), `max_health`, `slow_hold_ms`, `slow_factor` (negativ = tiefere Zeitlupe),
+  `armor_regen` (Instandsetzung je Wellenstart), `max_health`, `slow_factor` (negativ = tiefere Zeitlupe),
   `first_person` (> 0 schaltet die Ich-Sicht frei), `walk_speed` (Anteil auf das Lauftempo der Ich-Sicht) und
   `charge` (> 0: Sturmangriff bei jedem Treffer in der Ich-Sicht) und `bow` (> 0: Bogen in
   der Ich-Sicht; mit `charge` zusammen wechselt Tab) und `explosive_arrow` (> 0: ein

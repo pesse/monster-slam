@@ -998,10 +998,14 @@ func _shoot_hud() -> void:
 		(hud.get_node("%Book") as Control).visible = bool(c["mastered"])
 		(hud.get_node("%Mastered") as Control).visible = bool(c["mastered"])
 		(hud.get_node("%Mastered") as Label).text = "8 gemeistert"
-		pieces[1].set("gated", bool(c["closed"]))
-		# Die Pause im zweiten Bild: abgedunkelt, mit der Taste der Ich-Sicht.
+		# Die Eingabe fängt zu an; das erste Bild zeigt sie offen, das zweite zu mit der
+		# Beschriftung der Ich-Sicht.
+		pieces[1].set("first_person", bool(c["closed"]))
+		if not bool(c["closed"]):
+			pieces[1].call("_set_open", true)
+		# Die Pause im zweiten Bild: abgedunkelt.
 		if bool(c["closed"]):
-			(pieces[5] as PauseOverlay).show_pause(true)
+			(pieces[5] as PauseOverlay).show_pause()
 		for i in 3:
 			await RenderingServer.frame_post_draw
 		var path := "%s/hud_%s.png" % [dir, case]
@@ -1276,10 +1280,10 @@ func _shoot_bow() -> void:
 	# Beide Waffen gelernt, damit die Eingabe auch Tab nennt; der Bogen ist gewählt.
 	view.weapons = FirstPersonView.weapons_for({"bow": 1.0, "charge": 1.0})
 	view.weapon = FirstPersonView.Weapon.BOW
-	# Eine echte, gesperrte Eingabe: gehoben wird der Bogen nur, solange sie offen ist.
+	# Eine echte Eingabe der Ich-Sicht: gehoben wird der Bogen nur, solange sie offen ist.
 	var input := (load("res://scenes/ui/answer_input.tscn") as PackedScene).instantiate() as LineEdit
 	$UI.add_child(input)
-	input.set("gated", true)
+	input.set("first_person", true)
 	input.set("weapon_switch", true)
 	view.answer_input = input
 	var enter := InputEventKey.new()

@@ -336,25 +336,10 @@
       "tree": "tree.scout",
       "path": "res://assets/ui/skill_tree/icons/scout_bow.webp"
     },
-    "skill.time.root": {
-      "name": "Atempause",
-      "tree": "tree.timeweaver",
-      "path": "res://assets/ui/skill_tree/icons/time_hourglass.webp"
-    },
-    "skill.time.long": {
-      "name": "Langer Atem",
-      "tree": "tree.timeweaver",
-      "path": "res://assets/ui/skill_tree/icons/time_wind.webp"
-    },
     "skill.time.deep": {
       "name": "Zähe Zeit",
       "tree": "tree.timeweaver",
       "path": "res://assets/ui/skill_tree/icons/time_web.webp"
-    },
-    "skill.time.still": {
-      "name": "Stillstand",
-      "tree": "tree.timeweaver",
-      "path": "res://assets/ui/skill_tree/icons/time_pause.webp"
     },
     "skill.time.rift": {
       "name": "Zeitriss",

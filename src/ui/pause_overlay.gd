@@ -1,8 +1,7 @@
 class_name PauseOverlay
 extends Control
-## Die Pause des Wellenkampfs: Strg+P überall, ein nacktes P nur in der Ich-Sicht bei
-## geschlossener Eingabe (in der Iso-Sicht ist die Antwortzeile immer offen, jedes „p"
-## gehört dort ins Wort). Dazu der Knopf unter „Schnell auflösen".
+## Die Pause des Wellenkampfs: Strg+P überall, ein nacktes P bei geschlossener Eingabe
+## (in der offenen gehört jedes „p" ins Wort). Dazu der Knopf unter „Schnell auflösen".
 ##
 ## Läuft mit process_mode ALWAYS: in der Pause steht der Baum, und die Taste, die sie
 ## beendet, muss trotzdem ankommen. Ob gerade pausiert werden DARF, weiß der WaveRunner —
@@ -14,8 +13,8 @@ signal toggle_requested(bare: bool)
 ## Esc in der Pause: der Kampf soll enden wie mit Esc im laufenden Kampf.
 signal leave_requested
 
-const KEYS_BARE := "P: weiter · Esc: Kampf beenden"
-const KEYS_CTRL := "Strg+P: weiter · Esc: Kampf beenden"
+## In der Pause ist die Eingabe weg, das nackte P beendet sie also immer.
+const KEYS := "P: weiter · Esc: Kampf beenden"
 
 @onready var _dim: ColorRect = %Dim
 @onready var _keys: Label = %Keys
@@ -29,9 +28,8 @@ func is_shown() -> bool:
 	return _dim.visible
 
 
-## `bare_p`: nennt das nackte P statt Strg+P (Ich-Sicht).
-func show_pause(bare_p: bool) -> void:
-	_keys.text = KEYS_BARE if bare_p else KEYS_CTRL
+func show_pause() -> void:
+	_keys.text = KEYS
 	_dim.visible = true
 
 

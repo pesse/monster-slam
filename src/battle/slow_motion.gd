@@ -1,13 +1,13 @@
 class_name SlowMotion
 extends Node
-## Nimmt langsam Tippenden den Zeitdruck. Über Engine.time_scale, damit Bewegung,
-## Animationen, Spawn-Timer und Tweens gleichmäßig mitgehen. Die Haltedauer läuft
-## dagegen in Echtzeit — mit `delta` würde sie sich selbst mitverlangsamen.
+## Nimmt langsam Tippenden den Zeitdruck: solange die Eingabe offen ist (EventBus.typing_started
+## bis typing_stopped), läuft die Zeit langsamer. Über Engine.time_scale, damit Bewegung,
+## Animationen, Spawn-Timer und Tweens gleichmäßig mitgehen. Die Rampe rechnet in Echtzeit —
+## mit `delta` würde sie sich selbst mitverlangsamen.
 
 ## Grundwerte OHNE Skills. Wie in GameState stehen die Konstanten für den Stand ohne
 ## Bäume; gerechnet wird mit den Feldern darunter, die `apply_skills()` anhebt.
 const BASE_FACTOR := 0.15
-const BASE_HOLD_MS := 1000  ## Haltedauer je Zeichen (Echtzeit)
 const RAMP_PER_SEC := 6.0   ## Faktoränderung pro Echtzeit-Sekunde
 ## Tempo beim „Schnell auflösen" (WaveRunner). Lebt HIER, weil time_scale diesem Knoten
 ## gehört: jede fremde Änderung zöge _process wieder auf 1 zurück. Höher als 8 ruckelt —
@@ -19,24 +19,19 @@ const FAST_FORWARD_FACTOR := 16.0
 ## schlagartig loszurasen — beim Tippen dagegen muss die Zeitlupe sofort greifen.
 const FAST_FORWARD_RAMP_PER_SEC := 5.0
 
-## Die effektiven Werte des laufenden Laufs: Grundwert plus Boni des Zeitwandler-Baums.
-## Alles, was rechnet, liest DIESE beiden — nie die Konstanten.
+## Der effektive Wert des laufenden Laufs: Grundwert plus Boni des Zeitwandler-Baums.
+## Alles, was rechnet, liest DIESEN — nie die Konstante.
 var factor: float = BASE_FACTOR
-var hold_ms: int = BASE_HOLD_MS
 
-var _hold_until_ms: int = 0
 var _last_tick_ms: int = 0
 var _intensity: float = 0.0
 var _fast_forward: bool = false
-## Ich-Sicht: hält die Zeitlupe, solange die Eingabe offen ist (EventBus.typing_started),
-## ohne Haltedauer — bis stop(). Der Zeitwandler-Ast „Nachwirkung" hat dort nichts zu
-## verlängern; die Tiefe (`factor`) gilt weiter.
+## Die Eingabe ist offen: Zeitlupe bis stop().
 var _held_open: bool = false
 
 
 func _ready() -> void:
 	_last_tick_ms = Time.get_ticks_msec()
-	EventBus.typing_activity.connect(_on_typing_activity)
 	EventBus.typing_stopped.connect(stop)
 	EventBus.typing_started.connect(hold_open)
 
@@ -45,7 +40,7 @@ func _process(_delta: float) -> void:
 	var now := Time.get_ticks_msec()
 	var real_delta := float(now - _last_tick_ms) / 1000.0
 	_last_tick_ms = now
-	var target := factor if now < _hold_until_ms or _held_open else 1.0
+	var target := factor if _held_open else 1.0
 	var ramp := RAMP_PER_SEC
 	if _fast_forward:
 		target = FAST_FORWARD_FACTOR
@@ -64,24 +59,21 @@ func _publish_intensity(value: float) -> void:
 	EventBus.slow_motion_changed.emit(clamped)
 
 
-## Legt die Boni der gelernten Skills auf die Grundwerte — der Zeitwandler-Baum verzweigt
-## sich genau hier: ein Ast verlängert die Nachwirkung, der andere vertieft den Faktor.
-## Gehört zum Laufbeginn (siehe WaveRunner._ready) und nimmt dasselbe Dictionary wie
+## Legt die Boni der gelernten Skills auf den Grundwert: der Zeitwandler vertieft den
+## Faktor. Gehört zum Laufbeginn (siehe WaveRunner._ready) und nimmt dasselbe Dictionary wie
 ## GameState.apply_skills, damit es EINE Quelle der Boni gibt.
 ##
 ## Der Faktor wird nach unten geklemmt (SkillTree.MIN_SLOW_FACTOR): time_scale 0 wäre ein
-## eingefrorenes Spiel, in dem die Haltedauer trotzdem weiterliefe.
+## eingefrorenes Spiel.
 func apply_skills(bonuses: Dictionary) -> void:
 	factor = clampf(BASE_FACTOR + float(bonuses.get("slow_factor", 0.0)),
 			SkillTree.MIN_SLOW_FACTOR, 1.0)
-	hold_ms = maxi(0, BASE_HOLD_MS + int(bonuses.get("slow_hold_ms", 0)))
 
 
 ## Spult bis zum nächsten stop() vor — den ruft _finish_wave ohnehin, danach laufen
 ## Auflösung und Statistik wieder in Normaltempo. Die Rampe bleibt: ein Sprung auf 16×
 ## sähe aus wie ein Ruckler. Die Vignette bleibt aus, weil _publish_intensity auf 0..1 klemmt.
 func fast_forward() -> void:
-	_hold_until_ms = 0
 	_held_open = false
 	_fast_forward = true
 
@@ -90,13 +82,7 @@ func is_fast_forwarding() -> bool:
 	return _fast_forward
 
 
-func _on_typing_activity() -> void:
-	if _fast_forward:
-		return
-	_hold_until_ms = Time.get_ticks_msec() + hold_ms
-
-
-## Zeitlupe ab sofort und ohne Ende, bis stop() — die Eingabe der Ich-Sicht ist offen.
+## Zeitlupe ab sofort und ohne Ende, bis stop() — die Eingabe ist offen.
 func hold_open() -> void:
 	if _fast_forward:
 		return
@@ -106,7 +92,6 @@ func hold_open() -> void:
 ## Sofortiges Ende ohne Rampe.
 func stop() -> void:
 	_held_open = false
-	_hold_until_ms = 0
 	_fast_forward = false
 	Engine.time_scale = 1.0
 	_publish_intensity(0.0)

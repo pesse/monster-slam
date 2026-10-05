@@ -200,8 +200,13 @@ langsam tippen.
 
 ### Was du tust
 
-Tippe die Antwort in das Eingabefeld unten und drücke **Enter**. Du musst kein Monster
-auswählen: das Spiel sucht selbst das Monster, zu dem deine Antwort passt.
+Drück **Enter**, um das Eingabefeld unten zu öffnen, tippe die Antwort und drücke noch
+einmal **Enter**: das schickt sie ab und schließt das Feld wieder. **Escape** schließt das
+Feld, ohne abzuschicken. Du musst kein Monster auswählen: das Spiel sucht selbst das
+Monster, zu dem deine Antwort passt.
+
+Solange das Feld offen ist, ist jede Taste ein Buchstabe deiner Antwort, auch die Ziffern
+und das P. Ist es zu, setzen die Ziffern Zauber ein, und P hält den Kampf an.
 
 - **Richtig:** Das Monster platzt, es blitzt grün, und „+… XP“ steigt auf. Die Festung
   wird dabei ein kleines Stück repariert (1 HP je besiegtem Monster, mit Fähigkeiten
@@ -246,8 +251,8 @@ Gold, kein gemeistertes Wort. Er ist für den Moment, in dem eine Welle zu kippe
 Du hast **vier Plätze**. Gleiche Zauber liegen auf einem Platz übereinander, beliebig
 viele; für einen anderen Zauber brauchst du einen freien Platz. Im Kampf stehen die Plätze
 links unten, mit Ziffer und Anzahl. **Drück die Ziffer des Platzes (1 bis 4), solange das
-Antwortfeld leer ist**, dann wirkt der Zauber. Steht schon etwas im Feld, ist die Ziffer
-ein getipptes Zeichen. Würde ein Zauber gerade nichts bewirken (die Festung ist schon heil,
+Eingabefeld zu ist**, dann wirkt der Zauber. Ist das Feld offen, ist die Ziffer ein
+getipptes Zeichen. Würde ein Zauber gerade nichts bewirken (die Festung ist schon heil,
 kein Monster ist auf dem Feld), zittert der Platz, und der Zauber bleibt dir. Im
 Bosskampf gibt es keine Zauber.
 
@@ -272,12 +277,8 @@ golden. Den Bosskampf gibt es nur von oben: ist der Boss markiert, ist der Schal
 gesperrt.
 
 - **Laufen:** W, A, S, D (oder die Pfeiltasten). Mit der Maus siehst du dich um.
-- **Antworten:** **Enter** öffnet das Eingabefeld, du tippst, und das zweite **Enter**
-  schickt ab und schließt es wieder. **Escape** schließt das Feld, ohne abzuschicken.
-  Solange das Feld offen ist, stehst du still, und der Mauszeiger ist da, etwa für den Vorspul-Knopf.
-- **Zeitlupe:** Sie beginnt, sobald du mit Enter das Feld öffnest, und hält, bis du
-  abschickst oder das Feld schließt. Wie lange du tippst, spielt dabei keine Rolle. Der
-  Zeitwandler-Ast für die Nachwirkung bringt hier deshalb nichts, der für die Tiefe schon.
+- **Antworten:** wie von oben, mit Enter auf und Enter ab. Solange das Feld offen ist,
+  stehst du still, und der Mauszeiger ist da, etwa für den Vorspul-Knopf.
 - **Getroffen wird nur, was du siehst.** Passt deine Antwort zu einem Monster, das gerade
   nicht im Bild ist, zählt sie wie eine falsche Eingabe. Kleine Pfeile am Bildrand zeigen,
   wo die anderen Monster stehen, in der Farbe ihrer Wortart.
@@ -303,13 +304,13 @@ Der Schalter merkt sich deine Wahl, bis du das Spiel beendest.
 
 ### Zeitlupe beim Tippen
 
-Sobald du tippst, verlangsamt sich das ganze Spiel stark, und am Bildrand erscheint ein
-Schatten. Die Zeitlupe hält nach jedem Tastendruck eine Sekunde lang an und endet sofort,
-wenn du Enter drückst.
+Sobald du mit Enter das Eingabefeld öffnest, verlangsamt sich das ganze Spiel stark, und
+am Bildrand erscheint ein Schatten. Die Zeitlupe hält, bis du abschickst oder das Feld
+schließt. Wie lange du tippst, spielt dabei keine Rolle.
 
 **Warum?** Der Zeitdruck soll das schnelle Abrufen üben, nicht das schnelle Tippen. Wer
-langsam tippt, soll deshalb nicht verlieren. Mit dem Fähigkeitsbaum „Zeitwandler“ hält die
-Zeitlupe länger oder wird noch tiefer.
+langsam tippt, soll deshalb nicht verlieren. Mit dem Fähigkeitsbaum „Zeitwandler“ wird die
+Zeitlupe noch tiefer.
 
 ### Feier beim Meistern
 
@@ -387,8 +388,8 @@ retten. Das Ergebnis ist dasselbe, das auch ohne Vorspulen herausgekommen wäre.
 ### Pause
 
 Unter dem Vorspul-Knopf steht der kleine Knopf mit den **zwei Balken**. Er hält den Kampf
-an, ebenso **Strg+P**. In der Ich-Sicht reicht ein **P**, solange das Eingabefeld zu ist;
-sonst ist das P ein Buchstabe deiner Antwort.
+an, ebenso **Strg+P**. Solange das Eingabefeld zu ist, reicht ein **P**; ist es offen, ist
+das P ein Buchstabe deiner Antwort.
 
 - Das Bild wird abgedunkelt und das Eingabefeld ist weg. Die Pause ist zum Durchatmen da,
   nicht zum Nachdenken über die Wörter auf dem Feld.
@@ -397,7 +398,8 @@ sonst ist das P ein Buchstabe deiner Antwort.
 
 ## 7. Abbrechen mit Escape
 
-Mit **Escape** kommst du während einer Welle sofort zurück zum Start-Screen.
+Mit **Escape** kommst du während einer Welle sofort zurück zum Start-Screen. Ist das
+Eingabefeld gerade offen, schließt das erste Escape nur das Feld, erst das zweite bricht ab.
 
 - Die angefangene Welle zählt nicht: es gibt keine Auflösung, keine Statistik und keine
   Schatzkiste.
@@ -653,7 +655,7 @@ für 4.
 |---|---|
 | **Genesung** | Jedes besiegte Monster heilt die Festung um mehr HP. |
 | **Bollwerk** | Die Festung bekommt Rüstung. Ein Ast vergrößert den Vorrat, der andere setzt ihn zu jeder Welle ein Stück instand. Ganz außen wartet das **Wachkatapult**, das Monster mit gemeisterten Aufgaben abschießt. Direkt am Anfang hängt der **Schnelle Erbauer**: Stufe 4 der Festung kommt schon bei 70 % statt 75 %, die Stufen davor entsprechend früher. |
-| **Zeitwandler** | Die Zeitlupe beim Tippen hält länger nach (ein Ast) oder wird noch tiefer (der zweite Ast). Der dritte Ast bremst die Monster die ganze Zeit: **Schwere Schritte** und **Zäher Boden** machen sie je 15 % langsamer, mit **Späte Horde** kommen sie in größerem Abstand. Punkte gibt es dafür nicht weniger. |
+| **Zeitwandler** | Die Zeitlupe beim Tippen wird noch tiefer (**Zähe Zeit**, **Zeitriss**). Der zweite Ast bremst die Monster die ganze Zeit: **Schwere Schritte** und **Zäher Boden** machen sie je 15 % langsamer, mit **Späte Horde** kommen sie in größerem Abstand. Punkte gibt es dafür nicht weniger. |
 | **Späher** | Der Anfang, der **Späherblick**, schaltet die Ich-Sicht frei (Kapitel 5). Beide Äste danach machen dich darin schneller, am Ende des einen warten der **Sturmangriff** und der **Langbogen**, nach dem Langbogen der **Explosionspfeil**. |
 
 Alle Wirkungen zählen zusammen: zwei Knoten, die je 1 HP mehr heilen, heilen zusammen

@@ -28,41 +28,32 @@ func _pump(ms: int) -> void:
 		await get_tree().process_frame
 
 
-func test_typing_slows_time_down() -> void:
-	EventBus.typing_activity.emit()
+func test_opening_the_input_slows_time_down() -> void:
+	EventBus.typing_started.emit()
 	await _pump(250)
 	assert_float(Engine.time_scale).is_equal_approx(SlowMotion.BASE_FACTOR, 0.01)
 
 
-func test_slow_motion_ends_after_hold() -> void:
+## Zeichen allein bremsen nicht: die Zeitlupe hängt an der offenen Eingabe (ADR 0016).
+func test_characters_alone_do_not_slow_time() -> void:
 	EventBus.typing_activity.emit()
-	await _pump(SlowMotion.BASE_HOLD_MS + 400)
+	await _pump(250)
 	assert_float(Engine.time_scale).is_equal(1.0)
 
 
-func test_further_typing_renews_hold() -> void:
-	EventBus.typing_activity.emit()
-	await _pump(700)
-	EventBus.typing_activity.emit()
-	# 700 + 700 ms liegen über der Haltedauer — durch das zweite Zeichen läuft sie weiter.
-	await _pump(700)
-	assert_float(Engine.time_scale).is_equal_approx(SlowMotion.BASE_FACTOR, 0.01)
-
-
 func test_submit_ends_slow_motion_immediately() -> void:
-	EventBus.typing_activity.emit()
+	EventBus.typing_started.emit()
 	await _pump(250)
 	EventBus.typing_stopped.emit()
 	# Ohne einen einzigen weiteren Frame: Enter beendet sofort, ohne Ausblenden.
 	assert_float(Engine.time_scale).is_equal(1.0)
 
 
-## Ich-Sicht: offen gehalten endet die Zeitlupe nicht nach der Haltedauer, sondern erst
-## mit dem Stopp (Abschicken oder Schließen der Eingabe).
-func test_held_open_outlasts_the_hold_until_stopped() -> void:
-	_sm.hold_ms = 100
+## Offen gehalten endet die Zeitlupe erst mit dem Stopp (Abschicken oder Schließen der
+## Eingabe), wie lange auch immer getippt wird.
+func test_held_open_lasts_until_stopped() -> void:
 	EventBus.typing_started.emit()
-	await _pump(500)
+	await _pump(1500)
 	assert_float(Engine.time_scale).is_equal_approx(_sm.factor, 0.01)
 	EventBus.typing_stopped.emit()
 	assert_float(Engine.time_scale).is_equal(1.0)
@@ -71,7 +62,7 @@ func test_held_open_outlasts_the_hold_until_stopped() -> void:
 
 
 func test_removing_the_node_restores_normal_speed() -> void:
-	EventBus.typing_activity.emit()
+	EventBus.typing_started.emit()
 	await _pump(250)
 	remove_child(_sm)
 	assert_float(Engine.time_scale).is_equal(1.0)
@@ -81,7 +72,7 @@ func test_removing_the_node_restores_normal_speed() -> void:
 func test_intensity_is_reported_for_the_vignette() -> void:
 	var seen: Array[float] = []
 	EventBus.slow_motion_changed.connect(func(v: float) -> void: seen.append(v))
-	EventBus.typing_activity.emit()
+	EventBus.typing_started.emit()
 	await _pump(250)
 	# Volle Verlangsamung ⇒ Intensität 1.0; zwischendurch wurden Werte < 1 gemeldet
 	# (der Übergang), nie aber einer außerhalb von 0..1.
@@ -111,7 +102,7 @@ func test_fast_forward_rises_gradually() -> void:
 ## Zeitraffer in die Zeitlupe.
 func test_typing_does_not_interrupt_fast_forward() -> void:
 	_sm.fast_forward()
-	EventBus.typing_activity.emit()
+	EventBus.typing_started.emit()
 	await _pump(_ramp_up_ms())
 	assert_float(Engine.time_scale).is_equal_approx(SlowMotion.FAST_FORWARD_FACTOR, 0.01)
 
@@ -138,29 +129,26 @@ func test_fast_forward_reports_no_slow_motion_intensity() -> void:
 		assert_float(v).is_equal(0.0)
 
 
-## Der Zeitwandler-Baum verzweigt sich in Dauer und Tiefe — beide Äste landen hier.
-## Geprüft wird mit einem einfachen Dictionary, also ohne SkillBook und ohne Inhalte:
-## genau dafür nimmt apply_skills keine Autoload-Referenz.
-func test_skills_deepen_the_factor_and_lengthen_the_hold() -> void:
-	_sm.apply_skills({"slow_factor": -0.05, "slow_hold_ms": 700})
+## Der Zeitwandler vertieft die Zeitlupe. Geprüft wird mit einem einfachen Dictionary,
+## also ohne SkillBook und ohne Inhalte: genau dafür nimmt apply_skills keine
+## Autoload-Referenz.
+func test_skills_deepen_the_factor() -> void:
+	_sm.apply_skills({"slow_factor": -0.05})
 	assert_float(_sm.factor).is_equal_approx(SlowMotion.BASE_FACTOR - 0.05, 0.001)
-	assert_int(_sm.hold_ms).is_equal(SlowMotion.BASE_HOLD_MS + 700)
-	EventBus.typing_activity.emit()
+	EventBus.typing_started.emit()
 	await _pump(250)
 	assert_float(Engine.time_scale).is_equal_approx(_sm.factor, 0.01)
 
 
 ## Ein Baum darf beliebig tief gehen, nur nicht bis zum Stillstand: time_scale 0 wäre ein
-## eingefrorenes Spiel, in dem die Haltedauer trotzdem weiterliefe — der Lauf käme nie
-## zum Ende.
+## eingefrorenes Spiel — der Lauf käme nie zum Ende.
 func test_the_factor_never_reaches_a_standstill() -> void:
 	_sm.apply_skills({"slow_factor": -99.0})
 	assert_float(_sm.factor).is_equal_approx(SkillTree.MIN_SLOW_FACTOR, 0.001)
 
 
-## Ohne gelernte Skills bleibt alles beim Grundwert — ein leeres Dictionary ist der
+## Ohne gelernte Skills bleibt der Faktor beim Grundwert — ein leeres Dictionary ist der
 ## Normalfall, nicht ein Sonderfall.
 func test_without_skills_the_base_values_stand() -> void:
 	_sm.apply_skills({})
 	assert_float(_sm.factor).is_equal_approx(SlowMotion.BASE_FACTOR, 0.001)
-	assert_int(_sm.hold_ms).is_equal(SlowMotion.BASE_HOLD_MS)

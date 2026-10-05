@@ -30,11 +30,11 @@ signal answer_submitted(text: String)
 ## aber nicht im Bild). Ein Dictionary, damit Felder dazukommen können, ohne die
 ## Signatur zu brechen.
 signal answer_judged(text: String, verdict: Dictionary)
-## Jede Zeichenänderung in der Antwort-Eingabe (treibt die Tipp-Slow-Motion).
+## Jede Zeichenänderung in der Antwort-Eingabe (spannt in der Ich-Sicht den Bogen).
 signal typing_activity()
 ## Eingabe abgeschickt/beendet — eine laufende Slow-Motion endet sofort.
 signal typing_stopped()
-## Ich-Sicht: die Eingabe wurde mit Enter geöffnet. Die Zeitlupe beginnt sofort und hält,
+## Die Eingabe wurde mit Enter geöffnet. Die Zeitlupe beginnt sofort und hält,
 ## bis typing_stopped kommt (Abschicken oder Schließen) — nicht nach Zeichen bemessen.
 signal typing_started()
 ## Stärke der Tipp-Slow-Motion: 0.0 = Normaltempo, 1.0 = voll verlangsamt.
