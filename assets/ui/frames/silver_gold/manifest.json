@@ -1,0 +1,22 @@
+{
+  "format": "lossless WebP RGBA",
+  "frame": "frame.webp",
+  "size": [192, 192],
+  "slice_ltrb": [32, 32, 32, 32],
+  "minimum_size": [64, 64],
+  "recommended_minimum_size": [96, 96],
+  "draw_center": false,
+  "edge_mode": "stretch along length only",
+  "corner_mode": "fixed size",
+  "gold_accents": 4,
+  "variants": [
+    {"file":"frame@2x.webp", "size":[384,384], "slice_ltrb":[64,64,64,64]},
+    {"file":"frame@4x.webp", "size":[768,768], "slice_ltrb":[128,128,128,128]}
+  ],
+  "parts": {
+    "corner_tl": [0,0,32,32], "corner_tr": [160,0,32,32],
+    "corner_bl": [0,160,32,32], "corner_br": [160,160,32,32],
+    "edge_top": [32,0,128,32], "edge_bottom": [32,160,128,32],
+    "edge_left": [0,32,32,128], "edge_right": [160,32,32,128]
+  }
+}

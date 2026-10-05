@@ -1,0 +1,54 @@
+{
+  "checks": [
+    {
+      "file": "frame.webp",
+      "size": [
+        192,
+        192
+      ],
+      "visible_pixel_mismatches": 0,
+      "center_alpha": 0
+    },
+    {
+      "file": "frame@2x.webp",
+      "size": [
+        384,
+        384
+      ],
+      "visible_pixel_mismatches": 0,
+      "center_alpha": 0
+    },
+    {
+      "file": "frame@4x.webp",
+      "size": [
+        768,
+        768
+      ],
+      "visible_pixel_mismatches": 0,
+      "center_alpha": 0
+    }
+  ],
+  "preview_sizes": [
+    [
+      128,
+      144
+    ],
+    [
+      224,
+      224
+    ],
+    [
+      400,
+      112
+    ],
+    [
+      580,
+      288
+    ],
+    [
+      204,
+      288
+    ]
+  ],
+  "gold_accents": 4
+}
