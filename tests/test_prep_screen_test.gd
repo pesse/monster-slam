@@ -65,6 +65,23 @@ func test_filters_hide_rows() -> void:
 	assert_array(visible).is_empty()
 
 
+func test_the_count_names_marked_words_a_filter_hides() -> void:
+	var book := _book()
+	if book.is_empty():
+		return
+	MapSelection.book = book
+	var screen: TestPrep = auto_free(SCREEN.instantiate())
+	add_child(screen)
+	await await_idle_frame()
+	var word: Dictionary = screen._rows.filter(func(r): return r["kind"] == "word")[0]
+	screen._set_mark(word, true)
+	screen._apply_filter()
+	assert_str(screen._count.text).not_contains("ausgeblendet")
+	screen._search.text = "zzzz-kein-wort"
+	screen._apply_filter()
+	assert_str(screen._count.text).contains("(1 ausgeblendet)")
+
+
 ## Setzt das Häkchen der Unit an Stelle `index` im Baum, wie ein Klick.
 func _check_unit(screen: TestPrep, index: int) -> void:
 	var unit: TreeItem = screen._places._tree.get_root().get_child(index)

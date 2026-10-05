@@ -29,7 +29,6 @@ static var open_id := ""
 @onready var _places_button: Button = %PlacesButton
 @onready var _type_pick: CheckMenu = %TypePick
 @onready var _state_pick: CheckMenu = %StatePick
-@onready var _only_marked: CheckBox = %OnlyMarked
 @onready var _count: Label = %Count
 @onready var _direction_pick: OptionButton = %DirectionPick
 @onready var _play: Button = %PlayButton
@@ -68,7 +67,6 @@ func _ready() -> void:
 	_places.changed.connect(_apply_filter)
 	for pick: CheckMenu in [_type_pick, _state_pick]:
 		pick.changed.connect(_apply_filter)
-	_only_marked.toggled.connect(func(_on): _apply_filter())
 	_direction_pick.item_selected.connect(func(_i): _update_count())
 	_tree.item_edited.connect(_on_item_edited)
 	_tree.item_activated.connect(_on_item_activated)
@@ -322,8 +320,6 @@ func _apply_filter() -> void:
 			show = false
 		elif not states.is_empty() and not int(row["state"]) in states:
 			show = false
-		elif _only_marked.button_pressed and not _marked.has(row["id"]):
-			show = false
 		elif not needle.is_empty() and not (str(row["foreign"]).to_lower().contains(needle) \
 				or str(row["german"]).to_lower().contains(needle)):
 			show = false
@@ -388,9 +384,17 @@ func _update_count() -> void:
 			bonuses += 1
 		else:
 			words += 1
-	var text := "%d %s" % [words, "Wort" if words == 1 else "Wörter"]
+	# Was markiert ist, aber gerade ein Filter verdeckt — sonst wirkt die Auswahl
+	# kleiner, als sie ist.
+	var hidden := {"word": 0, "bonus": 0}
+	for row in _rows:
+		var item: TreeItem = row.get("item")
+		if item != null and not item.visible and _marked.has(row["id"]):
+			hidden["bonus" if str(row["kind"]) == "bonus" else "word"] += 1
+	var text := "%d %s" % [words, "Wort" if words == 1 else "Wörter"] + _hidden_text(hidden["word"])
 	if bonuses > 0:
-		text += " · %d Bonus" % bonuses if bonuses == 1 else " · %d Boni" % bonuses
+		text += (" · %d Bonus" % bonuses if bonuses == 1 else " · %d Boni" % bonuses) \
+				+ _hidden_text(hidden["bonus"])
 	var missing := _missing_ids().size()
 	if missing > 0:
 		text += " · %d fehlen" % missing
@@ -403,6 +407,10 @@ func _update_count() -> void:
 			"Jedes Wort kommt einmal, dann erst wieder — wie eine Zufalls-Playlist."
 			if not _play.disabled else "Erst Wörter markieren.",
 			"Ein Fehler legt das Wort zurück in den Beutel.")
+
+
+func _hidden_text(count: int) -> String:
+	return " (%d ausgeblendet)" % count if count > 0 else ""
 
 
 ## Ids der gespeicherten Liste, die der Inhalt nicht mehr kennt.

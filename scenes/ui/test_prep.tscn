@@ -114,11 +114,6 @@ flat = false
 script = ExtResource("3_check")
 label = "Stand"
 
-[node name="OnlyMarked" type="CheckBox" parent="Margin/Root/Filters"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "nur ✓"
-
 [node name="Words" type="Tree" parent="Margin/Root"]
 unique_name_in_owner = true
 layout_mode = 2
