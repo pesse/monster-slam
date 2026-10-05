@@ -45,8 +45,8 @@ func _ready() -> void:
 		get_window().size = Vector2i(int(parts[0]), int(parts[1]))
 	var field := (load(FIELD_SCENE) as PackedScene).instantiate()
 	add_child(field)
-	# Der Name des Themas steht dort oben links; im Kampf gibt es ihn nicht.
-	(field.get_node("UI/Name") as CanvasItem).visible = false
+	# Die Regler der Themen-Werkbank (oben links) gibt es im Kampf nicht.
+	(field.get_node("UI") as CanvasLayer).visible = false
 	_index = maxi(CARDS.find(_card_name()), 0)
 	%Prev.pressed.connect(_step.bind(-1))
 	%Next.pressed.connect(_step.bind(1))
