@@ -22,9 +22,10 @@ python3 tools/packs/build_packs.py --config data/language/packs.yaml \
 # PHP nur im Container:
 tools/report/php.sh server/melden/test_endpoint.php
 
-# Windows-EXE → exports/MonsterSlam-<version>.exe; die Version steht nur in project.godot
-# (config/version), build.sh gleicht export_presets.cfg daran an:
-./build.sh
+# Windows-EXE → exports/MonsterSlam-<version>.exe, macOS → exports/MonsterSlam-<version>-macos.zip
+# (ADR 0015); die Version steht nur in project.godot (config/version), build.sh gleicht
+# export_presets.cfg daran an:
+./build.sh            # beide; ./build.sh windows | macos für eins
 ```
 
 - Der Wrapper braucht den **Konsolen**-Build (`GODOT=… tools/godot.sh` überschreibt den

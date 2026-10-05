@@ -24,9 +24,10 @@ enum State {
 
 const MANIFEST_URL := "https://github.com/pesse/monster-slam/releases/latest/download/latest.json"
 
-## Schlüssel des Plattform-Blocks in latest.json. Es gibt heute nur Windows-Builds; ein
-## zweiter Eintrag hier braucht keinen Code, nur einen Build.
-const PLATFORM := "windows-x86_64"
+## Schlüssel der Plattform-Blöcke in latest.json. Der macOS-Build ist universal (Intel und
+## Apple Silicon in einer App).
+const PLATFORM_WINDOWS := "windows-x86_64"
+const PLATFORM_MACOS := "macos-universal"
 
 const DOWNLOAD_DIR := "user://updates"
 
@@ -112,11 +113,11 @@ func _on_manifest(result: int, code: int, _headers: PackedStringArray, body: Pac
 
 	var manifest: Dictionary = parsed
 	var platforms: Dictionary = manifest.get("platforms", {})
-	if not platforms.has(PLATFORM):
+	if not platforms.has(platform()):
 		# Kein Fehler des Nutzers: für diese Plattform gibt es das Release nicht.
 		_set_state(State.IDLE)
 		return
-	var entry: Dictionary = platforms[PLATFORM]
+	var entry: Dictionary = platforms[platform()]
 	for field in ["url", "sha256", "signature"]:
 		if str(entry.get(field, "")).is_empty():
 			_fail("Update-Manifest unvollständig (%s fehlt)." % field)
@@ -133,9 +134,33 @@ func _on_manifest(result: int, code: int, _headers: PackedStringArray, body: Pac
 	_set_state(State.AVAILABLE)
 
 
+## Der Plattform-Block in latest.json, der für diesen Build gilt. "" auf einer Plattform,
+## für die es keine Releases gibt — dann wird nie etwas angeboten.
+static func platform() -> String:
+	if OS.has_feature("windows"):
+		return PLATFORM_WINDOWS
+	if OS.has_feature("macos"):
+		return PLATFORM_MACOS
+	return ""
+
+
+## Ob das Spiel sich selbst ersetzen kann. Nur unter Windows: auf dem Mac ist das Spiel ein
+## signiertes `.app`-Bundle, und eine darin ausgetauschte Programmdatei bräche die Signatur.
+## Dort öffnet `open_download()` stattdessen den Download im Browser.
+static func can_self_install() -> bool:
+	return OS.has_feature("windows")
+
+
+## Öffnet die angebotene Fassung im Browser — der Weg auf Plattformen ohne Selbstersetzen.
+func open_download() -> void:
+	if state != State.AVAILABLE:
+		return
+	OS.shell_open(str(_entry["url"]))
+
+
 ## Lädt die angebotene Fassung und prüft sie. Endet in READY (installierbar) oder ERROR.
 func download() -> void:
-	if state != State.AVAILABLE:
+	if state != State.AVAILABLE or not can_self_install():
 		return
 	_loud = true
 	if DirAccess.make_dir_recursive_absolute(DOWNLOAD_DIR) != OK:
@@ -186,7 +211,7 @@ func _on_download(result: int, code: int, _headers: PackedStringArray, _body: Pa
 ## umbenannt (unter Windows auch für die laufende Datei erlaubt) und erst dann geschrieben —
 ## scheitert der zweite Schritt, kommt der alte Name zurück.
 func install() -> void:
-	if state != State.READY:
+	if state != State.READY or not can_self_install():
 		return
 	_loud = true
 	_set_state(State.INSTALLING)
@@ -234,7 +259,7 @@ func _swap() -> String:
 ## Nicht früher: bis zum Prozessende ist die Datei gesperrt, das Löschen scheiterte also
 ## genau in dem Moment, in dem es versucht würde.
 func _cleanup_old_executable() -> void:
-	if OS.has_feature("editor"):
+	if OS.has_feature("editor") or not can_self_install():
 		return
 	var backup := OS.get_executable_path() + ".old"
 	if FileAccess.file_exists(backup):

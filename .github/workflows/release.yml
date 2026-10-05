@@ -1,7 +1,7 @@
 name: Release
 
-# Baut, signiert und veröffentlicht eine Windows-Fassung; Auslöser ist ein in GitHub
-# publiziertes Release. Die Release-Beschreibung landet als `notes` in latest.json, die der
+# Baut, signiert und veröffentlicht eine Windows- und eine macOS-Fassung; Auslöser ist ein
+# in GitHub publiziertes Release. Die Release-Beschreibung landet als `notes` in latest.json, die der
 # letzten 7 Tage (mindestens 3 Releases) als `history` — der Update-Dialog zeigt alle, die
 # neuer sind als die installierte Fassung. Deshalb Release-Notes kurz halten.
 #
@@ -20,6 +20,10 @@ env:
   GODOT_VERSION: "4.7-stable"
   GODOT_TEMPLATE_DIR: "4.7.stable"
   PRESET: "Windows Desktop"
+  # Universal (Intel und Apple Silicon), ad hoc signiert, nicht notarisiert: Gatekeeper
+  # fragt beim ersten Start nach. Exportiert wird auf dem Windows-Runner mit — Godot packt
+  # und signiert das Bundle selbst, dafür braucht es keinen Mac.
+  PRESET_MACOS: "macOS"
 
 jobs:
   build:
@@ -27,6 +31,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       exe: ${{ steps.version.outputs.exe }}
+      mac: ${{ steps.version.outputs.mac }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -42,9 +47,11 @@ jobs:
         run: |
           VERSION="${TAG#v}"
           EXE="exports/MonsterSlam-${VERSION}.exe"
-          bash tools/release/set_version.sh "$VERSION" "$EXE"
+          MAC="exports/MonsterSlam-${VERSION}-macos.zip"
+          bash tools/release/set_version.sh "$VERSION" "$EXE" "$MAC"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "exe=$EXE" >> "$GITHUB_OUTPUT"
+          echo "mac=$MAC" >> "$GITHUB_OUTPUT"
         env:
           TAG: ${{ github.event.release.tag_name }}
 
@@ -99,11 +106,16 @@ jobs:
           "$GODOT" --headless --export-release "$PRESET" "${{ steps.version.outputs.exe }}" 2>&1 \
             | tr -d '\r' | grep -iE "error|warn|template|\[ done \]" || true
           test -f "${{ steps.version.outputs.exe }}"
+          "$GODOT" --headless --export-release "$PRESET_MACOS" "${{ steps.version.outputs.mac }}" 2>&1 \
+            | tr -d '\r' | grep -iE "error|warn|template|codesign|\[ done \]" || true
+          test -f "${{ steps.version.outputs.mac }}"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: windows-exe
-          path: ${{ steps.version.outputs.exe }}
+          name: builds
+          path: |
+            ${{ steps.version.outputs.exe }}
+            ${{ steps.version.outputs.mac }}
           retention-days: 1
 
   # Signieren und Manifest auf Linux, weil openssl und jq dort verlässlich vorliegen.
@@ -118,7 +130,7 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: windows-exe
+          name: builds
           path: exports
 
       - name: Signieren und latest.json erzeugen
@@ -131,6 +143,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ needs.build.outputs.version }}
           EXE: ${{ needs.build.outputs.exe }}
+          MAC: ${{ needs.build.outputs.mac }}
         run: |
           set -euo pipefail
           if [ -z "${SIGNING_KEY}" ]; then
@@ -144,8 +157,10 @@ jobs:
           gh api --paginate "repos/${{ github.repository }}/releases?per_page=100" --jq '.[]' \
             | jq -s . > releases.json
           bash tools/release/release_history.sh releases.json "$TAG" "$PUBLISHED" notes.md history.json
-          URL="${{ github.server_url }}/${{ github.repository }}/releases/download/${TAG}/$(basename "$EXE")"
-          bash tools/release/make_latest_json.sh "$EXE" "$VERSION" notes.md "$KEY" "$URL" latest.json history.json
+          BASE="${{ github.server_url }}/${{ github.repository }}/releases/download/${TAG}"
+          bash tools/release/make_latest_json.sh "$VERSION" notes.md "$KEY" latest.json history.json \
+            windows-x86_64 "$EXE" "${BASE}/$(basename "$EXE")" \
+            macos-universal "$MAC" "${BASE}/$(basename "$MAC")"
 
       - name: An das Release hängen
         shell: bash
@@ -153,7 +168,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload "${{ github.event.release.tag_name }}" \
-            "${{ needs.build.outputs.exe }}" latest.json --clobber
+            "${{ needs.build.outputs.exe }}" "${{ needs.build.outputs.mac }}" latest.json --clobber
 
   # Schreibt die freigegebene Version in den Default-Branch zurück, damit der committete
   # Stand nicht hinter den Releases zurückbleibt — die Versionsschranke der Content-Packs

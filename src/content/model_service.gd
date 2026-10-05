@@ -108,6 +108,12 @@ func available() -> bool:
 func refresh() -> void:
 	if _busy:
 		return
+	# Das Manifest nennt ein Windows-Programm (llama-server.exe). Auf anderen Plattformen
+	# gibt es den Zusatz noch nicht — dann wird gar nicht erst nachgefragt.
+	if not OS.has_feature("windows"):
+		manifest = {}
+		_set_state(State.READY)
+		return
 	_busy = true
 	message = ""
 	_set_state(State.LOADING)

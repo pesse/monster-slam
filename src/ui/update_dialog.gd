@@ -12,6 +12,14 @@ const ACTION_LABEL := {
 	UpdateService.State.READY: "Neu starten & ersetzen",
 }
 
+## Dasselbe, wo das Spiel sich nicht selbst ersetzt (macOS): geladen wird im Browser.
+const ACTION_LABEL_BROWSER := {
+	UpdateService.State.AVAILABLE: "Im Browser laden",
+}
+
+## Wo im Browser geladen wird, sagt der Dialog vorher, was danach zu tun ist.
+const BROWSER_HINT := "Lädt die neue Fassung im Browser. Danach das Spiel beenden und die alte App durch die neue ersetzen — der Spielstand bleibt erhalten."
+
 const STATUS_TEXT := {
 	UpdateService.State.CHECKING: "Suche nach einer neuen Fassung …",
 	UpdateService.State.DOWNLOADING: "Wird heruntergeladen …",
@@ -68,7 +76,11 @@ func _busy() -> bool:
 func _on_action() -> void:
 	match UpdateService.state:
 		UpdateService.State.AVAILABLE:
-			UpdateService.download()
+			if UpdateService.can_self_install():
+				UpdateService.download()
+			else:
+				UpdateService.open_download()
+				_close()
 		UpdateService.State.READY:
 			UpdateService.install()
 
@@ -86,6 +98,8 @@ func _render() -> void:
 
 	_status.text = UpdateService.error if state == UpdateService.State.ERROR \
 		else str(STATUS_TEXT.get(state, ""))
+	if state == UpdateService.State.AVAILABLE and not UpdateService.can_self_install():
+		_status.text = BROWSER_HINT
 	_status.visible = not _status.text.is_empty()
 
 	var loading := state == UpdateService.State.DOWNLOADING
@@ -94,8 +108,9 @@ func _render() -> void:
 	_progress.indeterminate = loading and UpdateService.progress < 0.0
 	_progress.value = maxf(UpdateService.progress, 0.0)
 
-	_action.visible = ACTION_LABEL.has(state)
-	_action.text = str(ACTION_LABEL.get(state, ""))
+	var labels := ACTION_LABEL if UpdateService.can_self_install() else ACTION_LABEL_BROWSER
+	_action.visible = labels.has(state)
+	_action.text = str(labels.get(state, ""))
 	_action.disabled = _busy()
 	_later.disabled = _busy()
 	_later.text = "Schließen" if state == UpdateService.State.ERROR else "Später"

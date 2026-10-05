@@ -7,6 +7,11 @@ die richtige Antwort, ist das Monster besiegt. Kommt es bis zur Festung, nimmt s
 Dieses Handbuch ist für Spielerinnen und Spieler gedacht und für Eltern und Lehrkräfte,
 die wissen wollen, was im Spiel passiert und warum es sich so verhält.
 
+**Auf dem Mac** ist das Spiel nicht bei Apple beglaubigt. Beim ersten Start meldet macOS
+deshalb, die App lasse sich nicht überprüfen. Unter *Systemeinstellungen → Datenschutz &
+Sicherheit* steht dann unten „Monster Slam“ mit **„Trotzdem öffnen“**. Einmal bestätigt,
+startet das Spiel danach normal. Nach jedem Update fragt macOS noch einmal.
+
 ## Inhalt
 
 1. [Der Start-Screen](#1-der-start-screen)
@@ -859,6 +864,10 @@ nachsehen kannst du mit **„Auf Updates prüfen“** rechts unten im Hauptmenü
    unbeschädigte Fassung installiert.
 3. „Neu starten & ersetzen“ tauscht das Spiel aus und startet es neu.
 
+**Auf dem Mac** ersetzt sich das Spiel nicht selbst. Statt „Herunterladen“ steht dort
+„Im Browser laden“: Der Browser lädt die neue Fassung als ZIP. Beende das Spiel, pack
+die ZIP aus und ersetze die alte „Monster Slam“-App im Programme-Ordner durch die neue.
+
 Dein Fortschritt bleibt dabei erhalten; er liegt nicht im Spiel selbst (Kapitel 19).
 
 ## 17. Hinweise am Mauszeiger
@@ -907,7 +916,8 @@ Auch das graue „↺“ im Fähigkeiten-Screen sagt am Zeiger, warum es gerade 
 Alles, was ein Profil sich erspielt (Lernstand, Gold, Erfahrung, Fähigkeiten, Boss-Siege,
 Einstellungen, Meldungen und Protokoll), liegt im Benutzer-Datenordner des Spiels auf
 diesem Rechner, nicht im Spielordner. Deshalb überlebt es auch ein Update. Unter Windows
-ist das in der Regel `%APPDATA%\Godot\app_userdata\Monster Slam\`. Den genauen Pfad der
+ist das in der Regel `%APPDATA%\Godot\app_userdata\Monster Slam\`, auf dem Mac
+`~/Library/Application Support/Godot/app_userdata/Monster Slam/`. Den genauen Pfad der
 Protokolldatei zeigt der Reiter „Protokoll“ in den Einstellungen, und „Ordner öffnen“
 führt direkt dorthin.
 
@@ -940,7 +950,9 @@ Sprechblase oben, deine Antwort tippst du unten in deine eigene. Es gibt **keine
 falschen nicht stimmt, beurteilt ein Sprachmodell, das **auf diesem Rechner** läuft. Es
 kommt nicht mit dem Spiel, sondern wird einmal über „Inhalte“ geholt („Sprachmodell für
 Bosskämpfe“, rund 4,6 GB). Beim Betreten des Bosskampfs startet es; bis es geladen ist,
-steht dort „Er erwacht …“. Nichts, was getippt wird, verlässt den Rechner.
+steht dort „Er erwacht …“. Nichts, was getippt wird, verlässt den Rechner. Das
+Sprachmodell gibt es bisher nur unter Windows. Auf dem Mac wird es unter „Inhalte“ gar
+nicht erst angeboten.
 
 **Ohne Sprachmodell** zählt nur, was als Lösung hinterlegt ist – für die meisten Sätze
 also nur die Musterlösung Wort für Wort. Das Spiel sagt das unten im Bosskampf.

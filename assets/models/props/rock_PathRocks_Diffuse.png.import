@@ -4,8 +4,9 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cwyqc3i7aw3o4"
 path.s3tc="res://.godot/imported/rock_PathRocks_Diffuse.png-95fe4d354837264a4ec0b6e82b743e9d.s3tc.ctex"
+path.etc2="res://.godot/imported/rock_PathRocks_Diffuse.png-95fe4d354837264a4ec0b6e82b743e9d.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 generator_parameters={
@@ -15,7 +16,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/props/rock_PathRocks_Diffuse.png"
-dest_files=["res://.godot/imported/rock_PathRocks_Diffuse.png-95fe4d354837264a4ec0b6e82b743e9d.s3tc.ctex"]
+dest_files=["res://.godot/imported/rock_PathRocks_Diffuse.png-95fe4d354837264a4ec0b6e82b743e9d.s3tc.ctex", "res://.godot/imported/rock_PathRocks_Diffuse.png-95fe4d354837264a4ec0b6e82b743e9d.etc2.ctex"]
 
 [params]
 

@@ -6,13 +6,14 @@
 # Skript hält sie synchron, damit lokaler Build und CI nicht auseinanderlaufen.
 #
 # Nutzung:
-#   set_version.sh <version> [<ausgabe-exe>]
+#   set_version.sh <version> [<ausgabe-exe>] [<ausgabe-macos-zip>]
 set -euo pipefail
 
 cd "$(dirname "$0")/../.."
 
 VERSION="${1:?Version fehlt}"
 OUT="${2:-}"
+OUT_MACOS="${3:-}"
 
 if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-].+)?$ ]]; then
 	echo "FEHLER: '$VERSION' ist keine gültige Version." >&2
@@ -28,13 +29,22 @@ while [[ "$(tr -cd '.' <<<"$PE_VERSION" | wc -c)" -lt 3 ]]; do
 done
 
 if [[ -f export_presets.cfg ]]; then
+	# Windows will vier Stellen, macOS (CFBundleVersion) die Version, wie sie ist.
 	sed -i \
 		-e "s|^application/file_version=.*|application/file_version=\"${PE_VERSION}\"|" \
 		-e "s|^application/product_version=.*|application/product_version=\"${PE_VERSION}\"|" \
+		-e "s|^application/short_version=.*|application/short_version=\"${VERSION%%-*}\"|" \
+		-e "s|^application/version=.*|application/version=\"${VERSION}\"|" \
 		export_presets.cfg
+	# export_path je Preset: der Bereich reicht von seinem name= bis zu seinem export_path=.
 	if [[ -n "$OUT" ]]; then
-		sed -i -e "s|^export_path=.*|export_path=\"${OUT}\"|" export_presets.cfg
+		sed -i -e "/^name=\"Windows Desktop\"/,/^export_path=/ s|^export_path=.*|export_path=\"${OUT}\"|" \
+			export_presets.cfg
+	fi
+	if [[ -n "$OUT_MACOS" ]]; then
+		sed -i -e "/^name=\"macOS\"/,/^export_path=/ s|^export_path=.*|export_path=\"${OUT_MACOS}\"|" \
+			export_presets.cfg
 	fi
 fi
 
-echo ">> Version $VERSION (PE ${PE_VERSION}${OUT:+, Ziel $OUT})"
+echo ">> Version $VERSION (PE ${PE_VERSION}${OUT:+, Ziel $OUT}${OUT_MACOS:+, $OUT_MACOS})"
