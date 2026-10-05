@@ -3,12 +3,12 @@
 importer="wav"
 type="AudioStreamWAV"
 uid="uid://car0su3pbsu16"
-path="res://.godot/imported/slow_mo_out.wav-957c2212443148c4e0e3124b83b57725.sample"
+path="res://.godot/imported/slow_mo_out.wav-5c44b4971a53a5b2a03893139558401c.sample"
 
 [deps]
 
-source_file="res://assets/audio/slow_mo_out.wav"
-dest_files=["res://.godot/imported/slow_mo_out.wav-957c2212443148c4e0e3124b83b57725.sample"]
+source_file="res://assets/audio/sfx/slow_mo_out.wav"
+dest_files=["res://.godot/imported/slow_mo_out.wav-5c44b4971a53a5b2a03893139558401c.sample"]
 
 [params]
 

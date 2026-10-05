@@ -1,7 +1,8 @@
 extends Node
 ## Zentrale Soundausgabe für kurze Effekte (Autoload `Sfx`).
 ##
-## Namenskonvention: eine Id heißt wie ihre Datei unter `res://assets/audio/`, snake_case.
+## Namenskonvention: eine Id heißt wie ihre Datei unter `res://assets/audio/sfx/`, snake_case.
+## (Musik bekommt einen eigenen Ordner daneben.)
 ## Der Dateiname steht trotzdem ausgeschrieben in [constant SOUNDS] — so kann eine einzelne
 ## Quelle auch mal ein anderes Format mitbringen, ohne dass Code sich ändert. Standard ist
 ## .wav: kurze One-Shots starten damit ohne Dekodierschritt, und die CC0-Quellen liefern
@@ -17,7 +18,7 @@ extends Node
 ## gemeldet, [method play] verwirft sie danach still. Frische Checkouts und Tests
 ## (headless = Dummy-Treiber) sollen nicht daran scheitern.
 
-const AUDIO_DIR := "res://assets/audio/"
+const AUDIO_DIR := "res://assets/audio/sfx/"
 
 ## Id -> Datei und Pegel. Absichtlich explizit statt Verzeichnis-Scan: ein Tippfehler im
 ## Aufruf soll als Warnung auffallen, nicht als stiller Nicht-Ton.
@@ -49,6 +50,18 @@ const SOUNDS := {
 	# der kräftige Abzug.
 	&"task_mastered": {"file": "task_mastered.wav", "db": -2.0},
 	&"word_mastered": {"file": "word_mastered.wav", "db": -6.5},
+	# Zauber (ADR 0014, SpellFx): selten und vom Spieler gewollt, also um die Wellen-Fanfare.
+	# `spell_reveal` kommt sehr leise aus der Quelle (-30 dBFS RMS, Spitzen bei -12),
+	# `spell_slow` und `spell_armor` laut und an der Grenze.
+	&"spell_reveal": {"file": "spell_reveal.wav", "db": 6.0},
+	&"spell_slow": {"file": "spell_slow.wav", "db": -2.5},
+	# Dieselbe Datei, wenn unter Schwere Luft ein neues Monster erscheint: kommt je Monster,
+	# also deutlich unter dem Zauber selbst.
+	&"spell_slow_spawn": {"file": "spell_slow.wav", "db": -9.0},
+	&"spell_freeze": {"file": "spell_freeze.wav", "db": 2.5},
+	# Taut das ganze Feld auf einmal auf, spielt der Cooldown ihn nur einmal.
+	&"spell_shatter": {"file": "spell_shatter.wav", "db": 1.0},
+	&"spell_armor": {"file": "spell_armor.wav", "db": -1.0},
 }
 
 const BUS_SFX := &"SFX"

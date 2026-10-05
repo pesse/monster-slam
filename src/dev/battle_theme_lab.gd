@@ -86,7 +86,9 @@ extends Node3D
 ##         Im Fenster: Reiter Zauber — „Feld füllen" stellt sechs Monster auf die Bahn,
 ##         „Zaubern" wirkt den gewählten Zauber auf alle, die laufen (ohne Vorrat, ohne Spur;
 ##         Lebensquell und Eisenhaut nehmen der Festung vorher etwas, nur im Speicher), „Feld
-##         leeren" räumt auf und nimmt den Dunst von Schwere Luft weg.
+##         leeren" räumt auf und beendet, was für die ganze Welle gilt (Nebel und Bremse von
+##         Schwere Luft, Alternativen des Orakelblicks) — bis dahin bekommt es auch jedes neue
+##         Monster, wie im Kampf.
 ##     … -- --fps [--theme=<name>] [--windowed]
 ##         Misst im Vollbild und ohne VSync die mittlere Bildzeit mit allem an, jeweils ohne
 ##         eine Zutat (MSAA, Wolken, Teilchen, Wind, Schatten, Glow, Farbgebung, Weg+Flecken)
@@ -563,6 +565,8 @@ func _spawn_monster() -> void:
 	monster.screen_sized_label = _fp != null
 	monster.position = Vector3(randf_range(-_lane_half, _lane_half), 0.0, WaveRunnerScript.SPAWN_Z)
 	_walkers.add_child(monster)
+	# Was für die ganze Welle gewirkt wurde (Schwere Luft, Orakelblick), wie im Kampf.
+	_spell_fx.on_spawn(monster, _caster.on_spawn(monster))
 
 
 func _process(delta: float) -> void:
@@ -1680,7 +1684,9 @@ func _cast_spell(spell: Dictionary, short_frost := false) -> void:
 	($UI/SpellBanner as SpellBanner).play(spell)
 	_spell_fx.play(spell, field)
 	_strike_index = 0
-	_caster.cast(spell, field, 0)
+	# Die Werkbank läuft wie eine Welle ohne Ende: es kommt immer noch etwas, „für die ganze
+	# Welle" gilt also auch für die, die noch erscheinen — bis „Feld leeren".
+	_caster.cast(spell, field, 1)
 	if _hud != null:
 		_show_tally()
 
@@ -1732,6 +1738,8 @@ func _shake(magnitude: float) -> void:
 ## Zauber auf ein frisches Feld.
 const SPELL_SHOTS := [150, 450, 1000]
 const FROST_THAW_SHOTS := [2300, 3080]
+## Schwere Luft: der Nebel, wenn er ganz da ist.
+const HAZE_SHOTS := [3000, 4500]
 
 func _shoot_spells() -> void:
 	var dir := ProjectSettings.globalize_path(SHOT_DIR)
@@ -1748,6 +1756,9 @@ func _shoot_spells() -> void:
 		var steps: Array = SPELL_SHOTS.duplicate()
 		if str(spell.get("effect", "")) == "freeze":
 			steps.append_array(FROST_THAW_SHOTS)
+		if str((spell.get("params", {}) as Dictionary).get("scope", "")) == "wave" \
+				and str(spell.get("effect", "")) == "slow":
+			steps.append_array(HAZE_SHOTS)
 		for ms: int in steps:
 			_clear_field()
 			await get_tree().create_timer(0.2).timeout

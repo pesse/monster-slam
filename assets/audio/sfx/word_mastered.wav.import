@@ -3,12 +3,12 @@
 importer="wav"
 type="AudioStreamWAV"
 uid="uid://lt7uast13o06"
-path="res://.godot/imported/word_mastered.wav-f8280ffddb73744a79cafa7311d56b58.sample"
+path="res://.godot/imported/word_mastered.wav-a1420d10925a60e1f791b005e843efbd.sample"
 
 [deps]
 
-source_file="res://assets/audio/word_mastered.wav"
-dest_files=["res://.godot/imported/word_mastered.wav-f8280ffddb73744a79cafa7311d56b58.sample"]
+source_file="res://assets/audio/sfx/word_mastered.wav"
+dest_files=["res://.godot/imported/word_mastered.wav-a1420d10925a60e1f791b005e843efbd.sample"]
 
 [params]
 

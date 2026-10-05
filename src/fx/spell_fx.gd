@@ -9,8 +9,9 @@ extends Node3D
 ## und den Schlamm (SlowAura) beim Bremsen. Hier entsteht, was zum Feld gehört:
 ## - Drittes Auge, Orakelblick: ein Lichtvorhang fährt von der Festung zum Spawn; ein Schild
 ##   geht auf, wenn er sein Monster erreicht (`reveal_delay`).
-## - Sumpf: unter jedem Monster spritzt es grün auf. Schwere Luft zusätzlich ein Dunst über dem
-##   Feld, solange die Welle läuft (`haze`).
+## - Sumpf: unter jedem Monster spritzt es grün auf. Schwere Luft zusätzlich Bodennebel über
+##   dem Feld, solange die Welle läuft (`haze`), und jedes neue Monster spritzt beim
+##   Erscheinen (`on_spawn`).
 ## - Frost: ein Eisring läuft von der Festung über das Feld, Schnee fällt, das Bild wird kalt.
 ## - Donnerschlag: das Bild verdunkelt sich (Anlauf), dann schlägt nacheinander auf jedes
 ##   Monster ein Blitz ein — Plasma, Brandfleck, Wackeln (`bolt`).
@@ -24,7 +25,7 @@ extends Node3D
 
 const SHOCKWAVE_SHADER := preload("res://assets/shaders/shockwave.gdshader")
 const SPARK_SHADER := preload("res://assets/shaders/spark.gdshader")
-const SMOKE_SHADER := preload("res://assets/shaders/smoke.gdshader")
+const FOG_SHADER := preload("res://assets/shaders/ground_fog.gdshader")
 const CURTAIN_SHADER := preload("res://assets/shaders/light_curtain.gdshader")
 const MARK_SHADER := preload("res://assets/shaders/ground_mark.gdshader")
 
@@ -39,14 +40,19 @@ const COLORS := {
 }
 ## Schwere Luft: blaugrauer Dunst.
 const HAZE_COLOR := Color(0.55, 0.6, 0.72)
-## Der Ton je Wirkung. Vorläufig aus dem Bestand; eigene Töne bestellt
-## assets/audio/SPELLS_BRIEF.md.
+## Höhen der Nebelschichten (m); oben dünner. Unter der Augenhöhe der Ich-Sicht.
+## Viele dünne Schichten statt weniger dichter: wo eine Schicht ein Monster schneidet, bleibt
+## die Stufe klein.
+const HAZE_LAYERS := [0.1, 0.28, 0.46, 0.64, 0.82, 1.0]
+const HAZE_DENSITY := [0.42, 0.36, 0.3, 0.24, 0.16, 0.09]
+## Der Ton je Wirkung. Noch ohne eigenen Ton: Schwere Luft (klingt wie Sumpf), Lebensquell
+## und der Donnerschlag (Bestand); bestellt in assets/audio/sfx/SPELLS_BRIEF.md.
 const SOUNDS := {
-	"reveal_alts": &"slow_mo_out",
-	"slow": &"slow_mo_in",
-	"freeze": &"slow_mo_in",
+	"reveal_alts": &"spell_reveal",
+	"slow": &"spell_slow",
+	"freeze": &"spell_freeze",
 	"heal": &"slow_mo_out",
-	"armor": &"slow_mo_out",
+	"armor": &"spell_armor",
 }
 
 ## So lange fährt der Lichtvorhang von der Festung bis zum Spawn (s).
@@ -70,7 +76,8 @@ var back_z := -24.0
 var half_width := 8.0
 var fortress := Vector3(0.0, 0.0, 20.0)
 
-var _haze: CPUParticles3D
+var _haze: Node3D
+var _haze_mats: Array[ShaderMaterial] = []
 var _veil_tween: Tween
 
 
@@ -132,19 +139,36 @@ func bolt(monster: Monster, index: int, landed: Callable) -> void:
 	landed.call()
 
 
+## Ein Monster erscheint und bekommt, was für die ganze Welle gewirkt wurde (`effects`, aus
+## SpellCaster.on_spawn): unter Schwere Luft spritzt es dort auf, mit dem Ton des Sumpfs, nur
+## leiser — er kommt mit jedem Monster. Der Orakelblick braucht nichts: das Schild springt
+## ohnehin auf (WordPlate).
+func on_spawn(monster: Monster, effects: PackedStringArray) -> void:
+	if effects.has("slow"):
+		_splash(monster.position, COLORS["slow"])
+		Sfx.play(&"spell_slow_spawn")
+
+
 ## Schwere Luft: Dunst über dem Feld an (`on`) oder aus. Bleibt bis zum Ende der Welle.
 func haze(on: bool) -> void:
 	if on and _haze == null:
-		_haze = _haze_particles()
+		_haze = _haze_layers()
+		_haze_mats.assign(_haze.get_meta("materials"))
 		add_child(_haze)
-		_haze.color = Color(1, 1, 1, 0)
-		create_tween().tween_property(_haze, "color:a", 1.0, 1.5)
+		_haze_fade(0.0, 1.0, 2.0)
 	elif not on and _haze != null:
 		var old := _haze
 		_haze = null
-		var tw := create_tween()
-		tw.tween_property(old, "color:a", 0.0, 1.0)
-		tw.tween_callback(old.queue_free)
+		_haze_fade(1.0, 0.0, 1.2).tween_callback(old.queue_free)
+
+
+func _haze_fade(from: float, to: float, time: float) -> Tween:
+	var mats := _haze_mats.duplicate()
+	var tw := create_tween()
+	tw.tween_method(func(v: float) -> void:
+		for mat: ShaderMaterial in mats:
+			mat.set_shader_parameter("fade", v), from, to, time)
+	return tw
 
 
 ## Je ein Stück von allem, was hier entsteht — für FxWarmup, damit der erste Zauber im Kampf
@@ -167,10 +191,10 @@ static func specimens(at: Vector3) -> Array[Node3D]:
 	curtain_mat.set_shader_parameter("fade", 1.0)
 	curtain.material_override = curtain_mat
 	out.append(curtain)
-	var smoke := Node3D.new()
 	var fx := SpellFx.new()
-	smoke.add_child(fx._haze_particles())
-	out.append(smoke)
+	var fog := fx._haze_layers()
+	fog.position = at
+	out.append(fog)
 	fx.free()
 	return out
 
@@ -364,39 +388,28 @@ func _motes(color: Color, amount: int, lifetime: float) -> CPUParticles3D:
 
 
 ## Dunst für Schwere Luft: große, langsame Schwaden knapp über dem Boden der Bahn.
-func _haze_particles() -> CPUParticles3D:
-	var p := CPUParticles3D.new()
-	p.amount = 70
-	p.lifetime = 7.0
-	p.preprocess = 3.5
-	p.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
-	p.emission_box_extents = Vector3(half_width + 3.0, 0.6, (front_z - back_z) * 0.5 - 2.0)
-	p.position = Vector3(0.0, 1.2, (front_z + back_z) * 0.5 - 2.0)
-	p.direction = Vector3(1.0, 0.0, 0.2)
-	p.spread = 30.0
-	p.gravity = Vector3.ZERO
-	p.initial_velocity_min = 0.2
-	p.initial_velocity_max = 0.6
-	p.angle_min = 0.0
-	p.angle_max = 360.0
-	p.angular_velocity_min = -8.0
-	p.angular_velocity_max = 8.0
-	p.scale_amount_min = 1.0
-	p.scale_amount_max = 1.8
-	var quad := QuadMesh.new()
-	quad.size = Vector2.ONE * 6.0
-	var mat := ShaderMaterial.new()
-	mat.shader = SMOKE_SHADER
-	mat.set_shader_parameter("ember", 0.0)
-	quad.material = mat
-	p.mesh = quad
-	var ramp := Gradient.new()
-	ramp.set_color(0, Color(HAZE_COLOR, 0.0))
-	ramp.set_color(1, Color(HAZE_COLOR, 0.0))
-	ramp.add_point(0.3, Color(HAZE_COLOR, 0.4))
-	ramp.add_point(0.7, Color(HAZE_COLOR, 0.4))
-	p.color_ramp = ramp
-	return p
+## Die Nebelschichten über dem ganzen Feld, je eine mit eigener Dichte. Ihre Materialien
+## liegen als Meta „materials" am Knoten; `haze` blendet über sie ein und aus.
+func _haze_layers() -> Node3D:
+	var root := Node3D.new()
+	var mats: Array[ShaderMaterial] = []
+	var size := Vector2((half_width + 6.0) * 2.0, front_z - back_z + 10.0)
+	for i in HAZE_LAYERS.size():
+		var layer := MeshInstance3D.new()
+		var plane := PlaneMesh.new()
+		plane.size = size
+		layer.mesh = plane
+		var mat := ShaderMaterial.new()
+		mat.shader = FOG_SHADER
+		mat.set_shader_parameter("tint", Vector3(HAZE_COLOR.r, HAZE_COLOR.g, HAZE_COLOR.b))
+		mat.set_shader_parameter("density", HAZE_DENSITY[i])
+		mats.append(mat)
+		layer.material_override = mat
+		layer.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		layer.position = Vector3(0.0, HAZE_LAYERS[i], (front_z + back_z) * 0.5)
+		root.add_child(layer)
+	root.set_meta("materials", mats)
+	return root
 
 
 ## Das Bild leuchtet in `color` auf: in `rise` auf `alpha`, hält `hold`, verlischt in `fall`.

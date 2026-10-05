@@ -1281,7 +1281,7 @@ func _spawn(entry: Dictionary) -> void:
 	monster.reached_goal.connect(_on_monster_reached_goal)
 	_monsters.add_child(monster)
 	_active.append(monster)
-	_spells.on_spawn(monster)
+	_spell_fx.on_spawn(monster, _spells.on_spawn(monster))
 	_wave_shown[str(plan["task"].get("source_id", ""))] = _spawned
 	_spawned += 1
 	EventBus.monster_spawned.emit(plan["monster_def"], plan["task"])

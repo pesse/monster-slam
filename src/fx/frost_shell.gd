@@ -72,6 +72,7 @@ func shatter() -> void:
 	if _breaking:
 		return
 	_breaking = true
+	Sfx.play(&"spell_shatter")
 	_shards()
 	var tw := create_tween().set_parallel(true)
 	tw.tween_property(_shell, "scale", Vector3.ONE * 1.15, 0.12)

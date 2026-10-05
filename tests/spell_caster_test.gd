@@ -90,11 +90,12 @@ func test_a_wave_spell_reaches_later_monsters() -> void:
 	assert_bool(_caster.can_cast(slow, _field([]), 3)).is_true()
 	_caster.cast(slow, _field([]), 3)
 	var later := _monster(["walk"])
-	_caster.on_spawn(later)
+	# Was es bekommen hat, meldet on_spawn zurück — dafür spritzt und klingt es (SpellFx).
+	assert_array(Array(_caster.on_spawn(later))).contains_exactly(["slow"])
 	assert_float(later.pace).is_equal(0.5)
 	_caster.reset_wave()
 	var next_wave := _monster()
-	_caster.on_spawn(next_wave)
+	assert_array(Array(_caster.on_spawn(next_wave))).is_empty()
 	assert_float(next_wave.pace).is_equal(1.0)
 
 

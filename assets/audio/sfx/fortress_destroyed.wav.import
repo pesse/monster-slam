@@ -3,12 +3,12 @@
 importer="wav"
 type="AudioStreamWAV"
 uid="uid://d1dya68ypg5o0"
-path="res://.godot/imported/fortress_destroyed.wav-e845a2126748173ca9f75a92d54c79e7.sample"
+path="res://.godot/imported/fortress_destroyed.wav-bb47264e6cdd4e637b5443668ad16cd0.sample"
 
 [deps]
 
-source_file="res://assets/audio/fortress_destroyed.wav"
-dest_files=["res://.godot/imported/fortress_destroyed.wav-e845a2126748173ca9f75a92d54c79e7.sample"]
+source_file="res://assets/audio/sfx/fortress_destroyed.wav"
+dest_files=["res://.godot/imported/fortress_destroyed.wav-bb47264e6cdd4e637b5443668ad16cd0.sample"]
 
 [params]
 

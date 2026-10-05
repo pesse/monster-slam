@@ -36,12 +36,16 @@ func reset_wave() -> void:
 	wave_alts = false
 
 
-## Ein Monster erscheint: es bekommt, was für die ganze Welle gewirkt wurde.
-func on_spawn(monster: Monster) -> void:
-	if wave_pace < 1.0:
-		monster.slow_to(wave_pace)
+## Ein Monster erscheint: es bekommt, was für die ganze Welle gewirkt wurde. Zurück kommen
+## die Wirkungen, die es bekommen hat — für Bild und Ton (SpellFx.on_spawn).
+func on_spawn(monster: Monster) -> PackedStringArray:
+	var got := PackedStringArray()
+	if wave_pace < 1.0 and monster.slow_to(wave_pace):
+		got.append("slow")
 	if wave_alts:
 		monster.show_alts()
+		got.append("reveal_alts")
+	return got
 
 
 ## Würde `spell` jetzt etwas bewirken? `field` sind die Monster auf dem Feld, `to_come`
