@@ -32,9 +32,9 @@
 - **Oben rechts:**
   - Die **Welle** mit ihrer Nummer und dem Fortschritt: wie viele Monster erledigt sind,
     von wie vielen.
-  - Darunter die **besiegten** Monster in diesem Lauf und mit dem goldenen Buch, wie viele
-    Aufgaben du **in dieser Sitzung gemeistert** hast. Das Buch erscheint erst, wenn es
-    die erste gibt.
+  - Darunter drei Zahlen: beim Totenkopf die **besiegten** Monster in diesem Lauf, beim
+    goldenen Buch, wie viele Aufgaben du **in dieser Sitzung gemeistert** hast, und bei den
+    Münzen dein **Gold**. Das Buch erscheint erst, wenn es die erste Meisterung gibt.
 - **Links unten** stehen deine Zauberplätze, je mit Ziffer, Zeichen und Anzahl (siehe
   „Zauber“ weiter unten).
 
