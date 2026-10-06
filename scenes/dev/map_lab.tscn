@@ -1,7 +1,11 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://src/dev/map_lab.gd" id="1_lab"]
 [ext_resource type="Script" path="res://src/ui/map_canvas.gd" id="2_canvas"]
+[ext_resource type="Shader" path="res://assets/shaders/map_mask_overlay.gdshader" id="3_overlay"]
+
+[sub_resource type="ShaderMaterial" id="mask_overlay"]
+shader = ExtResource("3_overlay")
 
 [node name="MapLab" type="Control"]
 layout_mode = 3
@@ -54,13 +58,253 @@ text = "Weg leeren"
 unique_name_in_owner = true
 text = "💾 Speichern"
 
-[node name="Status" type="Label" parent="Margin/Root"]
+[node name="Bar" type="HBoxContainer" parent="Margin/Root"]
+
+[node name="Status" type="Label" parent="Margin/Root/Bar"]
 unique_name_in_owner = true
 theme_type_variation = &"Hint"
-text = "Punkt wählen, ins Bild klicken."
+size_flags_horizontal = 3
+text = "Linke Maustaste wählt und zieht, rechte setzt Neues."
 
-[node name="Canvas" type="Control" parent="Margin/Root"]
+[node name="DeleteSelectionButton" type="Button" parent="Margin/Root/Bar"]
+unique_name_in_owner = true
+text = "Auswahl löschen (Entf)"
+
+[node name="OutlineToggle" type="CheckButton" parent="Margin/Root/Bar"]
+unique_name_in_owner = true
+button_pressed = true
+text = "Masken"
+
+[node name="Body" type="HBoxContainer" parent="Margin/Root"]
+size_flags_vertical = 3
+
+[node name="Canvas" type="Control" parent="Margin/Root/Body"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(320, 180)
-size_flags_vertical = 3
+size_flags_horizontal = 3
 script = ExtResource("2_canvas")
+
+[node name="Handles" type="Control" parent="Margin/Root/Body/Canvas"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Inspector" type="PanelContainer" parent="Margin/Root/Body"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(316, 0)
+
+[node name="Scroll" type="ScrollContainer" parent="Margin/Root/Body/Inspector"]
+horizontal_scroll_mode = 0
+
+[node name="Gutter" type="MarginContainer" parent="Margin/Root/Body/Inspector/Scroll"]
+theme_type_variation = &"ScrollGutter"
+size_flags_horizontal = 3
+
+[node name="Items" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter"]
+theme_type_variation = &"Tight"
+
+[node name="EffectCaption" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items"]
+theme_type_variation = &"Caption"
+text = "Bewegung der Karte"
+
+[node name="AmbienceSelect" type="OptionButton" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items"]
+unique_name_in_owner = true
+
+[node name="AddRow" type="HBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items"]
+
+[node name="KindSelect" type="OptionButton" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/AddRow"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+
+[node name="AddAmbienceButton" type="Button" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/AddRow"]
+unique_name_in_owner = true
+text = "+ Effekt"
+
+[node name="InspectorInfo" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items"]
+unique_name_in_owner = true
+theme_type_variation = &"Hint"
+autowrap_mode = 3
+text = "Einen Effekt wählen oder anlegen."
+
+[node name="ShapePreview" type="Control" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 160)
+
+[node name="ShapeMask" type="Control" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/ShapePreview"]
+unique_name_in_owner = true
+material = SubResource("mask_overlay")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="EffectGroup" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items"]
+unique_name_in_owner = true
+theme_type_variation = &"Tight"
+
+[node name="KindCaption" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup"]
+theme_type_variation = &"Caption"
+text = "Art"
+
+[node name="KindEdit" type="OptionButton" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup"]
+unique_name_in_owner = true
+
+[node name="IntensityGroup" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup"]
+unique_name_in_owner = true
+theme_type_variation = &"Tight"
+
+[node name="IntensityCaption" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/IntensityGroup"]
+theme_type_variation = &"Caption"
+text = "Intensität"
+
+[node name="IntensityRow" type="HBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/IntensityGroup"]
+
+[node name="IntensitySlider" type="HSlider" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/IntensityGroup/IntensityRow"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+size_flags_vertical = 4
+min_value = 0.0
+max_value = 2.0
+step = 0.05
+value = 1.0
+
+[node name="IntensityValue" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/IntensityGroup/IntensityRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(48, 0)
+text = "1.00"
+horizontal_alignment = 2
+
+[node name="StyleGroup" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup"]
+unique_name_in_owner = true
+theme_type_variation = &"Tight"
+
+[node name="StyleCaption" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/StyleGroup"]
+theme_type_variation = &"Caption"
+text = "Form"
+
+[node name="StyleSelect" type="OptionButton" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/StyleGroup"]
+unique_name_in_owner = true
+
+[node name="ParamGroup" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup"]
+unique_name_in_owner = true
+theme_type_variation = &"Tight"
+
+[node name="SizeGroup" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup"]
+unique_name_in_owner = true
+theme_type_variation = &"Tight"
+
+[node name="SizeCaption" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/SizeGroup"]
+theme_type_variation = &"Caption"
+text = "Größe der Quelle"
+
+[node name="SizeRow" type="HBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/SizeGroup"]
+
+[node name="SizeSlider" type="HSlider" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/SizeGroup/SizeRow"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+size_flags_vertical = 4
+min_value = 0.2
+max_value = 4.0
+step = 0.05
+value = 1.0
+
+[node name="SizeValue" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/SizeGroup/SizeRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(48, 0)
+text = "1.00"
+horizontal_alignment = 2
+
+[node name="BrushGroup" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup"]
+unique_name_in_owner = true
+theme_type_variation = &"Tight"
+
+[node name="BrushSizeGroup" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup"]
+unique_name_in_owner = true
+theme_type_variation = &"Tight"
+
+[node name="BrushCaption" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/BrushSizeGroup"]
+theme_type_variation = &"Caption"
+text = "Pinsel"
+
+[node name="BrushRow" type="HBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/BrushSizeGroup"]
+
+[node name="BrushSlider" type="HSlider" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/BrushSizeGroup/BrushRow"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+size_flags_vertical = 4
+min_value = 4.0
+max_value = 200.0
+step = 1.0
+value = 40.0
+
+[node name="BrushValue" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/BrushSizeGroup/BrushRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(48, 0)
+text = "40 px"
+horizontal_alignment = 2
+
+[node name="HardnessGroup" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup"]
+unique_name_in_owner = true
+theme_type_variation = &"Tight"
+
+[node name="HardnessCaption" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/HardnessGroup"]
+theme_type_variation = &"Caption"
+text = "Härte des Randes"
+
+[node name="HardnessRow" type="HBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/HardnessGroup"]
+
+[node name="HardnessSlider" type="HSlider" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/HardnessGroup/HardnessRow"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+size_flags_vertical = 4
+min_value = 0.0
+max_value = 1.0
+step = 0.05
+value = 0.5
+
+[node name="HardnessValue" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/HardnessGroup/HardnessRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(48, 0)
+text = "0.50"
+horizontal_alignment = 2
+
+[node name="StrengthGroup" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup"]
+unique_name_in_owner = true
+theme_type_variation = &"Tight"
+
+[node name="StrengthCaption" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/StrengthGroup"]
+theme_type_variation = &"Caption"
+text = "Stärke"
+
+[node name="StrengthRow" type="HBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/StrengthGroup"]
+
+[node name="StrengthSlider" type="HSlider" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/StrengthGroup/StrengthRow"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+size_flags_vertical = 4
+min_value = 0.05
+max_value = 1.0
+step = 0.05
+value = 1.0
+
+[node name="StrengthValue" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/StrengthGroup/StrengthRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(48, 0)
+text = "1.00"
+horizontal_alignment = 2
+
+[node name="UndoButton" type="Button" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup"]
+unique_name_in_owner = true
+text = "Rückgängig (Strg+Z)"
+
+[node name="DeleteAmbienceButton" type="Button" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup"]
+unique_name_in_owner = true
+text = "Effekt löschen"

@@ -71,6 +71,142 @@ func test_layout_reads_units_areas_and_path() -> void:
 	assert_dict(MapLayout.unit_points({})).is_empty()
 
 
+# --- Bewegung auf der Gebietskarte (map.json `ambience`) ----------------------
+
+func test_layout_reads_ambience_and_drops_what_does_not_fit() -> void:
+	var content := {"ambience": {"2": [
+		{"kind": "water"},
+		{"kind": "smoke", "x": 0.5, "y": 0.4, "size": 1.5},
+		{"kind": "ember", "x": 0.5, "y": 0.4},
+		{"kind": "lava"},
+		# Eine Fläche je Art: die zweite fällt weg.
+		{"kind": "water", "style": "rings"},
+		{"kind": "torch", "x": 0.5},
+		{"kind": "torch", "x": 1.5, "y": 0.5},
+		"kaputt",
+	]}}
+	var entries := MapLayout.ambience(content, 2)
+	assert_int(entries.size()).is_equal(3)
+	assert_str(str(entries[0]["kind"])).is_equal("water")
+	assert_str(str(entries[0]["style"])).is_equal("field")
+	assert_vector(entries[1]["at"]).is_equal(Vector2(0.5, 0.4))
+	assert_float(float(entries[1]["size"])).is_equal(1.5)
+	assert_float(float(entries[2]["size"])).is_equal(1.0)
+	assert_array(MapLayout.ambience(content, 3)).is_empty()
+	assert_array(MapLayout.ambience({}, 2)).is_empty()
+
+
+func test_layout_reads_intensity_and_style_with_defaults() -> void:
+	var read := func(entry: Dictionary) -> Dictionary: return MapLayout.ambience_entry(entry)
+	assert_float(float(read.call({"kind": "water"})["intensity"])).is_equal(1.0)
+	assert_str(str(read.call({"kind": "water", "style": "rings"})["style"])).is_equal("rings")
+	assert_float(float(read.call({"kind": "water", "intensity": 1.5})["intensity"])).is_equal(1.5)
+	# Unbekannte Form wird die gewohnte, zu stark wird gekappt.
+	var odd: Dictionary = read.call({"kind": "water", "style": "strudel", "intensity": 9})
+	assert_str(str(odd["style"])).is_equal("field")
+	assert_float(float(odd["intensity"])).is_equal(MapLayout.INTENSITY_MAX)
+	# Nebel kennt keine Formen.
+	assert_str(str(read.call({"kind": "mist", "style": "rings"})["style"])).is_empty()
+	assert_float(float(read.call({"kind": "smoke", "x": 0.5, "y": 0.4, "intensity": 0.5})["intensity"])).is_equal(0.5)
+
+
+func test_layout_reads_the_area_params_with_defaults_and_bounds() -> void:
+	var water := MapLayout.ambience_entry({"kind": "water", "speed": 2.0, "wave_size": 99})
+	assert_float(float(water["speed"])).is_equal(2.0)
+	assert_float(float(water["wave_size"])).is_equal(3.0)
+	assert_float(float(water["direction"])).is_equal(0.0)
+	var mist := MapLayout.ambience_entry({"kind": "mist"})
+	for param: Dictionary in MapLayout.PARAMS["mist"]:
+		assert_float(float(mist[param["key"]])).is_equal(float(param["default"]))
+	# Ein Schlüssel, den die Art nicht kennt, kommt nicht durch.
+	assert_bool(MapLayout.ambience_entry({"kind": "falls", "haze": 0.5}).has("haze")).is_false()
+
+
+## Jeder Regler steuert ein Uniform, das es im Shader seiner Art gibt — sonst bewegte er nichts.
+func test_every_param_is_a_uniform_of_its_shader() -> void:
+	for kind in MapLayout.PARAMS:
+		var names: Array = (MapAmbience.SHADERS[kind] as Shader).get_shader_uniform_list().map(
+				func(u: Dictionary): return u["name"])
+		for param: Dictionary in MapLayout.PARAMS[kind]:
+			assert_bool(param["key"] in names).override_failure_message(
+					"%s: Regler %s ohne Uniform" % [kind, param["key"]]).is_true()
+
+
+## Was in den echten map.json steht, taugt auch und gehört zu einer Unit mit Bild, sonst
+## sähe es niemand. Jede Fläche hat ihre Maske, jede Maske ihren Eintrag — eine Maske ohne
+## Eintrag läge sonst stumm im Export.
+func test_every_ambience_entry_is_valid_and_has_an_image() -> void:
+	for book in DirAccess.get_directories_at(MapLayout.ROOT):
+		var content := MapLayout.data(book)
+		var all: Dictionary = content.get("ambience", {})
+		for unit in all:
+			assert_object(MapLayout.unit_texture(book, int(unit))).override_failure_message(
+					"%s: ambience für Unit %s ohne Bild" % [book, unit]).is_not_null()
+			var raw: Array = all[unit]
+			for i in raw.size():
+				assert_dict(MapLayout.ambience_entry(raw[i])).override_failure_message(
+						"%s Unit %s: Eintrag %d taugt nicht: %s" % [book, unit, i, raw[i]]).is_not_empty()
+			var entries := MapLayout.ambience(content, int(unit))
+			var masks := MapLayout.ambience_masks(book, int(unit), entries)
+			for entry in entries:
+				if str(entry["kind"]) in MapLayout.AREA_KINDS:
+					assert_bool(masks.has(entry["mask"])).override_failure_message(
+							"%s Unit %s: %s ohne Maske" % [book, unit, entry["mask"]]).is_true()
+		for file in DirAccess.get_files_at(MapLayout.dir_of(book)):
+			if not file.begins_with("unit") or not file.ends_with(".webp") or not "_" in file:
+				continue
+			var unit := file.trim_prefix("unit").get_slice("_", 0)
+			var mask := file.trim_suffix(".webp").trim_prefix("unit%s_" % unit)
+			if not unit.is_valid_int() or not MapLayout.AREA_KINDS.any(func(k): return MapLayout.is_mask_of(mask, k)):
+				continue
+			var names: Array = MapLayout.ambience(content, int(unit)).map(func(e): return e.get("mask", ""))
+			assert_bool(mask in names).override_failure_message(
+					"%s/%s: Maske ohne Eintrag in map.json" % [book, file]).is_true()
+
+
+## Das Bild und die Bewegung liegen hinter der Zeichnung der Karte (Weg und Orte darüber),
+## das Bild zuerst; je Fläche mit Maske eine Ebene, die Quellen einer Art teilen eine.
+func test_ambience_lies_between_image_and_nodes() -> void:
+	var canvas: MapCanvas = auto_free(MapCanvas.new())
+	add_child(canvas)
+	canvas.size = Vector2(1104, 540)
+	var image := PlaceholderTexture2D.new()
+	image.size = Vector2(1920, 1080)
+	canvas.setup(image, [], [], func(_n: Dictionary) -> Dictionary: return {})
+	var mask := PlaceholderTexture2D.new()
+	canvas.set_ambience([
+		{"kind": "water", "mask": "water", "intensity": 1.0, "style": "field"},
+		# Ein zweites Wasser ist eine eigene Ebene mit eigenen Einstellungen.
+		{"kind": "water", "mask": "water2", "intensity": 0.5, "style": "rings"},
+		# Nebel ohne Maske bewegt nichts.
+		{"kind": "mist", "mask": "mist", "intensity": 1.0, "style": ""},
+		{"kind": "smoke", "at": Vector2(0.5, 0.5), "size": 1.0},
+		{"kind": "smoke", "at": Vector2(0.6, 0.5), "size": 1.0},
+	], {"water": mask, "water2": mask})
+	var layer := canvas.ambience_layer()
+	assert_int(layer.layer_count()).is_equal(3)
+	assert_bool(layer.show_behind_parent).is_true()
+	var image_layer := canvas.get_node("Image") as CanvasItem
+	assert_bool(image_layer.show_behind_parent).is_true()
+	assert_int(image_layer.get_index()).is_less(layer.get_index())
+	# Ein neues Bild nimmt die alte Bewegung mit.
+	canvas.setup(image, [], [], func(_n: Dictionary) -> Dictionary: return {})
+	assert_int(canvas.ambience_layer().layer_count()).is_equal(0)
+
+
+## Rauch steht auf seiner Quelle, Glut leuchtet um sie herum.
+func test_spot_rects_sit_on_their_source() -> void:
+	var rect := Rect2(Vector2(10, 20), Vector2(1600, 900))
+	var at := Vector2(0.5, 0.5)
+	var smoke := MapAmbience.spot_rect({"kind": "smoke", "at": at, "size": 1.0}, rect)
+	var ember := MapAmbience.spot_rect({"kind": "ember", "at": at, "size": 2.0}, rect)
+	var source := rect.position + at * rect.size
+	assert_float(smoke.end.y).is_equal_approx(source.y, 0.01)
+	assert_float(smoke.get_center().x).is_equal_approx(source.x, 0.01)
+	assert_vector(ember.get_center()).is_equal_approx(source, Vector2(0.01, 0.01))
+	assert_float(ember.size.y).is_equal_approx(MapAmbience.SPOT_SIZE["ember"].y * 2.0 * 900.0, 0.01)
+
+
 ## Die Buchkarte hat ihren Weg unter "units" — er ist kein Punkt einer Unit.
 func test_layout_reads_the_book_path_apart_from_the_units() -> void:
 	var content := {"units": {"1": {"x": 0.2, "y": 0.3},
