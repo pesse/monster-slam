@@ -2,7 +2,7 @@
 
 Godot 4.7, GDScript, Tests mit gdUnit4. Architektur und Begründungen: `docs/ARCHITECTURE.md`
 und `docs/adr/`; Inhalte: `docs/ADDING_CONTENT.md`; Tests: `docs/TESTING.md`; was der
-Spieler sieht: `docs/HANDBUCH.md`.
+Spieler sieht: `docs/handbuch/` (je Kapitel eine Datei, `README.md` ist der Inhalt).
 
 ## Befehle
 
