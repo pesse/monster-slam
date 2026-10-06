@@ -17,27 +17,23 @@ func _sources(ordered: Array) -> Array:
 	return ordered.map(func(c): return str(c["source"]["id"]))
 
 
-func _never_seen(_id: String) -> bool:
-	return false
+const NOW := 1790877600
 
 
-func _all_seen(_id: String) -> bool:
-	return true
+func _never_seen(_id: String) -> Dictionary:
+	return {}
 
 
-## Ohne gezeigte Wörter bleibt es bei fällig → neu → Rest.
-func test_without_shown_words_due_comes_before_new_before_rest() -> void:
-	var seen := func(id: String) -> bool: return id != "new"
-	var cands := [_cand("c", "rest"), _cand("b", "new"), _cand("a", "due")]
-	var order := GENERATOR.ordered(cands, ["due"], seen, {})
-	assert_array(_sources(order)).is_equal(["a", "b", "c"])
+## Jede Aufgabe gestern beantwortet, unsicher, seit Mitternacht fällig.
+func _all_seen(_id: String) -> Dictionary:
+	return {"confidence": 0.5, "last_seen": NOW - 86400, "due_at": NOW - 3600}
 
 
 ## Ein schon gezeigtes Wort kommt nach jedem ungezeigten — auch wenn es fällig ist und
 ## die anderen nur „Rest" sind.
 func test_a_shown_word_loses_even_when_it_is_due() -> void:
 	var cands := [_cand("shown", "shown.due"), _cand("x", "x.rest"), _cand("y", "y.rest")]
-	var order := GENERATOR.ordered(cands, ["shown.due"], _all_seen, {"shown": 0})
+	var order := GENERATOR.ordered(cands, _all_seen, {"shown": 0}, NOW)
 	assert_array(_sources(order)).has_size(3)
 	assert_str(str(_sources(order)[2])).is_equal("shown")
 
@@ -50,7 +46,7 @@ func test_every_task_of_a_shown_word_waits() -> void:
 		_cand("w", "translate.en_to_de.w"),
 		_cand("v", "translate.de_to_en.v"),
 	]
-	var order := GENERATOR.ordered(cands, [], _never_seen, {"w": 0})
+	var order := GENERATOR.ordered(cands, _never_seen, {"w": 0}, NOW)
 	assert_str(str(_sources(order)[0])).is_equal("v")
 
 
@@ -58,14 +54,14 @@ func test_every_task_of_a_shown_word_waits() -> void:
 func test_the_longest_unshown_word_repeats_first() -> void:
 	var cands := [_cand("late", "l"), _cand("early", "e"), _cand("mid", "m")]
 	var shown := {"late": 7, "early": 1, "mid": 4}
-	var order := GENERATOR.ordered(cands, [], _all_seen, shown)
+	var order := GENERATOR.ordered(cands, _all_seen, shown, NOW)
 	assert_array(_sources(order)).is_equal(["early", "mid", "late"])
 
 
 ## Kein Kandidat fällt weg: die Rückfallebene in pick() braucht auch die Wiederholungen.
 func test_nothing_is_dropped_when_all_words_were_shown() -> void:
 	var cands := [_cand("a", "a1"), _cand("a", "a2"), _cand("b", "b1")]
-	var order := GENERATOR.ordered(cands, [], _all_seen, {"a": 0, "b": 1})
+	var order := GENERATOR.ordered(cands, _all_seen, {"a": 0, "b": 1}, NOW)
 	assert_array(order).has_size(3)
 	assert_array(_sources(order)).is_equal(["a", "a", "b"])
 

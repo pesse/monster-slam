@@ -66,7 +66,8 @@ sehen.
    behalten ihre Formaufgaben, aber eine Form nach der *-ed*-Regel startet mit Confidence
    0.65, also gemeistert nach zwei Treffern (`WaveGenerator.RULE_FORM_PRIOR`). Bei einer
    Schreibfalle (verdoppelter Konsonant, *y → ied*) liegt der Start bei 0.55, also drei
-   Treffer. Ein Fehler halbiert die Confidence wie bei jeder anderen Aufgabe. Anlass war
+   Treffer (seit ADR 0018 0.6: der Zuwachs hängt am Abstand, drei Treffer in einer
+   Sitzung brauchen den höheren Start). Ein Fehler halbiert die Confidence wie bei jeder anderen Aufgabe. Anlass war
    Access 4 Unit 1: 22 von 24 Verben sind regelmäßig, die Formaufgaben dort bestanden fast
    nur aus *-ed* und verdrängten *dug* und *stood up*. Ganz herausnehmen wollten wir sie
    nicht, denn ein-, zweimal soll man sie sehen. Erkannt wird die Regel an den Formen

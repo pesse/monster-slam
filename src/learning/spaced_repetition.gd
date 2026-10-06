@@ -1,91 +1,69 @@
 class_name SpacedRepetition
 extends RefCounted
-## Lightweight SM-2-style scheduler for spaced repetition.
+## Wiederholung mit Abstand (ADR 0018): wie viel ein Treffer zählt und wann eine Aufgabe
+## wieder dran ist — beides aus der Confidence und der letzten Antwort, ohne eigenen Zustand.
 ##
-## Tracks per-item review state and decides when an item is due again.
-## Kept intentionally minimal and self-contained so it can be swapped or
-## extended without touching gameplay code. Persistence (save/load of the
-## `_items` dictionary as JSON) is the caller's responsibility.
+## Bis 0.26 lief daneben ein SM-2-Plan mit Ease und Intervall. Er wusste nichts von der
+## Confidence und sie nichts von ihm: fünf Treffer an einem Nachmittag meisterten ein Wort,
+## drei an drei Tagen nicht, und das frisch gemeisterte Wort war am nächsten Tag „fällig"
+## und stand in der Auswahl ganz vorn (Issue #18). Jetzt gibt es einen Lernstand, die
+## Confidence, und die Fälligkeit wird aus ihr gerechnet.
 ##
-## Zeitbasis sind Unix-Sekunden (`now`). Ein Fehler setzt die Aufgabe nach
-## RELEARN_SECONDS wieder auf fällig — noch in derselben Sitzung, nicht erst morgen.
-## Richtige Antworten rechnen in Tagen und werden zu Beginn des lokalen Tages fällig
-## (`utc_offset`): wer abends übt, hat das Wort am nächsten Nachmittag schon wieder,
-## nicht erst um dieselbe Uhrzeit.
-##
-## Nur eine FÄLLIGE Aufgabe rückt im Plan vor. Ein Wort kommt auch außer der Reihe dran
-## (der Pool ist klein), und drei richtige Antworten an einem Nachmittag hießen sonst
-## 1 → 3 → 8 Tage, ohne dass ein einziger Tag dazwischen lag. Ein Fehler zählt immer.
+## Zeitbasis sind Unix-Sekunden. Ein Fehler ist nach RELEARN_SECONDS wieder fällig — noch in
+## derselben Sitzung. Richtige Antworten rechnen in Tagen und werden zu Beginn des lokalen
+## Tages fällig (`utc_offset`): wer abends übt, hat das Wort am nächsten Nachmittag schon
+## wieder, nicht erst um dieselbe Uhrzeit.
 
 const DAY := 86400
-## Abstand nach einer falschen Antwort.
+## Abstand nach einer falschen Antwort, und der kleinste Abstand, der überhaupt zählt.
 const RELEARN_SECONDS := 600
 
-## Abstand der lokalen Zeit zu UTC in Sekunden; setzt der Besitzer (PlayerProgress).
-var utc_offset: int = 0
+## Ein Treffer schließt diesen Anteil der Lücke zu 1 — GAIN_MIN direkt nach der letzten
+## Antwort, GAIN_MAX nach einem vollen Abstand (spacing_gain). Gemessen an der
+## Meisterungs-Schwelle 0.8 und dem Prior 0.3: drei Treffer an drei Tagen meistern
+## (0.30 → 0.58 → 0.75 → 0.85), in einer Sitzung braucht es neun.
+const GAIN_MIN := 0.10
+const GAIN_MAX := 0.40
 
-## item_id -> { ease: float, interval: int (Tage), reps: int, due_at: int (unix) }
-var _items: Dictionary = {}
-
-
-func register(item_id: String) -> void:
-	if not _items.has(item_id):
-		_items[item_id] = {"ease": 2.5, "interval": 0, "reps": 0, "due_at": 0}
-
-
-## Records a review outcome. `quality` in 0..5 (SM-2 scale); >= 3 is a pass.
-## `now` in Unix-Sekunden.
-func review(item_id: String, quality: int, now: int) -> void:
-	register(item_id)
-	var it: Dictionary = _items[item_id]
-	if quality < 3:
-		it["reps"] = 0
-		it["interval"] = 0
-		it["due_at"] = now + RELEARN_SECONDS
-		return
-	if now < int(it["due_at"]):
-		return
-	it["reps"] += 1
-	if it["reps"] == 1:
-		it["interval"] = 1
-	elif it["reps"] == 2:
-		it["interval"] = 3
-	else:
-		it["interval"] = int(round(it["interval"] * it["ease"]))
-	it["ease"] = max(1.3, it["ease"] + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)))
-	it["due_at"] = _day_start(now) + int(it["interval"]) * DAY
+## Intervall nach einer richtigen Antwort, je Confidence: [ab Confidence, Tage]. Unter der
+## ersten Stufe ein Tag. Der Deckel liegt bei 45 Tagen — Schulvokabular wird über ein
+## Schuljahr geprüft, ein Wort, das erst in Monaten wiederkommt, ist aus dem Spiel verschwunden.
+const INTERVALS := [[0.985, 45], [0.975, 30], [0.95, 14], [0.9, 7], [0.8, 3]]
 
 
-## Item ids that are due at or before `now`, most-overdue first.
-func due_items(now: int) -> Array:
-	var due: Array = []
-	for id in _items:
-		if int(_items[id]["due_at"]) <= now:
-			due.append(id)
-	due.sort_custom(func(a, b): return _items[a]["due_at"] < _items[b]["due_at"])
-	return due
+## Wie viel ein Treffer zählt, nach dem Abstand zur letzten Antwort auf dieselbe Aufgabe.
+##
+## Logarithmisch zwischen RELEARN_SECONDS (GAIN_MIN) und dem vollen Abstand (GAIN_MAX):
+## eine Stunde später zählt etwa ein Drittel des Wegs, am nächsten Tag fast alles. Der volle
+## Abstand ist ein Tag oder das geplante Intervall, wenn es länger ist — wer ein Wort mit
+## sieben Tagen Intervall schon nach einem wiederholt, lernt dabei weniger als zur Zeit.
+## `elapsed` < 0 heißt: erste Antwort, kein Abstand bekannt — sie zählt voll, damit der
+## erste Tag einer der Tage ist.
+static func spacing_gain(elapsed: int, interval: int) -> float:
+	if elapsed < 0:
+		return GAIN_MAX
+	var full := float(maxi(DAY, interval))
+	var s := log(maxf(float(elapsed), RELEARN_SECONDS) / RELEARN_SECONDS) / log(full / RELEARN_SECONDS)
+	return lerpf(GAIN_MIN, GAIN_MAX, clampf(s, 0.0, 1.0))
 
 
-## Fälligkeit (unix) eines Items; 0 für ein unbekanntes.
-func due_at(item_id: String) -> int:
-	return int(_items.get(item_id, {}).get("due_at", 0))
+## Tage bis zur nächsten Wiederholung nach einer richtigen Antwort mit dieser Confidence.
+static func interval_days(confidence: float) -> int:
+	for step in INTERVALS:
+		if confidence >= float(step[0]):
+			return int(step[1])
+	return 1
 
 
-func to_dict() -> Dictionary:
-	return _items.duplicate(true)
-
-
-## Ältere Stände tragen `due` als UTC-Tageszähler statt `due_at`: fällig ab Mitternacht
-## UTC dieses Tages — umgerechnet ist das derselbe Zeitpunkt.
-func from_dict(data: Dictionary) -> void:
-	_items = data.duplicate(true)
-	for it in _items.values():
-		if it.has("due"):
-			if not it.has("due_at"):
-				it["due_at"] = int(it["due"]) * DAY
-			it.erase("due")
+## Fälligkeit (unix) aus dem Lernstand einer Aufgabe; 0, wenn sie nie beantwortet wurde.
+static func due_at(confidence: float, last_correct: bool, last_seen: int, utc_offset: int) -> int:
+	if last_seen <= 0:
+		return 0
+	if not last_correct:
+		return last_seen + RELEARN_SECONDS
+	return day_start(last_seen, utc_offset) + interval_days(confidence) * DAY
 
 
 ## Beginn des lokalen Tages, in den `now` fällt (unix).
-func _day_start(now: int) -> int:
+static func day_start(now: int, utc_offset: int) -> int:
 	return int(floor(float(now + utc_offset) / DAY)) * DAY - utc_offset

@@ -104,11 +104,12 @@ und die Auswahl fälliger/neuer Aufgaben + Monster-Mapping `src/battle/wave_gene
 Oberste Stufe der Auswahl ist „in dieser Welle schon gezeigt“ (am Grundwort, nicht am
 `learnable_id`): Wiederholungen erst, wenn der Pool erschöpft ist, dann das am längsten
 nicht gezeigte Wort zuerst (`WaveGenerator.ordered`). Die Menge führt der `WaveRunner`
-je Welle, gespeichert wird sie nicht. Darunter: fällig vor neu vor Rest; fällige und neue
-gemischt, der Rest nach Abstand zur letzten Antwort des Grundworts (`last_seen_at`), der
-längste zuerst, mit Zufall (`WaveGenerator.by_staleness`, Faktor 0,5–1,5 auf den
-Abstand). Das gibt auch über Wellen und lange Sitzungen etwas Spacing — vorher zog jede
-Welle wieder gleichverteilt aus dem Rest, und ein Wort kam in zwei Wellen hintereinander.
+je Welle, gespeichert wird sie nicht. Darunter wird gewichtet gezogen, ohne Zurücklegen
+(ADR 0018): Gewicht = Bedarf (1 − c, mindestens 0,05) × Dringlichkeit (verstrichener
+Anteil des Intervalls seit der letzten Antwort auf das Grundwort, gedeckelt bei 2), ein
+neues Wort 1. Die neuen tragen zusammen mindestens 30 % des Gewichts. Gemeistertes kommt
+so selten, aber nicht nie; ein Fehler (c halbiert, nach 10 min fällig) bald wieder. Die
+Gruppen fällig/neu/Rest stehen nur noch zur Erklärung in der Spur.
 
 ### Tempo = Schwierigkeit (Monster-Geschwindigkeit)
 Geschwindigkeit ist **kein eigenständiges Attribut**, sondern die sichtbare Projektion der
@@ -150,10 +151,12 @@ Score, aktive Welle) und reagiert selbst nur über EventBus-Signale.
 
 ## Lern-Module (`src/learning/`)
 
-- **`spaced_repetition.gd`** — SM-2-artiger Scheduler. Bestimmt, wann ein Item
-  wieder fällig ist: nach einem Fehler in 10 Minuten, nach richtigen Antworten in Tagen
-  ab lokaler Mitternacht. Nur eine fällige Aufgabe rückt im Plan vor. Persistierbar via
-  `to_dict()`/`from_dict()`.
+- **`spaced_repetition.gd`** — Wiederholung mit Abstand, ohne eigenen Zustand (ADR 0018).
+  `spacing_gain`: wie viel ein Treffer die Confidence hebt, 10–40 % der Lücke zu 1, je
+  nach Abstand zur letzten Antwort (logarithmisch, voll ab einem Tag bzw. dem Intervall).
+  `due_at`: Fälligkeit aus Confidence und letzter Antwort — nach einem Fehler in 10
+  Minuten, sonst 1 / 3 / 7 / 14 / 30 / 45 Tage ab lokaler Mitternacht. Es gibt nur einen
+  Lernstand, die Confidence; die Fälligkeit wird gerechnet.
 - **`answer_evaluator.gd`** — normalisierter Exakt-/Alternativabgleich für schnellen
   Recall (offline, deterministisch). Hier wohnt die Normalisierung (Artikel,
   Platzhalter, Klammergruppen, Typografie); die Satzbewertung nimmt sie über `tokens()`.
@@ -1031,8 +1034,8 @@ Ein Zauber ist ein Verbrauchsgegenstand: `price` in Gold, `effect` aus
   `user://logs/<player>_trace.jsonl`, eine Zeile je Ereignis. Siehe „Die Spur eines Laufs"
   unten.
 - **Spielerfortschritt** (`player_task_progress`): der Autoload `PlayerProgress`
-  (`src/learning/player_progress.gd`) hält je Aufgabe Confidence/Streak/Fälligkeit und
-  kapselt den SM-2-Scheduler. Persistenz: JSON unter `user://progress/<player>.json`
+  (`src/learning/player_progress.gd`) hält je Aufgabe Confidence/Streak/letzte Antwort;
+  die Fälligkeit rechnet `SpacedRepetition` daraus. Persistenz: JSON unter `user://progress/<player>.json`
   (schreibintensiv, wächst → bewusst nicht in `data/`). SQLite ist die vorgesehene
   Ausbaustufe für größere Historien.
 

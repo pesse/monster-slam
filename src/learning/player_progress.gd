@@ -1,8 +1,8 @@
 extends Node
 ## Persistenter Spielerfortschritt pro Aufgabe (Autoload `PlayerProgress`).
 ##
-## Hält player_progress-Records (ERM) und kapselt den SM-2-Scheduler
-## (src/learning/spaced_repetition.gd, unverändert wiederverwendet). Der Lernstand
+## Hält player_progress-Records (ERM). Die Fälligkeit wird aus ihnen gerechnet
+## (SpacedRepetition, ADR 0018), es gibt keinen Plan daneben. Der Lernstand
 ## hängt nur an Spieler + learnable_id (Task-Typ + Richtung + Lexeme/Form/Relation),
 ## nicht am Monster. Siehe TaskResolver.learnable_id() für das Schlüssel-Schema.
 ##
@@ -25,7 +25,7 @@ const CURVE_WEEKS := 12
 ## learnable_id -> {
 ##   confidence: float (0..1), attempts: int, correct_total: int,
 ##   current_streak: int, best_streak: int, last_correct: bool,
-##   last_response_time_ms: int, last_seen_at: int (unix), next_review_at: int (unix),
+##   last_response_time_ms: int, last_seen_at: int (unix),
 ##   first_seen_at: int (unix), mastered_at: int (unix, 0 = nie/unbekannt)
 ## }
 ##
@@ -34,7 +34,6 @@ const CURVE_WEEKS := 12
 ## sind nicht darstellbar. Fortschrittsdateien von vor dieser Änderung haben die Felder nicht;
 ## fehlend heißt 0 = „unbekannt" und wird NICHT mit einem erfundenen Datum aufgefüllt.
 var _records: Dictionary = {}
-var _sr := _new_scheduler()
 var player_id: String = "default"
 
 
@@ -46,16 +45,13 @@ func _ready() -> void:
 	EventBus.wave_cleared.connect(func(_wave_id): save_progress())
 
 
-## Zeitbasis des SM-2-Schedulers (Unix-Sekunden).
+## Abstand der lokalen Zeit zu UTC in Sekunden: die Fälligkeit rechnet Tage ab lokaler
+## Mitternacht (siehe SpacedRepetition).
+var utc_offset := int(Time.get_time_zone_from_system().get("bias", 0)) * 60
+
+
 func _now() -> int:
 	return int(Time.get_unix_time_from_system())
-
-
-## Der Scheduler rechnet Tage ab lokaler Mitternacht (siehe SpacedRepetition).
-func _new_scheduler() -> SpacedRepetition:
-	var sr := SpacedRepetition.new()
-	sr.utc_offset = int(Time.get_time_zone_from_system().get("bias", 0)) * 60
-	return sr
 
 
 ## `initial_confidence` >= 0 setzt die Start-Confidence eines NEU angelegten Records
@@ -67,12 +63,11 @@ func _ensure(task_id: String, initial_confidence: float = -1.0) -> void:
 		_records[task_id] = {
 			"confidence": start_conf, "attempts": 0, "correct_total": 0,
 			"current_streak": 0, "best_streak": 0, "last_correct": false,
-			"last_response_time_ms": 0, "last_seen_at": 0, "next_review_at": 0,
+			"last_response_time_ms": 0, "last_seen_at": 0,
 			# Erstkontakt: der Zeitpunkt gehört zum Anlegen des Records, nicht zur ersten
 			# Antwort — `record()` legt ihn über _ensure() unmittelbar davor an.
 			"first_seen_at": int(Time.get_unix_time_from_system()), "mastered_at": 0,
 		}
-	_sr.register(task_id)
 
 
 ## Verbucht ein Antwort-Ergebnis für eine Aufgabe und aktualisiert Fortschritt + Scheduler.
@@ -81,21 +76,32 @@ func _ensure(task_id: String, initial_confidence: float = -1.0) -> void:
 ## (`mastered_at` springt von 0 auf einen Zeitstempel und die Confidence lag vorher unter
 ## der Schwelle). Das ist der Anlass der Feier im
 ## Kampf (Issue #23); ob damit auch das Wort sitzt, sagt mastered_lexeme_of().
-func record(task_id: String, correct: bool, response_time_ms: int = 0, initial_confidence: float = -1.0) -> bool:
+## `now` (unix, < 0 = Systemzeit) setzen nur Tests, die Tage zwischen Antworten brauchen.
+func record(task_id: String, correct: bool, response_time_ms: int = 0, initial_confidence: float = -1.0,
+		now := -1) -> bool:
 	_ensure(task_id, initial_confidence)
 	var rec: Dictionary = _records[task_id]
 	var was_below := float(rec["confidence"]) < MASTERY_CONFIDENCE
+	# Abstand zur letzten Antwort und das bis dahin geplante Intervall — vor dem
+	# Überschreiben von last_seen_at; -1: noch nie beantwortet.
+	var last := int(rec["last_seen_at"])
+	if now < 0:
+		now = _now()
+	var elapsed := now - last if last > 0 else -1
+	var interval := due_at(task_id) - last if last > 0 else 0
 	rec["attempts"] += 1
 	rec["last_correct"] = correct
 	rec["last_response_time_ms"] = response_time_ms
-	rec["last_seen_at"] = int(Time.get_unix_time_from_system())
+	rec["last_seen_at"] = now
 
 	if correct:
 		rec["correct_total"] += 1
 		rec["current_streak"] += 1
 		rec["best_streak"] = max(rec["best_streak"], rec["current_streak"])
-		# Confidence nähert sich exponentiell 1.0.
-		rec["confidence"] = minf(1.0, rec["confidence"] + 0.25 * (1.0 - rec["confidence"]))
+		# Confidence nähert sich 1.0 — um so schneller, je mehr Zeit seit der letzten Antwort
+		# lag (ADR 0018): drei Tage hintereinander meistern, dreimal in einer Stunde nicht.
+		var gain := SpacedRepetition.spacing_gain(elapsed, interval)
+		rec["confidence"] = minf(1.0, rec["confidence"] + gain * (1.0 - rec["confidence"]))
 	else:
 		rec["current_streak"] = 0
 		rec["confidence"] = maxf(0.0, rec["confidence"] * 0.5)
@@ -110,33 +116,44 @@ func record(task_id: String, correct: bool, response_time_ms: int = 0, initial_c
 	if int(rec.get("mastered_at", 0)) == 0 and float(rec["confidence"]) >= MASTERY_CONFIDENCE:
 		rec["mastered_at"] = rec["last_seen_at"]
 		newly_mastered = was_below
-
-	# SM-2-Qualität (0..5): schnell+richtig hoch, falsch < 3 (Reset im Scheduler).
-	var quality := 2
-	if correct:
-		quality = 5 if (response_time_ms > 0 and response_time_ms < 4000) else 4
-	_sr.review(task_id, quality, _now())
-	rec["next_review_at"] = _sr.due_at(task_id)
 	return newly_mastered
 
 
-## Fälligkeit (unix) einer Aufgabe laut Scheduler; 0, wenn sie nie beantwortet wurde.
+## Fälligkeit (unix) einer Aufgabe, gerechnet aus ihrem Record (SpacedRepetition.due_at);
+## 0, wenn sie nie beantwortet wurde.
 func due_at(task_id: String) -> int:
-	return _sr.due_at(task_id)
+	var rec: Dictionary = _records.get(task_id, {})
+	if rec.is_empty():
+		return 0
+	return SpacedRepetition.due_at(float(rec.get("confidence", 0.0)),
+			bool(rec.get("last_correct", false)), int(rec.get("last_seen_at", 0)), utc_offset)
 
 
-## Eine Kopie des Schedulers — für die Werkbank, die mit verstellter Uhr fragt, was fällig
-## wäre, ohne den Lernstand anzufassen.
-func scheduler_copy() -> SpacedRepetition:
-	var sr := _new_scheduler()
-	sr.from_dict(_sr.to_dict())
-	return sr
+## Was die Auswahl über eine Aufgabe wissen muss (WaveGenerator.ordered): {} für eine
+## ungesehene, sonst { confidence, last_seen, due_at }.
+func state_of(task_id: String) -> Dictionary:
+	if not _records.has(task_id):
+		return {}
+	return {
+		"confidence": confidence(task_id),
+		"last_seen": last_seen_at(task_id),
+		"due_at": due_at(task_id),
+	}
 
 
-## learnable_ids, die jetzt fällig sind (überfälligste zuerst).
-## Nur bereits gesehene Aufgaben; neue (ohne Record) wählt der WaveGenerator separat.
-func due_task_ids() -> Array:
-	return _sr.due_items(_now())
+## learnable_ids, die zu `now` (unix, < 0 = jetzt) fällig sind, überfälligste zuerst.
+## Nur bereits gesehene Aufgaben; neue (ohne Record) zählen nicht.
+func due_task_ids(now := -1) -> Array:
+	var at := now if now >= 0 else _now()
+	var due: Array = []
+	var due_ats := {}
+	for id in _records:
+		var d := due_at(id)
+		if d <= at:
+			due.append(id)
+			due_ats[id] = d
+	due.sort_custom(func(a, b): return due_ats[a] < due_ats[b])
+	return due
 
 
 ## Confidence 0..1 für eine Aufgabe. Für noch ungesehene Aufgaben liefert `default_value`
@@ -205,7 +222,6 @@ func _language_filter() -> Callable:
 
 func reset() -> void:
 	_records.clear()
-	_sr = _new_scheduler()
 
 
 ## Speichert den aktuellen Stand und wechselt zum Profil `id` (lädt dessen Fortschritt).
@@ -468,7 +484,6 @@ func save_progress() -> void:
 	var payload := {
 		"player_id": player_id,
 		"records": _records,
-		"sr": _sr.to_dict(),
 	}
 	var file := FileAccess.open(_save_path(), FileAccess.WRITE)
 	if file == null:
@@ -488,4 +503,8 @@ func load_progress() -> void:
 		return
 	player_id = str(parsed.get("player_id", player_id))
 	_records = parsed.get("records", {})
-	_sr.from_dict(parsed.get("sr", {}))
+	# Bis 0.26 lag daneben ein SM-2-Plan (`sr`) und je Record sein Ergebnis
+	# (`next_review_at`). Die Fälligkeit wird jetzt gerechnet (ADR 0018); beides fällt
+	# beim nächsten Speichern weg.
+	for rec in _records.values():
+		rec.erase("next_review_at")

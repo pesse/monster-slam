@@ -71,7 +71,8 @@ func test_irregular_verbs_and_translations_keep_the_lexeme_prior() -> void:
 			.is_equal(-1.0)
 
 
-## Die Absicht hinter den Zahlen: nach zwei bzw. drei Treffern gemeistert, nicht nach einem.
+## Die Absicht hinter den Zahlen: nach zwei bzw. drei Treffern in einer Sitzung gemeistert,
+## nicht nach einem (die Treffer liegen hier Sekunden auseinander, ADR 0018).
 func test_priors_need_two_and_three_hits() -> void:
 	assert_int(_hits_to_mastery(GENERATOR.RULE_FORM_PRIOR)).is_equal(2)
 	assert_int(_hits_to_mastery(GENERATOR.SPELLING_FORM_PRIOR)).is_equal(3)

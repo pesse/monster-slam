@@ -6,7 +6,7 @@ extends RefCounted
 ##   1. Kandidaten aus dem Wave-Pool erzeugen: task_definitions × passende Lexeme
 ##      (allowed_types / requires_relation / requires_form), gefiltert nach
 ##      task_types/direction und den Lexem-tags.
-##   2. Fällige (SpacedRepetition) bevorzugen, dann neue, dann beliebige.
+##   2. Gewichtet ziehen: Fälliges, Unsicheres und Neues oft, Gemeistertes selten (ordered()).
 ##   3. Aufgabe über TaskResolver auflösen (prompt + accepted_answers).
 ##   4. monster_task_rules mappt (task_type, direction) -> monster_type + Basiswerte.
 ##   5. Tempo, Punkte und Erfahrung = Schwierigkeit: aus Aufgaben-Grundschwierigkeit +
@@ -49,10 +49,24 @@ const MASTERED_REWARD_FACTOR := 0.1
 const EARLY_WAVE_DAMAGE: Array[float] = [0.6, 0.8]
 const DAMAGE_GROWTH_PER_WAVE := 0.15
 
-## Die Gruppen der Auswahl (siehe ordered()), so auch in der Spur.
+## Die Gruppen der Auswahl (siehe ordered()), so auch in der Spur. Sie benennen nur, woher
+## ein Kandidat kommt; gewählt wird nach seinem Gewicht (selection_weight()).
 const GROUP_DUE := "due"
 const GROUP_NEW := "new"
 const GROUP_REST := "rest"
+
+## Gewicht eines neuen Worts. Ein unsicheres, fälliges Wort (c 0.5) liegt bei 0.5–1, ein
+## gemeistertes bei 0.05–0.3 (selection_weight()).
+const NEW_WEIGHT := 1.0
+## So viel des Gesamtgewichts haben die neuen Wörter mindestens, solange es welche gibt —
+## sonst verdrängen viele fällige Wiederholungen eine frische Lektion (Issue #18).
+const NEW_SHARE := 0.3
+## Bedarf (1 − c) einer gemeisterten Aufgabe sinkt nicht unter diesen Wert: sie kommt
+## seltener, aber nicht nie.
+const NEED_FLOOR := 0.05
+## Dringlichkeit ist der Anteil des Intervalls, der verstrichen ist — gedeckelt, damit ein
+## lange liegengebliebenes Wort nicht alles andere verdrängt.
+const URGENCY_CAP := 2.0
 
 ## Globaler Tempo-Multiplikator, vom WaveRunner aus der gewählten Wellen-Schwierigkeit gesetzt
 ## (1.0 = neutral, >1 schneller/schwerer, <1 langsamer/leichter). Ist selbst eine
@@ -106,13 +120,14 @@ func _confidence_prior(source: Dictionary) -> float:
 ## `irregular`, dessen Vergangenheit auf *-ed* gebildet ist (ADR 0009, Nachtrag). Wer die
 ## Regel kann, kann jedes solche Verb; die Aufgabe soll ein-, zweimal kommen und dann als
 ## gemeistert hinten stehen, statt die unregelmäßigen zu verdrängen. Gemessen an der
-## Fortschreibung in PlayerProgress.record (+25 % des Abstands zu 1 je Treffer, Meisterung
-## ab 0.8): 0.65 ist nach zwei Treffern gemeistert, 0.55 nach drei. Ein Fehler halbiert
-## die Confidence wie bei jeder Aufgabe.
+## Fortschreibung in PlayerProgress.record (10–40 % des Abstands zu 1 je Treffer, nach
+## Abstand; Meisterung ab 0.8): 0.65 ist nach zwei Treffern gemeistert, 0.6 nach drei in
+## einer Sitzung oder zwei an zwei Tagen. Ein Fehler halbiert die Confidence wie bei jeder
+## Aufgabe.
 const RULE_FORM_PRIOR := 0.65
 ## Regel mit Schreibfalle: verdoppelter Konsonant (preferred, snorkelled) oder y → ied
 ## (bullied). Regelmäßig, aber nicht geschenkt.
-const SPELLING_FORM_PRIOR := 0.55
+const SPELLING_FORM_PRIOR := 0.6
 ## Formen, bei denen eine Sprache „regelmäßig" kennt (ADR 0009, Punkt 2). Latein und
 ## Französisch fehlen: dort gibt es die Formaufgaben nur bei unregelmäßigen Verben, oder
 ## die Regel hängt an der Konjugation, die das Lexem nicht trägt.
@@ -217,7 +232,7 @@ func has_playable(pool: Dictionary) -> bool:
 ## kommt das Wort nach seinem Platz darin, nicht nach Fälligkeit.
 func pick(pool: Dictionary, exclude_sources: Dictionary = {}, shown_sources: Dictionary = {},
 		order: Array = []) -> Dictionary:
-	var candidates := listing(pool, shown_sources, PlayerProgress.due_task_ids())
+	var candidates := listing(pool, shown_sources)
 	if not order.is_empty():
 		candidates = TestPlaylist.arrange(candidates, order)
 	var plan := pick_with(candidates, exclude_sources)
@@ -233,14 +248,12 @@ func candidates(pool: Dictionary) -> Array:
 
 
 ## Die Kandidaten des Pools in der Reihenfolge, in der pick() sie probiert, jeder mit
-## `group` und `repeat` (siehe ordered()). `due`: die fälligen learnable_ids — im Spiel
-## PlayerProgress.due_task_ids(), in der Werkbank die einer verstellten Uhr.
-## `now`: Bezugszeit für „zuletzt gesehen" (unix, -1 = jetzt).
-func listing(pool: Dictionary, shown_sources: Dictionary, due: Array, now := -1) -> Array:
+## `group`, `repeat` und `weight` (siehe ordered()). `now`: Bezugszeit (unix, -1 = jetzt) —
+## die Werkbank fragt mit verstellter Uhr.
+func listing(pool: Dictionary, shown_sources: Dictionary, now := -1) -> Array:
 	if now < 0:
 		now = int(Time.get_unix_time_from_system())
-	return ordered(_candidates(pool), due, PlayerProgress.has_seen, shown_sources,
-			PlayerProgress.last_seen_at, now)
+	return ordered(_candidates(pool), PlayerProgress.state_of, shown_sources, now)
 
 
 ## Wählt aus einer listing() den ersten spielbaren Kandidaten.
@@ -257,7 +270,7 @@ func pick_with(ordered_candidates: Array, exclude_sources: Dictionary = {}) -> D
 			var plan := _build_plan(candidate)
 			if not plan.is_empty():
 				plan["task"]["pick"] = pick_reason(ordered_candidates, i, not respect_exclude,
-						float(plan["net"]), PlayerProgress.due_at(candidate["learnable_id"]))
+						float(plan["net"]), int(candidate.get("due_at", 0)))
 				return plan
 	return {}
 
@@ -274,6 +287,7 @@ func pick_with(ordered_candidates: Array, exclude_sources: Dictionary = {}) -> D
 ##   net:      t - c des Monsters
 ##   due_at:   Fälligkeit (unix), 0 = nie beantwortet
 ##   last_seen: zuletzt beantwortet, über alle Aufgaben des Grundworts (unix), 0 = nie
+##   weight:   Gewicht in der Auswahl (selection_weight())
 static func pick_reason(candidates: Array, index: int, fallback: bool, net: float,
 		due_at: int) -> Dictionary:
 	var counts := {GROUP_DUE: 0, GROUP_NEW: 0, GROUP_REST: 0, "repeat": 0}
@@ -293,6 +307,7 @@ static func pick_reason(candidates: Array, index: int, fallback: bool, net: floa
 		"net": snappedf(net, 0.01),
 		"due_at": due_at,
 		"last_seen": int(chosen.get("last_seen", 0)),
+		"weight": snappedf(float(chosen.get("weight", 0.0)), 0.01),
 	}
 
 
@@ -321,6 +336,8 @@ static func describe_reason(why: Dictionary, now: int) -> String:
 				int(counts.get("new", 0)), int(counts.get("rest", 0)), int(counts.get("repeat", 0))],
 		"t−c %+.2f" % float(why.get("net", 0.0)),
 	]
+	if why.has("weight"):
+		parts.append("Gewicht %.2f" % float(why["weight"]))
 	if bool(why.get("fallback", false)):
 		parts.append("trotz Wort auf dem Feld")
 	return " · ".join(parts)
@@ -342,87 +359,114 @@ static func span_text(seconds: int) -> String:
 	return "%d T" % roundi(span / 86400.0)
 
 
-## Die Auswahlreihenfolge von pick(), statisch und ohne Autoload prüfbar.
+## Die Auswahlreihenfolge von pick(), statisch und ohne Autoload prüfbar (ADR 0018).
 ##
 ## Oberste Stufe ist „in dieser Welle schon gezeigt" (Issue #24): erst alle Kandidaten,
-## deren Grundwort noch nicht dran war — darin fällige, dann neue, dann der Rest. Fällige
-## und neue sind gemischt; der Rest kommt nach Abstand (`by_staleness`): was am längsten
-## nicht beantwortet wurde, eher zuerst — ein kleines Spacing auch über Wellen und lange
-## Sitzungen, in denen sonst jede Welle wieder gleichverteilt aus dem Rest zöge. Danach die Wiederholungen, geordnet nach Grundwort: das am längsten nicht
-## gezeigte (kleinste Nummer in `shown`) zuerst, innerhalb wieder fällig → neu → Rest.
-## Die Sperre greift am Grundwort, nicht am learnable_id — sonst käme dasselbe Wort über
-## eine andere Richtung oder Aufgabenart sofort wieder.
+## deren Grundwort noch nicht dran war, danach die Wiederholungen, geordnet nach Grundwort —
+## das am längsten nicht gezeigte (kleinste Nummer in `shown`) zuerst. Die Sperre greift am
+## Grundwort, nicht am learnable_id — sonst käme dasselbe Wort über eine andere Richtung
+## oder Aufgabenart sofort wieder.
 ##
-## `due`: learnable_ids, die heute fällig sind. `seen`: learnable_id -> bool.
-## `last_seen`: learnable_id -> unix der letzten Antwort (0 = nie), `now` die Bezugszeit;
-## ohne `last_seen` wird auch der Rest nur gemischt.
+## Innerhalb einer Stufe wird gewichtet gezogen, ohne Zurücklegen (selection_weight()): ein
+## Kandidat mit doppeltem Gewicht steht doppelt so oft vor dem anderen. Bis 0.26 galt hart
+## fällig → neu → Rest; damit stand ein frisch gemeistertes, morgen fälliges Wort vor jedem
+## neuen, und ein gemeistertes, nicht fälliges kam praktisch nie (Issue #18).
 ##
-## Jeder Kandidat bekommt dabei `group` ("due" | "new" | "rest"), `repeat` (Wort in
-## dieser Welle schon gezeigt) und `last_seen` (Grundwort zuletzt beantwortet) — der Grund der Wahl kommt so aus derselben Sortierung und
-## nicht aus einer zweiten Regel daneben.
-static func ordered(candidates: Array, due: Array, seen: Callable, shown: Dictionary,
-		last_seen := Callable(), now := 0) -> Array:
-	var due_set := {}
-	for id in due:
-		due_set[id] = true
+## `state`: learnable_id -> {} (nie beantwortet) oder { confidence, last_seen, due_at }
+## (PlayerProgress.state_of). `now`: Bezugszeit (unix).
+##
+## Jeder Kandidat bekommt dabei `group` ("due" | "new" | "rest"), `repeat` (Wort in dieser
+## Welle schon gezeigt), `last_seen` (Grundwort zuletzt beantwortet), `due_at` und `weight` —
+## der Grund der Wahl kommt so aus derselben Rechnung und nicht aus einer zweiten Regel
+## daneben.
+static func ordered(candidates: Array, state: Callable, shown: Dictionary, now: int) -> Array:
 	# Am Grundwort, wie die Sperre: „convict" kam eben in der einen Richtung, also auch
 	# in der anderen nicht gleich wieder.
+	var states := {}
 	var word_seen := {}
-	if last_seen.is_valid():
-		for c in candidates:
-			var source := str(c["source"].get("id", ""))
-			word_seen[source] = maxi(int(word_seen.get(source, 0)),
-					int(last_seen.call(c["learnable_id"])))
-	var fresh: Array = [[], [], []]
-	var repeats := {} # Spawn-Nummer -> [fällig, neu, Rest]
 	for c in candidates:
 		var id: String = c["learnable_id"]
-		var rank := 0 if due_set.has(id) else (1 if not seen.call(id) else 2)
-		c["group"] = [GROUP_DUE, GROUP_NEW, GROUP_REST][rank]
+		states[id] = state.call(id)
+		var source := str(c["source"].get("id", ""))
+		word_seen[source] = maxi(int(word_seen.get(source, 0)),
+				int(states[id].get("last_seen", 0)))
+	var fresh: Array = []
+	var repeats := {} # Spawn-Nummer -> Kandidaten
+	for c in candidates:
+		var st: Dictionary = states[c["learnable_id"]]
 		var source_id := str(c["source"].get("id", ""))
-		c["repeat"] = shown.has(source_id)
 		c["last_seen"] = int(word_seen.get(source_id, 0))
+		c["due_at"] = int(st.get("due_at", 0))
+		if st.is_empty():
+			c["group"] = GROUP_NEW
+		else:
+			c["group"] = GROUP_DUE if now >= int(c["due_at"]) else GROUP_REST
+		c["weight"] = selection_weight(st, int(c["last_seen"]), now)
+		c["repeat"] = shown.has(source_id)
 		if shown.has(source_id):
 			var key := int(shown[source_id])
 			if not repeats.has(key):
-				repeats[key] = [[], [], []]
-			repeats[key][rank].append(c)
+				repeats[key] = []
+			repeats[key].append(c)
 		else:
-			fresh[rank].append(c)
-	var out: Array = []
-	for rank in fresh.size():
-		var bucket: Array = fresh[rank]
-		if rank == 2 and last_seen.is_valid():
-			bucket = by_staleness(bucket, now)
-		else:
-			bucket.shuffle()
-		out.append_array(bucket)
+			fresh.append(c)
+	var out := weighted_order(_with_new_share(fresh))
 	var keys := repeats.keys()
 	keys.sort()
 	for key in keys:
-		for bucket in repeats[key]:
-			bucket.shuffle()
-			out.append_array(bucket)
+		out.append_array(weighted_order(repeats[key]))
 	return out
 
 
-## Wie weit der Zufall den Abstand streckt oder staucht: der Abstand eines Kandidaten zählt
-## mit einem Faktor zwischen 1 − STALENESS_JITTER und 1 + STALENESS_JITTER. Bei 0.5 können
-## zwei Wörter nur tauschen, wenn ihre Abstände weniger als das Dreifache auseinander
-## liegen — vor einer Minute gezeigt kommt nie vor vor einer Stunde gezeigt, gestern und
-## vorgestern mischen sich.
-const STALENESS_JITTER := 0.5
+## Gewicht eines Kandidaten: Bedarf × Dringlichkeit, ein neues Wort NEW_WEIGHT.
+##
+##   Bedarf        1 − c, mindestens NEED_FLOOR — gemeistert heißt selten, nicht nie.
+##   Dringlichkeit verstrichener Anteil des Intervalls (1 = gerade fällig), bis URGENCY_CAP.
+##                 Gemessen ab der letzten Antwort auf das GRUNDWORT (`word_seen`): die andere
+##                 Richtung eines eben gezeigten Worts wartet, auch wenn sie fällig ist.
+##
+## Ein Fehler hebt beides: die Confidence halbiert sich, und die Aufgabe ist nach zehn Minuten
+## wieder fällig (SpacedRepetition.RELEARN_SECONDS) — zwanzig Minuten später wiegt sie mehr
+## als ein neues Wort.
+static func selection_weight(state: Dictionary, word_seen: int, now: int) -> float:
+	if state.is_empty():
+		return NEW_WEIGHT
+	var last := int(state.get("last_seen", 0))
+	var interval := maxi(int(state.get("due_at", 0)) - last, 1)
+	var since := maxi(now - maxi(word_seen, last), 0)
+	var urgency := clampf(float(since) / interval, 0.0, URGENCY_CAP) if last > 0 else 1.0
+	var need := maxf(1.0 - float(state.get("confidence", 0.0)), NEED_FLOOR)
+	return need * urgency
 
 
-## Ordnet Kandidaten nach Abstand zur letzten Antwort (`last_seen`), der längste zuerst,
-## mit Zufall (STALENESS_JITTER). Nie beantwortet zählt als unendlich lange her.
-static func by_staleness(candidates: Array, now: int) -> Array:
+## Hebt die neuen Kandidaten so weit an, dass sie zusammen mindestens NEW_SHARE des
+## Gesamtgewichts tragen. Ändert die Kandidaten in place und gibt sie zurück.
+static func _with_new_share(candidates: Array) -> Array:
+	var new_sum := 0.0
+	var other_sum := 0.0
+	for c in candidates:
+		if c["group"] == GROUP_NEW:
+			new_sum += float(c["weight"])
+		else:
+			other_sum += float(c["weight"])
+	if new_sum <= 0.0:
+		return candidates
+	var scale := NEW_SHARE * other_sum / ((1.0 - NEW_SHARE) * new_sum)
+	if scale > 1.0:
+		for c in candidates:
+			if c["group"] == GROUP_NEW:
+				c["weight"] = float(c["weight"]) * scale
+	return candidates
+
+
+## Gewichtete Zufallsreihenfolge ohne Zurücklegen (Efraimidis–Spirakis): Schlüssel
+## ln(u) / w, der größte zuerst. Ein Gewicht 0 steht hinten, fällt aber nicht weg — die
+## Rückfallebene in pick() braucht jeden Kandidaten.
+static func weighted_order(candidates: Array) -> Array:
 	var keyed: Array = []
 	for c in candidates:
-		var last := int(c.get("last_seen", 0))
-		var age := float(maxi(now - last, 1)) if last > 0 else INF
-		keyed.append([age * randf_range(1.0 - STALENESS_JITTER, 1.0 + STALENESS_JITTER), c])
-	keyed.shuffle()
+		var w := maxf(float(c.get("weight", 0.0)), 1e-9)
+		keyed.append([log(maxf(randf(), 1e-12)) / w, c])
 	keyed.sort_custom(func(a, b): return float(a[0]) > float(b[0]))
 	return keyed.map(func(k): return k[1])
 

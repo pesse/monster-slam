@@ -111,7 +111,7 @@ func test_progress_file_without_timestamps_still_works() -> void:
 	assert_int(int(_pp._records[TASK].get("mastered_at", 0))).is_equal(0)
 	assert_int(int(_pp._records[TASK].get("first_seen_at", 0))).is_equal(0)
 
-	_pp.record(TASK, true, 1200)   # 0.75 -> 0.81, reißt die Schwelle
+	_pp.record(TASK, true, 1200)   # 0.75 -> 0.85 (lange her, voller Zuwachs), reißt die Schwelle
 	assert_int(int(_pp._records[TASK]["mastered_at"])).is_greater(0)
 
 

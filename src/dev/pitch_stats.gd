@@ -36,7 +36,7 @@ func _ready() -> void:
 		lexemes.sort_custom(func(a, b): return str(a["id"]) < str(b["id"]))
 		var mastered := int(round(lexemes.size() * float(SHARE.get(unit, 0.0))))
 		for i in lexemes.size():
-			var times := 8 if i < mastered else (2 if i < mastered + lexemes.size() / 6 else 0)
+			var times := 10 if i < mastered else (2 if i < mastered + lexemes.size() / 6 else 0)
 			for id in generator.learnables_of(lexemes[i]):
 				for n in times:
 					PlayerProgress.record(str(id), true, 2500)

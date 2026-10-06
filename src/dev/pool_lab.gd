@@ -7,10 +7,10 @@ extends Control
 ## Tagen …). Ob ein Wort zu oft oder zu selten kommt, sieht man im Kampf erst nach vielen
 ## Wellen — hier auf einen Blick, und mit „+10 min" / „+1 Tag" auch für später.
 ##
-## Gelesen wird der Lernstand des aktiven Profils, aber nichts geschrieben: die Uhr
-## verstellt nur eine Kopie des Schedulers (PlayerProgress.scheduler_copy), und die
-## Simulation beantwortet keine Aufgabe. Die Reihenfolge würfelt wie im Spiel (fällige und
-## neue gemischt, der Rest nach Abstand mit Zufall) — jedes Neuzeichnen würfelt neu.
+## Gelesen wird der Lernstand des aktiven Profils, aber nichts geschrieben: die Fälligkeit
+## wird aus ihm gerechnet (ADR 0018), die Uhr verstellt nur die Bezugszeit, und die
+## Simulation beantwortet keine Aufgabe. Die Reihenfolge würfelt wie im Spiel (gewichtet,
+## WaveGenerator.selection_weight) — jedes Neuzeichnen würfelt neu.
 ##
 ## Starten: `tools/godot.sh res://scenes/dev/pool_lab.tscn` (zum Ansehen mit
 ## GODOT_WINDOW=1). `-- --shoot [--scope=<buch/unit>] [--days=<n>]` speichert ein Bild nach
@@ -25,7 +25,6 @@ const SHOT_DIR := "res://reports/pool_lab"
 const MAX_ROWS := 150
 
 var _gen := WaveGenerator.new()
-var _sr: SpacedRepetition
 var _scopes: Array = []
 ## Verstellung der Uhr gegenüber jetzt, in Sekunden.
 var _offset := 0
@@ -43,7 +42,6 @@ var _room: Window
 func _ready() -> void:
 	_room = get_window()
 	LabRoom.enlarge(_room)
-	_sr = PlayerProgress.scheduler_copy()
 	_fill_scopes()
 	_scope_select.item_selected.connect(func(_i: int) -> void: _refresh())
 	(%Plus10Min as Button).pressed.connect(_shift.bind(600))
@@ -108,12 +106,12 @@ func _shift(seconds: int) -> void:
 
 func _refresh() -> void:
 	_clock.text = "Uhr: " + Time.get_datetime_string_from_unix_time(
-			_now() + _sr.utc_offset, true) + ("" if _offset == 0 else " (verstellt)")
-	var listing := _gen.listing(_pool(), {}, _sr.due_items(_now()), _now())
+			_now() + PlayerProgress.utc_offset, true) + ("" if _offset == 0 else " (verstellt)")
+	var listing := _gen.listing(_pool(), {}, _now())
 	var counts := {"due": 0, "new": 0, "rest": 0}
 	for c in listing:
 		counts[str(c["group"])] += 1
-	_summary.text = "%d Kandidaten · fällig %d · neu %d · Rest %d — gewählt wird von oben, fällige zuerst; fällige und neue gemischt, der Rest nach Abstand mit Zufall." % [
+	_summary.text = "%d Kandidaten · fällig %d · neu %d · Rest %d — gewählt wird von oben; gezogen nach Gewicht (Bedarf × Dringlichkeit), neue mindestens 30 %%." % [
 			listing.size(), counts["due"], counts["new"], counts["rest"]]
 	_order_title.text = "Reihenfolge der Kandidaten" + (
 			" (erste %d)" % MAX_ROWS if listing.size() > MAX_ROWS else "")
@@ -122,11 +120,12 @@ func _refresh() -> void:
 		var c: Dictionary = listing[i]
 		var id := str(c["learnable_id"])
 		var info := "c %.2f" % PlayerProgress.confidence(id) if PlayerProgress.has_seen(id) else "nie gesehen"
-		var due_at := _sr.due_at(id)
+		var due_at := int(c.get("due_at", 0))
 		if due_at > 0:
 			info += " · fällig " + WaveGenerator.due_text(due_at, _now())
 		if int(c.get("last_seen", 0)) > 0:
 			info += " · zuletzt vor " + WaveGenerator.span_text(_now() - int(c["last_seen"]))
+		info += " · Gewicht %.2f" % float(c.get("weight", 0.0))
 		_add_row(_order_list, "%d. %s" % [i + 1, _group_label(c)], _prompt(c),
 				"%s · %s" % [info, id])
 	_clear(_sim_list)
@@ -137,9 +136,8 @@ func _refresh() -> void:
 func _simulate() -> void:
 	_clear(_sim_list)
 	var shown := {}
-	var due := _sr.due_items(_now())
 	for i in int(_sim_count.value):
-		var plan := _gen.pick_with(_gen.listing(_pool(), shown, due, _now()))
+		var plan := _gen.pick_with(_gen.listing(_pool(), shown, _now()))
 		if plan.is_empty():
 			_add_row(_sim_list, "—", "nichts Spielbares", "")
 			return
