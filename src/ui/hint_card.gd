@@ -188,10 +188,19 @@ func _list_mark_width() -> float:
 
 ## Breite der Werte-Spalte, ungebrochen gemessen.
 func _list_value_width() -> float:
-	var value := 0.0
-	for label: Label in _list_values():
-		value = maxf(value, label.get_combined_minimum_size().x)
-	return value
+	return _widest(_list_values())
+
+
+## Breite der Bezeichnungen, ungebrochen gemessen.
+func _list_name_width() -> float:
+	return _widest(_list_names())
+
+
+func _widest(labels: Array) -> float:
+	var widest := 0.0
+	for label: Label in labels:
+		widest = maxf(widest, label.get_combined_minimum_size().x)
+	return widest
 
 
 ## Die Breitenregel, in der einzigen Reihenfolge, in der sie funktioniert.
@@ -236,9 +245,13 @@ func _fit() -> void:
 	# damit rücken die Werte zugleich an den rechten Rand, in eine Flucht. Die Werte nehmen
 	# höchstens die Hälfte und brechen sonst selbst um: ein langer Wert („die Einstellung
 	# (zu etwas) / die Meinung (zu etwas)") ließ der Bezeichnung sonst keinen Pixel, und
-	# sie stand Buchstabe für Buchstabe untereinander.
+	# sie stand Buchstabe für Buchstabe untereinander. Passen Bezeichnung und Wert aber
+	# beide ungebrochen nebeneinander, bricht nichts — sonst bräche ein Wert wie
+	# „Kräuterbeutel" knapp über der Hälfte mitten im Wort.
 	var mark_width := _list_mark_width()
-	var value_width := minf(_list_value_width(), maxf(0.0, inner / 2.0 - mark_width))
+	var value_width := _list_value_width()
+	if mark_width + _list_name_width() + value_width > inner:
+		value_width = minf(value_width, maxf(0.0, inner / 2.0 - mark_width))
 	if value_width < _list_value_width():
 		for label: Label in values:
 			label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

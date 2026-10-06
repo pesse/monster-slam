@@ -18,11 +18,12 @@ baut einen Ast aus und kann den anderen liegen lassen. Knoten der ersten und zwe
 Stufe kosten 1 Skillpunkt, die der dritten 2. Im Späher kosten der Anfang, der
 Sturmangriff und der Langbogen je 5, der Explosionspfeil danach 3. Das Wachkatapult im
 Bollwerk kostet 8 und hängt als dritter Ast direkt am Anfang, ebenso der Schnelle Erbauer
-für 4.
+für 4. In der Genesung hängt ein dritter Ast am Anfang: Kräuterbeutel für 2, Arzneischrank
+für 3.
 
 | Baum | Was er tut |
 |---|---|
-| **Genesung** | Jedes besiegte Monster heilt die Festung um mehr HP. |
+| **Genesung** | Jedes besiegte Monster heilt die Festung um mehr HP. Ein dritter Ast vergrößert den Zaubervorrat: **Kräuterbeutel** und **Arzneischrank** bringen je zwei Plätze mehr ([Kapitel 5](05-kampf.md)). |
 | **Bollwerk** | Die Festung bekommt Rüstung. Ein Ast vergrößert den Vorrat, der andere setzt ihn zu jeder Welle ein Stück instand. Ganz außen wartet das **Wachkatapult**, das Monster mit gemeisterten Aufgaben abschießt. Direkt am Anfang hängt der **Schnelle Erbauer**: Stufe 4 der Festung kommt schon bei 70 % statt 75 %, die Stufen davor entsprechend früher. |
 | **Zeitwandler** | Die Zeitlupe beim Tippen wird noch tiefer (**Zähe Zeit**, **Zeitriss**). Der zweite Ast bremst die Monster die ganze Zeit: **Schwere Schritte** und **Zäher Boden** machen sie je 15 % langsamer, mit **Späte Horde** kommen sie in größerem Abstand. Punkte gibt es dafür nicht weniger. |
 | **Späher** | Der Anfang, der **Späherblick**, schaltet die Ich-Sicht frei ([Kapitel 5](05-kampf.md)). Beide Äste danach machen dich darin schneller, am Ende des einen warten der **Sturmangriff** und der **Langbogen**, nach dem Langbogen der **Explosionspfeil**. |

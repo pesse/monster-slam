@@ -253,6 +253,20 @@
       "height": 256,
       "notes": "Isolated Späte Horde; 256 px canvas, <=208 px centered motif; genuine alpha; lossless WebP RGBA. Golden crescent with violet stars and a hanging hourglass. Source: sources/time_lull.png.",
       "sha256": "265ca7f86aa80874cc59c223d61633674f10e3fbe9eae90a04949ce3e603d602"
+    },
+    "icons/healing_pouch": {
+      "path": "res://assets/ui/skill_tree/icons/healing_pouch.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated Kräuterbeutel; 256 px canvas, <=208 px centered motif; genuine alpha; lossless WebP RGBA. Plump leather drawstring herb pouch, flap open, a green and a golden corked vial and a sprig of herbs with white blossoms. Source: sources/healing_pouch.png.",
+      "sha256": "4c45ea5cec53176f5ab751f9ed59371da0e04226370b2a6d1fa4ea2b2b707ca8"
+    },
+    "icons/healing_cabinet": {
+      "path": "res://assets/ui/skill_tree/icons/healing_cabinet.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated Arzneischrank; 256 px canvas, <=208 px centered motif; genuine alpha; lossless WebP RGBA. Small wooden apothecary cabinet with both doors open, two shelves of green and golden corked potion bottles, leaf emblem on top. Source: sources/healing_cabinet.png.",
+      "sha256": "88b296cb175adb8e722075ed0c0c6b1db51e363ba0cedadd2ae3b423f156a38a"
     }
   },
   "skill_icons": {
@@ -375,6 +389,16 @@
       "name": "Späte Horde",
       "tree": "tree.timeweaver",
       "path": "res://assets/ui/skill_tree/icons/time_lull.webp"
+    },
+    "skill.heal.pouch": {
+      "name": "Kräuterbeutel",
+      "tree": "tree.healing",
+      "path": "res://assets/ui/skill_tree/icons/healing_pouch.webp"
+    },
+    "skill.heal.cabinet": {
+      "name": "Arzneischrank",
+      "tree": "tree.healing",
+      "path": "res://assets/ui/skill_tree/icons/healing_cabinet.webp"
     }
   },
   "tree_colors": {

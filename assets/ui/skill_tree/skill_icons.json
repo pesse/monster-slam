@@ -22,5 +22,7 @@
   "skill.armor.builder": "res://assets/ui/skill_tree/icons/bulwark_builder.webp",
   "skill.time.heavy": "res://assets/ui/skill_tree/icons/time_heavy.webp",
   "skill.time.mire": "res://assets/ui/skill_tree/icons/time_mire.webp",
-  "skill.time.lull": "res://assets/ui/skill_tree/icons/time_lull.webp"
+  "skill.time.lull": "res://assets/ui/skill_tree/icons/time_lull.webp",
+  "skill.heal.pouch": "res://assets/ui/skill_tree/icons/healing_pouch.webp",
+  "skill.heal.cabinet": "res://assets/ui/skill_tree/icons/healing_cabinet.webp"
 }

@@ -89,5 +89,39 @@
 		"effects": {
 			"heal_per_correct": 1
 		}
+	},
+	{
+		"id": "skill.heal.pouch",
+		"kind": "skill",
+		"tree": "tree.healing",
+		"name": "Kräuterbeutel",
+		"icon": "👝",
+		"description": "Zwei Zauberplätze mehr im Vorrat.",
+		"cost": 2,
+		"tier": 2,
+		"branch": 2,
+		"requires": [
+			"skill.heal.root"
+		],
+		"effects": {
+			"item_slots": 2
+		}
+	},
+	{
+		"id": "skill.heal.cabinet",
+		"kind": "skill",
+		"tree": "tree.healing",
+		"name": "Arzneischrank",
+		"icon": "🧪",
+		"description": "Nochmal zwei Zauberplätze mehr im Vorrat.",
+		"cost": 3,
+		"tier": 3,
+		"branch": 2,
+		"requires": [
+			"skill.heal.pouch"
+		],
+		"effects": {
+			"item_slots": 2
+		}
 	}
 ]

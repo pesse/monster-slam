@@ -366,10 +366,10 @@ Eine Datei je Baum. Der erste Eintrag ist der Baum-Kopf, die übrigen sind seine
   Bogentreffer platzt als Feuerball mit Rauch, nur das Bild) und `auto_catapult` (> 0: die
   Katapulte der vollen Festung schießen Monster mit gemeisterter Aufgabe ab, ohne Lernstand
   und Erfahrung) und `monster_speed` (Anteil aufs Lauftempo aller Monster, negativ =
-  langsamer, ab −50 % geklemmt) und `spawn_gap` (Anteil mehr Abstand zwischen zwei Spawns).
-  Die letzten beiden wirken hinter der Tempo-Formel und lassen Punkte und Erfahrung
-  unberührt. Ein neuer
-  Schlüssel braucht einen Eintrag dort **und** ein `apply_skills`, das ihn liest.
+  langsamer, ab −50 % geklemmt) und `spawn_gap` (Anteil mehr Abstand zwischen zwei Spawns)
+  und `item_slots` (Zauberplätze mehr, liest `Inventory.slot_count`). `monster_speed` und
+  `spawn_gap` wirken hinter der Tempo-Formel und lassen Punkte und Erfahrung unberührt.
+  Ein neuer Schlüssel braucht einen Eintrag dort **und** ein `apply_skills`, das ihn liest.
 
 Die Beträge sind reine Balance und ohne Code-Änderung justierbar. Was sich nicht ändern
 darf, ohne den Screen anzufassen: dass ein Baum sich verzweigt — `tests/skill_data_test.gd`

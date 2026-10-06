@@ -20,6 +20,7 @@ extends Node
 ##                                       Karte über die Knopfreihe der Plakette)
 ##     … -- --shoot … --stock=<id>:<n>,…  Vorrat für das Bild, nur im Speicher
 ##                                       (z. B. --stock=spell.frost:3,,spell.mend:1)
+##     … -- --shoot … --slots=<n>         so viele Zauberplätze wie mit gelernten Skills
 ##     … -- --shoot --settings[=<reiter>] drückt „Einstellungen", Reiter 1–3 (Profil, Melden,
 ##                                       Protokoll)
 ##     … -- --shoot --handbook[=<datei>[#<anker>]]  das Handbuch über dem Menü, auf einem
@@ -78,6 +79,8 @@ func _ready() -> void:
 	if not _arg("gold").is_empty():
 		Wallet.unlimited_gold = false
 		Wallet.gold = int(_arg("gold"))
+	if not _arg("slots").is_empty():
+		Inventory.extra_slots = int(_arg("slots")) - Inventory.BASE_SLOTS
 	if _has_arg("stock") or not _arg("stock").is_empty():
 		# Nur im Speicher wie Name und Gold: ohne buy/take schreibt Inventory nichts.
 		Inventory.slots.clear()

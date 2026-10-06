@@ -254,3 +254,16 @@ func test_calm_effects_have_a_readable_line() -> void:
 	assert_str(SkillTree.effect_label("monster_speed", -0.3)).is_equal("Monster 30 % langsamer")
 	assert_str(SkillTree.effect_label("spawn_gap", 0.3)) \
 			.is_equal("+30 % Abstand zwischen den Monstern")
+
+
+## Zauberplätze kommen durch `bonuses` (sonst fiele der Schlüssel als Tippfehler weg) und
+## summieren sich wie jeder Effekt — Inventory.slot_count liest die Summe.
+func test_item_slots_add_up_and_have_a_line() -> void:
+	var entries: Array = [
+		{"id": "tree.t", "kind": "tree"},
+		{"id": "skill.t.a", "kind": "skill", "tree": "tree.t", "effects": {"item_slots": 2}},
+		{"id": "skill.t.b", "kind": "skill", "tree": "tree.t", "effects": {"item_slots": 2}},
+	]
+	var bonuses := SkillTree.bonuses(entries, PackedStringArray(["skill.t.a", "skill.t.b"]))
+	assert_int(int(bonuses["item_slots"])).is_equal(4)
+	assert_str(SkillTree.effect_label("item_slots", 2)).is_equal("+2 Zauberplätze")

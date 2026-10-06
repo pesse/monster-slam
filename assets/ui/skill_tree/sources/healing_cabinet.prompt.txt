@@ -1,0 +1,5 @@
+Tool: built-in image_gen.imagegen
+transparent_background: true
+Reference: assets/ui/skill_tree/icons/healing_bandage.webp, healing_tent.webp, healing_staff.webp (style, palette, lighting)
+
+Polished fantasy game inventory icon in exactly the style of the other Genesung (healing) icons: a small wooden apothecary cabinet seen slightly from the front, both doors swung open, showing two shelves neatly filled with corked potion bottles in soft green and pale gold, a tiny green leaf emblem on the top of the cabinet. Orderly, well-stocked mood, simple strong silhouette readable at 40 px, clearly different from a pouch or a tent. Same materials, lighting, outline weight and perspective as the reference icons. Actual transparent background, not black. Square canvas, all elements inside central 81.25% with at least 9.375% fully transparent margins on every side. No floor shadow, no background glow, no text, no numbers.

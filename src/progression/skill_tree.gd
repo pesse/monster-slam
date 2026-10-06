@@ -126,6 +126,7 @@ const EFFECT_KEYS: Array[String] = [
 	"fortress_tier_drop",
 	"monster_speed",
 	"spawn_gap",
+	"item_slots",
 ]
 
 
@@ -499,6 +500,8 @@ static func effect_label(key: String, value: float) -> String:
 			return "Monster %d %% langsamer" % int(round(absf(value) * 100.0))
 		"spawn_gap":
 			return "+%d %% Abstand zwischen den Monstern" % int(round(value * 100.0))
+		"item_slots":
+			return "+%d Zauberplätze" % int(round(value))
 	return ""
 
 

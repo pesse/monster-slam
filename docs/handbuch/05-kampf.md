@@ -88,10 +88,12 @@ kleinen Plakette auf den Karten. Im Kampf kann man nicht einkaufen. Ein Zauber h
 einmal und ist dann verbraucht. Er bringt dir nichts beim Lernen: keine Erfahrung, kein
 Gold, kein gemeistertes Wort. Er ist für den Moment, in dem eine Welle zu kippen droht.
 
-Du hast **vier Plätze**. Gleiche Zauber liegen auf einem Platz übereinander, beliebig
-viele; für einen anderen Zauber brauchst du einen freien Platz. Im Kampf stehen die Plätze
-links unten, mit Ziffer und Anzahl. **Drück die Ziffer des Platzes (1 bis 4), solange das
-Eingabefeld zu ist**, dann wirkt der Zauber. Ist das Feld offen, ist die Ziffer ein
+Du hast **vier Plätze**, mit **Kräuterbeutel** und **Arzneischrank** aus dem
+Genesungs-Baum bis zu acht ([Kapitel 11](11-faehigkeiten.md)). Gleiche Zauber liegen auf
+einem Platz übereinander, beliebig viele; für einen anderen Zauber brauchst du einen
+freien Platz. Im Kampf stehen die Plätze links unten, mit Ziffer und Anzahl. **Drück die
+Ziffer des Platzes (1 bis 4, mit mehr Plätzen bis 8), solange das Eingabefeld zu ist**,
+dann wirkt der Zauber. Ist das Feld offen, ist die Ziffer ein
 getipptes Zeichen. Würde ein Zauber gerade nichts bewirken (die Festung ist schon heil,
 kein Monster ist auf dem Feld), zittert der Platz, und der Zauber bleibt dir. Im
 Bosskampf gibt es keine Zauber.
