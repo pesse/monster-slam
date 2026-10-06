@@ -1,8 +1,8 @@
 extends Control
 ## Kopfleiste im Kampf (Grafiken: `assets/ui/gameplay/`). Links das Porträt mit Level und
 ## Erfahrungsring, daneben die Festungstafel (Rüstung, HP) und darunter die Namensplakette;
-## rechts die Welle mit Fortschritt, besiegte Monster und in dieser Sitzung gemeisterte
-## Wörter. Das Layout liegt in hud.tscn; hier wird nur auf Signale reagiert und der Zustand
+## rechts die Welle mit Fortschritt, darunter nur Zahlen hinter Bildern: besiegte Monster,
+## in dieser Sitzung gemeisterte Wörter und das Gold. Das Layout liegt in hud.tscn; hier wird nur auf Signale reagiert und der Zustand
 ## dargestellt (die Werte LIEST das HUD aus GameState und PlayerLevel — die rechnen).
 ##
 ## Level und Erfahrung hängen am Porträt, nicht an der Welle: sie gehören zum Profil, nicht
@@ -25,6 +25,7 @@ const HP_WARN := 0.3
 @onready var _kills_label: Label = %Kills
 @onready var _book: Control = %Book
 @onready var _mastered_label: Label = %Mastered
+@onready var _gold_label: Label = %Gold
 @onready var _fortress_panel: Control = %FortressPanel
 @onready var _name_panel: PanelContainer = %NamePanel
 @onready var _player_name: Label = %PlayerName
@@ -51,6 +52,8 @@ func _ready() -> void:
 	# Die HP rührt er nicht an, der Stand läuft über die Wellen weiter.
 	EventBus.wave_started.connect(func(_wave_id): _refresh())
 	EventBus.wave_totals.connect(func(_total): _refresh())
+	# Gold kommt mit der Kiste nach der Welle, nicht über den EventBus.
+	Wallet.changed.connect(func(_gold): _refresh())
 	# Erfahrung meldet sich selbst (Profilstand, kein Lauf-Zustand) — der Ring hängt am
 	# Signal statt an jedem Refresh, weil er sich nur beim Verbuchen ändert.
 	PlayerLevel.changed.connect(func(_total_xp, _level): _refresh_level())
@@ -103,7 +106,7 @@ func _refresh() -> void:
 	_wave_bar.value = GameState.wave_resolved
 	_wave_text.text = "%d / %d" % [GameState.wave_resolved, total]
 
-	_kills_label.text = "%d besiegt" % GameState.monsters_defeated
+	_kills_label.text = str(GameState.monsters_defeated)
 	# Keine Punkte: sie sind ein interner Wert (aus ihnen wird das Gold der Kiste), und
 	# eine Zahl, mit der der Spieler nichts anfangen kann, lenkt nur ab. Stattdessen, was
 	# er in dieser Sitzung gelernt hat — und erst, wenn es etwas gibt: eine „0 gemeistert"
@@ -114,7 +117,8 @@ func _refresh() -> void:
 		mastered = PlayerProgress.mastered_since(int(session.get("started_at", 0))).size()
 	_book.visible = mastered > 0
 	_mastered_label.visible = mastered > 0
-	_mastered_label.text = "%d gemeistert" % mastered
+	_mastered_label.text = str(mastered)
+	_gold_label.text = Wallet.digits()
 
 
 ## Level und Erfahrungsring. Der Ring zeigt den Stand IM Level (0..Kosten des nächsten

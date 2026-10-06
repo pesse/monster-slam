@@ -13,11 +13,11 @@ extends GdUnitTestSuite
 const HUD_SCENE := preload("res://scenes/ui/hud.tscn")
 
 ## Ein später Spielstand: Level 27, dreistellige Kills und Meisterungen, eine hohe Welle,
-## Rüstung und HP dreistellig. Die Zahlen sind das, was in der Kopfleiste wächst.
+## Rüstung und HP dreistellig, Gold wie im Debug-Build. Die Zahlen sind das, was in der Kopfleiste wächst.
 const LATE_GAME := {
 	"27": "%LevelText", "288 / 288": "%HpText", "150 / 150": "%ArmorText",
-	"Welle 48": "%WaveTitle", "48 / 48": "%WaveText", "999 besiegt": "%Kills",
-	"999 gemeistert": "%Mastered",
+	"Welle 48": "%WaveTitle", "48 / 48": "%WaveText", "999": "%Kills",
+	"998": "%Mastered", "999.999.999": "%Gold",
 }
 
 

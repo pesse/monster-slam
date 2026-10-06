@@ -923,7 +923,7 @@ func _shoot_pitch() -> void:
 	hud.call("set_player_name", "Felix")
 	(hud.get_node("%XpRing") as XpRing).ratio = 0.7
 	(hud.get_node("%LevelText") as Label).text = "7"
-	(hud.get_node("%Mastered") as Label).text = "12 gemeistert"
+	(hud.get_node("%Mastered") as Label).text = "12"
 	(pieces[1] as LineEdit).text = "Wass"
 	var defs := FxWarmup.monster_defs()
 	var words := [["villa", "noun"], ["servus", "noun"], ["laudare", "verb"], ["magnus", "adjective"],
@@ -997,7 +997,7 @@ func _shoot_hud() -> void:
 		(hud.get_node("%LevelText") as Label).text = "4"
 		(hud.get_node("%Book") as Control).visible = bool(c["mastered"])
 		(hud.get_node("%Mastered") as Control).visible = bool(c["mastered"])
-		(hud.get_node("%Mastered") as Label).text = "8 gemeistert"
+		(hud.get_node("%Mastered") as Label).text = "8"
 		# Die Eingabe fängt zu an; das erste Bild zeigt sie offen, das zweite zu mit der
 		# Beschriftung der Ich-Sicht.
 		pieces[1].set("first_person", bool(c["closed"]))
@@ -1165,7 +1165,7 @@ func _show_tally() -> void:
 	var mastered := int(%MasteredSpin.value)
 	(_hud.get_node("%Book") as Control).visible = mastered > 0
 	(_hud.get_node("%Mastered") as Control).visible = mastered > 0
-	(_hud.get_node("%Mastered") as Label).text = "%d gemeistert" % mastered
+	(_hud.get_node("%Mastered") as Label).text = str(mastered)
 	(_hud.get_node("%XpRing") as XpRing).ratio = %XpSpin.value / 100.0
 
 

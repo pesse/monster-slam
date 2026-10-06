@@ -13,6 +13,7 @@
 [ext_resource type="Script" uid="uid://b3x2gxkloyfmm" path="res://src/ui/xp_ring.gd" id="11_xp"]
 [ext_resource type="PackedScene" path="res://scenes/ui/level_flare.tscn" id="12_flare"]
 [ext_resource type="Shader" uid="uid://cd2rlsgmacy34" path="res://assets/shaders/gold_glow.gdshader" id="13_gold"]
+[ext_resource type="Texture2D" path="res://assets/ui/statistics/icons/gold_coins.webp" id="14_coins"]
 
 [sub_resource type="ShaderMaterial" id="badge_glow"]
 shader = ExtResource("13_gold")
@@ -335,7 +336,7 @@ theme_type_variation = &"HudTallyRow"
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
-alignment = 2
+alignment = 1
 
 [node name="SkullSlot" type="Control" parent="EncounterPanel/Rows/TallyRow/KillsHalf" unique_id=1302309385]
 custom_minimum_size = Vector2(20, 20)
@@ -357,13 +358,14 @@ stretch_mode = 5
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HudText"
-text = "0 besiegt"
+text = "0"
 vertical_alignment = 1
 
 [node name="MasteredHalf" type="HBoxContainer" parent="EncounterPanel/Rows/TallyRow" unique_id=1458412678]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
+alignment = 1
 
 [node name="Book" type="TextureRect" parent="EncounterPanel/Rows/TallyRow/MasteredHalf" unique_id=2009477968]
 unique_name_in_owner = true
@@ -379,5 +381,27 @@ stretch_mode = 5
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HudText"
-text = "0 gemeistert"
+text = "0"
+vertical_alignment = 1
+
+[node name="GoldThird" type="HBoxContainer" parent="EncounterPanel/Rows/TallyRow" unique_id=1630284417]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+alignment = 1
+
+[node name="Coins" type="TextureRect" parent="EncounterPanel/Rows/TallyRow/GoldThird" unique_id=1630284418]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("14_coins")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Gold" type="Label" parent="EncounterPanel/Rows/TallyRow/GoldThird" unique_id=1630284419]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudText"
+text = "0"
 vertical_alignment = 1
