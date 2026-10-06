@@ -321,10 +321,11 @@ func _step_zoom(delta: float) -> void:
 ## Setzt Bild, Orte und Weg und meldet die Auskunft am Zeiger an. `hint` liefert für einen
 ## Ort die Karte (Title/Body/Note, siehe Hints.attach).
 func setup(texture: Texture2D, nodes: Array, path: Array, hint: Callable) -> void:
-	_texture = texture
 	# Was sich bewegt, gehört zum alten Bild; wer es will, setzt es danach (`set_ambience`).
-	if _ambience != null:
+	# Dasselbe Bild mit neuen Orten behält es — AreaMap setzt die Orte erst nach dem Zoom.
+	if _ambience != null and texture != _texture:
 		_ambience.setup([], texture)
+	_texture = texture
 	_nodes = nodes
 	_path = path
 	var missing := nodes.any(func(n): return (n.get("pos", Vector2.INF) as Vector2) == Vector2.INF)

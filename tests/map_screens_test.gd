@@ -189,8 +189,13 @@ func test_ambience_lies_between_image_and_nodes() -> void:
 	var image_layer := canvas.get_node("Image") as CanvasItem
 	assert_bool(image_layer.show_behind_parent).is_true()
 	assert_int(image_layer.get_index()).is_less(layer.get_index())
-	# Ein neues Bild nimmt die alte Bewegung mit.
-	canvas.setup(image, [], [], func(_n: Dictionary) -> Dictionary: return {})
+	# Dasselbe Bild mit Orten behält sie (so setzt AreaMap die Orte nach dem Zoom) …
+	canvas.setup(image, [{"pos": Vector2(0.5, 0.5)}], [], func(_n: Dictionary) -> Dictionary: return {})
+	assert_int(canvas.ambience_layer().layer_count()).is_equal(3)
+	# … ein neues Bild nimmt die alte Bewegung mit.
+	var other := PlaceholderTexture2D.new()
+	other.size = Vector2(1920, 1080)
+	canvas.setup(other, [], [], func(_n: Dictionary) -> Dictionary: return {})
 	assert_int(canvas.ambience_layer().layer_count()).is_equal(0)
 
 
@@ -734,6 +739,20 @@ func test_the_area_map_draws_small_bare_nodes_without_its_own_path() -> void:
 	assert_float(book_canvas.hover_radius).is_equal(MapCanvas.NODE_RADIUS)
 	assert_bool(book_canvas.show_captions).is_false()
 	remove_child(book)
+
+
+## Die Gebietskarte zeigt, was sich bewegt, auch noch, wenn ihre Orte stehen — sie setzt
+## die Orte nach dem Bild, und das darf die Bewegung nicht wegnehmen. Access 4 Unit 1:
+## Wasser, zwei Nebel, Fackeln.
+func test_the_area_map_keeps_its_ambience_once_the_nodes_are_set() -> void:
+	MapSelection.book = "access4"
+	MapSelection.unit = 1
+	var area: Control = auto_free(AREA_SCENE.instantiate())
+	add_child(area)
+	await get_tree().process_frame
+	var canvas := area.get_node("%Canvas") as MapCanvas
+	assert_int(canvas.ambience_layer().layer_count()).is_equal(4)
+	remove_child(area)
 
 
 ## Das Level des letzten Kampfes bleibt in RunRequest stehen. Der Zoom aus der Buchkarte
