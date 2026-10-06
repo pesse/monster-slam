@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://src/ui/settings_menu.gd" id="1_settings"]
 [ext_resource type="Texture2D" path="res://assets/ui/windows/window_surface.webp" id="2_surface"]
@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/windows/title_joint_right.webp" id="7_joint_right"]
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/settings.webp" id="8_icon"]
 [ext_resource type="PackedScene" path="res://scenes/ui/confirm_dialog.tscn" id="9_confirm"]
+[ext_resource type="PackedScene" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
 
 [sub_resource type="ButtonGroup" id="tab_group"]
 
@@ -108,6 +109,12 @@ size_flags_horizontal = 3
 theme_type_variation = &"WindowTitle"
 text = "EINSTELLUNGEN"
 vertical_alignment = 1
+
+[node name="HandbookLink" parent="Window/Layout/TitleBar/Header" instance=ExtResource("handbook_link")]
+unique_name_in_owner = true
+layout_mode = 2
+chapter = "13-einstellungen.md"
+section = "Reiter „Profil“"
 
 [node name="CloseButton" type="TextureButton" parent="Window/Layout/TitleBar/Header"]
 unique_name_in_owner = true

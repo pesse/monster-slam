@@ -181,6 +181,9 @@ Aufzählung von Kleinkram; unter ~600 Zeichen je Release.
 - Ein Screen, der in der Bildmitte hängt, ändert seine Größe nicht, solange er sichtbar
   ist: sperren und umbeschriften statt ein-/ausblenden; Inhaltsentscheidungen vor dem
   Anzeigen.
+- Das Handbuch (`docs/handbuch/`) liegt auch in der EXE und öffnet über `Handbook.open`
+  (ADR 0019). Ein „?“ (`HandbookLink`) zeigt auf eine Überschrift: umbenennen nur mit der
+  Szene (`tests/handbook_test.gd`); ein neues Kapitel gehört in die Liste in `README.md`.
 - Entwickler-Werkbänke liegen unter `scenes/dev/`, `src/dev/` (im Export ausgeschlossen),
   nie als Knopf im Startmenü. Jede Taste einer Werkbank hat auch einen Knopf.
 

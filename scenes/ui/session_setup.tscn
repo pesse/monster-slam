@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://d348wvi4kqfgf"]
 
 [ext_resource type="Script" uid="uid://b31yxuag568ts" path="res://src/ui/session_setup.gd" id="1_setup"]
+[ext_resource type="PackedScene" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
 
 [node name="SessionSetup" type="Control" unique_id=1595748894]
 layout_mode = 3
@@ -121,6 +122,12 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 text = "◀ Zurück"
+
+[node name="HandbookLink" parent="Margin/Root/Buttons" instance=ExtResource("handbook_link")]
+unique_name_in_owner = true
+layout_mode = 2
+chapter = "03-expertenmodus.md"
+custom_minimum_size = Vector2(40, 40)
 
 [node name="StartButton" type="Button" parent="Margin/Root/Buttons" unique_id=1330835382]
 unique_name_in_owner = true

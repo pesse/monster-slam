@@ -1,9 +1,10 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://src/ui/book_map.gd" id="1_screen"]
 [ext_resource type="Script" path="res://src/ui/map_canvas.gd" id="2_canvas"]
 [ext_resource type="Texture2D" path="res://assets/ui/library/back.webp" id="3_back"]
 [ext_resource type="PackedScene" path="res://scenes/ui/profile_badge.tscn" id="4_badge"]
+[ext_resource type="PackedScene" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
 
 [sub_resource type="Gradient" id="shade_g"]
 colors = PackedColorArray(0, 0, 0, 0.6, 0, 0, 0, 0)
@@ -108,6 +109,13 @@ size_flags_vertical = 4
 focus_mode = 0
 theme_type_variation = &"WindowButton"
 text = "Für eine Arbeit üben"
+
+[node name="HandbookLink" parent="Hud/Corners/Header" instance=ExtResource("handbook_link")]
+unique_name_in_owner = true
+layout_mode = 2
+chapter = "10-festung.md"
+section = "Die Landkarte"
+custom_minimum_size = Vector2(40, 40)
 
 [node name="EmptyHint" type="Label" parent="Hud/Corners"]
 unique_name_in_owner = true

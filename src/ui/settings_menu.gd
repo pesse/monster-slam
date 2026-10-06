@@ -57,6 +57,12 @@ signal closed()
 @onready var _trace_open: Button = %TraceOpen
 @onready var _trace_clear: Button = %TraceClear
 @onready var _trace_list: VBoxContainer = %TraceList
+## Reiter → Abschnitt im Handbuch: das „?“ im Titelband führt zum offenen Reiter.
+@onready var _handbook_sections := {
+	%ProfileTab: "Reiter „Profil“",
+	%ReportTab: "Reiter „Melden“",
+	%TraceTab: "Reiter „Protokoll“",
+}
 ## Reiter → Seite, in der Reihenfolge der Knöpfe.
 @onready var _pages := {
 	%ProfileTab: %ProfilePage,
@@ -128,6 +134,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _show_page(tab: Button) -> void:
 	for each: Button in _pages:
 		(_pages[each] as Control).visible = each == tab
+	(%HandbookLink as HandbookLink).section = _handbook_sections[tab]
 
 
 ## Baut Profilname, Schwierigkeits-Hervorhebung, Tempo und Melde-Reiter neu auf.

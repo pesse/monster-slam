@@ -22,6 +22,9 @@ extends Node
 ##                                       (z. B. --stock=spell.frost:3,,spell.mend:1)
 ##     … -- --shoot --settings[=<reiter>] drückt „Einstellungen", Reiter 1–3 (Profil, Melden,
 ##                                       Protokoll)
+##     … -- --shoot --handbook[=<datei>[#<anker>]]  das Handbuch über dem Menü, auf einem
+##                                       Kapitel (z. B. 18-wie-das-spiel-lernt.md#weiteres)
+##     … -- --shoot --hint=<knoten>      die Karte an diesem Knoten (Name, eindeutig im Baum)
 ##     … -- --shoot --badge-hint         die Karte am Medaillon der Plakette (Level, XP, Punkte)
 ##     … -- --shoot --map=book [--book=<id>]            die Buchkarte
 ##     … -- --shoot --map=area [--book=<id>] [--unit=N] die Gebietskarte einer Unit
@@ -142,6 +145,11 @@ func _ready() -> void:
 			var tab := int(_arg("settings")) if not _arg("settings").is_empty() else 1
 			var window := screen.get_node("SettingsMenu")
 			(window.get_node("%Tabs").get_child(tab - 1) as Button).button_pressed = true)
+	if _has_arg("handbook") or not _arg("handbook").is_empty():
+		var target := _arg("handbook").split("#")
+		get_tree().create_timer(0.5).timeout.connect(func():
+			Handbook.open(target[0] if target[0] != "" else Handbook.INDEX,
+					target[1] if target.size() > 1 else ""))
 	_cycle = screen.find_child("SunCycle", true, false) as SunCycle
 	if _cycle != null:
 		if not _arg("hour").is_empty():
@@ -185,6 +193,10 @@ func _shoot() -> void:
 		var medallion := get_tree().root.find_child("Medallion", true, false) as Control
 		if medallion != null:
 			Hints.probe(medallion)
+	if not _arg("hint").is_empty():
+		var target := get_tree().root.find_child(_arg("hint"), true, false) as Control
+		if target != null:
+			Hints.probe(target)
 	await RenderingServer.frame_post_draw
 	var dir := ProjectSettings.globalize_path(SHOT_DIR)
 	DirAccess.make_dir_recursive_absolute(dir)
@@ -204,6 +216,11 @@ func _shoot() -> void:
 		what += "_stats" + ("_closed" if _arg("stats") == "close" else "")
 	if _has_arg("badge-hint"):
 		what += "_badge_hint"
+	if not _arg("hint").is_empty():
+		what += "_hint_" + _arg("hint")
+	if _has_arg("handbook") or not _arg("handbook").is_empty():
+		what += "_handbook" + ("_" + _arg("handbook").get_slice(".", 0).left(2) \
+				if not _arg("handbook").is_empty() else "")
 	if not _arg("hour").is_empty():
 		what += "_h" + _arg("hour")
 	if _has_arg("content"):

@@ -1,0 +1,16 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/ui/handbook_link.gd" id="1_link"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/help.svg" id="2_icon"]
+
+[node name="HandbookLink" type="Button"]
+custom_minimum_size = Vector2(32, 32)
+size_flags_horizontal = 0
+size_flags_vertical = 4
+focus_mode = 0
+theme_type_variation = &"HandbookLink"
+icon = ExtResource("2_icon")
+flat = true
+icon_alignment = 1
+expand_icon = true
+script = ExtResource("1_link")

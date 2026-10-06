@@ -72,6 +72,12 @@
       "width": 256,
       "height": 256,
       "notes": "256×256, zentriert, für Anzeige mit 40–64 px."
+    },
+    "icons/handbook": {
+      "file": "icons/handbook.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "256×256, zentriert, für Anzeige mit 24–40 px. Quelle sources/handbook.webp."
     }
   }
 }
