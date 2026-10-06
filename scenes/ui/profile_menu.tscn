@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3]
+[gd_scene load_steps=20 format=3]
 
 [ext_resource type="Script" path="res://src/ui/profile_menu.gd" id="1_menu"]
 [ext_resource type="PackedScene" path="res://scenes/ui/update_dialog.tscn" id="2_update"]
@@ -16,6 +16,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/book_select.tscn" id="15_library"]
 [ext_resource type="PackedScene" path="res://scenes/ui/handbook_link.tscn" id="16_handbook"]
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/handbook.webp" id="17_handbook_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/quit.webp" id="18_quit_icon"]
 
 [sub_resource type="Gradient" id="ShadeGradient"]
 colors = PackedColorArray(0.03, 0.04, 0.08, 0.6, 0.03, 0.04, 0.08, 0)
@@ -180,6 +181,18 @@ custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
 theme_type_variation = &"MenuLink"
 icon = ExtResource("17_handbook_icon")
+
+[node name="QuitButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Left/LinkRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_type_variation = &"MenuLink"
+icon = ExtResource("18_quit_icon")
+flat = true
+icon_alignment = 1
+expand_icon = true
 
 [node name="ExpertButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Left/LinkRow"]
 unique_name_in_owner = true

@@ -74,6 +74,8 @@ func _ready() -> void:
 	(%SpellButton as Button).pressed.connect(_open_window.bind(ProfileBadge.SHOP_SCENE, %SpellButton))
 	(%StatsButton as Button).pressed.connect(_open_window.bind(ProfileBadge.STATS_SCENE, %StatsButton))
 	(%SettingsButton as Button).pressed.connect(_open_window.bind(SETTINGS_SCENE, %SettingsButton))
+	(%QuitButton as Button).pressed.connect(get_tree().quit)
+	Hints.attach(%QuitButton, "Beenden", "Schließt das Spiel.")
 	_badge.switch_pressed.connect(_back_to_intro)
 	# Was ein Fenster geändert haben kann und kein Signal meldet: ob es nach einer
 	# Installation etwas zu spielen gibt (Inhalte).
