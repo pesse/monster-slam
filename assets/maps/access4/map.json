@@ -1514,6 +1514,36 @@
 				"direction": 175.0,
 				"puff_size": 0.8
 			}
+		],
+		"4": [
+			{
+				"kind": "water",
+				"style": "rings",
+				"speed": 0.25,
+				"wave_size": 0.6,
+				"glint": 0.15,
+				"ring_size": 2.05,
+				"ring_rate": 0.6
+			},
+			{
+				"kind": "smoke",
+				"x": 0.293,
+				"y": 0.395,
+				"size": 3.2
+			},
+			{
+				"kind": "mist",
+				"speed": 2.9,
+				"density": 0.45,
+				"puff_size": 0.6,
+				"direction": 145.0,
+				"haze": 0.2
+			},
+			{
+				"kind": "smoke",
+				"x": 0.785,
+				"y": 0.577
+			}
 		]
 	}
 }
