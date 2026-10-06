@@ -131,8 +131,7 @@ static func part_tiers(lexemes: Array, mastered: Dictionary, part_of: Callable,
 
 
 ## Zählt ein Lexem in die Gruppe `key`: eines mehr insgesamt, und eines mehr gemeistert,
-## wenn es in der Menge steht. Die eine Zählregel für Units (hier) und Themen
-## (StatsScreen.tag_rows).
+## wenn es in der Menge steht. Die eine Zählregel für Units.
 static func count_into(groups: Dictionary, key: String, entry: Dictionary, mastered: Dictionary) -> void:
 	if not groups.has(key):
 		groups[key] = {"done": 0, "total": 0, "lexemes": []}

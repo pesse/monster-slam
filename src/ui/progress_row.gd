@@ -10,7 +10,7 @@ extends VBoxContainer
 ## dann, WELCHE 6 noch fehlen — die Zahl allein beantwortet das nicht.
 ##
 ## Die Wortzeilen kommen erst beim ersten Aufklappen (`words` ist ein Callable, kein
-## Array): der Fortschritts-Reiter hat eine Zeile je Unit UND je Thema, und alle Listen
+## Array): der Fortschritts-Reiter hat eine Zeile je Unit und Bonus, und alle Listen
 ## im Voraus zu bauen hieße, den halben Katalog als Knoten in den Baum zu hängen.
 
 const ROW_SCENE := preload("res://scenes/ui/stat_row.tscn")

@@ -12,7 +12,7 @@ extends Control
 ## Drei Reiter: „Überblick" trägt die Abschnitte, die zum Weiterspielen motivieren
 ## (Tages-Serie #6, Sitzungs-Genauigkeit #13, Level und Gold #5, Kampf-Rekorde #11,
 ## Lernkurve #7, frisch gemeistert und Comeback #9, Fahndungsliste #5, Lebenszeitwerte unter
-## „Insgesamt" #13), „Fortschritt" die Balken pro Unit und Thema (#8) — die
+## „Insgesamt" #13), „Fortschritt" die Balken pro Unit (#8) — die
 ## wachsen mit dem Katalog und schöben im Überblick alles andere aus dem Bild —, „Aufgaben" die
 ## vollständige Liste der Learnables. Ein Balken lässt sich aufklappen und zeigt dann die
 ## WÖRTER seiner Gruppe mit Prozentstand: „18 von 24" sagt nicht, welche sechs fehlen,
@@ -105,7 +105,6 @@ var _generator := WaveGenerator.new()
 var _resolver := TaskResolver.new()
 
 @onready var _unit_list: VBoxContainer = %UnitList
-@onready var _tag_list: VBoxContainer = %TagList
 @onready var _task_list: VBoxContainer = %TaskList
 @onready var _sort_bars: Array[SortBar] = [%WordSort as SortBar, %TaskSort as SortBar]
 @onready var _language_bar: LanguageBar = %LanguageBar
@@ -172,10 +171,9 @@ func _on_sort_changed(mode: int) -> void:
 	_sort_mode = mode as SortMode
 	for bar in _sort_bars:
 		bar.set_mode(mode)
-	for box in [_unit_list, _tag_list]:
-		for row in box.get_children():
-			if row is ProgressRow:
-				(row as ProgressRow).refill()
+	for row in _unit_list.get_children():
+		if row is ProgressRow:
+			(row as ProgressRow).refill()
 	_refresh_tasks()
 
 
@@ -575,10 +573,11 @@ func _refresh_wanted() -> void:
 				"%d× entwischt" % misses(row), _percent(row))
 
 
-## Fortschrittsbalken pro Unit und pro Thema (Issue #8).
+## Fortschrittsbalken pro Unit (Issue #8). Balken je Thema (Lexem-Tag) gibt es hier
+## nicht mehr: gezählt wird nach Buch und Unit.
 ##
 ## Der Bezugsrahmen ist der Curriculum-Scope aus dem Session-Setup: angezeigt werden nur
-## Units und Themen, die darin überhaupt vorkommen. Ohne Auswahl ist es der ganze
+## Units, die darin überhaupt vorkommen. Ohne Auswahl ist es der ganze
 ## Katalog. Die Themen-Auswahl (die zweite Achse) bleibt hier bewusst außen vor — sonst
 ## stünde bei „Unit 6: 8 von 12" nur der ausgewählte Teil der Unit, und die Zahl wäre
 ## nicht die, nach der ein Elternteil oder eine Lehrkraft fragt.
@@ -601,7 +600,6 @@ func _refresh_progress() -> void:
 	units = with_bonus_rows(units, ContentRegistry.bonuses_of, PlayerProgress.is_mastered,
 			func(book): return MapLayout.data(str(book)))
 	_fill_progress(_unit_list, units, "Keine Units im gewählten Bereich.")
-	_fill_progress(_tag_list, tag_rows(pool, mastered), "Noch keine Themen im gewählten Bereich.")
 
 
 ## Fortschrittszeilen je Unit: { key, label, done, total, lexemes }, nach Buch und Unit
@@ -667,25 +665,6 @@ static func bonus_lines(bonus: Dictionary, conf: Callable, describe: Callable) -
 		"value": percent_label(float(r["confidence"])),
 		"mark": "✓" if float(r["confidence"]) >= PROGRESS.MASTERY_CONFIDENCE else "",
 	})
-
-
-## Fortschrittszeilen je Thema (Lexem-Tag), alphabetisch. Ein Lexem mit mehreren Tags
-## zählt in jedem davon mit — die Themen sind keine Aufteilung, sondern Sichten.
-static func tag_rows(lexemes: Array, mastered: Dictionary) -> Array:
-	var groups := {}
-	for entry in lexemes:
-		for tag in entry.get("tags", []):
-			FortressTier.count_into(groups, str(tag), entry, mastered)
-	var keys: Array = groups.keys()
-	keys.sort()
-	var rows: Array = []
-	for key in keys:
-		var group: Dictionary = groups[key]
-		rows.append({
-			"label": str(key), "done": int(group["done"]), "total": int(group["total"]),
-			"lexemes": group["lexemes"],
-		})
-	return rows
 
 
 ## Die Wörter einer Gruppe mit ihrem Prozentstand — was hinter „18 von 24" steht.

@@ -281,7 +281,7 @@ stehen so im Code, in den ADRs und in den Commit-Texten:
 
 ### Meisterung: ein Wort braucht beide Richtungen
 
-Der Fortschrittsbalken je Unit und Thema (Statistik, Reiter „Fortschritt") zählt WÖRTER:
+Der Fortschrittsbalken je Unit (Statistik, Reiter „Fortschritt") zählt WÖRTER:
 `PlayerProgress.mastered_lexemes` nimmt ein Lexem erst auf, wenn `translate:de_to_en:<id>`
 UND `translate:en_to_de:<id>` über der Schwelle liegen — allgemein beide Richtungen seiner
 Sprache (`Lexeme.mastery_directions`: `de_to_<sprache>`/`<sprache>_to_de`, ADR 0007). Der

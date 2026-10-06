@@ -742,7 +742,7 @@ steht dann „alle Sprachen“). Die Wahl bleibt, bis du das Spiel schließt.
 
 ### Reiter „Fortschritt“: gezählt werden Wörter
 
-Hier steht je Unit und je Thema ein Balken: „… von … Wörtern gemeistert“. Hinter dem Namen
+Hier steht je Unit ein Balken: „… von … Wörtern gemeistert“. Hinter dem Namen
 einer Unit steht ihre Festungsstufe („🏰 Stufe 2“, Kapitel 10). Ein Klick auf eine Zeile
 zeigt ihre Wörter.
 

@@ -200,28 +200,10 @@ func test_mastered_words_outside_the_pool_do_not_count() -> void:
 	assert_int(int(rows[0]["total"])).is_equal(1)
 
 
-## Themen sind Sichten, keine Aufteilung: ein Lexem mit zwei Tags zählt in beiden.
-func test_tag_rows_count_a_lexeme_in_each_of_its_tags() -> void:
-	var pool := [_lexeme("a", "access2", 6, ["body", "school"]), _lexeme("b", "access2", 6, ["body"])]
-	var rows := STATS_SCREEN.tag_rows(pool, {"a": true})
-	assert_int(rows.size()).is_equal(2)
-	# Alphabetisch: body vor school.
-	assert_str(str(rows[0]["label"])).is_equal("body")
-	assert_int(int(rows[0]["done"])).is_equal(1)
-	assert_int(int(rows[0]["total"])).is_equal(2)
-	assert_str(str(rows[1]["label"])).is_equal("school")
-	assert_int(int(rows[1]["total"])).is_equal(1)
-
-
-func test_a_pool_without_tags_yields_no_tag_rows() -> void:
-	assert_array(STATS_SCREEN.tag_rows([_lexeme("a", "access2", 6)], {})).is_empty()
-
-
 func test_stats_scene_has_the_progress_lists() -> void:
 	var screen: Control = auto_free(STATS_SCENE.instantiate())
 	add_child(screen)
 	assert_object(screen.get_node("%UnitList")).is_not_null()
-	assert_object(screen.get_node("%TagList")).is_not_null()
 	remove_child(screen)
 
 
@@ -310,12 +292,10 @@ func test_the_groups_carry_their_lexemes() -> void:
 	var pool := [_lexeme("a", "access2", 6), _lexeme("b", "access2", 6, ["body"])]
 	var unit: Array = STATS_SCREEN.unit_rows(pool, {}, _book_label)[0]["lexemes"]
 	assert_int(unit.size()).is_equal(2)
-	var tag: Array = STATS_SCREEN.tag_rows(pool, {})[0]["lexemes"]
-	assert_int(tag.size()).is_equal(1)
 
 
 ## Aufklappen zeigt die Wörter, nochmal klappt sie weg — und gebaut werden sie erst beim
-## ersten Mal (der Fortschritts-Reiter hat eine Zeile je Unit und je Thema).
+## ersten Mal (der Fortschritts-Reiter hat eine Zeile je Unit).
 func test_the_progress_row_unfolds_its_word_list() -> void:
 	var row: ProgressRow = auto_free(PROGRESS_ROW_SCENE.instantiate())
 	add_child(row)

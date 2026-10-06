@@ -849,20 +849,6 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="TagSection" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress"]
-layout_mode = 2
-theme_type_variation = &"Tight"
-
-[node name="TagTitle" type="Label" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress/TagSection"]
-layout_mode = 2
-theme_type_variation = &"StatHeading"
-text = "Nach Thema"
-
-[node name="TagList" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress/TagSection"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"Tight"
-
 [node name="TaskPage" type="ScrollContainer" parent="Window/Layout/Content/Body/Pages"]
 unique_name_in_owner = true
 visible = false
