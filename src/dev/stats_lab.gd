@@ -4,7 +4,7 @@ extends Node
 ##
 ##     GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/stats_lab.tscn -- --shoot
 ##         speichert reports/stats/stats_<breite>x<höhe>.png und beendet sich.
-##     … -- --shoot --size=1920x1080   anderes Fenster (Bezugsgröße bleibt 1152×648)
+##     … -- --shoot --size=1920x1080   anderes Fenster (Bezugsgröße nach Menügröße, UiScale)
 ##     … -- --shoot --tab=1            zweiter Reiter (0 Überblick, 1 Fortschritt, 2 Aufgaben)
 ##     … -- --shoot --day=29           Karte des Tages 29, als hätte er den Tastaturfokus
 ##     … -- --shoot --scroll=400       Überblick um so viele Pixel nach unten geschoben

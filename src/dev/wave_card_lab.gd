@@ -16,7 +16,7 @@ extends Node
 ##     … -- --snap --card=defeat       Stufe 2 nach einer Niederlage
 ##     … -- --snap --card=reveal       die Auflösung der Vokabeln
 ##     … -- --snap --card=confirm      die Rückfrage (wie „Welle auflösen")
-##     … -- --snap --size=1920x1080    anderes Fenster (Bezugsgröße bleibt 1152×648)
+##     … -- --snap --size=1920x1080    anderes Fenster (Bezugsgröße nach Menügröße, UiScale)
 ##
 ## Ohne `--snap` bleibt das Fenster offen: unten links schalten ◀/▶ (oder Bild↑/Bild↓)
 ## durch alle Karten. Die Karten sind echt — die Kiste lässt sich öffnen, Knöpfe blättern.

@@ -41,6 +41,7 @@ Hints="*res://scenes/ui/hints.tscn"
 
 [display]
 
+window/size/mode.template=2
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 

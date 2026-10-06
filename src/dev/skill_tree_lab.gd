@@ -4,7 +4,7 @@ extends Node
 ##
 ##     GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/skill_tree_lab.tscn -- --shoot
 ##         speichert reports/skill_tree/skill_tree_<breite>x<höhe>.png und beendet sich.
-##     … -- --shoot --size=1920x1080     anderes Fenster (Bezugsgröße bleibt 1152×648)
+##     … -- --shoot --size=1920x1080     anderes Fenster (Bezugsgröße nach Menügröße, UiScale)
 ##     … -- --shoot --points=3           echte Punkte statt der unbegrenzten des Debug-Builds
 ##     … -- --shoot --hint=skill.scout.bow   zeigt die Hinweiskarte, als stünde die Maus
 ##                                         auf dem Knoten (Bildname bekommt die Id dazu)

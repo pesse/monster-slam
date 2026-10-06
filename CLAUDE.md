@@ -174,6 +174,8 @@ Aufzählung von Kleinkram; unter ~600 Zeichen je Release.
 - Erklärungen nur über `Hints.attach` / `Hints.attach_live`, **nie `tooltip_text`**;
   am kleinsten Knoten anmelden, nie an einer Screen-Wurzel. (`tests/hint_discipline_test.gd`)
 - Dialoge als Overlay (`ConfirmDialog`), kein Godot-`Window` — das skaliert nicht mit.
+- Die Bezugsgröße (`content_scale_size`) setzt nur `UiScale.apply` (ADR 0017); wer mehr
+  Platz braucht, hebt `UiScale.floor_size`.
 - Randlayout gegen **1152×648** prüfen (siehe „Fallen"); die Kopfleiste ist voll
   (`tests/hud_header_test.gd`), Neues gehört woandershin.
 - Ein Screen, der in der Bildmitte hängt, ändert seine Größe nicht, solange er sichtbar
@@ -203,8 +205,8 @@ Aufzählung von Kleinkram; unter ~600 Zeichen je Release.
   Sekunden später noch nach — vor jedem Commit `git diff -w --stat` gegen
   `git diff --stat` halten und reine Einrückungsänderungen zurücksetzen.
 - **Das Vollbild ist der schmalste Fall.** `canvas_items`/`expand` dehnt die längere Achse;
-  ein maximiertes Fenster ist breiter als 1152, das Vollbild auf 16:9 nicht. Was im
-  Fenster passt, kann im Vollbild abgeschnitten sein.
+  ein maximiertes Fenster ist breiter als 1152, das Vollbild auf 16:9 bei großer Menügröße
+  nicht. Was im Fenster passt, kann im Vollbild abgeschnitten sein.
 - **Ein umbrechendes Label meldet als Mindestgröße 1 px Breite und die Höhe dafür.** Wo
   keine echte Breite ankommt (unsichtbare Seite im `PageStack`, von Hand gesetzte
   Kartengröße), braucht es `custom_minimum_size.x` oder die Breite vor dem Messen.
