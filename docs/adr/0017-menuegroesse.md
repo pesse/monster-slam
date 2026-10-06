@@ -35,7 +35,8 @@ Vollbild zu groß. Die 3D-Welt rendert ohnehin in Fensterauflösung und darf wac
 
 6. **Die EXE startet maximiert** (`window/size/mode.template=2`). Editor-Läufe, Werkbänke
    und ihre Bilder bleiben im freien Fenster 1152×648, damit Bilder nicht vom Bildschirm
-   abhängen.
+   abhängen. Ebenso das Vollbild aus den Einstellungen: beim Start greift es nur in der EXE,
+   umschalten (Checkbox, F11, Alt+Enter) geht überall.
 
 ## Folgen
 

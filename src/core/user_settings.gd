@@ -42,6 +42,10 @@ func _ready() -> void:
 	var root := get_tree().root
 	UiScale.apply(root, ui_size())
 	root.size_changed.connect(func() -> void: UiScale.apply(root, ui_size()))
+	# Das Vollbild beim Start nur in der EXE: Editor-Läufe und Werkbänke bleiben im freien
+	# Fenster, damit ihre Bilder nicht vom Bildschirm abhängen (ADR 0017).
+	if OS.has_feature("template") and fullscreen():
+		_apply_fullscreen(true)
 
 
 func active_profile() -> String:
@@ -194,6 +198,54 @@ func set_ui_size(value: UiScale.Size) -> void:
 	_config.set_value("general", "ui_size", int(value))
 	_save()
 	UiScale.apply(get_tree().root, value)
+
+
+## Vollbild? Geräteweit wie die Menügröße. Gespeichert wird der Wunsch, was das Fenster
+## gerade ist, sagt `window_is_fullscreen()` — verlassen lässt es sich auch über das
+## Betriebssystem (macOS: grüner Knopf). Randlos statt exklusiv: Alt+Tab und was das Spiel
+## selbst öffnet (Spur-Ordner, Update, Links) kommen nach vorn, ohne dass es minimiert.
+func fullscreen() -> bool:
+	return bool(_config.get_value("general", "fullscreen", false))
+
+
+func set_fullscreen(on: bool) -> void:
+	_config.set_value("general", "fullscreen", on)
+	_save()
+	_apply_fullscreen(on)
+
+
+static func window_is_fullscreen() -> bool:
+	return DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
+
+
+## Ein im Editor eingebettetes Spiel (F5, Reiter „Game“) kennt nur das freie Fenster.
+static func can_fullscreen() -> bool:
+	return not Engine.is_embedded_in_editor()
+
+
+## Zurück geht es dorthin, wo das Fenster ohne Vollbild startet: die EXE maximiert, alles
+## andere frei (`window/size/mode.template`).
+func _apply_fullscreen(on: bool) -> void:
+	if not can_fullscreen() or on == window_is_fullscreen():
+		return
+	var back := DisplayServer.WINDOW_MODE_MAXIMIZED if OS.has_feature("template") \
+			else DisplayServer.WINDOW_MODE_WINDOWED
+	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if on else back)
+
+
+## F11 und Alt+Enter schalten überall um, auch während getippt wird — `_input` kommt vor
+## der Oberfläche, ein Eingabefeld sieht das Enter dann nicht.
+func _input(event: InputEvent) -> void:
+	var key := event as InputEventKey
+	if key == null or not key.pressed or key.echo:
+		return
+	var f11 := key.keycode == KEY_F11 and not (key.alt_pressed or key.ctrl_pressed
+			or key.shift_pressed or key.meta_pressed)
+	var alt_enter := key.keycode in [KEY_ENTER, KEY_KP_ENTER] and key.alt_pressed \
+			and not (key.ctrl_pressed or key.shift_pressed or key.meta_pressed)
+	if (f11 or alt_enter) and can_fullscreen():
+		get_viewport().set_input_as_handled()
+		set_fullscreen(not window_is_fullscreen())
 
 
 ## Ausgewählte Lexem-Tags eines Profils (Session-Filter). Leer -> keine Einschränkung

@@ -43,6 +43,15 @@ func test_the_chosen_menu_size_is_pressed() -> void:
 	remove_child(screen)
 
 
+## Die Vollbild-Checkbox zeigt, was das Fenster ist, nicht den gespeicherten Wunsch —
+## verlassen lässt es sich auch über das Betriebssystem. Kopflos ist es nie Vollbild.
+func test_the_fullscreen_toggle_shows_the_window() -> void:
+	var screen := _window()
+	assert_bool((screen.get_node("%FullscreenToggle") as CheckBox).button_pressed) \
+			.is_equal(UserSettings.window_is_fullscreen())
+	remove_child(screen)
+
+
 ## Schließen-X und Escape melden `closed` — das Menü nimmt das Fenster dann weg.
 func test_close_and_escape_tell_the_opener() -> void:
 	var screen := _window()

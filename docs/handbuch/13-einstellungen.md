@@ -16,6 +16,9 @@
   auf dem Bildschirm stehen. „Mittel“ richtet sich nach der Anzeige-Einstellung des
   Rechners. Ein größeres Fenster gibt mehr Platz, die Schrift bleibt gleich groß. Gilt für
   diesen Rechner, nicht nur für das Profil.
+- **„Im Vollbild spielen“**: das Spiel füllt den ganzen Bildschirm, ohne Fensterrahmen.
+  **F11** oder **Alt+Enter** schaltet jederzeit um, auch mitten im Kampf. Beenden geht dann
+  über „Beenden“ im Startmenü. Gilt für diesen Rechner, nicht nur für das Profil.
 - **„Fortschritt zurücksetzen“**: löscht nach einer Rückfrage den Lernstand der Wörter
   dieses Profils. Gold, Erfahrung und gelernte Fähigkeiten sind davon nicht betroffen.
 

@@ -411,6 +411,27 @@ autowrap_mode = 3
 layout_mode = 2
 theme_type_variation = &"StatRule"
 
+[node name="FullscreenLabel" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+layout_mode = 2
+theme_type_variation = &"StatHeading"
+text = "Vollbild"
+
+[node name="FullscreenToggle" type="CheckBox" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Im Vollbild spielen"
+
+[node name="FullscreenNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+layout_mode = 2
+theme_type_variation = &"Caption"
+text = "Umschalten geht jederzeit auch mit F11 oder Alt+Enter. Beenden im Vollbild über „Beenden“ im Startmenü. Gilt für diesen Rechner, nicht nur für dieses Profil."
+autowrap_mode = 3
+
+[node name="FullscreenRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+layout_mode = 2
+theme_type_variation = &"StatRule"
+
 [node name="ResetLabel" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
 layout_mode = 2
 theme_type_variation = &"StatHeading"

@@ -90,6 +90,15 @@ func _ready() -> void:
 	(%UiSizeSmall as Button).pressed.connect(_on_ui_size_pressed.bind(UiScale.Size.SMALL))
 	(%UiSizeMedium as Button).pressed.connect(_on_ui_size_pressed.bind(UiScale.Size.MEDIUM))
 	(%UiSizeLarge as Button).pressed.connect(_on_ui_size_pressed.bind(UiScale.Size.LARGE))
+	var fullscreen := %FullscreenToggle as CheckBox
+	fullscreen.toggled.connect(UserSettings.set_fullscreen)
+	fullscreen.disabled = not UserSettings.can_fullscreen()
+	if fullscreen.disabled:
+		Hints.attach(fullscreen, "Vollbild", "Nicht im Editor eingebettet — dort gibt es nur das Fenster.")
+	else:
+		Hints.attach(fullscreen, "Vollbild", "", "F11 oder Alt+Enter")
+	# Auch F11 und das Betriebssystem schalten um; die Checkbox zeigt, was das Fenster ist.
+	get_tree().root.size_changed.connect(_refresh_fullscreen)
 	(%ResetButton as Button).pressed.connect(func(): _reset_confirm.ask(
 			"Fortschritt zurücksetzen?",
 			"Der Lernstand aller Wörter dieses Profils geht verloren. Gold, Erfahrung und "
@@ -144,6 +153,7 @@ func _refresh() -> void:
 	_refresh_speed()
 	_refresh_graphics()
 	_refresh_ui_size()
+	_refresh_fullscreen()
 	_refresh_report()
 	_refresh_trace()
 
@@ -182,6 +192,10 @@ func _refresh_ui_size() -> void:
 	(%UiSizeSmall as Button).set_pressed_no_signal(chosen == UiScale.Size.SMALL)
 	(%UiSizeMedium as Button).set_pressed_no_signal(chosen == UiScale.Size.MEDIUM)
 	(%UiSizeLarge as Button).set_pressed_no_signal(chosen == UiScale.Size.LARGE)
+
+
+func _refresh_fullscreen() -> void:
+	(%FullscreenToggle as CheckBox).set_pressed_no_signal(UserSettings.window_is_fullscreen())
 
 
 func _update_speed_label(value: float) -> void:
