@@ -37,6 +37,11 @@ func _ready() -> void:
 		_config.set_value("names", DEFAULT_PROFILE, "Spieler")
 		_save()
 	GraphicsQuality.apply_window(get_tree().root, graphics_quality())
+	# Die Bezugsgröße der Oberfläche folgt dem Fenster (UiScale): beim Start und nach
+	# jeder Größenänderung, auch beim Maximieren und im Vollbild.
+	var root := get_tree().root
+	UiScale.apply(root, ui_size())
+	root.size_changed.connect(func() -> void: UiScale.apply(root, ui_size()))
 
 
 func active_profile() -> String:
@@ -175,6 +180,20 @@ func set_graphics_quality(value: GraphicsQuality.Level) -> void:
 	_config.set_value("general", "graphics_quality", int(value))
 	_save()
 	GraphicsQuality.apply_window(get_tree().root, value)
+
+
+## Menügröße (UiScale.Size)? Geräteweit wie die Grafikstufe: wie groß die Menüs stehen
+## sollen, hängt am Bildschirm, nicht daran, wer spielt. Gespeichert wird nur die Stufe;
+## was „Mittel" in Pixeln heißt, rechnet UiScale aus der Systemskalierung.
+func ui_size() -> UiScale.Size:
+	return clampi(int(_config.get_value("general", "ui_size", UiScale.Size.MEDIUM)),
+			UiScale.Size.SMALL, UiScale.Size.LARGE) as UiScale.Size
+
+
+func set_ui_size(value: UiScale.Size) -> void:
+	_config.set_value("general", "ui_size", int(value))
+	_save()
+	UiScale.apply(get_tree().root, value)
 
 
 ## Ausgewählte Lexem-Tags eines Profils (Session-Filter). Leer -> keine Einschränkung

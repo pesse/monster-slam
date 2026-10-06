@@ -30,6 +30,19 @@ func test_the_tabs_switch_pages() -> void:
 	remove_child(screen)
 
 
+## Die gespeicherte Menügröße steht gedrückt, genau eine (Issue #38).
+func test_the_chosen_menu_size_is_pressed() -> void:
+	var screen := _window()
+	var buttons := {
+		UiScale.Size.SMALL: screen.get_node("%UiSizeSmall") as Button,
+		UiScale.Size.MEDIUM: screen.get_node("%UiSizeMedium") as Button,
+		UiScale.Size.LARGE: screen.get_node("%UiSizeLarge") as Button,
+	}
+	for each: UiScale.Size in buttons:
+		assert_bool((buttons[each] as Button).button_pressed).is_equal(each == UserSettings.ui_size())
+	remove_child(screen)
+
+
 ## Schließen-X und Escape melden `closed` — das Menü nimmt das Fenster dann weg.
 func test_close_and_escape_tell_the_opener() -> void:
 	var screen := _window()

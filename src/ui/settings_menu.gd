@@ -1,6 +1,6 @@
 extends Control
 ## Einstellungs-Fenster (Profilname, Standard-Schwierigkeit, Grund-Geschwindigkeit, Grafik,
-## Reset, Melden, Protokoll).
+## Menügröße, Reset, Melden, Protokoll).
 ##
 ## Öffnet als Fenster über dem Hauptmenü wie Statistik und Fähigkeiten
 ## (`profile_menu._open_window`): derselbe Rahmen, dasselbe Titelband, dasselbe
@@ -81,6 +81,9 @@ func _ready() -> void:
 	(%GraphicsFine as Button).pressed.connect(_on_graphics_pressed.bind(GraphicsQuality.Level.FINE))
 	(%GraphicsMedium as Button).pressed.connect(_on_graphics_pressed.bind(GraphicsQuality.Level.MEDIUM))
 	(%GraphicsFast as Button).pressed.connect(_on_graphics_pressed.bind(GraphicsQuality.Level.FAST))
+	(%UiSizeSmall as Button).pressed.connect(_on_ui_size_pressed.bind(UiScale.Size.SMALL))
+	(%UiSizeMedium as Button).pressed.connect(_on_ui_size_pressed.bind(UiScale.Size.MEDIUM))
+	(%UiSizeLarge as Button).pressed.connect(_on_ui_size_pressed.bind(UiScale.Size.LARGE))
 	(%ResetButton as Button).pressed.connect(func(): _reset_confirm.ask(
 			"Fortschritt zurücksetzen?",
 			"Der Lernstand aller Wörter dieses Profils geht verloren. Gold, Erfahrung und "
@@ -133,6 +136,7 @@ func _refresh() -> void:
 	_refresh_difficulty()
 	_refresh_speed()
 	_refresh_graphics()
+	_refresh_ui_size()
 	_refresh_report()
 	_refresh_trace()
 
@@ -163,6 +167,14 @@ func _refresh_graphics() -> void:
 	(%GraphicsFine as Button).set_pressed_no_signal(level == GraphicsQuality.Level.FINE)
 	(%GraphicsMedium as Button).set_pressed_no_signal(level == GraphicsQuality.Level.MEDIUM)
 	(%GraphicsFast as Button).set_pressed_no_signal(level == GraphicsQuality.Level.FAST)
+
+
+## Die Menügröße ebenso.
+func _refresh_ui_size() -> void:
+	var chosen := UserSettings.ui_size()
+	(%UiSizeSmall as Button).set_pressed_no_signal(chosen == UiScale.Size.SMALL)
+	(%UiSizeMedium as Button).set_pressed_no_signal(chosen == UiScale.Size.MEDIUM)
+	(%UiSizeLarge as Button).set_pressed_no_signal(chosen == UiScale.Size.LARGE)
 
 
 func _update_speed_label(value: float) -> void:
@@ -268,6 +280,10 @@ func _on_difficulty_pressed(level: int) -> void:
 
 func _on_graphics_pressed(level: GraphicsQuality.Level) -> void:
 	UserSettings.set_graphics_quality(level)
+
+
+func _on_ui_size_pressed(chosen: UiScale.Size) -> void:
+	UserSettings.set_ui_size(chosen)
 
 
 func _on_speed_changed(value: float) -> void:

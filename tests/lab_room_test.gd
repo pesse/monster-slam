@@ -2,9 +2,9 @@ extends GdUnitTestSuite
 ## Die Werkbänke dürfen größer sein als das Spiel — und sie müssen in das, was sie sich
 ## nehmen, auch hineinpassen.
 ##
-## Der Anlass: `canvas_items`/`expand` skaliert das Bild, statt Platz zu geben. Wer eine
-## überlaufende Werkbank durch Ziehen am Fensterrand retten will, zieht ins Leere; erst
-## Fenster UND Bezugsgröße zusammen geben Raum. Genau das ist eine Aussage über Zahlen und
+## Der Anlass: `canvas_items`/`expand` gibt nur so viel Platz, wie die Menügröße zulässt
+## (UiScale). Wer eine überlaufende Werkbank durch Ziehen am Fensterrand retten will, kommt
+## damit nicht weit; erst Fenster UND Untergrenze der Bezugsgröße zusammen geben Raum. Genau das ist eine Aussage über Zahlen und
 ## gehört damit gerechnet und nicht am Bildschirm beurteilt — wie
 ## `test_the_defeat_screen_fits_into_the_base_resolution`.
 ##

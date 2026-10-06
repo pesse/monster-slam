@@ -1292,10 +1292,15 @@ sondern gesperrt und umbeschriftet — jede Größenänderung verschiebt den Kno
 Zeiger. Was sich doch ändern muss, wird entschieden, bevor die Seite erscheint
 (`WaveStats.show_stats`).
 
-**Werkbänke haben mehr Platz als das Spiel.** Ein Fenster lässt sich wegen `canvas_items`
-nicht am Rand größer ziehen, das Bild skaliert bloß mit. `LabRoom` (`src/dev/lab_room.gd`)
-hebt deshalb Fenster und `content_scale_size` auf 1600×900 und stellt in `_exit_tree()`
-wieder her, was dem Spiel gehört. Werkbänke sind die eine Stelle, an der 1152 nicht gilt;
+**Die Bezugsgröße wird gerechnet** (ADR 0017, `UiScale`). `canvas_items`/`expand` skaliert
+von `Window.content_scale_size` aus, und die ist Fenster ÷ (Systemskalierung × Menügröße),
+je Achse mindestens 1152×648. Ein großes Fenster gibt also Platz statt größerer Schrift.
+Gesetzt wird sie nur in `UiScale.apply`, beim Start und nach jedem `size_changed`
+(`UserSettings`). Kopflos gilt fest 1152×648, damit Tests nicht vom Bildschirm abhängen.
+
+**Werkbänke haben mehr Platz als das Spiel.** `LabRoom` (`src/dev/lab_room.gd`) hebt Fenster
+und Untergrenze der Bezugsgröße (`UiScale.floor_size`) auf 1600×900 und gibt sie in
+`_exit_tree()` dem Spiel zurück. Werkbänke sind die eine Stelle, an der 1152 nicht gilt;
 `tests/lab_room_test.gd` rechnet, dass jede in ihren Platz passt.
 
 ## Sprachwahl: GDScript (C# nur bei Bedarf punktuell)

@@ -791,6 +791,10 @@ Richtung sitzt.
 - **„Grund-Geschwindigkeit“** (50 % bis 150 %): macht alle Monster langsamer oder
   schneller, unabhängig von der Schwierigkeit. Gut für Kinder, die noch langsam tippen
   oder lesen.
+- **„Menügröße“** (Klein, Mittel, Groß): wie groß Menüs, Karte und die Anzeigen im Kampf
+  auf dem Bildschirm stehen. „Mittel“ richtet sich nach der Anzeige-Einstellung des
+  Rechners. Ein größeres Fenster gibt mehr Platz, die Schrift bleibt gleich groß. Gilt für
+  diesen Rechner, nicht nur für das Profil.
 - **„Fortschritt zurücksetzen“**: löscht nach einer Rückfrage den Lernstand der Wörter
   dieses Profils. Gold, Erfahrung und gelernte Fähigkeiten sind davon nicht betroffen.
 

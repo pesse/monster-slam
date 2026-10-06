@@ -2,18 +2,18 @@ class_name LabRoom
 extends RefCounted
 ## Wie viel Platz eine Werkbank bekommt (scenes/dev/*).
 ##
-## Das Spiel ist auf 1152×648 gebaut, und `canvas_items`/`expand` hält es dabei: ein
-## größeres Fenster gibt NICHT mehr Platz, es macht das Bild größer. Wer eine überlaufende
-## Werkbank durch Ziehen am Fensterrand retten will, zieht deshalb ins Leere.
+## Das Spiel rechnet seine Bezugsgröße aus dem Fenster und der Menügröße (UiScale): ein
+## kleines Fenster gibt 1152×648, ein großes mehr — aber nur so viel, wie die Menügröße
+## zulässt. Wer eine überlaufende Werkbank durch Ziehen am Fensterrand retten will, bekommt
+## deshalb erst dann Platz, wenn das Fenster größer ist als Bezugsgröße mal Skala.
 ##
-## Für eine Werkbank ist diese Regel falsch herum. Sie hat kein Randlayout zu beweisen
-## (dafür ist 1152 da, siehe CLAUDE.md „Das Vollbild ist der SCHMALSTE Fall"), sie stellt
-## drei Spalten nebeneinander, und ihre Texte sind so lang, wie ein Modell sie macht.
+## Für eine Werkbank reicht das nicht. Sie hat kein Randlayout zu beweisen (dafür ist 1152
+## da, siehe CLAUDE.md „Das Vollbild ist der SCHMALSTE Fall"), sie stellt drei Spalten
+## nebeneinander, und ihre Texte sind so lang, wie ein Modell sie macht.
 ##
-## Gehoben wird deshalb ZWEIERLEI: das Fenster UND die Bezugsgröße der Skalierung
-## (`Window.content_scale_size`). Nur das Fenster zu vergrößern hilft nicht — das Bild
-## wüchse mit. Nur die Bezugsgröße zu heben auch nicht — dann würde alles kleiner. Erst
-## beide zusammen geben mehr Raum bei gleicher Schriftgröße.
+## Gehoben wird deshalb ZWEIERLEI: das Fenster UND die Untergrenze der Bezugsgröße
+## (`UiScale.floor_size`). Die Bezugsgröße selbst setzt nur `UiScale.apply` — schriebe die
+## Werkbank sie direkt, nähme die nächste Größenänderung sie wieder weg.
 ##
 ## Zurückgestellt wird beim Verlassen, und zwar in `_exit_tree()` der Werkbank: sie ist ein
 ## Gast im Fenster des Spiels. Es gibt in jeder Werkbank zwei Wege hinaus (Knopf und
@@ -28,12 +28,9 @@ extends RefCounted
 const SIZE := Vector2i(1600, 900)
 
 
-## Die Grundauflösung des Spiels — aus den Projekteinstellungen gelesen und nicht als
-## zweite Konstante daneben gelegt.
+## Die Grundauflösung des Spiels (UiScale).
 static func game_size() -> Vector2i:
-	return Vector2i(
-			int(ProjectSettings.get_setting("display/window/size/viewport_width", 1152)),
-			int(ProjectSettings.get_setting("display/window/size/viewport_height", 648)))
+	return UiScale.game_size()
 
 
 ## Macht Platz.
@@ -43,7 +40,7 @@ static func enlarge(window: Window) -> void:
 
 ## Stellt das Fenster des Spiels wieder her.
 static func restore(window: Window) -> void:
-	_apply(window, game_size())
+	_apply(window, Vector2i.ZERO)
 
 
 ## Was von SIZE auf diesen Bildschirm passt — und nie weniger als das Spiel selbst. Ein
@@ -64,13 +61,14 @@ static func fitting(window: Window) -> Vector2i:
 			clampi(SIZE.y, base.y, maxi(base.y, usable.y)))
 
 
+## `size` ist die Untergrenze der Bezugsgröße; null gibt sie dem Spiel zurück.
 static func _apply(window: Window, size: Vector2i) -> void:
 	if window == null or not is_instance_valid(window):
 		return
-	window.content_scale_size = size
+	UiScale.floor_size = size
 	# Nur ein freies Fenster wird mitgezogen. Im Vollbild und im maximierten Fenster gibt es
-	# nichts zu vergrößern — dort tut die Bezugsgröße allein schon, was sie soll.
-	if window.mode != Window.MODE_WINDOWED:
-		return
-	window.size = size
-	window.move_to_center()
+	# nichts zu vergrößern — dort tut die Untergrenze allein schon, was sie soll.
+	if window.mode == Window.MODE_WINDOWED:
+		window.size = size if size != Vector2i.ZERO else game_size()
+		window.move_to_center()
+	UiScale.apply(window)

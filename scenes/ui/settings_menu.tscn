@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://src/ui/settings_menu.gd" id="1_settings"]
 [ext_resource type="Texture2D" path="res://assets/ui/windows/window_surface.webp" id="2_surface"]
@@ -15,6 +15,8 @@
 [sub_resource type="ButtonGroup" id="diff_group"]
 
 [sub_resource type="ButtonGroup" id="graphics_group"]
+
+[sub_resource type="ButtonGroup" id="ui_size_group"]
 
 [node name="SettingsMenu" type="Control"]
 layout_mode = 3
@@ -353,6 +355,52 @@ text = "„Mittel“ lässt das Leuchten weg und glättet Kanten weniger. „Sch
 autowrap_mode = 3
 
 [node name="GraphicsRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+layout_mode = 2
+theme_type_variation = &"StatRule"
+
+[node name="UiSizeLabel" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+layout_mode = 2
+theme_type_variation = &"StatHeading"
+text = "Menügröße"
+
+[node name="UiSizeRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="UiSizeSmall" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/UiSizeRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+theme_type_variation = &"ToolChoice"
+toggle_mode = true
+button_group = SubResource("ui_size_group")
+text = "Klein"
+
+[node name="UiSizeMedium" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/UiSizeRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+theme_type_variation = &"ToolChoice"
+toggle_mode = true
+button_group = SubResource("ui_size_group")
+text = "Mittel"
+
+[node name="UiSizeLarge" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/UiSizeRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+theme_type_variation = &"ToolChoice"
+toggle_mode = true
+button_group = SubResource("ui_size_group")
+text = "Groß"
+
+[node name="UiSizeNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+layout_mode = 2
+theme_type_variation = &"Caption"
+text = "Wie groß Menüs, Karte und Anzeigen im Kampf stehen. „Mittel“ richtet sich nach der Bildschirmeinstellung des Rechners; ein größeres Fenster gibt mehr Platz statt größerer Schrift. Gilt für diesen Rechner, nicht nur für dieses Profil."
+autowrap_mode = 3
+
+[node name="UiSizeRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
 layout_mode = 2
 theme_type_variation = &"StatRule"
 

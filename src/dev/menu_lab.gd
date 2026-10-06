@@ -4,7 +4,7 @@ extends Node
 ##
 ##     GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/menu_lab.tscn -- --shoot
 ##         speichert reports/menu/menu_<breite>x<höhe>.png und beendet sich.
-##     … -- --shoot --size=1920x1080     anderes Fenster (Bezugsgröße bleibt 1152×648)
+##     … -- --shoot --size=1920x1080     anderes Fenster (Bezugsgröße nach Menügröße, UiScale)
 ##     … -- --shoot --backdrop           nur die Kulisse, ohne Menü
 ##     … -- --shoot --intro              „Wer spielt?" statt des Menüs
 ##     … -- --shoot --intro --slide=0.5  mitten im Schieben (0 = „Wer spielt?", 1 = Menü,
