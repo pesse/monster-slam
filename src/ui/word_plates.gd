@@ -164,6 +164,16 @@ func _keep_clear() -> Array[Rect2]:
 	return out
 
 
+## Die Sicht hat gewechselt (WaveRunner._toggle_view): jedes Schild neu, in der Größe, die
+## `Monster.screen_sized_label` jetzt sagt. Gebaut werden sie im nächsten Bild von `_sync`.
+func restyle() -> void:
+	for plate: WordPlate in _plates.values():
+		plate.queue_free()
+	_plates.clear()
+	_heads.clear()
+	queue_redraw()
+
+
 func _sync() -> void:
 	# Ungetypt: ein befreites Monster ließe sich keiner Monster-Variablen zuweisen.
 	for key in _plates.keys():

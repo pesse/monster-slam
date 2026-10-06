@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3]
+[gd_scene load_steps=24 format=3]
 
 [ext_resource type="Script" path="res://src/battle/wave_runner.gd" id="1_battle"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="2_hud"]
@@ -20,6 +20,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/word_plates.tscn" id="14_plates"]
 [ext_resource type="PackedScene" path="res://scenes/ui/spell_slots.tscn" id="24_spell_slots"]
 [ext_resource type="PackedScene" path="res://scenes/ui/spell_banner.tscn" id="25_spell_banner"]
+[ext_resource type="PackedScene" path="res://scenes/ui/view_button.tscn" id="26_view_button"]
 
 [sub_resource type="Environment" id="Env_1"]
 background_mode = 1
@@ -138,6 +139,8 @@ visible = false
 [node name="PauseOverlay" parent="UI" instance=ExtResource("22_pause")]
 
 [node name="PauseButton" parent="UI" instance=ExtResource("23_pause_button")]
+
+[node name="ViewButton" parent="UI" instance=ExtResource("26_view_button")]
 
 [node name="DebugPanel" parent="UI" instance=ExtResource("4_debug")]
 process_mode = 3

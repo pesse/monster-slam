@@ -1,0 +1,24 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/ui/skill_tree/icons/scout_eye.webp" id="1_icon"]
+
+[node name="ViewButton" type="Button" groups=["word_plate_keep_clear"]]
+visible = false
+texture_filter = 4
+custom_minimum_size = Vector2(40, 40)
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = 384.0
+offset_top = -47.0
+offset_right = 424.0
+offset_bottom = -7.0
+grow_vertical = 0
+focus_mode = 0
+accessibility_name = "Sicht wechseln"
+theme_type_variation = &"HudRound"
+toggle_mode = true
+icon = ExtResource("1_icon")
+icon_alignment = 1
+expand_icon = true

@@ -18,8 +18,9 @@ const TEST_SCENE := "res://scenes/ui/test_prep.tscn"
 ## Das Level von der Karte (MapLevel.levels_for), oder leer im Expertenmodus.
 static var _level: Dictionary = {}
 
-## Die Wahl „Ich-Sicht" auf der Gebietskarte. Nur der Wunsch: ob er gilt, entscheidet
-## `first_person()` mit dem Skill-Baum. Hält wie das Level nur bis zum Programmende.
+## Die Wahl „Ich-Sicht" — auf der Gebietskarte oder zuletzt im Kampf umgeschaltet. Nur der
+## Wunsch: ob er gilt, entscheidet `first_person()` mit dem Skill-Baum. Hält wie das Level
+## nur bis zum Programmende.
 static var _first_person_wanted := false
 
 ## Die Testliste (TestLists), wenn der Lauf eine Arbeit vorbereitet — sonst leer. Ein
@@ -63,7 +64,7 @@ static func update_test(list: Dictionary) -> void:
 		_test = list.duplicate(true)
 
 
-## Auf der Gebietskarte gewählt oder abgewählt.
+## Auf der Gebietskarte oder im Kampf (WaveRunner._toggle_view) gewählt oder abgewählt.
 static func want_first_person(on: bool) -> void:
 	_first_person_wanted = on
 
@@ -72,15 +73,16 @@ static func wants_first_person() -> bool:
 	return _first_person_wanted
 
 
-## Spielt der nächste Wellenkampf aus der Ich-Sicht? Nur ein Level von der Karte (dort
-## steht der Schalter) und nur mit gelerntem Späherblick — wer den Knoten verlernt,
-## steht wieder auf der Festung, ohne dass ein zweiter Merker nachgezogen werden muss.
-## Der Bosskampf fragt nicht: er bleibt, wie er ist.
+## Beginnt der nächste Wellenkampf aus der Ich-Sicht? Jeder Wellenkampf — Karte,
+## Expertenmodus, Testlauf; umschalten lässt sie sich im Kampf ohnehin — aber nur mit
+## gelerntem Späherblick: wer den Knoten verlernt, steht wieder auf der Festung, ohne
+## dass ein zweiter Merker nachgezogen werden muss. Der Bosskampf fragt nicht: er bleibt,
+## wie er ist.
 static func first_person() -> bool:
 	return first_person_with(SkillBook.bonuses(), OS.is_debug_build())
 
 
-## Steht der Schalter auf der Gebietskarte? Mit gelerntem Späherblick — und im Debug-Build
+## Steht der Schalter auf der Gebietskarte und im Kampf? Mit gelerntem Späherblick — und im Debug-Build
 ## immer, damit man die Ich-Sicht ohne fünf Skillpunkte ausprobieren kann (wie das
 ## Debug-Panel gibt es das im veröffentlichten Build nicht).
 static func first_person_selectable() -> bool:
@@ -94,7 +96,7 @@ static func first_person_selectable_with(bonuses: Dictionary, debug: bool) -> bo
 ## Dieselbe Regel mit übergebenen Boni und Build — prüfbar ohne das SkillBook des Profils
 ## und unabhängig davon, dass die Tests selbst im Debug-Build laufen.
 static func first_person_with(bonuses: Dictionary, debug := false) -> bool:
-	return _first_person_wanted and is_level() and first_person_selectable_with(bonuses, debug)
+	return _first_person_wanted and first_person_selectable_with(bonuses, debug)
 
 
 static func is_level() -> bool:

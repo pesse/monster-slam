@@ -77,10 +77,18 @@ var _fortress: Node3D = null
 var _fortress_tier: int = -1
 var _cutscene: bool = false   # läuft gerade die Ausbau-Cutscene? (unterdrückt Kamera-Wackeln)
 ## Die Ich-Sicht (Späher-Baum, RunRequest.first_person), oder null für die Iso-Kamera.
+## Im Kampf umschaltbar (`_toggle_view`), deshalb die einzige Auskunft über die Sicht.
 var _fp: FirstPersonView = null
-## Spielt dieser Lauf aus der Ich-Sicht? Einmal am Anfang gefragt: schon die Streudeko
-## richtet sich danach, bevor die Ich-Sicht steht.
-var _first_person_run := false
+## Lässt sich die Sicht in diesem Kampf wechseln (RunRequest.first_person_selectable)?
+## Einmal am Anfang gefragt, damit der Knopf nicht mitten im Kampf auftaucht.
+var _view_selectable := false
+## Die gelernten Boni des Laufs — die Ich-Sicht kann auch nach dem Start noch entstehen.
+var _skill_bonuses: Dictionary = {}
+## Das Environment der Iso-Sicht: die Ich-Sicht legt Nebel auf eine Kopie, zurück geht es
+## auf dieses.
+var _iso_env: Environment = null
+## Die Grasbüschel der Streudeko: aus Augenhöhe stehen sie kleiner (GRASS_SCALE_FIRST_PERSON).
+var _grass: Array[Node3D] = []
 ## Laufende Sturmangriffe, fliegende Pfeile und Steine: so lange wartet das Wellenende.
 var _underway := 0
 ## Explosionen, die noch zu sehen sind: auch darauf wartet das Wellenende (`_settle`), damit
@@ -138,6 +146,8 @@ var _warming := false
 @onready var _fast_resolve_confirm: ConfirmDialog = $UI/FastResolveConfirm
 @onready var _pause_overlay: PauseOverlay = $UI/PauseOverlay
 @onready var _pause_button: Button = $UI/PauseButton
+@onready var _view_button: Button = $UI/ViewButton
+@onready var _word_plates: WordPlates = $UI/WordPlates
 ## Seit wann der Spieler pausiert hat (Echtzeit, ms); -1 = keine Pause des Spielers. Die
 ## Baum-Pause der Feiern ist eine andere und läuft nicht über diese Variable.
 var _paused_since_ms := -1
@@ -155,7 +165,7 @@ var _strike_index := 0
 
 func _ready() -> void:
 	_rng.randomize()
-	_first_person_run = RunRequest.first_person()
+	_view_selectable = RunRequest.first_person_selectable()
 	_setup_view()
 	# Der Kampf kommt aus der Ferne heran (SceneZoom, wie die Karten): das Gelände wird für
 	# den weitesten Blick gebaut, sonst sähe man beim Heranzoomen seinen Rand.
@@ -202,8 +212,9 @@ func _ready() -> void:
 	_catapult = float(skill_bonuses.get("auto_catapult", 0.0)) > 0.0
 	_monster_pace = SkillTree.monster_pace(skill_bonuses)
 	_spawn_gap_scale = SkillTree.spawn_gap_scale(skill_bonuses)
-	if _first_person_run:
-		_setup_first_person(skill_bonuses)
+	_skill_bonuses = skill_bonuses
+	if RunRequest.first_person():
+		_setup_first_person()
 	# Der Lauf beginnt hier, nicht mit der ersten Welle: alles, was über die Wellen hinweg
 	# zählt (Sitzungs-Log, GameState-Zähler), hängt an diesem Punkt.
 	EventBus.run_started.emit()
@@ -239,6 +250,8 @@ func _ready() -> void:
 		_toggle_pause()
 		_abort_battle())
 	_pause_button.pressed.connect(_toggle_pause)
+	_view_button.pressed.connect(_toggle_view)
+	_view_button.set_pressed_no_signal(_fp != null)
 	_celebration.started.connect(_on_celebration_started)
 	_celebration.finished.connect(_on_celebration_finished)
 	_spelling.started.connect(_on_spelling_started)
@@ -279,11 +292,18 @@ func _warm_up() -> void:
 	_level_flare.warm_up()
 	var extras: Array[Node3D] = [xp]
 	# Der Pfeil fliegt erst nach der ersten Antwort; der Bogen hängt schon an der Kamera.
-	if _fp != null:
+	# Auch von oben, wenn die Sicht umschaltbar ist: sonst hielte der erste Pfeil nach dem
+	# Wechsel das Bild an — und dazu ein Schild in der Bildgröße der Ich-Sicht.
+	var explosive := FirstPersonView.explodes_for(_skill_bonuses)
+	if _fp != null or _view_selectable:
 		var arrow := Arrow.new()
 		arrow.trail = true
 		extras.append(arrow)
-		if _fp.explosive:
+		if _fp == null:
+			var fp_xp := xp_label(FxWarmup.GLYPHS)
+			_size_for_first_person(fp_xp, POPUP_SCREEN_SCALE)
+			extras.append(fp_xp)
+		if explosive:
 			var ember := Arrow.new()
 			ember.trail = true
 			ember.glowing = true
@@ -293,7 +313,7 @@ func _warm_up() -> void:
 		extras.append(Tumbleweeds.specimen())
 	if _catapult:
 		extras.append(CatapultStone.new())
-	if _fp == null or not _fp.explosive:
+	if not ((_fp != null or _view_selectable) and explosive):
 		extras.append(Blast.new())
 	# Die Zauber (ADR 0014) können in jedem Kampf kommen.
 	extras.append_array(SpellFx.specimens(at))
@@ -535,9 +555,9 @@ func _ground_y(x: float, z: float) -> float:
 ## assets/models/) auf Terrain-Höhe mit zufälliger Drehung; ein leerer Platz stellt nichts
 ## hin, und auf dem Weg (BattlePath) steht nichts. Position/Skalierung kommen vom Aufrufer.
 ## Bäume merken sich ihren Fuß (`_tree_feet`): um sie wachsen Sträucher (GroundCover).
-func _scatter(parent: Node3D, slot: Array[String], x: float, z: float, scale: float) -> void:
+func _scatter(parent: Node3D, slot: Array[String], x: float, z: float, scale: float) -> Node3D:
 	if slot.is_empty() or (_path != null and _path.blocks(x, z, 0.4 * scale)):
-		return
+		return null
 	var model := slot[_rng.randi() % slot.size()]
 	var at := Vector3(x, _ground_y(x, z), z)
 	var inst := _place_model(parent, model.get_file(), at,
@@ -550,6 +570,7 @@ func _scatter(parent: Node3D, slot: Array[String], x: float, z: float, scale: fl
 			_leaf_crowns.append(AmbientParticles.crown_of(inst))
 		elif AmbientParticles.BLOSSOM_TREES.has(model.get_file().get_basename()):
 			_blossom_crowns.append(AmbientParticles.crown_of(inst))
+	return inst
 
 
 const GRASS_SCALE_FIRST_PERSON := 0.4
@@ -578,10 +599,11 @@ func _decorate() -> void:
 		_scatter(d, _theme.rocks, _rng.randf_range(-10.0, 10.0), _rng.randf_range(z_back, z_front), _rng.randf_range(1.6, 2.6))
 
 	# Grasbüschel. Für die Draufsicht bemessen — aus Augenhöhe stünden sie als Hecke
-	# zwischen Spieler und Monstern, deshalb in der Ich-Sicht deutlich kleiner.
-	var grass_scale := GRASS_SCALE_FIRST_PERSON if _first_person_run else 1.0
+	# zwischen Spieler und Monstern, deshalb macht die Ich-Sicht sie kleiner (_scale_grass).
 	for i in _rng.randi_range(22, 34):
-		_scatter(d, _theme.grass, _rng.randf_range(-11.0, 11.0), _rng.randf_range(z_back, z_front + 0.5), _rng.randf_range(1.2, 2.0) * grass_scale)
+		var tuft := _scatter(d, _theme.grass, _rng.randf_range(-11.0, 11.0), _rng.randf_range(z_back, z_front + 0.5), _rng.randf_range(1.2, 2.0))
+		if tuft != null:
+			_grass.append(tuft)
 
 	# Fässer/Kisten an den Rändern
 	for i in _rng.randi_range(3, 6):
@@ -936,6 +958,10 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		_use_spell(slot)
 		return
+	if view_key(event) and not _answer_input.is_typing():
+		get_viewport().set_input_as_handled()
+		_toggle_view()
+		return
 	if not event.is_action_pressed("ui_cancel"):
 		return
 	# Nach dem Wellenende führen Auflösung und Statistik-Screen selbst zurück; nur der
@@ -1076,6 +1102,7 @@ func _toggle_pause() -> bool:
 		get_tree().paused = false
 		_answer_input.visible = true
 		_fast_resolve_button.disabled = false
+		_view_button.disabled = false
 		_set_view_active(true)
 		return true
 	# Keine Pause über eine Feier, das Standbild, die Rückfrage oder das Wellenende hinweg:
@@ -1087,6 +1114,7 @@ func _toggle_pause() -> bool:
 	get_tree().paused = true
 	_answer_input.visible = false
 	_fast_resolve_button.disabled = true
+	_view_button.disabled = true
 	_set_view_active(false)
 	_pause_overlay.show_pause()
 	return true
@@ -1121,6 +1149,7 @@ func _fast_resolve_wave() -> void:
 	_answer_input.visible = false
 	_fast_resolve_button.disabled = true
 	_pause_button.disabled = true
+	_view_button.disabled = true
 	# Ich-Sicht: zurück zum Laufen — die Frage hat die Maus freigegeben, und eine Eingabe
 	# gibt es im Zeitraffer nicht mehr.
 	_set_view_active(true)
@@ -1167,6 +1196,8 @@ func _start_next_wave() -> void:
 	_spell_slots.visible = true
 	_pause_button.visible = true
 	_pause_button.disabled = false
+	_view_button.visible = _view_selectable
+	_view_button.disabled = false
 	_set_view_active(true)
 
 	GameState.current_wave = "procedural_%d" % _wave_number
@@ -1261,6 +1292,7 @@ func _show_no_content() -> void:
 	_answer_input.visible = false
 	_fast_resolve_button.visible = false
 	_pause_button.visible = false
+	_view_button.visible = false
 	_stats.hide_stats()
 	_end_label.text = "Keine spielbaren Aufgaben.\n\nFilter prüfen oder über „Inhalte“\neinen Vokabel-Pack installieren.\n\n[Esc] zurück ins Menü"
 	_end_label.visible = true
@@ -1434,11 +1466,11 @@ func _unseen_learnable_ids() -> Array:
 ## statt Weltrand. Die Iso-Kamera bleibt in der Szene — Boden und Deko sind für ihren
 ## (weitesten) Blick gebaut, und SceneZoom darf sie weiter bewegen, sie ist nur nicht
 ## mehr die aktive.
-func _setup_first_person(bonuses: Dictionary) -> void:
+func _setup_first_person() -> void:
 	_fp = FIRST_PERSON_SCENE.instantiate() as FirstPersonView
-	_fp.speed = FirstPersonView.speed_for(bonuses)
-	_fp.weapons = FirstPersonView.weapons_for(bonuses)
-	_fp.explosive = FirstPersonView.explodes_for(bonuses)
+	_fp.speed = FirstPersonView.speed_for(_skill_bonuses)
+	_fp.weapons = FirstPersonView.weapons_for(_skill_bonuses)
+	_fp.explosive = FirstPersonView.explodes_for(_skill_bonuses)
 	_fp.bounds = Rect2(-FIELD_HALF_X + 1.0, SPAWN_Z - 1.0,
 			2.0 * (FIELD_HALF_X - 1.0), GOAL_Z - 1.5 - (SPAWN_Z - 1.0))
 	_fp.position = Vector3(0.0, 0.0, GOAL_Z - 2.0)
@@ -1449,7 +1481,8 @@ func _setup_first_person(bonuses: Dictionary) -> void:
 	# Kopie: das Environment ist eine Ressource der Szene und käme beim nächsten Kampf in
 	# der Iso-Sicht mit Nebel wieder (geladene Ressourcen sind geteilt).
 	var world := $WorldEnvironment as WorldEnvironment
-	var env := world.environment.duplicate() as Environment
+	_iso_env = world.environment
+	var env := _iso_env.duplicate() as Environment
 	env.fog_enabled = true
 	env.fog_mode = Environment.FOG_MODE_DEPTH
 	env.fog_light_color = env.background_color
@@ -1458,6 +1491,62 @@ func _setup_first_person(bonuses: Dictionary) -> void:
 	world.environment = env
 	_answer_input.first_person = true
 	_answer_input.weapon_switch = _fp.weapons.size() > 1
+	_scale_grass(GRASS_SCALE_FIRST_PERSON)
+
+
+## Zurück auf die Iso-Kamera: das Gegenstück zu `_setup_first_person`. Die Maus gibt die
+## Ich-Sicht beim Verlassen des Baums selbst frei.
+func _teardown_first_person() -> void:
+	_camera.make_current()
+	_fp.set_active(false)
+	_fp.queue_free()
+	_fp = null
+	($WorldEnvironment as WorldEnvironment).environment = _iso_env
+	_answer_input.first_person = false
+	_answer_input.weapon_switch = false
+	_scale_grass(1.0 / GRASS_SCALE_FIRST_PERSON)
+
+
+func _scale_grass(factor: float) -> void:
+	for tuft in _grass:
+		if is_instance_valid(tuft):
+			tuft.scale *= factor
+
+
+## V oder das Auge neben der Pause: von oben aufs Feld oder zurück. Nur mit gelerntem
+## Späherblick und nur, solange gekämpft wird — nicht in der Pause, einer Feier, dem
+## Standbild, der Rückfrage, dem Zeitraffer, der Ausbau-Fahrt, und nicht, solange ein
+## Pfeil, Anlauf oder Stein unterwegs ist: der hängt an der Sicht, in der er losging.
+## Der Wechsel ist auch der Wunsch für den nächsten Kampf (RunRequest). False, wenn
+## gerade nicht gewechselt werden darf.
+func _toggle_view() -> bool:
+	if not _view_selectable or _finished or _warming or _leaving or _fast_resolving \
+			or _cutscene or _underway > 0 or _paused_since_ms >= 0 or get_tree().paused \
+			or _fast_resolve_confirm.visible or _answer_input.is_typing():
+		_view_button.set_pressed_no_signal(_fp != null)
+		return false
+	if _fp == null:
+		_setup_first_person()
+		_fp.set_active(true)
+	else:
+		_teardown_first_person()
+	_shake_left = 0.0
+	_camera.position = _cam_base
+	var large := _fp != null
+	for monster in _active:
+		monster.screen_sized_label = large
+	_word_plates.restyle()
+	_view_button.set_pressed_no_signal(large)
+	RunRequest.want_first_person(large)
+	return true
+
+
+## Ob `event` die Sicht wechselt: V ohne Strg und Alt. Gilt nur bei geschlossener
+## Eingabe (`_input`) — offen ist es ein Buchstabe.
+static func view_key(event: InputEvent) -> bool:
+	var key := event as InputEventKey
+	return key != null and key.pressed and not key.echo and key.keycode == KEY_V \
+			and not key.ctrl_pressed and not key.alt_pressed and not key.meta_pressed
 
 
 ## Treffer verbuchen. `verdict` ist das Urteil des AnswerEvaluator, leer für einen Treffer
@@ -1879,8 +1968,11 @@ const FP_TEXT_PIXEL_SIZE := 0.0009
 ## füllte er nach einem Sturmangriff aus der Nähe das ganze Bild. `scale` ist die Größe
 ## gegenüber FP_TEXT_PIXEL_SIZE.
 func _screen_size_in_first_person(label: Label3D, scale: float) -> void:
-	if _fp == null:
-		return
+	if _fp != null:
+		_size_for_first_person(label, scale)
+
+
+func _size_for_first_person(label: Label3D, scale: float) -> void:
 	label.fixed_size = true
 	label.pixel_size = FP_TEXT_PIXEL_SIZE * scale * 64.0 / float(label.font_size)
 
@@ -1965,6 +2057,7 @@ func _finish_wave(won: bool) -> void:
 	_spells.reset_wave()
 	_spell_fx.haze(false)
 	_pause_button.visible = false
+	_view_button.visible = false
 	# Endet die Welle, während die Rückfrage offen ist, gibt es nichts mehr aufzulösen.
 	_fast_resolve_confirm.hide()
 	# Cutscene, Auflösung und Statistik immer in Normaltempo.

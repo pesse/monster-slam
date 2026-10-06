@@ -4,6 +4,7 @@ extends GdUnitTestSuite
 ## und die Eingabe für sich (kein Test fährt eine ganze Welle).
 
 const AnswerInputScene := preload("res://scenes/ui/answer_input.tscn")
+const WaveRunnerScript := preload("res://src/battle/wave_runner.gd")
 
 
 func after_test() -> void:
@@ -29,9 +30,9 @@ func test_walk_speed_adds_shares_on_the_base() -> void:
 			FirstPersonView.BASE_SPEED * 1.5, 0.001)
 
 
-## Der Schalter auf der Karte ist nur ein Wunsch: er gilt mit gelerntem Knoten und nur
-## für ein Level — der Expertenmodus hat keinen Schalter.
-func test_run_request_needs_wish_level_and_skill() -> void:
+## Der Schalter ist nur ein Wunsch: er gilt mit gelerntem Knoten — für ein Level wie für
+## den Expertenmodus (im Kampf lässt sich die Sicht ohnehin umschalten).
+func test_run_request_needs_wish_and_skill() -> void:
 	var skill := {"first_person": 1.0}
 	RunRequest.start_level({"key": "t1", "book": "b", "unit": 1, "scope": []})
 	assert_bool(RunRequest.first_person_with(skill)).is_false()
@@ -39,7 +40,7 @@ func test_run_request_needs_wish_level_and_skill() -> void:
 	assert_bool(RunRequest.first_person_with(skill)).is_true()
 	assert_bool(RunRequest.first_person_with({})).is_false()
 	RunRequest.start_expert()
-	assert_bool(RunRequest.first_person_with(skill)).is_false()
+	assert_bool(RunRequest.first_person_with(skill)).is_true()
 
 
 ## Im Debug-Build steht der Schalter immer da und gilt auch ohne Knoten — im
@@ -52,6 +53,50 @@ func test_debug_build_offers_it_without_the_skill() -> void:
 	RunRequest.want_first_person(true)
 	assert_bool(RunRequest.first_person_with({}, true)).is_true()
 	assert_bool(RunRequest.first_person_with({}, false)).is_false()
+
+
+# --- Sicht wechseln im Kampf -------------------------------------------------------
+
+static func _key(code: Key, ctrl := false, echo := false) -> InputEventKey:
+	var key := InputEventKey.new()
+	key.keycode = code
+	key.pressed = true
+	key.ctrl_pressed = ctrl
+	key.echo = echo
+	return key
+
+
+## V wechselt die Sicht; Strg+V, gehaltene Taste und andere Buchstaben nicht.
+func test_v_switches_the_view() -> void:
+	assert_bool(WaveRunnerScript.view_key(_key(KEY_V))).is_true()
+	assert_bool(WaveRunnerScript.view_key(_key(KEY_V, true))).is_false()
+	assert_bool(WaveRunnerScript.view_key(_key(KEY_V, false, true))).is_false()
+	assert_bool(WaveRunnerScript.view_key(_key(KEY_P))).is_false()
+	var up := _key(KEY_V)
+	up.pressed = false
+	assert_bool(WaveRunnerScript.view_key(up)).is_false()
+
+
+## Das Auge steht neben der Pause, berührt weder sie noch „Schnell auflösen" und bleibt
+## bei der kleinsten Bezugsgröße im Bild.
+func test_view_button_sits_beside_pause() -> void:
+	var host := auto_free(Control.new()) as Control
+	host.size = Vector2(1152, 648)
+	add_child(host)
+	var view := (load("res://scenes/ui/view_button.tscn") as PackedScene).instantiate() as Control
+	var pause := (load("res://scenes/ui/pause_button.tscn") as PackedScene).instantiate() as Control
+	var fast := (load("res://scenes/ui/fast_resolve_button.tscn") as PackedScene).instantiate() as Control
+	for node: Control in [view, pause, fast]:
+		host.add_child(node)
+	await await_idle_frame()
+	var rect := view.get_rect()
+	assert_bool(rect.intersects(pause.get_rect())).is_false()
+	assert_bool(rect.intersects(fast.get_rect())).is_false()
+	assert_float(rect.position.y).is_equal_approx(pause.get_rect().position.y, 0.5)
+	assert_float(rect.end.x).is_less_equal(host.size.x)
+	assert_float(rect.end.y).is_less_equal(host.size.y)
+	assert_bool(view.is_in_group(WordPlates.KEEP_CLEAR_GROUP)).is_true()
+	remove_child(host)
 
 
 func test_charge_needs_its_node() -> void:

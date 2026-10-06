@@ -116,6 +116,12 @@ Wellenkampf selbst auf dem Feld, statt von oben daraufzusehen. Der Schalter leuc
 golden. Den Bosskampf gibt es nur von oben: ist der Boss markiert, ist der Schalter
 gesperrt.
 
+Im Wellenkampf wechselst du jederzeit mit **V** oder dem Auge neben dem Pause-Knopf
+zwischen oben und unten, auch im Expertenmodus und beim Üben für einen Test. Das geht,
+solange das Antwortfeld zu ist und nichts in der Luft ist; in der Pause und während einer
+Feier nicht. Der nächste Kampf beginnt in der Sicht, in der du aufgehört hast, und der
+Schalter auf der Karte zeigt sie.
+
 - **Laufen:** W, A, S, D (oder die Pfeiltasten). Mit der Maus siehst du dich um.
 - **Antworten:** wie von oben, mit Enter auf und Enter ab. Solange das Feld offen ist,
   stehst du still, und der Mauszeiger ist da, etwa für den Vorspul-Knopf.
