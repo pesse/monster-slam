@@ -962,6 +962,11 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		_toggle_view()
 		return
+	var fast := fast_resolve_key(event)
+	if fast != 0 and (fast == 2 or not _answer_input.is_typing()):
+		get_viewport().set_input_as_handled()
+		_on_fast_resolve_key()
+		return
 	if not event.is_action_pressed("ui_cancel"):
 		return
 	# Nach dem Wellenende führen Auflösung und Statistik-Screen selbst zurück; nur der
@@ -1129,6 +1134,26 @@ func _on_fast_resolve_pressed() -> void:
 			"Die übrigen Monster laufen im Zeitraffer durch und treffen die Festung wie sonst "
 			+ "auch. Ihre Wörter zählen als nicht gewusst und werden danach aufgelöst.",
 			"Auflösen")
+
+
+## Ob `event` „Schnell auflösen" fragt: 2 für Strg+F (gilt immer), 1 für das nackte F
+## (nur bei geschlossener Eingabe, offen ist es ein Buchstabe), sonst 0 — wie bei der Pause.
+static func fast_resolve_key(event: InputEvent) -> int:
+	var key := event as InputEventKey
+	if key == null or not key.pressed or key.echo or key.keycode != KEY_F \
+			or key.alt_pressed or key.shift_pressed or key.meta_pressed:
+		return 0
+	return 2 if key.ctrl_pressed else 1
+
+
+## Die Taste geht denselben Weg wie der Knopf, aber nur, wenn der Knopf gerade drückbar
+## wäre (nicht in Pause, Zeitraffer, Feier oder Standbild) und nicht schon gefragt wird.
+func _on_fast_resolve_key() -> void:
+	if not _fast_resolve_button.visible or _fast_resolve_button.disabled \
+			or _fast_resolve_confirm.visible or _warming or _leaving or _cutscene \
+			or get_tree().paused:
+		return
+	_on_fast_resolve_pressed()
 
 
 func _on_fast_resolve_cancelled() -> void:

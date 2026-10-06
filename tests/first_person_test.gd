@@ -77,6 +77,17 @@ func test_v_switches_the_view() -> void:
 	assert_bool(WaveRunnerScript.view_key(up)).is_false()
 
 
+## F fragt „Schnell auflösen" (Strg+F auch bei offener Eingabe); Tab bleibt der Waffe.
+func test_f_asks_for_fast_resolve() -> void:
+	assert_int(WaveRunnerScript.fast_resolve_key(_key(KEY_F))).is_equal(1)
+	assert_int(WaveRunnerScript.fast_resolve_key(_key(KEY_F, true))).is_equal(2)
+	assert_int(WaveRunnerScript.fast_resolve_key(_key(KEY_F, false, true))).is_equal(0)
+	assert_int(WaveRunnerScript.fast_resolve_key(_key(KEY_TAB))).is_equal(0)
+	var shifted := _key(KEY_F)
+	shifted.shift_pressed = true
+	assert_int(WaveRunnerScript.fast_resolve_key(shifted)).is_equal(0)
+
+
 ## Das Auge steht neben der Pause, berührt weder sie noch „Schnell auflösen" und bleibt
 ## bei der kleinsten Bezugsgröße im Bild.
 func test_view_button_sits_beside_pause() -> void:

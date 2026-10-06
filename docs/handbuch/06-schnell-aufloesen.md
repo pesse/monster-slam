@@ -4,8 +4,10 @@ Neben dem Eingabefeld steht der runde Knopf mit den **zwei Pfeilen** (Vorspulen)
 Wörter auf dem Feld gerade einfach nicht weißt und nicht warten willst, bis alle
 Monster angekommen sind.
 
-1. Ein Klick fragt nach: „Schnell auflösen?“ mit „Auflösen“ und „Abbrechen“. Während die
-   Frage offen ist, **läuft das Spiel weiter**, das Eingabefeld ist so lange weg.
+1. Ein Klick oder **Strg+F** fragt nach: „Schnell auflösen?“ mit „Auflösen“ und
+   „Abbrechen“. Solange das Eingabefeld zu ist, reicht ein **F**; ist es offen, ist das F
+   ein Buchstabe deiner Antwort. Während die Frage offen ist, **läuft das Spiel weiter**,
+   das Eingabefeld ist so lange weg.
 2. Nach „Auflösen“ läuft der Rest der Welle im Zeitraffer, der langsam Fahrt aufnimmt.
    Tippen geht dann nicht mehr.
 3. Die Monster treffen die Festung **mit vollem Schaden**, genau wie ohne Vorspulen. Die
