@@ -207,7 +207,7 @@ func _settle() -> void:
 
 
 ## Der erste Auftritt der Kulisse übersetzt ihre Shader und hält das Bild kurz an
-## (CLAUDE.md „Fallen"). Das Menü steht sofort; die Kulisse blendet danach auf, statt
+## (docs/CONVENTIONS.md „Fallen"). Das Menü steht sofort; die Kulisse blendet danach auf, statt
 ## halb gezeichnet zu ruckeln.
 func _unveil() -> void:
 	var veil := %Veil as ColorRect

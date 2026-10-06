@@ -185,7 +185,7 @@ func _hint_under(node: Node, at: Vector2) -> Dictionary:
 ##
 ## Gemessen wird gegen das BILD und nicht gegen einen Screen: die Karte hängt in einer
 ## eigenen Schicht und kennt keinen. Das ist zugleich der Fall, der im maximierten Fenster
-## stimmt, wo das Spiel breiter ist als die Grundauflösung (CLAUDE.md).
+## stimmt, wo das Spiel breiter ist als die Grundauflösung (docs/CONVENTIONS.md).
 func _place(at: Vector2) -> void:
 	var room := get_viewport().get_visible_rect().size
 	var size := _card.size

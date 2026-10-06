@@ -70,7 +70,7 @@ func test_the_default_difficulty_is_the_pressed_choice() -> void:
 	remove_child(screen)
 
 
-## Die Rückfrage ist ein Overlay im Fenster, kein Godot-`Window` (CLAUDE.md).
+## Die Rückfrage ist ein Overlay im Fenster, kein Godot-`Window` (docs/CONVENTIONS.md).
 func test_the_reset_asks_inside_the_window() -> void:
 	var screen := _window()
 	var dialog := screen.get_node("%ResetDialog")

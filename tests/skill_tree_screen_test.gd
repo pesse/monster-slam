@@ -584,7 +584,7 @@ func test_respec_without_gold_names_the_price() -> void:
 # --- Maß ----------------------------------------------------------------------
 
 ## Der Screen passt in die Grundauflösung — das Vollbild ist der schmalste Fall, nicht
-## der breiteste (siehe tests/hud_header_test.gd und CLAUDE.md).
+## der breiteste (siehe tests/hud_header_test.gd und docs/CONVENTIONS.md).
 func test_the_screen_fits_the_base_resolution() -> void:
 	_give_points(9)
 	var screen := _screen()

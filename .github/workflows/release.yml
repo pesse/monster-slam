@@ -15,7 +15,7 @@ permissions:
   contents: write
 
 env:
-  # Muss zur lokalen Toolchain passen (siehe CLAUDE.md). Godot bringt keine
+  # Muss zur lokalen Toolchain passen (siehe docs/CONVENTIONS.md). Godot bringt keine
   # Rückwärtskompatibilität über Minor-Versionen, deshalb steht die Zahl fest.
   GODOT_VERSION: "4.7-stable"
   GODOT_TEMPLATE_DIR: "4.7.stable"

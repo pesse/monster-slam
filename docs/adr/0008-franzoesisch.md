@@ -43,7 +43,7 @@ Gespielt wird am Lehrbuch *À plus!* entlang, zunächst ohne Bosskampf.
    werden zum Wildcard wie *sb.*/*jn.*.
 6. **Weibliche und männliche Formen werden bei der Generierung aufgelöst**, nicht in der
    Auswertung: Die Daten tragen ausgeschriebene Formen statt der Notation des Buchs
-   (`ami(e)`, `petit, e`), siehe `docs/prompts/vocab_generation.md`.
+   (`ami(e)`, `petit, e`), siehe die nicht öffentliche Generierungsvorgabe für Vokabeln.
 7. **Formen am Buch entlang.** Neue `fr_*`-Formtypen kommen erst, wenn eine Unit sie
    lernen lässt, und nicht vorab als Konjugationstabelle. Konjugiert werden nur die
    unregelmäßigen Verben; regelmäßige (auch *-ir* wie *finir*, *-dre* wie *attendre*,

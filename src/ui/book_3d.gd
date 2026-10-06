@@ -116,7 +116,7 @@ func _ready() -> void:
 	_right_map.uv1_offset = Vector3(0.5, 0.0, 0.0)
 	(%LeftMap as MeshInstance3D).material_override = _left_map
 	(%RightMap as MeshInstance3D).material_override = _right_map
-	# Eigene Kopie: jedes Buch leuchtet für sich (CLAUDE.md „Fallen", geteilte Ressourcen).
+	# Eigene Kopie: jedes Buch leuchtet für sich (docs/CONVENTIONS.md „Fallen", geteilte Ressourcen).
 	var glow := %Glow as MeshInstance3D
 	_glow_material = (glow.material_override as ShaderMaterial).duplicate()
 	glow.material_override = _glow_material

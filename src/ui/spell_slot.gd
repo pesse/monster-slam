@@ -3,7 +3,7 @@ extends PanelContainer
 ## Ein Platz im Zaubervorrat (scenes/ui/spell_slot.tscn): Bild des Zaubers (oder sein Zeichen, `SpellIcons`), Anzahl und
 ## die Taste, die ihn im Kampf auslöst. Kampf-HUD (SpellSlots) und Laden nutzen dieselbe
 ## Vorlage, damit ein Platz überall gleich aussieht. Hinweise hängt hier niemand an —
-## im Kampf gibt es keine (CLAUDE.md), der Laden erklärt am Angebot.
+## im Kampf gibt es keine (docs/CONVENTIONS.md), der Laden erklärt am Angebot.
 
 ## So schwach steht ein leerer Platz.
 const EMPTY_ALPHA := 0.45

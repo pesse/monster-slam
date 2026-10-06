@@ -5,7 +5,7 @@ extends RefCounted
 ## Die Skelette bringen keine eigenen Animationen mit; sie liegen in zwei Rig-Dateien mit
 ## demselben „Rig_Medium/Skeleton3D“-Aufbau. Jede Datei wird einmal geladen und ihre
 ## Library zwischen allen Figuren geteilt — wer daran etwas ändert (etwa `loop_mode`),
-## ändert es für alle (CLAUDE.md „Geladene Ressourcen sind geteilt“).
+## ändert es für alle (docs/CONVENTIONS.md „Geladene Ressourcen sind geteilt“).
 
 const GENERAL := "res://assets/models/animations/Rig_Medium_General.glb"
 const MOVEMENT := "res://assets/models/animations/Rig_Medium_MovementBasic.glb"

@@ -18,6 +18,7 @@ Sprachaufgaben löst. Fokus: motivierendes Gameplay, das evidenzbasiertes Lernen
 - Engine: **Godot 4.7** (GDScript, GL-Compatibility-Renderer)
 - **Offline-first**, datengetrieben (JSON; SQLite optional für persistenten Lernfortschritt)
 - Modulare, entkoppelte Architektur (siehe [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md))
+- Befehle, Regeln und Fallen für die Arbeit am Code: [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md)
 
 ## Loslegen
 

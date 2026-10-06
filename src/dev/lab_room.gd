@@ -8,7 +8,7 @@ extends RefCounted
 ## deshalb erst dann Platz, wenn das Fenster größer ist als Bezugsgröße mal Skala.
 ##
 ## Für eine Werkbank reicht das nicht. Sie hat kein Randlayout zu beweisen (dafür ist 1152
-## da, siehe CLAUDE.md „Das Vollbild ist der SCHMALSTE Fall"), sie stellt drei Spalten
+## da, siehe docs/CONVENTIONS.md „Das Vollbild ist der SCHMALSTE Fall"), sie stellt drei Spalten
 ## nebeneinander, und ihre Texte sind so lang, wie ein Modell sie macht.
 ##
 ## Gehoben wird deshalb ZWEIERLEI: das Fenster UND die Untergrenze der Bezugsgröße

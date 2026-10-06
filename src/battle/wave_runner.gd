@@ -360,7 +360,7 @@ const TERRAIN_HEIGHT_SCALE := 0.6
 const TERRAIN_HEIGHT_MAX := TERRAIN_EDGE_MAX * TERRAIN_HEIGHT_SCALE
 ## Breitestes Seitenverhältnis, für das der Boden reicht. Die Orthogonal-Kamera hält
 ## ihre HÖHE (`keep_aspect`), die Breite wächst mit dem Fenster — ein 21:9-Schirm sieht
-## am weitesten nach außen, das Vollbild auf 16:9 am wenigsten (siehe CLAUDE.md).
+## am weitesten nach außen, das Vollbild auf 16:9 am wenigsten (siehe docs/CONVENTIONS.md).
 const VIEW_MAX_ASPECT := 2.4
 ## Zugabe in Bildeinheiten beim Aussortieren unsichtbarer Kacheln — gerechnet, nicht
 ## geschätzt: aussortiert wird auf der Ebene y=0, ein Hügel HEBT die Kachel im Bild

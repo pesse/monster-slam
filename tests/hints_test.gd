@@ -178,7 +178,7 @@ func test_a_long_hint_stops_at_the_maximum() -> void:
 
 ## Und er wächst in die BREITE bis zum Deckel und danach in die Höhe — nicht andersherum.
 ## Ohne die Mess-Reihenfolge in `HintCard._fit()` käme hier die Höhe für EINEN Pixel Breite
-## heraus, also ein paar tausend (CLAUDE.md, dieselbe Falle wie bei der Reveal-Karte).
+## heraus, also ein paar tausend (docs/CONVENTIONS.md, dieselbe Falle wie bei der Reveal-Karte).
 ## Die Achsen einzeln, weil `assert_vector(...).is_less_equal(...)` lexikografisch
 ## vergleicht.
 func test_a_long_hint_wraps_instead_of_growing_tall() -> void:

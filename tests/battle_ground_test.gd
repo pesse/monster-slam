@@ -14,7 +14,7 @@ extends GdUnitTestSuite
 const WaveRunnerScript := preload("res://src/battle/wave_runner.gd")
 
 ## Seitenverhältnisse, unter denen das Bild stehen kann: das Vollbild auf 16:9 ist der
-## SCHMALSTE Fall (siehe CLAUDE.md), ein maximiertes Fenster ist breiter, und bis
+## SCHMALSTE Fall (siehe docs/CONVENTIONS.md), ein maximiertes Fenster ist breiter, und bis
 ## `VIEW_MAX_ASPECT` soll der Boden reichen.
 const ASPECTS := [16.0 / 9.0, 1196.0 / 648.0, 2.0, WaveRunnerScript.VIEW_MAX_ASPECT]
 

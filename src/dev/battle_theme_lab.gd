@@ -2,7 +2,7 @@ extends Node3D
 ## Werkbank: das Schlachtfeld in jedem BattleTheme, ohne einen Kampf zu starten.
 ##
 ## Ein echter Kampf spielt im Entwicklungsprofil und schreibt Lernstand und Spur (siehe
-## CLAUDE.md). Hier steht nur, was man SIEHT: Kamera und Boden aus denselben statischen
+## docs/CONVENTIONS.md). Hier steht nur, was man SIEHT: Kamera und Boden aus denselben statischen
 ## Funktionen wie im WaveRunner, dazu Streudeko und die Burg zum Vergleich der Farben.
 ##
 ##     GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/battle_theme_lab.tscn

@@ -191,7 +191,7 @@ func test_the_bounds_hold_every_node_with_its_radius() -> void:
 	# Die Kanten werden EINSCHLIESSLICH geprüft: der äußerste Knoten liegt genau auf dem
 	# Rand, und `Rect2.has_point` zählt die rechte und untere Kante nicht mehr dazu.
 	# Achsen einzeln: assert_vector(...).is_less_equal(...) vergleicht lexikografisch, ein
-	# zu tiefer Knoten rutschte über die x-Achse durch (siehe CLAUDE.md).
+	# zu tiefer Knoten rutschte über die x-Achse durch (siehe docs/CONVENTIONS.md).
 	# Ein Hauch Spiel auf der Kante: `Rect2` rechnet in 32-Bit-Floats, GDScript in 64 —
 	# der äußerste Knoten liegt GENAU auf dem Rand, und dort unterscheiden sich die beiden
 	# Rechnungen um Bruchteile eines Pixels.

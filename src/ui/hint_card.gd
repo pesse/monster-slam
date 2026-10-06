@@ -197,7 +197,7 @@ func _list_value_width() -> float:
 ## Die Breitenregel, in der einzigen Reihenfolge, in der sie funktioniert.
 ##
 ## Ein `Label` mit `autowrap_mode` meldet als Mindestbreite 1 Pixel und dazu die Höhe, die
-## der Text bei EINEM Pixel Breite braucht (CLAUDE.md, dieselbe Falle wie bei
+## der Text bei EINEM Pixel Breite braucht (docs/CONVENTIONS.md, dieselbe Falle wie bei
 ## `RevealCard.set_width()`). Man kann also nicht in einem Zug fragen, wie breit der Text
 ## gern wäre und wie hoch er dann wird. Zum MESSEN wird der Umbruch deshalb abgeschaltet.
 func _fit() -> void:

@@ -61,7 +61,7 @@ static func sway(node: Node3D, model: String, strength := 1.0) -> void:
 
 
 ## Der Windshader mit den Werten von `src`. Das Ausgangsmaterial bleibt unberührt: es ist
-## geladen und damit geteilt (CLAUDE.md, „Geladene Ressourcen sind geteilt").
+## geladen und damit geteilt (docs/CONVENTIONS.md, „Geladene Ressourcen sind geteilt").
 static func _windy(src: BaseMaterial3D, height: float, amount: float) -> ShaderMaterial:
 	var key := "%d/%.3f/%.4f" % [src.get_instance_id(), height, amount]
 	if _cache.has(key):

@@ -14,9 +14,9 @@
 *.yml text eol=lf
 *.php text eol=lf
 
-# Alles weitere, was Godot bei einem Lauf umschreibt (siehe CLAUDE.md, "Drei Fallen"):
+# Alles weitere, was Godot bei einem Lauf umschreibt (siehe docs/CONVENTIONS.md, "Fallen"):
 # er speichert offene Dateien mit CRLF, und dann steht die ganze Datei ohne inhaltlichen
-# Grund im Diff. Betroffen waren hier schon CLAUDE.md, docs/*.md, data/**/*.json,
+# Grund im Diff. Betroffen waren hier schon docs/*.md, data/**/*.json,
 # project.godot, export_presets.cfg und die .uid-Dateien neben jedem Skript.
 *.uid text eol=lf
 *.import text eol=lf

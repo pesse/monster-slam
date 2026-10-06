@@ -46,7 +46,7 @@ werden. Deshalb gibt kein Zauber etwas, das beim Lernen zählt.
    keine Antwort mit einer Ziffer beginnt — beides ist mit ADR 0016 entfallen. Im Bosskampf gibt es vorerst keine Zauber, denn dort enthalten
    Lösungen Jahreszahlen. Die Plätze stehen als Raster unten links im Kampf-HUD, zwei
    Reihen hoch (2×2, mit mehr Plätzen 3×2, 4×2), mit Symbol, Anzahl und Taste. Hinweise
-   gibt es dort keine (CLAUDE.md), die Erklärung steht im Laden.
+   gibt es dort keine (docs/CONVENTIONS.md), die Erklärung steht im Laden.
 
 5. **Ein Zauber, der nichts bewirken würde, wird nicht verbraucht.** Beispiele: die
    Festung ist schon heil, es gibt keine Rüstung oder sie ist voll, kein Monster ist auf

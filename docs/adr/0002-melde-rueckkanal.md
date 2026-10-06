@@ -332,7 +332,7 @@ angekommen ist und ein doppelter Versand `stored:false` erzeugt.
     `-text`-Regel der `.gitattributes`, und ein HMAC über *genau diese Bytes* ist
     exakt die Falle, die schon einmal fünf Tests umgeworfen hat. Neue
     `class_name`-Dateien brauchen `--import` vor dem Testlauf.
-15. `docs/ARCHITECTURE.md` um den dritten Kanal ergänzen; in `CLAUDE.md` einen
+15. `docs/ARCHITECTURE.md` um den dritten Kanal ergänzen; in `docs/CONVENTIONS.md` einen
     Satz, dass das Melde-Geheimnis ausschließlich auf dem Server liegt.
 
 ## Abweichungen in der Umsetzung

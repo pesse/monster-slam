@@ -2,7 +2,7 @@ extends Node
 ## Werkbank: die Karten zwischen den Wellen als Bild — Wellenabschluss, Auflösung,
 ## Rückfrage — über dem Schlachtfeld, mit erfundenen Werten.
 ##
-## Ein echter Kampf spielt im Entwicklungsprofil und schreibt Lernstand und Spur (CLAUDE.md);
+## Ein echter Kampf spielt im Entwicklungsprofil und schreibt Lernstand und Spur (docs/CONVENTIONS.md);
 ## hier wird nichts verbucht. Die Kiste meldet ihr Gold nur per Signal, und daran hängt hier
 ## niemand. Statt Vokabeln stehen Füllwörter auf den Karten.
 ##

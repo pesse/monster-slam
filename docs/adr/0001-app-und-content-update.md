@@ -17,7 +17,7 @@ Daraus folgen heute drei Probleme:
    korrigierte Übersetzung), der Code selten. Trotzdem kostet jede
    Vokabel-Korrektur einen 122-MB-Download.
 3. **Die EXE trägt geschütztes Material.** `data/language` ist aus
-   urheberrechtlich geschütztem Lehrbuchmaterial abgeleitet (siehe `CLAUDE.md`)
+   urheberrechtlich geschütztem Lehrbuchmaterial abgeleitet (siehe `docs/CONVENTIONS.md`)
    und liegt deshalb in einem privaten Repo. Der Export packt es ungefragt in
    die EXE — eine öffentlich verteilte EXE veröffentlicht damit genau das
    Material, das das private Submodule schützen soll. **Das ist der eigentlich
@@ -409,8 +409,8 @@ Umgesetzt am 2026-08-31. Was anders kam als oben geplant, und warum:
 **Noch offen:** die Repos und Secrets existieren noch nicht (Transport-Repo
 `pesse/monster-slam-packs`; Secrets `RELEASE_SIGNING_KEY`, `PACK_PW_ACCESS2`,
 `PUBLIC_RELEASE_TOKEN`, `CONTENT_DISPATCH_TOKEN`). Ob `language-basic` wirklich
-offen verteilt werden darf, ist eine inhaltliche Entscheidung — Belege in
-`docs/CONTENT_GENERATION_RUNS.md` (Lauf #1).
+offen verteilt werden darf, ist eine inhaltliche Entscheidung — Belege im
+nicht öffentlichen Generierungsprotokoll (Lauf #1).
 
 ## Nachtrag 2026-09-25: kein Grundwortschatz mehr
 

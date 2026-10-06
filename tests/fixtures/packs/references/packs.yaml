@@ -1,6 +1,6 @@
 # Fixture fuer tests/tools/pack_references_test.py: drei Packs, die jeder fuer sich
 # referenz-abgeschlossen sind. Die Tests kopieren den Baum und brechen ihn gezielt auf.
-# Ids mit `zz-`, damit sie hinter jedem echten Pack sortieren (CLAUDE.md).
+# Ids mit `zz-`, damit sie hinter jedem echten Pack sortieren (docs/CONVENTIONS.md).
 roots:
   language: [lexemes, lexeme_forms, lexeme_relations, sentences, sentence_lexemes]
   game: [monsters, bosses, waves, monster_task_rules]

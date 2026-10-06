@@ -54,8 +54,8 @@ richtige Übersetzung nicht anerkennt, glaubt ihm den nächsten Tadel nicht mehr
 
 ### 1. Der Satz entsteht zur Autorenzeit, nicht zur Laufzeit
 
-„KI-generiert" heißt: von Claude in der Pipeline erzeugt, die
-`docs/prompts/vocab_generation.md` schon beschreibt, geprüft, und über den Pack-Kanal
+„KI-generiert" heißt: von Claude in derselben Pipeline erzeugt wie die Vokabeln (nach einer
+nicht öffentlichen Generierungsvorgabe), geprüft, und über den Pack-Kanal
 ausgeliefert. Ein Satz ist **Inhalt und kein Ereignis** — er hängt an Unit und Wortschatz,
 nicht an der Situation im Kampf. Ein ausreichend großer Vorrat je Unit, aus dem nach
 Lernstand ausgewählt wird, ist vom Spielgefühl her nicht von Live-Erzeugung zu
