@@ -1236,6 +1236,24 @@ Die Breite ist eine Regel (so breit wie der Text, zwischen `MIN_WIDTH` und `MAX_
 gemessen in der Reihenfolge, die im Kopf von `HintCard._fit()` steht — dieselbe
 Label-Falle wie unter „Oberfläche" unten.
 
+## Das Handbuch im Spiel (`Handbook`, ADR 0019)
+
+| | |
+|---|---|
+| Quelle | `docs/handbuch/*.md`, per `include_filter` in der EXE; Reihenfolge aus `README.md` „## Inhalt“ |
+| Lesen | `Handbook.blocks(markdown)` → Überschrift / Absatz / Listenpunkt / Tabelle; Zeichen über `MarkdownToBbcode.inline` |
+| Öffnen | `Handbook.open(datei, überschrift)` — eigene `CanvasLayer` 110 unter der Wurzel, Fenster `scenes/ui/handbook.tscn` |
+| Absprung | `HandbookLink` (`scenes/ui/handbook_link.tscn`): `chapter`, `section` (Überschrift wie im Kapitel), `answers_f1` |
+| Wächter | `tests/handbook_test.gd` (kein Markdown-Rest, jeder Link und jedes „?“ trifft) |
+
+Das Fenster weiß nichts vom Screen darunter: es hängt in einer eigenen Schicht unter der
+Wurzel, schluckt alle Tasten und gibt den Fokus beim Schließen zurück. Die Seite wird je
+Kapitel aus vier Vorlagen gebaut (`handbook_heading/_text/_item.tscn`, Kapitelknopf
+`handbook_chapter.tscn`); die Typografie steht in den Variationen `Handbook*` im Theme.
+Ein Screen mit Reitern setzt `section` seines „?“ beim Umschalten (Statistik,
+Einstellungen). Wer eine Überschrift im Handbuch umbenennt, an der ein „?“ hängt, bekommt
+das vom Test gesagt.
+
 ## Oberfläche: Theme und Layout
 
 `scenes/ui/ui_theme.tres` ist die einzige Quelle für Raum und Typografie. Vorher lagen

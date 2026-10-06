@@ -120,6 +120,12 @@ var _book_languages := {}
 var _filter: Array = []
 ## Die Sprachen zur Wahl (language_choices), einmal beim Öffnen.
 var _language_choices: Array = []
+## Reiter → Abschnitt im Handbuch: das „?“ im Titelband führt zum offenen Reiter.
+@onready var _handbook_sections := {
+	%OverviewTab: "Reiter „Überblick“",
+	%ProgressTab: "Reiter „Fortschritt“: gezählt werden Wörter",
+	%TaskTab: "Reiter „Aufgaben“: gezählt werden Aufgaben",
+}
 ## Reiter → Seite, in der Reihenfolge der Knöpfe.
 @onready var _pages := {
 	%OverviewTab: %OverviewPage,
@@ -224,6 +230,7 @@ static func language_filter(selected: Array, choices: Array) -> Array:
 func _show_page(tab: Button) -> void:
 	for each: Button in _pages:
 		(_pages[each] as Control).visible = each == tab
+	(%HandbookLink as HandbookLink).section = _handbook_sections[tab]
 
 
 func _refresh() -> void:

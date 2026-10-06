@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://src/ui/area_map.gd" id="1_screen"]
 [ext_resource type="Script" path="res://src/ui/map_canvas.gd" id="2_canvas"]
@@ -10,6 +10,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/fortress/tiers/tier_0.webp" id="8_tier"]
 [ext_resource type="Texture2D" path="res://assets/ui/fortress/small/level_plate.webp" id="9_plate"]
 [ext_resource type="PackedScene" path="res://scenes/ui/profile_badge.tscn" id="12_badge"]
+[ext_resource type="PackedScene" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
 
 [sub_resource type="Gradient" id="shade_g"]
 colors = PackedColorArray(0, 0, 0, 0.6, 0, 0, 0, 0)
@@ -88,6 +89,13 @@ focus_mode = 0
 theme_type_variation = &"WindowButton"
 text = "Buchkarte"
 icon = ExtResource("3_back")
+
+[node name="HandbookLink" parent="Hud/Corners/Header" instance=ExtResource("handbook_link")]
+unique_name_in_owner = true
+layout_mode = 2
+chapter = "10-festung.md"
+section = "Die Landkarte"
+custom_minimum_size = Vector2(40, 40)
 
 [node name="Plate" type="Container" parent="Hud/Corners"]
 unique_name_in_owner = true

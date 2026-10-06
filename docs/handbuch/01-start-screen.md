@@ -42,6 +42,7 @@ nicht – nochmal“**.
 
 Links unten steht klein **„Eigene Runde – Expertenmodus“**. Er führt zu „Runde
 vorbereiten“, wo man selbst auswählt, was geübt wird ([Kapitel 3](03-expertenmodus.md)).
+Links daneben öffnet das kleine **Buch** dieses Handbuch.
 
 **Warum ist „Spielen“ grau?** Dann sind noch keine Vokabeln da. Das Spiel selbst bringt
 keine mit; sie kommen als Pack über „Inhalte“. Der Hinweis rechts unten sagt das auch.

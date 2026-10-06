@@ -60,6 +60,11 @@ async function save(name, pipeline, notes) {
     const cell=await sharp(atlas).extract({left,top,width:Math.round((col+1)*meta.width/4)-left,height:Math.round((row+1)*meta.height/2)-top}).png().toBuffer();
     await save('icons/'+names[i],sharp(cell).extract(await bounds(cell)).resize(224,224,{fit:'contain',background:transparent}).extend({top:16,bottom:16,left:16,right:16,background:transparent}),'256×256, zentriert, für Anzeige mit 40–64 px.');
   }
+  // Einzeln erzeugte Icons (nicht im Atlas): dieselbe Behandlung. Ohne sharp: src/dev/trim_icon.gd.
+  for(const name of ['handbook']) {
+    const file=path.join(src,name+'.webp');
+    if(fs.existsSync(file)) await save('icons/'+name,sharp(file).extract(await bounds(file)).resize(224,224,{fit:'contain',background:transparent}).extend({top:16,bottom:16,left:16,right:16,background:transparent}),'256×256, zentriert, für Anzeige mit 24–40 px. Quelle sources/'+name+'.webp.');
+  }
   fs.writeFileSync(path.join(root,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');
   console.log(JSON.stringify(manifest,null,2));
 })();

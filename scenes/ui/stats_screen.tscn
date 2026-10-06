@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3]
+[gd_scene load_steps=21 format=3]
 
 [ext_resource type="Script" path="res://src/ui/stats_screen.gd" id="1_r"]
 [ext_resource type="Script" path="res://src/ui/stats_chart.gd" id="2_r"]
@@ -18,6 +18,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/statistics/icons/treasure_chest.webp" id="16_r"]
 [ext_resource type="PackedScene" path="res://scenes/ui/sort_bar.tscn" id="17_r"]
 [ext_resource type="PackedScene" path="res://scenes/ui/language_bar.tscn" id="18_r"]
+[ext_resource type="PackedScene" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
 
 [sub_resource type="ButtonGroup" id="tab_group"]
 
@@ -111,6 +112,12 @@ theme_type_variation = &"WindowTitle"
 text = "STATISTIK"
 size_flags_horizontal = 3
 vertical_alignment = 1
+
+[node name="HandbookLink" parent="Window/Layout/TitleBar/Header" instance=ExtResource("handbook_link")]
+unique_name_in_owner = true
+layout_mode = 2
+chapter = "12-statistik.md"
+section = "Reiter „Überblick“"
 
 [node name="CloseButton" type="TextureButton" parent="Window/Layout/TitleBar/Header"]
 unique_name_in_owner = true
@@ -636,6 +643,14 @@ theme_type_variation = &"StatNumber"
 text = "0"
 vertical_alignment = 1
 
+[node name="MasteredHelp" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/RecordColumn/Footer/Mastered" instance=ExtResource("handbook_link")]
+layout_mode = 2
+chapter = "18-wie-das-spiel-lernt.md"
+section = "Der Lernstand einer Aufgabe"
+answers_f1 = false
+custom_minimum_size = Vector2(24, 24)
+theme_type_variation = &"HandbookLinkSmall"
+
 [node name="FooterDivider" type="VSeparator" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/RecordColumn/Footer"]
 layout_mode = 2
 theme_type_variation = &"StatDivider"
@@ -657,6 +672,14 @@ layout_mode = 2
 theme_type_variation = &"StatNumber"
 text = "0"
 vertical_alignment = 1
+
+[node name="DueHelp" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/BottomRow/RecordColumn/Footer/Due" instance=ExtResource("handbook_link")]
+layout_mode = 2
+chapter = "18-wie-das-spiel-lernt.md"
+section = "Wann eine Aufgabe wiederkommt"
+answers_f1 = false
+custom_minimum_size = Vector2(24, 24)
+theme_type_variation = &"HandbookLinkSmall"
 
 [node name="CurveRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview"]
 layout_mode = 2
@@ -833,10 +856,22 @@ layout_mode = 2
 layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="UnitTitle" type="Label" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress/UnitSection"]
+[node name="UnitHead" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress/UnitSection"]
+layout_mode = 2
+theme_type_variation = &"Tight"
+
+[node name="UnitTitle" type="Label" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress/UnitSection/UnitHead"]
 layout_mode = 2
 theme_type_variation = &"StatHeading"
 text = "Nach Unit"
+
+[node name="UnitHelp" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress/UnitSection/UnitHead" instance=ExtResource("handbook_link")]
+layout_mode = 2
+chapter = "18-wie-das-spiel-lernt.md"
+section = "Der Lernstand einer Aufgabe"
+answers_f1 = false
+custom_minimum_size = Vector2(24, 24)
+theme_type_variation = &"HandbookLinkSmall"
 
 [node name="UnitHint" type="Label" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress/UnitSection"]
 layout_mode = 2
@@ -870,11 +905,24 @@ layout_mode = 2
 theme_type_variation = &"Tight"
 size_flags_horizontal = 3
 
-[node name="TaskHint" type="Label" parent="Window/Layout/Content/Body/Pages/TaskPage/Gutter/TaskSection"]
+[node name="TaskHead" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/TaskPage/Gutter/TaskSection"]
 layout_mode = 2
+theme_type_variation = &"Tight"
+
+[node name="TaskHint" type="Label" parent="Window/Layout/Content/Body/Pages/TaskPage/Gutter/TaskSection/TaskHead"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_type_variation = &"Hint"
 text = "Eine Zeile je Aufgabe: beide Übersetzungsrichtungen getrennt, dazu Formen, Gegenteile, Synonyme und Verwechslungen. Ein Wort steht hier also mehrfach — als Wort steht es im Reiter „Fortschritt“."
 autowrap_mode = 3
+
+[node name="TaskHelp" parent="Window/Layout/Content/Body/Pages/TaskPage/Gutter/TaskSection/TaskHead" instance=ExtResource("handbook_link")]
+layout_mode = 2
+chapter = "18-wie-das-spiel-lernt.md"
+section = "Der Lernstand einer Aufgabe"
+answers_f1 = false
+custom_minimum_size = Vector2(24, 24)
+theme_type_variation = &"HandbookLinkSmall"
 
 [node name="TaskSort" parent="Window/Layout/Content/Body/Pages/TaskPage/Gutter/TaskSection" instance=ExtResource("17_r")]
 unique_name_in_owner = true

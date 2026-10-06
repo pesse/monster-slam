@@ -14,6 +14,8 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/profile_pick.tscn" id="13_pick"]
 [ext_resource type="PackedScene" path="res://scenes/ui/profile_badge.tscn" id="14_badge"]
 [ext_resource type="PackedScene" path="res://scenes/ui/book_select.tscn" id="15_library"]
+[ext_resource type="PackedScene" path="res://scenes/ui/handbook_link.tscn" id="16_handbook"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/handbook.webp" id="17_handbook_icon"]
 
 [sub_resource type="Gradient" id="ShadeGradient"]
 colors = PackedColorArray(0.03, 0.04, 0.08, 0.6, 0.03, 0.04, 0.08, 0)
@@ -167,7 +169,19 @@ layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
 
-[node name="ExpertButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Left"]
+[node name="LinkRow" type="HBoxContainer" parent="Slide/MenuPage/Margin/Layout/Left"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"ScreenStack"
+
+[node name="HandbookButton" parent="Slide/MenuPage/Margin/Layout/Left/LinkRow" instance=ExtResource("16_handbook")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+theme_type_variation = &"MenuLink"
+icon = ExtResource("17_handbook_icon")
+
+[node name="ExpertButton" type="Button" parent="Slide/MenuPage/Margin/Layout/Left/LinkRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 0

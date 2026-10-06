@@ -28,18 +28,19 @@ static func _line(line: String) -> String:
 		text = text.substr(1)
 		heading += 1
 	if heading > 0:
-		return "[b]%s[/b]" % _inline(text.strip_edges())
+		return "[b]%s[/b]" % inline(text.strip_edges())
 
 	for bullet in ["- ", "* ", "+ "]:
 		if text.begins_with(bullet):
-			return "  • %s" % _inline(text.substr(2))
+			return "  • %s" % inline(text.substr(2))
 
-	return _inline(line)
+	return inline(line)
 
 
 ## Zeichenauszeichnung innerhalb einer Zeile. Reihenfolge zählt: `**` vor `*`, sonst frisst
-## die Kursiv-Regel die Hälfte einer Fett-Auszeichnung.
-static func _inline(text: String) -> String:
+## die Kursiv-Regel die Hälfte einer Fett-Auszeichnung. Öffentlich, weil das Handbuch
+## (Handbook) Absätze, Listen und Tabellen selbst gliedert und nur die Zeichen hier holt.
+static func inline(text: String) -> String:
 	var safe := text.replace("[", "[lb]")
 	safe = _wrap(safe, "**", "[b]", "[/b]")
 	safe = _wrap(safe, "__", "[b]", "[/b]")

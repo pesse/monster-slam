@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene load_steps=17 format=3]
 
 [ext_resource type="Script" path="res://src/ui/skill_tree.gd" id="1_skills"]
 [ext_resource type="Script" path="res://src/ui/skill_graph.gd" id="2_graph"]
@@ -15,6 +15,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/windows/close_pressed.webp" id="13_close_pressed"]
 [ext_resource type="Texture2D" path="res://assets/ui/windows/title_joint_left.webp" id="14_joint_left"]
 [ext_resource type="Texture2D" path="res://assets/ui/windows/title_joint_right.webp" id="15_joint_right"]
+[ext_resource type="PackedScene" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
 
 [node name="SkillTreeScreen" type="Control"]
 layout_mode = 3
@@ -124,6 +125,11 @@ layout_mode = 2
 theme_type_variation = &"Accent"
 text = "0 Skillpunkte"
 vertical_alignment = 1
+
+[node name="HandbookLink" parent="Window/Layout/TitleBar/Header" instance=ExtResource("handbook_link")]
+unique_name_in_owner = true
+layout_mode = 2
+chapter = "11-faehigkeiten.md"
 
 [node name="CloseButton" type="TextureButton" parent="Window/Layout/TitleBar/Header"]
 unique_name_in_owner = true
