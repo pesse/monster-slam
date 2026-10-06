@@ -10,6 +10,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/content.webp" id="8_icon"]
 
 [ext_resource type="Texture2D" path="res://assets/ui/statistics/icons/gold_coins.webp" id="gold_icon"]
+[ext_resource type="PackedScene" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
 
 [node name="SpellShop" type="Control"]
 layout_mode = 3
@@ -101,6 +102,12 @@ size_flags_horizontal = 3
 theme_type_variation = &"WindowTitle"
 text = "ZAUBER"
 vertical_alignment = 1
+
+[node name="HandbookLink" parent="Window/Layout/TitleBar/Header" instance=ExtResource("handbook_link")]
+unique_name_in_owner = true
+layout_mode = 2
+chapter = "05-kampf.md"
+section = "Zauber"
 
 [node name="CloseButton" type="TextureButton" parent="Window/Layout/TitleBar/Header"]
 unique_name_in_owner = true

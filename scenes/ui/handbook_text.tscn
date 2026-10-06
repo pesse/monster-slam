@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[node name="Text" type="RichTextLabel"]
+size_flags_horizontal = 3
+mouse_filter = 1
+theme_type_variation = &"HandbookText"
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+autowrap_mode = 3

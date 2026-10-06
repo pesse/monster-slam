@@ -1274,6 +1274,22 @@ corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxEmpty" id="tree_focus"]
 
+[sub_resource type="FontVariation" id="handbook_bold"]
+variation_embolden = 0.6
+
+[sub_resource type="FontVariation" id="handbook_italic"]
+variation_transform = Transform2D(1, 0, 0.2, 1, 0, 0)
+
+[sub_resource type="FontVariation" id="handbook_bold_italic"]
+variation_embolden = 0.6
+variation_transform = Transform2D(1, 0, 0.2, 1, 0, 0)
+
+[sub_resource type="StyleBoxEmpty" id="handbook_heading"]
+content_margin_top = 16.0
+
+[sub_resource type="StyleBoxEmpty" id="handbook_subheading"]
+content_margin_top = 8.0
+
 [resource]
 default_font_size = 18
 Accent/base_type = &"Label"
@@ -1435,6 +1451,40 @@ GridContainer/constants/v_separation = 4
 HSlider/styles/grabber_area = SubResource("xp_fill")
 HSlider/styles/grabber_area_highlight = SubResource("xp_fill")
 HSlider/styles/slider = SubResource("pb_bg")
+HandbookChapter/base_type = &"RowButton"
+HandbookChapter/colors/font_focus_color = Color(1, 0.86, 0.45, 1)
+HandbookChapter/colors/font_pressed_color = Color(1, 0.86, 0.45, 1)
+HandbookChapter/font_sizes/font_size = 16
+HandbookHeading/base_type = &"StatHeading"
+HandbookHeading/styles/normal = SubResource("handbook_heading")
+HandbookLink/base_type = &"MenuLink"
+HandbookLink/colors/icon_hover_color = Color(1, 0.86, 0.45, 1)
+HandbookLink/colors/icon_pressed_color = Color(1, 0.86, 0.45, 1)
+HandbookLink/constants/icon_max_width = 32
+HandbookLinkSmall/base_type = &"HandbookLink"
+HandbookLinkSmall/constants/icon_max_width = 24
+HandbookMarker/base_type = &"Label"
+HandbookMarker/colors/font_color = Color(1, 0.8, 0.35, 1)
+HandbookMarker/font_sizes/font_size = 16
+HandbookSubheading/base_type = &"StatSubline"
+HandbookSubheading/colors/font_color = Color(1, 0.8, 0.35, 1)
+HandbookSubheading/styles/normal = SubResource("handbook_subheading")
+HandbookText/base_type = &"RichTextLabel"
+HandbookText/colors/default_color = Color(0.92, 0.94, 0.98, 1)
+HandbookText/colors/table_border = Color(0.45, 0.55, 0.75, 0.3)
+HandbookText/colors/table_even_row_bg = Color(0.24, 0.28, 0.38, 0.35)
+HandbookText/colors/table_odd_row_bg = Color(0.18, 0.21, 0.3, 0.35)
+HandbookText/constants/table_h_separation = 16
+HandbookText/constants/table_v_separation = 4
+HandbookText/fonts/bold_font = SubResource("handbook_bold")
+HandbookText/fonts/bold_italics_font = SubResource("handbook_bold_italic")
+HandbookText/fonts/italics_font = SubResource("handbook_italic")
+HandbookText/font_sizes/bold_font_size = 16
+HandbookText/font_sizes/bold_italics_font_size = 16
+HandbookText/font_sizes/italics_font_size = 16
+HandbookText/font_sizes/mono_font_size = 16
+HandbookText/font_sizes/normal_font_size = 16
+HandbookTitle/base_type = &"StatHeadline"
 Hint/base_type = &"Label"
 Hint/colors/font_color = Color(0.78, 0.8, 0.84, 1)
 Hint/font_sizes/font_size = 14

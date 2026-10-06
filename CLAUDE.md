@@ -2,7 +2,7 @@
 
 Godot 4.7, GDScript, Tests mit gdUnit4. Architektur und Begründungen: `docs/ARCHITECTURE.md`
 und `docs/adr/`; Inhalte: `docs/ADDING_CONTENT.md`; Tests: `docs/TESTING.md`; was der
-Spieler sieht: `docs/HANDBUCH.md`.
+Spieler sieht: `docs/handbuch/` (je Kapitel eine Datei, `README.md` ist der Inhalt).
 
 ## Befehle
 
@@ -181,6 +181,9 @@ Aufzählung von Kleinkram; unter ~600 Zeichen je Release.
 - Ein Screen, der in der Bildmitte hängt, ändert seine Größe nicht, solange er sichtbar
   ist: sperren und umbeschriften statt ein-/ausblenden; Inhaltsentscheidungen vor dem
   Anzeigen.
+- Das Handbuch (`docs/handbuch/`) liegt auch in der EXE und öffnet über `Handbook.open`
+  (ADR 0019). Ein „?“ (`HandbookLink`) zeigt auf eine Überschrift: umbenennen nur mit der
+  Szene (`tests/handbook_test.gd`); ein neues Kapitel gehört in die Liste in `README.md`.
 - Entwickler-Werkbänke liegen unter `scenes/dev/`, `src/dev/` (im Export ausgeschlossen),
   nie als Knopf im Startmenü. Jede Taste einer Werkbank hat auch einen Knopf.
 

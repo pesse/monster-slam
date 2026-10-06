@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[node name="Heading" type="Label"]
+size_flags_horizontal = 3
+theme_type_variation = &"HandbookHeading"
+autowrap_mode = 3

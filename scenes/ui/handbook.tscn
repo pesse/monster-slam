@@ -1,0 +1,156 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/ui/handbook_window.gd" id="1_window"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/window_surface.webp" id="2_surface"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/close.webp" id="3_close"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/close_hover.webp" id="4_close_hover"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/close_pressed.webp" id="5_close_pressed"]
+[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/handbook.webp" id="6_icon"]
+
+[node name="HandbookWindow" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_window")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.03, 0.06, 0.6)
+
+[node name="Window" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+
+[node name="Frame" type="PanelContainer" parent="Window"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"GameWindow"
+
+[node name="Surface" type="TextureRect" parent="Window"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 9.0
+offset_top = 9.0
+offset_right = -9.0
+offset_bottom = -9.0
+mouse_filter = 2
+texture = ExtResource("2_surface")
+expand_mode = 1
+stretch_mode = 1
+
+[node name="Layout" type="VBoxContainer" parent="Window"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TitleBar" type="PanelContainer" parent="Window/Layout"]
+layout_mode = 2
+theme_type_variation = &"WindowTitleBar"
+
+[node name="Header" type="HBoxContainer" parent="Window/Layout/TitleBar"]
+layout_mode = 2
+theme_type_variation = &"ScreenStack"
+
+[node name="TitleIcon" type="TextureRect" parent="Window/Layout/TitleBar/Header"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("6_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Title" type="Label" parent="Window/Layout/TitleBar/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"WindowTitle"
+text = "HANDBUCH"
+vertical_alignment = 1
+
+[node name="CloseButton" type="TextureButton" parent="Window/Layout/TitleBar/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 4
+focus_mode = 0
+texture_filter = 4
+texture_normal = ExtResource("3_close")
+texture_pressed = ExtResource("5_close_pressed")
+texture_hover = ExtResource("4_close_hover")
+texture_focused = ExtResource("4_close_hover")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Content" type="MarginContainer" parent="Window/Layout"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_type_variation = &"WindowContent"
+
+[node name="Columns" type="HBoxContainer" parent="Window/Layout/Content"]
+layout_mode = 2
+theme_type_variation = &"SectionStack"
+
+[node name="ChapterScroll" type="ScrollContainer" parent="Window/Layout/Content/Columns"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(264, 0)
+layout_mode = 2
+follow_focus = true
+horizontal_scroll_mode = 0
+
+[node name="Gutter" type="MarginContainer" parent="Window/Layout/Content/Columns/ChapterScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ScrollGutter"
+
+[node name="ChapterList" type="VBoxContainer" parent="Window/Layout/Content/Columns/ChapterScroll/Gutter"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"Tight"
+
+[node name="PageScroll" type="ScrollContainer" parent="Window/Layout/Content/Columns"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+horizontal_scroll_mode = 0
+
+[node name="Gutter" type="MarginContainer" parent="Window/Layout/Content/Columns/PageScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ScrollGutter"
+
+[node name="Page" type="VBoxContainer" parent="Window/Layout/Content/Columns/PageScroll/Gutter"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
