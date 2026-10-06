@@ -149,12 +149,25 @@ var _glow: Texture2D
 var _fx: Control
 ## Die Zoom-Transformation des letzten `_draw` — die Effektebene zeichnet darin mit.
 var _base := Transform2D()
+## Das Bild liegt in einer eigenen Ebene hinter der Zeichnung der Karte, damit das, was sich
+## darauf bewegt (`_ambience`), zwischen Bild und Orten liegen kann.
+var _image: Control
+var _ambience: MapAmbience
 
 
 func _ready() -> void:
 	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	resized.connect(_relayout)
 	mouse_exited.connect(func() -> void: _set_hovered(-1))
+	_image = Control.new()
+	_image.name = "Image"
+	_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_image.show_behind_parent = true
+	_image.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_image.draw.connect(_draw_image)
+	add_child(_image)
+	_ambience = MapAmbience.new(self)
+	add_child(_ambience)
 	_fx = Control.new()
 	_fx.name = "Fx"
 	_fx.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -309,6 +322,9 @@ func _step_zoom(delta: float) -> void:
 ## Ort die Karte (Title/Body/Note, siehe Hints.attach).
 func setup(texture: Texture2D, nodes: Array, path: Array, hint: Callable) -> void:
 	_texture = texture
+	# Was sich bewegt, gehört zum alten Bild; wer es will, setzt es danach (`set_ambience`).
+	if _ambience != null:
+		_ambience.setup([], texture)
 	_nodes = nodes
 	_path = path
 	var missing := nodes.any(func(n): return (n.get("pos", Vector2.INF) as Vector2) == Vector2.INF)
@@ -502,13 +518,8 @@ func _draw() -> void:
 	_base = base
 	if _fx != null:
 		_fx.queue_redraw.call_deferred()
-	if _texture != null:
-		draw_texture_rect(_texture, rect, false)
-	else:
-		# Ohne Bild eine schlichte Fläche mit Rand — die Karte soll als Karte lesbar bleiben,
-		# bis ihr Bild da ist.
-		draw_rect(rect, BLANK_COLOR)
-		draw_rect(rect.grow(-8.0), BLANK_EDGE, false, 2.0)
+		_image.queue_redraw.call_deferred()
+		_ambience.refresh.call_deferred()
 	if _texture == null or path_over_image:
 		_draw_path()
 	for i in _centers.size():
@@ -783,6 +794,37 @@ func _draw_soft_spot(i: int, center: Vector2, size: Vector2, strength: float) ->
 		var t := float(n) / float(STEPS)
 		draw_circle(Vector2.ZERO, size.x * (1.0 - t * 0.6), Color(0, 0, 0, strength / float(STEPS) * 3.0))
 	draw_set_transform_matrix(around)
+
+
+## Das Bild, in der Zoom-Transformation der Karte.
+func _draw_image() -> void:
+	var rect := map_rect(size, aspect(), cover)
+	if rect.size.x <= 0.0:
+		return
+	_image.draw_set_transform_matrix(_base)
+	if _texture != null:
+		_image.draw_texture_rect(_texture, rect, false)
+	else:
+		# Ohne Bild eine schlichte Fläche mit Rand — die Karte soll als Karte lesbar bleiben,
+		# bis ihr Bild da ist.
+		_image.draw_rect(rect, BLANK_COLOR)
+		_image.draw_rect(rect.grow(-8.0), BLANK_EDGE, false, 2.0)
+
+
+## Die Zoom-Transformation, in der die Karte gerade steht — die Ebenen zeichnen darin mit.
+func view_transform() -> Transform2D:
+	return _base
+
+
+## Was sich auf dem Bild bewegt (MapLayout.ambience), mit den Masken der Flächen
+## (MapLayout.ambience_masks). Nach `setup` setzen: die Flächen lesen das Bild.
+func set_ambience(entries: Array, masks: Dictionary = {}) -> void:
+	_ambience.setup(entries, _texture, masks)
+
+
+## Die Ebene mit dem, was sich bewegt — für Werkbank und Tests.
+func ambience_layer() -> MapAmbience:
+	return _ambience
 
 
 ## Die Transformation, in der Ort `i` gerade steht: Zoom der Karte und sein Aufspringen.

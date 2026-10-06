@@ -1136,5 +1136,15 @@
 		"4": "mountain",
 		"5": "alpine",
 		"6": "alpine"
+	},
+	"ambience": {
+		"4": [
+			{
+				"kind": "water"
+			},
+			{
+				"kind": "falls"
+			}
+		]
 	}
 }

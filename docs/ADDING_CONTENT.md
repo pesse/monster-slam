@@ -376,6 +376,36 @@ darf, ohne den Screen anzufassen: dass ein Baum sich verzweigt — `tests/skill_
 besteht darauf, dass jeder Baum irgendwo eine Stufe mit zwei Ästen nebeneinander hat.
 Einzelne Stufen dürfen einen einzigen Knoten tragen.
 
+## Bewegung auf einer Gebietskarte → `assets/maps/<buch>/map.json` (`ambience`)
+
+Wasser, Wasserfälle, Nebel, Rauch, Glut und Fackeln einer Gebietskarte
+(`docs/ARCHITECTURE.md` „Karte und Laufanfrage“).
+
+**Setzen:** in `scenes/dev/map_lab.tscn`, in der Leiste rechts.
+- Oben einen Effekt wählen, oder Art wählen und „+ Effekt“ drücken. Jedes „+ Effekt“ legt
+  einen neuen Eintrag an — auch zwei Nebelfelder mit eigener Dichte, Richtung usw.
+- Eine Fläche (`water`, `falls`, `mist`) malt man in ihre Maske
+  (`assets/maps/<buch>/unit<n>_<art>.webp`, die weiteren einer Art `<art>2`, `<art>3` …;
+  der Eintrag trägt dann `"mask": "mist2"`): links malt, rechts radiert, „Rückgängig“
+  (Strg+Z) nimmt den letzten Strich zurück. Pinselgröße, Härte des Randes und Stärke stehen
+  in der Leiste; halbe Stärke heißt halbe Bewegung. Einen weichen Rand ruhig etwas ins Ufer
+  laufen lassen.
+- Eine Quelle (`smoke`, `ember`, `torch`) setzt die rechte Maustaste. Die linke wählt eine
+  Quelle, einen Ort oder einen Wegpunkt, Ziehen verschiebt, Entf löscht.
+- Die Leiste zeigt nur, was zum Effekt passt: die Karte mit Maske oder den Ausschnitt um die
+  Quelle, Art und Intensität (`intensity`, 0–2), bei Wasser die Form (`style`, Feld oder
+  Ringe), bei Quellen die Größe (`size`), bei Flächen den Pinsel. Gewohnte Werte schreibt
+  die Werkbank nicht in `map.json`.
+- „Speichern“ schreibt `map.json` und die Masken; eine gelöschte Fläche verliert ihre
+  Maske. Neue Masken sieht das Spiel nach `tools/godot.sh --import`.
+
+**Prüfen:**
+```bash
+GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/map_lab.tscn -- --shoot --book=<buch> --unit=<n> [--outline] [--crop=x,y,w] [--later] [--select=N] [--style=rings]
+```
+Ein ungültiger Eintrag fällt im Spiel weg, `tests/map_screens_test.gd` meldet ihn, ebenso
+eine Fläche ohne Maske und eine Maske ohne Eintrag.
+
 ## Neue Mechanik hinzufügen
 Neues System als eigenes Script/Szene anlegen, das relevante `EventBus`-Signale
 abonniert (z. B. `monster_defeated`, `answer_submitted`). Kein bestehendes System

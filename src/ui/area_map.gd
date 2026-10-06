@@ -126,6 +126,8 @@ func _show_image() -> void:
 	for part: Control in [_fortress, _medal, _actions]:
 		part.modulate.a = 0.0
 	_canvas.setup(MapLayout.unit_texture(MapSelection.book, MapSelection.unit), [], [], hint_lines)
+	var ambience := MapLayout.ambience(MapLayout.data(MapSelection.book), MapSelection.unit)
+	_canvas.set_ambience(ambience, MapLayout.ambience_masks(MapSelection.book, MapSelection.unit, ambience))
 
 
 func _fill() -> void:

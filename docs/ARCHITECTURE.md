@@ -601,6 +601,22 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
   ein Punkt, zeichnet `MapCanvas` eine schlichte Fläche und legt ALLE Orte selbst aus
   (`default_positions`) — eine neue Unit ist so spielbar, bevor ihr Bild existiert.
   Die Bilder entstehen außerhalb dieses Repos.
+- **Auf der Gebietskarte bewegt sich das Bild** (`MapAmbience`, `map.json` `ambience`):
+  - Wasser schlägt Wellen (Feld) oder Ringe, Wasserfälle laufen, Nebel zieht, aus Glut
+    steigt Rauch, Fackeln flackern; jeder Effekt hat eine Intensität.
+  - Flächen sind gemalte Graustufen-Masken, je Eintrag eine
+    (`unit<n>_<mask>.webp`, `MapLayout.mask_path`; `mask` fehlt beim ersten einer Art und
+    heißt sonst `<kind>2` …, so bleibt jedes Feld mit eigenen Einstellungen); Form und Intensität stehen im Eintrag
+    in `map.json`. Quellen sind Punkte. Beides setzt man in `map_lab`, Flächen mit dem
+    Pinsel. WebP verlustfrei, weil die PNGs unter `assets/maps` nicht exportiert werden.
+  - Die Ebene liegt wie das Bild hinter der Zeichnung von `MapCanvas` (`show_behind_parent`):
+    Bild, dann Bewegung, dann Weg und Orte, dann `_fx`.
+  - Bewegt wird nur im Shader (`TIME`, `assets/shaders/map_*.gdshader`). Neu gezeichnet
+    wird nur mit der Karte, ein `_process` gibt es nicht.
+  - Eine Fläche zeichnet das ganze Kartenbild; der Shader liest das gemalte Wasser selbst,
+    verschoben, und verwirft, was die Maske nicht trifft (`map_ambience.gdshaderinc`).
+    Grauwerte schwächen die Bewegung, ein weich gemalter Rand läuft weich aus.
+  - Fehlt `ambience`, steht das Bild still da.
 - **Der Kampf steht in der Landschaft seiner Gebietskarte** (`BattleTheme`). Ein Thema
   färbt Boden, Hügel, Kuppen und Flecken (Schnee), Hintergrund, Umgebungslicht und
   Sonne und wählt die Deko: je Platz (`trees`, `rocks`, `grass`, `props`, `landmarks`)
