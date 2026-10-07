@@ -8,6 +8,14 @@ extends Control
 ## (MapLevel.toggle): mehrere Teile und Boni zusammen, Gesamt und Boss allein. „Spielen" unten
 ## rechts setzt die Auswahl als ein Level in RunRequest (MapLevel.combine) und startet den
 ## Kampf — der kommt über RunRequest.return_scene hierher zurück.
+##
+## Ein begonnener Lauf des Buchs (RunSave, ADR 0020): liegt er in dieser Unit, sind seine
+## Orte beim Öffnen markiert, und „Spielen" heißt „Fortsetzen", solange sie alle markiert
+## sind — weitere Orte der Unit dürfen dazukommen, der Lauf wird erweitert
+## (RunSave.continues). Fehlt einer, oder liegt die Auswahl in einer anderen Unit des Buchs,
+## startet ein neuer Lauf und fragt vorher, denn der begonnene geht dabei verloren. Das „✕"
+## daneben verwirft ihn, damit sich dieselbe Auswahl auch frisch spielen lässt. Ein Boss
+## gehört zu keinem Lauf: er startet ohne Rückfrage, und der begonnene bleibt liegen.
 
 const BATTLE_SCENE := "res://scenes/battle/battle.tscn"
 const BOSS_SCENE := "res://scenes/battle/boss_fight.tscn"
@@ -30,10 +38,18 @@ const BossFight := preload("res://src/battle/boss_fight.gd")
 @onready var _fortress_image: TextureRect = %FortressImage
 @onready var _fortress_level: Label = %FortressLevel
 @onready var _play: Button = %PlayButton
+@onready var _discard_run: Button = %DiscardRunButton
+@onready var _confirm: ConfirmDialog = %Confirm
 
 var _levels: Array = []
 ## Die markierten Orte (Schlüssel aus MapLevel.levels_for), in Spielreihenfolge.
 var _selected: Array = []
+## Der begonnene Lauf dieses Buchs (RunSave), oder leer.
+var _saved: Dictionary = {}
+## Was die offene Rückfrage bei „Ja" tut.
+var _on_confirmed: Callable
+## Wurde beim Öffnen ein unspielbarer begonnener Lauf verworfen? (`_check_saved`)
+var _pending_notice := false
 
 
 func _ready() -> void:
@@ -45,6 +61,12 @@ func _ready() -> void:
 			(%FirstPersonToggle as Button).visible = RunRequest.first_person_selectable())
 	_canvas.node_selected.connect(_on_level_clicked)
 	_play.pressed.connect(_start)
+	_discard_run.pressed.connect(_ask_discard)
+	_confirm.confirmed.connect(func() -> void:
+		if _on_confirmed.is_valid():
+			_on_confirmed.call())
+	Hints.attach(_discard_run, "Begonnenen Lauf verwerfen",
+			"Danach beginnt „Spielen“ auch mit denselben Orten einen neuen Lauf.")
 	# Die Level sitzen klein auf den Plätzen des Bildes und wachsen unter dem Zeiger; das
 	# Bild zeigt seinen Weg selbst, die Hinweiskarte sagt, was ein Ort ist.
 	_canvas.node_radius = MapCanvas.AREA_NODE_RADIUS
@@ -76,6 +98,7 @@ func _ready() -> void:
 				func(k): return points.get(str(k), Vector2.INF))))
 		await _canvas.zoom_finished
 	_fill()
+	_check_saved()
 	_canvas.appear()
 	for part: Control in [_fortress, _medal, _actions]:
 		create_tween().tween_property(part, "modulate:a", 1.0, MapCanvas.APPEAR_TIME)
@@ -152,12 +175,16 @@ func _fill() -> void:
 			MapLayout.area_points(layout, unit), bonus_counts(ContentRegistry.bonuses_of(book, unit)))
 	_canvas.setup(MapLayout.unit_texture(book, unit), nodes, MapLayout.area_path(layout, unit),
 			hint_lines)
+	_load_saved()
 	_select(_initial_selection(nodes))
 
 
 ## Was markiert ist, wenn die Karte aufgeht: die Auswahl des letzten Laufs, wenn er in
 ## dieser Unit war — so spielt „Spielen" nach dem Kampf dasselbe noch einmal. Sonst nichts.
 func _initial_selection(nodes: Array) -> Array:
+	var saved := _saved_keys()
+	if not saved.is_empty():
+		return saved
 	if not RunRequest.is_level():
 		return []
 	var last := RunRequest.level()
@@ -357,20 +384,119 @@ func _select(keys: Array) -> void:
 	_canvas.set_selected(keys)
 	var level := MapLevel.combine(_levels, keys)
 	_play.disabled = level.is_empty()
-	_lock_first_person(not level.is_empty() and str(level["kind"]) == MapLevel.KIND_BOSS)
+	var boss := not level.is_empty() and str(level["kind"]) == MapLevel.KIND_BOSS
+	_lock_first_person(boss)
+	var resumes := _resumes(keys)
+	_play.text = "Fortsetzen" if resumes else "Spielen"
+	_discard_run.visible = resumes
+	var note := ""
+	if boss and not _saved.is_empty():
+		note = "Dein begonnener Lauf (%s) bleibt liegen." % saved_label(_saved)
+	elif not _saved.is_empty() and not resumes:
+		note = "Begonnener Lauf: %s" % saved_label(_saved)
 	if level.is_empty():
 		Hints.attach(_play, "Spielen", "Wähle auf der Karte, was du spielen willst.",
 				"Mehrere Teile und Boni lassen sich zusammen markieren; Gesamt und Boss stehen allein.")
+	elif resumes:
+		var added := _added_labels(keys)
+		Hints.attach(_play, "Fortsetzen", "Der begonnene Lauf geht weiter: %s." % saved_label(_saved),
+				"" if added.is_empty() else "Neu dabei: %s" % ", ".join(added))
 	else:
 		Hints.attach(_play, "Spielen", "%s · %s" % [
-				BookNaming.unit_label(MapSelection.book, MapSelection.unit), str(level["label"])])
+				BookNaming.unit_label(MapSelection.book, MapSelection.unit), str(level["label"])],
+				note)
+
+
+## Setzt „Spielen" mit dieser Auswahl den begonnenen Lauf fort — mit denselben Orten oder
+## erweitert um weitere?
+func _resumes(keys: Array) -> bool:
+	return RunSave.continues(_saved, MapSelection.unit, keys, _levels)
+
+
+## Die Namen der Orte, um die die Auswahl den begonnenen Lauf erweitert.
+func _added_labels(keys: Array) -> Array:
+	var added := RunSave.added(_saved, keys, _levels)
+	return _levels.filter(func(l): return str(l["key"]) in added) \
+			.map(func(l): return str(l["label"]))
+
+
+## Die gespeicherten Orte, wenn der begonnene Lauf in dieser Unit liegt.
+func _saved_keys() -> Array:
+	if _saved.is_empty() or int((_saved["level"] as Dictionary).get("unit", 0)) != MapSelection.unit:
+		return []
+	return Array((_saved["level"] as Dictionary).get("keys", []))
+
+
+## „Unit 4, Welle 23" — wo der begonnene Lauf steht.
+static func saved_label(state: Dictionary) -> String:
+	var level: Dictionary = state.get("level", {})
+	return "%s, Welle %d" % [BookNaming.unit_label(str(level.get("book", "")),
+			int(level.get("unit", 0))), int(state.get("next_wave", 1))]
+
+
+## Liest den begonnenen Lauf des Buchs, bevor die Orte markiert werden. Liegt er in dieser
+## Unit und lässt sich nicht mehr spielen (ein Ort ist weg, die App zu alt), wird er
+## verworfen, und die Karte sagt es — still verschwinden darf er nicht.
+func _load_saved() -> void:
+	_saved = RunSave.of_book(MapSelection.book, UserSettings.active_profile())
+	if _saved_keys().is_empty() or not RunSave.resumable_level(_saved, _levels).is_empty():
+		return
+	RunSave.discard(MapSelection.book, UserSettings.active_profile())
+	_saved = {}
+	_pending_notice = true
+
+
+## Sagt, dass ein begonnener Lauf verworfen wurde (`_load_saved`) — erst, wenn die Karte
+## steht.
+func _check_saved() -> void:
+	if not _pending_notice:
+		return
+	_pending_notice = false
+	_on_confirmed = Callable()
+	_confirm.inform("Lauf verworfen",
+			"Dein begonnener Lauf in dieser Unit lässt sich nicht mehr fortsetzen: die Inhalte "
+			+ "haben sich geändert. Der nächste Lauf beginnt neu.")
+
+
+func _ask_discard() -> void:
+	if _saved.is_empty():
+		return
+	_on_confirmed = func() -> void:
+		RunSave.discard(MapSelection.book, UserSettings.active_profile())
+		_saved = {}
+		_select(_selected)
+	_confirm.ask("Lauf verwerfen?",
+			"Dein begonnener Lauf (%s) geht verloren." % saved_label(_saved),
+			"Verwerfen", "Behalten")
 
 
 func _start() -> void:
 	var level := MapLevel.combine(_levels, _selected)
-	if level.is_empty() or _canvas.is_zooming():
+	if level.is_empty() or _canvas.is_zooming() or _confirm.visible:
 		return
-	RunRequest.start_level(level)
+	if str(level["kind"]) == MapLevel.KIND_BOSS:
+		_launch(level)
+	elif _resumes(_selected):
+		var resume := _saved.duplicate(true)
+		resume["added"] = RunSave.added(_saved, _selected, _levels)
+		_launch(level, resume)
+	elif not _saved.is_empty():
+		_on_confirmed = func() -> void:
+			RunSave.discard(MapSelection.book, UserSettings.active_profile())
+			_saved = {}
+			_launch(level)
+		_confirm.ask("Neuer Lauf?",
+				"Dies startet einen neuen Lauf. Dein begonnener Lauf (%s) geht verloren."
+				% saved_label(_saved), "Neuer Lauf", "Zurück")
+	else:
+		_launch(level)
+
+
+## Startet den Kampf mit `level`; `resume` ist der begonnene Lauf, den er fortsetzt.
+func _launch(level: Dictionary, resume: Dictionary = {}) -> void:
+	if level.is_empty():
+		return
+	RunRequest.start_level(level, resume)
 	# Hinein ins Level, wie von der Buch- in die Gebietskarte; der Kampf setzt fort.
 	_play.disabled = true
 	_canvas.zoom_into_all(level["keys"])

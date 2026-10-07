@@ -882,6 +882,12 @@ func test_place_and_fortress_share_one_plate_and_the_toggle_sits_before_play() -
 	assert_float(r.position.x - t.end.x).is_less_equal(8.0)
 	# Das Schild in der Mitte und die Knöpfe rechts überdecken sich nicht.
 	assert_float(p.end.x).is_less_equal(t.position.x)
+	# Auch nicht mit dem „✕" eines begonnenen Laufs davor (ADR 0020).
+	var discard := area.get_node("%DiscardRunButton") as Button
+	discard.visible = true
+	await get_tree().process_frame
+	assert_object(discard.get_parent()).is_same(play.get_parent())
+	assert_float(p.end.x).is_less_equal(discard.get_global_rect().position.x)
 	remove_child(area)
 
 

@@ -107,6 +107,38 @@ func apply_skills(bonuses: Dictionary) -> void:
 	fortress_armor = fortress_armor_max
 
 
+## Was ein begonnener Lauf vom Zustand der Festung mitnimmt (RunSave, ADR 0020): nur die
+## Stände, keine Maxima. Die rechnet `apply_skills` beim Fortsetzen neu.
+func run_snapshot() -> Dictionary:
+	return {
+		"fortress_health": fortress_health,
+		"fortress_armor": fortress_armor,
+		"score": score,
+		"monsters_defeated": monsters_defeated,
+		"monsters_leaked": monsters_leaked,
+		"no_leak_streak": no_leak_streak,
+		"best_no_leak_streak": best_no_leak_streak,
+		"min_fortress_health": min_fortress_health,
+	}
+
+
+## Setzt einen begonnenen Lauf fort. Gehört HINTER `apply_skills()`: das hat das Maximum
+## mit den heutigen Skills und der heutigen Festungsstufe gerechnet, die Stände werden
+## darauf begrenzt. Eine Festung, die rastet, lebt (gefallene rasten nicht), deshalb nie
+## unter 1 HP.
+func restore_run(run: Dictionary) -> void:
+	fortress_health = clampi(int(run.get("fortress_health", fortress_max_health)), 1,
+			fortress_max_health)
+	fortress_armor = clampi(int(run.get("fortress_armor", 0)), 0, fortress_armor_max)
+	score = maxi(0, int(run.get("score", 0)))
+	monsters_defeated = maxi(0, int(run.get("monsters_defeated", 0)))
+	monsters_leaked = maxi(0, int(run.get("monsters_leaked", 0)))
+	no_leak_streak = maxi(0, int(run.get("no_leak_streak", 0)))
+	best_no_leak_streak = maxi(no_leak_streak, int(run.get("best_no_leak_streak", 0)))
+	min_fortress_health = clampi(int(run.get("min_fortress_health", fortress_health)), 0,
+			fortress_health)
+
+
 ## Die Festung wächst mitten im Lauf um `extra` HP: eine Unit hat nach einer gewonnenen
 ## Welle eine Festungsstufe dazugewonnen (WaveRunner._finish_wave, FortressTier). Maximum
 ## UND Stand steigen um denselben Betrag — der Ausbau soll sofort etwas taugen, nicht erst

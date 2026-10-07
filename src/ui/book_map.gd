@@ -6,6 +6,9 @@ extends Control
 ## Medaille ihres Bosses. Ein Klick öffnet die Gebietskarte der Unit. Nichts ist
 ## gesperrt — die Reihenfolge legt nur der Weg auf der Karte nahe.
 ##
+## Hat das Buch einen begonnenen Lauf (RunSave, ADR 0020), führt „Lauf fortsetzen" unten
+## rechts (wo auf der Gebietskarte „Spielen" steht) in seine Unit; dort sind seine Orte markiert, und „Spielen" setzt ihn fort.
+##
 ## Das Layout liegt in book_map.tscn, das Bild und die Punkte unter assets/maps/<book>/
 ## (MapLayout); gezeichnet wird in MapCanvas. Die Zahlen kommen aus FortressTier.unit_tiers
 ## — derselben Zählung wie Kampf und Statistik.
@@ -33,6 +36,7 @@ func _ready() -> void:
 	if not MapSelection.book in books and not books.is_empty():
 		MapSelection.book = books[0]
 	_title.text = ContentRegistry.book_label(MapSelection.book)
+	_setup_resume()
 	_canvas.setup(MapLayout.book_texture(MapSelection.book), [], [], func(_n): return {})
 	# Nicht abgewartet: der Zoom soll nicht auf den Kopf warten.
 	_place_header()
@@ -46,6 +50,22 @@ func _ready() -> void:
 		await _canvas.zoom_finished
 	_fill()
 	_canvas.appear()
+
+
+## Der Knopf steht vor dem ersten Bild fest. Unten rechts und nicht im Kopf: der ist mit
+## Buchtitel und „Für eine Arbeit üben" bei 1152 Pixel Breite schon fast voll.
+func _setup_resume() -> void:
+	var button := %ResumeButton as Button
+	var saved := RunSave.of_book(MapSelection.book, UserSettings.active_profile())
+	button.visible = not saved.is_empty()
+	if saved.is_empty():
+		return
+	var level: Dictionary = saved["level"]
+	button.text = "Lauf fortsetzen · %s" % AreaMap.saved_label(saved)
+	Hints.attach(button, "Lauf fortsetzen",
+			"Öffnet die Unit mit den Orten des begonnenen Laufs; „Fortsetzen“ startet ihn.")
+	button.pressed.connect(func() -> void:
+		_on_unit_selected("%s/%d" % [MapSelection.book, int(level.get("unit", 0))]))
 
 
 ## Der Kopf weicht den Orten aus, bevor er zu sehen ist — die Größen stehen erst nach

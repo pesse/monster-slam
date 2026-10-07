@@ -46,15 +46,29 @@ func _input(event: InputEvent) -> void:
 
 ## Stellt die Frage. `action` ist die Beschriftung des bestätigenden Knopfes und benennt
 ## die TAT („Lernen", „Umlernen") statt „OK" zu sagen: was ein Klick tut, soll auf dem
-## Knopf stehen und nicht nur in der Frage darüber.
-func ask(title: String, body: String, action := "Ja") -> void:
+## Knopf stehen und nicht nur in der Frage darüber. Dasselbe gilt für `keep`, den anderen
+## Ausgang („Weiterspielen" statt „Abbrechen", wo Abbrechen das Gefragte wäre).
+func ask(title: String, body: String, action := "Ja", keep := "Abbrechen") -> void:
 	_title.text = title
 	_body.text = body
 	_action.text = action
+	_cancel.text = keep
+	_cancel.visible = true
 	show()
 	# Der Fokus liegt auf dem ABBRECHEN: mit der Eingabetaste soll man nicht versehentlich
 	# Punkte ausgeben, die man gerade erst bekommen hat.
 	_cancel.grab_focus()
+
+
+## Teilt etwas mit, ohne zu fragen: nur ein Knopf, der `confirmed` meldet (Escape meldet
+## wie immer `cancelled`).
+func inform(title: String, body: String, action := "OK") -> void:
+	_title.text = title
+	_body.text = body
+	_action.text = action
+	_cancel.visible = false
+	show()
+	_action.grab_focus()
 
 
 func _close() -> void:

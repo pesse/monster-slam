@@ -138,6 +138,9 @@ visible = false
 
 [node name="PauseOverlay" parent="UI" instance=ExtResource("22_pause")]
 
+[node name="AbortConfirm" parent="UI" instance=ExtResource("11_confirm")]
+process_mode = 3
+
 [node name="PauseButton" parent="UI" instance=ExtResource("23_pause_button")]
 
 [node name="ViewButton" parent="UI" instance=ExtResource("26_view_button")]

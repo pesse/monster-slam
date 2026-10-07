@@ -71,6 +71,13 @@ signal run_started()
 ## Der Lauf ist zu Ende, über den Statistik-Screen oder per Abbruch. `summary` trägt,
 ## was nur der WaveRunner weiß: wave_reached, difficulty_last, last_wave_won.
 signal run_ended(summary: Dictionary)
+## Der Lauf wird gerastet (ADR 0020): er endet hier, und `next_wave` ist die Welle, mit
+## der er auf der Karte weitergehen kann. Kommt direkt vor `run_ended`.
+signal run_suspended(next_wave: int)
+## Der Kampf setzt einen begonnenen Lauf fort. Kommt direkt nach `run_started`;
+## `run_started_at` ist der Beginn des ursprünglichen Laufs (SessionLog `continues`),
+## `added` die Orte, um die er auf der Karte erweitert wurde (RunSave.added), sonst leer.
+signal run_resumed(next_wave: int, run_started_at: int, added: Array)
 
 ## --- Learning / spaced repetition ---
 ## `response_time_ms` ist 0, wo es keine gemessene Zeit gibt (durchgelassenes Monster) —
