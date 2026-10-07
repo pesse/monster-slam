@@ -86,6 +86,8 @@ const CHOICE_DELTAS := [-2, -1, 0, 1, 2]
 ## So viele Aufgaben nennt die Sitzungsbilanz beim Namen; der Rest steht als Zahl da.
 ## Gedeckelt, weil der Screen nicht scrollt (siehe Kopf).
 const BALANCE_WORDS := 4
+## Der Rückweg eines Laufs von der Karte, der gerastet wird.
+const REST_TEXT := "⟵ Rasten"
 ## Index der Standardauswahl ("Gleich").
 const DEFAULT_CHOICE := 2
 ## Aufforderung an der Kiste, solange sie zu ist.
@@ -220,6 +222,7 @@ func show_stats(data: Dictionary) -> void:
 	_diff_label.visible = _won
 	_choice_row.visible = _won
 	_defeat_label.visible = not _won
+	_label_menu_button()
 	# Die Bilanz ist die dritte Inhalts-Entscheidung, und auch sie fällt hier: sie liegt
 	# auf der noch unsichtbaren Stufe 2, zählt über den PageStack aber schon jetzt zur
 	# Größe des Screens.
@@ -230,6 +233,20 @@ func show_stats(data: Dictionary) -> void:
 	_update_choice_highlight()
 	_goto_stage(Stage.RESULT)
 	visible = true
+
+
+## Der Weg zurück auf Stufe 2. Ein Lauf von der Karte, dessen Festung steht, rastet dabei
+## (ADR 0020, WaveRunner.can_rest) — das sagt der Knopf, statt nur „zurück" zu sagen. Die
+## Hinweiskarte ist erlaubt: am Wellenende ist die Maus frei.
+func _label_menu_button() -> void:
+	if RunRequest.is_level() and _won:
+		_menu_button.text = REST_TEXT
+		Hints.attach(_menu_button, "Rasten",
+				"Der Lauf wird gespeichert, mit Festung und Welle. Auf der Karte geht er mit "
+				+ "„Lauf fortsetzen“ weiter.")
+	elif RunRequest.is_level():
+		_menu_button.text = "⟵ Zurück zur Karte"
+		Hints.attach(_menu_button, "")
 
 
 func hide_stats() -> void:

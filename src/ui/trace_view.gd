@@ -54,6 +54,17 @@ static func describe(line: Dictionary, tasks: Dictionary = {}) -> Dictionary:
 					int(line.get("wave_reached", 0)), outcome], "",
 					{"title": "Lauf beendet",
 					"body": "Schwierigkeit der letzten Welle: %d" % int(line.get("difficulty", 0))})
+		"run_suspend":
+			return _entry("‖ Gerastet · weiter mit Welle %d · ❤ %d" % [
+					int(line.get("next_wave", 0)), int(line.get("hp", 0))])
+		"run_resume":
+			var added: Array = line.get("added", [])
+			if added.is_empty():
+				return _entry("▷ Lauf geht weiter · Welle %d · ❤ %d" % [
+						int(line.get("next_wave", 0)), int(line.get("hp", 0))])
+			return _entry("▷ Lauf geht erweitert weiter · Welle %d · ❤ %d" % [
+					int(line.get("next_wave", 0)), int(line.get("hp", 0))], "",
+					{"title": "Lauf erweitert", "body": "Neu dabei: %s" % ", ".join(added)})
 		"wave_start":
 			var text := "⚑ %s beginnt · ❤ %d" % [_wave(line), int(line.get("hp", 0))]
 			if int(line.get("armor", 0)) > 0:

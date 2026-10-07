@@ -144,6 +144,8 @@ var _warming := false
 @onready var _slow_motion: SlowMotion = $SlowMotion
 @onready var _fast_resolve_button: Button = $UI/FastResolveButton
 @onready var _fast_resolve_confirm: ConfirmDialog = $UI/FastResolveConfirm
+## Rückfrage vor dem Abbruch eines Laufs, der etwas wert ist (ADR 0020, `_request_abort`).
+@onready var _abort_confirm: ConfirmDialog = $UI/AbortConfirm
 @onready var _pause_overlay: PauseOverlay = $UI/PauseOverlay
 @onready var _pause_button: Button = $UI/PauseButton
 @onready var _view_button: Button = $UI/ViewButton
@@ -158,6 +160,14 @@ var _paused_since_ms := -1
 @onready var _spell_banner: SpellBanner = $UI/SpellBanner
 ## Was ein Zauber aus dem Vorrat tut (ADR 0014); wie es aussieht, macht `_spell_fx`.
 var _spells := SpellCaster.new()
+## Setzt dieser Kampf einen begonnenen Lauf fort (RunSave, ADR 0020)?
+var _resumed := false
+## Beginn des Laufs (SessionLog `started_at`), bei einem fortgesetzten der des ersten Teils.
+## Geht in den Speicherstand, damit die Sitzungen eines Laufs zusammenfinden.
+var _run_started_at := 0
+## Hat die Abbruch-Rückfrage selbst pausiert? Dann hebt „Weiterspielen" die Pause auf; kam
+## sie aus der Pause, bleibt es dort.
+var _abort_paused_here := false
 var _spell_fx := SpellFx.new()
 ## Der wievielte Blitz des laufenden Donnerschlags als nächster fällt (`_strike`).
 var _strike_index := 0
@@ -242,13 +252,10 @@ func _ready() -> void:
 	_fast_resolve_confirm.confirmed.connect(_fast_resolve_wave)
 	_fast_resolve_confirm.cancelled.connect(_on_fast_resolve_cancelled)
 	_pause_overlay.toggle_requested.connect(_on_pause_key)
-	# Esc in der Pause beendet den Kampf wie sonst auch. Der Zoom hinaus braucht den
-	# laufenden Baum, also erst die Pause aufheben.
-	_pause_overlay.leave_requested.connect(func() -> void:
-		if _leaving:
-			return
-		_toggle_pause()
-		_abort_battle())
+	# Esc in der Pause beendet den Kampf wie sonst auch, mit derselben Rückfrage.
+	_pause_overlay.leave_requested.connect(_request_abort)
+	_abort_confirm.confirmed.connect(_on_abort_confirmed)
+	_abort_confirm.cancelled.connect(_on_abort_cancelled)
 	_pause_button.pressed.connect(_toggle_pause)
 	_view_button.pressed.connect(_toggle_view)
 	_view_button.set_pressed_no_signal(_fp != null)
@@ -268,6 +275,7 @@ func _ready() -> void:
 	add_child(_spell_fx)
 	# Startschwierigkeit aus den persistenten Einstellungen des aktiven Profils.
 	_difficulty = UserSettings.default_difficulty()
+	_resume_run(RunRequest.take_resume())
 	_start_next_wave()
 	# Hinter dem geschlossenen Schleier einmal alles zeigen, was sonst beim ersten Treffer
 	# oder der ersten Meisterung Shader übersetzt und das Bild anhält (FxWarmup). Das erste
@@ -978,7 +986,7 @@ func _input(event: InputEvent) -> void:
 	# set_input_as_handled() statt accept_event(): das gibt es nur an Control/Viewport,
 	# der WaveRunner ist ein Node3D.
 	get_viewport().set_input_as_handled()
-	_abort_battle()
+	_request_abort()
 
 
 ## Welcher Platz des Zaubervorrats zu `event` gehört: die Ziffern 1–9 (auch am Ziffernblock)
@@ -1062,6 +1070,52 @@ func _dismiss(monster: Monster) -> void:
 ## Auch keine Sitzungsbilanz (Issue #12): Escape heißt „sofort raus", und eine Bilanz
 ## dazwischen wäre ein Screen, der den Ausgang verzögert. Die Bilanz steht auf Stufe 2
 ## des Wellenabschlusses — wer sie sehen will, sieht sie dort nach jeder Welle.
+## Escape mitten in der Welle (ADR 0020): ein Lauf von der Karte, der schon eine Welle
+## geräumt hat, endet erst nach einer Rückfrage — er ließe sich nach der Welle rasten und
+## ist nach dem Abbruch verloren. Die Rückfrage pausiert; die Vorgabe ist Weiterspielen
+## (Enter und ein zweites Escape). Sonst, und im Expertenmodus und in der
+## Testvorbereitung, endet der Kampf sofort wie bisher.
+func _request_abort() -> void:
+	if _leaving or _abort_confirm.visible:
+		return
+	var from_pause := _paused_since_ms >= 0
+	if not abort_needs_confirm(RunRequest.is_level(), _wave_number):
+		# Der Zoom hinaus braucht den laufenden Baum, also erst die Pause aufheben.
+		if from_pause:
+			_toggle_pause()
+		_abort_battle()
+		return
+	_abort_paused_here = not from_pause and _toggle_pause()
+	_answer_input.visible = false
+	_set_view_active(false)
+	_abort_confirm.ask("Lauf abbrechen?",
+			("Abbrechen beendet deinen Lauf (Welle %d). Die angefangene Welle zählt nicht, "
+			+ "und der Lauf lässt sich nicht fortsetzen. Rasten kannst du nach dem Ende der "
+			+ "Welle.") % _wave_number,
+			"Lauf beenden", "Weiterspielen")
+
+
+## Braucht der Abbruch eine Rückfrage? Nur ein Lauf von der Karte rastet, und erst ab der
+## zweiten Welle gibt es etwas zu verlieren (ein fortgesetzter Lauf steht immer dort).
+static func abort_needs_confirm(is_level: bool, wave_number: int) -> bool:
+	return is_level and wave_number > 1
+
+
+func _on_abort_confirmed() -> void:
+	if _paused_since_ms >= 0:
+		_toggle_pause()
+	_abort_battle()
+
+
+func _on_abort_cancelled() -> void:
+	if _abort_paused_here:
+		_abort_paused_here = false
+		_toggle_pause()
+	elif _paused_since_ms < 0 and not _finished and not _fast_resolving:
+		_answer_input.visible = true
+		_set_view_active(true)
+
+
 func _abort_battle() -> void:
 	_finished = true
 	_report_run_ended()
@@ -1089,6 +1143,8 @@ func _exit_tree() -> void:
 ## ist das „p" ein Buchstabe.
 func _on_pause_key(bare: bool) -> void:
 	if bare and _answer_input.is_typing():
+		return
+	if _abort_confirm.visible:
 		return
 	if _toggle_pause():
 		_pause_overlay.consume()
@@ -2083,8 +2139,11 @@ func _finish_wave(won: bool) -> void:
 	_spell_fx.haze(false)
 	_pause_button.visible = false
 	_view_button.visible = false
-	# Endet die Welle, während die Rückfrage offen ist, gibt es nichts mehr aufzulösen.
+	# Endet die Welle, während die Rückfrage offen ist, gibt es nichts mehr aufzulösen —
+	# und nichts mehr abzubrechen: nach dem Wellenende führt Stufe 2 weiter.
 	_fast_resolve_confirm.hide()
+	_abort_confirm.hide()
+	_abort_paused_here = false
 	# Cutscene, Auflösung und Statistik immer in Normaltempo.
 	_slow_motion.stop()
 	# VOR der Cutscene: der Festungsausbau bringt seinen eigenen goldenen Blitz mit, die
@@ -2178,8 +2237,46 @@ func _on_next_wave_requested(delta: int) -> void:
 ## (der Niederlage-Pfad emittiert kein wave_cleared) und die Menü-Szene laden.
 func _on_back_to_menu() -> void:
 	PlayerProgress.save_progress()
+	if can_rest(RunRequest.is_level(), _last_won):
+		_rest()
 	_report_run_ended()
 	_leave_battle()
+
+
+## Ob der Rückweg von Stufe 2 rastet (ADR 0020): nur ein Lauf von der Karte, dessen
+## Festung steht. Expertenmodus und Testvorbereitung rasten nicht.
+static func can_rest(is_level: bool, last_won: bool) -> bool:
+	return is_level and last_won
+
+
+## Legt den Lauf auf den Platz seines Buchs. Weiter geht es mit der nächsten Welle und
+## der zuletzt gespielten Schwierigkeit — die Wahl auf Stufe 2 galt der Welle, die jetzt
+## nicht mehr kommt.
+func _rest() -> void:
+	var next_wave := _wave_number + 1
+	RunSave.store(RunSave.build(RunRequest.level(), next_wave, _difficulty,
+			GameState.run_snapshot(), _run_started_at, int(Time.get_unix_time_from_system())),
+			UserSettings.active_profile())
+	EventBus.run_suspended.emit(next_wave)
+
+
+## Setzt einen begonnenen Lauf fort (`state` aus RunRequest.take_resume) oder merkt sich
+## den Beginn eines neuen. Läuft nach `apply_skills` und `run_started`: das Maximum der
+## Festung ist mit den heutigen Skills gerechnet, die Stände kommen darauf. Der
+## Speicherstand ist damit verbraucht — eine schlecht laufende Welle lässt sich nicht
+## durch Neuladen ungeschehen machen.
+func _resume_run(state: Dictionary) -> void:
+	_run_started_at = int(SessionLog.current().get("started_at", 0))
+	if state.is_empty():
+		return
+	GameState.restore_run(state.get("run", {}))
+	_wave_number = maxi(1, int(state.get("next_wave", 1)))
+	_difficulty = clampi(int(state.get("difficulty", _difficulty)), 1, 5)
+	_resumed = true
+	_run_started_at = int(state.get("run_started_at", _run_started_at))
+	RunSave.discard(str((state.get("level", {}) as Dictionary).get("book", "")),
+			UserSettings.active_profile())
+	EventBus.run_resumed.emit(_wave_number, _run_started_at, Array(state.get("added", [])))
 
 
 ## Meldet das Ende des Laufs mit dem, was nur hier bekannt ist. Beide Ausgänge gehen

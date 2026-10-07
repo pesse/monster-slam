@@ -37,6 +37,9 @@ const ACCURACY_WINDOW_DAYS := 7
 ##                                 (der Wert wird erst in end() von GameState abgelesen,
 ##                                 eine laufende oder abgebrochene Sitzung hat ihn nicht)
 ##   aborted: bool               — nur bei hart beendeten Läufen (siehe load_sessions)
+##   suspended: bool             — nur bei begonnenen Läufen (ADR 0020)
+##   continues: int              — nur bei fortgesetzten: started_at des Laufs, den diese
+##                                 Sitzung fortsetzt (der ersten Sitzung, nicht der letzten)
 var _sessions: Array = []
 ## Die laufende Sitzung; leer = gerade kein Lauf.
 var _current: Dictionary = {}
@@ -51,6 +54,8 @@ func _ready() -> void:
 	UserSettings.active_profile_changed.connect(switch_to)
 	EventBus.run_started.connect(begin)
 	EventBus.run_ended.connect(end)
+	EventBus.run_suspended.connect(func(_next_wave): note_suspended())
+	EventBus.run_resumed.connect(func(_next_wave, started_at, _added): note_resumed(started_at))
 	EventBus.wave_cleared.connect(func(_wave_id): note_wave_cleared())
 	EventBus.item_reviewed.connect(func(_id, correct, response_time_ms): note_answer(correct, response_time_ms))
 
@@ -78,6 +83,20 @@ func begin() -> void:
 		# jede abgebrochene Sitzung (load_sessions) einen makellosen Lauf in die Rekorde.
 		"min_fortress_health": -1,
 	}
+
+
+## Die laufende Sitzung setzt einen begonnenen Lauf fort, der um `run_started_at` begann.
+func note_resumed(run_started_at: int) -> void:
+	if _current.is_empty() or run_started_at <= 0:
+		return
+	_current["continues"] = run_started_at
+
+
+## Der Lauf wird gerastet; das Ende kommt gleich danach mit `run_ended`.
+func note_suspended() -> void:
+	if _current.is_empty():
+		return
+	_current["suspended"] = true
 
 
 ## Verbucht eine beantwortete Aufgabe (richtig oder falsch).

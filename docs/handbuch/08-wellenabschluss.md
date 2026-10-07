@@ -75,8 +75,15 @@ Aufgaben du im Lauf neu gemeistert hast. Mit „↺“ markierte Wörter hast du
 
 Darunter wählst du die **Schwierigkeit der nächsten Welle**, im Vergleich zu der eben
 gespielten: „Viel leichter“, „Leichter“, „Gleich“, „Schwieriger“, „Viel schwieriger“.
-Vorausgewählt ist „Gleich“. Mit „Nächste Welle“ (oder Enter) geht es weiter, mit „⟵ Zurück zum
-Menü“ endet der Lauf.
+Vorausgewählt ist „Gleich“. Mit „Nächste Welle“ (oder Enter) geht es weiter.
+
+Links unten steht der Weg zurück:
+
+- **„⟵ Rasten“**, wenn du ein Level von der Landkarte spielst. Der Lauf wird gespeichert,
+  mit Welle, Festung und Rüstung, und du kommst zurück auf die Gebietskarte. Dort geht er
+  später weiter, auch an einem anderen Tag ([Kapitel 10](10-festung.md#rasten-und-weiterspielen)).
+- **„⟵ Zurück zum Menü“** im Expertenmodus und **„⟵ Zurück zur Liste“** beim Üben für einen
+  Test. Dort endet der Lauf.
 
 Jede neue Welle bringt ein Monster mehr als die vorige.
 

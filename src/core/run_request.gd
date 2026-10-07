@@ -8,7 +8,8 @@ extends RefCounted
 ## von der Karte mit den Filtern, die jemand irgendwann im Expertenmodus gesetzt hat.
 ##
 ## Der Zustand ist statisch, damit er den Szenenwechsel überdauert; er gehört dem Lauf,
-## nicht dem Profil, und wird nicht gespeichert. Ohne gesetztes Level gilt der
+## nicht dem Profil. Gespeichert wird er nur in einem begonnenen Lauf von der Karte, und
+## dort nur seine Orte (RunSave, ADR 0020). Ohne gesetztes Level gilt der
 ## Expertenmodus — so verhält sich jeder Einstieg, der RunRequest nicht kennt, wie bisher.
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
@@ -29,23 +30,32 @@ static var _test: Dictionary = {}
 ## Ihr Scope (TestLists.run_scope), beim Start einmal gerechnet.
 static var _test_scope: Array = []
 
+## Der begonnene Lauf, den der nächste Kampf fortsetzt (RunSave), sonst leer. Der Kampf
+## nimmt ihn genau einmal (`take_resume`): ein „Nochmal" von der Karte beginnt neu.
+static var _resume: Dictionary = {}
+
 
 ## Der nächste Kampf spielt dieses Level (von der Gebietskarte).
-static func start_level(level: Dictionary) -> void:
+## `resume` ist ein begonnener Lauf (RunSave), den der Kampf fortsetzt; `level` ist dann
+## das aus seinen Orten neu gebaute Level (RunSave.resumable_level).
+static func start_level(level: Dictionary, resume: Dictionary = {}) -> void:
 	_level = level.duplicate(true)
 	_test = {}
+	_resume = resume.duplicate(true)
 
 
 ## Der nächste Kampf spielt die Auswahl des Profils (Expertenmodus).
 static func start_expert() -> void:
 	_level = {}
 	_test = {}
+	_resume = {}
 
 
 ## Der nächste Kampf übt die Wörter einer Testliste.
 static func start_test(list: Dictionary) -> void:
 	_level = {}
 	_test = list.duplicate(true)
+	_resume = {}
 	_test_scope = TestLists.run_scope(_test, ContentRegistry.lexemes,
 			ContentRegistry.narrowest_scope)
 
@@ -97,6 +107,13 @@ static func first_person_selectable_with(bonuses: Dictionary, debug: bool) -> bo
 ## und unabhängig davon, dass die Tests selbst im Debug-Build laufen.
 static func first_person_with(bonuses: Dictionary, debug := false) -> bool:
 	return _first_person_wanted and first_person_selectable_with(bonuses, debug)
+
+
+## Gibt den begonnenen Lauf heraus, den dieser Kampf fortsetzt, und vergisst ihn.
+static func take_resume() -> Dictionary:
+	var out := _resume
+	_resume = {}
+	return out
 
 
 static func is_level() -> bool:

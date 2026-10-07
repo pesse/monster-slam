@@ -47,6 +47,8 @@ func _ready() -> void:
 	UserSettings.active_profile_changed.connect(switch_to)
 	EventBus.run_started.connect(note_run_start)
 	EventBus.run_ended.connect(note_run_end)
+	EventBus.run_suspended.connect(note_run_suspended)
+	EventBus.run_resumed.connect(note_run_resumed)
 	EventBus.wave_started.connect(func(wave_id): note_wave_start(wave_id))
 	EventBus.wave_cleared.connect(func(wave_id): note_wave_clear(wave_id))
 	EventBus.wave_fast_resolved.connect(note_fast_resolve)
@@ -85,6 +87,21 @@ func note_run_end(summary: Dictionary = {}) -> void:
 		"difficulty": int(summary.get("difficulty_last", 0)),
 		"won": bool(summary.get("last_wave_won", false)),
 	})
+
+
+## Gerastet (ADR 0020): mit dieser Welle kann der Lauf auf der Karte weitergehen.
+func note_run_suspended(next_wave: int) -> void:
+	_write({"e": "run_suspend", "next_wave": next_wave, "hp": GameState.fortress_health})
+
+
+## Ein begonnener Lauf geht weiter; `since` ist der Beginn des ursprünglichen Laufs,
+## `added` (nur wenn erweitert) die Orte, die dazukamen.
+func note_run_resumed(next_wave: int, run_started_at: int, added: Array = []) -> void:
+	var line := {"e": "run_resume", "next_wave": next_wave, "since": run_started_at,
+			"hp": GameState.fortress_health}
+	if not added.is_empty():
+		line["added"] = added
+	_write(line)
 
 
 func note_boss_start(boss_id: String) -> void:
