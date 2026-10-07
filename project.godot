@@ -37,6 +37,7 @@ UpdateService="*res://src/update/update_service.gd"
 ContentService="*res://src/content/content_service.gd"
 ModelService="*res://src/content/model_service.gd"
 ReportService="*res://src/report/report_service.gd"
+StatsUploader="*res://src/stats/stats_uploader.gd"
 Hints="*res://scenes/ui/hints.tscn"
 
 [display]

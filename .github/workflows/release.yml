@@ -96,6 +96,15 @@ jobs:
           path: reports/
           if-no-files-found: ignore
 
+      # Statistik-Kanal (ADR 0021): ohne Secret und Variable bleibt er in dieser Fassung
+      # aus — das ist ein gültiger Build, kein Fehler.
+      - name: Statistik-Schluessel einsetzen
+        shell: bash
+        env:
+          STATS_URL: ${{ vars.STATS_URL }}
+          STATS_APP_KEY: ${{ secrets.STATS_APP_KEY }}
+        run: bash tools/stats/write_key.sh
+
       - name: Exportieren
         shell: bash
         run: |

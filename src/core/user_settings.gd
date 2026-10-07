@@ -301,6 +301,55 @@ func set_selected_lexeme_types(types: PackedStringArray, profile := "") -> void:
 	_save()
 
 
+## Zufällige Kennung eines Profils für die Statistik (ADR 0021), 32 Hex-Zeichen. Wird beim
+## ersten Bedarf erzeugt und bleibt beim Umbenennen stehen: der Server soll Verläufe
+## zusammenhalten, ohne den Namen zu kennen. Die player_id taugt dafür nicht — sie ist der
+## Name. Leeres `profile` -> aktives Profil.
+func stats_id(profile := "") -> String:
+	var id := profile if not profile.is_empty() else active_profile()
+	var value := str(_config.get_value("stats_id", id, ""))
+	if value.is_empty():
+		value = Crypto.new().generate_random_bytes(16).hex_encode()
+		_config.set_value("stats_id", id, value)
+		_save()
+	return value
+
+
+## Hat dieser Rechner den Hinweis zur Statistik gesehen? Geräteweit: er gilt dem Rechner,
+## nicht dem Kind. Vorher wird nichts gesendet.
+func stats_notice_seen() -> bool:
+	return bool(_config.get_value("general", "stats_notice_seen", false))
+
+
+func set_stats_notice_seen(value: bool) -> void:
+	_config.set_value("general", "stats_notice_seen", value)
+	_save()
+
+
+## Bis wohin die bereinigte Spur eines Profils beim Server ist: [at, ms] der letzten
+## gesendeten Zeile. Den Stand bestätigt der Server (`have`), nicht die App.
+func stats_trace_cursor(profile: String) -> Array:
+	var value: Variant = _config.get_value("stats_cursor", profile, [0, 0])
+	if value is Array and (value as Array).size() == 2:
+		return [int(value[0]), int(value[1])]
+	return [0, 0]
+
+
+func set_stats_trace_cursor(profile: String, mark: Array) -> void:
+	_config.set_value("stats_cursor", profile, [int(mark[0]), int(mark[1])])
+	_save()
+
+
+## Wann der Snapshot eines Profils zuletzt angenommen wurde (unix, 0 = nie).
+func stats_sent_at(profile: String) -> int:
+	return int(_config.get_value("stats_sent", profile, 0))
+
+
+func set_stats_sent_at(profile: String, unix: int) -> void:
+	_config.set_value("stats_sent", profile, unix)
+	_save()
+
+
 ## Anzeigename -> sicherer player_id: klein, Leerzeichen zu '_', nur [a-z0-9_-].
 func _sanitize(name: String) -> String:
 	var lowered := name.strip_edges().to_lower()

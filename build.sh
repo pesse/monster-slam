@@ -44,6 +44,12 @@ bash tools/release/set_version.sh "$VERSION" "$OUT_WINDOWS" "$OUT_MACOS"
 
 mkdir -p exports
 
+# Statistik-Kanal (ADR 0021): nur mit stats_key.cfg (tools/stats/write_key.sh) sendet die
+# Fassung. Fehlt sie, ist das kein Fehler — aber man soll es wissen, bevor man verteilt.
+if [[ ! -f stats_key.cfg ]]; then
+	echo ">> Hinweis: stats_key.cfg fehlt — diese Fassung sendet keine Statistik." >&2
+fi
+
 # export <preset> <ausgabe>
 export_preset() {
 	local preset="$1" out="$2"

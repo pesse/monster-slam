@@ -8,6 +8,9 @@ ist das in der Regel `%APPDATA%\Godot\app_userdata\Monster Slam\`, auf dem Mac
 Protokolldatei zeigt der Reiter „Protokoll“ in den Einstellungen, und „Ordner öffnen“
 führt direkt dorthin.
 
+Was davon für die Entwicklung an unseren Server geht, und was nie, steht in
+[Kapitel 21: Spieldaten für die Entwicklung](21-spieldaten.md).
+
 ---
 
 ← [18. Wie das Spiel lernt](18-wie-das-spiel-lernt.md) · [Inhalt](README.md) · [20. Der Bosskampf](20-bosskampf.md) →
