@@ -23,7 +23,9 @@ extends Node3D
 ##         Normal-Bias, Weichheit; Tageszeit, Uhr, Zeitraffer und die Grenzen des SunCycle)
 ##         HUD (das Kampf-HUD zeigen; „Aufsteigen" lässt das Level-Badge aufleuchten,
 ##         die Felder darunter setzen HP, Rüstung, XP-Ring, Zählerzeile und Wellenfortschritt
-##         — nur GameState im Speicher und die Anzeige, nichts im Profil) und Bewuchs
+##         — nur GameState im Speicher und die Anzeige, nichts im Profil; „Aufgabe
+##         gemeistert" und „Wort gemeistert" spielen die Meister-Feier mit einem beliebigen
+##         Wort, ohne Lernstand) und Bewuchs
 ##         (Dichte, Klumpen, Helligkeit, Größe der Büschel, Sträucher; die oberen drei
 ##         gelten dem Thema und stehen nach dem Wechsel auf dessen Werten) —
 ##         Namen wie die Konstanten im Spiel. „Werte kopieren" legt sie als Konstanten in die
@@ -195,6 +197,7 @@ var _hud: Control
 var _shown_level := 1
 ## Das Standbild des Reiters Schreibweise, oder null, solange es nicht gebraucht wurde.
 var _spelling: SpellingFreeze
+var _celebration: MasteryCelebration
 
 
 func _ready() -> void:
@@ -364,6 +367,8 @@ func _fill_controls() -> void:
 	_fill_spelling_controls()
 	%HudCheck.toggled.connect(_show_hud)
 	%LevelUpButton.pressed.connect(_level_up)
+	%TaskMasteredButton.pressed.connect(_celebrate.bind(MasteryCelebration.Kind.TASK))
+	%WordMasteredButton.pressed.connect(_celebrate.bind(MasteryCelebration.Kind.WORD))
 	%KillsSpin.value_changed.connect(func(_v: float) -> void: _show_tally())
 	%MasteredSpin.value_changed.connect(func(_v: float) -> void: _show_tally())
 	for spin: SpinBox in [%WaveNumberSpin, %WaveResolvedSpin, %WaveTotalSpin, %HpSpin,
@@ -1177,6 +1182,29 @@ func _level_up() -> void:
 	(_hud.get_node("%LevelText") as Label).text = str(_shown_level)
 	%XpSpin.value = 5
 	(_hud.get("level_flare") as LevelFlare).play()
+
+
+## Die Meister-Feier wie im Kampf (WaveRunner._on_celebration_started): der Baum hält an,
+## solange sie steht. Gefeiert wird ein beliebiges geladenes Wort, an der Meisterung
+## vorbei — Lernstand und Spur bleiben unberührt.
+func _celebrate(kind: MasteryCelebration.Kind) -> void:
+	if _celebration == null:
+		_celebration = CELEBRATION_SCENE.instantiate() as MasteryCelebration
+		$UI.add_child(_celebration)
+		# Die Regler treten zurück, solange sie steht — sonst stünden sie im Bild.
+		_celebration.started.connect(func(_ms: int) -> void:
+			get_tree().paused = true
+			%Menu.visible = false)
+		_celebration.finished.connect(func() -> void:
+			get_tree().paused = false
+			%Menu.visible = %MenuToggle.button_pressed)
+	var lexemes := ContentRegistry.all("lexemes")
+	var lex: Dictionary = lexemes.pick_random() if not lexemes.is_empty() else {}
+	var id := str(lex.get("id", ""))
+	if kind == MasteryCelebration.Kind.TASK and not lex.is_empty():
+		var direction: String = Lexeme.mastery_directions(Lexeme.language(lex))[0]
+		id = TaskResolver.new().learnable_id("translate", direction, id)
+	_celebration.celebrate(kind, id)
 
 
 func _shoot_level_up() -> void:

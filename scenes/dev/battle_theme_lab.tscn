@@ -485,6 +485,16 @@ max_value = 999.0
 value = 15.0
 allow_greater = true
 
+[node name="TaskMasteredButton" type="Button" parent="UI/Margin/Root/Menu/Items/Tabs/HUD"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "Aufgabe gemeistert"
+
+[node name="WordMasteredButton" type="Button" parent="UI/Margin/Root/Menu/Items/Tabs/HUD"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "Wort gemeistert"
+
 [node name="Bewuchs" type="GridContainer" parent="UI/Margin/Root/Menu/Items/Tabs"]
 visible = false
 columns = 4
