@@ -10,26 +10,28 @@ extends Node
 ## zustellbare Meldung bleibt in `user://lexeme_flags.json` offen und geht beim nächsten
 ## Start mit. Gemeldet wird immer erst lokal, gesendet danach.
 ##
-## Ohne hinterlegtes Token (und ohne eingetragenen Endpunkt) ist der Kanal aus, und die
-## Oberfläche zeigt „Melden" gar nicht — eine Meldung, die nirgends ankommt, ist
-## ärgerlicher als ein fehlender Knopf.
+## Gemeldet wird mit dem App-Schlüssel, den auch der Statistik-Kanal trägt: jeder Spieler
+## einer Fassung mit Rückkanal darf melden, ein Token je Person gibt es nicht mehr
+## (docs/adr/0022-melden-ohne-token.md). Ohne eingetragenen Endpunkt und Schlüssel ist der
+## Kanal aus, und die Oberfläche zeigt „Melden" gar nicht — eine Meldung, die nirgends
+## ankommt, ist ärgerlicher als ein fehlender Knopf.
 
-## Zustand hat sich geändert. Empfänger lesen `state`, `error`, `label()`.
+## Zustand hat sich geändert. Empfänger lesen `state` und `error`.
 signal changed
 
 enum State {
 	IDLE,        ## Nichts zu tun
-	VERIFYING,   ## Token wird gegen den Endpunkt geprüft
 	SENDING,     ## Offene Meldungen gehen raus
 	ERROR,       ## Benannter Fehlschlag; `error` trägt den Text
 }
 
-## Der Endpunkt (server/melden/melden.php). **Leer = Rückkanal aus.**
-##
-## Absichtlich eine Konstante wie `MANIFEST_URL` im App-Kanal: die URL ist kein
-## Geheimnis, sie steht im öffentlichen Repo. Genau deshalb setzt der Endpunkt selbst die
-## Grenzen (Größe, Rate je Token) — hier davor steht nichts.
-const ENDPOINT := ""
+## Vom Export geschrieben wie beim Statistik-Kanal (`tools/stats/write_key.sh`), nicht im
+## Repo. Der Schlüssel ist derselbe, die URL steht in einer eigenen Sektion:
+##   [report]
+##   url="https://…/melden/melden.php"
+## Fehlt die Sektion oder der Schlüssel, ist der Rückkanal aus. Die URL ist kein
+## Geheimnis — genau deshalb setzt der Endpunkt selbst die Grenzen (Größe, Rate).
+const KEY_PATH := "res://stats_key.cfg"
 
 ## Antworten sind ein paar Bytes JSON. Die Schranke fängt eine falsch geroutete Antwort
 ## (Fehlerseite, HTML) ab, bevor sie als Antwort durchläuft.
@@ -43,9 +45,9 @@ const TARGET_TYPE_LEXEME := "lexeme"
 
 ## Die Gründe, die der Endpunkt benennt, in der Sprache der Oberfläche.
 const ERROR_TEXTS := {
-	"bad_token": "Token ist nicht gültig.",
-	"stale_key": "Token ist abgelaufen — bitte das neue eintragen.",
-	"revoked": "Token wurde zurückgezogen.",
+	"bad_token": "Diese Fassung darf nicht mehr melden — bitte das Spiel aktualisieren.",
+	"stale_key": "Diese Fassung darf nicht mehr melden — bitte das Spiel aktualisieren.",
+	"revoked": "Diese Fassung darf nicht mehr melden — bitte das Spiel aktualisieren.",
 	"too_large": "Meldung ist zu lang.",
 	"rate_limited": "Zu viele Meldungen — später noch einmal.",
 	"bad_payload": "Meldung war unvollständig.",
@@ -56,7 +58,10 @@ const ERROR_TEXTS := {
 var state: State = State.IDLE
 var error := ""
 
-var endpoint := ENDPOINT
+var endpoint := ""
+## App-Schlüssel `app-<n>.<mac>` und die Schlüsselversion, unter der er geprägt wurde.
+var key := ""
+var key_version := 1
 
 var _http: HTTPRequest
 ## HTTPRequest kann einen Vorgang; das verhindert, dass Startversand und Klick sich
@@ -70,69 +75,27 @@ func _ready() -> void:
 	_http.timeout = TIMEOUT_SECONDS
 	_http.body_size_limit = MAX_RESPONSE_BYTES
 	add_child(_http)
+	_load_key()
 	if OS.is_debug_build():
-		var override := OS.get_environment("MONSTER_SLAM_REPORT_URL")
-		if not override.is_empty():
-			endpoint = override
+		# Editor- und Testläufe melden nie von selbst — sie spielen im Entwicklungsprofil.
+		# Für einen Versuch gegen einen lokalen Endpunkt: beide Variablen setzen.
+		endpoint = OS.get_environment("MONSTER_SLAM_REPORT_URL")
+		key = OS.get_environment("MONSTER_SLAM_REPORT_KEY")
+		if not endpoint.is_empty():
 			print("ReportService: Endpunkt überschrieben -> %s" % endpoint)
 	if can_report():
 		# Stiller Nachversand beim Start — ohne await, das Spiel wartet auf niemanden.
 		_send_silently.call_deferred()
 
 
-## Melder-Name des hinterlegten Tokens, "" wenn keines hinterlegt ist.
-##
-## Bewusst abgeleitet statt gepuffert: der Name steht im Token, und der Endpunkt leitet
-## ihn genauso ab. Ein Feld daneben könnte nur falsch werden.
-func label() -> String:
-	return ReportToken.label_of(str(ReportToken.get_stored().get("token", "")))
-
-
-## Ist überhaupt ein Endpunkt eingetragen? Ohne ihn gibt es den Kanal nicht.
-func configured() -> bool:
-	return not endpoint.is_empty()
-
-
-## Darf dieser Rechner melden? Steuert, ob „Melden" in der Oberfläche erscheint.
+## Darf diese Fassung melden? Steuert, ob „Melden" in der Oberfläche erscheint.
 func can_report() -> bool:
-	return configured() and ReportToken.has_token()
+	return not endpoint.is_empty() and not key.is_empty()
 
 
 ## Anzahl offener (noch nicht gesendeter) Meldungen.
 func pending_count() -> int:
 	return LexemeFlags.pending().size()
-
-
-## Prüft ein abgetipptes Token gegen den Endpunkt und hinterlegt es bei Erfolg.
-##
-## Die Prüfung muss übers Netz: das Geheimnis liegt auf dem Server, die App kann nur die
-## Gestalt prüfen. Dafür ist die Rückmeldung echt („Token gilt für Mia") statt eines
-## stillen Speicherns, das erst bei der ersten Meldung auffällt.
-##
-## `key_version` wird bewusst NICHT mitgesendet — die App lernt sie aus der Antwort.
-func verify(raw_token: String) -> bool:
-	if not configured():
-		_fail("Für diese Fassung ist kein Rückkanal eingetragen.")
-		return false
-	var token := ReportToken.normalize(raw_token)
-	if token.is_empty():
-		_fail("Das sieht nicht wie ein Melde-Token aus (erwartet: name.XXXX-XXXX-XXXX-XXXX).")
-		return false
-	_set_state(State.VERIFYING)
-	var answer := await _post({"action": "verify"}, token)
-	if not answer["error"].is_empty():
-		_fail(answer["error"])
-		return false
-	var data: Dictionary = answer["data"]
-	ReportToken.store(token, int(data.get("key_version", 1)))
-	_set_state(State.IDLE)
-	return true
-
-
-## Nimmt das Token zurück. Danach ist „Melden" wieder aus; die lokalen Meldungen bleiben.
-func forget() -> void:
-	ReportToken.forget()
-	_set_state(State.IDLE)
 
 
 ## Schickt alle offenen Meldungen, eine nach der anderen. Gibt true zurück, wenn danach
@@ -147,21 +110,18 @@ func send_pending(loud: bool) -> bool:
 	var open := LexemeFlags.pending()
 	if open.is_empty():
 		return true
-	var stored := ReportToken.get_stored()
-	var token := str(stored.get("token", ""))
-	var key_version := int(stored.get("key_version", 1))
 	_busy = true
 	_set_state(State.SENDING)
 	var all_sent := true
 	var last_error := ""
 	for item in open:
-		var payload := _payload(item, key_version)
-		var answer := await _post(payload, token)
+		var payload := _payload(item)
+		var answer := await _post(payload)
 		if not answer["error"].is_empty():
 			all_sent = false
 			last_error = answer["error"]
 			# Der erste Fehlschlag beendet den Lauf: was den einen Versand hindert
-			# (kein Netz, gesperrtes Token), hindert auch die anderen.
+			# (kein Netz, gesperrter Schlüssel), hindert auch die anderen.
 			break
 		ContentRegistry.mark_flag_sent(String(item.get("lexeme_id", "")))
 	_busy = false
@@ -178,8 +138,9 @@ func send_pending(loud: bool) -> bool:
 
 ## Der Payload einer Meldung. `target_type`/`target_id` statt `lexeme_id`, damit gemeldete
 ## Sätze später dazupassen; Herkunft (App-Fassung, Pack) mit, weil eine Meldung sonst zu
-## einem Wort im Raum steht, das inzwischen längst korrigiert wurde.
-func _payload(item: Dictionary, key_version: int) -> Dictionary:
+## einem Wort im Raum steht, das inzwischen längst korrigiert wurde. Die Profilnummer
+## (`stats_id`) geht mit, wenn die Meldung sie trägt — ältere Einträge haben keine.
+func _payload(item: Dictionary) -> Dictionary:
 	var lexeme_id := String(item.get("lexeme_id", ""))
 	var payload := {
 		"action": "report",
@@ -191,6 +152,9 @@ func _payload(item: Dictionary, key_version: int) -> Dictionary:
 		"at": String(item.get("at", "")),
 		"app_version": str(ProjectSettings.get_setting("application/config/version", "")),
 	}
+	var stats_id := String(item.get("stats_id", ""))
+	if not stats_id.is_empty():
+		payload["stats_id"] = stats_id
 	var pack_id := ContentRegistry.pack_of("lexemes", lexeme_id)
 	if not pack_id.is_empty():
 		payload["pack"] = {
@@ -202,10 +166,10 @@ func _payload(item: Dictionary, key_version: int) -> Dictionary:
 
 ## Ein Vorgang gegen den Endpunkt. Rückgabe: {"error": String, "data": Dictionary}.
 ## `error` ist der fertige Anzeigetext, nicht der Code des Endpunkts.
-func _post(payload: Dictionary, token: String) -> Dictionary:
+func _post(payload: Dictionary) -> Dictionary:
 	var headers := PackedStringArray([
 		"Content-Type: application/json",
-		"Authorization: Bearer %s" % token,
+		"Authorization: Bearer %s" % key,
 	])
 	var err := _http.request(endpoint, headers, HTTPClient.METHOD_POST, JSON.stringify(payload))
 	if err != OK:
@@ -222,6 +186,15 @@ func _post(payload: Dictionary, token: String) -> Dictionary:
 		var code := str(data.get("error", ""))
 		return {"error": str(ERROR_TEXTS.get(code, "Abgewiesen (%s)." % code)), "data": data}
 	return {"error": "", "data": data}
+
+
+func _load_key() -> void:
+	var config := ConfigFile.new()
+	if config.load(KEY_PATH) != OK:
+		return
+	endpoint = str(config.get_value("report", "url", ""))
+	key = str(config.get_value("stats", "key", ""))
+	key_version = int(config.get_value("stats", "key_version", 1))
 
 
 func _send_silently() -> void:

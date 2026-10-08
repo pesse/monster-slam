@@ -112,6 +112,26 @@ func _ready() -> void:
 	_show_page(MENU if intro_done else INTRO)
 	_settle()
 	_unveil()
+	_show_stats_notice()
+
+
+## Einmal je Rechner, bevor die erste Statistik hinausgeht (ADR 0021). Nur in einer
+## Fassung, die überhaupt senden kann — eine ohne Schlüssel hat nichts mitzuteilen.
+## Auch Escape gilt als gesehen: der Hinweis informiert, er fragt nicht.
+func _show_stats_notice() -> void:
+	if not StatsUploader.configured() or UserSettings.stats_notice_seen():
+		return
+	var notice := %StatsNotice as ConfirmDialog
+	notice.inform("Spieldaten für die Entwicklung",
+			"Dieses Spiel ist in einer sehr frühen Entwicklungsphase. Damit es besser wird, schickt es nach jedem "
+			+ "Lauf anonymisierte Spieldaten verschlüsselt an unseren Server in Deutschland: Fortschritt, Gold, Erfahrung, "
+			+ "welche Wörter wie oft richtig waren und wie lange die Antworten dauerten.\n\n"
+			+ "Niemals gespeichert wird: Namen und getippte Antworten. Nur wer ein Wort bewusst "
+			+ "meldet, kann einen Kommentar mitschicken – auch dann bleibt das anonym. "
+			+ "Jedes Profil bekommt eine zufällige Nummer, die nicht mit einem Namen verknüpft werden kann.\n\n"
+			+ "Genaueres steht im Handbuch unter „Spieldaten“.", "Verstanden")
+	notice.confirmed.connect(StatsUploader.notice_acknowledged, CONNECT_ONE_SHOT)
+	notice.cancelled.connect(StatsUploader.notice_acknowledged, CONNECT_ONE_SHOT)
 
 
 ## Schaltet auf das Profil `id` und schiebt ins Menü.

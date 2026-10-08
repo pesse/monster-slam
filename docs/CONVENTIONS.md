@@ -64,8 +64,12 @@ urheberrechtlich geschütztem Lehrbuchmaterial und liegen im privaten Submodule
 - Nur lokal, nie committen: `assets/maps/*/drafts/` (steht in `.git/info/exclude`).
 - Jeder Content-Generierungslauf (Vokabeln, Formen, Relationen, Sätze) wird in einem
   nicht öffentlichen Generierungsprotokoll festgehalten (Ansatz, Modell, Ergebnis).
-- Die Spur (`user://logs/*_trace.jsonl`) enthält getippte Kindertexte und Lemmata — sie
-  verlässt den Rechner nicht.
+- Die Rohspur (`user://logs/*_trace.jsonl`) enthält getippte Kindertexte und Lemmata — sie
+  verlässt den Rechner nicht. Hinaus geht nur, was `TraceSanitizer` daraus macht (ADR 0021);
+  ein neues Spurereignis oder -feld wird dort bewusst eingetragen, sonst bleibt es daheim.
+- Was der Statistik-Kanal aus `user://progress/` sendet, steht in
+  `StatsUploader.SNAPSHOT_FILES` (Allowlist je Datei). Nie: Profilname, player_id,
+  getippter Text. Die Auswertung (`stats-data/`, `tools/stats/report.py`) bleibt lokal.
 
 ## Geheimnisse
 
@@ -73,6 +77,9 @@ urheberrechtlich geschütztem Lehrbuchmaterial und liegen im privaten Submodule
   gitignored). Der öffentliche Schlüssel steht absichtlich in `src/update/release_key.gd`.
 - HMAC-Geheimnis des Melde-Endpunkts: nur in `ms-secret.php` über dem Docroot — nicht ins
   Repo, kein GitHub-Secret, keine Konstante. Geprägte Token werden nicht committet.
+- App-Schlüssel des Statistik-Kanals: nur im GitHub-Secret `STATS_APP_KEY` und in der
+  gitignorierten `stats_key.cfg`, die `tools/stats/write_key.sh` vor dem Export schreibt.
+  Er steckt in der EXE und ist damit kein Geheimnis, aber auch nichts fürs Repo.
 
 ## Release-Notes
 

@@ -189,6 +189,7 @@ function report_body(array $extra = []): array
         'at' => '2026-09-02T18:04:11',
         'app_version' => '0.3.1',
         'pack' => ['id' => 'zz-test-pack', 'version' => 'v7'],
+        'stats_id' => '0123456789abcdef0123456789abcdef',
     ], $extra);
 }
 
@@ -255,6 +256,8 @@ scenario('Meldung annehmen', [], function (array $ctx): void {
     check('Pack-Herkunft steht drin',
         ($entry['pack_id'] ?? '') === 'zz-test-pack' && ($entry['pack_version'] ?? '') === 'v7');
     check('App-Fassung steht drin', ($entry['app_version'] ?? '') === '0.3.1');
+    check('Profilnummer steht drin',
+        ($entry['stats_id'] ?? '') === '0123456789abcdef0123456789abcdef');
     check('Empfangszeit wird gesetzt', ($entry['received_at'] ?? '') !== '');
 
     // Verlorene Antwort, Spiel schickt erneut.
@@ -276,6 +279,22 @@ scenario('Meldung annehmen', [], function (array $ctx): void {
         $last = end($lines);
         return ($last['comment'] ?? '') === 'böseZeichen';
     })());
+
+    // Ältere Fassungen senden keine Profilnummer, und eine kaputte darf die Meldung nicht
+    // kosten — sie fällt nur weg.
+    foreach ([
+        ['ohne Profilnummer', null, '2026-09-02T21:00:00'],
+        ['kaputte Profilnummer', '../../etc/passwd', '2026-09-02T22:00:00'],
+        ['Profilnummer in Großbuchstaben', '0123456789ABCDEF0123456789ABCDEF', '2026-09-02T23:00:00'],
+    ] as [$name, $sid, $at]) {
+        [$status, $data] = request($ctx['url'], 'POST', $ctx['token'],
+            report_body(['at' => $at, 'stats_id' => $sid]));
+        $lines = reports($ctx);
+        $last = end($lines);
+        check("$name: angenommen, Feld leer",
+            ($data['stored'] ?? null) === true && ($last['stats_id'] ?? null) === '',
+            "Status $status, gespeichert: " . var_export($last['stats_id'] ?? null, true));
+    }
 });
 
 scenario('Meldung abweisen', [], function (array $ctx): void {

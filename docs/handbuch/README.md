@@ -37,3 +37,4 @@ als Nächstes drankommt — steht in [Kapitel 18: Wie das Spiel lernt](18-wie-da
 18. [Wie das Spiel lernt](18-wie-das-spiel-lernt.md)
 19. [Wo die Daten liegen](19-daten.md)
 20. [Der Bosskampf](20-bosskampf.md)
+21. [Spieldaten für die Entwicklung](21-spieldaten.md)

@@ -1085,9 +1085,10 @@ Zeile JSON.
 - **Abschaltbar, Vorgabe an** (`UserSettings.trace_enabled`, geräteweit wie die Lautstärke).
   Der Zugang ist der Reiter „Protokoll" im Einstellungs-Fenster: Pfad, Ordner öffnen, leeren.
   Eine Aufzeichnung, die man erst einschalten muss, ist beim Fehler von gestern leer.
-- **Die Spur bleibt auf dem Rechner.** Sie enthält getippte Kindertexte und Lemmata aus
+- **Die Rohspur bleibt auf dem Rechner.** Sie enthält getippte Kindertexte und Lemmata aus
   geschütztem Material — anders als der Melde-Rückkanal, der nur Ids kennt. Das ist der
-  Unterschied und keine Nachlässigkeit. Sie geht deshalb in kein Repo.
+  Unterschied und keine Nachlässigkeit. Sie geht deshalb in kein Repo. Der
+  Statistik-Kanal sendet nur ihre bereinigte Fassung (siehe „Der Statistik-Kanal“).
 - **Felder kommen dazu, sie werden nicht umbenannt** — eine Zeile von gestern muss lesbar
   bleiben (dieselbe Regel wie bei den Packs). `JSON.stringify` läuft mit
   `sort_keys = false`, damit Zeit und Art vorn stehen: eine Spur wird gelesen.
@@ -1164,7 +1165,8 @@ auch nur einen Veröffentlicher: der Workflow im Content-Repo, den eine Änderun
 
 ## Der Melde-Kanal: der Weg zurück
 
-Entscheidung und Begründung: `docs/adr/0002-melde-rueckkanal.md`.
+Entscheidung und Begründung: `docs/adr/0002-melde-rueckkanal.md`, Berechtigung seit
+`docs/adr/0022-melden-ohne-token.md`.
 
 Die beiden Kanäle oben liefern **zum** Spieler. Der dritte geht nach oben: eine Meldung
 („dieses Wort ist falsch") wird zu einer Korrektur im privaten Content-Repo und kommt über
@@ -1172,17 +1174,17 @@ den Content-Kanal als Pack-Update zurück.
 
 | | Melde-Kanal |
 |---|---|
-| Was | eine Meldung: Ziel-Id, Kommentar, App- und Pack-Fassung (wenige Bytes) |
+| Was | eine Meldung: Ziel-Id, Kommentar, App- und Pack-Fassung, Profilnummer (`stats_id`) (wenige Bytes) |
 | Autoload | `ReportService` (`src/report/`) |
 | Ziel | eigener PHP-Endpunkt, `server/melden/melden.php`; Ablage als JSON Lines **über** dem Docroot |
-| Berechtigung | Melde-Token je Person, `<label>.<mac>` mit HMAC — geprägt von `tools/report/mint_token.py`, geprüft vom Endpunkt |
-| Ablage des Tokens | `user://codes.cfg`, Sektion `report` (`ReportToken`) — wie die Zugangscodes **kein** Geheimnisspeicher |
+| Berechtigung | App-Schlüssel `app-<n>.<mac>` der Fassung, derselbe wie beim Statistik-Kanal — geprägt von `tools/report/mint_token.py`, geprüft vom Endpunkt |
+| Konfiguration | `stats_key.cfg` (beim Export geschrieben): Schlüssel in `[stats]`, URL in `[report]` |
 | UI | Reiter „Melden" in `scenes/ui/settings_menu.tscn`; „⚑ Melden" im Reveal |
 
-**Ohne hinterlegtes Token gibt es „Melden" nicht** — der Knopf im Reveal und die
+**Ohne Endpunkt und Schlüssel gibt es „Melden" nicht** — der Knopf im Reveal und die
 Meldungsliste erscheinen nicht. Das ist eine Bedienungsentscheidung, keine Schranke: eine
 Meldung, die nirgends ankommt, ist ärgerlicher als ein fehlender Knopf. Die Schranke sitzt
-im Endpunkt, der das Token prüft, Größe und Rate deckelt und ein zurückgezogenes Label
+im Endpunkt, der den Schlüssel prüft, Größe und Rate deckelt und ein zurückgezogenes Label
 sperrt.
 
 Gemeldet wird **immer erst lokal**, gesendet danach: ein Netzfehler lässt die Meldung offen
@@ -1198,10 +1200,39 @@ Endpunkt kennt bloß Ids. Zustand hält es keinen: es liest per `gh issue list`,
 dort steht, erkennt Vorhandenes an unsichtbaren Markern im Issue-Text und trägt nur
 Fehlendes nach, also beliebig oft wiederholbar (`server/melden/README.md`).
 
-Das HMAC-Geheimnis liegt **ausschließlich** auf dem Server (`server/melden/README.md`). Die
-Endpunkt-URL ist dagegen eine Konstante im öffentlichen Repo (`ReportService.ENDPOINT`) —
-kein Geheimnis, und genau deshalb muss der Endpunkt seine Grenzen selbst setzen. Ist sie
-leer, ist der Kanal aus.
+Das HMAC-Geheimnis liegt **ausschließlich** auf dem Server (`server/melden/README.md`). URL
+und App-Schlüssel kommen beim Export in die EXE und sind kein Geheimnis — genau deshalb
+muss der Endpunkt seine Grenzen selbst setzen. Fehlt eins davon, ist der Kanal aus.
+
+## Der Statistik-Kanal: Spieldaten der Testspieler
+
+Entscheidung und Begründung: `docs/adr/0021-statistik-rueckkanal.md`.
+
+| | Statistik-Kanal |
+|---|---|
+| Was | je Profil ein Snapshot aus `user://progress/` und die bereinigte Spur, gzip-gepackt |
+| Autoload | `StatsUploader` (`src/stats/`), Bereinigung `TraceSanitizer` |
+| Ziel | `server/statistik/statistik.php` neben dem Melde-Endpunkt; Ablage `ms-stats/<stats_id>/` **über** dem Docroot |
+| Berechtigung | App-Schlüssel `app-<n>.<mac>` (Format wie Melde-Token), beim Export als `stats_key.cfg` eingesetzt |
+| Zuordnung | `UserSettings.stats_id` — zufällig je Profil, nie player_id oder Name |
+| Auswertung | lokal: `tools/stats/fetch.sh` (SFTP) → `tools/stats/report.py` → `stats-data/report.html` |
+
+- **Was hinausgeht, steht an genau zwei Stellen**: `StatsUploader.SNAPSHOT_FILES` (je Datei
+  unter `user://progress/` die erlaubten Schlüssel) und `TraceSanitizer.KEEP` (je
+  Spurereignis die erlaubten Felder). Beides sind Allowlists; was neu dazukommt, bleibt
+  daheim, bis es dort steht.
+- **Getipptes wird zu Zahlen.** Eine `answer`-Zeile verliert `text` und `canonical` und
+  bekommt `len`, `words` und `dist` — den Levenshtein-Abstand (über `AnswerEvaluator.tokens`)
+  zur nächsten Lösung, die die `spawn`-Zeilen davor nennen; bei einem Fehlversuch dazu
+  `near`, die Aufgabe dieser Lösung. Deshalb liest die Bereinigung die Spur immer von vorn.
+- **Der Cursor gehört dem Server**: die App schickt `from`/`to` als `[at, ms]`, der Server
+  antwortet `have`. Ein Stück endet nie mitten in einer Gruppe gleicher Marken.
+- **Wann**: `run_ended`, `boss_ended` (aktives Profil) und beim Start jedes Profil mit
+  Änderungen seit dem letzten Snapshot. Nur nach dem Hinweis im Startmenü
+  (`UserSettings.stats_notice_seen`), nie in Debug-Läufen, nie für `zz-`-Profile.
+- **Ohne `stats_key.cfg` ist der Kanal aus** — dort stehen URL und Schlüssel. Für einen
+  Versuch gegen einen lokalen Endpunkt in einem Debug-Lauf: `MONSTER_SLAM_STATS_URL` und
+  `MONSTER_SLAM_STATS_KEY` (unter WSL über `WSLENV` an Godot durchreichen).
 
 ## Auskunft am Zeiger (`Hints`, `src/ui/hints.gd`)
 

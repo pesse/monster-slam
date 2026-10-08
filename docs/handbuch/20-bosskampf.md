@@ -41,4 +41,4 @@ Detail. Deshalb zählt der Bosskampf vorerst nicht für den Lernstand.
 
 ---
 
-← [19. Wo die Daten liegen](19-daten.md) · [Inhalt](README.md)
+← [19. Wo die Daten liegen](19-daten.md) · [Inhalt](README.md) · [21. Spieldaten für die Entwicklung](21-spieldaten.md) →

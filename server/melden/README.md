@@ -72,14 +72,17 @@ Das ist die schlechtere Variante — sie schützt nur, solange Apache die `.htac
    Beide rechnen dieselben Vektoren. Weichen sie ab, ist das Format auseinandergelaufen
    und kein Token stimmt mehr — dann nicht weitermachen.
 
-5. **Token prägen und mitteilen**:
+5. **App-Schlüssel prägen** (seit ADR 0022 meldet jeder Spieler damit, ein Token je
+   Person gibt es in der App nicht mehr; derselbe Schlüssel gilt für die Statistik):
 
    ```bash
-   MONSTER_SLAM_REPORT_SECRET=<hex> python3 tools/report/mint_token.py mia leo
+   python3 tools/report/mint_token.py --secret-file <datei-mit-geheimnis> app-1
    ```
 
-6. **Die URL in die App eintragen**: `ENDPOINT` in `src/report/report_service.gd`.
-   Solange sie leer ist, ist der Rückkanal aus und „Melden" erscheint nirgends.
+6. **In GitHub hinterlegen**: Secret `STATS_APP_KEY` = der Schlüssel, Repo-Variable
+   `REPORT_URL` = `https://<domain>/melden/melden.php`. Der Release-Workflow schreibt beides
+   in `stats_key.cfg` (`tools/stats/write_key.sh`). Fehlt eins davon, ist der Rückkanal aus
+   und „Melden" erscheint nirgends.
 
 ## Örtlich prüfen, ohne PHP zu installieren
 
@@ -106,7 +109,9 @@ als Windows-Binary über `tools/godot.sh` und ist darin nicht enthalten.
 **Ganz durch, mit dem echten Spiel**: im Container `php -S 0.0.0.0:8080 -t <docroot>`
 starten (Port 8080 ist in `devcontainer.json` weitergegeben), in der Konfiguration
 `MS_REQUIRE_HTTPS = false` setzen und Godot im Debug-Build mit
-`MONSTER_SLAM_REPORT_URL=http://localhost:8080/melden/melden.php` starten. Dann meldet das
+`MONSTER_SLAM_REPORT_URL=http://127.0.0.1:8080/melden/melden.php` und
+`MONSTER_SLAM_REPORT_KEY=<app-Schlüssel>` starten (unter WSL zusätzlich
+`WSLENV=MONSTER_SLAM_REPORT_URL:MONSTER_SLAM_REPORT_KEY`). Dann meldet das
 Spiel wirklich, und die Zeile landet wirklich in der JSONL.
 
 ## Von Hand durchspielen
@@ -157,9 +162,9 @@ RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
   Sicherung gehört so wenig in ein Repo wie `raw/`.
 - **Token sperren**: Label in `ms-reports/revoked.txt` schreiben, eines je Zeile. Wirkt
   sofort, ohne neues Geheimnis.
-- **Geheimnis wechseln**: neues erzeugen, `MS_KEY_VERSION` hochzählen, Token neu prägen
-  und mitteilen. Alte Token antworten danach `stale_key`, und die App sagt „Token ist
-  abgelaufen, bitte neu eintragen" statt „ungültig".
+- **Geheimnis wechseln**: neues erzeugen, `MS_KEY_VERSION` hochzählen, den App-Schlüssel
+  neu prägen (`STATS_APP_KEY`, `STATS_KEY_VERSION`) und eine neue Fassung bauen. Ältere
+  Fassungen antworten danach `stale_key`, und die App bittet ums Aktualisieren.
 - **Auswerten**: Datei herunterladen und lesen, z. B.
   `jq -r '[.received_at,.label,.target_id,.comment] | @tsv' reports.jsonl`.
 
@@ -170,9 +175,10 @@ Wort sind drei Zeilen. Gearbeitet wird an Issues im privaten Content-Repo — **
 gemeldetem Wort**, mit allen Meldungen dazu als Belege. Das macht `tools/report/to_issues.py`:
 
 ```bash
-# reports.jsonl per SFTP holen (sie ist über keine URL abrufbar), dann:
-python3 tools/report/to_issues.py --from-file reports.jsonl --dry-run
-python3 tools/report/to_issues.py --from-file reports.jsonl
+# holt reports.jsonl per SFTP nach stats-data/ (sie ist über keine URL abrufbar) und
+# reicht sie an tools/report/to_issues.py weiter:
+REPORT_SFTP=<benutzer>@<sftp-host> tools/report/fetch.sh --dry-run
+REPORT_SFTP=<benutzer>@<sftp-host> tools/report/fetch.sh --issues
 ```
 
 Warum das ein eigener Schritt ist und nicht im Endpunkt steckt:

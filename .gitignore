@@ -26,6 +26,11 @@ ms-secret.php
 *.report-secret
 report-tokens.txt
 
+# Statistik-Kanal (ADR 0021): App-Schlüssel und URL schreibt tools/stats/write_key.sh vor
+# dem Export; heruntergeladene Statistik (tools/stats/fetch.sh) bleibt auf dem Rechner.
+stats_key.cfg
+/stats-data/
+
 # Python-Bytecode der Werkzeuge unter tools/
 __pycache__/
 

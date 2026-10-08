@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3]
+[gd_scene load_steps=21 format=3]
 
 [ext_resource type="Script" path="res://src/ui/profile_menu.gd" id="1_menu"]
 [ext_resource type="PackedScene" path="res://scenes/ui/update_dialog.tscn" id="2_update"]
@@ -17,6 +17,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/handbook_link.tscn" id="16_handbook"]
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/handbook.webp" id="17_handbook_icon"]
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/quit.webp" id="18_quit_icon"]
+[ext_resource type="PackedScene" path="res://scenes/ui/confirm_dialog.tscn" id="19_confirm"]
 
 [sub_resource type="Gradient" id="ShadeGradient"]
 colors = PackedColorArray(0.03, 0.04, 0.08, 0.6, 0.03, 0.04, 0.08, 0)
@@ -290,3 +291,7 @@ grow_horizontal = 0
 
 [node name="UpdateDialog" parent="." instance=ExtResource("2_update")]
 unique_name_in_owner = true
+
+[node name="StatsNotice" parent="." instance=ExtResource("19_confirm")]
+unique_name_in_owner = true
+visible = false

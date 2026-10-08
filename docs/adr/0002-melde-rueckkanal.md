@@ -2,6 +2,9 @@
 
 Status: **umgesetzt** (Endpunkt geprüft, noch nicht deployt) · Datum: 2026-09-02 · Baut auf: ADR 0001
 
+> **Geändert durch ADR 0022:** Das Token je Person ist auf der App-Seite ausgebaut; gemeldet
+> wird mit dem App-Schlüssel der Fassung. Der Endpunkt ist unverändert.
+
 ## Kontext
 
 „Melden" gibt es im Spiel schon: im Reveal markiert der Spieler ein Lexem mit

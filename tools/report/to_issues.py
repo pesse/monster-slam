@@ -143,6 +143,9 @@ def title_for(target_type: str, target_id: str, entry: dict | None) -> str:
 def render_report(report: dict) -> str:
     """Ein Beleg: wer, wann, was — plus der Marker, an dem er wiedererkannt wird."""
     origin = []
+    if report.get("stats_id"):
+        # Die ganze Nummer: sie ist der Ordnername unter stats-data/ms-stats/ (ADR 0022).
+        origin.append("Profil `%s`" % report["stats_id"])
     if report.get("app_version"):
         origin.append("App %s" % report["app_version"])
     if report.get("pack_id"):
@@ -406,10 +409,12 @@ def self_test() -> int:
                                                  "type": "noun", "book": "a2", "unit": "3"},
                              [{"label": "mia", "target_id": "lex.x", "comment": "falsch",
                                "at": "t", "ts": 1, "app_version": "0.3.1", "pack_id": "p",
-                               "pack_version": "v7", "learnable_id": "task.x"}])
+                               "pack_version": "v7", "learnable_id": "task.x",
+                               "stats_id": "0123456789abcdef0123456789abcdef"}])
     assert target_of_body(body) == ("lexeme", "lex.x"), target_of_body(body)
     assert keys_in(body) == {"mia|lex.x|t"}, keys_in(body)
     assert "Pack p v7" in body and "task.x" in body
+    assert "Profil `0123456789abcdef0123456789abcdef`" in body
 
     # Ein Issue ohne Marker (von Hand angelegt) darf nicht als Treffer gelten.
     assert target_of_body("nur Text") is None

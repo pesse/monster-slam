@@ -16,7 +16,9 @@ extends Node
 ##    lesbar bleiben; dieselbe Regel wie bei den Content-Packs und aus demselben Grund.
 ## 3. **Das Protokoll bleibt auf diesem Rechner.** Es enthält getippte Kindertexte und
 ##    Lemmata aus geschütztem Material. Der Melde-Rückkanal kennt Ids, dieses Protokoll
-##    kennt Wörter — die Grenze ist der Punkt, nicht ein Versehen.
+##    kennt Wörter — die Grenze ist der Punkt, nicht ein Versehen. Hinaus geht nur die
+##    bereinigte Fassung (`TraceSanitizer`, ADR 0021): wer hier ein Ereignis oder Feld
+##    ergänzt, entscheidet dort, was davon mitgeht.
 ##
 ## Persistenz: JSON Lines unter user://logs/<player_id>_trace.jsonl, eine Zeile je
 ## Ereignis, zwei Generationen (siehe max_bytes). Geschrieben wird sofort und mit flush():
