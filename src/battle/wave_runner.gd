@@ -171,6 +171,15 @@ var _abort_paused_here := false
 var _spell_fx := SpellFx.new()
 ## Der wievielte Blitz des laufenden Donnerschlags als nächster fällt (`_strike`).
 var _strike_index := 0
+## Kleine Erfolge (Issue #63); gezeigt werden sie von der Meister-Feier.
+var _badges := Badges.new()
+## Tiefster HP-Stand der laufenden Welle — für das Comeback.
+var _wave_low_hp := 0
+## Sind die Plaketten der gewonnenen Welle schon gemeldet? _check_end kommt nach ihrer Feier
+## ein zweites Mal vorbei.
+var _wave_badges_done := false
+## Die nächste Beispiel-Plakette des Debug-Panels.
+var _debug_badge := 0
 
 
 func _ready() -> void:
@@ -236,6 +245,8 @@ func _ready() -> void:
 		debug_panel.fortress_tier_selected.connect(_on_debug_tier_selected)
 	if debug_panel.has_signal("celebration_requested"):
 		debug_panel.celebration_requested.connect(_on_debug_celebration)
+	if debug_panel.has_signal("badge_requested"):
+		debug_panel.badge_requested.connect(_on_debug_badge)
 	if debug_panel.has_signal("level_up_requested"):
 		debug_panel.level_up_requested.connect(_level_flare.play)
 	if _stats.has_signal("next_wave_requested"):
@@ -1270,6 +1281,9 @@ func _start_next_wave() -> void:
 	# die Feier noch an.
 	_spelling_due.clear()
 	_celebration.release()
+	_badges.new_wave()
+	_wave_low_hp = GameState.fortress_health
+	_wave_badges_done = false
 	_fast_resolve_button.visible = true
 	_fast_resolve_button.disabled = false
 	_spells.reset_wave()
@@ -1649,6 +1663,8 @@ func _score_hit(monster: Monster, text: String = "", verdict: Dictionary = {}) -
 		_spelling_due[monster.get_instance_id()] = [full_form,
 				AnswerEvaluator.spelling_marks(full_form, text),
 				AnswerEvaluator.missing_marks(full_form, text)]
+	# Der Stand davor: record() überschreibt, woran Revanche und Co. hängen.
+	var badge_ctx := _badges.before_hit(task_id)
 	var newly_mastered := PlayerProgress.record(task_id, true, rt,
 			float(monster.task.get("initial_confidence", -1.0)))
 	EventBus.item_reviewed.emit(task_id, true, rt)
@@ -1665,6 +1681,8 @@ func _score_hit(monster: Monster, text: String = "", verdict: Dictionary = {}) -
 		var lexeme_id := PlayerProgress.mastered_lexeme_of(task_id)
 		if not lexeme_id.is_empty():
 			EventBus.lexeme_mastered.emit(lexeme_id)
+	# Nach der Meisterung: ihre Feier geht vor.
+	_announce_badges(_badges.after_hit(badge_ctx))
 	var weapon := _fp.weapon if _fp != null else FirstPersonView.Weapon.NONE
 	if weapon == FirstPersonView.Weapon.CHARGE:
 		_defeat_by_charge(monster)
@@ -1775,6 +1793,24 @@ func _on_debug_celebration(word: bool) -> void:
 		_celebration.celebrate(MasteryCelebration.Kind.WORD, str(task.get("source_id", "")))
 	else:
 		_celebration.celebrate(MasteryCelebration.Kind.TASK, str(task.get("learnable_id", "")))
+
+
+## Meldet Plaketten der Spur und der Feier; true, wenn welche da waren.
+func _announce_badges(badges: Array) -> bool:
+	for badge: Dictionary in badges:
+		EventBus.badge_earned.emit(str(badge["id"]), int(badge["tier"]))
+		_celebration.announce(badge)
+	return not badges.is_empty()
+
+
+## Debug-Panel: zeigt reihum je eine Plakette jeder Art, ohne sie zu verdienen (keine Spur,
+## keine Datei). Nicht in der Pause, aus demselben Grund wie die Meister-Feier.
+func _on_debug_badge() -> void:
+	if _paused_since_ms >= 0:
+		return
+	var samples := Badges.samples()
+	_celebration.announce(samples[_debug_badge % samples.size()])
+	_debug_badge += 1
 
 
 func _shake(magnitude: float = SHAKE_MAGNITUDE) -> void:
@@ -2098,6 +2134,7 @@ func _on_monster_reached_goal(monster: Monster) -> void:
 	# 0 ms: ein durchgelassenes Monster hat keine gemessene Antwortzeit.
 	EventBus.item_reviewed.emit(task_id, false, 0)
 	EventBus.fortress_damaged.emit(monster.damage)
+	_wave_low_hp = mini(_wave_low_hp, GameState.fortress_health)
 	if GameState.fortress_health <= 0:
 		_finish_wave(false)
 		return
@@ -2119,6 +2156,13 @@ func _check_end() -> void:
 	if _spell_fx.is_busy() or _settling > 0:
 		return
 	if _spawned >= _total and _active.is_empty():
+		# Die Plaketten der gewonnenen Welle kommen noch im Kampf; nach ihrer Feier ruft
+		# _on_celebration_finished hierher zurück.
+		if not _wave_badges_done:
+			_wave_badges_done = true
+			var low := float(_wave_low_hp) / float(maxi(1, GameState.fortress_max_health))
+			if _announce_badges(_badges.wave_won(low)):
+				return
 		EventBus.wave_cleared.emit(GameState.current_wave)
 		_finish_wave(true)
 

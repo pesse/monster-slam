@@ -178,6 +178,31 @@ Jede Aufgabe und jedes Wort wird nur einmal gefeiert. Fällt eine Aufgabe späte
 sitzt dann wieder, gibt es keine zweite Feier. Jede Meisterung bekommt ihre Feier, auch die
 mit dem letzten Monster einer Welle – die Welle endet erst danach.
 
+## Plaketten
+
+Bis ein Wort gemeistert ist, vergehen ein paar Tage. Unterwegs gibt es **Plaketten** für
+kleine Erfolge. Auch sie halten das Spiel kurz an, gut eine Sekunde: Eine Medaille springt
+in die Mitte, dazu ein Ton, ein Ring und ein paar Funken in ihrer Farbe. Sie ist kleiner
+als die Feier beim Meistern und kommt nach ihr, wenn beides mit derselben Antwort gelingt.
+
+- **Treffer heute:** 10, 25, 50 und 100 richtig besiegte Monster an einem Tag bringen eine
+  Plakette aus Bronze, Silber, Gold und Diamant.
+- **Wörter einer Sprache:** Hast du 20, 50, 100 oder 250 Wörter einer Sprache schon einmal
+  richtig übersetzt, egal in welche Richtung, wirst du Wortschnüffler, Vokabeljäger,
+  Wörterdrache und schließlich Sprachmonster. Diese Plaketten gibt es nur einmal.
+- **Von gestern behalten:** Du triffst ein Wort, das du an einem früheren Tag zuletzt
+  richtig hattest. Eine Plakette gibt es beim ersten, fünften, zehnten und 25. Wort des Tages.
+- **Revanche:** Ein Wort, das dir zuletzt entwischt ist, triffst du jetzt.
+- **Aufholjagd:** Du triffst ein Wort, das fast schon vergessen war.
+- **Comeback des Tages:** Die Festung stand im roten Bereich, und du hast die Welle trotzdem
+  gewonnen.
+- **Besser als sonst:** Am Ende einer gewonnenen Welle liegt deine Genauigkeit in dieser
+  Sitzung über der der letzten Tage.
+
+Revanche und Aufholjagd gibt es höchstens einmal je Welle. Comeback und „Besser als sonst“
+gibt es einmal am Tag, die übrigen Tagesplaketten fangen um Mitternacht von vorn an.
+Plaketten bringen keine Erfahrung und kein Gold.
+
 ## Festung, Schaden und Rüstung
 
 Erreicht ein Monster die Festung, explodiert es dort und die Festung verliert HP. Wie viel,

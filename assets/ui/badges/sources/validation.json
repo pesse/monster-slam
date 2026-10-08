@@ -1,0 +1,218 @@
+[
+  {
+    "name": "bronze",
+    "sourceSize": [
+      1122,
+      1402
+    ],
+    "sourceDiscBounds": [
+      63,
+      90,
+      1056,
+      1067
+    ],
+    "sourceBottom": 1306,
+    "outputSize": [
+      256,
+      320
+    ],
+    "discCenter": [
+      128,
+      120
+    ],
+    "discRadius": 104,
+    "ribbonBottom": 310,
+    "transparentPixels": 37069,
+    "opaquePixels": 829,
+    "lossless": true
+  },
+  {
+    "name": "silver",
+    "sourceSize": [
+      1122,
+      1402
+    ],
+    "sourceDiscBounds": [
+      61,
+      89,
+      1056,
+      1067
+    ],
+    "sourceBottom": 1308,
+    "outputSize": [
+      256,
+      320
+    ],
+    "discCenter": [
+      128,
+      120
+    ],
+    "discRadius": 104,
+    "ribbonBottom": 310,
+    "transparentPixels": 37041,
+    "opaquePixels": 820,
+    "lossless": true
+  },
+  {
+    "name": "gold",
+    "sourceSize": [
+      1122,
+      1402
+    ],
+    "sourceDiscBounds": [
+      62,
+      88,
+      1057,
+      1068
+    ],
+    "sourceBottom": 1306,
+    "outputSize": [
+      256,
+      320
+    ],
+    "discCenter": [
+      128,
+      120
+    ],
+    "discRadius": 104,
+    "ribbonBottom": 310,
+    "transparentPixels": 37030,
+    "opaquePixels": 836,
+    "lossless": true
+  },
+  {
+    "name": "diamond",
+    "sourceSize": [
+      1122,
+      1402
+    ],
+    "sourceDiscBounds": [
+      62,
+      85,
+      1057,
+      1069
+    ],
+    "sourceBottom": 1308,
+    "outputSize": [
+      256,
+      320
+    ],
+    "discCenter": [
+      128,
+      120
+    ],
+    "discRadius": 104,
+    "ribbonBottom": 310,
+    "transparentPixels": 36907,
+    "opaquePixels": 806,
+    "lossless": true
+  },
+  {
+    "name": "comeback",
+    "sourceSize": [
+      1122,
+      1402
+    ],
+    "sourceDiscBounds": [
+      62,
+      87,
+      1057,
+      1069
+    ],
+    "sourceBottom": 1307,
+    "outputSize": [
+      256,
+      320
+    ],
+    "discCenter": [
+      128,
+      120
+    ],
+    "discRadius": 104,
+    "ribbonBottom": 310,
+    "transparentPixels": 36898,
+    "opaquePixels": 822,
+    "lossless": true
+  },
+  {
+    "name": "better",
+    "sourceSize": [
+      1122,
+      1402
+    ],
+    "sourceDiscBounds": [
+      61,
+      87,
+      1055,
+      1068
+    ],
+    "sourceBottom": 1308,
+    "outputSize": [
+      256,
+      320
+    ],
+    "discCenter": [
+      128,
+      120
+    ],
+    "discRadius": 104,
+    "ribbonBottom": 310,
+    "transparentPixels": 36863,
+    "opaquePixels": 832,
+    "lossless": true
+  },
+  {
+    "name": "revenge",
+    "sourceSize": [
+      1122,
+      1402
+    ],
+    "sourceDiscBounds": [
+      61,
+      87,
+      1054,
+      1069
+    ],
+    "sourceBottom": 1308,
+    "outputSize": [
+      256,
+      320
+    ],
+    "discCenter": [
+      128,
+      120
+    ],
+    "discRadius": 104,
+    "ribbonBottom": 310,
+    "transparentPixels": 36916,
+    "opaquePixels": 836,
+    "lossless": true
+  },
+  {
+    "name": "catch_up",
+    "sourceSize": [
+      1122,
+      1402
+    ],
+    "sourceDiscBounds": [
+      63,
+      85,
+      1056,
+      1070
+    ],
+    "sourceBottom": 1307,
+    "outputSize": [
+      256,
+      320
+    ],
+    "discCenter": [
+      128,
+      120
+    ],
+    "discRadius": 104,
+    "ribbonBottom": 310,
+    "transparentPixels": 36813,
+    "opaquePixels": 845,
+    "lossless": true
+  }
+]

@@ -82,6 +82,11 @@ focus_mode = 0
 theme_type_variation = &"DebugButton"
 text = "Level"
 
+[node name="Badge" type="Button" parent="Root/Body/CelebrateRow"]
+focus_mode = 0
+theme_type_variation = &"DebugButton"
+text = "Plakette"
+
 [node name="PicksLabel" type="Label" parent="Root/Body"]
 theme_type_variation = &"Caption"
 text = "Letzte Spawns — warum dieses Wort"

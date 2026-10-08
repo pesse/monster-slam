@@ -60,6 +60,7 @@ func _ready() -> void:
 	EventBus.spell_activated.connect(note_spell)
 	EventBus.task_mastered.connect(note_task_mastered)
 	EventBus.lexeme_mastered.connect(note_lexeme_mastered)
+	EventBus.badge_earned.connect(note_badge)
 	EventBus.boss_started.connect(note_boss_start)
 	EventBus.boss_answer_judged.connect(note_boss_answer)
 	EventBus.boss_answer_explained.connect(note_boss_explained)
@@ -252,6 +253,12 @@ func note_task_mastered(task_id: String) -> void:
 ## Ein Wort sitzt zum ersten Mal in allen Richtungen.
 func note_lexeme_mastered(lexeme_id: String) -> void:
 	_write({"e": "word_mastered", "lex": lexeme_id})
+
+
+## Eine Plakette ist verdient (Badges). Steht hinter der answer-Zeile, die sie gebracht hat,
+## oder hinter dem letzten Treffer einer gewonnenen Welle.
+func note_badge(id: String, tier: int) -> void:
+	_write({"e": "badge", "id": id, "tier": tier})
 
 
 # --- Schalter und Profil ------------------------------------------------------

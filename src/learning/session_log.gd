@@ -234,6 +234,17 @@ func played_today() -> bool:
 	return false
 
 
+## Richtige Antworten heute (lokal), die laufende Sitzung eingeschlossen — die Treffer des
+## Tages der Plaketten. Eine Sitzung über Mitternacht zählt zu ihrem Anfangstag.
+func correct_today() -> int:
+	var today := local_day(int(Time.get_unix_time_from_system()))
+	var n := 0
+	for entry in _all_entries():
+		if local_day(int(entry.get("started_at", 0))) == today:
+			n += int(entry.get("correct", 0))
+	return n
+
+
 ## Zahl der Tage mit mindestens einer Sitzung — der Vorrat, aus dem die Münzen der
 ## Tages-Leiste kommen (ein geübter Tag = eine Münze, mehrere Sitzungen am selben Tag
 ## sind eines). Sollen die Stücke später eingesammelt und ausgegeben werden können,

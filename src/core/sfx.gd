@@ -27,7 +27,8 @@ const AUDIO_DIR := "res://assets/audio/sfx/"
 ## Sound stehen muss: Quelldateien sind unterschiedlich ausgesteuert (eine Blechfanfare
 ## kommt lauter aus dem Netz als ein gehauchtes „nein"), und ein Sound, den man bei jeder
 ## Falscheingabe hört, darf nicht so laut sein wie einer, der einmal pro Welle kommt.
-## 0.0 = Datei unverändert, negative Werte leiser. Der Regler des Spielers sitzt DARÜBER
+## 0.0 = Datei unverändert, negative Werte leiser. `pitch` (Standard 1.0) verschiebt die
+## Tonhöhe, damit eine Datei für einen verwandten Anlass ein zweites Mal dienen kann. Der Regler des Spielers sitzt DARÜBER
 ## auf dem Bus (siehe [method apply_volumes]) und verschiebt alles gemeinsam.
 ## Die dB-Werte sind an den gemessenen RMS-Pegeln der Dateien ausgerichtet (Zielband um
 ## -20 dBFS), danach nach Rolle verschoben: was oft kommt, liegt darunter, was einmal pro
@@ -50,6 +51,19 @@ const SOUNDS := {
 	# der kräftige Abzug.
 	&"task_mastered": {"file": "task_mastered.wav", "db": -2.0},
 	&"word_mastered": {"file": "word_mastered.wav", "db": -6.5},
+	# Plaketten (Issue #63, Badges.sound_of). Bronze und Silber kommen oft und klingen wie
+	# Eisenhaut, etwas leiser als der Zauber. Die besonderen haben eigene Töne und liegen
+	# knapp über Bronze/Silber, unter der Aufgaben-Feier (gemessen am lautesten 300-ms-Fenster,
+	# Ziel um -17 dBFS nach Abzug). Gold und Diamant kamen sehr leise aus der Quelle (-27
+	# bzw. -39 dBFS) und sind in der Datei angehoben (CREDITS.md); `badge_catch_up` ist ein
+	# Rechteck-Chiptune an der Grenze (-3).
+	&"badge_earned": {"file": "spell_armor.wav", "db": -4.0},
+	&"badge_gold": {"file": "badge_gold.wav", "db": 2.0},
+	&"badge_diamond": {"file": "badge_diamond.wav", "db": 3.0},
+	&"badge_revenge": {"file": "badge_revenge.wav", "db": 4.0},
+	&"badge_catch_up": {"file": "badge_catch_up.wav", "db": -14.0},
+	&"badge_comeback": {"file": "badge_comeback.wav", "db": 3.5},
+	&"badge_better": {"file": "badge_better.wav", "db": 5.5},
 	# Zauber (ADR 0014, SpellFx): selten und vom Spieler gewollt, also um die Wellen-Fanfare.
 	# `spell_reveal` kommt sehr leise aus der Quelle (-30 dBFS RMS, Spitzen bei -12),
 	# `spell_slow` und `spell_armor` laut und an der Grenze.
@@ -140,7 +154,8 @@ func play(id: StringName) -> void:
 	# Jedes Mal setzen: ein Player kommt aus dem Pool mit dem Pegel seines Vorgängers.
 	player.volume_db = last_volume_db
 	var spread := float((SOUNDS[id] as Dictionary).get("spread", PITCH_SPREAD))
-	player.pitch_scale = randf_range(1.0 - spread, 1.0 + spread)
+	var pitch := float((SOUNDS[id] as Dictionary).get("pitch", 1.0))
+	player.pitch_scale = pitch * randf_range(1.0 - spread, 1.0 + spread)
 	player.play()
 
 

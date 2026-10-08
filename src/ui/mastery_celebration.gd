@@ -16,14 +16,20 @@ extends Control
 ## Effekte sind GPUParticles2D-Knoten in mastery_celebration.tscn (dort im Editor
 ## einstellen); Knoten mit `Task` im Namen gehören zur Aufgaben-, `Word` zur Wort-Feier.
 ## Nur die Blitze sind ein eigener Knoten (Lightning), das kann ein Partikelsystem nicht.
+##
+## Plaketten (Badges, Issue #63) laufen durch dieselbe Warteschlange: auch sie halten den
+## Kampf kurz an, aber kleiner — eine Medaille, ein Ring und ein paar Funken in ihrer Farbe,
+## kein Blitz, kein Bildflash. Sie kommen nach der Meister-Feier derselben Antwort und
+## verdrängen keine: jede gemeldete Plakette läuft.
 
 signal started(duration_ms: int)
 signal finished()
 
-enum Kind { NONE, TASK, WORD }
+enum Kind { NONE, TASK, WORD, BADGE }
 
 const TASK_MS := 1200
 const WORD_MS := 2000
+const BADGE_MS := 1300
 ## Die zweite Funkenwelle der Wort-Feier kommt so viel später, die Glut steigt so lange,
 ## die Blitze zucken so lange (alles ms).
 const WORD_GLITTER_DELAY_MS := 350
@@ -33,6 +39,8 @@ const WORD_LIGHTNING_MS := 900
 var _pending: Kind = Kind.NONE
 var _pending_id: String = ""
 var _flush_queued: bool = false
+## Im selben Frame gemeldete Plaketten; sie stellen sich hinter die Meister-Feier.
+var _pending_badges: Array = []
 var _playing: bool = false
 ## Wartende Feiern als [Kind, id], älteste zuerst.
 var _queue_list: Array = []
@@ -48,6 +56,11 @@ var _held: bool = false
 @onready var _content: Control = $Content
 @onready var _headline: Label = %Headline
 @onready var _detail: Label = %Detail
+@onready var _badge_content: Control = $BadgeContent
+@onready var _badge_fx: Node2D = $Origin/BadgeFx
+@onready var _plate: BadgePlate = %Plate
+@onready var _badge_title: Label = %BadgeTitle
+@onready var _badge_detail: Label = %BadgeDetail
 
 
 func _ready() -> void:
@@ -75,15 +88,28 @@ func celebrate(kind: Kind, id: String) -> void:
 		_flush.call_deferred()
 
 
+## Meldet eine Plakette an (Badges.make). Wie eine Meisterung erst zum Frame-Ende, damit
+## die Meister-Feier derselben Antwort vorgeht.
+func announce(badge: Dictionary) -> void:
+	_pending_badges.append(badge)
+	if not _flush_queued:
+		_flush_queued = true
+		_flush.call_deferred()
+
+
 func _flush() -> void:
 	_flush_queued = false
 	var kind := _pending
 	var id := _pending_id
 	_pending = Kind.NONE
 	_pending_id = ""
-	if kind == Kind.NONE:
+	if kind != Kind.NONE:
+		_queue_list.append([kind, id])
+	for badge in _pending_badges:
+		_queue_list.append([Kind.BADGE, badge])
+	_pending_badges.clear()
+	if _queue_list.is_empty():
 		return
-	_queue_list.append([kind, id])
 	if not _playing and not _held:
 		_run()
 
@@ -110,6 +136,12 @@ func warm_up() -> void:
 	_headline.text = FxWarmup.GLYPHS
 	_detail.text = FxWarmup.GLYPHS
 	_content.modulate = Color.WHITE
+	_content.visible = true
+	_badge_title.text = FxWarmup.GLYPHS
+	_badge_detail.text = FxWarmup.GLYPHS
+	_plate.setup(&"gold", "0123456789")
+	_badge_content.modulate = Color.WHITE
+	_badge_content.visible = true
 	_flash.modulate.a = 0.6
 	visible = true
 	for particles in _all_particles():
@@ -147,7 +179,10 @@ func _run() -> void:
 	_playing = true
 	while not _queue_list.is_empty():
 		var next: Array = _queue_list.pop_front()
-		await _play(next[0], next[1])
+		if next[0] == Kind.BADGE:
+			await _play_badge(next[1])
+		else:
+			await _play(next[0], next[1])
 	visible = false
 	_playing = false
 	finished.emit()
@@ -161,12 +196,40 @@ func _play(kind: Kind, id: String) -> void:
 	_headline.theme_type_variation = &"CelebrateWord" if big else &"CelebrateTask"
 	_headline.text = "Wort gemeistert!" if big else "Aufgabe gemeistert!"
 	_detail.text = _word_label(id) if big else TaskResolver.new().describe_learnable(id)
+	_content.visible = true
+	_badge_content.visible = false
 	visible = true
 	_fire(big)
 	Sfx.play(&"word_mastered" if big else &"task_mastered")
-	_pop_in(duration)
+	_pop_in(_content, duration)
 	started.emit(duration)
 	await _wait(duration)
+
+
+## Eine Plakette: Medaille, Titel und Detail springen auf, ein Ring und Funken in der Farbe
+## der Plakette gehen von der Medaille aus.
+func _play_badge(badge: Dictionary) -> void:
+	var palette := StringName(badge.get("palette", &"gold"))
+	_plate.setup(palette, str(badge.get("mark", "")))
+	_badge_title.text = str(badge.get("title", ""))
+	_badge_detail.text = str(badge.get("detail", ""))
+	_badge_detail.visible = not _badge_detail.text.is_empty()
+	_content.visible = false
+	_badge_content.visible = true
+	visible = true
+	Sfx.play(badge.get("sound", &"badge_earned"))
+	_pop_in(_badge_content, BADGE_MS)
+	started.emit(BADGE_MS)
+	# Erst nach dem Layout steht die Medaille dort, wo die Funken herkommen sollen. Gemessen
+	# am Stand OHNE das Aufspringen: der Inhalt ist gerade noch klein (_pop_in).
+	await get_tree().process_frame
+	var medal := _plate.get_global_transform() * (_plate.size * BadgePlate.DISC_CENTER)
+	var unscaled := _badge_content.get_global_transform().affine_inverse() * medal
+	_badge_fx.global_position = get_global_transform() * (_badge_content.position + unscaled)
+	_badge_fx.modulate = BadgePlate.glow(palette)
+	for particles in _badge_fx.get_children():
+		_emit(particles as GPUParticles2D)
+	await _wait(BADGE_MS)
 
 
 ## Echtzeit-Wartezeit, die auch in der Baum-Pause läuft (process_always).
@@ -214,13 +277,13 @@ func _word_label(lexeme_id: String) -> String:
 	return "%s ↔ %s" % [Lexeme.foreign(lex), lex.get("lemma_de", "")]
 
 
-func _pop_in(duration_ms: int) -> void:
-	_content.pivot_offset = _content.size / 2.0
-	_content.scale = Vector2.ONE * 0.4
-	_content.modulate = Color(1, 1, 1, 0)
+func _pop_in(content: Control, duration_ms: int) -> void:
+	content.pivot_offset = content.size / 2.0
+	content.scale = Vector2.ONE * 0.4
+	content.modulate = Color(1, 1, 1, 0)
 	var seconds := duration_ms / 1000.0
 	var tw := create_tween()
 	tw.set_parallel(true)
-	tw.tween_property(_content, "scale", Vector2.ONE, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.tween_property(_content, "modulate:a", 1.0, 0.15)
-	tw.chain().tween_property(_content, "modulate:a", 0.0, 0.3).set_delay(seconds - 0.3 - 0.3)
+	tw.tween_property(content, "scale", Vector2.ONE, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(content, "modulate:a", 1.0, 0.15)
+	tw.chain().tween_property(content, "modulate:a", 0.0, 0.3).set_delay(seconds - 0.3 - 0.3)

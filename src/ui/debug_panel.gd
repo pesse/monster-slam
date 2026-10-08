@@ -7,6 +7,8 @@ extends PanelContainer
 signal fortress_tier_selected(tier: int)
 ## Die Meister-Feier testweise zeigen (`word` = Wort-Feier statt Aufgaben-Feier).
 signal celebration_requested(word: bool)
+## Reihum eine Beispiel-Plakette zeigen (Badges.samples), ohne sie zu verdienen.
+signal badge_requested()
 ## Das Aufleuchten des Level-Badges testweise zeigen, ohne Erfahrung zu verbuchen.
 signal level_up_requested()
 
@@ -30,6 +32,7 @@ func _ready() -> void:
 	($Root/Body/CelebrateRow/Task as Button).pressed.connect(celebration_requested.emit.bind(false))
 	($Root/Body/CelebrateRow/Word as Button).pressed.connect(celebration_requested.emit.bind(true))
 	($Root/Body/CelebrateRow/Level as Button).pressed.connect(level_up_requested.emit)
+	($Root/Body/CelebrateRow/Badge as Button).pressed.connect(badge_requested.emit)
 	EventBus.monster_spawned.connect(func(_monster, task): note_pick(task))
 
 

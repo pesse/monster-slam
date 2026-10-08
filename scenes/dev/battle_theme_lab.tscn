@@ -485,16 +485,6 @@ max_value = 999.0
 value = 15.0
 allow_greater = true
 
-[node name="TaskMasteredButton" type="Button" parent="UI/Margin/Root/Menu/Items/Tabs/HUD"]
-unique_name_in_owner = true
-focus_mode = 0
-text = "Aufgabe gemeistert"
-
-[node name="WordMasteredButton" type="Button" parent="UI/Margin/Root/Menu/Items/Tabs/HUD"]
-unique_name_in_owner = true
-focus_mode = 0
-text = "Wort gemeistert"
-
 [node name="Bewuchs" type="GridContainer" parent="UI/Margin/Root/Menu/Items/Tabs"]
 visible = false
 columns = 4
@@ -708,6 +698,40 @@ text = "Feld füllen"
 unique_name_in_owner = true
 focus_mode = 0
 text = "Feld leeren"
+
+[node name="Feiern" type="GridContainer" parent="UI/Margin/Root/Menu/Items/Tabs"]
+visible = false
+columns = 3
+metadata/_tab_index = 7
+
+[node name="TaskMasteredButton" type="Button" parent="UI/Margin/Root/Menu/Items/Tabs/Feiern"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "Aufgabe gemeistert"
+
+[node name="WordMasteredButton" type="Button" parent="UI/Margin/Root/Menu/Items/Tabs/Feiern"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "Wort gemeistert"
+
+[node name="MasteryAndBadgeButton" type="Button" parent="UI/Margin/Root/Menu/Items/Tabs/Feiern"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "Meisterung + Plakette"
+
+[node name="BadgeSelect" type="OptionButton" parent="UI/Margin/Root/Menu/Items/Tabs/Feiern"]
+unique_name_in_owner = true
+focus_mode = 0
+
+[node name="BadgeButton" type="Button" parent="UI/Margin/Root/Menu/Items/Tabs/Feiern"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "Plakette zeigen"
+
+[node name="AllBadgesButton" type="Button" parent="UI/Margin/Root/Menu/Items/Tabs/Feiern"]
+unique_name_in_owner = true
+focus_mode = 0
+text = "Alle nacheinander"
 
 [node name="Buttons" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items"]
 

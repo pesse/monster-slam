@@ -156,6 +156,32 @@ func due_task_ids(now := -1) -> Array:
 	return due
 
 
+## Kopie des Records einer Aufgabe, {} für eine ungesehene. Für den Stand VOR einer
+## Antwort: record() überschreibt ihn (die Plaketten im Kampf vergleichen davor und danach).
+func record_of(task_id: String) -> Dictionary:
+	return (_records.get(task_id, {}) as Dictionary).duplicate()
+
+
+## Wie viele Wörter der Sprache `lang` schon einmal richtig übersetzt wurden, in irgendeiner
+## Richtung — die Sprach-Meilensteine der Plaketten. Gezählt wird nur `translate`, wie bei
+## der Meisterung: Formen und Relationen gibt es nicht zu jedem Wort.
+func lexemes_answered(lang: String) -> int:
+	return lexemes_answered_in(_records, lang)
+
+
+## Wie lexemes_answered(), statisch über übergebene Records (prüfbar ohne Autoload).
+static func lexemes_answered_in(records: Dictionary, lang: String) -> int:
+	var hit := {}
+	for id in records:
+		if int(records[id].get("correct_total", 0)) <= 0:
+			continue
+		var parts := str(id).split(":")
+		if parts.size() == 3 and parts[0] == "translate" \
+				and Lexeme.language_of_direction(parts[1]) == lang:
+			hit[parts[2]] = true
+	return hit.size()
+
+
 ## Confidence 0..1 für eine Aufgabe. Für noch ungesehene Aufgaben liefert `default_value`
 ## den Wert — der WaveGenerator übergibt hier den CEFR/Frequenz-Prior des Lexems.
 func confidence(task_id: String, default_value: float = DEFAULT_CONFIDENCE) -> float:

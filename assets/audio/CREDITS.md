@@ -26,6 +26,12 @@ denselben Commit.
 | `sfx/spell_thunder_windup.wav` | https://freesound.org/people/magnuswaker/sounds/592573/ | CC0 | magnuswaker |
 | `sfx/spell_thunder.wav` | https://freesound.org/people/SGAK/sounds/467777/ | CC0 | SGAK |
 | `sfx/spell_heal.wav` | https://freesound.org/people/cellokratzer/sounds/502947/ | CC0 | cellokratzer |
+| `sfx/badge_gold.wav` | https://freesound.org/people/LilMati/sounds/659677/ | CC0 | LilMati |
+| `sfx/badge_diamond.wav` | https://freesound.org/people/MLaudio/sounds/511485/ | CC0 | MLaudio |
+| `sfx/badge_revenge.wav` | https://freesound.org/people/GameAudio/sounds/220173/ | CC0 | GameAudio |
+| `sfx/badge_catch_up.wav` | https://freesound.org/people/Tissman/sounds/455857/ | CC0 | Tissman |
+| `sfx/badge_comeback.wav` | https://freesound.org/people/colorsCrimsonTears/sounds/566203/ | CC0 | colorsCrimsonTears |
+| `sfx/badge_better.wav` | https://freesound.org/people/Beetlemuse/sounds/528957/ | CC0 | Beetlemuse |
 
 `sfx/wave_cleared.wav` ist die verlustfreie WAV-Fassung der dort angebotenen FLAC-Datei —
 Godot 4.7 lädt FLAC nicht („No loader found for resource"). Die Quelle ist innen bereits
@@ -34,3 +40,8 @@ Godot 4.7 lädt FLAC nicht („No loader found for resource"). Die Quelle ist in
 `sfx/spell_shatter.wav` ist die dort angebotene FLAC-Datei (24 Bit) als 16-Bit-WAV, vorn um
 0,58 s Stille gekürzt; sonst unverändert. Die übrigen `spell_*`-Dateien sind die Originale,
 nur umbenannt.
+
+`sfx/badge_better.wav` ist vorn um 55 ms Stille gekürzt, `sfx/badge_gold.wav` um 8 dB und
+`sfx/badge_diamond.wav` um 20 dB lauter (beide kamen sehr leise, ohne Übersteuerung); sonst
+unverändert. Die übrigen `badge_*`-Dateien sind die Originale, nur umbenannt. `badge_gold.wav` ist eine Bearbeitung von
+https://freesound.org/people/LilMati/sounds/523755/ (CC0, derselbe Autor).

@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://src/ui/mastery_celebration.gd" id="1_celebration"]
 [ext_resource type="Script" path="res://src/fx/lightning.gd" id="2_lightning"]
+[ext_resource type="PackedScene" path="res://scenes/ui/badge_plate.tscn" id="3_plate"]
 
 [sub_resource type="CanvasItemMaterial" id="additive"]
 blend_mode = 1
@@ -237,6 +238,35 @@ scale_min = 0.12
 scale_max = 0.3
 color_ramp = SubResource("fade")
 color_initial_ramp = SubResource("gold")
+
+[sub_resource type="Gradient" id="badge_shock_g"]
+offsets = PackedFloat32Array(0, 1)
+colors = PackedColorArray(1, 1, 1, 0.85, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture1D" id="badge_shock"]
+gradient = SubResource("badge_shock_g")
+
+[sub_resource type="ParticleProcessMaterial" id="p_badge_shock"]
+particle_flag_disable_z = true
+gravity = Vector3(0, 0, 0)
+scale_min = 0.7
+scale_max = 0.7
+scale_curve = SubResource("grow_tex")
+color_ramp = SubResource("badge_shock")
+
+[sub_resource type="ParticleProcessMaterial" id="p_badge_sparks"]
+particle_flag_disable_z = true
+particle_flag_align_y = true
+spread = 180.0
+initial_velocity_min = 260.0
+initial_velocity_max = 560.0
+gravity = Vector3(0, 300, 0)
+damping_min = 500.0
+damping_max = 750.0
+scale_min = 0.25
+scale_max = 0.55
+scale_curve = SubResource("shrink_tex")
+color_ramp = SubResource("fade")
 
 [node name="MasteryCelebration" type="Control"]
 process_mode = 3
@@ -487,6 +517,30 @@ begin_cap_mode = 2
 end_cap_mode = 2
 antialiased = true
 
+[node name="BadgeFx" type="Node2D" parent="Origin"]
+
+[node name="BadgeShock" type="GPUParticles2D" parent="Origin/BadgeFx"]
+material = SubResource("additive")
+emitting = false
+amount = 1
+lifetime = 0.5
+one_shot = true
+explosiveness = 1.0
+visibility_rect = Rect2(-2000, -2000, 4000, 4000)
+process_material = SubResource("p_badge_shock")
+texture = SubResource("ring")
+
+[node name="BadgeSparks" type="GPUParticles2D" parent="Origin/BadgeFx"]
+material = SubResource("additive")
+emitting = false
+amount = 48
+lifetime = 0.8
+one_shot = true
+explosiveness = 1.0
+visibility_rect = Rect2(-2000, -2000, 4000, 4000)
+process_material = SubResource("p_badge_sparks")
+texture = SubResource("streak")
+
 [node name="Content" type="CenterContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
@@ -512,4 +566,37 @@ horizontal_alignment = 1
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"CelebrateDetail"
+horizontal_alignment = 1
+
+[node name="BadgeContent" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Stack" type="VBoxContainer" parent="BadgeContent"]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"Tight"
+
+[node name="Plate" parent="BadgeContent/Stack" instance=ExtResource("3_plate")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="BadgeTitle" type="Label" parent="BadgeContent/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"CelebrateBadge"
+text = "10 Treffer heute!"
+horizontal_alignment = 1
+
+[node name="BadgeDetail" type="Label" parent="BadgeContent/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"CelebrateBadgeDetail"
+text = "Bronze-Plakette"
 horizontal_alignment = 1

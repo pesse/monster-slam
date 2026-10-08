@@ -90,6 +90,9 @@ signal task_mastered(task_id: String)
 ## (Lexeme.mastery_directions). Kommt direkt nach dem task_mastered der
 ## Aufgabe, die es abgeschlossen hat.
 signal lexeme_mastered(lexeme_id: String)
+## Eine Plakette ist verdient (Badges, Issue #63): `id` wie in Badges, `tier` 1..4 oder 0
+## ohne Stufe. Ohne Wort — das steht nur im Bild.
+signal badge_earned(id: String, tier: int)
 ## Das Wachkatapult (Bollwerk) hat ein Monster mit gemeisterter Aufgabe abgeschossen. Es ist
 ## erledigt, aber nicht beantwortet: kein Lernstand, keine Erfahrung, keine Punkte.
 signal monster_catapulted(task: Dictionary)
