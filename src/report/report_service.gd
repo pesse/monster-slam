@@ -138,7 +138,8 @@ func send_pending(loud: bool) -> bool:
 
 ## Der Payload einer Meldung. `target_type`/`target_id` statt `lexeme_id`, damit gemeldete
 ## Sätze später dazupassen; Herkunft (App-Fassung, Pack) mit, weil eine Meldung sonst zu
-## einem Wort im Raum steht, das inzwischen längst korrigiert wurde.
+## einem Wort im Raum steht, das inzwischen längst korrigiert wurde. Die Profilnummer
+## (`stats_id`) geht mit, wenn die Meldung sie trägt — ältere Einträge haben keine.
 func _payload(item: Dictionary) -> Dictionary:
 	var lexeme_id := String(item.get("lexeme_id", ""))
 	var payload := {
@@ -151,6 +152,9 @@ func _payload(item: Dictionary) -> Dictionary:
 		"at": String(item.get("at", "")),
 		"app_version": str(ProjectSettings.get_setting("application/config/version", "")),
 	}
+	var stats_id := String(item.get("stats_id", ""))
+	if not stats_id.is_empty():
+		payload["stats_id"] = stats_id
 	var pack_id := ContentRegistry.pack_of("lexemes", lexeme_id)
 	if not pack_id.is_empty():
 		payload["pack"] = {

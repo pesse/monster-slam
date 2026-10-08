@@ -77,6 +77,14 @@ func test_payload_traegt_zieltyp_und_herkunft() -> void:
 	assert_str(String(payload["app_version"])).is_not_empty()
 
 
+func test_payload_traegt_die_profilnummer_der_meldung() -> void:
+	var item := {"lexeme_id": "lex.gibt.es.nicht", "stats_id": "0123456789abcdef0123456789abcdef"}
+	assert_str(String(ReportService._payload(item).get("stats_id", ""))) \
+		.is_equal("0123456789abcdef0123456789abcdef")
+	# Ältere Einträge haben keine — dann fehlt das Feld, statt leer mitzugehen.
+	assert_bool(ReportService._payload({"lexeme_id": "lex.gibt.es.nicht"}).has("stats_id")).is_false()
+
+
 func test_payload_ohne_pack_wenn_der_eintrag_nicht_aus_einem_pack_kommt() -> void:
 	var payload := ReportService._payload({"lexeme_id": "lex.gibt.es.nicht"})
 	assert_bool(payload.has("pack")).is_false()

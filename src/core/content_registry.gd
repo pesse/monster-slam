@@ -833,12 +833,13 @@ func flagged_lexemes() -> Array:
 ## Gibt false zurück, wenn das Lexem unbekannt oder die Datei nicht schreibbar ist.
 ## Bewusst NICHT in die Quell-JSON: `res://` ist im Export read-only, und eine geänderte
 ## Pack-Datei würde beim nächsten Pack-Update übersprungen (siehe LexemeFlags).
-func flag_lexeme(lexeme_id: String, comment: String, learnable_id: String) -> bool:
+func flag_lexeme(lexeme_id: String, comment: String, learnable_id: String,
+		stats_id := "") -> bool:
 	if not lexemes.has(lexeme_id):
 		push_warning("ContentRegistry: flag für unbekanntes Lexem '%s'" % lexeme_id)
 		return false
 	var flags := LexemeFlags.load_all()
-	flags[lexeme_id] = LexemeFlags.entry(comment, learnable_id)
+	flags[lexeme_id] = LexemeFlags.entry(comment, learnable_id, stats_id)
 	if not LexemeFlags.save_all(flags):
 		return false
 	lexemes[lexeme_id]["flag"] = flags[lexeme_id]

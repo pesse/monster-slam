@@ -469,7 +469,7 @@ text = "Wörter melden"
 [node name="ReportHint" type="Label" parent="Window/Layout/Content/Body/Pages/ReportPage"]
 layout_mode = 2
 theme_type_variation = &"Caption"
-text = "Ist ein Wort falsch oder unklar, melde es in der Auflösung nach einer Welle mit „⚑ Melden“. Übertragen werden nur das gemeldete Wort, dein Kommentar und die Spielversion — kein Profilname und keine Fortschrittsdaten."
+text = "Ist ein Wort falsch oder unklar, melde es in der Auflösung nach einer Welle mit „⚑ Melden“. Übertragen werden nur das gemeldete Wort, dein Kommentar, die Spielversion und die zufällige Nummer deines Profils — kein Profilname."
 autowrap_mode = 3
 
 [node name="ReportStatus" type="Label" parent="Window/Layout/Content/Body/Pages/ReportPage"]

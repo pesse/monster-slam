@@ -47,6 +47,13 @@ func test_save_und_load_round_trip() -> void:
 	assert_str(String(loaded["lex.x"]["at"])).is_not_empty()
 
 
+func test_eintrag_traegt_die_profilnummer_nur_wenn_es_eine_gibt() -> void:
+	# Die Datei ist geräteweit: die Nummer muss beim Melden in den Eintrag, nicht beim Senden.
+	assert_str(String(LexemeFlags.entry("x", "learn.x", "0123456789abcdef0123456789abcdef")
+			.get("stats_id", ""))).is_equal("0123456789abcdef0123456789abcdef")
+	assert_bool(LexemeFlags.entry("x", "learn.x").has("stats_id")).is_false()
+
+
 func test_flag_lexeme_schreibt_nicht_in_die_quelldatei(do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:
 	var source := ContentRegistry.source_file("lexemes", _lexeme_id)
 	var before := FileAccess.get_file_as_string(source)

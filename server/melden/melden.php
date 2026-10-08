@@ -204,6 +204,12 @@ if (!in_array($target_type, MS_TARGET_TYPES, true)) {
 }
 
 $pack = is_array($data['pack'] ?? null) ? $data['pack'] : [];
+// Profilnummer der Statistik (ADR 0022): zufaellig, ohne Namen. Optional, denn aeltere
+// Fassungen senden sie nicht; was nicht wie eine aussieht, faellt still weg.
+$stats_id = (string) ($data['stats_id'] ?? '');
+if (preg_match('/^[0-9a-f]{32}$/D', $stats_id) !== 1) {
+    $stats_id = '';
+}
 $entry = [
     'ts' => time(),
     'received_at' => gmdate('c'),
@@ -216,6 +222,7 @@ $entry = [
     'app_version' => ms_field($data, 'app_version', false),
     'pack_id' => ms_field(['pack_id' => $pack['id'] ?? ''], 'pack_id', false),
     'pack_version' => ms_field(['pack_version' => $pack['version'] ?? ''], 'pack_version', false),
+    'stats_id' => $stats_id,
 ];
 // Doppelerkennung: dieselbe Meldung nach einer verlorenen Antwort darf nicht zweimal
 // in der Datei stehen. `at` ist die Uhrzeit der Meldung auf dem Spielerrechner.

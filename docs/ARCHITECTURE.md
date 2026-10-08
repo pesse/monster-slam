@@ -1174,7 +1174,7 @@ den Content-Kanal als Pack-Update zurück.
 
 | | Melde-Kanal |
 |---|---|
-| Was | eine Meldung: Ziel-Id, Kommentar, App- und Pack-Fassung (wenige Bytes) |
+| Was | eine Meldung: Ziel-Id, Kommentar, App- und Pack-Fassung, Profilnummer (`stats_id`) (wenige Bytes) |
 | Autoload | `ReportService` (`src/report/`) |
 | Ziel | eigener PHP-Endpunkt, `server/melden/melden.php`; Ablage als JSON Lines **über** dem Docroot |
 | Berechtigung | App-Schlüssel `app-<n>.<mac>` der Fassung, derselbe wie beim Statistik-Kanal — geprägt von `tools/report/mint_token.py`, geprüft vom Endpunkt |

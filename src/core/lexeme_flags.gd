@@ -11,7 +11,7 @@ extends RefCounted
 const PATH := "user://lexeme_flags.json"
 
 
-## lexeme_id -> {comment, learnable_id, at, sent}. Leer, wenn es noch keine Meldungen gibt
+## lexeme_id -> {comment, learnable_id, at, sent, stats_id?}. Leer, wenn es noch keine Meldungen gibt
 ## oder die Datei unlesbar ist (eine kaputte Meldungsliste darf das Spiel nicht aufhalten).
 static func load_all() -> Dictionary:
 	if not FileAccess.file_exists(PATH):
@@ -38,13 +38,19 @@ static func save_all(flags: Dictionary) -> bool:
 	return true
 
 
-static func entry(comment: String, learnable_id: String) -> Dictionary:
-	return {
+## `stats_id` ist die Profilnummer zum Zeitpunkt der Meldung (ADR 0022). Sie steht im
+## Eintrag, weil die Datei geräteweit ist und eine offene Meldung erst später rausgeht —
+## dann spielt womöglich schon ein anderes Profil.
+static func entry(comment: String, learnable_id: String, stats_id := "") -> Dictionary:
+	var item := {
 		"comment": comment,
 		"learnable_id": learnable_id,
 		"at": Time.get_datetime_string_from_system(),
 		"sent": false,
 	}
+	if not stats_id.is_empty():
+		item["stats_id"] = stats_id
+	return item
 
 
 ## Meldungen, die noch nicht beim Content-Autor angekommen sind — die Warteschlange des

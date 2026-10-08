@@ -4,8 +4,9 @@ Ist ein Wort im Spiel falsch oder unklar, kann man es melden, damit es korrigier
 
 - Gemeldet wird in der Vokabel-Auflösung nach einer Welle: **„⚑ Melden“**, einen kurzen
   Kommentar eingeben (zum Beispiel „Wortart falsch“), „Absenden“.
-- Übertragen werden nur: das gemeldete Wort, dein Kommentar und die Spielversion. Kein
-  Profilname und keine Fortschrittsdaten.
+- Übertragen werden nur: das gemeldete Wort, dein Kommentar, die Spielversion und die
+  zufällige Nummer deines Profils, dieselbe wie bei den Spieldaten
+  ([Kapitel 21](21-spieldaten.md)). Kein Profilname.
 - Hat deine Fassung des Spiels keinen Rückkanal, gibt es den Knopf zum Melden nicht.
 - **Die Meldung wird zuerst auf dem Rechner gespeichert und danach gesendet.** Klappt das
   Senden nicht (zum Beispiel ohne Internet), steht dort „⚑ Gemerkt — Versand später“.

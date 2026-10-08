@@ -23,13 +23,20 @@ ohnehin einen App-Schlüssel (`app-<n>`), mit dem der Endpunkt nebenan rechnet.
 3. **Debug-Fassungen melden nur mit `MONSTER_SLAM_REPORT_URL` und
    `MONSTER_SLAM_REPORT_KEY`**, wie der Statistik-Kanal — der Editor spielt im
    Entwicklungsprofil.
-4. **Der Endpunkt bleibt unverändert.** `melden.php` nimmt jedes gültige Token an, also
+4. **Der Endpunkt prüft wie bisher.** `melden.php` nimmt jedes gültige Token an, also
    auch `app-*`. `statistik.php` nimmt weiterhin **nur** `app-*` an (ADR 0021).
+5. **Eine Meldung trägt die Profilnummer** (`stats_id`, ADR 0021). So lässt sie sich neben
+   die Spieldaten desselben Profils legen, ohne dass ein Name dabei ist. Die Nummer kommt
+   beim Melden in den Eintrag von `user://lexeme_flags.json`, nicht erst beim Senden: die
+   Datei ist geräteweit, und eine offene Meldung geht womöglich erst raus, wenn ein
+   anderes Profil spielt. Der Endpunkt speichert nur 32 Hex-Zeichen und lässt alles andere
+   still weg; ältere Fassungen senden keine.
 
 ## Folgen
 
-- Jede Meldung trägt das Label `app-<n>`; wer gemeldet hat, ist nicht mehr zu sehen. Für
-  die Korrektur eines Wortes zählt das Wort, nicht der Melder.
+- Jede Meldung trägt das Label `app-<n>`; wer gemeldet hat, ist nur noch als Profilnummer
+  zu sehen. `to_issues.py` schreibt sie in den Beleg, sie ist der Ordnername unter
+  `stats-data/ms-stats/`.
 - Die Rate des Endpunkts gilt je Label, also für **alle Spieler zusammen** (Vorgabe 30 je
   Stunde, 200 je Tag). Wird es eng, `MS_RATE_HOUR`/`MS_RATE_DAY` in `ms-secret.php`
   anheben.

@@ -1,8 +1,9 @@
 # 21. Spieldaten für die Entwicklung
 
-Monster Slam ist in der Testphase. Damit das Spiel besser wird, schickt es Spieldaten an
-unseren eigenen Server in Deutschland. Beim ersten Start sagt ein Hinweis, dass das
-passiert. Danach geht es ohne Nachfrage.
+Monster Slam ist in einer sehr frühen Entwicklungsphase. Damit das Spiel besser wird,
+schickt es anonymisierte Spieldaten verschlüsselt an unseren eigenen Server in
+Deutschland. Beim ersten Start sagt ein Hinweis, dass das passiert. Danach geht es ohne
+Nachfrage.
 
 ## Was gesendet wird
 
@@ -18,11 +19,15 @@ passiert. Danach geht es ohne Nachfrage.
 
 ## Was nie gesendet wird
 
-- **Keine Namen.** Jedes Profil bekommt eine zufällige Nummer, und nur die geht mit. Der
-  Profilname bleibt auf dem Rechner.
+- **Keine Namen.** Jedes Profil bekommt eine zufällige Nummer, und nur die geht mit. Sie
+  lässt sich nicht mit einem Namen verknüpfen; der Profilname bleibt auf dem Rechner.
 - **Nichts, was ein Kind selbst tippt**: keine Antworten, keine Sätze aus dem Bosskampf,
   keine Kommentare beim Melden, keine Namen von Testlisten.
 - Profile, deren Name mit `zz-` beginnt, sendet das Spiel nie.
+
+Nur wer ein Wort bewusst meldet, schickt einen Kommentar mit
+([Kapitel 14](14-woerter-melden.md)). Auch der bleibt anonym: Er trägt keinen Namen, nur
+dieselbe zufällige Nummer des Profils.
 
 ## Wenn das Internet fehlt
 

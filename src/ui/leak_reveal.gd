@@ -289,7 +289,10 @@ func _on_flag_submit() -> void:
 	if source_id.is_empty():
 		_flag_status.text = "Kein Lexem zum Melden."
 		return
-	var ok := ContentRegistry.flag_lexeme(source_id, comment, String(item.get("learnable_id", "")))
+	# Mit der Profilnummer lässt sich die Meldung neben die Spieldaten desselben Profils
+	# legen — ohne Namen (ADR 0022).
+	var ok := ContentRegistry.flag_lexeme(source_id, comment,
+			String(item.get("learnable_id", "")), UserSettings.stats_id())
 	if not ok:
 		_flag_status.text = "Melden fehlgeschlagen (siehe Log)."
 		return
