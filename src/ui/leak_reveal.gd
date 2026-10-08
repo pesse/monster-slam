@@ -14,8 +14,8 @@ extends PanelContainer
 ## Enter der letzten Antwort soll nicht durch ihn hindurchklicken. Im Kommentarfeld
 ## gehört Enter dem Absenden.
 ##
-## "⚑ Melden" erscheint nur, wenn dieser Rechner einen Rückkanal hat (Melde-Token
-## hinterlegt, siehe ReportService und docs/adr/0002-melde-rueckkanal.md). Ohne ihn wäre
+## "⚑ Melden" erscheint nur, wenn diese Fassung einen Rückkanal hat (Endpunkt und
+## App-Schlüssel, siehe ReportService und docs/adr/0022-melden-ohne-token.md). Ohne ihn wäre
 ## die Meldung ohne Folge — und ein Knopf ohne Folge ist ärgerlicher als keiner.
 ##
 ## Bei perfekter Welle (0 durchgelassen) erscheint der Screen ohne Animation und
@@ -253,9 +253,8 @@ func _update_progress() -> void:
 
 # --- Flaggen -----------------------------------------------------------------
 
-## Ohne Rückkanal (kein Melde-Token) gibt es kein "Melden" — der Knopf erscheint nicht.
-## Einmal je Reveal: an das Token kommt man nur im Einstellungs-Screen, der Rückkanal
-## kann sich während einer Welle also nicht ändern.
+## Ohne Rückkanal gibt es kein "Melden" — der Knopf erscheint nicht. Einmal je Reveal:
+## der Rückkanal hängt an der Fassung und ändert sich während einer Welle nicht.
 func _apply_report_gate() -> void:
 	_flag_btn.visible = ReportService.can_report()
 

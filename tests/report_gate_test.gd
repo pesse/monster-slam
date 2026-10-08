@@ -7,29 +7,22 @@ extends GdUnitTestSuite
 
 const REVEAL_SCENE := preload("res://scenes/ui/leak_reveal.tscn")
 const SETTINGS_SCENE := preload("res://scenes/ui/settings_menu.tscn")
-const TOKEN := "mia.6FRQ4TRQV7AY862H"
+const KEY := "app-1.6FRQ4TRQV7AY862H"
 
 var _endpoint_backup := ""
-var _codes_backup: String = ""
-var _had_codes: bool = false
+var _key_backup := ""
 
 
 func before_test() -> void:
 	_endpoint_backup = ReportService.endpoint
-	_had_codes = FileAccess.file_exists(ReportToken.PATH)
-	_codes_backup = FileAccess.get_file_as_string(ReportToken.PATH) if _had_codes else ""
+	_key_backup = ReportService.key
 	ReportService.endpoint = "https://example.invalid/melden.php"
-	ReportToken.forget()
+	ReportService.key = ""
 
 
 func after_test() -> void:
 	ReportService.endpoint = _endpoint_backup
-	if _had_codes:
-		var file := FileAccess.open(ReportToken.PATH, FileAccess.WRITE)
-		file.store_string(_codes_backup)
-		file.close()
-	else:
-		DirAccess.remove_absolute(ReportToken.PATH)
+	ReportService.key = _key_backup
 
 
 func _reveal() -> Control:
@@ -45,28 +38,28 @@ func _settings() -> Control:
 	return menu
 
 
-func test_reveal_zeigt_melden_nur_mit_token() -> void:
+func test_reveal_zeigt_melden_nur_mit_rueckkanal() -> void:
 	assert_bool((_reveal().get_node("%FlagBtn") as Button).visible).is_false()
-	ReportToken.store(TOKEN, 1)
+	ReportService.key = KEY
 	assert_bool((_reveal().get_node("%FlagBtn") as Button).visible).is_true()
 
 
-func test_einstellungen_verbergen_die_meldungsliste_ohne_token() -> void:
+func test_einstellungen_verbergen_die_meldungsliste_ohne_rueckkanal() -> void:
 	var menu := _settings()
 	assert_bool((menu.get_node("%FlagScroll") as ScrollContainer).visible).is_false()
-	assert_str((menu.get_node("%TokenStatus") as Label).text).contains("Kein Token")
+	assert_str((menu.get_node("%ReportStatus") as Label).text).contains("keinen Rückkanal")
 
 
-func test_einstellungen_zeigen_die_meldungsliste_mit_token() -> void:
-	ReportToken.store(TOKEN, 1)
+func test_einstellungen_zeigen_die_meldungsliste_mit_rueckkanal() -> void:
+	ReportService.key = KEY
 	var menu := _settings()
 	assert_bool((menu.get_node("%FlagScroll") as ScrollContainer).visible).is_true()
-	assert_str((menu.get_node("%TokenStatus") as Label).text).contains("mia")
+	assert_str((menu.get_node("%ReportStatus") as Label).text).not_contains("keinen Rückkanal")
 
 
-func test_ohne_endpunkt_ist_auch_das_eingabefeld_aus() -> void:
+func test_ohne_endpunkt_ist_melden_aus() -> void:
 	ReportService.endpoint = ""
+	ReportService.key = KEY
 	var menu := _settings()
-	assert_bool((menu.get_node("%TokenInput") as LineEdit).editable).is_false()
 	assert_bool((menu.get_node("%FlagScroll") as ScrollContainer).visible).is_false()
-	assert_str((menu.get_node("%TokenStatus") as Label).text).contains("keinen Rückkanal")
+	assert_str((menu.get_node("%ReportStatus") as Label).text).contains("keinen Rückkanal")

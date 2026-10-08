@@ -1165,7 +1165,8 @@ auch nur einen Veröffentlicher: der Workflow im Content-Repo, den eine Änderun
 
 ## Der Melde-Kanal: der Weg zurück
 
-Entscheidung und Begründung: `docs/adr/0002-melde-rueckkanal.md`.
+Entscheidung und Begründung: `docs/adr/0002-melde-rueckkanal.md`, Berechtigung seit
+`docs/adr/0022-melden-ohne-token.md`.
 
 Die beiden Kanäle oben liefern **zum** Spieler. Der dritte geht nach oben: eine Meldung
 („dieses Wort ist falsch") wird zu einer Korrektur im privaten Content-Repo und kommt über
@@ -1176,14 +1177,14 @@ den Content-Kanal als Pack-Update zurück.
 | Was | eine Meldung: Ziel-Id, Kommentar, App- und Pack-Fassung (wenige Bytes) |
 | Autoload | `ReportService` (`src/report/`) |
 | Ziel | eigener PHP-Endpunkt, `server/melden/melden.php`; Ablage als JSON Lines **über** dem Docroot |
-| Berechtigung | Melde-Token je Person, `<label>.<mac>` mit HMAC — geprägt von `tools/report/mint_token.py`, geprüft vom Endpunkt |
-| Ablage des Tokens | `user://codes.cfg`, Sektion `report` (`ReportToken`) — wie die Zugangscodes **kein** Geheimnisspeicher |
+| Berechtigung | App-Schlüssel `app-<n>.<mac>` der Fassung, derselbe wie beim Statistik-Kanal — geprägt von `tools/report/mint_token.py`, geprüft vom Endpunkt |
+| Konfiguration | `stats_key.cfg` (beim Export geschrieben): Schlüssel in `[stats]`, URL in `[report]` |
 | UI | Reiter „Melden" in `scenes/ui/settings_menu.tscn`; „⚑ Melden" im Reveal |
 
-**Ohne hinterlegtes Token gibt es „Melden" nicht** — der Knopf im Reveal und die
+**Ohne Endpunkt und Schlüssel gibt es „Melden" nicht** — der Knopf im Reveal und die
 Meldungsliste erscheinen nicht. Das ist eine Bedienungsentscheidung, keine Schranke: eine
 Meldung, die nirgends ankommt, ist ärgerlicher als ein fehlender Knopf. Die Schranke sitzt
-im Endpunkt, der das Token prüft, Größe und Rate deckelt und ein zurückgezogenes Label
+im Endpunkt, der den Schlüssel prüft, Größe und Rate deckelt und ein zurückgezogenes Label
 sperrt.
 
 Gemeldet wird **immer erst lokal**, gesendet danach: ein Netzfehler lässt die Meldung offen
@@ -1199,10 +1200,9 @@ Endpunkt kennt bloß Ids. Zustand hält es keinen: es liest per `gh issue list`,
 dort steht, erkennt Vorhandenes an unsichtbaren Markern im Issue-Text und trägt nur
 Fehlendes nach, also beliebig oft wiederholbar (`server/melden/README.md`).
 
-Das HMAC-Geheimnis liegt **ausschließlich** auf dem Server (`server/melden/README.md`). Die
-Endpunkt-URL ist dagegen eine Konstante im öffentlichen Repo (`ReportService.ENDPOINT`) —
-kein Geheimnis, und genau deshalb muss der Endpunkt seine Grenzen selbst setzen. Ist sie
-leer, ist der Kanal aus.
+Das HMAC-Geheimnis liegt **ausschließlich** auf dem Server (`server/melden/README.md`). URL
+und App-Schlüssel kommen beim Export in die EXE und sind kein Geheimnis — genau deshalb
+muss der Endpunkt seine Grenzen selbst setzen. Fehlt eins davon, ist der Kanal aus.
 
 ## Der Statistik-Kanal: Spieldaten der Testspieler
 

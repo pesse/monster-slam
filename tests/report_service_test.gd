@@ -5,7 +5,7 @@ extends GdUnitTestSuite
 ## Es wird nichts gesendet — der Endpunkt gehört nicht in einen Testlauf. Geprüft wird
 ## die Entscheidung „darf gemeldet werden" und der Aufbau der Meldung.
 
-const TOKEN := "mia.6FRQ4TRQV7AY862H"
+const KEY := "app-1.6FRQ4TRQV7AY862H"
 
 ## Die Gründe, die server/melden/melden.php benennt. Absichtlich hier wiederholt: die
 ## Liste IST der Vertrag zwischen Endpunkt und App, und ein neuer Grund ohne Text würde
@@ -16,54 +16,46 @@ const ENDPOINT_ERRORS := [
 ]
 
 var _endpoint_backup := ""
-var _codes_backup: String = ""
-var _had_codes: bool = false
+var _key_backup := ""
+var _key_version_backup := 1
 
 
 func before_test() -> void:
 	_endpoint_backup = ReportService.endpoint
-	_had_codes = FileAccess.file_exists(ReportToken.PATH)
-	_codes_backup = FileAccess.get_file_as_string(ReportToken.PATH) if _had_codes else ""
-	ReportToken.forget()
+	_key_backup = ReportService.key
+	_key_version_backup = ReportService.key_version
 
 
 func after_test() -> void:
 	ReportService.endpoint = _endpoint_backup
-	if _had_codes:
-		var file := FileAccess.open(ReportToken.PATH, FileAccess.WRITE)
-		file.store_string(_codes_backup)
-		file.close()
-	else:
-		DirAccess.remove_absolute(ReportToken.PATH)
+	ReportService.key = _key_backup
+	ReportService.key_version = _key_version_backup
 
 
 func test_ohne_endpunkt_ist_der_kanal_aus() -> void:
 	ReportService.endpoint = ""
-	ReportToken.store(TOKEN, 1)
-	assert_bool(ReportService.configured()).is_false()
+	ReportService.key = KEY
 	assert_bool(ReportService.can_report()).is_false()
 
 
-func test_ohne_token_darf_nicht_gemeldet_werden() -> void:
+func test_ohne_schluessel_ist_der_kanal_aus() -> void:
 	ReportService.endpoint = "https://example.invalid/melden.php"
-	assert_bool(ReportService.configured()).is_true()
+	ReportService.key = ""
 	assert_bool(ReportService.can_report()).is_false()
 
 
-func test_mit_endpunkt_und_token_ist_melden_offen() -> void:
+func test_mit_endpunkt_und_schluessel_ist_melden_offen() -> void:
+	# Kein Token je Person mehr: was die Fassung mitbringt, reicht (ADR 0022).
 	ReportService.endpoint = "https://example.invalid/melden.php"
-	ReportToken.store(TOKEN, 1)
+	ReportService.key = KEY
 	assert_bool(ReportService.can_report()).is_true()
 
 
-func test_verify_weist_kaputte_gestalt_ohne_netz_ab() -> void:
-	# Die Gestaltprüfung ist der Sinn der lokalen Normalisierung: ein Tippfehler soll
-	# auffallen, ohne dass eine Anfrage rausgeht.
-	ReportService.endpoint = "https://example.invalid/melden.php"
-	assert_bool(await ReportService.verify("mia.viel-zu-kurz")).is_false()
-	assert_int(ReportService.state).is_equal(ReportService.State.ERROR)
-	assert_str(ReportService.error).is_not_empty()
-	assert_bool(ReportToken.has_token()).is_false()
+func test_ohne_rueckkanal_wird_nichts_gesendet() -> void:
+	ReportService.endpoint = ""
+	ReportService.key = ""
+	assert_bool(await ReportService.send_pending(true)).is_false()
+	assert_int(ReportService.state).is_not_equal(ReportService.State.SENDING)
 
 
 func test_payload_traegt_zieltyp_und_herkunft() -> void:
@@ -73,7 +65,8 @@ func test_payload_traegt_zieltyp_und_herkunft() -> void:
 		"learnable_id": "learn.x",
 		"at": "2026-09-02T18:04:11",
 	}
-	var payload := ReportService._payload(item, 3)
+	ReportService.key_version = 3
+	var payload := ReportService._payload(item)
 	assert_str(String(payload["action"])).is_equal("report")
 	assert_int(int(payload["key_version"])).is_equal(3)
 	# Nicht "lexeme_id": gemeldete Sätze sollen später ohne Formatbruch dazupassen.
@@ -85,7 +78,7 @@ func test_payload_traegt_zieltyp_und_herkunft() -> void:
 
 
 func test_payload_ohne_pack_wenn_der_eintrag_nicht_aus_einem_pack_kommt() -> void:
-	var payload := ReportService._payload({"lexeme_id": "lex.gibt.es.nicht"}, 1)
+	var payload := ReportService._payload({"lexeme_id": "lex.gibt.es.nicht"})
 	assert_bool(payload.has("pack")).is_false()
 
 

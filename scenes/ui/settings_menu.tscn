@@ -461,42 +461,18 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TokenLabel" type="Label" parent="Window/Layout/Content/Body/Pages/ReportPage"]
+[node name="ReportLabel" type="Label" parent="Window/Layout/Content/Body/Pages/ReportPage"]
 layout_mode = 2
 theme_type_variation = &"StatHeading"
-text = "Melde-Token"
+text = "Wörter melden"
 
-[node name="TokenHint" type="Label" parent="Window/Layout/Content/Body/Pages/ReportPage"]
+[node name="ReportHint" type="Label" parent="Window/Layout/Content/Body/Pages/ReportPage"]
 layout_mode = 2
 theme_type_variation = &"Caption"
-text = "Mit einem Melde-Token kannst du falsche oder unklare Vokabeln melden. Übertragen werden dann: das gemeldete Wort, dein Kommentar, die Spielversion und der Name, der im Token steht — kein Profilname und keine Fortschrittsdaten."
+text = "Ist ein Wort falsch oder unklar, melde es in der Auflösung nach einer Welle mit „⚑ Melden“. Übertragen werden nur das gemeldete Wort, dein Kommentar und die Spielversion — kein Profilname und keine Fortschrittsdaten."
 autowrap_mode = 3
 
-[node name="TokenRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/ReportPage"]
-layout_mode = 2
-
-[node name="TokenInput" type="LineEdit" parent="Window/Layout/Content/Body/Pages/ReportPage/TokenRow"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 44)
-layout_mode = 2
-size_flags_horizontal = 3
-placeholder_text = "name.XXXX-XXXX-XXXX-XXXX"
-
-[node name="TokenButton" type="Button" parent="Window/Layout/Content/Body/Pages/ReportPage/TokenRow"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(160, 44)
-layout_mode = 2
-theme_type_variation = &"WindowButton"
-text = "Eintragen"
-
-[node name="TokenForget" type="Button" parent="Window/Layout/Content/Body/Pages/ReportPage/TokenRow"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(160, 44)
-layout_mode = 2
-theme_type_variation = &"WindowButton"
-text = "Vergessen"
-
-[node name="TokenStatus" type="Label" parent="Window/Layout/Content/Body/Pages/ReportPage"]
+[node name="ReportStatus" type="Label" parent="Window/Layout/Content/Body/Pages/ReportPage"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"StatSubline"

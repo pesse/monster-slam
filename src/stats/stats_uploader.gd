@@ -25,6 +25,8 @@ extends Node
 ##   url="https://…/statistik/statistik.php"
 ##   key="app-1.XXXX-XXXX-XXXX-XXXX"
 ##   key_version=1
+## Derselbe Schlüssel gilt auch fürs Melden; dessen URL steht in `[report]`
+## (ReportService, ADR 0022).
 const KEY_PATH := "res://stats_key.cfg"
 
 const FORMAT := 1

@@ -43,6 +43,7 @@ Zwei Dinge sind beim Melden anders und gelten hier nicht:
      HMAC der IP), höchstens 1000 Profile und 20 MB Spur je Profil und Monat.
    - Der Endpunkt nimmt **nur** `app-*` an. Mit einem Personen-Token lägen Statistik und
      Name doch wieder zusammen.
+   - Seit ADR 0022 meldet die App mit demselben Schlüssel.
 
 3. **Zuordnung über eine zufällige `stats_id` je Profil** (128 Bit,
    `UserSettings.stats_id`). Die player_id ist der Name des Kindes und taugt dafür nicht.

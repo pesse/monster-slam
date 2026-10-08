@@ -55,7 +55,8 @@ demselben Grund wie `ms-reports/`.
    ```
 
 4. **In GitHub hinterlegen**: Secret `STATS_APP_KEY` = der Schlüssel aus Schritt 3,
-   Repo-Variable `STATS_URL` = `https://<domain>/statistik/statistik.php`. Der
+   Repo-Variable `STATS_URL` = `https://<domain>/statistik/statistik.php`, für Melden
+   zusätzlich `REPORT_URL` = `https://<domain>/melden/melden.php` (ADR 0022). Der
    Release-Workflow schreibt daraus `stats_key.cfg` (`tools/stats/write_key.sh`), und die
    nächste Fassung sendet. Für einen lokalen `./build.sh` dasselbe Skript einmal von Hand
    aufrufen; die Datei ist gitignored.
