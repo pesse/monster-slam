@@ -175,9 +175,10 @@ Wort sind drei Zeilen. Gearbeitet wird an Issues im privaten Content-Repo — **
 gemeldetem Wort**, mit allen Meldungen dazu als Belege. Das macht `tools/report/to_issues.py`:
 
 ```bash
-# reports.jsonl per SFTP holen (sie ist über keine URL abrufbar), dann:
-python3 tools/report/to_issues.py --from-file reports.jsonl --dry-run
-python3 tools/report/to_issues.py --from-file reports.jsonl
+# holt reports.jsonl per SFTP nach stats-data/ (sie ist über keine URL abrufbar) und
+# reicht sie an tools/report/to_issues.py weiter:
+REPORT_SFTP=<benutzer>@<sftp-host> tools/report/fetch.sh --dry-run
+REPORT_SFTP=<benutzer>@<sftp-host> tools/report/fetch.sh --issues
 ```
 
 Warum das ein eigener Schritt ist und nicht im Endpunkt steckt:
