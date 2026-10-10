@@ -140,19 +140,22 @@ static func files_for(data: Dictionary, profile: String) -> Dictionary:
 	return out
 
 
-## Was die Rückfrage vor dem Einspielen zeigt: Name, Level, Gold, Zeitpunkt und welche
-## Teile die Datei hat (ein Teil-Archiv ersetzt nur diese).
+## Was die Rückfrage vor dem Einspielen zeigt: Name, Zeitpunkt, welche Teile die Datei hat
+## (ein Teil-Archiv ersetzt nur diese) und Level bzw. Gold nur, wenn sie drin sind — sonst
+## fehlen die Schlüssel; ein Archiv nur mit Erfahrung hat kein Gold, auch keine 0.
 static func preview(archive: Dictionary) -> Dictionary:
 	var data: Dictionary = archive.get("data", {})
 	var head: Dictionary = archive.get("head", {})
-	var xp := int((data.get("_level", {}) as Dictionary).get("total_xp", 0))
-	return {
+	var out := {
 		"name": str(head.get("name", "")),
-		"level": Experience.level_for(xp),
-		"gold": int((data.get("_wallet", {}) as Dictionary).get("gold", 0)),
 		"saved_at": int(head.get("saved_at", 0)),
 		"parts": data.keys(),
 	}
+	if data.has("_level"):
+		out["level"] = Experience.level_for(int((data["_level"] as Dictionary).get("total_xp", 0)))
+	if data.has("_wallet"):
+		out["gold"] = int((data["_wallet"] as Dictionary).get("gold", 0))
+	return out
 
 
 static func _fail(message: String) -> Dictionary:

@@ -362,14 +362,20 @@ func _check_import(path: String) -> void:
 		return
 	_import_pending = archive
 	var seen := SaveArchive.preview(archive)
-	var who := str(seen["name"]) if not str(seen["name"]).is_empty() else "ohne Namen"
+	var facts: Array = [str(seen["name"]) if not str(seen["name"]).is_empty() else "ohne Namen"]
+	if seen.has("level"):
+		facts.append("Level %d" % int(seen["level"]))
+	if seen.has("gold"):
+		facts.append("%d Gold" % int(seen["gold"]))
+	facts.append("gesichert am %s" % SaveNotices.date(int(seen["saved_at"])))
+	var rest := "" if (seen["parts"] as Array).size() >= SaveCoordinator.PROFILE_SUFFIXES.size() \
+			else " Alles andere bleibt, wie es ist."
 	_import_confirm.ask("Spielstand laden?",
-			"In der Datei: %s, Level %d, %d Gold, gesichert am %s.\n" \
-					% [who, int(seen["level"]), int(seen["gold"]), SaveNotices.date(int(seen["saved_at"]))]
+			"In der Datei: %s.\n" % ", ".join(facts)
 			+ "Sie enthält: %s.\n\n" % SaveNotices.part_names(seen["parts"])
-			+ "Diese Teile des Spielstands von %s werden dadurch ersetzt. Der bisherige Stand " \
-					% UserSettings.display_name()
-			+ "bleibt in den Sicherungen.",
+			+ "Diese Teile des Spielstands von %s werden dadurch ersetzt.%s Der bisherige " \
+					% [UserSettings.display_name(), rest]
+			+ "Stand bleibt in den Sicherungen.",
 			"Laden", "Abbrechen")
 
 
