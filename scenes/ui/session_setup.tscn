@@ -140,3 +140,10 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 text = "👹 Bosskampf starten"
+
+[node name="WritingStartButton" type="Button" parent="Margin/Root/Buttons"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+text = "📜 The Rambler"

@@ -1,0 +1,76 @@
+[gd_scene format=3]
+
+[node name="ReadingPanel" type="VBoxContainer"]
+theme_type_variation = &"ScreenStack"
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Page" type="PanelContainer" parent="."]
+theme_type_variation = &"BossBubble"
+custom_minimum_size = Vector2(760, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 3
+
+[node name="PageStack" type="VBoxContainer" parent="Page"]
+theme_type_variation = &"Tight"
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Page/PageStack"]
+unique_name_in_owner = true
+theme_type_variation = &"BubbleTitle"
+custom_minimum_size = Vector2(680, 0)
+layout_mode = 2
+autowrap_mode = 3
+text = "—"
+
+[node name="Author" type="Label" parent="Page/PageStack"]
+unique_name_in_owner = true
+theme_type_variation = &"BubbleHint"
+custom_minimum_size = Vector2(680, 0)
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="Scroll" type="ScrollContainer" parent="Page/PageStack"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Gutter" type="MarginContainer" parent="Page/PageStack/Scroll"]
+theme_type_variation = &"ScrollGutter"
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SourceText" type="Label" parent="Page/PageStack/Scroll/Gutter"]
+unique_name_in_owner = true
+theme_type_variation = &"BubbleText"
+custom_minimum_size = Vector2(680, 0)
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="Actions" type="HBoxContainer" parent="."]
+theme_type_variation = &"ScreenStack"
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ReadNote" type="Label" parent="Actions"]
+unique_name_in_owner = true
+theme_type_variation = &"Hint"
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+autowrap_mode = 3
+text = "Lies in Ruhe – es gibt keinen Zeitdruck. Beim Schreiben steht die Geschichte links daneben."
+
+[node name="WriteButton" type="Button" parent="Actions"]
+unique_name_in_owner = true
+theme_type_variation = &"ActionButton"
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+text = "✍ Zum Schreiben"

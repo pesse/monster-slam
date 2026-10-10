@@ -1,0 +1,8 @@
+{
+  "id": "boss.rambler",
+  "name": "The Rambler",
+  "description": "Kein Zeitdruck. Fasse seine endlose Geschichte in einer Summary zusammen; jedes erfüllte Kriterium wirft einen Papierstapel ab.",
+  "writing_rule": {
+    "kind": "summary"
+  }
+}

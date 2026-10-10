@@ -17,6 +17,9 @@ dem Menü; „✕“ oder **Esc** schließt es.
 - Stößt die Installation auf Dateien, die schon da sind, erscheint „Vorhandene Dateien
   übernehmen“.
 - **Ohne Internet** bleiben installierte Inhalte nutzbar. Nur neue holen geht dann nicht.
+- **Schreib-Boss (Cloud):** Hier trägt man den eigenen API-Schlüssel für The Rambler ein
+  und sieht, was die Abgaben der letzten 30 Tage ungefähr gekostet haben
+  ([Kapitel 22](22-schreib-boss.md)).
 - **Zurückgezogene Packs** verschwinden von selbst: Führt die Liste einen installierten Pack
   nicht mehr, entfernt das Spiel ihn beim nächsten Abruf. So ging es dem früheren
   Grundwortschatz-Pack; alle Vokabeln kommen jetzt aus den Büchern.

@@ -1,0 +1,124 @@
+[gd_scene format=3]
+
+[node name="WritingPanel" type="HBoxContainer"]
+theme_type_variation = &"ScreenStack"
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Source" type="PanelContainer" parent="."]
+theme_type_variation = &"BossBubble"
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+
+[node name="SourceStack" type="VBoxContainer" parent="Source"]
+theme_type_variation = &"Tight"
+layout_mode = 2
+
+[node name="SourceTitle" type="Label" parent="Source/SourceStack"]
+unique_name_in_owner = true
+theme_type_variation = &"BubbleAccent"
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+autowrap_mode = 3
+text = "—"
+
+[node name="SourceScroll" type="ScrollContainer" parent="Source/SourceStack"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Gutter" type="MarginContainer" parent="Source/SourceStack/SourceScroll"]
+theme_type_variation = &"ScrollGutter"
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SourceText" type="Label" parent="Source/SourceStack/SourceScroll/Gutter"]
+unique_name_in_owner = true
+theme_type_variation = &"BubbleText"
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="Editor" type="PanelContainer" parent="."]
+theme_type_variation = &"PlayerBubble"
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="EditorStack" type="VBoxContainer" parent="Editor"]
+theme_type_variation = &"Tight"
+layout_mode = 2
+
+[node name="EditorTitle" type="Label" parent="Editor/EditorStack"]
+unique_name_in_owner = true
+theme_type_variation = &"BubbleAccent"
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+autowrap_mode = 3
+text = "Deine Summary"
+
+[node name="TextEdit" type="TextEdit" parent="Editor/EditorStack"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+placeholder_text = "In the short story „…“ by …, …"
+wrap_mode = 1
+
+[node name="Sidebar" type="PanelContainer" parent="."]
+theme_type_variation = &"HudPanel"
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+
+[node name="SideStack" type="VBoxContainer" parent="Sidebar"]
+theme_type_variation = &"Tight"
+layout_mode = 2
+
+[node name="Words" type="Label" parent="Sidebar/SideStack"]
+unique_name_in_owner = true
+theme_type_variation = &"SectionTitle"
+layout_mode = 2
+text = "0 Wörter"
+
+[node name="Target" type="Label" parent="Sidebar/SideStack"]
+unique_name_in_owner = true
+theme_type_variation = &"Hint"
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+autowrap_mode = 3
+text = "Ziel: —"
+
+[node name="Rule" type="HSeparator" parent="Sidebar/SideStack"]
+theme_type_variation = &"StatRule"
+layout_mode = 2
+
+[node name="Checks" type="VBoxContainer" parent="Sidebar/SideStack"]
+unique_name_in_owner = true
+theme_type_variation = &"Tight"
+layout_mode = 2
+
+[node name="Space" type="Control" parent="Sidebar/SideStack"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="ReadButton" type="Button" parent="Sidebar/SideStack"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "📖 Geschichte groß"
+
+[node name="SubmitButton" type="Button" parent="Sidebar/SideStack"]
+unique_name_in_owner = true
+theme_type_variation = &"ActionButton"
+layout_mode = 2
+text = "⚔ Abgeben"
+
+[node name="SubmitNote" type="Label" parent="Sidebar/SideStack"]
+unique_name_in_owner = true
+theme_type_variation = &"Caption"
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+autowrap_mode = 3
+text = "Strg+Enter gibt ab."

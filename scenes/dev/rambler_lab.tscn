@@ -1,0 +1,131 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/dev/rambler_lab.gd" id="1_lab"]
+[ext_resource type="PackedScene" path="res://scenes/battle/rambler_stage.tscn" id="2_stage"]
+
+[node name="RamblerLab" type="Node"]
+script = ExtResource("1_lab")
+
+[node name="Stage" parent="." instance=ExtResource("2_stage")]
+unique_name_in_owner = true
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Probe" type="PanelContainer" parent="UI"]
+unique_name_in_owner = true
+visible = false
+anchor_left = 0.33
+anchor_top = 0.08
+anchor_right = 0.97
+anchor_bottom = 0.92
+theme_type_variation = &"GameWindow"
+
+[node name="ProbeText" type="Label" parent="UI/Probe"]
+theme_type_variation = &"BubbleText"
+text = "Overlay-Probe: So viel Platz hat ein Text, der über der Bühne liegt — die Vorlage beim Lesen, das Schreibfeld, die markierten Stellen beim Überarbeiten.
+
+The Rambler wandert dahinter durch den Raum und taucht zwischen den Panels auf; die Kamera steht still.
+
+Dies ist ein Fülltext ohne Inhalt. Er ist so lang wie ein Absatz einer kurzen Geschichte, damit man sieht, wie die Zeilen auf dem Hintergrund stehen."
+autowrap_mode = 3
+
+[node name="Mouth" type="ColorRect" parent="UI"]
+unique_name_in_owner = true
+visible = false
+offset_right = 14.0
+offset_bottom = 14.0
+mouse_filter = 2
+color = Color(0.2, 1, 0.9, 1)
+
+[node name="Panel" type="PanelContainer" parent="UI"]
+unique_name_in_owner = true
+offset_left = 8.0
+offset_top = 8.0
+theme_type_variation = &"DebugPanel"
+
+[node name="Buttons" type="VBoxContainer" parent="UI/Panel"]
+
+[node name="Title" type="Label" parent="UI/Panel/Buttons"]
+theme_type_variation = &"Hint"
+text = "Rambler-Werkbank"
+
+[node name="FocusButton" type="Button" parent="UI/Panel/Buttons"]
+unique_name_in_owner = true
+theme_type_variation = &"DebugButton"
+text = "F  Fokus: vorn"
+
+[node name="SpeakButton" type="Button" parent="UI/Panel/Buttons"]
+unique_name_in_owner = true
+theme_type_variation = &"DebugButton"
+text = "S  Reden"
+
+[node name="IndexRow" type="HBoxContainer" parent="UI/Panel/Buttons"]
+
+[node name="IndexCaption" type="Label" parent="UI/Panel/Buttons/IndexRow"]
+theme_type_variation = &"Hint"
+text = "Stapel"
+
+[node name="IndexSpin" type="SpinBox" parent="UI/Panel/Buttons/IndexRow"]
+unique_name_in_owner = true
+max_value = 9.0
+rounded = true
+
+[node name="DropButton" type="Button" parent="UI/Panel/Buttons"]
+unique_name_in_owner = true
+theme_type_variation = &"DebugButton"
+text = "D  Stapel fällt (1–9: dieser)"
+
+[node name="HoldButton" type="Button" parent="UI/Panel/Buttons"]
+unique_name_in_owner = true
+theme_type_variation = &"DebugButton"
+text = "H  Stapel hält"
+
+[node name="GloatButton" type="Button" parent="UI/Panel/Buttons"]
+unique_name_in_owner = true
+theme_type_variation = &"DebugButton"
+text = "G  Freuen"
+
+[node name="FallButton" type="Button" parent="UI/Panel/Buttons"]
+unique_name_in_owner = true
+theme_type_variation = &"DebugButton"
+text = "X  Besiegt"
+
+[node name="CountRow" type="HBoxContainer" parent="UI/Panel/Buttons"]
+
+[node name="CountCaption" type="Label" parent="UI/Panel/Buttons/CountRow"]
+theme_type_variation = &"Hint"
+text = "Anzahl"
+
+[node name="CountSpin" type="SpinBox" parent="UI/Panel/Buttons/CountRow"]
+unique_name_in_owner = true
+min_value = 1.0
+max_value = 9.0
+value = 5.0
+rounded = true
+
+[node name="RestoreButton" type="Button" parent="UI/Panel/Buttons"]
+unique_name_in_owner = true
+theme_type_variation = &"DebugButton"
+text = "R  Neuer Kampf"
+
+[node name="WarmButton" type="Button" parent="UI/Panel/Buttons"]
+unique_name_in_owner = true
+theme_type_variation = &"DebugButton"
+text = "W  Vorwärmen"
+
+[node name="ProbeButton" type="Button" parent="UI/Panel/Buttons"]
+unique_name_in_owner = true
+theme_type_variation = &"DebugButton"
+toggle_mode = true
+text = "O  Overlay-Probe"
+
+[node name="MouthButton" type="Button" parent="UI/Panel/Buttons"]
+unique_name_in_owner = true
+theme_type_variation = &"DebugButton"
+toggle_mode = true
+text = "M  Mund zeigen"
+
+[node name="HideButton" type="Button" parent="UI/Panel/Buttons"]
+unique_name_in_owner = true
+theme_type_variation = &"DebugButton"
+text = "Tab  Knöpfe ausblenden"

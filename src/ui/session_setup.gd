@@ -21,11 +21,16 @@ extends Control
 ## nimmt davon nur Bücher & Units und Tags (Sätze haben keinen Aufgaben- und keinen
 ## Vokabel-Typ). Jeder Knopf sperrt für sich, wenn seine Auswahl nichts hergibt.
 ##
+## Dazu kommt „📜 The Rambler“, der Schreib-Boss (docs/adr/0023-schreib-boss.md). Er ist
+## **unsichtbar statt gesperrt**, solange kein eigener API-Schlüssel eingetragen ist oder
+## die gewählten Units keine Schreibaufgabe haben (WritingBoss.can_start).
+##
 ## Das statische Layout liegt in session_setup.tscn; hier nur die datengetriebenen
 ## Inhalte (Muster wie profile_menu._refresh_words()).
 
 const BATTLE_SCENE := "res://scenes/battle/battle.tscn"
 const BOSS_SCENE := "res://scenes/battle/boss_fight.tscn"
+const WRITING_SCENE := "res://scenes/battle/writing_boss.tscn"
 const BossFight := preload("res://src/battle/boss_fight.gd")
 
 const NO_WORDS_TEXT := "Diese Auswahl trifft keine Vokabel — Filter lockern oder Inhalte installieren."
@@ -54,6 +59,7 @@ const MAX_SUGGESTIONS := 10
 @onready var _tag_badges: HFlowContainer = %TagBadges
 @onready var _start_button: Button = %StartButton
 @onready var _boss_start_button: Button = %BossStartButton
+@onready var _writing_start_button: Button = %WritingStartButton
 @onready var _start_hint: Label = %StartHint
 
 var _all_tags: PackedStringArray = PackedStringArray()
@@ -70,6 +76,10 @@ func _ready() -> void:
 	RunRequest.start_expert()
 	_start_button.pressed.connect(func(): get_tree().change_scene_to_file(BATTLE_SCENE))
 	_boss_start_button.pressed.connect(func(): get_tree().change_scene_to_file(BOSS_SCENE))
+	_writing_start_button.pressed.connect(func(): get_tree().change_scene_to_file(WRITING_SCENE))
+	Hints.attach(_writing_start_button, "The Rambler",
+			"Schreib-Boss: Fasse seine Geschichte in einer englischen Summary zusammen. Kein Zeitdruck.",
+			"Dein Text geht zum Bewerten mit deinem eigenen Schlüssel an Anthropic.")
 	(%BackButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(MENU_SCENE))
 	_build_scope()
 	_build_task_types()
@@ -97,6 +107,7 @@ func _refresh_start_gate() -> void:
 	_start_button.disabled = not playable
 	_boss_start_button.disabled = not boss_playable
 	_start_hint.visible = not (playable and boss_playable)
+	_writing_start_button.visible = WritingBoss.can_start()
 	_start_hint.text = NO_WORDS_TEXT if not playable else NO_SENTENCES_TEXT
 
 

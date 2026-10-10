@@ -36,6 +36,11 @@ und darunter steht, dass die Filter gelockert werden müssen. So landet man nie 
 leeren Schlachtfeld. Genauso wird „👹 Bosskampf starten“ grau, wenn es zu den gewählten
 Units noch keine Sätze gibt.
 
+Ist unter „Inhalte“ ein eigener Schlüssel für den Schreib-Boss eingetragen und gibt es zu den
+gewählten Units eine Schreibaufgabe, steht daneben ein dritter Knopf: **„📜 The Rambler“**
+führt zur Summary ([Kapitel 22](22-schreib-boss.md)). Ohne Schlüssel oder Aufgabe fehlt
+er ganz.
+
 Ein Bosssieg aus dem Expertenmodus zählt nicht für die Medaillen auf der Landkarte: er gehört
 zu keiner einzelnen Unit.
 

@@ -15,6 +15,9 @@ Nachfrage.
 - **Der Spielverlauf**: wann welches Monster kam, ob die Antwort richtig war, wie lange sie
   gedauert hat und, bei einer falschen, wie weit sie von der Lösung entfernt war (zum
   Beispiel „ein Buchstabe falsch“).
+- **Beim Schreib-Boss** je Abgabe, welche Kriterien erfüllt waren, wie viele Wörter der
+  Text hatte und wie viel Rechenleistung des Sprachmodells sie verbraucht hat — nicht den
+  Text selbst.
 - Dazu die Spielversion, das Betriebssystem und die installierten Vokabel-Packs.
 
 ## Was nie gesendet wird
@@ -22,8 +25,12 @@ Nachfrage.
 - **Keine Namen.** Jedes Profil bekommt eine zufällige Nummer, und nur die geht mit. Sie
   lässt sich nicht mit einem Namen verknüpfen; der Profilname bleibt auf dem Rechner.
 - **Nichts, was ein Kind selbst tippt**: keine Antworten, keine Sätze aus dem Bosskampf,
-  keine Kommentare beim Melden, keine Namen von Testlisten.
+  keine Texte aus dem Schreib-Boss, keine Kommentare beim Melden, keine Namen von Testlisten.
 - Profile, deren Name mit `zz-` beginnt, sendet das Spiel nie.
+
+Der Schreib-Boss ist die eine Ausnahme vom Rechner-bleibt-Rechner: Wer dort einen eigenen
+Schlüssel einträgt, schickt seine Texte zur Bewertung an Anthropic, nicht an uns
+([Kapitel 22](22-schreib-boss.md)).
 
 Nur wer ein Wort bewusst meldet, schickt einen Kommentar mit
 ([Kapitel 14](14-woerter-melden.md)). Auch der bleibt anonym: Er trägt keinen Namen, nur
@@ -39,4 +46,4 @@ Spielverlauf mehr mit. Der Spielstand wird weiter gesendet.
 
 ---
 
-← [20. Der Bosskampf](20-bosskampf.md) · [Inhalt](README.md)
+← [20. Der Bosskampf](20-bosskampf.md) · [Inhalt](README.md) · [22. The Rambler](22-schreib-boss.md) →

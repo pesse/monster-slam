@@ -1,0 +1,182 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://src/battle/writing_boss.gd" id="1_boss"]
+[ext_resource type="PackedScene" path="res://scenes/battle/writing/encounter_panel.tscn" id="2_encounter"]
+[ext_resource type="PackedScene" path="res://scenes/battle/writing/reading_panel.tscn" id="3_reading"]
+[ext_resource type="PackedScene" path="res://scenes/battle/writing/writing_panel.tscn" id="4_writing"]
+[ext_resource type="PackedScene" path="res://scenes/battle/writing/attack_panel.tscn" id="5_attack"]
+[ext_resource type="PackedScene" path="res://scenes/battle/writing/revision_panel.tscn" id="6_revision"]
+[ext_resource type="PackedScene" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
+[ext_resource type="PackedScene" path="res://scenes/ui/confirm_dialog.tscn" id="8_confirm"]
+[ext_resource type="PackedScene" path="res://scenes/ui/scene_zoom.tscn" id="20_zoom"]
+
+[node name="WritingBoss" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_boss")
+
+[node name="Flash" type="ColorRect" parent="."]
+unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 0.85, 0.4, 0.3)
+
+[node name="Margin" type="MarginContainer" parent="."]
+theme_type_variation = &"ScreenMargin"
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Root" type="VBoxContainer" parent="Margin"]
+theme_type_variation = &"ScreenStack"
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Header" type="HBoxContainer" parent="Margin/Root"]
+theme_type_variation = &"SectionStack"
+layout_mode = 2
+mouse_filter = 2
+
+[node name="BackButton" type="Button" parent="Margin/Root/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+text = "← Zurück"
+
+[node name="LeftSpace" type="Control" parent="Margin/Root/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="BossPlate" type="PanelContainer" parent="Margin/Root/Header"]
+theme_type_variation = &"HudPanel"
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+
+[node name="PlateStack" type="VBoxContainer" parent="Margin/Root/Header/BossPlate"]
+theme_type_variation = &"Tight"
+layout_mode = 2
+
+[node name="PlateTop" type="HBoxContainer" parent="Margin/Root/Header/BossPlate/PlateStack"]
+theme_type_variation = &"ScreenStack"
+layout_mode = 2
+
+[node name="BossName" type="Label" parent="Margin/Root/Header/BossPlate/PlateStack/PlateTop"]
+unique_name_in_owner = true
+theme_type_variation = &"SectionTitle"
+layout_mode = 2
+size_flags_horizontal = 3
+text = "The Rambler"
+
+[node name="StackLabel" type="Label" parent="Margin/Root/Header/BossPlate/PlateStack/PlateTop"]
+unique_name_in_owner = true
+theme_type_variation = &"SectionTitle"
+layout_mode = 2
+text = "📄 5/5"
+
+[node name="StackBar" type="ProgressBar" parent="Margin/Root/Header/BossPlate/PlateStack"]
+unique_name_in_owner = true
+theme_type_variation = &"BossHp"
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+max_value = 5.0
+step = 0.01
+value = 5.0
+show_percentage = false
+
+[node name="RightSpace" type="Control" parent="Margin/Root/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="RoundPlate" type="PanelContainer" parent="Margin/Root/Header"]
+theme_type_variation = &"HudPanel"
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="RoundLabel" type="Label" parent="Margin/Root/Header/RoundPlate"]
+unique_name_in_owner = true
+theme_type_variation = &"SectionTitle"
+layout_mode = 2
+horizontal_alignment = 1
+text = "Begegnung"
+
+[node name="HandbookLink" parent="Margin/Root/Header" instance=ExtResource("handbook_link")]
+layout_mode = 2
+size_flags_vertical = 4
+chapter = "22-schreib-boss.md"
+
+[node name="Body" type="Control" parent="Margin/Root"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="Encounter" parent="Margin/Root/Body" instance=ExtResource("2_encounter")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="Reading" parent="Margin/Root/Body" instance=ExtResource("3_reading")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+
+[node name="Writing" parent="Margin/Root/Body" instance=ExtResource("4_writing")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+
+[node name="Attack" parent="Margin/Root/Body" instance=ExtResource("5_attack")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+
+[node name="Revision" parent="Margin/Root/Body" instance=ExtResource("6_revision")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+
+[node name="Shout" type="Label" parent="."]
+unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0)
+theme_type_variation = &"Shout"
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -60.0
+offset_right = 300.0
+offset_bottom = 60.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CheckTimer" type="Timer" parent="."]
+unique_name_in_owner = true
+wait_time = 0.35
+one_shot = true
+
+[node name="ConfirmDialog" parent="." instance=ExtResource("8_confirm")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="SceneZoom" parent="." instance=ExtResource("20_zoom")]

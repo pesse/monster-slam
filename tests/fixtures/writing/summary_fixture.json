@@ -1,0 +1,46 @@
+{
+	"id": "writing.en_test_unit1.summary_01",
+	"kind": "summary",
+	"book": "test",
+	"unit": 1,
+	"title": "The Lighthouse Cat",
+	"author": "Mara Linden",
+	"genre": "short story",
+	"text": "Every evening, old Tom climbed the hundred steps of the lighthouse on Gull Island to light the lamp. He had done this for forty years, and he always took his grey cat, Pepper, with him. Pepper liked to sit on the warm glass and watch the boats come home.\n\nOne stormy night in November, the lamp did not work. The wind was so strong that the windows shook, and the rain hit the glass like little stones. Tom tried again and again, but the old machine stayed dark. Far out at sea, he could see the lights of a small fishing boat. It was coming straight towards the rocks.\n\n\"We have to do something, Pepper,\" Tom said. He remembered the old oil lantern in the cupboard downstairs. But his knees hurt, and the steps were wet and slippery. While Tom was still thinking, Pepper ran down the stairs. A minute later the cat came back with the end of a rope in her mouth. The rope was tied to the lantern.\n\nTogether they pulled the lantern up. Tom lit it with shaking hands and held it high in the window. For a long moment nothing happened. Then the fishing boat turned slowly away from the rocks and sailed into the safe harbour.\n\nThe next morning, the fishermen came to the lighthouse to say thank you. One of them was a young woman called Ella. She told Tom that her little brother had been on the boat, too. \"Without your light we would all be at the bottom of the sea,\" she said.\n\nTom smiled and pointed at Pepper. \"Don't thank me,\" he said. \"Thank her.\" From that day on, the people of Gull Island called Pepper the Lighthouse Cat, and the fishermen brought her a fresh fish every Friday.",
+	"target_words": [
+		80,
+		140
+	],
+	"key_points": [
+		{
+			"id": "kp1",
+			"text": "An old lighthouse keeper and his cat look after the light on an island.",
+			"required": true
+		},
+		{
+			"id": "kp2",
+			"text": "During a storm the lamp breaks while a fishing boat is heading for the rocks.",
+			"required": true
+		},
+		{
+			"id": "kp3",
+			"text": "The cat fetches the rope of an old lantern, and they pull it up together.",
+			"required": true
+		},
+		{
+			"id": "kp4",
+			"text": "The light of the lantern saves the boat.",
+			"required": true
+		},
+		{
+			"id": "kp5",
+			"text": "The fishermen thank Tom, and he gives the credit to the cat.",
+			"required": true
+		},
+		{
+			"id": "kp6",
+			"text": "A young woman's brother was on the boat.",
+			"required": false
+		}
+	]
+}

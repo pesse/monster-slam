@@ -126,6 +126,10 @@ will, installiert ihn; wer den schwachen Rechner hat, zahlt nichts dafür.
 Unterschied zu ADR 0002: dort steht ein eigener Server, aber er bekommt nur Ids und kennt
 keine Wörter. Eine frei getippte Schülerantwort ist etwas anderes.
 
+> Für die Satzbewertung gilt das weiter. Den Schreib-Boss, der ganze Texte bewertet, regelt
+> ADR 0023 eigens: Cloud nur mit eigenem Schlüssel und ausdrücklicher Bestätigung
+> (`docs/adr/0023-schreib-boss.md`).
+
 ### 4. Ein Vertrag für alle Stufen, und er blockiert nie
 
 `SentenceJudge` liefert `{ "quality": float, "feedback": String, "matched": String }` —

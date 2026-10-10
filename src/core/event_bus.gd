@@ -56,6 +56,12 @@ signal boss_ended(boss_id: String, won: bool)
 ## zusätzlich zu `boss_ended`, nicht statt ihm.
 signal boss_won(boss_id: String, unit_key: String)
 
+## --- Schreib-Boss (ADR 0023) ---
+## Eine Abgabe beim Schreib-Boss ist bewertet. `entry` hat die Felder von
+## `WritingLog.FIELDS` (Boss, Abgabe-Nummer, Modell, Token, Dauer, erfüllte Kriterien,
+## Wortzahl) — kein Text, kein Schlüssel.
+signal writing_submitted(entry: Dictionary)
+
 ## --- Zauber (Verbrauchsgegenstände, ADR 0014) ---
 ## Nicht zu verwechseln mit den Skills des Fähigkeitsbaums: die sind dauerhaft, werden
 ## mit Skillpunkten gekauft und wirken über SkillBook auf den Lauf (kein Signal nötig).

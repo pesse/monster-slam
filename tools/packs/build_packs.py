@@ -68,6 +68,7 @@ CATEGORIES = {
     "lexeme_relations",
     "sentences",
     "sentence_lexemes",
+    "writing",
     "task_definitions",
     "monster_task_rules",
     "monsters",

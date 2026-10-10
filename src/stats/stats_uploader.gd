@@ -50,6 +50,8 @@ const SNAPSHOT_FILES := {
 	"_skills": {"skills": ["unlocked", "spent_points"]},
 	"_inventory": {"inventory": "slots"},
 	"_bosses": {"bosses": "wins"},
+	# Abgaben beim Schreib-Boss (WritingLog): Token und Ergebnis, kein Text (ADR 0023, §7).
+	"_writing": {"writing": "submissions"},
 }
 
 var endpoint := ""

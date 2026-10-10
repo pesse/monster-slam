@@ -1,0 +1,367 @@
+class_name CloudModelBackend
+extends Node
+## Das Modell für den Schreib-Boss: Anthropic in der Cloud, mit dem EIGENEN Schlüssel des
+## Spielers (docs/adr/0023-schreib-boss.md, §1 und §2).
+##
+## Das ist die eine Ausnahme von „Kindertexte gehen nicht ins Netz" (ADR 0004), und sie gilt
+## nur hier: ohne bestätigten Schlüssel (`ApiKeys.anthropic()`) wird nichts gesendet. Hinaus
+## gehen Aufgabe, Vorlage, Kernpunkte und der Schülertext (`WritingPrompts.summary_user`) —
+## kein Profil, keine Spieler-Id. Der Schlüssel steht nur im Kopf der Anfrage und nie in
+## `last_note`, in der Ausgabe oder in der Antwort an den Aufrufer.
+##
+## Derselbe Zuschnitt wie `LocalModelBackend`: Anfrage rein, Dictionary raus, Zeitlimit,
+## `last_note` im Klartext, und Anfrage-Bau wie Antwort-Auswertung statisch — ohne Netz
+## prüfbar. Ein zweiter Anbieter passt dahinter, ohne dass Boss oder Richter davon wissen.
+##
+## **Strukturierte Ausgabe über `output_config.format`, nicht über ein erzwungenes Tool.**
+## Claude Opus 5.5 lehnt `tool_choice` `any`/`tool` mit HTTP 400 ab; die JSON-Ausgabe mit
+## Schema (`WritingPrompts.SUMMARY_SCHEMA`) ist der vorgesehene Ersatz und garantiert die
+## Form genauso. Die Antwort steht dann als JSON im Text-Block. `parse_envelope` liest zur
+## Sicherheit auch einen `tool_use`-Block, falls ein anderes Modell so antwortet.
+##
+## Verweigert das Modell (Sicherheitsfilter, `stop_reason: "refusal"`), versucht der Dienst
+## es selbst auf einem Ersatzmodell (`fallbacks: "default"`). Welches Modell geantwortet hat,
+## steht in der Antwort und geht so in `usage.model` — und damit in die Kostenrechnung.
+
+const URL := "https://api.anthropic.com/v1/messages"
+const MODELS_URL := "https://api.anthropic.com/v1/models/"
+## Die Modell-Id steht an dieser EINEN Stelle (ADR 0023, §2).
+const MODEL := "claude-opus-5-5"
+const API_VERSION := "2023-06-01"
+## Beta für die serverseitige Ersatzanfrage in der Form `fallbacks: "default"`.
+const FALLBACK_BETA := "server-side-fallback-2026-07-01"
+
+## Wie gründlich das Modell nachdenkt. Opus 5.5 denkt immer; `medium` ist dort die
+## Voreinstellung und hier ausdrücklich gesetzt, damit eine Änderung sichtbar ist. Ob
+## `high` die Güte hebt, wird in der Werkstatt gemessen (ADR 0023, §9), nicht hier geraten.
+const EFFORT := "medium"
+
+## Obergrenze für Denken und Antwort zusammen. Die Antwort selbst ist ein JSON mit einer
+## Handvoll Zitaten (wenige hundert Token); die Grenze trifft nur ein Modell, das aus der
+## Form fällt.
+const MAX_TOKENS := 16000
+
+## Sekunden bis zum Abbruch. Gemessen ~4 s je Aufruf (ADR 0023, §9), mit Denken und einem
+## langen Text eher eine halbe Minute; der Kampf hat keinen Zeitdruck.
+const HTTP_TIMEOUT := 120.0
+
+const BUSY_NOTE := "Vorige Anfrage läuft noch — diese wurde nicht gestellt."
+const NO_KEY_NOTE := "Kein bestätigter API-Schlüssel eingetragen."
+
+var model := MODEL
+## Verstellbar für Werkbank und Messung; gelesen in _ready(), also VOR dem Einhängen setzen.
+var http_timeout := HTTP_TIMEOUT
+## Ein Schlüssel für Werkbank oder Messung. Leer heißt: der bestätigte aus ApiKeys.
+var api_key := ""
+
+## Woran es beim letzten Mal lag, im Klartext — leer, solange alles in Ordnung war.
+var last_note := ""
+## Wie lange die letzte Anfrage gedauert hat, in Sekunden.
+var last_seconds := 0.0
+## Der Rumpf der letzten Bewertungsanfrage (ohne Kopfzeilen, also ohne Schlüssel) und die
+## rohe Antwort darauf mit HTTP-Status — für die Werkbank, die zeigen will, was wirklich
+## hin- und zurückging.
+var last_request: Dictionary = {}
+var last_response := ""
+var last_code := 0
+
+var _http: HTTPRequest
+var _on_done: Callable
+## "judge" oder "check" — was die offene Anfrage ist.
+var _mode := ""
+var _started_msec := 0
+
+
+func _ready() -> void:
+	_http = HTTPRequest.new()
+	_http.timeout = http_timeout
+	add_child(_http)
+	_http.request_completed.connect(_on_completed)
+
+
+## Bewertet eine Summary. `on_done` bekommt { result, usage, note } (siehe `reply_from`):
+## `result` ist {} bei jedem Fehler, `note` dann der Grund.
+func judge_summary(task: Dictionary, text: String, on_done: Callable) -> void:
+	if busy():
+		last_note = BUSY_NOTE
+		on_done.call(failed(BUSY_NOTE, model))
+		return
+	var key := _key()
+	if key.is_empty():
+		last_note = NO_KEY_NOTE
+		on_done.call(failed(NO_KEY_NOTE, model))
+		return
+	_begin(on_done, "judge")
+	last_request = request_body(task, text, model)
+	last_response = ""
+	last_code = 0
+	var error := _http.request(URL, request_headers(key), HTTPClient.METHOD_POST,
+			JSON.stringify(last_request))
+	if error != OK:
+		_fail("Anfrage an Anthropic nicht abgesetzt (Fehler %d)." % error)
+
+
+## Prüft den Schlüssel, ohne etwas zu kosten: fragt nur nach dem Modell (`GET /v1/models`).
+## `on_done` bekommt "" für „in Ordnung", sonst den Grund. `key` leer = der gespeicherte.
+func check_key(on_done: Callable, key := "") -> void:
+	var use := key.strip_edges() if not key.strip_edges().is_empty() else _key()
+	if busy():
+		on_done.call(BUSY_NOTE)
+		return
+	if use.is_empty():
+		on_done.call(NO_KEY_NOTE)
+		return
+	_begin(on_done, "check")
+	var error := _http.request(MODELS_URL + model, request_headers(use, false),
+			HTTPClient.METHOD_GET)
+	if error != OK:
+		_fail("Anfrage an Anthropic nicht abgesetzt (Fehler %d)." % error)
+
+
+func busy() -> bool:
+	return _on_done.is_valid()
+
+
+# --- Anfrage (statisch) --------------------------------------------------------
+
+## Die Kopfzeilen. Der Schlüssel steht NUR hier.
+static func request_headers(key: String, with_fallback := true) -> PackedStringArray:
+	var headers := PackedStringArray([
+		"Content-Type: application/json",
+		"x-api-key: %s" % key,
+		"anthropic-version: %s" % API_VERSION,
+	])
+	if with_fallback:
+		headers.append("anthropic-beta: %s" % FALLBACK_BETA)
+	return headers
+
+
+## Der Rumpf der Anfrage. Kein `thinking`: Opus 5.5 denkt immer (adaptiv), und ein
+## ausgeschaltetes Denken lehnt es ab. Kein `temperature`: wird dort ebenfalls abgelehnt.
+static func request_body(task: Dictionary, text: String, model_name := MODEL) -> Dictionary:
+	return {
+		"model": model_name,
+		"max_tokens": MAX_TOKENS,
+		"system": WritingPrompts.SUMMARY_SYSTEM,
+		"messages": [
+			{"role": "user", "content": WritingPrompts.summary_user(task, text)},
+		],
+		"output_config": {
+			"effort": EFFORT,
+			"format": {"type": "json_schema", "schema": WritingPrompts.SUMMARY_SCHEMA},
+		},
+		"fallbacks": "default",
+	}
+
+
+# --- Antwort (statisch) --------------------------------------------------------
+
+## Die Antwort an den Aufrufer aus dem, was HTTPRequest geliefert hat:
+## { "result": Modellantwort oder {}, "usage": {...}, "note": "" oder Grund }.
+static func reply_from(http_result: int, code: int, text: String, seconds: float,
+		model_name := MODEL) -> Dictionary:
+	if http_result != HTTPRequest.RESULT_SUCCESS:
+		return failed(_transport_note(http_result), model_name, seconds)
+	var envelope: Variant = _quiet_parse(text)
+	var env: Dictionary = envelope if envelope is Dictionary else {}
+	var usage := usage_of(env, model_name, seconds)
+	if code != 200:
+		return {"result": {}, "usage": usage, "note": error_note(code, env, text)}
+	var parsed := parse_envelope(env)
+	return {"result": parsed["result"], "usage": usage, "note": parsed["note"]}
+
+
+## Ein Fehlschlag ohne Verbrauch.
+static func failed(note: String, model_name := MODEL, seconds := 0.0) -> Dictionary:
+	return {"result": {}, "usage": usage_of({}, model_name, seconds), "note": note}
+
+
+## Der Verbrauch aus der Hülle, in der Form, die WritingLog speichert. Fehlt er (Fehler,
+## kein Netz), ist alles 0. `model` ist das Modell, das geantwortet hat — bei einer
+## Ersatzanfrage nicht das bestellte.
+static func usage_of(env: Dictionary, model_name: String, seconds: float) -> Dictionary:
+	var raw: Variant = env.get("usage", {})
+	var u: Dictionary = raw if raw is Dictionary else {}
+	var answered := str(env.get("model", "")).strip_edges()
+	return {
+		"model": answered if not answered.is_empty() else model_name,
+		"input_tokens": int(_num(u.get("input_tokens", 0))),
+		"output_tokens": int(_num(u.get("output_tokens", 0))),
+		"cache_read_input_tokens": int(_num(u.get("cache_read_input_tokens", 0))),
+		"cache_creation_input_tokens": int(_num(u.get("cache_creation_input_tokens", 0))),
+		"seconds": snappedf(seconds, 0.01),
+	}
+
+
+## Das Ergebnis aus einer erfolgreichen Hülle: { result, note }. Liest den Text-Block
+## (strukturierte Ausgabe) oder, falls vorhanden, die Eingabe eines `tool_use`-Blocks.
+static func parse_envelope(env: Dictionary) -> Dictionary:
+	var stop := str(env.get("stop_reason", ""))
+	if stop == "refusal":
+		return {"result": {}, "note": "Das Modell hat die Bewertung abgelehnt."}
+	if stop == "max_tokens":
+		return {"result": {}, "note": "Die Antwort des Modells wurde abgeschnitten."}
+	var candidate: Variant = null
+	var texts := PackedStringArray()
+	for block in Array(env.get("content", [])):
+		if not (block is Dictionary):
+			continue
+		var b: Dictionary = block
+		match str(b.get("type", "")):
+			"tool_use":
+				if b.get("input") is Dictionary and candidate == null:
+					candidate = b["input"]
+			"text":
+				texts.append(str(b.get("text", "")))
+	if candidate == null and not texts.is_empty():
+		candidate = _quiet_parse("".join(texts).strip_edges())
+	if not (candidate is Dictionary):
+		return {"result": {}, "note": "Antwort ohne Bewertung (kein JSON gefunden)."}
+	var result := parse_result(candidate)
+	if result.is_empty():
+		return {"result": {}, "note": "Antwort ohne Bewertung (Form stimmt nicht)."}
+	return {"result": result, "note": ""}
+
+
+## Die Modellantwort in fester Form, oder {} wenn sie nicht zum Vertrag passt. Ohne
+## `key_points`, `present_tense` oder `errors` gibt es kein Urteil; einzelne kaputte
+## Einträge fallen weg, statt die ganze Antwort zu kippen.
+static func parse_result(raw: Dictionary) -> Dictionary:
+	if not (raw.get("key_points") is Array and raw.get("errors") is Array \
+			and raw.get("present_tense") is bool):
+		return {}
+	var points: Array = []
+	for item in raw["key_points"]:
+		if not (item is Dictionary):
+			continue
+		var p: Dictionary = item
+		var id := str(p.get("id", "")).strip_edges()
+		if id.is_empty():
+			continue
+		var covered: bool = p.get("covered") is bool and p["covered"]
+		points.append({"id": id, "covered": covered,
+				"quote": str(p.get("quote", "")).strip_edges() if covered else ""})
+	var tense: Array = []
+	for quote in Array(raw.get("tense_quotes", [])):
+		var q := str(quote).strip_edges()
+		if not q.is_empty():
+			tense.append(q)
+	var errors: Array = []
+	for item in raw["errors"]:
+		if not (item is Dictionary):
+			continue
+		var e: Dictionary = item
+		var quote := str(e.get("quote", "")).strip_edges()
+		if quote.is_empty():
+			continue
+		var category := str(e.get("category", "")).strip_edges()
+		var severity := str(e.get("severity", "")).strip_edges()
+		errors.append({
+			"quote": quote,
+			"category": category if category in WritingPrompts.CATEGORIES else "grammar",
+			# Was nicht ausdrücklich schwer ist, zählt als leicht: ein schwerer Fehler hält
+			# einen Stapel, und das soll nur ein ausdrückliches Urteil tun.
+			"severity": "major" if severity == "major" else "minor",
+			"hint": str(e.get("hint", "")).strip_edges(),
+		})
+	return {
+		"key_points": points,
+		"present_tense": bool(raw["present_tense"]),
+		"tense_quotes": tense,
+		"errors": errors,
+	}
+
+
+## Der Grund für einen HTTP-Fehler im Klartext, für Overlay und Einstellungen.
+static func error_note(code: int, env: Dictionary, text := "") -> String:
+	var message := ""
+	if env.get("error") is Dictionary:
+		message = str((env["error"] as Dictionary).get("message", "")).strip_edges()
+	if message.is_empty():
+		message = _excerpt(text)
+	match code:
+		401:
+			return "Der API-Schlüssel wurde abgelehnt (ungültig oder widerrufen)."
+		403:
+			return "Der API-Schlüssel darf dieses Modell nicht nutzen."
+		404:
+			return "Das Modell %s ist für diesen Schlüssel nicht verfügbar." % MODEL
+		429:
+			return "Zu viele Anfragen oder Ausgabenlimit erreicht — später noch einmal."
+		500, 502, 503, 529:
+			return "Anthropic ist gerade überlastet — später noch einmal."
+	return "HTTP %d von Anthropic: %s" % [code, message]
+
+
+static func _transport_note(http_result: int) -> String:
+	if http_result == HTTPRequest.RESULT_TIMEOUT:
+		return "Keine Antwort von Anthropic in der Zeit."
+	return "Anthropic nicht erreichbar — besteht eine Internetverbindung? (Ergebnis %d)" \
+			% http_result
+
+
+static func _num(value: Variant) -> float:
+	return float(value) if (value is int or value is float) else 0.0
+
+
+static func _quiet_parse(text: String) -> Variant:
+	var json := JSON.new()
+	return json.data if json.parse(text) == OK else null
+
+
+static func _excerpt(text: String) -> String:
+	var one_line := " ".join(text.strip_edges().split("\n", false))
+	return one_line if one_line.length() <= 160 else one_line.substr(0, 160) + " …"
+
+
+# --- Ablauf --------------------------------------------------------------------
+
+func _key() -> String:
+	return api_key.strip_edges() if not api_key.strip_edges().is_empty() else ApiKeys.anthropic()
+
+
+func _begin(on_done: Callable, mode: String) -> void:
+	_on_done = on_done
+	_mode = mode
+	last_note = ""
+	_started_msec = Time.get_ticks_msec()
+
+
+func _fail(note: String) -> void:
+	last_note = note
+	if _mode == "check":
+		_finish(note)
+	else:
+		_finish(failed(note, model))
+
+
+func _on_completed(result: int, code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+	last_seconds = float(Time.get_ticks_msec() - _started_msec) / 1000.0
+	var text := body.get_string_from_utf8()
+	if _mode == "check":
+		var note := ""
+		if result != HTTPRequest.RESULT_SUCCESS:
+			note = _transport_note(result)
+		elif code != 200:
+			var env: Variant = _quiet_parse(text)
+			note = error_note(code, env if env is Dictionary else {}, text)
+		last_note = note
+		_finish(note)
+		return
+	last_response = text
+	last_code = code
+	var reply := reply_from(result, code, text, last_seconds, model)
+	last_note = str(reply["note"])
+	if not last_note.is_empty():
+		# In die Ausgabe, wie bei LocalModelBackend: die Karte am Rand zeigt nur den
+		# gekürzten Grund. Der Rumpf enthält nie den Schlüssel (der steht nur im Kopf).
+		print("CloudModelBackend: %s\n%s" % [last_note, text.strip_edges()])
+	_finish(reply)
+
+
+func _finish(value: Variant) -> void:
+	var done := _on_done
+	_on_done = Callable()
+	_mode = ""
+	if done.is_valid():
+		done.call(value)

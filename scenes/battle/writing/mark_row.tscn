@@ -1,0 +1,24 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/battle/writing/mark_row.gd" id="1_mark"]
+
+[node name="MarkRow" type="VBoxContainer"]
+theme_type_variation = &"Tight"
+size_flags_horizontal = 3
+script = ExtResource("1_mark")
+
+[node name="Quote" type="Button" parent="."]
+unique_name_in_owner = true
+theme_type_variation = &"MenuLink"
+layout_mode = 2
+focus_mode = 0
+text = "„…“"
+alignment = 0
+autowrap_mode = 3
+
+[node name="Hint" type="Label" parent="."]
+unique_name_in_owner = true
+theme_type_variation = &"Hint"
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+autowrap_mode = 3

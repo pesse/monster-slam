@@ -1,0 +1,72 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/ui/speech_bubble.gd" id="1_bubble"]
+
+[node name="EncounterPanel" type="VBoxContainer"]
+theme_type_variation = &"ScreenStack"
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="BossBubble" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+theme_type_variation = &"BossBubble"
+custom_minimum_size = Vector2(720, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+script = ExtResource("1_bubble")
+
+[node name="Says" type="VBoxContainer" parent="BossBubble"]
+theme_type_variation = &"Tight"
+layout_mode = 2
+
+[node name="BossLine" type="Label" parent="BossBubble/Says"]
+unique_name_in_owner = true
+theme_type_variation = &"BubbleAccent"
+custom_minimum_size = Vector2(640, 0)
+layout_mode = 2
+autowrap_mode = 3
+text = "…"
+
+[node name="TaskTitle" type="Label" parent="BossBubble/Says"]
+unique_name_in_owner = true
+theme_type_variation = &"BubbleTitle"
+custom_minimum_size = Vector2(640, 0)
+layout_mode = 2
+autowrap_mode = 3
+text = "—"
+
+[node name="TaskText" type="Label" parent="BossBubble/Says"]
+unique_name_in_owner = true
+theme_type_variation = &"BubbleText"
+custom_minimum_size = Vector2(640, 0)
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="TaskNote" type="Label" parent="BossBubble/Says"]
+unique_name_in_owner = true
+theme_type_variation = &"BubbleHint"
+custom_minimum_size = Vector2(640, 0)
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="Space" type="Control" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="Actions" type="HBoxContainer" parent="."]
+theme_type_variation = &"ScreenStack"
+layout_mode = 2
+mouse_filter = 2
+alignment = 2
+
+[node name="ActionButton" type="Button" parent="Actions"]
+unique_name_in_owner = true
+theme_type_variation = &"ActionButton"
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+text = "📖 Geschichte lesen"

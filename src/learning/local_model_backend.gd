@@ -18,6 +18,8 @@ extends Node
 ## Netz — der Unterschied zum Melde-Rückkanal (ADR 0002), der nur Ids kennt und keine
 ## Wörter. `URL` zeigt deshalb auf 127.0.0.1, und das ist keine Einstellung, sondern die
 ## Entscheidung.
+## Das gilt für die Satzbewertung; der Schreib-Boss, der ganze Texte bewertet, ist nach
+## ADR 0023 eigens geregelt (eigener Schlüssel, Bestätigung, CloudModelBackend).
 ##
 ## **Zwei Aufrufe** (docs/adr/0005-bosskampf-mit-erklaerung.md): `judge()` urteilt mit dem
 ## Lösungsschlüssel, `explain()` erklärt ohne ihn. Die Aufträge stehen in StageOnePrompts.

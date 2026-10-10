@@ -1,0 +1,164 @@
+extends GdUnitTestSuite
+## Das Urteil über eine Summary (src/learning/writing_judge.gd,
+## docs/adr/0023-schreib-boss.md): Offline-Prüfung und Modellantwort je Kriterium.
+##
+## Die Modellantwort ist hier von Hand gebaut — kein Test spricht mit einem Dienst.
+
+const FIXTURE := "res://tests/fixtures/writing/summary_fixture.json"
+
+const TEXT := "In the story \"The Lighthouse Cat\" by Mara Linden, an old man called Tom and his cat look after a lighthouse. One night the lamp breaks while a boat sails towards the rocks. The cat brings the rope of an old lantern and they pull it up. The light saves the boat. The fishermen thanked Tom, but he says the cat deserve the thanks."
+
+var _task: Dictionary
+
+
+func before() -> void:
+	_task = JSON.parse_string(FileAccess.get_file_as_string(FIXTURE))
+
+
+func _reply(overrides := {}) -> Dictionary:
+	var reply := {
+		"key_points": [
+			{"id": "kp1", "covered": true, "quote": "an old man called Tom and his cat"},
+			{"id": "kp2", "covered": true, "quote": "the lamp breaks while a boat sails"},
+			{"id": "kp3", "covered": true, "quote": "the rope of an old lantern"},
+			{"id": "kp4", "covered": true, "quote": "The light saves the boat."},
+			{"id": "kp5", "covered": true, "quote": "he says the cat deserve the thanks"},
+			{"id": "kp6", "covered": false, "quote": ""},
+		],
+		"present_tense": true,
+		"tense_quotes": [],
+		"errors": [],
+	}
+	reply.merge(overrides, true)
+	return reply
+
+
+func _by_id(list: Array) -> Dictionary:
+	var out := {}
+	for entry in list:
+		out[entry["id"]] = entry
+	return out
+
+
+func _judge(reply: Dictionary, text := TEXT) -> Dictionary:
+	return _by_id(WritingJudge.criteria(_task, text, SummaryCard.check(_task, text), reply))
+
+
+func test_criteria_come_in_the_fixed_order() -> void:
+	var ids: Array = WritingJudge.criteria(_task, TEXT, {}, _reply()).map(func(c): return c["id"])
+	assert_array(ids).is_equal(WritingJudge.CRITERIA)
+
+
+func test_a_clean_reply_meets_content_genre_and_language() -> void:
+	var result := _judge(_reply())
+	for id in ["intro", "content", "genre", "language"]:
+		assert_bool(bool(result[id]["decided"])).override_failure_message(id).is_true()
+		assert_bool(bool(result[id]["met"])).override_failure_message(id).is_true()
+	assert_str(str(result["intro"]["source"])).is_equal("offline")
+	assert_str(str(result["content"]["source"])).is_equal("model")
+	assert_str(str(result["genre"]["source"])).is_equal("both")
+	# Zu kurz für den Zielbereich der Fixture (80–140).
+	assert_bool(bool(result["length"]["met"])).is_false()
+
+
+## Ohne Modellantwort entscheidet nur, was offline geht.
+func test_without_a_reply_the_model_criteria_stay_open() -> void:
+	var result := _judge({})
+	assert_bool(bool(result["intro"]["decided"])).is_true()
+	assert_bool(bool(result["length"]["decided"])).is_true()
+	for id in ["content", "genre", "language"]:
+		assert_bool(bool(result[id]["decided"])).override_failure_message(id).is_false()
+		assert_bool(bool(result[id]["met"])).override_failure_message(id).is_false()
+
+
+## Eine Meinung im Text entscheidet die Textsorte auch ohne Modell — nach unten.
+func test_an_opinion_fails_the_genre_offline() -> void:
+	var text := TEXT + " I think Tom is a hero."
+	var genre: Dictionary = _judge({}, text)["genre"]
+	assert_bool(bool(genre["decided"])).is_true()
+	assert_bool(bool(genre["met"])).is_false()
+	assert_str(str(genre["source"])).is_equal("offline")
+	var mark: Dictionary = genre["marks"][0]
+	assert_str(str(mark["category"])).is_equal("opinion")
+	assert_str(text.substr(int(mark["from"]), int(mark["to"]) - int(mark["from"])))\
+			.is_equal("I think")
+	assert_str(str(mark["hint"])).is_equal(WritingJudge.DEFAULT_HINTS["opinion"])
+
+
+## Ein Kernpunkt gilt nur mit einem Zitat, das wirklich im Text steht.
+func test_a_key_point_without_evidence_is_not_covered() -> void:
+	var reply := _reply()
+	reply["key_points"][2] = {"id": "kp3", "covered": true, "quote": "the cat climbs down a rope"}
+	assert_bool(bool(_judge(reply)["content"]["met"])).is_false()
+	reply = _reply()
+	reply["key_points"][4] = {"id": "kp5", "covered": false, "quote": ""}
+	assert_bool(bool(_judge(reply)["content"]["met"])).is_false()
+
+
+func test_an_optional_key_point_is_not_needed() -> void:
+	var reply := _reply()
+	(reply["key_points"] as Array).remove_at(5)
+	assert_bool(bool(_judge(reply)["content"]["met"])).is_true()
+
+
+## Erfundene Fehler fallen weg; Zitate werden normalisiert gesucht, die Stelle bezieht sich
+## auf den Originaltext.
+func test_error_quotes_are_verified_in_the_text() -> void:
+	var reply := _reply({"errors": [
+		{"quote": "the cat DESERVE the thanks", "category": "grammar", "severity": "major",
+			"hint": "Achte auf das -s in der dritten Person Singular."},
+		{"quote": "the dog barks loudly", "category": "spelling", "severity": "major",
+			"hint": "Prüfe die Schreibweise."},
+	]})
+	var language: Dictionary = _judge(reply)["language"]
+	assert_bool(bool(language["met"])).is_false()
+	assert_int((language["marks"] as Array).size()).is_equal(1)
+	var mark: Dictionary = language["marks"][0]
+	assert_str(str(mark["quote"])).is_equal("the cat deserve the thanks")
+	assert_str(TEXT.substr(int(mark["from"]), int(mark["to"]) - int(mark["from"])))\
+			.is_equal("the cat deserve the thanks")
+	assert_str(str(mark["hint"])).is_equal("Achte auf das -s in der dritten Person Singular.")
+
+
+func test_minor_errors_are_marked_but_do_not_hold_the_stack() -> void:
+	var reply := _reply({"errors": [
+		{"quote": "they pull it up", "category": "style", "severity": "minor", "hint": ""},
+	]})
+	var language: Dictionary = _judge(reply)["language"]
+	assert_bool(bool(language["met"])).is_true()
+	assert_str(str(language["marks"][0]["hint"])).is_equal(WritingJudge.DEFAULT_HINTS["style"])
+
+
+## Nicht im Präsens zählt nur mit einer Stelle, die im Text steht.
+func test_past_tense_needs_a_verified_quote() -> void:
+	var reply := _reply({"present_tense": false, "tense_quotes": ["The fishermen thanked Tom"]})
+	var genre: Dictionary = _judge(reply)["genre"]
+	assert_bool(bool(genre["met"])).is_false()
+	assert_str(str(genre["marks"][0]["category"])).is_equal("tense")
+	assert_str(str(genre["marks"][0]["hint"])).is_equal(WritingJudge.DEFAULT_HINTS["tense"])
+	var invented := _reply({"present_tense": false, "tense_quotes": ["Tom was very sad"]})
+	assert_bool(bool(_judge(invented)["genre"]["met"])).is_true()
+
+
+func test_a_hint_never_gives_the_solution() -> void:
+	for hint in [
+		"Use 'deserves' here.",
+		"deserve → deserves",
+		"Write \"deserves\" instead of \"deserve\".",
+		"This should be 'deserves'.",
+		"Change it to 'deserves'.",
+		"Schreib „deserves“.",
+		"Richtig wäre: deserves.",
+		"Hier muss es deserves heißen.",
+		"deserves statt deserve",
+	]:
+		assert_bool(WritingJudge.reveals_solution(hint)).override_failure_message(hint).is_true()
+		assert_str(WritingJudge.safe_hint("grammar", hint))\
+				.is_equal(WritingJudge.DEFAULT_HINTS["grammar"])
+	for hint in [
+		"Achte auf das -s in der dritten Person Singular.",
+		"Eine Summary steht im Present Tense.",
+		"Change the verb to the present tense.",
+	]:
+		assert_bool(WritingJudge.reveals_solution(hint)).override_failure_message(hint).is_false()
+	assert_str(WritingJudge.safe_hint("unknown", "")).is_equal(WritingJudge.FALLBACK_HINT)
