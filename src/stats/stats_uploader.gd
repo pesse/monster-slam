@@ -6,13 +6,18 @@ extends Node
 ## `UserSettings.stats_id`, nie über Profilnamen oder player_id.
 ##
 ## Was hinausgeht, steht an zwei Stellen und nur dort: `snapshot()` (Allowlist je Datei
-## unter user://progress) und `TraceSanitizer` (Allowlist je Spurereignis). Die Rohspur,
+## einer Sicherung) und `TraceSanitizer` (Allowlist je Spurereignis). Die Rohspur,
 ## gemeldete Kommentare, Testlisten und Profilnamen gehen nie mit.
 ##
 ## Wie die anderen Kanäle ist jeder Netzfehler ein Zustand, kein Abbruch: es bleibt still,
 ## und der nächste Anlass versucht es neu. Eine Warteschlange gibt es nicht — der Snapshot
-## entsteht jedes Mal frisch aus den Dateien, und die Spur geht ab dem Stand, den der Server
-## bestätigt hat.
+## entsteht jedes Mal frisch aus der neuesten Sicherung, und die Spur geht ab dem Stand, den
+## der Server bestätigt hat.
+##
+## Der Snapshot liest nie die Live-Dateien unter user://progress, sondern nur eine fertige,
+## geprüfte Sicherung des SaveCoordinator (ADR 0024). Ein halb geschriebener Stand kann so
+## nicht hinausgehen und den vollständigen des Tages auf dem Server ersetzen; Speichern
+## wartet nie auf den Versand, und der Versand schreibt nie unter progress/.
 ##
 ## Gesendet wird nur, wenn alles zusammenkommt: Endpunkt und App-Schlüssel (beim Export
 ## eingesetzt, `KEY_PATH`), der gesehene Hinweis beim ersten Start, und keine
@@ -38,9 +43,7 @@ const TRACE_CHUNK := 3000
 ## Nach so vielen Stücken je Anlass ist Schluss; der Rest geht beim nächsten Mal.
 const MAX_CHUNKS := 20
 
-const SAVE_DIR := "user://progress"
-
-## Je Datei unter user://progress, was davon hinausgeht. `player_id` steht in jeder dieser
+## Je Datei einer Sicherung, was davon hinausgeht. `player_id` steht in jeder dieser
 ## Dateien und ist der Name — es fehlt deshalb überall.
 const SNAPSHOT_FILES := {
 	"": {"progress": "records"},
@@ -104,21 +107,35 @@ static func sendable(profile: String) -> bool:
 
 # --- Was hinausgeht -----------------------------------------------------------
 
-## Der Snapshot eines Profils aus seinen Dateien. Statisch und ohne Autoload, damit ein
-## Test ihn gegen eigene Dateien prüfen kann; `settings` und `meta` reicht der Aufrufer.
+## Der Snapshot eines Profils aus der neuesten gültigen Sicherung unter `backup_dir`, oder
+## {}, wenn es keine gibt. Die Prüfsummen rechnet `Backups.latest` — läuft auf dem
+## Arbeitsthread.
+static func generation_snapshot(profile: String, settings: Dictionary, meta: Dictionary,
+		backup_dir: String) -> Dictionary:
+	var generation := Backups.latest(backup_dir, profile)
+	if generation.is_empty():
+		return {}
+	return snapshot(profile, settings, meta, str(generation["dir"]))
+
+
+## Der Snapshot eines Profils aus den Dateien in `dir`. Statisch und ohne Autoload, damit
+## ein Test ihn gegen eigene Dateien prüfen kann; `settings` und `meta` reicht der Aufrufer.
+## Ist eine Datei unlesbar, gibt es keinen Snapshot ({}) — lieber keiner als ein halber.
 static func snapshot(profile: String, settings: Dictionary, meta: Dictionary,
-		dir: String = SAVE_DIR) -> Dictionary:
+		dir: String) -> Dictionary:
 	var out := {"format": FORMAT}
 	out.merge(meta)
 	out["settings"] = settings
 	for suffix in SNAPSHOT_FILES:
-		var path := "%s/%s%s.json" % [dir, profile, suffix]
-		if not FileAccess.file_exists(path):
-			continue
-		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
-		if not (parsed is Dictionary):
-			continue
-		var data: Dictionary = parsed
+		var read := SaveStore.read("%s/%s%s.json" % [dir, profile, suffix])
+		match int(read["status"]):
+			SaveStore.Status.MISSING:
+				continue
+			SaveStore.Status.OK:
+				pass
+			_:
+				return {}
+		var data: Dictionary = read["data"]
 		var rule: Dictionary = SNAPSHOT_FILES[suffix]
 		for key in rule:
 			var pick: Variant = rule[key]
@@ -175,7 +192,7 @@ func _send_active() -> void:
 	await send_profile(UserSettings.active_profile())
 
 
-## Beim Start: jedes Profil, dessen Dateien sich seit dem letzten Snapshot geändert haben.
+## Beim Start: jedes Profil, das seit dem letzten Snapshot neu gesichert wurde.
 func _send_all() -> void:
 	for profile in UserSettings.profiles():
 		if _changed_since_sent(profile):
@@ -183,12 +200,18 @@ func _send_all() -> void:
 
 
 func _changed_since_sent(profile: String) -> bool:
-	var sent := UserSettings.stats_sent_at(profile)
-	for suffix in SNAPSHOT_FILES:
-		var path := "%s/%s%s.json" % [SAVE_DIR, profile, suffix]
-		if FileAccess.file_exists(path) and int(FileAccess.get_modified_time(path)) > sent:
-			return true
-	return false
+	return saved_at(SaveCoordinator.backup_dir, profile) > UserSettings.stats_sent_at(profile)
+
+
+## Wann die neueste Sicherung eines Profils entstand (Unix-Sekunden), 0 ohne Sicherung.
+## Liest nur die Manifeste, ohne Prüfsummen — das prüft erst der Versand.
+static func saved_at(backup_dir: String, profile: String) -> int:
+	var dirs := Backups.generation_dirs(backup_dir, profile)
+	for i in range(dirs.size() - 1, -1, -1):
+		var manifest := Backups.manifest_of(dirs[i])
+		if not manifest.is_empty():
+			return int(manifest.get("created_at", 0))
+	return 0
 
 
 ## Snapshot und Spur eines Profils. Gibt true zurück, wenn beides angekommen ist.
@@ -212,8 +235,13 @@ func send_profile(profile: String) -> bool:
 func _send_snapshot(profile: String) -> bool:
 	var settings := _settings_of(profile)
 	var meta := _meta(profile)
+	var backup_dir := SaveCoordinator.backup_dir
 	var body: Dictionary = await _off_thread(func() -> Dictionary:
-			return snapshot(profile, settings, meta))
+			return generation_snapshot(profile, settings, meta, backup_dir))
+	if body.is_empty():
+		# Noch keine Sicherung (oder keine heile): nichts zu senden, kein Fehler — die Spur
+		# geht trotzdem.
+		return true
 	body["action"] = "snapshot"
 	body["key_version"] = _key_version
 	var answer := await _post(body)

@@ -451,6 +451,8 @@ func _record_win() -> void:
 	if unit.is_empty() or not record_wins:
 		return
 	BossRecord.record_win(unit, UserSettings.active_profile())
+	# Der Sieg steht schon in seiner Datei; der Commit legt die Sicherung dazu (ADR 0024).
+	SaveCoordinator.commit("boss_end")
 	EventBus.boss_won.emit(str(boss.get("id", "")), unit)
 
 

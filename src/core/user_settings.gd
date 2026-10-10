@@ -10,6 +10,9 @@ extends Node
 ## in _ready() bereits das aktive Profil übernehmen kann.
 
 const PATH := "user://settings.cfg"
+const PROGRESS_DIR := "user://progress"
+const BACKUP_DIR := "user://backups"
+const QUARANTINE_DIR := "user://quarantine"
 const DEFAULT_PROFILE := "default"
 const DEFAULT_DIFFICULTY := 3
 const DEFAULT_BASE_SPEED := 1.0
@@ -24,13 +27,17 @@ signal active_profile_changed(id: String)
 var _config := ConfigFile.new()
 
 
+## Wo die Datei liegt und wo nach Spielständen gesucht wird — Tests setzen eigene.
+var config_path := PATH
+var progress_dir := PROGRESS_DIR
+var backup_dir := BACKUP_DIR
+var quarantine_dir := QUARANTINE_DIR
+## Was beim Laden repariert wurde, für das Startmenü (SaveCoordinator.take_notices).
+var _recovery_notice := {}
+
+
 func _ready() -> void:
-	var err := _config.load(PATH)
-	if err != OK:
-		# Erststart (oder unlesbar): Default-Profil anlegen und sichern.
-		_config.set_value("general", "active_profile", DEFAULT_PROFILE)
-		_config.set_value("profiles", "roster", PackedStringArray([DEFAULT_PROFILE]))
-		_save()
+	load_config()
 	# Sicherstellen, dass das Default-Profil einen Anzeigenamen hat (auch für Altbestände
 	# ohne [names]-Sektion).
 	if str(_config.get_value("names", DEFAULT_PROFILE, "")).is_empty():
@@ -362,7 +369,87 @@ func _sanitize(name: String) -> String:
 	return out
 
 
+## Lädt die Einstellungen (docs/adr/0024-spielstand-sicher-speichern.md). Nur ein echter
+## Erststart — keine Datei und noch kein Spielstand — legt das Standardprofil an. Ist die
+## Datei unlesbar oder fehlt sie neben vorhandenen Spielständen, kommt die neueste Kopie aus
+## den Sicherungen zurück; ohne Kopie wird die Profilliste aus den Spielständen gebaut.
+## Früher setzte eine unlesbare Datei alles auf das Standardprofil zurück und speicherte
+## sofort: Namen und Profilliste waren weg.
+func load_config() -> void:
+	var read := SaveStore.read_cfg(config_path)
+	match int(read["status"]):
+		SaveStore.Status.OK:
+			_config.parse(str(read["text"]))
+			if bool(read["legacy"]):
+				_save()
+			return
+		SaveStore.Status.MISSING:
+			if not _has_player_data():
+				_config.set_value("general", "active_profile", DEFAULT_PROFILE)
+				_config.set_value("profiles", "roster", PackedStringArray([DEFAULT_PROFILE]))
+				_save()
+				return
+		_:
+			var stamp := Backups.stamp_name(int(Time.get_unix_time_from_system() * 1000.0))
+			SaveStore.quarantine(config_path, "%s/_settings/%s" % [quarantine_dir, stamp], ".corrupt")
+	var copy := SaveStore.decode_cfg(Backups.newest_settings(backup_dir))
+	if int(copy["status"]) == SaveStore.Status.OK:
+		_config.parse(str(copy["text"]))
+		_save()
+		push_warning("UserSettings: aus der Sicherung zurückgeholt")
+		_recovery_notice = {"kind": "settings_restored"}
+		return
+	_config.clear()
+	var roster := found_profiles()
+	if roster.is_empty():
+		roster.append(DEFAULT_PROFILE)
+	_config.set_value("general", "active_profile", roster[0])
+	_config.set_value("profiles", "roster", roster)
+	_save()
+	push_warning("UserSettings: Profilliste aus den Spielständen gebaut: %s" % ", ".join(roster))
+	_recovery_notice = {"kind": "settings_rebuilt"}
+
+
+## Was beim Laden repariert wurde ({} = nichts), einmal.
+func take_recovery_notice() -> Dictionary:
+	var out := _recovery_notice
+	_recovery_notice = {}
+	return out
+
+
+## Die Profile, deren Spielstand auf der Platte liegt (Lernstand `<id>.json` oder eine
+## Sicherung), ohne `zz-`-Testprofile. Für den Fall, dass die Profilliste verloren ist.
+func found_profiles() -> PackedStringArray:
+	var out := PackedStringArray()
+	if DirAccess.dir_exists_absolute(progress_dir):
+		for name in DirAccess.get_files_at(progress_dir):
+			if not name.ends_with(".json") or name.ends_with(SaveCoordinator.JOURNAL_SUFFIX):
+				continue
+			var id := name.get_basename()
+			if _is_profile_file(id) and not id.begins_with("zz-") and id not in out:
+				out.append(id)
+	if DirAccess.dir_exists_absolute(backup_dir):
+		for id in DirAccess.get_directories_at(backup_dir):
+			if not id.begins_with("zz-") and id not in out:
+				out.append(id)
+	out.sort()
+	return out
+
+
+## Der Lernstand heißt `<id>.json`; alles andere trägt eine Endung (`_level`, …).
+func _is_profile_file(base: String) -> bool:
+	for suffix: String in SaveCoordinator.PROFILE_SUFFIXES + ["_runs"]:
+		if not suffix.is_empty() and base.ends_with(suffix):
+			return false
+	return true
+
+
+func _has_player_data() -> bool:
+	return (DirAccess.dir_exists_absolute(progress_dir) and not DirAccess.get_files_at(progress_dir).is_empty()) \
+			or DirAccess.dir_exists_absolute(backup_dir)
+
+
 func _save() -> void:
-	var err := _config.save(PATH)
+	var err := SaveStore.write_cfg(config_path, _config.encode_to_text())
 	if err != OK:
-		push_warning("UserSettings: konnte '%s' nicht schreiben (Fehler %d)" % [PATH, err])
+		push_warning("UserSettings: konnte '%s' nicht schreiben (Fehler %d)" % [config_path, err])

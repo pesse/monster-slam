@@ -38,3 +38,4 @@ als Nächstes drankommt — steht in [Kapitel 18: Wie das Spiel lernt](18-wie-da
 19. [Wo die Daten liegen](19-daten.md)
 20. [Der Bosskampf](20-bosskampf.md)
 21. [Spieldaten für die Entwicklung](21-spieldaten.md)
+23. [Spielstand und Sicherungen](23-spielstand-und-sicherungen.md)

@@ -68,6 +68,9 @@ func _ready() -> void:
 	EventBus.boss_answer_explained.connect(note_boss_explained)
 	EventBus.boss_ended.connect(note_boss_end)
 	EventBus.boss_won.connect(note_boss_won)
+	EventBus.save_refused.connect(note_save_refused)
+	EventBus.save_restored.connect(note_save_restored)
+	EventBus.save_damaged.connect(note_save_damaged)
 
 
 func _exit_tree() -> void:
@@ -261,6 +264,20 @@ func note_lexeme_mastered(lexeme_id: String) -> void:
 ## oder hinter dem letzten Treffer einer gewonnenen Welle.
 func note_badge(id: String, tier: int) -> void:
 	_write({"e": "badge", "id": id, "tier": tier})
+
+
+## Spielstand (ADR 0024). `part` ist die Endung der Datei („_level“), ohne den Profilnamen
+## davor; `reason` nennt Feld und Werte („total_xp würde von 32500 auf 10 sinken“).
+func note_save_refused(file: String, reason: String) -> void:
+	_write({"e": "save_refused", "part": file.get_basename().trim_prefix(player_id), "reason": reason})
+
+
+func note_save_restored(parts: Array, backup_at: int) -> void:
+	_write({"e": "save_restored", "parts": parts, "backup_at": backup_at})
+
+
+func note_save_damaged(parts: Array) -> void:
+	_write({"e": "save_damaged", "parts": parts})
 
 
 # --- Schalter und Profil ------------------------------------------------------

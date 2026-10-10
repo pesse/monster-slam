@@ -36,6 +36,9 @@ const TRACE_ROW_SCENE := preload("res://scenes/ui/trace_row.tscn")
 ## öffnet die Datei.
 const TRACE_SHOWN := 200
 
+## Ein gelesenes Archiv, das auf die Rückfrage „Laden?" wartet.
+var _import_pending := {}
+
 ## Das Fenster will zu. Wer es geöffnet hat, nimmt es weg; hängt niemand daran (der Screen
 ## läuft allein, etwa aus dem Editor), geht es zurück ins Startmenü.
 signal closed()
@@ -45,6 +48,8 @@ signal closed()
 @onready var _speed_slider: HSlider = %SpeedSlider
 @onready var _speed_label: Label = %SpeedLabel
 @onready var _reset_confirm: ConfirmDialog = %ResetDialog
+@onready var _import_confirm: ConfirmDialog = %ImportDialog
+@onready var _save_status: Label = %SaveStatus
 @onready var _flag_list: VBoxContainer = %FlagList
 @onready var _flag_scroll: ScrollContainer = %FlagScroll
 @onready var _report_status: Label = %ReportStatus
@@ -101,6 +106,14 @@ func _ready() -> void:
 			"Der Lernstand aller Wörter dieses Profils geht verloren. Gold, Erfahrung und "
 			+ "Fähigkeiten bleiben.", "Zurücksetzen"))
 	_reset_confirm.confirmed.connect(_on_reset_confirmed)
+	(%SaveExport as Button).pressed.connect(_on_save_export)
+	(%SaveImport as Button).pressed.connect(_on_save_import)
+	_import_confirm.confirmed.connect(_on_import_confirmed)
+	_import_confirm.cancelled.connect(func() -> void: _import_pending = {})
+	Hints.attach(%SaveExport as Control, "Spielstand sichern",
+			"Legt den Spielstand dieses Profils als Datei ab.", "die Sicherungen nach jeder Welle gibt es trotzdem")
+	Hints.attach(%SaveImport as Control, "Spielstand laden",
+			"Spielt eine gesicherte Datei in dieses Profil ein. Vorher zeigt das Spiel, was darin steht.")
 	# Der Dienst meldet jeden Zustandswechsel; die Anzeige hängt daran statt zu pollen.
 	ReportService.changed.connect(_refresh_report)
 	_trace_toggle.toggled.connect(_on_trace_toggled)
@@ -282,8 +295,106 @@ func _on_speed_changed(value: float) -> void:
 
 func _on_reset_confirmed() -> void:
 	PlayerProgress.reset()
-	PlayerProgress.save_progress()
+	# Zurücksetzen ist die eine Stelle, an der der Lernstand schrumpfen darf (SaveGuard);
+	# der Stand davor liegt in den Sicherungen.
+	SaveCoordinator.commit("progress_reset", [""])
 	_refresh()
+
+
+# --- Spielstand sichern und laden (ADR 0024) ---------------------------------
+
+## Schreibt die neueste Sicherung als Datei. Erst speichern, damit sie den Stand von jetzt
+## trägt; ein gesperrtes Profil speichert nicht, dann geht die letzte gute hinaus.
+func _on_save_export() -> void:
+	SaveCoordinator.commit("export")
+	var generation := SaveCoordinator.latest_generation(UserSettings.active_profile())
+	if generation.is_empty():
+		_save_status.text = "Noch nichts zu sichern – erst eine Welle spielen."
+		return
+	var name := SaveArchive.suggested_name(UserSettings.display_name(), int(Time.get_unix_time_from_system()))
+	if _native_file_dialog():
+		DisplayServer.file_dialog_show("Spielstand sichern", _documents(), name, false,
+				DisplayServer.FILE_DIALOG_MODE_SAVE_FILE, PackedStringArray(["*.zip ; Spielstand"]),
+				func(ok: bool, paths: PackedStringArray, _filter: int) -> void:
+					if ok and not paths.is_empty():
+						_export_to.call_deferred(paths[0], generation))
+		return
+	_export_to(_fallback_dir().path_join(name), generation)
+	OS.shell_open(_fallback_dir())
+
+
+func _export_to(path: String, generation: Dictionary) -> void:
+	if not path.get_extension().to_lower() == "zip":
+		path += ".zip"
+	var err := SaveArchive.write(path, generation, UserSettings.display_name())
+	_save_status.text = ("Gesichert: %s" % path) if err == OK \
+			else "Sichern hat nicht geklappt (Fehler %d)." % err
+
+
+func _on_save_import() -> void:
+	if _native_file_dialog():
+		DisplayServer.file_dialog_show("Spielstand laden", _documents(), "", false,
+				DisplayServer.FILE_DIALOG_MODE_OPEN_FILE, PackedStringArray(["*.zip ; Spielstand"]),
+				func(ok: bool, paths: PackedStringArray, _filter: int) -> void:
+					if ok and not paths.is_empty():
+						_check_import.call_deferred(paths[0]))
+		return
+	# Ohne Dateidialog: die neueste Datei im Ordner „Monster Slam“ unter Dokumente.
+	var newest := ""
+	var dir := _fallback_dir()
+	for name in DirAccess.get_files_at(dir):
+		var path := dir.path_join(name)
+		if name.get_extension().to_lower() == "zip" and (newest.is_empty()
+				or FileAccess.get_modified_time(path) > FileAccess.get_modified_time(newest)):
+			newest = path
+	if newest.is_empty():
+		_save_status.text = "Leg die Datei in den Ordner %s und klick noch einmal auf „Laden…“." % dir
+		OS.shell_open(dir)
+		return
+	_check_import(newest)
+
+
+## Liest das Archiv und fragt mit dem, was darin steht.
+func _check_import(path: String) -> void:
+	var archive := SaveArchive.read(path)
+	if not str(archive["error"]).is_empty():
+		_save_status.text = str(archive["error"])
+		return
+	_import_pending = archive
+	var seen := SaveArchive.preview(archive)
+	var who := str(seen["name"]) if not str(seen["name"]).is_empty() else "ohne Namen"
+	_import_confirm.ask("Spielstand laden?",
+			"In der Datei: %s, Level %d, %d Gold, gesichert am %s.\n" \
+					% [who, int(seen["level"]), int(seen["gold"]), SaveNotices.date(int(seen["saved_at"]))]
+			+ "Sie enthält: %s.\n\n" % SaveNotices.part_names(seen["parts"])
+			+ "Diese Teile des Spielstands von %s werden dadurch ersetzt. Der bisherige Stand " \
+					% UserSettings.display_name()
+			+ "bleibt in den Sicherungen.",
+			"Laden", "Abbrechen")
+
+
+func _on_import_confirmed() -> void:
+	if _import_pending.is_empty():
+		return
+	var files := SaveArchive.files_for(_import_pending["data"], UserSettings.active_profile())
+	_import_pending = {}
+	_save_status.text = "Spielstand geladen." if SaveCoordinator.import_files(files) \
+			else "Laden hat nicht geklappt – der bisherige Stand liegt in den Sicherungen."
+	_refresh()
+
+
+func _native_file_dialog() -> bool:
+	return DisplayServer.has_feature(DisplayServer.FEATURE_NATIVE_DIALOG_FILE)
+
+
+func _documents() -> String:
+	return OS.get_system_dir(OS.SYSTEM_DIR_DOCUMENTS)
+
+
+func _fallback_dir() -> String:
+	var dir := _documents().path_join("Monster Slam")
+	DirAccess.make_dir_recursive_absolute(dir)
+	return dir
 
 
 # --- Reiter „Protokoll" -------------------------------------------------------

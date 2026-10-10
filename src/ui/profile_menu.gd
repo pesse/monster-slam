@@ -62,10 +62,16 @@ var _page := MENU
 ## einen Fehlschlag; die stille Startprüfung behelligt niemanden.
 var _checked := false
 var _slide: Tween
+## Hinweise zum Spielstand, die noch kommen, der gerade gezeigte, und was danach folgt.
+var _save_notices: Array = []
+var _save_notice := {}
+var _after_save_notices := Callable()
 
 
 func _ready() -> void:
 	_play_button.pressed.connect(_open_library)
+	(%SaveNotice as ConfirmDialog).confirmed.connect(_on_save_notice_closed.bind(true))
+	(%SaveNotice as ConfirmDialog).cancelled.connect(_on_save_notice_closed.bind(false))
 	_library.setup(_backdrop)
 	_library.back_requested.connect(func(): _slide_to(MENU))
 	(%ExpertButton as Button).pressed.connect(
@@ -108,11 +114,49 @@ func _ready() -> void:
 		# Die Buchkarte deckt schon den Bildschirm; die Kulisse braucht keinen Schleier.
 		(%Veil as Control).visible = false
 		_library.return_from_book()
+		_show_save_notices()
 		return
 	_show_page(MENU if intro_done else INTRO)
 	_settle()
 	_unveil()
-	_show_stats_notice()
+	_show_save_notices(_show_stats_notice)
+
+
+## Was der SaveCoordinator über den Spielstand zu sagen hat (ADR 0024), einer nach dem
+## anderen; danach `then`. Ein gesperrtes Profil fragt, ob es leer weitergehen soll.
+func _show_save_notices(then := Callable()) -> void:
+	_save_notices.append_array(SaveCoordinator.take_notices())
+	if then.is_valid():
+		_after_save_notices = then
+	if not (%SaveNotice as Control).visible:
+		_next_save_notice()
+
+
+func _next_save_notice() -> void:
+	if _save_notices.is_empty():
+		var then := _after_save_notices
+		_after_save_notices = Callable()
+		if then.is_valid():
+			then.call()
+		return
+	_save_notice = _save_notices.pop_front()
+	var text := SaveNotices.text(_save_notice,
+			UserSettings.display_name(str(_save_notice.get("profile", ""))))
+	if text.is_empty():
+		_next_save_notice()
+		return
+	var dialog := %SaveNotice as ConfirmDialog
+	if str(text["keep"]).is_empty():
+		dialog.inform(text["title"], text["body"], text["action"])
+	else:
+		dialog.ask(text["title"], text["body"], text["action"], text["keep"])
+
+
+func _on_save_notice_closed(accepted: bool) -> void:
+	if accepted and _save_notice.get("kind") == "blocked":
+		SaveCoordinator.start_blank()
+		_badge.refresh()
+	_next_save_notice.call_deferred()
 
 
 ## Einmal je Rechner, bevor die erste Statistik hinausgeht (ADR 0021). Nur in einer
@@ -137,12 +181,13 @@ func _show_stats_notice() -> void:
 ## Schaltet auf das Profil `id` und schiebt ins Menü.
 func _play_as(id: String) -> void:
 	intro_done = true
+	# Lernstand, Geldbörse, Erfahrung und Fähigkeiten schalten über
+	# UserSettings.active_profile_changed selbst um; der SaveCoordinator sichert vorher den
+	# alten Stand und prüft den neuen.
 	UserSettings.set_active_profile(id)
-	PlayerProgress.switch_to(id)
-	# Geldbörse, Erfahrung und Fähigkeiten schalten über
-	# UserSettings.active_profile_changed selbst um (siehe Wallet._ready / PlayerLevel._ready).
 	_badge.refresh()
 	_slide_to(MENU)
+	_show_save_notices()
 
 
 ## Fähigkeiten, Statistik, Inhalte und Einstellungen öffnen als Fenster über dem Menü, nicht

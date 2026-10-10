@@ -11,10 +11,10 @@ extends Node
 ## vierte und die einzige, die etwas ausgeben kann.
 ##
 ## Persistenz: JSON unter user://progress/<player_id>_wallet.json — dieselbe Ablage wie
-## Fortschritt und Sitzungen, `user://` ist der einzige beschreibbare Ort. Gesichert wird
-## SOFORT bei jeder Änderung und nicht erst am Laufende: verdientes Gold darf ein
-## Absturz nicht kosten, und die Änderungen sind selten genug (eine Kiste je Welle),
-## dass das nicht auffällt.
+## Fortschritt und Sitzungen, `user://` ist der einzige beschreibbare Ort. Gespeichert wird
+## über den SaveCoordinator (ADR 0024): im Kampf an der Wellengrenze und nach der Kiste,
+## im Menü (Laden, Verlernen) am Ende des Frames, zusammen mit dem, was der Kauf sonst
+## geändert hat.
 
 const SAVE_DIR := "user://progress"
 
@@ -43,6 +43,7 @@ func _ready() -> void:
 	unlimited_gold = OS.is_debug_build()
 	player_id = UserSettings.active_profile()
 	load_wallet()
+	SaveCoordinator.register(self)
 	# Profilwechsel mitschalten, damit Gold nicht im falschen Profil landet — dasselbe
 	# Muster wie im SessionLog (der Wechsel wird an drei Stellen im UI ausgelöst).
 	UserSettings.active_profile_changed.connect(switch_to)
@@ -108,14 +109,20 @@ func digits(amount := -1) -> String:
 	return out
 
 
-## Speichert den Stand und wechselt zum Profil `id` (lädt dessen Geldbörse).
+## Wechselt zum Profil `id` (lädt dessen Geldbörse). Gespeichert ist der alte Stand schon
+## (SaveCoordinator); eine Instanz ohne ihn schreibt bei jeder Änderung sofort.
 func switch_to(id: String) -> void:
-	_save()
 	player_id = id
+	reload()
+
+
+## Lädt den Stand des Profils neu und meldet ihn (Profilwechsel, verworfene Welle).
+func reload() -> void:
 	gold = 0
 	total_earned = 0
 	chests_opened = 0
 	load_wallet()
+	changed.emit(gold)
 
 
 # --- Persistenz ---------------------------------------------------------------
@@ -124,32 +131,37 @@ func _save_path() -> String:
 	return "%s/%s_wallet.json" % [SAVE_DIR, player_id]
 
 
-func _save() -> void:
-	DirAccess.make_dir_recursive_absolute(SAVE_DIR)
-	var payload := {
+func save_path() -> String:
+	return _save_path()
+
+
+func save_suffix() -> String:
+	return "_wallet"
+
+
+func save_payload() -> Dictionary:
+	return {
 		"player_id": player_id,
 		"gold": gold,
 		"total_earned": total_earned,
 		"chests_opened": chests_opened,
 	}
-	var file := FileAccess.open(_save_path(), FileAccess.WRITE)
-	if file == null:
-		push_warning("Wallet: konnte '%s' nicht schreiben" % _save_path())
-		return
-	file.store_string(JSON.stringify(payload, "\t"))
-	file.close()
+
+
+func _save() -> void:
+	SaveCoordinator.mark_dirty(self)
 
 
 ## Lädt den Stand des aktuellen Profils. Keine Datei heißt „neues Profil": leere
 ## Geldbörse, kein Fehler.
 func load_wallet() -> void:
-	if not FileAccess.file_exists(_save_path()):
+	var read := SaveStore.read(_save_path())
+	if int(read["status"]) == SaveStore.Status.MISSING:
 		return
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(_save_path()))
-	if not (parsed is Dictionary):
+	if int(read["status"]) != SaveStore.Status.OK:
 		push_warning("Wallet: ungültige Geldbörse '%s'" % _save_path())
 		return
-	var payload: Dictionary = parsed
+	var payload: Dictionary = read["data"]
 	# maxi(0, …): eine handgeschriebene negative Zahl in der Datei wäre eine Schuld, die
 	# das Spiel nicht kennt.
 	gold = maxi(0, int(payload.get("gold", 0)))

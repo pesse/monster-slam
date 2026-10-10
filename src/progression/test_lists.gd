@@ -28,13 +28,10 @@ static func path(profile: String) -> String:
 
 ## Alle Listen des Profils, in der Reihenfolge, in der sie angelegt wurden.
 static func lists(profile: String) -> Array:
-	var text := FileAccess.get_file_as_string(path(profile))
-	if text.is_empty():
+	var read := SaveStore.read(path(profile))
+	if int(read["status"]) != SaveStore.Status.OK:
 		return []
-	var parsed: Variant = JSON.parse_string(text)
-	if not parsed is Dictionary:
-		return []
-	var all: Variant = (parsed as Dictionary).get("lists", [])
+	var all: Variant = (read["data"] as Dictionary).get("lists", [])
 	return (all as Array).filter(func(l): return l is Dictionary) if all is Array else []
 
 
@@ -82,14 +79,10 @@ static func remove(id: String, profile: String) -> void:
 	_write(lists(profile).filter(func(l): return str(l.get("id", "")) != id), profile)
 
 
+## Sicher geschrieben und nie über eine unlesbare Datei (SaveGuard) — die anderen Listen
+## gingen sonst mit.
 static func _write(all: Array, profile: String) -> void:
-	DirAccess.make_dir_recursive_absolute(SAVE_DIR)
-	var file := FileAccess.open(path(profile), FileAccess.WRITE)
-	if file == null:
-		push_warning("TestLists: %s nicht schreibbar" % path(profile))
-		return
-	file.store_string(JSON.stringify({"lists": all}, "\t"))
-	file.close()
+	SaveGuard.write(path(profile), "_test_lists", {"lists": all})
 
 
 ## Der Curriculum-Scope, den ein Lauf über die Liste spielt: je Wort sein engster Schlüssel

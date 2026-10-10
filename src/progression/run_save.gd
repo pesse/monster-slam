@@ -13,8 +13,8 @@ extends RefCounted
 ## man ihn innerhalb der Unit (`continues`), verkleinern nicht.
 ##
 ## Ablage: user://progress/<profil>_runs.json als { "runs": { <book>: <stand> } },
-## geschrieben über eine temporäre Datei, damit ein Absturz beim Schreiben nicht die
-## Läufe der anderen Bücher mitnimmt. Statisch und mit Profil-Argument wie BossRecord,
+## geschrieben über SaveStore (temporäre Datei, Prüfsumme), damit ein Absturz beim Schreiben
+## nicht die Läufe der anderen Bücher mitnimmt. Statisch und mit Profil-Argument wie BossRecord,
 ## damit Tests auf einem `zz-`-Profil laufen.
 
 const SAVE_DIR := "user://progress"
@@ -28,13 +28,16 @@ static func path(profile: String) -> String:
 
 ## Alle begonnenen Läufe des Profils: Buch -> Stand.
 static func all(profile: String) -> Dictionary:
-	var text := FileAccess.get_file_as_string(path(profile))
-	if text.is_empty():
+	var read := SaveStore.read(path(profile))
+	if int(read["status"]) == SaveStore.Status.CORRUPT:
+		# Ein begonnener Lauf hat keine Sicherung (SaveCoordinator.PROFILE_SUFFIXES). Die
+		# kaputte Datei geht in die Quarantäne, damit wieder gerastet werden kann.
+		push_warning("RunSave: %s unlesbar, in die Quarantäne" % path(profile))
+		SaveStore.quarantine(path(profile), "user://quarantine/%s/runs-%d"
+				% [profile, int(Time.get_unix_time_from_system())], ".corrupt")
+	if int(read["status"]) != SaveStore.Status.OK:
 		return {}
-	var parsed: Variant = JSON.parse_string(text)
-	if not parsed is Dictionary:
-		return {}
-	var runs: Variant = (parsed as Dictionary).get("runs", {})
+	var runs: Variant = (read["data"] as Dictionary).get("runs", {})
 	return runs if runs is Dictionary else {}
 
 
@@ -169,12 +172,4 @@ static func _write(runs: Dictionary, profile: String) -> void:
 		if FileAccess.file_exists(target):
 			DirAccess.remove_absolute(target)
 		return
-	var temp := target + ".tmp"
-	var file := FileAccess.open(temp, FileAccess.WRITE)
-	if file == null:
-		push_warning("RunSave: %s nicht schreibbar" % temp)
-		return
-	file.store_string(JSON.stringify({"runs": runs}, "\t"))
-	file.close()
-	if DirAccess.rename_absolute(temp, target) != OK:
-		push_warning("RunSave: %s nicht ersetzt" % target)
+	SaveGuard.write(target, "_runs", {"runs": runs})

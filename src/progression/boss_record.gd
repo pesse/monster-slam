@@ -25,29 +25,21 @@ static func path(profile: String) -> String:
 
 ## Alle Siege des Profils, in der Reihenfolge, in der sie errungen wurden.
 static func entries(profile: String) -> Array:
-	var text := FileAccess.get_file_as_string(path(profile))
-	if text.is_empty():
+	var read := SaveStore.read(path(profile))
+	if int(read["status"]) != SaveStore.Status.OK:
 		return []
-	var parsed: Variant = JSON.parse_string(text)
-	if not parsed is Dictionary:
-		return []
-	var wins: Variant = (parsed as Dictionary).get("wins", [])
+	var wins: Variant = (read["data"] as Dictionary).get("wins", [])
 	return wins if wins is Array else []
 
 
-## Bucht einen Sieg. Eine leere Unit ist nichts zu buchen.
+## Bucht einen Sieg. Eine leere Unit ist nichts zu buchen. Sicher geschrieben und nie über
+## eine unlesbare Datei (SaveGuard) — die bisherigen Siege gingen sonst mit.
 static func record_win(unit_key: String, profile: String) -> void:
 	if unit_key.is_empty():
 		return
 	var all := entries(profile)
 	all.append({"unit": unit_key, "won_at": int(Time.get_unix_time_from_system())})
-	DirAccess.make_dir_recursive_absolute(SAVE_DIR)
-	var file := FileAccess.open(path(profile), FileAccess.WRITE)
-	if file == null:
-		push_warning("BossRecord: %s nicht schreibbar" % path(profile))
-		return
-	file.store_string(JSON.stringify({"wins": all}, "\t"))
-	file.close()
+	SaveGuard.write(path(profile), "_bosses", {"wins": all})
 
 
 ## Siege je Unit: „<book>/<unit>" -> Anzahl.

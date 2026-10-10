@@ -253,22 +253,37 @@ func _save_path() -> String:
 	return "%s/%s_badges.json" % [SAVE_DIR, player_id]
 
 
+func save_path() -> String:
+	return _save_path()
+
+
+func save_suffix() -> String:
+	return "_badges"
+
+
+func save_payload() -> Dictionary:
+	return {"day": _day, "earned": _earned.duplicate(), "kept": _kept.duplicate()}
+
+
+## Lädt den Tag neu (verworfene Welle): was in ihr verdient wurde, gibt es noch einmal.
+func reload() -> void:
+	_day = -1
+	_earned = []
+	_kept = []
+	_load()
+
+
+## Der WaveRunner meldet die Plaketten beim SaveCoordinator an: gespeichert wird mit der
+## Welle. Ohne Anmeldung (Tests) sofort.
 func _save() -> void:
-	DirAccess.make_dir_recursive_absolute(SAVE_DIR)
-	var file := FileAccess.open(_save_path(), FileAccess.WRITE)
-	if file == null:
-		push_warning("Badges: konnte '%s' nicht schreiben" % _save_path())
-		return
-	file.store_string(JSON.stringify({"day": _day, "earned": _earned, "kept": _kept}, "\t"))
-	file.close()
+	SaveCoordinator.mark_dirty(self)
 
 
 func _load() -> void:
 	_roll_day()
-	if not FileAccess.file_exists(_save_path()):
-		return
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(_save_path()))
-	if not (parsed is Dictionary) or int((parsed as Dictionary).get("day", -1)) != _day:
+	var read := SaveStore.read(_save_path())
+	var parsed: Variant = read["data"]
+	if int(read["status"]) != SaveStore.Status.OK or int((parsed as Dictionary).get("day", -1)) != _day:
 		return
 	_earned = (parsed as Dictionary).get("earned", [])
 	_kept = (parsed as Dictionary).get("kept", [])

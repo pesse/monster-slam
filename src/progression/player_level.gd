@@ -19,9 +19,10 @@ extends Node
 ## dieselbe Regel, eine Ebene höher. Die offenen Punkte sind `SkillBook.available()`.
 ##
 ## Persistenz: JSON unter user://progress/<player_id>_level.json — dieselbe Ablage wie
-## Fortschritt, Sitzungen und Geldbörse. Gesichert wird SOFORT bei jeder Änderung, also
-## mitten in der Welle: ein Absturz darf gelernte Erfahrung nicht kosten. Die Datei ist
-## ein paar Dutzend Bytes, das kostet nichts Messbares.
+## Fortschritt, Sitzungen und Geldbörse. Gespeichert wird über den SaveCoordinator an der
+## Wellengrenze, zusammen mit allem anderen (ADR 0024): die Erfahrung einer Welle, die
+## abbricht, verfällt mit ihr. Früher wurde bei jedem Kill direkt überschrieben — ein
+## Absturz dabei hat einen Spielstand von Level 26 auf Level 1 gesetzt.
 
 const SAVE_DIR := "user://progress"
 
@@ -46,8 +47,10 @@ var player_id: String = "default"
 func _ready() -> void:
 	player_id = UserSettings.active_profile()
 	load_level()
+	SaveCoordinator.register(self)
 	# Profilwechsel mitschalten, damit Erfahrung nicht im falschen Profil landet —
-	# dasselbe Muster wie in Wallet und SessionLog.
+	# dasselbe Muster wie in Wallet und SessionLog. Gesichert hat der SaveCoordinator
+	# den alten Stand vorher.
 	UserSettings.active_profile_changed.connect(switch_to)
 
 
@@ -87,10 +90,15 @@ func label(amount := -1) -> String:
 	return "%d XP" % (amount if amount >= 0 else total_xp)
 
 
-## Speichert den Stand und wechselt zum Profil `id` (lädt dessen Erfahrung).
+## Wechselt zum Profil `id` (lädt dessen Erfahrung). Gespeichert ist der alte Stand schon
+## (SaveCoordinator); eine Instanz ohne ihn schreibt bei jeder Änderung sofort.
 func switch_to(id: String) -> void:
-	_save()
 	player_id = id
+	reload()
+
+
+## Lädt den Stand des Profils neu und meldet ihn (Profilwechsel, verworfene Welle).
+func reload() -> void:
 	total_xp = 0
 	level = 1
 	load_level()
@@ -103,22 +111,27 @@ func _save_path() -> String:
 	return "%s/%s_level.json" % [SAVE_DIR, player_id]
 
 
-func _save() -> void:
-	DirAccess.make_dir_recursive_absolute(SAVE_DIR)
+func save_path() -> String:
+	return _save_path()
+
+
+func save_suffix() -> String:
+	return "_level"
+
+
+func save_payload() -> Dictionary:
 	# `level` und `skill_points` stehen zum Mitlesen in der Datei (Debugging, Support),
 	# gelesen wird beim Laden aber NUR total_xp — sonst gäbe es zwei Wahrheiten.
-	var payload := {
+	return {
 		"player_id": player_id,
 		"total_xp": total_xp,
 		"level": level,
 		"skill_points": skill_points(),
 	}
-	var file := FileAccess.open(_save_path(), FileAccess.WRITE)
-	if file == null:
-		push_warning("PlayerLevel: konnte '%s' nicht schreiben" % _save_path())
-		return
-	file.store_string(JSON.stringify(payload, "\t"))
-	file.close()
+
+
+func _save() -> void:
+	SaveCoordinator.mark_dirty(self)
 
 
 ## Lädt den Stand des aktuellen Profils. Keine Datei heißt „neues Profil": Level 1 ohne
@@ -136,15 +149,16 @@ func level_of(id: String) -> int:
 	return Experience.level_for(_read_total_xp("%s/%s_level.json" % [SAVE_DIR, id]))
 
 
-## Keine Datei heißt „neues Profil": keine Erfahrung, kein Fehler.
+## Keine Datei heißt „neues Profil": keine Erfahrung, kein Fehler. Eine unlesbare Datei
+## gibt hier auch 0 — überschrieben wird sie trotzdem nie (SaveGuard), und beim Öffnen des
+## Profils hat der SaveCoordinator sie schon aus der Sicherung ersetzt.
 func _read_total_xp(path: String) -> int:
-	if not FileAccess.file_exists(path):
+	var read := SaveStore.read(path)
+	if int(read["status"]) != SaveStore.Status.OK:
+		if int(read["status"]) != SaveStore.Status.MISSING:
+			push_warning("PlayerLevel: ungültige Datei '%s'" % path)
 		return 0
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
-	if not (parsed is Dictionary):
-		push_warning("PlayerLevel: ungültige Datei '%s'" % path)
-		return 0
-	var payload: Dictionary = parsed
+	var payload: Dictionary = read["data"]
 	# maxi(0, …): eine handgeschriebene negative Zahl wäre eine Schuld, die das Spiel
 	# nicht kennt. Das Level kommt aus der Erfahrung und nicht aus der Datei — ein von
 	# Hand hochgesetztes Level wäre sonst ein Level ohne Erfahrung dahinter.

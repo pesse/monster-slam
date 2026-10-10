@@ -8,6 +8,8 @@ extends Node
 ##
 ## Persistenz: JSON unter user://progress/<player_id>.json. Content (lexemes, tasks…)
 ## bleibt versioniertes JSON unter res://data/ — hier landet NUR der Fortschritt.
+## Gespeichert wird über den SaveCoordinator an der Wellengrenze (ADR 0024); was in einer
+## abgebrochenen Welle beantwortet wurde, verfällt.
 
 const SAVE_DIR := "user://progress"
 
@@ -41,8 +43,8 @@ func _ready() -> void:
 	# Aktives Profil aus den Einstellungen übernehmen (UserSettings lädt vorher, siehe [autoload]).
 	player_id = UserSettings.active_profile()
 	load_progress()
-	# Nach geräumter Welle sichern; günstiger Zeitpunkt ohne eigenes Autosave.
-	EventBus.wave_cleared.connect(func(_wave_id): save_progress())
+	SaveCoordinator.register(self)
+	UserSettings.active_profile_changed.connect(switch_to)
 
 
 ## Abstand der lokalen Zeit zu UTC in Sekunden: die Fälligkeit rechnet Tage ab lokaler
@@ -250,12 +252,17 @@ func reset() -> void:
 	_records.clear()
 
 
-## Speichert den aktuellen Stand und wechselt zum Profil `id` (lädt dessen Fortschritt).
-## load_progress() kehrt früh zurück, wenn das Profil noch keine Datei hat -> leerer Start.
+## Wechselt zum Profil `id` (lädt dessen Fortschritt). Gespeichert ist der alte Stand schon
+## (SaveCoordinator). load_progress() kehrt früh zurück, wenn das Profil noch keine Datei
+## hat -> leerer Start.
 func switch_to(id: String) -> void:
-	save_progress()
-	reset()
 	player_id = id
+	reload()
+
+
+## Lädt den Stand des Profils neu (Profilwechsel, verworfene Welle, Import).
+func reload() -> void:
+	reset()
 	load_progress()
 
 
@@ -505,29 +512,34 @@ func _save_path() -> String:
 	return "%s/%s.json" % [SAVE_DIR, player_id]
 
 
+func save_path() -> String:
+	return _save_path()
+
+
+func save_suffix() -> String:
+	return ""
+
+
+func save_payload() -> Dictionary:
+	return {"player_id": player_id, "records": _records}
+
+
+## Speichert: beim Autoload über den SaveCoordinator (am Ende des Frames, im Kampf an der
+## Wellengrenze), bei einer eigenen Instanz sofort.
 func save_progress() -> void:
-	DirAccess.make_dir_recursive_absolute(SAVE_DIR)
-	var payload := {
-		"player_id": player_id,
-		"records": _records,
-	}
-	var file := FileAccess.open(_save_path(), FileAccess.WRITE)
-	if file == null:
-		push_warning("PlayerProgress: konnte '%s' nicht schreiben" % _save_path())
-		return
-	file.store_string(JSON.stringify(payload, "\t"))
-	file.close()
+	SaveCoordinator.mark_dirty(self)
 
 
 func load_progress() -> void:
-	if not FileAccess.file_exists(_save_path()):
+	var read := SaveStore.read(_save_path())
+	if int(read["status"]) == SaveStore.Status.MISSING:
 		return
-	var text := FileAccess.get_file_as_string(_save_path())
-	var parsed: Variant = JSON.parse_string(text)
-	if not (parsed is Dictionary):
+	var parsed: Variant = read["data"]
+	if int(read["status"]) != SaveStore.Status.OK:
 		push_warning("PlayerProgress: ungültige Fortschrittsdatei '%s'" % _save_path())
 		return
-	player_id = str(parsed.get("player_id", player_id))
+	# Die player_id steht auch in der Datei, gilt aber nur über den Pfad: eine eingespielte
+	# Datei eines anderen Profils lenkte sonst das nächste Speichern dorthin um.
 	_records = parsed.get("records", {})
 	# Bis 0.26 lag daneben ein SM-2-Plan (`sr`) und je Record sein Ergebnis
 	# (`next_review_at`). Die Fälligkeit wird jetzt gerechnet (ADR 0018); beides fällt

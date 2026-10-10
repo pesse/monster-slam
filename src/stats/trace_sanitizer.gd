@@ -38,6 +38,11 @@ const KEEP := {
 	"mastered": ["id"],
 	"word_mastered": ["lex"],
 	"badge": ["id", "tier"],
+	# Spielstand (ADR 0024): ob und wo Spielstände kaputtgehen. Nur Endungen, Zeitpunkte
+	# und Werte — der Profilname steckt nicht darin.
+	"save_refused": ["part", "reason"],
+	"save_restored": ["parts", "backup_at"],
+	"save_damaged": ["parts"],
 }
 
 ## Längere Eingaben werden für den Abstand gekappt: ein Kind, das die Tastatur flutet, soll
