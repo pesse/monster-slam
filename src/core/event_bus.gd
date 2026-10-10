@@ -99,3 +99,13 @@ signal monster_catapulted(task: Dictionary)
 ## Der Donnerschlag (Zauber, ADR 0014) hat ein Monster vom Feld genommen. Wie beim Katapult
 ## erledigt, aber nicht beantwortet — ein eigenes Signal, damit die Spur die beiden trennt.
 signal monster_struck(task: Dictionary)
+
+## --- Spielstand (docs/adr/0024-spielstand-sicher-speichern.md) ---
+## Ein Speichern wurde verweigert (SaveGuard): die Datei `file` bleibt, wie sie ist.
+signal save_refused(file: String, reason: String)
+## Beim Öffnen eines Profils war der Spielstand beschädigt und wurde aus der Sicherung vom
+## `backup_at` (unix) zurückgeholt. `files` nennt die beschädigten Dateien (nur Endungen).
+signal save_restored(files: Array, backup_at: int)
+## Beim Öffnen beschädigt und keine Sicherung da: das Profil speichert nicht, bis der
+## Spieler entscheidet (SaveCoordinator.start_blank). `files` wie oben.
+signal save_damaged(files: Array)

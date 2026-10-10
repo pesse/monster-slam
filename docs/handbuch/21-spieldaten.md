@@ -39,4 +39,4 @@ Spielverlauf mehr mit. Der Spielstand wird weiter gesendet.
 
 ---
 
-← [20. Der Bosskampf](20-bosskampf.md) · [Inhalt](README.md)
+← [20. Der Bosskampf](20-bosskampf.md) · [Inhalt](README.md) · [23. Spielstand und Sicherungen](23-spielstand-und-sicherungen.md) →

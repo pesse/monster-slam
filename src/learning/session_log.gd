@@ -44,11 +44,15 @@ var _sessions: Array = []
 ## Die laufende Sitzung; leer = gerade kein Lauf.
 var _current: Dictionary = {}
 var player_id: String = "default"
+## Eine verworfene Welle (SaveCoordinator.discard_uncommitted) nimmt dem Log nichts: es ist
+## ein Protokoll dessen, was gespielt wurde, kein Verdienst.
+var keep_on_discard := true
 
 
 func _ready() -> void:
 	player_id = UserSettings.active_profile()
 	load_sessions()
+	SaveCoordinator.register(self)
 	# Profilwechsel mitschalten, damit Sitzungen nicht im falschen Profil landen. Über das
 	# Signal statt über einen Aufruf im UI: der Wechsel wird an drei Stellen ausgelöst.
 	UserSettings.active_profile_changed.connect(switch_to)
@@ -375,15 +379,25 @@ func _save_path() -> String:
 	return "%s/%s_sessions.json" % [SAVE_DIR, player_id]
 
 
+func save_path() -> String:
+	return _save_path()
+
+
+func save_suffix() -> String:
+	return "_sessions"
+
+
+func save_payload() -> Dictionary:
+	return {"player_id": player_id, "sessions": _sessions, "current": _current}
+
+
+## Lädt das Log des Profils neu (Import).
+func reload() -> void:
+	load_sessions()
+
+
 func _save() -> void:
-	DirAccess.make_dir_recursive_absolute(SAVE_DIR)
-	var payload := {"player_id": player_id, "sessions": _sessions, "current": _current}
-	var file := FileAccess.open(_save_path(), FileAccess.WRITE)
-	if file == null:
-		push_warning("SessionLog: konnte '%s' nicht schreiben" % _save_path())
-		return
-	file.store_string(JSON.stringify(payload, "\t"))
-	file.close()
+	SaveCoordinator.mark_dirty(self)
 
 
 ## Lädt das Log und schließt dabei eine offen liegende Sitzung ab.
@@ -394,13 +408,13 @@ func _save() -> void:
 func load_sessions() -> void:
 	_sessions.clear()
 	_current = {}
-	if not FileAccess.file_exists(_save_path()):
+	var read := SaveStore.read(_save_path())
+	if int(read["status"]) == SaveStore.Status.MISSING:
 		return
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(_save_path()))
-	if not (parsed is Dictionary):
+	if int(read["status"]) != SaveStore.Status.OK:
 		push_warning("SessionLog: ungültige Sitzungsdatei '%s'" % _save_path())
 		return
-	var payload: Dictionary = parsed
+	var payload: Dictionary = read["data"]
 	var loaded: Variant = payload.get("sessions", [])
 	if loaded is Array:
 		_sessions = loaded

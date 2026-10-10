@@ -108,6 +108,11 @@ Aufzählung von Kleinkram; unter ~600 Zeichen je Release.
 - `user://` ist der einzige beschreibbare Ort; `res://` ist im Export read-only.
 - Gespeichert wird nur der Ursprungswert, alles Abgeleitete wird gerechnet (`total_xp`
   statt Level, gelernte Knoten statt ausgegebener Punkte). Kein zweiter Zähler daneben.
+- **Spielstand** (ADR 0024): Profildateien und `settings.cfg` schreibt nur `SaveStore`,
+  wann, entscheidet `SaveCoordinator` (Wellengrenze, nie mitten in der Welle). Ein Speicher
+  ruft `mark_dirty`, nie selbst `FileAccess.WRITE`. Unlesbar ist nie „neu“ und wird nie
+  überschrieben. Eine neue Profildatei kommt in `PROFILE_SUFFIXES`, ein Wert, der nur
+  wächst, in `SaveGuard.MONOTONIC`. Der Statistik-Kanal liest nur Sicherungen.
 - Schwierigkeit hat **ein** Maß: `t - c` in `WaveGenerator._build_plan`. Tempo, Punkte und
   Erfahrung sind Projektionen davon; kein eigenes Maß daneben bauen.
 - `TraceLog` hängt nur am EventBus und wirkt nie zurück. Braucht die Spur ein neues
@@ -202,11 +207,17 @@ Aufzählung von Kleinkram; unter ~600 Zeichen je Release.
 - Nach einem Test, der Packs installiert, `user://content` aufräumen — ein
   liegengebliebener Pack überschreibt im Entwicklungslauf das Submodule.
 - Kein Test fährt eine ganze Welle.
+- Unter gdUnit4 speichert das Autoload `SaveCoordinator` nicht (`_under_test`). Wer
+  Speichern prüft, baut eine eigene Instanz mit eigenen Ordnern (`save_coordinator_test`).
 - Neue Fixtures nach `tests/fixtures/` (dort ist jede Zeilenenden-Umwandlung aus).
 - Größen je Achse prüfen: `assert_vector(...).is_less_equal(...)` vergleicht lexikografisch.
 
 ## Fallen
 
+- **Umbenennen ist unter Windows „Ziel löschen, dann verschieben“**, und fsync gibt es
+  nicht. Dazwischen kann ein Ziel fehlen und nur die `.tmp` stehen — `SaveCoordinator`
+  räumt das beim Öffnen auf (Journal). Nie eine `.tmp` von Hand löschen, solange das
+  Spiel läuft.
 - **Godot schreibt offene Dateien um.** Jeder Lauf, auch headless, lädt und speichert die
   im Skripteditor offenen Dateien und stellt ihre Einrückung auf Tabs um — auch Markdown,
   JSON und Dateien im Submodule. `tools/godot.sh` setzt reine Einrückungsänderungen danach

@@ -8,6 +8,7 @@ extends GdUnitTestSuite
 const DIR := "user://zz-stats-test"
 const PROFILE := "zz-stats-test"
 const OTHER := "zz-stats-test-other"
+const BACKUPS := "user://zz-stats-test-backups"
 
 
 func before_test() -> void:
@@ -23,6 +24,10 @@ func _cleanup() -> void:
 	for suffix in StatsUploader.SNAPSHOT_FILES:
 		DirAccess.remove_absolute("%s/%s%s.json" % [DIR, PROFILE, suffix])
 	DirAccess.remove_absolute(DIR)
+	for dir in Backups.generation_dirs(BACKUPS, PROFILE):
+		Backups._remove_dir(dir)
+	DirAccess.remove_absolute(BACKUPS.path_join(PROFILE))
+	DirAccess.remove_absolute(BACKUPS)
 	for profile in [PROFILE, OTHER]:
 		for section in ["stats_id", "stats_cursor", "stats_sent"]:
 			if UserSettings._config.has_section_key(section, profile):
@@ -57,6 +62,28 @@ func test_snapshot_takes_only_allowed_fields() -> void:
 	assert_bool(snap.has("inventory")).is_false()      # keine Datei, kein Eintrag
 	# Die player_id ist der Name des Kindes.
 	assert_bool(JSON.stringify(snap).contains(PROFILE)).is_false()
+
+
+## Gesendet wird nur aus einer fertigen Sicherung (ADR 0024), nie aus den Live-Dateien.
+func test_snapshot_comes_from_the_newest_backup() -> void:
+	SaveStore.write("%s/%s_level.json" % [DIR, PROFILE], {"total_xp": 900})
+	assert_dict(StatsUploader.generation_snapshot(PROFILE, {}, {}, BACKUPS)).is_empty()
+	assert_int(StatsUploader.saved_at(BACKUPS, PROFILE)).is_equal(0)
+	Backups.create(BACKUPS, PROFILE, DIR, StatsUploader.SNAPSHOT_FILES.keys(), "test", 1_760_100_000_000,
+			"user://zz-stats-test-none.cfg")
+	# Danach geändert, aber nicht gesichert: geht nicht hinaus.
+	SaveStore.write("%s/%s_level.json" % [DIR, PROFILE], {"total_xp": 950})
+	var snap := StatsUploader.generation_snapshot(PROFILE, {}, {}, BACKUPS)
+	assert_dict(snap["level"]).is_equal({"total_xp": 900.0})
+	assert_bool(JSON.stringify(snap).contains("_save")).is_false()
+	assert_int(StatsUploader.saved_at(BACKUPS, PROFILE)).is_equal(1_760_100_000)
+
+
+func test_an_unreadable_file_sends_nothing() -> void:
+	_write("_wallet", {"gold": 1})
+	var file := FileAccess.open("%s/%s_level.json" % [DIR, PROFILE], FileAccess.WRITE)
+	file.close()
+	assert_dict(StatsUploader.snapshot(PROFILE, {}, {}, DIR)).is_empty()
 
 
 func test_test_profiles_never_send() -> void:

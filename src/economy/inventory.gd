@@ -13,8 +13,9 @@ extends Node
 ## in der Datei. Liegt etwas auf einem Platz jenseits der Zahl (Skills zurückgesetzt),
 ## bleibt es gespeichert und kommt mit dem Platz zurück.
 ##
-## Persistenz: JSON unter user://progress/<player_id>_inventory.json, gesichert bei jeder
-## Änderung wie die Geldbörse — ein gekaufter Zauber darf einen Absturz überstehen.
+## Persistenz: JSON unter user://progress/<player_id>_inventory.json, gespeichert wie die
+## Geldbörse über den SaveCoordinator (ADR 0024): ein Kauf im Laden sofort, ein im Kampf
+## eingesetzter Zauber an der Wellengrenze — bricht die Welle ab, ist er wieder da.
 
 const SAVE_DIR := "user://progress"
 const BASE_SLOTS := 4
@@ -35,6 +36,7 @@ func _ready() -> void:
 	wallet = Wallet
 	player_id = UserSettings.active_profile()
 	load_inventory()
+	SaveCoordinator.register(self)
 	UserSettings.active_profile_changed.connect(switch_to)
 
 
@@ -112,11 +114,15 @@ func take(index: int) -> String:
 	return str(entry["id"])
 
 
-## Speichert den Vorrat und wechselt zum Profil `id` (lädt dessen Vorrat).
+## Wechselt zum Profil `id` (lädt dessen Vorrat). Gespeichert ist der alte Stand schon
+## (SaveCoordinator); eine Instanz ohne ihn schreibt bei jeder Änderung sofort.
 func switch_to(id: String) -> void:
-	_save()
 	player_id = id
-	slots.clear()
+	reload()
+
+
+## Lädt den Vorrat des Profils neu und meldet ihn (Profilwechsel, verworfene Welle).
+func reload() -> void:
 	load_inventory()
 	changed.emit()
 
@@ -127,24 +133,31 @@ func _save_path() -> String:
 	return "%s/%s_inventory.json" % [SAVE_DIR, player_id]
 
 
+func save_path() -> String:
+	return _save_path()
+
+
+func save_suffix() -> String:
+	return "_inventory"
+
+
+func save_payload() -> Dictionary:
+	return {"player_id": player_id, "slots": slots.duplicate(true)}
+
+
 func _save() -> void:
-	DirAccess.make_dir_recursive_absolute(SAVE_DIR)
-	var file := FileAccess.open(_save_path(), FileAccess.WRITE)
-	if file == null:
-		push_warning("Inventory: konnte '%s' nicht schreiben" % _save_path())
-		return
-	file.store_string(JSON.stringify({"player_id": player_id, "slots": slots}, "\t"))
-	file.close()
+	SaveCoordinator.mark_dirty(self)
 
 
 ## Lädt den Vorrat des aktuellen Profils. Keine Datei heißt „neues Profil": leerer Vorrat.
 ## Ein Platz mit unbrauchbarem Inhalt wird leer, statt den Rest zu verwerfen.
 func load_inventory() -> void:
 	slots.clear()
-	if not FileAccess.file_exists(_save_path()):
+	var read := SaveStore.read(_save_path())
+	if int(read["status"]) == SaveStore.Status.MISSING:
 		return
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(_save_path()))
-	if not (parsed is Dictionary) or not ((parsed as Dictionary).get("slots") is Array):
+	var parsed: Variant = read["data"]
+	if int(read["status"]) != SaveStore.Status.OK or not ((parsed as Dictionary).get("slots") is Array):
 		push_warning("Inventory: ungültiger Vorrat '%s'" % _save_path())
 		return
 	for raw: Variant in (parsed as Dictionary)["slots"]:

@@ -5,7 +5,8 @@ Eingabefeld gerade offen, schließt das erste Escape nur das Feld, erst das zwei
 
 - Die angefangene Welle zählt nicht: es gibt keine Auflösung, keine Statistik und keine
   Schatzkiste.
-- Erfahrung, die du in der Welle schon bekommen hast, bleibt dir.
+- Auch die Erfahrung und das Gold aus der angefangenen Welle zählen nicht. Gespeichert
+  wird erst am Ende einer Welle ([Kapitel 23](23-spielstand-und-sicherungen.md)).
 - Nach dem Ende einer Welle ist Escape ohne Wirkung; dort führen die Knöpfe weiter
   (oder Enter).
 

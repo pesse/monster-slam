@@ -6,7 +6,7 @@ Gold und Erfahrung bleiben dir über den Lauf hinaus, aber sie meinen Verschiede
 ## Gold
 
 - Du verdienst es in den Schatzkisten am Ende einer Welle.
-- Es wird sofort gespeichert, sobald die Kiste offen ist.
+- Es wird gespeichert, sobald die Kiste offen ist.
 - Du gibst es für Zauber aus ([Kapitel 5](05-kampf.md), „Zauber“) und im Fähigkeiten-Screen, um
   gelernte Fähigkeiten zurückzunehmen ([Kapitel 11](11-faehigkeiten.md)).
 
@@ -19,7 +19,8 @@ Gold und Erfahrung bleiben dir über den Lauf hinaus, aber sie meinen Verschiede
 - Die gewählte Wellen-Schwierigkeit hebt die Punkte, aber nicht die Erfahrung. Sonst wäre
   die schnellste Welle der schnellste Weg zum nächsten Level, und ein einzelnes Wort wird
   nicht schwerer, nur weil die Welle schneller ist.
-- Die Erfahrung wird sofort gespeichert, schon mitten in der Welle.
+- Die Erfahrung wird am Ende der Welle gespeichert. Bricht die Welle ab, zählt sie nicht
+  ([Kapitel 23](23-spielstand-und-sicherungen.md)).
 
 ## Level und Skillpunkte
 

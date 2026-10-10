@@ -129,6 +129,31 @@ def profile_summary(profile: dict) -> dict:
     }
 
 
+# Was nur wachsen darf (wie SaveGuard.MONOTONIC im Spiel, ADR 0024).
+MONOTONIC = {
+    "XP": lambda s: (s.get("level") or {}).get("total_xp", 0),
+    "Gold verdient": lambda s: (s.get("wallet") or {}).get("total_earned", 0),
+    "Kisten": lambda s: (s.get("wallet") or {}).get("chests_opened", 0),
+    "Lernstände": lambda s: len(s.get("progress") or {}),
+    "Sitzungen": lambda s: len(s.get("sessions") or []),
+    "Boss-Siege": lambda s: len(s.get("bosses") or []),
+}
+
+
+def drops(profiles: list[dict]) -> list[list]:
+    """Je Profil und Tag, was gegenüber dem Snapshot davor gesunken ist: ein verlorener
+    Spielstand (oder ein zurückgesetzter Lernstand). Zeilen: Profil, von, bis, Größe, vorher, nachher."""
+    out = []
+    for profile in profiles:
+        snaps = profile["snapshots"]
+        for before, after in zip(snaps, snaps[1:]):
+            for name, value in MONOTONIC.items():
+                was, now = int(value(before) or 0), int(value(after) or 0)
+                if now < was:
+                    out.append([profile["id"][:8], before["_day"], after["_day"], name, was, now])
+    return out
+
+
 def sessions_per_day(profiles: list[dict]) -> list[tuple[str, int, int]]:
     """(Tag, Sitzungen, Profile) über alle Profile."""
     count: dict[str, int] = collections.Counter()
@@ -215,6 +240,14 @@ def render(profiles: list[dict], lemmas: dict[str, str]) -> str:
               [[s["id"], s["app"], s["last_seen"], s["sessions"], s["days"], s["minutes"], s["waves"],
                 s["answers"], pct(s["accuracy"]), s["gold"], s["xp"], s["seen"], s["mastered"],
                 s["difficulty"]] for s in summaries]),
+    ]
+    lost = drops(profiles)
+    parts += [
+        "<h2>Rückgänge</h2>",
+        "<p class=note>Gesunken zwischen zwei Snapshots, was nur wachsen kann – ein verlorener "
+        "Spielstand. Wiederherstellen: tools/stats/rebuild_save.py.</p>",
+        table(["Profil", "von", "bis", "Größe", "vorher", "nachher"], lost) if lost
+        else "<p>Keine.</p>",
         "<h2>Sitzungen je Tag</h2><div class=bars>",
     ]
     for day, n, who in days:
@@ -280,8 +313,12 @@ def self_test() -> None:
         with open(profile / "trace-2026-10.jsonl.gz", "wb") as fh:
             fh.write(gzip.compress(b'{"e":"answer","hit":true,"rt":1200}\n'))
             fh.write(gzip.compress(b'{"e":"answer","hit":false,"dist":1}\n{"e":"leak"}\n'))
+        lower = dict(snap, level={"total_xp": 10})
+        with gzip.open(profile / "snapshot-2026-10-02.json.gz", "wt", encoding="utf-8") as fh:
+            json.dump(lower, fh)
         profiles = load_profiles(data)
         assert len(profiles) == 1, profiles
+        assert drops(profiles) == [["abababab", "2026-10-01", "2026-10-02", "XP", 400, 10]], drops(profiles)
         assert len(profiles[0]["trace"]) == 3, "gzip-Glieder nicht alle gelesen"
         summary = profile_summary(profiles[0])
         assert summary["minutes"] == 10 and summary["mastered"] == 1, summary

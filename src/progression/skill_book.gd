@@ -16,9 +16,9 @@ extends Node
 ## abweichen, und dann wäre nicht mehr zu sagen, welcher stimmt.
 ##
 ## Persistenz: JSON unter user://progress/<player_id>_skills.json — dieselbe Ablage wie
-## Fortschritt, Sitzungen, Geldbörse und Erfahrung. Gesichert wird SOFORT bei jeder
-## Änderung: der Kauf ist eine Entscheidung des Spielers, und die darf ein Absturz nicht
-## zurücknehmen.
+## Fortschritt, Sitzungen, Geldbörse und Erfahrung. Gespeichert wird über den
+## SaveCoordinator am Ende des Frames (ADR 0024) — zusammen mit dem Gold, das ein Verlernen
+## kostet, in einem Commit.
 
 const SAVE_DIR := "user://progress"
 
@@ -41,6 +41,7 @@ func _ready() -> void:
 	unlimited_points = OS.is_debug_build()
 	player_id = UserSettings.active_profile()
 	load_skills()
+	SaveCoordinator.register(self)
 	# Profilwechsel mitschalten, damit Gelerntes nicht im falschen Profil landet —
 	# dasselbe Muster wie in Wallet, PlayerLevel und SessionLog.
 	UserSettings.active_profile_changed.connect(switch_to)
@@ -135,10 +136,15 @@ func bonuses() -> Dictionary:
 	return SkillTree.bonuses(entries(), unlocked)
 
 
-## Speichert den Stand und wechselt zum Profil `id` (lädt dessen gelernte Skills).
+## Wechselt zum Profil `id` (lädt dessen gelernte Skills). Gespeichert ist der alte Stand
+## schon (SaveCoordinator); eine Instanz ohne ihn schreibt bei jeder Änderung sofort.
 func switch_to(id: String) -> void:
-	_save()
 	player_id = id
+	reload()
+
+
+## Lädt den Stand des Profils neu und meldet ihn (Profilwechsel, Import).
+func reload() -> void:
 	unlocked = PackedStringArray()
 	load_skills()
 	changed.emit()
@@ -150,33 +156,38 @@ func _save_path() -> String:
 	return "%s/%s_skills.json" % [SAVE_DIR, player_id]
 
 
-func _save() -> void:
-	DirAccess.make_dir_recursive_absolute(SAVE_DIR)
+func save_path() -> String:
+	return _save_path()
+
+
+func save_suffix() -> String:
+	return "_skills"
+
+
+func save_payload() -> Dictionary:
 	# `spent_points` steht zum Mitlesen in der Datei (Debugging, Support), gelesen wird
 	# beim Laden aber NUR `unlocked` — sonst gäbe es zwei Wahrheiten.
-	var payload := {
+	return {
 		"player_id": player_id,
 		"unlocked": Array(unlocked),
 		"spent_points": SkillTree.spent(entries(), unlocked),
 	}
-	var file := FileAccess.open(_save_path(), FileAccess.WRITE)
-	if file == null:
-		push_warning("SkillBook: konnte '%s' nicht schreiben" % _save_path())
-		return
-	file.store_string(JSON.stringify(payload, "\t"))
-	file.close()
+
+
+func _save() -> void:
+	SaveCoordinator.mark_dirty(self)
 
 
 ## Lädt den Stand des aktuellen Profils. Keine Datei heißt „neues Profil": nichts gelernt,
 ## kein Fehler.
 func load_skills() -> void:
-	if not FileAccess.file_exists(_save_path()):
+	var read := SaveStore.read(_save_path())
+	if int(read["status"]) == SaveStore.Status.MISSING:
 		return
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(_save_path()))
-	if not (parsed is Dictionary):
+	if int(read["status"]) != SaveStore.Status.OK:
 		push_warning("SkillBook: ungültige Datei '%s'" % _save_path())
 		return
-	var payload: Dictionary = parsed
+	var payload: Dictionary = read["data"]
 	var list := PackedStringArray()
 	for id in payload.get("unlocked", []):
 		# Doppelte Einträge würden doppelt abgerechnet — eine von Hand verdoppelte Zeile

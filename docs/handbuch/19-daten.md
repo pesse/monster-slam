@@ -8,6 +8,11 @@ ist das in der Regel `%APPDATA%\Godot\app_userdata\Monster Slam\`, auf dem Mac
 Protokolldatei zeigt der Reiter „Protokoll“ in den Einstellungen, und „Ordner öffnen“
 führt direkt dorthin.
 
+Im selben Ordner liegen die Sicherungen (`backups`, je Profil ein Ordner) und
+beschädigte Dateien, die das Spiel beiseitegelegt hat (`quarantine`). Alte Sicherungen
+räumt das Spiel selbst weg; beiseitegelegte Dateien bleiben liegen, damit nichts verloren
+geht. Wie die Sicherungen funktionieren, steht in [Kapitel 23](23-spielstand-und-sicherungen.md).
+
 Was davon für die Entwicklung an unseren Server geht, und was nie, steht in
 [Kapitel 21: Spieldaten für die Entwicklung](21-spieldaten.md).
 

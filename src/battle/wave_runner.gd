@@ -178,6 +178,8 @@ var _wave_low_hp := 0
 ## Sind die Plaketten der gewonnenen Welle schon gemeldet? _check_end kommt nach ihrer Feier
 ## ein zweites Mal vorbei.
 var _wave_badges_done := false
+## Ob der Ausgang schon gespeichert hat (Rückweg oder Abbruch) — sonst verwirft _exit_tree.
+var _saved_on_exit := false
 ## Die nächste Beispiel-Plakette des Debug-Panels.
 var _debug_badge := 0
 
@@ -234,6 +236,10 @@ func _ready() -> void:
 	_skill_bonuses = skill_bonuses
 	if RunRequest.first_person():
 		_setup_first_person()
+	# Gespeichert wird ab hier nur an der Wellengrenze (ADR 0024): was eine Welle verdient,
+	# kommt mit ihrem Ende auf die Platte, und eine abgebrochene verfällt ganz.
+	SaveCoordinator.hold()
+	SaveCoordinator.register(_badges)
 	# Der Lauf beginnt hier, nicht mit der ersten Welle: alles, was über die Wellen hinweg
 	# zählt (Sitzungs-Log, GameState-Zähler), hängt an diesem Punkt.
 	EventBus.run_started.emit()
@@ -258,7 +264,9 @@ func _ready() -> void:
 	if _stats.has_signal("reward_collected"):
 		_stats.reward_collected.connect(_on_reward_collected)
 	if _stats.has_signal("consolation_collected"):
-		_stats.consolation_collected.connect(func(gold: int) -> void: Wallet.earn(gold))
+		_stats.consolation_collected.connect(func(gold: int) -> void:
+				Wallet.earn(gold)
+				SaveCoordinator.commit("chest"))
 	_fast_resolve_button.pressed.connect(_on_fast_resolve_pressed)
 	_fast_resolve_confirm.confirmed.connect(_fast_resolve_wave)
 	_fast_resolve_confirm.cancelled.connect(_on_fast_resolve_cancelled)
@@ -1073,10 +1081,12 @@ func _dismiss(monster: Monster) -> void:
 ## Zurück ins Menü, ohne die Welle zu beenden.
 ##
 ## Bewusst NICHT über _finish_wave(): ein Abbruch ist keine Niederlage — keine Statistik,
-## kein wave_cleared, kein Festungsausbau. Der Lernfortschritt dieser Welle wird nicht
-## gespeichert; PlayerProgress schreibt erst bei wave_cleared bzw. beim Verlassen über den
-## Statistik-Screen (_on_back_to_menu). Was schon beantwortet wurde, verfällt damit — das
-## ist der Preis des Abbruchs und besser, als eine halbe Welle als Lernstand zu buchen.
+## kein wave_cleared, kein Festungsausbau. Alles, was die angefangene Welle verdient hat —
+## Lernstand, Erfahrung, eingesetzte Zauber, Plaketten —, verfällt
+## (SaveCoordinator.discard_uncommitted, ADR 0024): gespeichert wird nur an der
+## Wellengrenze. Das ist der Preis des Abbruchs, derselbe wie bei einem Absturz, und besser,
+## als eine halbe Welle zu buchen. Das Sitzungs-Log behält die Antworten — es zeigt, was
+## gespielt wurde.
 ##
 ## Auch keine Sitzungsbilanz (Issue #12): Escape heißt „sofort raus", und eine Bilanz
 ## dazwischen wäre ein Screen, der den Ausgang verzögert. Die Bilanz steht auf Stufe 2
@@ -1129,7 +1139,10 @@ func _on_abort_cancelled() -> void:
 
 func _abort_battle() -> void:
 	_finished = true
+	SaveCoordinator.discard_uncommitted()
 	_report_run_ended()
+	SaveCoordinator.commit("run_abort")
+	_saved_on_exit = true
 	_wave_gen += 1   # bindet laufende Spawn-Coroutinen ab (siehe _run_spawn_batch)
 	_slow_motion.stop()
 	_leave_battle()
@@ -1145,6 +1158,12 @@ func _set_view_active(on: bool) -> void:
 
 func _exit_tree() -> void:
 	get_tree().paused = false
+	# Ein Ausgang an Rückweg und Abbruch vorbei (Szenenwechsel aus der Werkbank): auch dann
+	# kommt keine halbe Welle auf die Platte.
+	if not _saved_on_exit:
+		SaveCoordinator.discard_uncommitted()
+	SaveCoordinator.unregister(_badges)
+	SaveCoordinator.release()
 
 
 ## „Schnell auflösen" fragt erst nach. Solange die Frage steht, ist die Eingabe weg: sie
@@ -2029,9 +2048,9 @@ func _book_defeat(monster: Monster) -> void:
 	_active.erase(monster)
 	_wave_correct += 1
 	_wave_played_tasks.append(_task_snapshot(monster, false))
-	# Erfahrung SOFORT verbuchen, wie das Gold in der Geldbörse: sie gehört zum Profil
-	# (PlayerLevel), nicht zum Lauf, und ein Absturz mitten in der Welle darf sie nicht
-	# kosten. Der Zähler daneben ist nur für den Wellenabschluss.
+	# Erfahrung sofort verbuchen: sie gehört zum Profil (PlayerLevel), nicht zum Lauf, und
+	# die Anzeige soll mitzählen. Auf die Platte kommt sie mit dem Wellenende
+	# (SaveCoordinator). Der Zähler daneben ist nur für den Wellenabschluss.
 	PlayerLevel.gain(monster.xp)
 	_wave_xp += monster.xp
 	# Reward aus der monster_task_rule an GameState durchreichen (Score).
@@ -2173,6 +2192,9 @@ func _finish_wave(won: bool) -> void:
 		return
 	_finished = true
 	_last_won = won
+	# Die Wellengrenze: alles, was die Welle verdient hat, kommt jetzt zusammen auf die
+	# Platte (ADR 0024). Nach wave_cleared, damit das Sitzungs-Log die Welle schon zählt.
+	SaveCoordinator.commit("wave_end")
 	if _sun_cycle != null:
 		_sun_cycle.hold = false
 	_set_view_active(false)
@@ -2257,10 +2279,11 @@ func _on_review_requested() -> void:
 
 ## Der Spieler hat die Schatzkiste aufgedrückt: das Gold gehört ihm. Verbucht wird hier
 ## und nicht im Screen — das Gold hängt am Profil (Wallet), und der Screen soll nichts
-## schreiben, was er nur anzeigt. Die Geldbörse sichert sofort: ein Absturz auf dem Weg
-## in die nächste Welle darf die Kiste nicht rückgängig machen.
+## schreiben, was er nur anzeigt. Gespeichert wird gleich: ein Absturz auf dem Weg in die
+## nächste Welle darf die Kiste nicht rückgängig machen.
 func _on_reward_collected(gold: int) -> void:
 	Wallet.earn(gold, true)
+	SaveCoordinator.commit("chest")
 
 
 ## Spieler hat auf dem Statistik-Screen die nächste Welle gerufen. Die Wahl ist RELATIV:
@@ -2277,13 +2300,14 @@ func _on_next_wave_requested(delta: int) -> void:
 	_start_next_wave()
 
 
-## Spieler kehrt vom Statistik-Screen ins Menü zurück. Fortschritt explizit sichern
-## (der Niederlage-Pfad emittiert kein wave_cleared) und die Menü-Szene laden.
+## Spieler kehrt vom Statistik-Screen ins Menü zurück: rasten, den Lauf beenden, das
+## Sitzungs-Log mit ihm speichern und die Menü-Szene laden.
 func _on_back_to_menu() -> void:
-	PlayerProgress.save_progress()
 	if can_rest(RunRequest.is_level(), _last_won):
 		_rest()
 	_report_run_ended()
+	SaveCoordinator.commit("run_end")
+	_saved_on_exit = true
 	_leave_battle()
 
 
