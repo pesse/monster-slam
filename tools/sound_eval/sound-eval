@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Startet sound-eval aus dem uv-Projekt. Unter WSL/Linux liegt die venv auf dem Linux-
+# Dateisystem (schneller als /mnt/c und getrennt von einer Windows-venv in .venv).
+set -euo pipefail
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export PATH="$HOME/.local/bin:$PATH"
+export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-$HOME/.cache/sound-eval/venv}"
+exec uv run --quiet --no-sync --project "$here" sound-eval "$@"
