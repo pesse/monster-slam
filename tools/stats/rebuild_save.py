@@ -13,9 +13,10 @@ Datei für „Laden…“ in den Einstellungen (`--format export`).
     python3 tools/stats/rebuild_save.py --stats-id 3fa1 --day 2026-10-08 \\
         --profile anna --name Anna --format export --out ~/Anna-zurück.zip
 
-    # Nur die Erfahrung, plus was seit dem Verlust neu verdient wurde:
+    # Nur die Erfahrung, plus was seit dem Verlust neu verdient wurde (aus dem neuesten
+    # Snapshot; mit --base aus den jetzigen Dateien). Der Lernstand bleibt, wie er ist:
     python3 tools/stats/rebuild_save.py --stats-id 3fa1 --day 2026-10-08 --only _level \\
-        --profile anna --base /pfad/zu/progress --add-live-xp --format legacy --out out/
+        --profile anna --name Anna --add-live-xp --out ~/Anna-Erfahrung.zip
 
 Der Snapshot trägt nicht alles: Abzeichen und Testlisten fehlen, und Lernzeiten nur, soweit
 sie gesendet wurden. Gebaut wird nur, was er hat; „Laden…“ ersetzt nur die Teile, die in
@@ -163,19 +164,31 @@ def write_export(files: dict[str, dict], name: str, saved_at: int, out: pathlib.
         zf.writestr(ARCHIVE_HEAD, json.dumps(head, indent="\t", ensure_ascii=False))
 
 
-def rebuild(snap: dict, profile: str, only: list[str] | None, base: pathlib.Path | None,
-            add_live_xp: bool) -> dict[str, dict]:
+def rebuild(snap: dict, profile: str, only: list[str] | None, live_xp: int = 0) -> dict[str, dict]:
+    """`live_xp`: was seit dem Verlust neu verdient wurde, kommt auf die Erfahrung."""
     files = files_from(snap, profile)
     if only:
         files = {s: c for s, c in files.items() if s in only}
-    if add_live_xp:
-        if base is None:
-            raise SystemExit("--add-live-xp braucht --base.")
-        live = base / ("%s_level.json" % profile)
-        if live.exists() and "_level" in files:
-            files["_level"]["total_xp"] = int(files["_level"].get("total_xp", 0)) \
-                + int(read_save(live).get("total_xp", 0))
+    if live_xp and "_level" in files:
+        files["_level"]["total_xp"] = int(files["_level"].get("total_xp", 0)) + live_xp
     return files
+
+
+def live_xp(found: list[tuple[str, dict]], day: str, base: pathlib.Path | None, profile: str) -> tuple[int, str]:
+    """Erfahrung seit dem Verlust und woher sie stammt: die jetzige _level.json (`base`) oder
+    der neueste Snapshot nach `day`. Der muss nach dem Verlust liegen (weniger XP als `day`),
+    sonst würde der Stand doppelt gezählt."""
+    if base is not None:
+        return int(read_save(base / ("%s_level.json" % profile)).get("total_xp", 0)), str(base)
+    good = summary(dict(found)[day])["xp"]
+    later = [(d, summary(s)["xp"]) for d, s in found if d > day]
+    if not later:
+        raise SystemExit("Kein Snapshot nach dem %s — --base mit den jetzigen Dateien angeben." % day)
+    newest, xp = later[-1]
+    if xp >= good:
+        raise SystemExit("Der Snapshot vom %s hat %d XP, nicht weniger als %d am %s — dort fehlt "
+                         "nichts. Falscher Tag?" % (newest, xp, good, day))
+    return xp, "Snapshot vom %s" % newest
 
 
 # --- Selbsttest ------------------------------------------------------------------------
@@ -210,8 +223,21 @@ def self_test() -> None:
         base = root / "progress"
         base.mkdir()
         (base / "zz_level.json").write_bytes(encode({"player_id": "zz", "total_xp": 700}))
-        rebuilt = rebuild(snap, "zz", ["_level"], base, True)
+        assert live_xp(found, "2026-10-08", base, "zz")[0] == 700
+        rebuilt = rebuild(snap, "zz", ["_level"], 700)
         assert list(rebuilt) == ["_level"] and rebuilt["_level"]["total_xp"] == 33200, rebuilt
+
+        # Ohne --base aus dem neuesten Snapshot danach — nur, wenn dort wirklich XP fehlt.
+        lost = dict(snap, level={"total_xp": 900})
+        found_after = found + [("2026-10-09", dict(snap, level={"total_xp": 400})), ("2026-10-10", lost)]
+        assert live_xp(found_after, "2026-10-08", None, "zz") == (900, "Snapshot vom 2026-10-10")
+        for bad in [found, found + [("2026-10-09", snap)]]:
+            try:
+                live_xp(bad, "2026-10-08", None, "zz")
+            except SystemExit:
+                pass
+            else:
+                raise AssertionError("live_xp hätte abbrechen müssen")
 
         for sample in [{}, {"a": 1}, {"ä": "ü", "n": [1, 2.5]}]:
             assert decode(encode(sample)) == sample, sample
@@ -244,7 +270,8 @@ def main() -> int:
     parser.add_argument("--only", default="", help="nur diese Endungen, z. B. _level,_wallet; der Lernstand hat die "
                         "leere Endung (',_level')")
     parser.add_argument("--base", help="Ordner mit den jetzigen Dateien des Profils")
-    parser.add_argument("--add-live-xp", action="store_true", help="XP der jetzigen _level.json dazurechnen")
+    parser.add_argument("--add-live-xp", action="store_true", help="XP seit dem Verlust dazurechnen: aus der "
+                        "jetzigen _level.json (--base) oder dem neuesten Snapshot")
     parser.add_argument("--format", choices=["legacy", "export"], default="export")
     parser.add_argument("--out", help="Ordner (legacy) oder .zip (export)")
     parser.add_argument("--self-test", action="store_true")
@@ -268,7 +295,11 @@ def main() -> int:
     if not args.profile or not args.out:
         parser.error("--profile und --out fehlen")
     only = [s.strip() for s in args.only.split(",")] if args.only else None
-    files = rebuild(chosen, args.profile, only, pathlib.Path(args.base) if args.base else None, args.add_live_xp)
+    extra = 0
+    if args.add_live_xp:
+        extra, source = live_xp(found, args.day, pathlib.Path(args.base) if args.base else None, args.profile)
+        print("+%d XP seit dem Verlust (%s). Was danach noch dazukommt, fehlt." % (extra, source))
+    files = rebuild(chosen, args.profile, only, extra)
     out = pathlib.Path(args.out).expanduser()
     if args.format == "legacy":
         for path in write_legacy(files, args.profile, out):

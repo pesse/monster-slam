@@ -40,7 +40,8 @@ oder zur Vorsicht gibt es in den Einstellungen im Reiter „Profil“ den Abschn
   USB-Stick.
 - **„Laden…“** spielt so eine Datei in das Profil ein, das gerade spielt. Vorher zeigt das
   Spiel, was in der Datei steht (Name, Level, Gold, Datum), und fragt nach. Der bisherige
-  Stand bleibt in den Sicherungen.
+  Stand bleibt in den Sicherungen. Ersetzt wird nur, was in der Datei steckt: eine Datei
+  nur mit der Erfahrung lässt die gelernten Wörter, das Gold und alles andere, wie es ist.
 
 Wo die Sicherungen liegen, steht in [Kapitel 19](19-daten.md).
 

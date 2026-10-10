@@ -122,6 +122,15 @@ func test_suggested_name_is_a_safe_file_name() -> void:
 	assert_str(SaveArchive.suggested_name("  ", 1_760_100_000)).is_equal("MonsterSlam-Spielstand-2025-10-10.zip")
 
 
+## Ein Archiv nur mit Erfahrung (Rettung nach Verlust): kein Gold in der Vorschau, auch keine 0.
+func test_preview_of_a_partial_archive_names_only_what_is_in_it() -> void:
+	var seen := SaveArchive.preview({"head": {"name": "Anna", "saved_at": 1},
+			"data": {"_level": {"total_xp": 0}}})
+	assert_array(seen["parts"]).contains_exactly(["_level"])
+	assert_bool(seen.has("level")).is_true()
+	assert_bool(seen.has("gold")).is_false()
+
+
 ## tools/stats/rebuild_save.py baut dieselbe Hülle in Python — die Datei kommt von dort.
 func test_reads_an_archive_built_by_the_rebuild_tool() -> void:
 	var archive := SaveArchive.read("res://tests/fixtures/rebuilt_save.zip")
