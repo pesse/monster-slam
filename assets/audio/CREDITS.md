@@ -57,7 +57,7 @@ Spieler fanden ihn auf Dauer nervig.
 `sfx/slow_mo_in.wav` und `sfx/slow_mo_out.wav` stammen aus Variante 3 desselben Laufs
 (gleicher Prompt). Bearbeitung: zu Mono gemischt, die ersten 50 ms (fast still) entfernt, dann
 als Band-Effekt die Abspielrate gleiten lassen – beim Einstieg von 1,0 auf 0,55 (Bandstopp,
-0,45 s), beim Ausstieg von 0,6 auf 1,15 (Bandstart, 0,85 s mit natürlichem Ausklang) –,
+0,85 s), beim Ausstieg von 0,6 auf 1,15 (Bandstart, 0,85 s), beide mit natürlichem Ausklang –,
 Cosinus-Fades, Pegel wie die Vorgänger (lautestes 50-ms-Fenster −21 dBFS, True Peak ≤ −1 dBTP).
 Bis 2026-10-12 stand hier „Slow motion" von Leszek_Szary
 (https://freesound.org/people/Leszek_Szary/sounds/146733/, CC0), Ausstieg rückwärts.
