@@ -20,6 +20,10 @@ GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/battle_theme_lab.tscn -- --shoot 
 python3 tools/packs/build_packs.py --config data/language/packs.yaml \
   --source language=data/language --source game=data --dry-run
 
+# Soundeffekte gegen das Setting-Profil bewerten (lokal, LAION-CLAP; tools/sound_eval/README.md):
+tools/sound_eval/sound-eval batch assets/audio/sfx
+tools/sound_eval/sound-eval rank kandidaten/ --effect spell_freeze
+
 # PHP nur im Container:
 tools/report/php.sh server/melden/test_endpoint.php
 
