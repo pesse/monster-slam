@@ -6,6 +6,10 @@ teilen sich `badge_earned` (die Datei von Eisenhaut, `spell_armor.wav`). Die bes
 wie ihre Palette, `badge_<palette>`. Probehören: `battle_theme_lab`, Reiter
 „Feiern".
 
+**Stand 2026-10-12:** alle sechs Töne und ein eigener für Bronze/Silber (`badge_earned.wav`,
+vorher `spell_armor.wav`) sind durch ElevenLabs-Generierungen ersetzt (`tools/sound_eval`,
+Prompts in `../CREDITS.md`). Der Rest dieses Dokuments ist die Vorgeschichte.
+
 **Stand 2026-10-08:** alle sechs Töne sind eingebaut (Credits in `../CREDITS.md`), je der
 Favorit unten; Revanche ist „Spacey 1up/Power up“ — „Brass Sting 2“ klang nach Fehler. Die
 übrigen Kandidaten sind die Reserve.

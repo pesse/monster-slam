@@ -53,28 +53,28 @@ const SOUNDS := {
 	# Wellen-Fanfare (beide dann um -15…-17 dBFS).
 	&"task_mastered": {"file": "task_mastered.wav", "db": 3.0},
 	&"word_mastered": {"file": "word_mastered.wav", "db": -6.5},
-	# Plaketten (Issue #63, Badges.sound_of). Bronze und Silber kommen oft und klingen wie
-	# Eisenhaut, etwas leiser als der Zauber. Die besonderen haben eigene Töne und liegen
-	# knapp über Bronze/Silber, unter der Aufgaben-Feier (gemessen am lautesten 300-ms-Fenster,
-	# Ziel um -17 dBFS nach Abzug). Gold und Diamant kamen sehr leise aus der Quelle (-27
-	# bzw. -39 dBFS) und sind in der Datei angehoben (CREDITS.md); `badge_catch_up` ist ein
-	# Rechteck-Chiptune an der Grenze (-3).
-	&"badge_earned": {"file": "spell_armor.wav", "db": -4.0},
-	&"badge_gold": {"file": "badge_gold.wav", "db": 2.0},
-	&"badge_diamond": {"file": "badge_diamond.wav", "db": 3.0},
-	&"badge_revenge": {"file": "badge_revenge.wav", "db": 4.0},
-	&"badge_catch_up": {"file": "badge_catch_up.wav", "db": -14.0},
-	&"badge_comeback": {"file": "badge_comeback.wav", "db": 3.5},
-	&"badge_better": {"file": "badge_better.wav", "db": 5.5},
+	# Plaketten (Issue #63, Badges.sound_of). Bronze und Silber kommen oft, daher am leisesten
+	# (um -18,5 dBFS nach Abzug); die besonderen liegen knapp darüber, unter der Aufgaben-Feier
+	# (gemessen am lautesten 300-ms-Fenster, Ziel um -17 dBFS nach Abzug). Seit 2026-10 alle
+	# ElevenLabs (CREDITS.md), in der Datei einheitlich auf -16 dBFS im lautesten Fenster
+	# (True Peak ≤ -1) — die Abzüge halten die zuvor nach Gehör gesetzten Abstände.
+	&"badge_earned": {"file": "badge_earned.wav", "db": -0.8},
+	&"badge_gold": {"file": "badge_gold.wav", "db": -1.2},
+	&"badge_diamond": {"file": "badge_diamond.wav", "db": -0.4},
+	&"badge_revenge": {"file": "badge_revenge.wav", "db": -0.9},
+	&"badge_catch_up": {"file": "badge_catch_up.wav", "db": -1.0},
+	&"badge_comeback": {"file": "badge_comeback.wav", "db": -0.6},
+	&"badge_better": {"file": "badge_better.wav", "db": -0.7},
 	# Zauber (ADR 0014, SpellFx): selten und vom Spieler gewollt, also um die Wellen-Fanfare.
-	# `spell_reveal` kommt sehr leise aus der Quelle (-30 dBFS RMS, Spitzen bei -12),
-	# `spell_slow` und `spell_armor` laut und an der Grenze.
-	&"spell_reveal": {"file": "spell_reveal.wav", "db": 6.0},
+	# `spell_reveal` und `spell_freeze` (seit 2026-10 ElevenLabs) liegen in der Datei bei -16
+	# bzw. -17 dBFS im lautesten 300-ms-Fenster, `spell_slow` und `spell_armor` laut und an
+	# der Grenze.
+	&"spell_reveal": {"file": "spell_reveal.wav", "db": -2.1},
 	&"spell_slow": {"file": "spell_slow.wav", "db": -2.5},
 	# Dieselbe Datei, wenn unter Schwere Luft ein neues Monster erscheint: kommt je Monster,
 	# also deutlich unter dem Zauber selbst.
 	&"spell_slow_spawn": {"file": "spell_slow.wav", "db": -9.0},
-	&"spell_freeze": {"file": "spell_freeze.wav", "db": 2.5},
+	&"spell_freeze": {"file": "spell_freeze.wav", "db": -1.8},
 	# Taut das ganze Feld auf einmal auf, spielt der Cooldown ihn nur einmal.
 	&"spell_shatter": {"file": "spell_shatter.wav", "db": 1.0},
 	&"spell_armor": {"file": "spell_armor.wav", "db": -1.0},

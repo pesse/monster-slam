@@ -4,6 +4,9 @@ Die Zauber (ADR 0014) klingen bisher nach dem Bestand (`slow_mo_in`/`_out`, beim
 `fortress_hit` und `monster_kill`). Jede Wirkung soll ihren eigenen Ton bekommen, passend zum
 Bild in `SpellFx` (Werkbank: `battle_theme_lab`, Reiter „Zauber").
 
+**Stand 2026-10-12:** `spell_reveal` und `spell_freeze` sind durch ElevenLabs-Generierungen
+ersetzt (`tools/sound_eval`, Prompts in `../CREDITS.md`).
+
 **Stand 2026-10-05:** alle neun Töne sind eingebaut (Credits in `../CREDITS.md`). Gewählt
 wurde nach Gehör aus den Kandidaten unten: `spell_haze` = „So slimy!", `spell_thunder_windup`
 = „Laser Charge Up (Stronger)" (1,1 s — der Anlauf des Donnerschlags wurde darauf verlängert),

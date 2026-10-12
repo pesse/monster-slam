@@ -58,6 +58,8 @@ effects:
       - sparkling magic reveal sweep
     duration: [0.8, 1.2]
     files: [spell_reveal*]
+    generation_prompt: >
+      Magic reveal spell: a soft shimmering sweep rising upward like a curtain of light passing over, airy glassy chimes and warm sparkle, mystical and calm, fantasy game sound
     references: [../../../assets/audio/sfx/spell_reveal.wav]
   spell_slow:
     description: Sumpf – schmatzender Schlamm, ein, zwei Blasen; eher komisch als eklig.
@@ -80,6 +82,8 @@ effects:
       - magical ice spell
     duration: [0.6, 1.0]
     files: [spell_freeze*]
+    generation_prompt: >
+      Magic frost spell: a quick icy whoosh as water freezes solid with crisp crackling ice, ending in one clear glassy crystal clink, fantasy game spell sound
   spell_shatter:
     description: Frost (Auftauen) – Eis zerspringt, kleine Splitter; leise, kommt sechsmal zugleich.
     prompts:
@@ -115,6 +119,20 @@ effects:
       - steel armor clank
     duration: [0.6, 1.0]
     files: [spell_armor*]
+  badge_earned:
+    description: >
+      Bronze-/Silber-Plakette – kommt oft, daher klein und unaufdringlich, deutlich unter Gold.
+      Bis 2026-10 teilte sie sich die Datei mit Eisenhaut (spell_armor.wav).
+    prompts:
+      - small soft reward whoosh landing on a gentle warm ting
+      - subtle pleasant achievement sound
+    avoid:
+      - annoying high pitched beeps
+    duration: [0.5, 1.0]
+    files: [badge_earned*]
+    generation_prompt: >
+      Small reward sound: a short soft whoosh landing on a gentle, warm metallic ting,
+      subtle and pleasant, low-mid tones, fantasy game achievement
   badge_gold:
     description: Gold-Plakette – warmer Medaillen-Glanz, Glöckchen oder Münzen, festlich.
     prompts:
@@ -122,6 +140,8 @@ effects:
       - treasure loot found jingle
     duration: [0.5, 1.0]
     files: [badge_gold*]
+    generation_prompt: >
+      Gold medal reward: a warm shiny chime with a few soft bells and a light jingle of gold coins, festive but gentle, low-mid tones, fantasy game reward sound
   badge_diamond:
     description: Diamant-Plakette – kristallin, gläsern, kleiner aufsteigender Glitzer.
     prompts:
@@ -129,18 +149,24 @@ effects:
       - magic twinkle glitter
     duration: [0.6, 1.2]
     files: [badge_diamond*]
+    generation_prompt: >
+      Diamond reward: a soft magical whoosh rising into a crystalline glassy sparkle that settles on a clear warm shimmer, precious and special, fantasy game reward sound
   badge_revenge:
     description: Revanche – keck und triumphierend, frecher Akzent mit „Ding".
     prompts:
       - cheeky triumphant power up sting with a ding
     duration: [0.4, 0.8]
     files: [badge_revenge*]
+    generation_prompt: >
+      Cheeky triumphant sting: a quick punchy swoosh into one confident bright ding, playful and sassy, cartoon fantasy game reward
   badge_catch_up:
     description: Aufholjagd – aufsteigender Swoosh, der in einem hellen Ton landet.
     prompts:
       - rising swoosh landing on a bright tone
     duration: [0.5, 1.0]
     files: [badge_catch_up*]
+    generation_prompt: >
+      A rising swoosh that speeds up and lands on a bright warm tone just in time, playful just-made-it feeling, fantasy game reward sound
   badge_comeback:
     description: Comeback des Tages – heroisch und kurz, kleiner Wirbel mit Becken oder Bläser-Akzent.
     prompts:
@@ -148,12 +174,16 @@ effects:
       - brass victory sting
     duration: [0.6, 1.2]
     files: [badge_comeback*]
+    generation_prompt: >
+      Short heroic comeback sting: a quick snare drum roll into a bold warm brass hit with a cymbal swell, triumphant and brief, fantasy game
   badge_better:
     description: Besser als sonst – zwei, drei freundliche Töne nach oben, sanft.
     prompts:
       - two or three gentle friendly rising notes
     duration: [0.4, 0.8]
     files: [badge_better*]
+    generation_prompt: >
+      Two or three gentle friendly rising marimba notes, soft and warm, encouraging, casual fantasy game reward sound
   monster_kill:
     description: Monster besiegt – kurzer, befriedigender Treffer; kommt sehr oft.
     prompts:
