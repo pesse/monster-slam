@@ -48,8 +48,10 @@ const SOUNDS := {
 	# Meister-Feier (Issue #23). Die Aufgabe liegt knapp unter der Wellen-Fanfare, weil sie
 	# öfter kommt; das Wort darüber, es ist der größte gute Moment im Kampf. Die Quelle von
 	# `word_mastered` steht an der Aussteuerungsgrenze (-12 dBFS RMS, Spitzen bei 0) — daher
-	# der kräftige Abzug.
-	&"task_mastered": {"file": "task_mastered.wav", "db": -2.0},
+	# der kräftige Abzug. `task_mastered` (seit 2026-10 ElevenLabs, CREDITS.md) kommt mit
+	# -20 dBFS im lautesten 300-ms-Fenster leise aus der Quelle; +3 legt es knapp unter die
+	# Wellen-Fanfare (beide dann um -15…-17 dBFS).
+	&"task_mastered": {"file": "task_mastered.wav", "db": 3.0},
 	&"word_mastered": {"file": "word_mastered.wav", "db": -6.5},
 	# Plaketten (Issue #63, Badges.sound_of). Bronze und Silber kommen oft und klingen wie
 	# Eisenhaut, etwas leiser als der Zauber. Die besonderen haben eigene Töne und liegen

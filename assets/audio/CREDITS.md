@@ -15,7 +15,7 @@ denselben Commit.
 | `sfx/fortress_hit.mp3` | https://freesound.org/people/canberries4/sounds/868110/ | CC0 | canberries4 |
 | `sfx/wave_cleared.wav` | https://freesound.org/people/plasterbrain/sounds/397355/ | CC0 | plasterbrain |
 | `sfx/fortress_destroyed.wav` | https://freesound.org/people/taranp/sounds/362206/ | CC0 | TaranP |
-| `sfx/task_mastered.wav` | https://freesound.org/people/colorsCrimsonTears/sounds/562292/ | CC0 | colorsCrimsonTears |
+| `sfx/task_mastered.wav` | ElevenLabs Sound Effects (`eleven_text_to_sound_v2`), generiert 2026-10-12 | ElevenLabs-Nutzungsbedingungen (Abo des Projekts) | ElevenLabs, Prompt s. u. |
 | `sfx/word_mastered.wav` | https://freesound.org/people/qubodup/sounds/442774/ | CC0 | qubodup |
 | `sfx/spell_reveal.wav` | https://freesound.org/people/renatalmar/sounds/264981/ | CC0 | renatalmar |
 | `sfx/spell_slow.wav` | https://freesound.org/people/Breviceps/sounds/445118/ | CC0 | Breviceps |
@@ -45,3 +45,11 @@ nur umbenannt.
 `sfx/badge_diamond.wav` um 20 dB lauter (beide kamen sehr leise, ohne Übersteuerung); sonst
 unverändert. Die übrigen `badge_*`-Dateien sind die Originale, nur umbenannt. `badge_gold.wav` ist eine Bearbeitung von
 https://freesound.org/people/LilMati/sounds/523755/ (CC0, derselbe Autor).
+
+`sfx/task_mastered.wav` ist eine KI-Generierung (`tools/sound_eval`, `generate`), keine
+freesound-Datei: Prompt „Short soft magic spell: a quick airy whoosh that lands on a warm,
+mellow magical shimmer, gentle and friendly, low-mid tones, fantasy game success sound",
+1,1 s, `prompt_influence` 0,5; Variante 2 von 3, nach Gehör gewählt. Die gelieferte MP3 ist
+als 16-Bit-WAV gespeichert, sonst unverändert. Bis 2026-10-12 stand hier „Heal - Rpg" von
+colorsCrimsonTears (https://freesound.org/people/colorsCrimsonTears/sounds/562292/, CC0) —
+Spieler fanden ihn auf Dauer nervig.

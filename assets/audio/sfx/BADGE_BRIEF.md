@@ -52,5 +52,4 @@ MP3/FLAC beachten (FLAC nach WAV wandeln, Godot 4.7 lädt kein FLAC).
 | Besser | [Correct Answer / That's Right!](https://freesound.org/people/Beetlemuse/sounds/528957/) | Beetlemuse | 0,73 s | WAV |
 | Besser | [Cmaj Victory Scale](https://freesound.org/people/ConManVD/sounds/742190/) | ConManVD | 1,07 s | MP3 |
 
-`Fanfare - Rpg` stammt vom selben Autor wie `task_mastered.wav` und passt damit im Klang zur
-Meister-Feier.
+`Fanfare - Rpg` stammt vom selben Autor wie der frühere `task_mastered.wav` (bis 2026-10).
