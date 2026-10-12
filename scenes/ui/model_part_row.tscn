@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[node name="ModelPartRow" type="Label"]
+theme_type_variation = &"Caption"
+text = "model.gguf (2/2): 4.3 GB"
+clip_text = true
