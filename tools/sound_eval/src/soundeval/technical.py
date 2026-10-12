@@ -10,6 +10,7 @@ from .audio import Audio
 
 CLIP_LEVEL = 0.999  # ab hier gilt ein Sample als am Anschlag
 CLIP_RUN = 3  # so viele Samples in Folge am Anschlag = Clipping (ein einzelnes darf es sein)
+PHASE_ALERT = -0.3  # erst deutlich negative Korrelation ist gegenphasig; um 0 ist nur breites Stereo
 PENALTY = {"error": 30, "warn": 10, "info": 0}
 
 
@@ -174,7 +175,7 @@ def check(m: Metrics, rules: dict, duration_range: tuple[float, float] | None = 
         add("warn", "dc_offset", f"Gleichspannungsanteil {m.dc_offset:+.3f}.", "Hochpass (~20 Hz) oder DC-Removal anwenden.")
     if m.channel_correlation is not None and m.channel_correlation > 0.999:
         add("info", "dual_mono", "Stereo-Datei mit identischen Kanälen.", "Als Mono speichern halbiert die Größe.")
-    if m.channel_correlation is not None and m.channel_correlation < 0:
+    if m.channel_correlation is not None and m.channel_correlation < PHASE_ALERT:
         add("warn", "phase", f"Kanäle gegenphasig korreliert ({m.channel_correlation:.2f}); in Mono droht Auslöschung.",
             "Phase eines Kanals prüfen oder als Mono summieren und gegenhören.")
     if m.peak_dbfs < -60:

@@ -129,3 +129,18 @@ def test_report_files(setup, tmp_path):
     assert data["disclaimer"] == DISCLAIMER and len(data["results"]) == 2
     text = md.read_text(encoding="utf-8")
     assert "## Ranking" in text and "★" in text and DISCLAIMER in text
+
+
+def test_excluded_reference_is_ignored(profile_file, write_wav):
+    for name in ("ref_ice", "ref_mud", "ref_thunder"):
+        write_wav(f"refs/{name}.wav", tone(seconds=0.6))
+    profile = load_profile(profile_file("""
+        references: [refs]
+        exclude_references: [ref_mud*]
+        effects:
+          mud: {prompts: [mud], files: ["ref_mud*", "mud_*"]}
+    """))
+    ev = Evaluator(profile, FakeEmbedder(TEXTS, AUDIO))
+    assert [f.name for f in ev.ref_files] == ["ref_ice.wav", "ref_thunder.wav"]
+    (r,) = ev.evaluate([write_wav("mud_new.wav", tone())])
+    assert "effect_references" not in r.reference

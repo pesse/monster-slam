@@ -2,8 +2,8 @@
 
 Nichts wird gesendet, ohne dass der Aufrufer bestätigt (``confirmed=True``). Jede ausgeführte
 Generierung landet im Ledger (``<cache>/elevenlabs-ledger.jsonl``); das Gesamtlimit gilt über
-alle Läufe. Die Credit-Sätze sind Schätzungen aus der ElevenLabs-Doku (die widerspricht sich,
-daher eher hoch angesetzt) und im Profil unter ``elevenlabs:`` überschreibbar.
+alle Läufe. Die Credit-Sätze sind Schätzungen (ElevenLabs-Doku widersprüchlich; der Satz pro
+Sekunde ist an einer echten Abrechnung abgelesen) und im Profil unter ``elevenlabs:`` überschreibbar.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ from .clap import cache_dir
 
 API_URL = "https://api.elevenlabs.io/v1/sound-generation"
 DEFAULTS = {
-    "credits_per_second": 20,  # bei fester Dauer
+    "credits_per_second": 10,  # bei fester Dauer; gemessen 2026-10-12 (3 × 1,1 s = 33 Credits)
     "credits_auto_duration": 100,  # ohne Dauer (das Modell wählt)
     "max_credits_per_run": 500,
     "max_credits_total": 5000,

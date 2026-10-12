@@ -15,16 +15,16 @@ def isolated_cache(tmp_path, monkeypatch):
 
 def test_estimate():
     s = el.settings_for({})
-    assert el.estimate(1.0, s) == 20 and el.estimate(0.75, s) == 15
+    assert el.estimate(1.0, s) == 10 and el.estimate(0.75, s) == 8
     assert el.estimate(None, s) == 100
 
 
 def test_budget_limits(tmp_path):
-    s = el.settings_for({"max_credits_per_run": 50, "max_credits_total": 100})
+    s = el.settings_for({"max_credits_per_run": 25, "max_credits_total": 100})
     with pytest.raises(el.BudgetError, match="pro Lauf"):
         el.make_plan("x", 3, 1.0, s)
     ledger = tmp_path / "ledger.jsonl"
-    ledger.write_text(json.dumps({"credits": 90}) + "\n")
+    ledger.write_text(json.dumps({"credits": 95}) + "\n")
     with pytest.raises(el.BudgetError, match="Gesamtlimit"):
         el.make_plan("x", 1, 1.0, s, ledger)
     with pytest.raises(ValueError):
@@ -48,7 +48,7 @@ def test_generate_requires_confirmation_and_logs(tmp_path):
     files = el.generate(plan, tmp_path / "gen", name="spell_freeze", confirmed=True, api_key="k", post=fake_post, ledger=ledger)
     assert len(files) == 2 and all(f.suffix == ".mp3" and f.read_bytes() == b"ID3fake" for f in files)
     assert calls[0][2]["duration_seconds"] == 1.0 and "output_format=mp3_44100_128" in calls[0][0]
-    assert el.spent_total(ledger) == 40
+    assert el.spent_total(ledger) == 20
 
 
 def test_cli_generate_without_yes_sends_nothing(monkeypatch, capsys):
@@ -57,7 +57,7 @@ def test_cli_generate_without_yes_sends_nothing(monkeypatch, capsys):
     code = main(["generate", "--effect", "spell_freeze", "--variants", "2"])
     assert code == EXIT_NEEDS_CONFIRMATION
     out = capsys.readouterr().out
-    assert "Geschätzte Kosten: 32 Credits" in out  # 2 × 0,8 s × 20
+    assert "Geschätzte Kosten: 16 Credits" in out  # 2 × 0,8 s × 10
 
 
 def test_cli_generate_dry_run_and_budget(capsys):

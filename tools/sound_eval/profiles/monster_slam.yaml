@@ -32,6 +32,9 @@ style:
 # Akzeptierte Töne: Maßstab für den Stil-Abgleich (Referenzen).
 references:
   - ../../../assets/audio/sfx
+# Dateien im Bestand, die nicht als Vorbild gelten sollen (Dateimuster), z. B. ein Ton, den
+# Spieler nervig finden, solange er noch nicht ersetzt ist.
+exclude_references: []
 
 weights:
   semantic: 0.40
@@ -179,17 +182,33 @@ effects:
     duration: [1.0, 3.5]
     files: [wave_cleared*]
   task_mastered:
-    description: Aufgabe gemeistert – feierlicher Erfolgston.
+    description: >
+      Aufgabe gemeistert – kommt öfter als das Wort, daher die kleinere Schwester von
+      word_mastered: kürzer und weicher, warm statt hell. Der frühere Ton (helle
+      Glöckchen/Marimba) wurde als nervig empfunden; seit 2026-10 ElevenLabs (CREDITS.md).
     prompts:
-      - achievement unlocked celebration jingle
-      - magical success chime
-    duration: [1.0, 3.0]
+      - short soft magic spell whoosh landing on a warm shimmer
+      - small friendly magical success sound
+    avoid:
+      - annoying high pitched beeps
+    duration: [0.8, 1.4]
     files: [task_mastered*]
+    references: [../../../assets/audio/sfx/word_mastered.wav]
+    generation_prompt: >
+      Short soft magic spell: a quick airy whoosh that lands on a warm, mellow magical
+      shimmer, gentle and friendly, low-mid tones, fantasy game success sound
   word_mastered:
-    description: Wort gemeistert – größter guter Moment im Kampf, triumphal.
+    description: >
+      Wort gemeistert – größter guter Moment im Kampf. Der aktuelle Ton („Magic Spell",
+      qubodup) kommt bei Spielern sehr gut an: schneller, kraftvoller Zauber-Whoosh mit Wucht.
     prompts:
-      - triumphant level up fanfare
+      - fast powerful magic spell whoosh burst
+      - epic magical impact with a big swell
     duration: [1.0, 3.0]
+    generation_prompt: >
+      Epic powerful magic spell: a fast rushing whoosh that bursts into a huge bright magical
+      impact, layered with a heroic orchestral brass hit and a choir swell, shimmering tail,
+      fantasy game reward sound
     files: [word_mastered*]
   wrong_answer:
     description: Falsche Antwort – leises, sanftes „nein", nicht strafend.
@@ -206,7 +225,7 @@ effects:
 
 # Optional: Generierung über ElevenLabs (sound-eval generate). Credit-Sätze sind Schätzungen.
 elevenlabs:
-  credits_per_second: 20
+  credits_per_second: 10     # gemessen 2026-10-12: 3 × 1,1 s = 33 Credits
   credits_auto_duration: 100
   max_credits_per_run: 300
   max_credits_total: 3000

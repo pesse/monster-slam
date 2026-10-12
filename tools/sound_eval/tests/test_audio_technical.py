@@ -86,3 +86,9 @@ def test_inverted_stereo_warns_about_phase(write_wav):
     t = tone()
     r = analyze(write_wav("phase.wav", np.concatenate([t, -t], axis=1)))
     assert "phase" in codes(r.issues)
+
+
+def test_wide_stereo_is_not_phase_problem(write_wav):
+    rng = np.random.default_rng(0)
+    noise = (rng.normal(size=(RATE, 2)) * 0.1).astype(np.float32)  # unkorreliert, ~0
+    assert "phase" not in codes(analyze(write_wav("wide.wav", noise)).issues)

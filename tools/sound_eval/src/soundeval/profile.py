@@ -44,9 +44,13 @@ class Profile:
     technical: dict
     weights: dict
     references: list[Path]
+    exclude_references: list[str]  # Dateimuster: liegen im Bestand, gelten aber nicht als akzeptiert
     effects: dict[str, Effect]
     model: str = "laion/larger_clap_general"
     elevenlabs: dict = field(default_factory=dict)  # Credit-Sätze, Limits, Format (soundeval.elevenlabs.DEFAULTS)
+
+    def is_excluded_reference(self, path: Path) -> bool:
+        return any(fnmatch.fnmatch(path.name, pat) for pat in self.exclude_references)
 
     def effect_for_file(self, path: Path) -> Effect | None:
         name = path.name
@@ -108,6 +112,7 @@ def load_profile(path: str | Path) -> Profile:
         technical={**DEFAULT_TECHNICAL, **(data.get("technical") or {})},
         weights=weights,
         references=_paths(base, data.get("references")),
+        exclude_references=data.get("exclude_references") or [],
         effects=effects,
         model=data.get("model") or "laion/larger_clap_general",
         elevenlabs=data.get("elevenlabs") or {},

@@ -99,6 +99,7 @@ Ja an der Konsole; ohne Terminal endet es mit Exit 3. Erzeugte MP3s landen in
 `ELEVENLABS_API_KEY`. Die Credit-Sätze sind Schätzungen (die ElevenLabs-Doku nennt 11–20
 Credits/s bei fester Dauer, 100 bei automatischer) – im Profil anpassen; der Ledger zählt die
 Schätzung, nicht die echte Abrechnung.
+Gemessen am 2026-10-12: 3 × 1,1 s kosteten 33 Credits, also 10 je Sekunde (Standard).
 
 ## Tests
 

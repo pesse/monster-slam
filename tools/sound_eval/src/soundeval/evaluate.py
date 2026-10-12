@@ -105,7 +105,7 @@ class Evaluator:
         self.style_baseline = None
         if not enabled or not self.profile.references:
             return
-        files = find_audio(self.profile.references)
+        files = [f for f in find_audio(self.profile.references) if not self.profile.is_excluded_reference(f)]
         if not files:
             return
         audios = [load(f) for f in files]
