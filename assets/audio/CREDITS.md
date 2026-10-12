@@ -9,8 +9,8 @@ denselben Commit.
 | Datei | Quelle (URL) | Lizenz | Autor |
 | ----- | ------------ | ------ | ----- |
 | `sfx/monster_kill.wav` | https://freesound.org/people/modusmogulus/sounds/792520/ | CC0 | modusmogulus |
-| `sfx/slow_mo_in.wav` | https://freesound.org/people/Leszek_Szary/sounds/146733/ | CC0 | Leszek_Szary |
-| `sfx/slow_mo_out.wav` | aus `slow_mo_in.wav` erzeugt (rückwärts, sonst unverändert) | wie `slow_mo_in.wav` | s. o. |
+| `sfx/slow_mo_in.wav` | abgeleitet aus einer ElevenLabs-Generierung (`eleven_text_to_sound_v2`), 2026-10-12 | ElevenLabs-Nutzungsbedingungen (Abo des Projekts) | ElevenLabs, s. u. |
+| `sfx/slow_mo_out.wav` | aus derselben Generierung abgeleitet | wie `slow_mo_in.wav` | s. u. |
 | `sfx/wrong_answer.wav` | https://freesound.org/people/Sadiquecat/sounds/818960/ | CC0 | Sadiquecat |
 | `sfx/fortress_hit.mp3` | https://freesound.org/people/canberries4/sounds/868110/ | CC0 | canberries4 |
 | `sfx/wave_cleared.wav` | https://freesound.org/people/plasterbrain/sounds/397355/ | CC0 | plasterbrain |
@@ -53,3 +53,11 @@ mellow magical shimmer, gentle and friendly, low-mid tones, fantasy game success
 als 16-Bit-WAV gespeichert, sonst unverändert. Bis 2026-10-12 stand hier „Heal - Rpg" von
 colorsCrimsonTears (https://freesound.org/people/colorsCrimsonTears/sounds/562292/, CC0) —
 Spieler fanden ihn auf Dauer nervig.
+
+`sfx/slow_mo_in.wav` und `sfx/slow_mo_out.wav` stammen aus Variante 3 desselben Laufs
+(gleicher Prompt). Bearbeitung: zu Mono gemischt, die ersten 50 ms (fast still) entfernt, dann
+als Band-Effekt die Abspielrate gleiten lassen – beim Einstieg von 1,0 auf 0,55 (Bandstopp,
+0,45 s), beim Ausstieg von 0,6 auf 1,15 (Bandstart, 0,85 s mit natürlichem Ausklang) –,
+Cosinus-Fades, Pegel wie die Vorgänger (lautestes 50-ms-Fenster −21 dBFS, True Peak ≤ −1 dBTP).
+Bis 2026-10-12 stand hier „Slow motion" von Leszek_Szary
+(https://freesound.org/people/Leszek_Szary/sounds/146733/, CC0), Ausstieg rückwärts.
