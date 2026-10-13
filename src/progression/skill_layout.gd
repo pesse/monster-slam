@@ -1,12 +1,8 @@
 class_name SkillLayout
 extends RefCounted
-## Von Hand gesetzte Plätze im Fähigkeiten-Netz: Id -> Position, in den Koordinaten von
-## `SkillTree.layout()` (Ursprung in der Mitte, schon gestreckt). Was hier fehlt, rechnet das
-## Layout wie immer; ein neuer Knoten braucht also keinen Eintrag.
-##
-## Gesetzt werden die Plätze in der Werkbank scenes/dev/skill_tree_lab.tscn. Die Datei liegt
-## in der EXE und nicht im Pack, wie die Punkte der Karten (assets/maps/): sie ist Bild,
-## nicht Inhalt. Gespeichert werden kann nur im Editor-Lauf, im Export ist res:// read-only.
+## Von Hand gesetzte Plätze im Fähigkeiten-Netz: Id -> Position in den Koordinaten von
+## `SkillTree.layout()` (Ursprung in der Mitte, schon gestreckt). Fehlende Ids rechnet das
+## Layout. Gesetzt in scenes/dev/skill_tree_lab.tscn; speichern geht nur im Editor-Lauf.
 
 const PATH := "res://assets/ui/skill_tree/layout.json"
 
@@ -27,8 +23,7 @@ static func overrides(path: String = PATH) -> Dictionary:
 	return out
 
 
-## Schreibt die Plätze, nach Id sortiert und auf ganze Punkte gerundet — so bleibt der Diff
-## einer verschobenen Plakette eine Zeile.
+## Schreibt die Plätze nach Id sortiert und auf ganze Punkte gerundet, eine Zeile je Knoten.
 static func save(places: Dictionary, path: String = PATH) -> Error:
 	var ids: Array = places.keys()
 	ids.sort()

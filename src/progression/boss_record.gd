@@ -1,16 +1,9 @@
 class_name BossRecord
 extends RefCounted
-## Die Siege über den Boss einer Unit (ADR 0006).
-##
-## Gespeichert wird der Ursprungswert — je Sieg ein Eintrag { unit, won_at } —, gezählt
-## und in eine Medaille übersetzt wird beim Lesen. Kein Zähler daneben.
-##
-## Nur ein Sieg, der von der Karte gestartet wurde, trägt eine Unit und landet hier; ein
-## Boss aus dem Expertenmodus mit beliebigem Bereich gehört zu keiner Unit. Gold,
-## Erfahrung und Lernstand bleiben unberührt (ADR 0005, Entscheidung 6).
-##
-## Ablage: user://progress/<profil>_bosses.json, dieselbe wie Wallet und PlayerLevel.
-## Statisch und mit Profil-Argument, damit Tests auf einem `zz-`-Profil laufen.
+## Die Siege über den Boss einer Unit (ADR 0006). Gespeichert wird je Sieg { unit, won_at };
+## gezählt wird beim Lesen. Nur Siege von der Karte tragen eine Unit.
+## Ablage: user://progress/<profil>_bosses.json. Statisch mit Profil-Argument, damit Tests
+## auf einem `zz-`-Profil laufen.
 
 const SAVE_DIR := "user://progress"
 
@@ -32,8 +25,7 @@ static func entries(profile: String) -> Array:
 	return wins if wins is Array else []
 
 
-## Bucht einen Sieg. Eine leere Unit ist nichts zu buchen. Sicher geschrieben und nie über
-## eine unlesbare Datei (SaveGuard) — die bisherigen Siege gingen sonst mit.
+## Bucht einen Sieg, nie über eine unlesbare Datei (SaveGuard). Leere Unit: nichts zu tun.
 static func record_win(unit_key: String, profile: String) -> void:
 	if unit_key.is_empty():
 		return

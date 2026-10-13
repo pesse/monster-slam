@@ -1,19 +1,11 @@
 class_name TestLists
 extends RefCounted
-## Die Testlisten eines Profils: Wörter, die ein Kind gezielt für eine Arbeit übt.
-##
-## Eine Liste gehört zu einem Buch und nennt Wörter, keine Aufgaben:
-##
+## Die Testlisten eines Profils: Wörter eines Buchs, die ein Kind gezielt für eine Arbeit übt.
 ##     { id, name, book, lexeme_ids, form_bonuses, direction, round_started_at, created_at }
-##
-## `form_bonuses` sind Scope-Schlüssel von Form-Boni (ADR 0012): ihre Formen kommen nur mit,
-## wenn der Bonus selbst gewählt ist. `direction` ist "" (alle Aufgaben), "from_de" (Deutsch
-## gefragt) oder "to_de" (Fremdsprache gefragt). `round_started_at` ist der Beginn der
-## laufenden Runde durch die Liste (TestPlaylist) — der einzige Stand, den die Runde
-## braucht; was darin schon dran war, rechnet TestPlaylist aus dem Lernstand.
-##
-## Ablage: user://progress/<profil>_test_lists.json, neben BossRecord. Statisch und mit
-## Profil-Argument, damit Tests auf einem `zz-`-Profil laufen.
+## `form_bonuses` sind Scope-Schlüssel von Form-Boni (ADR 0012). `direction`: "" alle,
+## "from_de" Deutsch gefragt, "to_de" Fremdsprache gefragt. `round_started_at` ist der
+## Beginn der laufenden Runde (TestPlaylist).
+## Ablage: user://progress/<profil>_test_lists.json, statisch mit Profil-Argument.
 
 const SAVE_DIR := "user://progress"
 
@@ -79,16 +71,14 @@ static func remove(id: String, profile: String) -> void:
 	_write(lists(profile).filter(func(l): return str(l.get("id", "")) != id), profile)
 
 
-## Sicher geschrieben und nie über eine unlesbare Datei (SaveGuard) — die anderen Listen
-## gingen sonst mit.
+## Nie über eine unlesbare Datei (SaveGuard).
 static func _write(all: Array, profile: String) -> void:
 	SaveGuard.write(path(profile), "_test_lists", {"lists": all})
 
 
-## Der Curriculum-Scope, den ein Lauf über die Liste spielt: je Wort sein engster Schlüssel
-## (Teil, Wort-Bonus oder Unit) und die gewählten Form-Boni. Ein Teil bringt keinen Bonus
-## mit (ContentRegistry.bonus_in_scope) — Formen eines Bonus kommen also nur, wenn er
-## gewählt ist; und welche Formen als eingeführt gelten, folgt aus den Teilen.
+## Der Curriculum-Scope eines Laufs über die Liste: je Wort sein engster Schlüssel (Teil,
+## Wort-Bonus oder Unit) und die gewählten Form-Boni. Formen eines Bonus kommen nur mit,
+## wenn er gewählt ist (ContentRegistry.bonus_in_scope).
 static func run_scope(list: Dictionary, lexemes: Dictionary, narrowest: Callable) -> Array:
 	var out: Array = []
 	for id in list.get("lexeme_ids", []):
@@ -104,7 +94,7 @@ static func run_scope(list: Dictionary, lexemes: Dictionary, narrowest: Callable
 	return out
 
 
-## Die Unit, aus der die meisten Wörter der Liste stammen — für das Kampf-Thema.
+## Die Unit, aus der die meisten Wörter der Liste stammen.
 static func main_unit(list: Dictionary, lexemes: Dictionary) -> int:
 	var counts := {}
 	for id in list.get("lexeme_ids", []):

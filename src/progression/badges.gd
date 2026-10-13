@@ -1,40 +1,19 @@
 class_name Badges
 extends RefCounted
-## Plaketten im Wellenkampf (Issue #63): kleine Erfolge, die nicht an der Meisterung hängen.
-## Eine Aufgabe sitzt frühestens nach drei Tagen (ADR 0018) — bis dahin gibt es sonst nichts
-## zu feiern. Gefeiert werden Spielen und Erinnern:
-##
-## - `hits`      Treffer heute: 10 / 25 / 50 / 100 (Bronze, Silber, Gold, Diamant)
-## - `words`     Wörter einer Sprache schon einmal richtig: 20 / 50 / 100 / 250, dauerhaft
-## - `kept`      Von gestern behalten: die letzte Antwort war richtig und lag vor heute;
-##               Plakette beim 1., 5., 10. und 25. Wort des Tages
-## - `revenge`   Revanche: die letzte Antwort war ein durchgelassenes Monster
-## - `catch_up`  Aufholjagd: die Confidence lag vor dem Treffer unter CATCH_UP_BELOW
-## - `comeback`  Comeback des Tages: Welle gewonnen, obwohl die Festung im Roten stand
-## - `better`    Besser als sonst: Genauigkeit der Sitzung über dem Vergleichswert
-##
-## Nichts wird nebenher gezählt. Treffer und Wörter kommen aus SessionLog und PlayerProgress
-## und lösen beim Überschreiten einer Schwelle aus (die Zahl steigt je Antwort um höchstens
-## eins). Gespeichert wird nur, was sich danach nicht mehr ablesen lässt: welche Tages-
-## Plaketten heute schon kamen und welche Aufgaben heute „behalten" waren — record()
-## überschreibt den Stand davor. Datei: user://progress/<player_id>_badges.json, nur der
-## laufende Tag.
-##
-## Revanche und Aufholjagd kommen je Welle höchstens einmal: wer viele wacklige Wörter hat,
-## soll nicht nach jedem Treffer angehalten werden.
-##
-## Die Regeln sind statisch und ohne Autoload prüfbar (tests/badges_test.gd); die Instanz
-## liest den Stand und schreibt den Tag. Gezeigt werden die Plaketten von MasteryCelebration.
+## Plaketten im Wellenkampf (Issue #63): kleine Erfolge unabhängig von der Meisterung; die
+## Arten stehen im Handbuch „Kampf“. Treffer und Wörter werden nicht mitgezählt, sondern aus
+## SessionLog und PlayerProgress abgelesen. Gespeichert wird nur der laufende Tag: welche
+## Tages-Plaketten schon kamen und welche Aufgaben heute „behalten“ waren.
 
 const SAVE_DIR := "user://progress"
 
 const HIT_STEPS := [10, 25, 50, 100]
 const WORD_STEPS := [20, 50, 100, 250]
 const KEPT_STEPS := [1, 5, 10, 25]
-## Unter dieser Confidence vor dem Treffer ist es eine Aufholjagd. Eine neue Aufgabe startet
-## bei 0,3 (PlayerProgress.DEFAULT_CONFIDENCE); darunter kommt man nur über Fehler.
+## Confidence vor dem Treffer, unter der es eine Aufholjagd ist. Neue Aufgaben starten bei
+## PlayerProgress.DEFAULT_CONFIDENCE, darunter kommt man nur über Fehler.
 const CATCH_UP_BELOW := 0.10
-## Rote Zone des Lebensbalkens — dieselbe Schwelle wie im HUD.
+## Rote Zone des Lebensbalkens (Anteil), dieselbe wie im HUD.
 const COMEBACK_RATIO := preload("res://src/ui/hud.gd").HP_WARN
 
 const TIER_NAMES := ["Bronze", "Silber", "Gold", "Diamant"]
@@ -67,9 +46,9 @@ static func step_tier(steps: Array, count: int) -> int:
 	return steps.find(count) + 1
 
 
-## Was ein Treffer auf eine Aufgabe mit dem Stand `before` (ein PlayerProgress-Record VOR
-## der Antwort) außer dem Treffer bedeutet: "catch_up", "revenge", "kept" oder "".
-## `last_day`/`today` sind lokale Tagesindizes (SessionLog.local_day).
+## Was ein Treffer mit dem Stand `before` (PlayerProgress-Record vor der Antwort) außerdem
+## bedeutet: "catch_up", "revenge", "kept" oder "". `last_day`/`today` sind lokale
+## Tagesindizes (SessionLog.local_day).
 static func answer_kind(before: Dictionary, last_day: int, today: int) -> String:
 	if int(before.get("attempts", 0)) <= 0:
 		return ""
@@ -82,14 +61,13 @@ static func answer_kind(before: Dictionary, last_day: int, today: int) -> String
 	return ""
 
 
-## Der Ton einer Plakette: Bronze und Silber kommen oft und teilen sich `badge_earned`;
-## die besonderen (Gold, Diamant und die ohne Stufe) heißen wie ihre Palette, `badge_<palette>`.
+## Der Ton einer Plakette: Bronze und Silber teilen sich `badge_earned`, die übrigen heißen
+## `badge_<palette>`.
 static func sound_of(palette: StringName) -> StringName:
 	return &"badge_earned" if palette in COMMON_PALETTES else StringName("badge_" + palette)
 
 
-## Besser als sonst: beide Werte gelten (SessionLog.accuracy_trend gibt sonst -1) und die
-## Sitzung liegt darüber.
+## Besser als sonst: beide Werte gelten (sonst -1) und die Sitzung liegt darüber.
 static func is_better(trend: Dictionary) -> bool:
 	var accuracy := float(trend.get("accuracy", -1.0))
 	var baseline := float(trend.get("baseline", -1.0))
@@ -97,8 +75,7 @@ static func is_better(trend: Dictionary) -> bool:
 
 
 ## Eine Plakette zum Zeigen: id, tier (0 ohne Stufe), title, detail, mark (Zahl auf der
-## Plakette, sonst leer: dann zeichnet sie ihr Zeichen), palette (BadgePlate) und sound
-## (Sfx-Id, sound_of).
+## Plakette oder leer für ihr Zeichen), palette (BadgePlate) und sound (Sfx-Id).
 static func make(id: String, tier: int, detail_args: Dictionary = {}) -> Dictionary:
 	var palette: StringName = TIER_PALETTES[tier - 1] if tier > 0 else StringName(id)
 	var badge := {"id": id, "tier": tier, "title": "", "detail": "", "mark": "",
@@ -135,7 +112,6 @@ static func make(id: String, tier: int, detail_args: Dictionary = {}) -> Diction
 	return badge
 
 
-## Je eine Plakette jeder Art, für das Debug-Panel.
 static func samples() -> Array:
 	return [make("hits", 1), make("hits", 2), make("hits", 3), make("hits", 4),
 			make("words", 1, {"lang": "fr"}), make("words", 4, {"lang": "en"}),
@@ -146,7 +122,6 @@ static func samples() -> Array:
 
 
 
-## Jede Plakette in jeder Stufe mit Beispieltexten, für die Werkbank (battle_theme_lab).
 static func catalog() -> Array:
 	var all := []
 	for tier in range(1, 5):
@@ -167,7 +142,7 @@ func new_wave() -> void:
 	_this_wave.clear()
 
 
-## Stand einer Aufgabe VOR ihrem Treffer — vor PlayerProgress.record() holen und nach dem
+## Stand einer Aufgabe vor ihrem Treffer: vor PlayerProgress.record() holen und nach dem
 ## Verbuchen an after_hit() geben.
 func before_hit(task_id: String) -> Dictionary:
 	var rec := PlayerProgress.record_of(task_id)
@@ -239,7 +214,7 @@ func _earn(id: String) -> bool:
 
 # --- Tag und Datei ------------------------------------------------------------
 
-## Ein neuer Tag beginnt (auch mitten im Lauf über Mitternacht): alles Tägliche von vorn.
+## Ein neuer Tag beginnt (auch mitten im Lauf): alles Tägliche von vorn.
 func _roll_day() -> void:
 	var today := SessionLog.local_day(int(Time.get_unix_time_from_system()))
 	if today == _day:
@@ -273,8 +248,6 @@ func reload() -> void:
 	_load()
 
 
-## Der WaveRunner meldet die Plaketten beim SaveCoordinator an: gespeichert wird mit der
-## Welle. Ohne Anmeldung (Tests) sofort.
 func _save() -> void:
 	SaveCoordinator.mark_dirty(self)
 
