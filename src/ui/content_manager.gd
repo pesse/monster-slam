@@ -19,6 +19,8 @@ signal closed()
 
 ## Vorlage einer Pack-Zeile, im Editor gesetzt (siehe content_manager.tscn).
 @export var row_template: PackedScene
+## Vorlage einer Zeile je Teil des Sprachmodells.
+@export var part_template: PackedScene
 
 @onready var _packs: VBoxContainer = %Packs
 @onready var _status: Label = %Status
@@ -30,6 +32,7 @@ signal closed()
 @onready var _model_remove: Button = %ModelRemoveButton
 @onready var _model_hint: Label = %ModelHint
 @onready var _model_progress: ProgressBar = %ModelProgress
+@onready var _model_parts: VBoxContainer = %ModelParts
 
 ## Auswahl je Pack, damit sie einen Neuaufbau der Liste übersteht.
 var _selected: Dictionary = {}
@@ -156,6 +159,7 @@ func _render_model() -> void:
 
 	_model_progress.visible = busy
 	_model_progress.value = ModelService.progress
+	_render_parts(busy or (not installed and ModelService.available()))
 	_model_button.visible = not installed
 	_model_button.disabled = busy or not ModelService.available()
 	_model_remove.visible = installed and not busy
@@ -180,3 +184,18 @@ func _render_model() -> void:
 	Hints.attach(_model_remove, "Sprachmodell entfernen",
 			"Gibt %s wieder frei." % size,
 			"Bosskämpfe laufen weiter — nur ohne die zweite Meinung.")
+
+
+## Eine Zeile je Teil, angelegt, sobald das Manifest da ist, und danach nur umbeschriftet —
+## der Abschnitt springt beim Start des Downloads nicht.
+func _render_parts(show: bool) -> void:
+	var count := ModelService.parts().size()
+	if _model_parts.get_child_count() != count:
+		for child in _model_parts.get_children():
+			_model_parts.remove_child(child)
+			child.queue_free()
+		for i in count:
+			_model_parts.add_child(part_template.instantiate())
+	for i in count:
+		(_model_parts.get_child(i) as Label).text = ModelService.part_line(i)
+	_model_parts.visible = show and count > 0
