@@ -66,12 +66,14 @@ static func discard(book: String, profile: String) -> void:
 	_write(runs, profile)
 
 
-## Baut den Stand am Wellenende. `level` ist RunRequest.level() (MapLevel.combine),
-## gespeichert werden davon nur Buch, Unit und Orte — der Scope wird beim Fortsetzen aus
-## den Orten neu gebaut. `next_wave` ist die Welle, mit der es weitergeht.
+## Baut den Stand. `level` ist RunRequest.level() (MapLevel.combine), gespeichert werden
+## davon nur Buch, Unit und Orte — der Scope wird beim Fortsetzen aus den Orten neu gebaut.
+## `next_wave` ist die Welle, mit der es weitergeht. Mitten in der Welle gerastet ist das
+## die angefangene, und `wave` trägt, was sie schon hinter sich hat (`WaveRunner._open_wave`,
+## ADR 0020 Nachtrag); an der Wellengrenze bleibt es leer.
 static func build(level: Dictionary, next_wave: int, difficulty: int, run: Dictionary,
-		run_started_at: int, now: int) -> Dictionary:
-	return {
+		run_started_at: int, now: int, wave := {}) -> Dictionary:
+	var state := {
 		"format": FORMAT,
 		"app_version": SemVer.app_version(),
 		"level": {
@@ -85,6 +87,18 @@ static func build(level: Dictionary, next_wave: int, difficulty: int, run: Dicti
 		"run_started_at": run_started_at,
 		"saved_at": now,
 	}
+	if not wave.is_empty():
+		state["wave"] = wave
+	return state
+
+
+## Die angefangene Welle eines Stands, oder {}, wenn er an einer Wellengrenze gerastet
+## wurde oder von der Welle nichts mehr übrig ist.
+static func open_wave(state: Dictionary) -> Dictionary:
+	var wave: Variant = state.get("wave", {})
+	if not wave is Dictionary or int((wave as Dictionary).get("remaining", 0)) <= 0:
+		return {}
+	return wave
 
 
 ## Ob die Auswahl `keys` in Unit `unit` den begonnenen Lauf fortsetzt: sie muss jeden

@@ -107,6 +107,12 @@ Aufhören kostet dich den Lauf nicht. Wählst du nach einer gewonnenen Welle **�
 merkt sich das Spiel den Lauf: die Welle, mit der es weitergeht, die HP und die Rüstung
 der Festung, die Schwierigkeit und welche Orte markiert waren.
 
+Du kannst auch **mitten in einer Welle** rasten: drück Escape und wähle „Rasten“
+([Kapitel 7](07-abbrechen.md)). Dann geht beim Fortsetzen dieselbe Welle mit ihren
+übrigen Monstern weiter. Am Ende zählt sie als eine Welle: Kiste, Erfahrung und Auflösung
+gelten für die ganze Welle, auch für den Teil vor der Rast. Ist die Festung in der ersten
+Hälfte gewachsen, wird sie am Ende der Welle ausgebaut wie sonst.
+
 - **Je Buch ein begonnener Lauf.** Englisch und Latein haben jedes ihren eigenen.
 - **Weiterspielen:** Auf der Buchkarte steht unten rechts „Lauf fortsetzen · Unit 4, Welle 23“.
   Der Knopf öffnet die Unit, und die Orte des Laufs sind markiert. Auf der Gebietskarte
@@ -124,7 +130,7 @@ der Festung, die Schwierigkeit und welche Orte markiert waren.
 - **Mit denselben Orten neu anfangen:** das **✕** neben „Fortsetzen“ verwirft den
   begonnenen Lauf.
 - **Nur einmal:** Ein fortgesetzter Lauf ist nicht mehr gespeichert, bis du wieder rastest.
-  Fällt die Festung oder brichst du mitten in einer Welle ab, ist er vorbei.
+  Fällt die Festung, ist er vorbei.
 - Haben sich die Wörter einer Unit so geändert, dass ein markierter Ort fehlt, lässt sich
   der Lauf nicht fortsetzen. Die Gebietskarte sagt dir das, und der nächste Lauf beginnt
   neu.

@@ -55,6 +55,10 @@ static func describe(line: Dictionary, tasks: Dictionary = {}) -> Dictionary:
 					{"title": "Lauf beendet",
 					"body": "Schwierigkeit der letzten Welle: %d" % int(line.get("difficulty", 0))})
 		"run_suspend":
+			if int(line.get("remaining", 0)) > 0:
+				return _entry("‖ Gerastet in Welle %d · noch %d Monster · ❤ %d" % [
+						int(line.get("next_wave", 0)), int(line.get("remaining", 0)),
+						int(line.get("hp", 0))])
 			return _entry("‖ Gerastet · weiter mit Welle %d · ❤ %d" % [
 					int(line.get("next_wave", 0)), int(line.get("hp", 0))])
 		"run_resume":

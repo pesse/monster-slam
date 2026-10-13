@@ -96,8 +96,12 @@ func note_run_end(summary: Dictionary = {}) -> void:
 
 
 ## Gerastet (ADR 0020): mit dieser Welle kann der Lauf auf der Karte weitergehen.
-func note_run_suspended(next_wave: int) -> void:
-	_write({"e": "run_suspend", "next_wave": next_wave, "hp": GameState.fortress_health})
+## `remaining` (nur mitten in der Welle) sind die Monster, die von ihr noch kommen.
+func note_run_suspended(next_wave: int, remaining := 0) -> void:
+	var line := {"e": "run_suspend", "next_wave": next_wave, "hp": GameState.fortress_health}
+	if remaining > 0:
+		line["remaining"] = remaining
+	_write(line)
 
 
 ## Ein begonnener Lauf geht weiter; `since` ist der Beginn des ursprünglichen Laufs,

@@ -1,6 +1,6 @@
 # ADR 0020 — Rasten und Fortsetzen eines Laufs
 
-Status: **angenommen** · Datum: 2026-10-06
+Status: **angenommen** · Datum: 2026-10-06 · Nachtrag 2026-10-13 (Rasten mitten in der Welle)
 
 ## Kontext
 
@@ -157,3 +157,61 @@ nichts mehr übrig. Ein Abbruch mit Escape zählt die angefangene Welle schon he
   fort (auch erweitert, auch über Gesamt), wegnehmen oder tauschen fragt nach, der Boss
   setzt nie fort, und Expertenmodus und Testvorbereitung
   schreiben nie einen.
+
+## Nachtrag 2026-10-13: Rasten mitten in der Welle
+
+Testspieler kommen auf 40 und mehr Monster je Welle (`2 + Welle + …`). „Rasten nach dem
+Ende der Welle“ heißt dann eine Viertelstunde weiterspielen, wer jetzt aufhören muss. Punkt 1
+und 5 ändern sich deshalb:
+
+1. **Escape rastet, statt abzubrechen.** Wo Escape bisher nachfragte (Lauf von der Karte,
+   ab der zweiten Welle), fragt es jetzt „Rasten?“ mit **Rasten** und **Weiterspielen**
+   (Vorgabe). Einen Knopf „Lauf beenden“ gibt es dort nicht mehr; neu anfangen geht über
+   das „✕“ auf der Karte. In der ersten Welle eines frischen Laufs, im Expertenmodus und in
+   der Testvorbereitung bricht Escape weiter sofort ab. Läuft die Welle schon aus (alles
+   erschienen und erledigt, oder „Schnell auflösen“), tut Escape nichts: Stufe 2 kommt gleich
+   und rastet dort.
+
+2. **Rasten ist eine künstliche Wellengrenze.** Der Commit (ADR 0024) läuft wie am
+   Wellenende: Lernstand, Erfahrung, verbrauchte Zauber und Plaketten bleiben. Ein Absturz
+   mitten in der Welle kostet sie weiterhin.
+
+3. **Die Welle geht weiter, sie wird nicht geteilt.** `next_wave` ist die angefangene Welle,
+   und das Feld `wave` im Speicherstand trägt, was sie schon hinter sich hat
+   (`WaveRunner._open_wave_state`):
+
+   | Feld | wofür |
+   |---|---|
+   | `remaining`, `total` | nur die übrigen Monster kommen; der HUD-Balken steht bei `total − remaining` |
+   | `correct`, `leaked`, `score_gained` | Güte und Gold der Kiste über die ganze Welle |
+   | `xp`, `level_at_start` | Erfahrung und Aufstiege auf Stufe 1 |
+   | `low_hp` | Comeback-Plakette |
+   | `pace`, `alts` | Zauber, die für die ganze Welle wirken (`SpellCaster`), samt Dunst |
+   | `played` | die Auflösung zeigt alle Wörter der Welle; die Datei bleibt lokal |
+   | `fortress_tier` | die Stufe, mit der die Welle begann |
+
+   Als eigene kleine Welle wäre der Rest billiger zu bauen. Dann hätte jedes Teilstück
+   seine eigene Kiste (eigene Güte, eigenes Mindestgold) und eine leichtere Plakette, und ein
+   Zauber für die ganze Welle wäre verbraucht, ohne zu wirken.
+
+   Monster auf dem Feld zählen nicht als erledigt: sie kommen als neue wieder, mit neu
+   gewähltem Wort. Ihre Antworten stehen schon im Lernstand. `remaining` wird gespeichert
+   und nicht aus der Formel nachgerechnet, denn die Zahl einer Welle kann sinken (ausgefallener
+   Spawn) und die Formel sich ändern.
+
+4. **Die Festung beginnt mit ihrer alten Stufe.** Ist die Unit in der ersten Hälfte der Welle
+   gewachsen, rechnete das Fortsetzen das neue Maximum schon ein, und Ausbau, Cutscene und
+   HP-Zuwachs fielen weg. Deshalb startet die fortgesetzte Welle mit `fortress_tier` (höchstens
+   der heutigen Stufe), und der Ausbau kommt wie sonst an ihrem Ende.
+
+5. **Keine zweite Instandsetzung.** Der Wellenstart setzt die Rüstung instand
+   (`GameState._on_wave_started`). Für eine fortgesetzte Welle gab es das schon an ihrem
+   Anfang; `GameState.continue_wave` stellt die gespeicherte Rüstung wieder her. Sonst ließe
+   sich die Rüstung durch Rasten und Fortsetzen auffüllen.
+
+6. **Spur:** `run_suspend` bekommt `remaining` (nur mitten in der Welle), der EventBus
+   `run_suspended(next_wave, remaining)`. `TraceSanitizer` lässt das Feld durch: eine Zahl
+   ohne Text.
+
+`FORMAT` bleibt 1: ein Stand ohne `wave` ist einer von der Wellengrenze. Ältere Fassungen
+übersehen das Feld und spielen die angefangene Welle ganz.

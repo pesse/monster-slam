@@ -607,7 +607,10 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
   markiert die Orte; eine Auswahl, die sie alle enthält, setzt fort und darf weitere Orte
   der Unit dazunehmen (`RunSave.continues`, Gesamt zählt als alle Teile, der Boss nie).
   „Fortsetzen" trägt den Stand über `RunRequest.start_level(level,
-  resume)` in den Kampf, der ihn einmal nimmt und den Platz verwirft.
+  resume)` in den Kampf, der ihn einmal nimmt und den Platz verwirft. Escape mitten in der
+  Welle rastet ebenfalls (ADR 0020 Nachtrag): das Feld `wave` trägt die übrigen Monster und
+  die Zähler der angefangenen Welle (`RunSave.open_wave`), und `WaveRunner._continue_wave`
+  setzt sie fort, statt eine neue zu beginnen.
 - **Bilder liegen in der EXE**, nicht im Pack (`export_presets.cfg` nimmt
   `assets/maps/*.json` mit). Punkte stehen in Anteilen des Bildes (0..1). Fehlt Bild oder
   ein Punkt, zeichnet `MapCanvas` eine schlichte Fläche und legt ALLE Orte selbst aus

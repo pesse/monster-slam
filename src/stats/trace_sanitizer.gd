@@ -19,7 +19,7 @@ extends RefCounted
 const KEEP := {
 	"run_start": [],
 	"run_end": ["wave_reached", "difficulty", "won"],
-	"run_suspend": ["next_wave", "hp"],
+	"run_suspend": ["next_wave", "hp", "remaining"],
 	"run_resume": ["next_wave", "since", "hp", "added"],
 	"boss_start": ["boss"],
 	"boss_answer": ["id", "hit", "q", "stage", "sure"],

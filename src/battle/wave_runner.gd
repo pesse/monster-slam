@@ -162,6 +162,9 @@ var _paused_since_ms := -1
 var _spells := SpellCaster.new()
 ## Setzt dieser Kampf einen begonnenen Lauf fort (RunSave, ADR 0020)?
 var _resumed := false
+## Die mitten in der Welle gerastete Welle, mit der dieser Kampf weitergeht
+## (RunSave.open_wave, ADR 0020 Nachtrag) — bis `_start_next_wave` sie nimmt, sonst leer.
+var _open_wave: Dictionary = {}
 ## Beginn des Laufs (SessionLog `started_at`), bei einem fortgesetzten der des ersten Teils.
 ## Geht in den Speicherstand, damit die Sitzungen eines Laufs zusammenfinden.
 var _run_started_at := 0
@@ -217,7 +220,10 @@ func _ready() -> void:
 		weeds.on_screen = func(x: float, z: float) -> bool:
 			return _fp != null or tile_on_screen(_camera, x, z)
 		add_child(weeds)
-	_build_fortress()
+	# Den Speicherstand schon hier: eine mitten in der Welle gerastete Welle steht mit der
+	# Festung da, mit der sie begonnen hat (`_build_fortress`).
+	var resume := RunRequest.take_resume()
+	_build_fortress(int(RunSave.open_wave(resume).get("fortress_tier", -1)))
 	_cam_base = _camera.position
 	GameState.reset()
 	# Gelernte Skills UNMITTELBAR nach dem reset(): der Reset stellt die Grundwerte her,
@@ -294,7 +300,7 @@ func _ready() -> void:
 	add_child(_spell_fx)
 	# Startschwierigkeit aus den persistenten Einstellungen des aktiven Profils.
 	_difficulty = UserSettings.default_difficulty()
-	_resume_run(RunRequest.take_resume())
+	_resume_run(resume)
 	_start_next_wave()
 	# Hinter dem geschlossenen Schleier einmal alles zeigen, was sonst beim ersten Treffer
 	# oder der ersten Meisterung Shader übersetzt und das Bild anhält (FxWarmup). Das erste
@@ -776,8 +782,13 @@ func _blocks_field(x: float, z: float, field: Dictionary) -> bool:
 const FORTRESS_SCALE := FortressModel.SCALE
 const WALL_YAW := FortressModel.WALL_YAW   # für battle_theme_lab
 
-func _build_fortress() -> void:
+## `cap` (ab 0): die Stufe, mit der eine mitten in der Welle gerastete Welle begonnen hat.
+## Ist die Unit seitdem gewachsen, kommt der Ausbau samt Cutscene und HP-Zuwachs wie sonst
+## am Ende dieser Welle (`_finish_wave`) — und nicht stumm schon im Maximum beim Fortsetzen.
+func _build_fortress(cap := -1) -> void:
 	_fortress_tier = _current_fortress_tier()
+	if cap >= 0:
+		_fortress_tier = mini(_fortress_tier, cap)
 	_spawn_fortress(_fortress_tier)
 
 
@@ -1091,16 +1102,21 @@ func _dismiss(monster: Monster) -> void:
 ## Auch keine Sitzungsbilanz (Issue #12): Escape heißt „sofort raus", und eine Bilanz
 ## dazwischen wäre ein Screen, der den Ausgang verzögert. Die Bilanz steht auf Stufe 2
 ## des Wellenabschlusses — wer sie sehen will, sieht sie dort nach jeder Welle.
-## Escape mitten in der Welle (ADR 0020): ein Lauf von der Karte, der schon eine Welle
-## geräumt hat, endet erst nach einer Rückfrage — er ließe sich nach der Welle rasten und
-## ist nach dem Abbruch verloren. Die Rückfrage pausiert; die Vorgabe ist Weiterspielen
+## Escape mitten in der Welle (ADR 0020 mit Nachtrag): ein Lauf von der Karte, der schon
+## eine Welle geräumt hat, bricht nicht ab, sondern RASTET nach einer Rückfrage — mitten in
+## der Welle (`_rest_in_wave`). Die Rückfrage pausiert; die Vorgabe ist Weiterspielen
 ## (Enter und ein zweites Escape). Sonst, und im Expertenmodus und in der
 ## Testvorbereitung, endet der Kampf sofort wie bisher.
 func _request_abort() -> void:
 	if _leaving or _abort_confirm.visible:
 		return
 	var from_pause := _paused_since_ms >= 0
-	if not abort_needs_confirm(RunRequest.is_level(), _wave_number):
+	var rests := escape_rests(RunRequest.is_level(), _wave_number)
+	# Läuft die Welle schon aus (alles erschienen und erledigt, oder „Schnell auflösen"),
+	# gibt es mitten in ihr nichts mehr zu rasten: Stufe 2 kommt gleich und rastet dort.
+	if rests and (_fast_resolving or (_spawned >= _total and _active.is_empty())):
+		return
+	if not rests:
 		# Der Zoom hinaus braucht den laufenden Baum, also erst die Pause aufheben.
 		if from_pause:
 			_toggle_pause()
@@ -1109,23 +1125,40 @@ func _request_abort() -> void:
 	_abort_paused_here = not from_pause and _toggle_pause()
 	_answer_input.visible = false
 	_set_view_active(false)
-	_abort_confirm.ask("Lauf abbrechen?",
-			("Abbrechen beendet deinen Lauf (Welle %d). Die angefangene Welle zählt nicht, "
-			+ "und der Lauf lässt sich nicht fortsetzen. Rasten kannst du nach dem Ende der "
-			+ "Welle.") % _wave_number,
-			"Lauf beenden", "Weiterspielen")
+	var remaining := maxi(0, _total - _spawned) + _active.size()
+	_abort_confirm.ask("Rasten?",
+			("Dein Lauf wird gespeichert (Welle %d). Setzt du ihn auf der Karte fort, geht "
+			+ "die Welle mit den übrigen %d Monstern weiter.") % [_wave_number, remaining],
+			"Rasten", "Weiterspielen")
 
 
-## Braucht der Abbruch eine Rückfrage? Nur ein Lauf von der Karte rastet, und erst ab der
-## zweiten Welle gibt es etwas zu verlieren (ein fortgesetzter Lauf steht immer dort).
-static func abort_needs_confirm(is_level: bool, wave_number: int) -> bool:
+## Rastet Escape mitten in der Welle (nach einer Rückfrage)? Nur ein Lauf von der Karte
+## rastet, und erst ab der zweiten Welle (ein fortgesetzter Lauf steht immer dort). In der
+## ersten Welle eines frischen Laufs bricht Escape sofort ab.
+static func escape_rests(is_level: bool, wave_number: int) -> bool:
 	return is_level and wave_number > 1
 
 
 func _on_abort_confirmed() -> void:
 	if _paused_since_ms >= 0:
 		_toggle_pause()
-	_abort_battle()
+	_rest_in_wave()
+
+
+## Rasten mitten in der Welle (ADR 0020 Nachtrag): eine künstliche Wellengrenze. Was die
+## Welle bis hier verdient hat — Lernstand, Erfahrung, verbrauchte Zauber, Plaketten —,
+## kommt auf die Platte wie an ihrem Ende, und der Speicherstand nimmt mit, was sie schon
+## hinter sich hat (`_open_wave_state`). Fortgesetzt kommen nur ihre übrigen Monster.
+func _rest_in_wave() -> void:
+	var wave := _open_wave_state()
+	_finished = true
+	_wave_gen += 1   # bindet laufende Spawn-Coroutinen ab (siehe _run_spawn_batch)
+	_rest(_wave_number, wave)
+	_report_run_ended()
+	SaveCoordinator.commit("wave_rest")
+	_saved_on_exit = true
+	_slow_motion.stop()
+	_leave_battle()
 
 
 func _on_abort_cancelled() -> void:
@@ -1329,9 +1362,16 @@ func _start_next_wave() -> void:
 	_plan_playlist(spawns)
 	for entry in spawns:
 		_total += int(entry.get("count", 0))
+	var open := _open_wave
+	_open_wave = {}
+	var armor := GameState.fortress_armor
+	if not open.is_empty():
+		_continue_wave(open, spawns)
 	# Löst den Wellenstart in GameState + HUD-Refresh aus. Die Festungs-HP bleiben dabei
 	# unangetastet — der Stand wird über die Wellen hinweg mitgenommen (siehe GameState).
 	EventBus.wave_started.emit(GameState.current_wave)
+	if not open.is_empty():
+		GameState.continue_wave(_spawned, armor)
 	# Kein Sprung auf den Morgen, solange Monster laufen (_finish_wave gibt ihn frei).
 	if _sun_cycle != null:
 		_sun_cycle.hold = true
@@ -1339,6 +1379,56 @@ func _start_next_wave() -> void:
 	EventBus.wave_totals.emit(_total)
 	for entry in spawns:
 		_run_spawn_batch(entry, gen)
+
+
+## Setzt eine mitten in der Welle gerastete Welle fort (ADR 0020 Nachtrag): es kommen nur
+## noch die Monster, die sie nicht hinter sich hat, und was ihr Abschluss zählt — Kiste,
+## Erfahrung, Plaketten, Auflösung, Zauber für die ganze Welle —, geht weiter, wo es stand.
+## Die schon erledigten gelten als erschienen (`_spawned`), damit `_check_end` und der
+## HUD-Balken die ganze Welle sehen.
+func _continue_wave(open: Dictionary, spawns: Array) -> void:
+	var remaining := maxi(1, int(open.get("remaining", 1)))
+	_total = maxi(remaining, int(open.get("total", remaining)))
+	_spawned = _total - remaining
+	spawns[0]["count"] = remaining
+	_wave_correct = int(open.get("correct", 0))
+	_wave_leaked = int(open.get("leaked", 0))
+	_score_at_start = GameState.score - int(open.get("score_gained", 0))
+	_wave_xp = int(open.get("xp", 0))
+	_level_at_start = int(open.get("level_at_start", _level_at_start))
+	_wave_low_hp = mini(_wave_low_hp, int(open.get("low_hp", _wave_low_hp)))
+	_spells.wave_pace = clampf(float(open.get("pace", 1.0)), 0.0, 1.0)
+	_spells.wave_alts = bool(open.get("alts", false))
+	if _spells.wave_pace < 1.0:
+		_spell_fx.haze(true)
+	for task in open.get("played", []):
+		if task is Dictionary:
+			_wave_played_tasks.append(task)
+			if bool(task.get("leaked", false)):
+				_wave_leaked_tasks.append(task)
+
+
+## Was die angefangene Welle für ihren Fortgang braucht, wenn mitten in ihr gerastet wird
+## (RunSave.build, Feld `wave`). Monster auf dem Feld zählen nicht als erledigt: sie kommen
+## als neue wieder, mit neu gewähltem Wort — ihre Antworten stehen schon im Lernstand.
+func _open_wave_state() -> Dictionary:
+	var played: Array = []
+	for task in _wave_played_tasks:
+		played.append(task)
+	return {
+		"remaining": maxi(0, _total - _spawned) + _active.size(),
+		"total": _total,
+		"correct": _wave_correct,
+		"leaked": _wave_leaked,
+		"score_gained": GameState.score - _score_at_start,
+		"xp": _wave_xp,
+		"level_at_start": _level_at_start,
+		"low_hp": _wave_low_hp,
+		"fortress_tier": _fortress_tier,
+		"pace": _spells.wave_pace,
+		"alts": _spells.wave_alts,
+		"played": played,
+	}
 
 
 ## Testliste: die Reihenfolge der Wörter in dieser Welle (TestPlaylist). Ist der Beutel
@@ -2304,7 +2394,7 @@ func _on_next_wave_requested(delta: int) -> void:
 ## Sitzungs-Log mit ihm speichern und die Menü-Szene laden.
 func _on_back_to_menu() -> void:
 	if can_rest(RunRequest.is_level(), _last_won):
-		_rest()
+		_rest(_wave_number + 1)
 	_report_run_ended()
 	SaveCoordinator.commit("run_end")
 	_saved_on_exit = true
@@ -2317,15 +2407,15 @@ static func can_rest(is_level: bool, last_won: bool) -> bool:
 	return is_level and last_won
 
 
-## Legt den Lauf auf den Platz seines Buchs. Weiter geht es mit der nächsten Welle und
-## der zuletzt gespielten Schwierigkeit — die Wahl auf Stufe 2 galt der Welle, die jetzt
-## nicht mehr kommt.
-func _rest() -> void:
-	var next_wave := _wave_number + 1
+## Legt den Lauf auf den Platz seines Buchs. An der Wellengrenze geht es mit der nächsten
+## Welle und der zuletzt gespielten Schwierigkeit weiter — die Wahl auf Stufe 2 galt der
+## Welle, die jetzt nicht mehr kommt. Mitten in der Welle (`wave`, `_open_wave_state`) mit
+## der angefangenen.
+func _rest(next_wave: int, wave := {}) -> void:
 	RunSave.store(RunSave.build(RunRequest.level(), next_wave, _difficulty,
-			GameState.run_snapshot(), _run_started_at, int(Time.get_unix_time_from_system())),
-			UserSettings.active_profile())
-	EventBus.run_suspended.emit(next_wave)
+			GameState.run_snapshot(), _run_started_at, int(Time.get_unix_time_from_system()),
+			wave), UserSettings.active_profile())
+	EventBus.run_suspended.emit(next_wave, int(wave.get("remaining", 0)))
 
 
 ## Setzt einen begonnenen Lauf fort (`state` aus RunRequest.take_resume) oder merkt sich
@@ -2341,6 +2431,7 @@ func _resume_run(state: Dictionary) -> void:
 	_wave_number = maxi(1, int(state.get("next_wave", 1)))
 	_difficulty = clampi(int(state.get("difficulty", _difficulty)), 1, 5)
 	_resumed = true
+	_open_wave = RunSave.open_wave(state)
 	_run_started_at = int(state.get("run_started_at", _run_started_at))
 	RunSave.discard(str((state.get("level", {}) as Dictionary).get("book", "")),
 			UserSettings.active_profile())

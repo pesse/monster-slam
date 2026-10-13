@@ -26,7 +26,7 @@ das P ein Buchstabe deiner Antwort.
 
 - Das Bild wird abgedunkelt und das Eingabefeld ist weg. Die Pause ist zum Durchatmen da,
   nicht zum Nachdenken über die Wörter auf dem Feld.
-- Weiter geht es mit derselben Taste oder dem Knopf, **Esc** beendet den Kampf ([Kapitel 7](07-abbrechen.md)).
+- Weiter geht es mit derselben Taste oder dem Knopf. **Esc** beendet den Kampf, auf der Karte fragt es, ob du rasten willst ([Kapitel 7](07-abbrechen.md)).
 - Die Pause zählt nicht als Bedenkzeit.
 
 ---
