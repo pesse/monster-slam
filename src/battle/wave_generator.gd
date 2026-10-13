@@ -717,4 +717,6 @@ func _build_plan(candidate: Dictionary) -> Dictionary:
 		"reward": reward,
 		"xp": xp,
 		"net": net,
+		# Dasselbe Urteil wie bei Punkten und Erfahrung: das Monster zeigt es (Monster.mastered).
+		"mastered": mastered,
 	}

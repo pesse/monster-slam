@@ -79,6 +79,10 @@ extends Node3D
 ##         Sieben Monster dicht beieinander auf der Bahn, in beiden Sichten — die Wortschilder
 ##         dürfen sich nicht überdecken, jedes dritte zeigt Alternativen (Zauber, ADR 0014) —
 ##         als reports/battle_themes/plates_<sicht>.png.
+##     … -- --mastered
+##         Sechs Monster über die Bahn verteilt, jedes zweite gemeistert (Monster.mastered:
+##         halb durchsichtig, mattes Schild mit Haken), in beiden Sichten als
+##         reports/battle_themes/mastered_<sicht>.png.
 ##     … -- --spells [--spell=<name>] [--view=first]
 ##         Jeder Zauber (Reiter Zauber, SpellFx) auf ein Feld mit sechs Monstern, in Schritten
 ##         nach dem Wirken, als reports/battle_themes/spell_<name>_<ms>.png; Frost dazu mit
@@ -257,6 +261,8 @@ func _ready() -> void:
 		_shoot_level_up.call_deferred()
 	elif _has_arg("plates"):
 		_shoot_plates.call_deferred()
+	elif _has_arg("mastered"):
+		_shoot_mastered.call_deferred()
 	elif _has_arg("pitch"):
 		_shoot_pitch.call_deferred()
 	elif _has_arg("fps"):
@@ -899,6 +905,45 @@ func _shoot_plates() -> void:
 			await get_tree().process_frame
 		await RenderingServer.frame_post_draw
 		var path := "%s/plates_%s.png" % [dir, view]
+		get_viewport().get_texture().get_image().save_png(path)
+		print("battle_theme_lab: ", path)
+		group.free()
+	get_tree().quit()
+
+
+func _shoot_mastered() -> void:
+	var dir := ProjectSettings.globalize_path(SHOT_DIR)
+	DirAccess.make_dir_recursive_absolute(dir)
+	$UI/Margin.visible = false
+	var defs := FxWarmup.monster_defs()
+	# Einzelne Wörter, keine Wortliste.
+	var prompts := ["house", "beautiful", "to run", "yesterday", "the dog", "tree"]
+	var types := WordTypePalette.COLORS.keys()
+	# Wie „Feld füllen": über die Bahn verteilt, vorne dichter.
+	var spots := [[-5.0, 0.15], [1.5, 0.25], [-1.5, 0.42], [4.5, 0.5], [-4.0, 0.7], [2.5, 0.85]]
+	for view in ["iso", "first"]:
+		_set_first_person(view == "first")
+		if _fp != null:
+			# An der Mauer, zum Spawn gedreht — wie im Kampf.
+			_fp.position = Vector3(0.0, 0.0, _goal() - 1.0)
+			_fp.call("_set_yaw", 0.0)
+		var group := Node3D.new()
+		add_child(group)
+		for i in spots.size():
+			var monster := FxWarmup.MONSTER_SCENE.instantiate() as Monster
+			monster.setup(defs[i % defs.size()], {"prompt": prompts[i],
+					"lexeme_type": types[i % types.size()]}, 1000.0, 0.0)
+			monster.mastered = i % 2 == 1
+			monster.screen_sized_label = _fp != null
+			monster.position = Vector3(float(spots[i][0]) * _lane_half / 8.0, 0.0,
+					lerpf(_goal() - 5.0, _spawn_z + 4.0, float(spots[i][1])))
+			group.add_child(monster)
+			monster.halt()
+		# Die Schilder gleiten an ihren Platz; eine halbe Sekunde reicht.
+		for i in 30:
+			await get_tree().process_frame
+		await RenderingServer.frame_post_draw
+		var path := "%s/mastered_%s.png" % [dir, view]
 		get_viewport().get_texture().get_image().save_png(path)
 		print("battle_theme_lab: ", path)
 		group.free()

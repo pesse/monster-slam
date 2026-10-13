@@ -20,6 +20,9 @@
   Schrift auf dem Schild hat diese Farbe. Die Legende am unteren Bildrand sagt, welche
   Farbe was bedeutet (zum Beispiel Nomen, Verb, Adjektiv). Das hilft, wenn ein Wort
   mehrere Bedeutungen hat.
+- **Halb durchsichtige Monster** tragen eine Aufgabe, die du schon gemeistert hast. Sie
+  haben keinen leuchtenden Rand, ihr Schild ist matt und zeigt einen Haken vor dem Wort.
+  Sie bringen kaum noch etwas, kümmere dich zuerst um die anderen.
 - **Die Wortschilder** stehen über den Köpfen. Drängen sich mehrere Monster, rücken die
   Schilder zur Seite, eine dünne Linie zeigt dann auf das Monster.
 - **Die Kopfleiste** oben links:

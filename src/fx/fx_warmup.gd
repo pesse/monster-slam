@@ -19,7 +19,7 @@ const FRAMES := 4
 const MONSTER_SCENE := preload("res://scenes/entities/monster.tscn")
 
 ## Die Zeichen, die ein Schild oder aufsteigender Text zeigen kann.
-const GLYPHS := "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ abcdefghijklmnopqrstuvwxyzäöüß 0123456789 +-.,:;!?'’…()/"
+const GLYPHS := "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ abcdefghijklmnopqrstuvwxyzäöüß 0123456789 +-.,:;!?'’…()/✓"
 
 ## Größe der Explosion: die größte im Kampf (Festungsausbau), damit ihr Licht das Feld
 ## erreicht — die Lichtvariante braucht jedes Material, das es trifft.
@@ -37,7 +37,9 @@ static func run(parent: Node3D, at: Vector3, monster_defs: Array, extras: Array[
 	fx.position = at
 	parent.add_child(fx)
 	for def in monster_defs:
-		shown.append(_monster(parent, def, at, screen_sized))
+		shown.append(_monster(parent, def, at, screen_sized, false))
+		# Gemeistert: durchsichtige Materialien, eigene Shader-Variante.
+		shown.append(_monster(parent, def, at, screen_sized, true))
 	for node in extras:
 		node.position = at
 		parent.add_child(node)
@@ -69,9 +71,11 @@ static func monster_defs() -> Array:
 ## Ein stehendes Monster mit Modell, Outline, Laufanimation und Schild — dieselbe Szene wie
 ## im Kampf, nur ohne Tempo und ohne Verbindung zum WaveRunner. Das Schild zeigt auch die
 ## Zeile der Alternativen (Zauber, ADR 0014): eigene Schriftgröße.
-static func _monster(parent: Node3D, def: Dictionary, at: Vector3, screen_sized: bool) -> Node3D:
+static func _monster(parent: Node3D, def: Dictionary, at: Vector3, screen_sized: bool,
+		mastered: bool) -> Node3D:
 	var monster := MONSTER_SCENE.instantiate() as Monster
 	monster.setup(def, {"prompt": GLYPHS, "prompt_alt": [GLYPHS]}, at.z + 1000.0, 0.0)
+	monster.mastered = mastered
 	monster.screen_sized_label = screen_sized
 	monster.position = at
 	parent.add_child(monster)
