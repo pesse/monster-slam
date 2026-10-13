@@ -2433,7 +2433,8 @@ func _resume_run(state: Dictionary) -> void:
 	_resumed = true
 	_open_wave = RunSave.open_wave(state)
 	_run_started_at = int(state.get("run_started_at", _run_started_at))
-	RunSave.discard(str((state.get("level", {}) as Dictionary).get("book", "")),
+	var saved_level: Dictionary = state.get("level", {})
+	RunSave.discard(str(saved_level.get("book", "")), int(saved_level.get("unit", 0)),
 			UserSettings.active_profile())
 	EventBus.run_resumed.emit(_wave_number, _run_started_at, Array(state.get("added", [])))
 

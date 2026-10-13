@@ -117,8 +117,9 @@ var cover := false
 
 var _texture: Texture2D
 ## Die Orte: { key, pos (Vector2 in 0..1 oder INF), glyph, caption, done, total, medal,
-## boss, disabled, bonus }. `bonus` ist je Bonus der Unit sein Anteil 0..1 — ein Stern unter
-## dem Ort, der erst bei 1 leuchtet.
+## boss, disabled, bonus, resting }. `bonus` ist je Bonus der Unit sein Anteil 0..1 — ein
+## Stern unter dem Ort, der erst bei 1 leuchtet. `resting` > 0: hier liegt ein begonnener
+## Lauf (BookMap.add_runs), ein Lagerfeuer unten rechts am Ring.
 var _nodes: Array = []
 ## Wegpunkte in 0..1; leer = die Orte der Reihe nach verbinden.
 var _path: Array = []
@@ -664,6 +665,16 @@ func _draw_node(i: int) -> void:
 		draw_string(font, at + Vector2(-r, -r - 4.0 * k), "👑",
 				HORIZONTAL_ALIGNMENT_CENTER, r * 2.0, glyph_size)
 		top -= glyph_size
+	if int(node.get("resting", 0)) > 0 and not disabled:
+		# Eine dunkle Plakette unter dem Feuer: auf dem bunten Bild und an kleinen Orten
+		# der Buchkarte bliebe es sonst ein orangener Fleck.
+		var fire_size := maxi(roundi(glyph_size * 0.8), 15)
+		var corner := at + Vector2(ring_r, ring_r) * 0.78
+		draw_circle(corner + Vector2(0, 2.0), fire_size * 0.78, SHADOW)
+		draw_circle(corner, fire_size * 0.72, Color(0.07, 0.08, 0.11))
+		draw_arc(corner, fire_size * 0.72, 0.0, TAU, 32, RING_GOLD, 1.5, true)
+		draw_string(font, corner + Vector2(-fire_size, fire_size * 0.36), "🔥",
+				HORIZONTAL_ALIGNMENT_CENTER, fire_size * 2.0, fire_size)
 	if _selected.has(str(node["key"])) and not disabled:
 		_draw_pointer(Vector2(at.x, top), k)
 	var below := ring_r + ring * 0.5

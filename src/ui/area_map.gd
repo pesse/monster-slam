@@ -9,11 +9,11 @@ extends Control
 ## rechts setzt die Auswahl als ein Level in RunRequest (MapLevel.combine) und startet den
 ## Kampf — der kommt über RunRequest.return_scene hierher zurück.
 ##
-## Ein begonnener Lauf des Buchs (RunSave, ADR 0020): liegt er in dieser Unit, sind seine
-## Orte beim Öffnen markiert, und „Spielen" heißt „Fortsetzen", solange sie alle markiert
+## Der begonnene Lauf dieser Unit (RunSave, ADR 0020 mit Nachtrag „Ein Platz je Unit"): seine
+## Orte sind beim Öffnen markiert, und „Spielen" heißt „Fortsetzen", solange sie alle markiert
 ## sind — weitere Orte der Unit dürfen dazukommen, der Lauf wird erweitert
-## (RunSave.continues). Fehlt einer, oder liegt die Auswahl in einer anderen Unit des Buchs,
-## startet ein neuer Lauf und fragt vorher, denn der begonnene geht dabei verloren. Das „✕"
+## (RunSave.continues). Fehlt einer, startet ein neuer Lauf und fragt vorher, denn der
+## begonnene geht dabei verloren. Läufe anderer Units bleiben unberührt. Das „✕"
 ## daneben verwirft ihn, damit sich dieselbe Auswahl auch frisch spielen lässt. Ein Boss
 ## gehört zu keinem Lauf: er startet ohne Rückfrage, und der begonnene bleibt liegen.
 
@@ -420,9 +420,9 @@ func _added_labels(keys: Array) -> Array:
 			.map(func(l): return str(l["label"]))
 
 
-## Die gespeicherten Orte, wenn der begonnene Lauf in dieser Unit liegt.
+## Die gespeicherten Orte des begonnenen Laufs dieser Unit.
 func _saved_keys() -> Array:
-	if _saved.is_empty() or int((_saved["level"] as Dictionary).get("unit", 0)) != MapSelection.unit:
+	if _saved.is_empty():
 		return []
 	return Array((_saved["level"] as Dictionary).get("keys", []))
 
@@ -434,14 +434,14 @@ static func saved_label(state: Dictionary) -> String:
 			int(level.get("unit", 0))), int(state.get("next_wave", 1))]
 
 
-## Liest den begonnenen Lauf des Buchs, bevor die Orte markiert werden. Liegt er in dieser
-## Unit und lässt sich nicht mehr spielen (ein Ort ist weg, die App zu alt), wird er
+## Liest den begonnenen Lauf dieser Unit, bevor die Orte markiert werden. Lässt er sich
+## nicht mehr spielen (ein Ort ist weg, die App zu alt), wird er
 ## verworfen, und die Karte sagt es — still verschwinden darf er nicht.
 func _load_saved() -> void:
-	_saved = RunSave.of_book(MapSelection.book, UserSettings.active_profile())
+	_saved = RunSave.of_unit(MapSelection.book, MapSelection.unit, UserSettings.active_profile())
 	if _saved_keys().is_empty() or not RunSave.resumable_level(_saved, _levels).is_empty():
 		return
-	RunSave.discard(MapSelection.book, UserSettings.active_profile())
+	RunSave.discard(MapSelection.book, MapSelection.unit, UserSettings.active_profile())
 	_saved = {}
 	_pending_notice = true
 
@@ -462,7 +462,7 @@ func _ask_discard() -> void:
 	if _saved.is_empty():
 		return
 	_on_confirmed = func() -> void:
-		RunSave.discard(MapSelection.book, UserSettings.active_profile())
+		RunSave.discard(MapSelection.book, MapSelection.unit, UserSettings.active_profile())
 		_saved = {}
 		_select(_selected)
 	_confirm.ask("Lauf verwerfen?",
@@ -482,7 +482,7 @@ func _start() -> void:
 		_launch(level, resume)
 	elif not _saved.is_empty():
 		_on_confirmed = func() -> void:
-			RunSave.discard(MapSelection.book, UserSettings.active_profile())
+			RunSave.discard(MapSelection.book, MapSelection.unit, UserSettings.active_profile())
 			_saved = {}
 			_launch(level)
 		_confirm.ask("Neuer Lauf?",

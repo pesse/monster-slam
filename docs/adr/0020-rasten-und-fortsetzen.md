@@ -1,6 +1,6 @@
 # ADR 0020 — Rasten und Fortsetzen eines Laufs
 
-Status: **angenommen** · Datum: 2026-10-06 · Nachtrag 2026-10-13 (Rasten mitten in der Welle)
+Status: **angenommen** · Datum: 2026-10-06 · Nachträge 2026-10-13 (Rasten mitten in der Welle; ein Platz je Unit)
 
 ## Kontext
 
@@ -27,7 +27,7 @@ nichts mehr übrig. Ein Abbruch mit Escape zählt die angefangene Welle schon he
    den Rückweg an. Das gilt nur für Läufe von der Karte. Expertenmodus, Testvorbereitung
    und Bosskampf bleiben, wie sie sind (siehe „Bewusst nicht“).
 
-2. **Ein Speicherplatz je Buch.** Ein Kind spielt Englisch und Latein nebeneinander. Mit
+2. **Ein Speicherplatz je Buch.** *Abgelöst durch den Nachtrag „Ein Platz je Unit“.* Ein Kind spielt Englisch und Latein nebeneinander. Mit
    nur einem Platz würde jeder Wechsel den begonnenen Lauf verwerfen. Alle Plätze eines
    Profils stehen in `user://progress/<profil>_runs.json` (Buch-Id → Speicherstand),
    geschrieben über eine temporäre Datei und Umbenennen. Je Buch und nicht je Unit: ein
@@ -215,3 +215,25 @@ und 5 ändern sich deshalb:
 
 `FORMAT` bleibt 1: ein Stand ohne `wave` ist einer von der Wellengrenze. Ältere Fassungen
 übersehen das Feld und spielen die angefangene Welle ganz.
+
+## Nachtrag 2026-10-13: Ein Platz je Unit
+
+Ein Kind hat Unit 1 fast gemeistert und will seinen langen Lauf dort behalten, aber schon
+für Unit 2 lernen. Mit einem Platz je Buch verwirft der erste Lauf in Unit 2 den in Unit 1.
+Punkt 2 und Punkt 6 ändern sich deshalb:
+
+1. **Ein Speicherplatz je Unit.** Der Schlüssel in `<profil>_runs.json` ist
+   `<book>/<unit>` (wie `RunRequest.unit_key()`). Ein neuer Lauf verwirft nur den Platz
+   **seiner** Unit. Ältere Dateien mit dem Buch als Schlüssel liest `RunSave.all` weiter: der
+   Stand kennt seine Unit selbst (`level.unit`), der Schlüssel wird beim Lesen umgestellt
+   und beim nächsten Schreiben so abgelegt. Der Stand selbst ändert sich nicht, `FORMAT`
+   bleibt.
+
+2. **Wiederfinden.** Die Sorge aus Punkt 2 waren halbe Läufe, die keiner wiederfindet.
+   Die Buchkarte zeigt deshalb an jeder Unit mit Lauf ein Lagerfeuer 🔥, und ihre
+   Hinweiskarte nennt die Welle. Der Knopf unten rechts bleibt einer und führt zum zuletzt
+   gerasteten Lauf (`saved_at`). Ein Knopf je Lauf passt bei 1152 Pixel Breite nicht.
+
+3. **Gebietskarte.** Sie kennt nur noch den Lauf ihrer Unit. Die Rückfrage „Neuer Lauf?“
+   kommt nur noch, wenn ein gespeicherter Ort in der Auswahl fehlt. Eine andere Unit hat
+   ihren eigenen Platz und fragt nichts.

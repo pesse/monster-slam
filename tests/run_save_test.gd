@@ -37,27 +37,51 @@ func _state(keys: Array, unit := 1, next_wave := 7, book := "zz_book") -> Dictio
 
 func test_no_file_no_runs() -> void:
 	assert_dict(RunSave.all(PROFILE)).is_empty()
-	assert_dict(RunSave.of_book("zz_book", PROFILE)).is_empty()
+	assert_dict(RunSave.of_unit("zz_book", 1, PROFILE)).is_empty()
+	assert_array(RunSave.of_book("zz_book", PROFILE)).is_empty()
 
 
-func test_one_slot_per_book() -> void:
+func test_one_slot_per_unit() -> void:
 	RunSave.store(_state(["t1"]), PROFILE)
+	RunSave.store(_state(["t2"], 2, 5), PROFILE)
 	RunSave.store(_state(["t2"], 3, 9, "zz_other"), PROFILE)
-	# Ein neuer Stand desselben Buchs ersetzt den alten, die anderen bleiben.
-	RunSave.store(_state(["t3"], 2, 4), PROFILE)
-	assert_array(RunSave.all(PROFILE).keys()).contains_exactly_in_any_order(["zz_book", "zz_other"])
-	assert_int(int(RunSave.of_book("zz_book", PROFILE)["next_wave"])).is_equal(4)
-	assert_int(int(RunSave.of_book("zz_other", PROFILE)["next_wave"])).is_equal(9)
+	# Ein neuer Stand derselben Unit ersetzt den alten, die anderen Units bleiben.
+	RunSave.store(_state(["t3"], 1, 4), PROFILE)
+	assert_array(RunSave.all(PROFILE).keys()).contains_exactly_in_any_order(
+			["zz_book/1", "zz_book/2", "zz_other/3"])
+	assert_int(int(RunSave.of_unit("zz_book", 1, PROFILE)["next_wave"])).is_equal(4)
+	assert_int(int(RunSave.of_unit("zz_book", 2, PROFILE)["next_wave"])).is_equal(5)
+	assert_int(int(RunSave.of_unit("zz_other", 3, PROFILE)["next_wave"])).is_equal(9)
 
 
-func test_discard_leaves_the_other_books_alone() -> void:
+func test_discard_leaves_the_other_units_alone() -> void:
 	RunSave.store(_state(["t1"]), PROFILE)
-	RunSave.store(_state(["t2"], 3, 9, "zz_other"), PROFILE)
-	RunSave.discard("zz_book", PROFILE)
-	assert_dict(RunSave.of_book("zz_book", PROFILE)).is_empty()
-	assert_dict(RunSave.of_book("zz_other", PROFILE)).is_not_empty()
-	RunSave.discard("zz_other", PROFILE)
+	RunSave.store(_state(["t2"], 2, 5), PROFILE)
+	RunSave.discard("zz_book", 1, PROFILE)
+	assert_dict(RunSave.of_unit("zz_book", 1, PROFILE)).is_empty()
+	assert_dict(RunSave.of_unit("zz_book", 2, PROFILE)).is_not_empty()
+	RunSave.discard("zz_book", 2, PROFILE)
 	assert_bool(FileAccess.file_exists(RunSave.path(PROFILE))).is_false()
+
+
+func test_of_book_newest_first() -> void:
+	var older := MapLevel.combine(_levels(1), ["t1"])
+	var newer := MapLevel.combine(_levels(2), ["t1"])
+	RunSave.store(RunSave.build(older, 3, 4, {}, 1000, 2000), PROFILE)
+	RunSave.store(RunSave.build(newer, 8, 4, {}, 1000, 3000), PROFILE)
+	RunSave.store(_state(["t2"], 3, 9, "zz_other"), PROFILE)
+	var runs := RunSave.of_book("zz_book", PROFILE)
+	assert_array(runs.map(func(s): return int(s["next_wave"]))).is_equal([8, 3])
+
+
+func test_a_file_with_one_slot_per_book_is_read_per_unit() -> void:
+	# So lag es vor dem Nachtrag „Ein Platz je Unit": Buch -> Stand.
+	DirAccess.make_dir_recursive_absolute(RunSave.SAVE_DIR)
+	SaveStore.write(RunSave.path(PROFILE), {"runs": {"zz_book": _state(["t1"], 2, 6)}})
+	assert_int(int(RunSave.of_unit("zz_book", 2, PROFILE)["next_wave"])).is_equal(6)
+	RunSave.store(_state(["t1"], 1, 3), PROFILE)
+	assert_array(RunSave.all(PROFILE).keys()).contains_exactly_in_any_order(
+			["zz_book/1", "zz_book/2"])
 
 
 func test_the_state_keeps_places_not_scope() -> void:
@@ -234,7 +258,7 @@ func test_a_rest_in_the_wave_keeps_the_open_wave() -> void:
 	var level := MapLevel.combine(_levels(), ["t1"])
 	RunSave.store(RunSave.build(level, 23, 4, {"fortress_health": 60}, 1000, 2000,
 			_open_wave()), PROFILE)
-	var state := RunSave.of_book("zz_book", PROFILE)
+	var state := RunSave.of_unit("zz_book", 1, PROFILE)
 	assert_int(int(state["next_wave"])).is_equal(23)
 	var wave := RunSave.open_wave(state)
 	assert_int(int(wave["remaining"])).is_equal(17)

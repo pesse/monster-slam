@@ -537,7 +537,7 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
 | `RunRequest` | `src/core/run_request.gd` | statisch: was der nächste Lauf spielt — ein Level der Karte oder die Auswahl des Expertenmodus; Scope, Tags, Aufgabenpool, Unit, Rücksprung |
 | `MapLevel` | `src/progression/map_level.gd` | die Level einer Unit (T1…T4, Gesamt, Boss) aus `ContentRegistry.parts_for`; Stufe und Zählung je Level |
 | `BossRecord` | `src/progression/boss_record.gd` | Boss-Siege je Unit (Ursprungswert), Medaille bei 1/3/5 Siegen |
-| `RunSave` | `src/progression/run_save.gd` | begonnene Läufe von der Karte, ein Platz je Buch (ADR 0020) |
+| `RunSave` | `src/progression/run_save.gd` | begonnene Läufe von der Karte, ein Platz je Unit (ADR 0020 mit Nachtrag) |
 | `MapSelection` | `src/ui/map_selection.gd` | welches Buch, welche Unit gerade offen ist (überdauert den Szenenwechsel) |
 | `MapLayout` | `src/ui/map_layout.gd` | Bild und Punkte unter `assets/maps/<book>/` (`book.png`, `unit<n>.png`, `map.json`) |
 | `BookNaming` | `src/core/book_naming.gd` | Wie das Buch sich und seine Ebenen nennt („Dossier 2 · Partie A", „Abschnitt 2 · Lektion 10"); unter `naming` in `map.json`, ohne Eintrag „Unit"/„Teil" |
@@ -601,7 +601,7 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
   lässt: der Boss-Sieg. Nur ein Sieg mit `RunRequest.unit_key()` zählt; er geht über
   `EventBus.boss_won` auch in die Spur.
 - **Rasten** (ADR 0020): ein Lauf von der Karte, dessen Festung steht, wird auf Stufe 2
-  gerastet (`RunSave`, ein Platz je Buch). Gespeichert sind die Orte (`keys`), Welle,
+  gerastet (`RunSave`, ein Platz je Unit). Gespeichert sind die Orte (`keys`), Welle,
   Schwierigkeit und `GameState.run_snapshot()`; Scope und Maxima werden beim Fortsetzen
   neu gerechnet (`RunSave.resumable_level`, `GameState.restore_run`). Die Gebietskarte
   markiert die Orte; eine Auswahl, die sie alle enthält, setzt fort und darf weitere Orte
@@ -610,7 +610,8 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
   resume)` in den Kampf, der ihn einmal nimmt und den Platz verwirft. Escape mitten in der
   Welle rastet ebenfalls (ADR 0020 Nachtrag): das Feld `wave` trägt die übrigen Monster und
   die Zähler der angefangenen Welle (`RunSave.open_wave`), und `WaveRunner._continue_wave`
-  setzt sie fort, statt eine neue zu beginnen.
+  setzt sie fort, statt eine neue zu beginnen. Die Buchkarte zeigt jeden begonnenen Lauf
+  als 🔥 an seiner Unit (`BookMap.add_runs`), ihr Knopf führt zum zuletzt gerasteten.
 - **Bilder liegen in der EXE**, nicht im Pack (`export_presets.cfg` nimmt
   `assets/maps/*.json` mit). Punkte stehen in Anteilen des Bildes (0..1). Fehlt Bild oder
   ein Punkt, zeichnet `MapCanvas` eine schlichte Fläche und legt ALLE Orte selbst aus
@@ -1063,7 +1064,7 @@ Entscheidung und Begründung: `docs/adr/0024-spielstand-sicher-speichern.md`.
   `user://progress/<player>_bosses.json`, je Sieg ein Eintrag `{unit, won_at}`. Zahl und
   Medaille werden beim Lesen gezählt (ADR 0006).
 - **Begonnene Läufe** (`RunSave`, `src/progression/run_save.gd`): JSON unter
-  `user://progress/<player>_runs.json`, `{runs: {<book>: <stand>}}`, über eine temporäre
+  `user://progress/<player>_runs.json`, `{runs: {<book>/<unit>: <stand>}}`, über eine temporäre
   Datei geschrieben (ADR 0020).
 - **Ereignis-Protokoll** (`TraceLog`, `src/learning/trace_log.gd`): JSON Lines unter
   `user://logs/<player>_trace.jsonl`, eine Zeile je Ereignis. Siehe „Die Spur eines Laufs"
