@@ -1,18 +1,9 @@
 class_name StatsChart
 extends Control
-## Minimaler Linien-Chart mit Godot-Bordmitteln (Issue #7): eine Wertereihe, gezeichnet
-## in `_draw()`, ohne Diagramm-Bibliothek und ohne Addon.
-##
-## Bewusst ein eigenständiger Control und nicht Teil des Statistik-Screens: die Lernkurve
-## ist die erste Reihe, die hier gezeichnet wird, aber nicht die letzte (Genauigkeit,
-## Wellen pro Sitzung …). Deshalb kennt er nur Zahlen und zwei Beschriftungen — was die
-## Reihe bedeutet, weiß der Screen.
-##
-## Die Höhe steht in der Szene (custom_minimum_size), damit sie im Editor änderbar bleibt.
-## Die Rechnung (Achsen-Maximum, Punktlage) steht in statischen Funktionen, damit sie ohne
-## Szene und Zeichenaufruf prüfbar ist (siehe tests/stats_chart_test.gd).
+## Minimaler Linien-Chart: eine Wertereihe, gezeichnet in `_draw()`. Kennt nur Zahlen und
+## zwei Beschriftungen; die Höhe steht in der Szene (custom_minimum_size).
 
-## Platz für die Beschriftungen: links das Achsen-Maximum, unten die Zeitspanne.
+## Platz für die Beschriftungen (px): links das Achsen-Maximum, unten die Zeitspanne.
 const PAD_LEFT := 40.0
 const PAD_RIGHT := 8.0
 const PAD_TOP := 10.0
@@ -38,8 +29,7 @@ func show_series(values: Array, first_label := "", last_label := "") -> void:
 	queue_redraw()
 
 
-## Oberes Achsen-Ende: der Höchstwert, aufgerundet auf eine ablesbare Zahl. Nie 0 — sonst
-## teilt die Punktlage durch null und eine leere Kurve hätte keine Fläche.
+## Oberes Achsen-Ende: der Höchstwert, aufgerundet auf eine ablesbare Zahl. Nie 0.
 static func axis_max(values: Array) -> int:
 	var top := 0
 	for value in values:
@@ -85,7 +75,7 @@ func _draw() -> void:
 	var font := get_theme_default_font()
 	var top_value := axis_max(_values)
 
-	# Grundlinie und obere Hilfslinie — zwei Linien genügen, um die Kurve einzuordnen.
+	# Grundlinie und obere Hilfslinie; Beschriftung 4 px vor dem Feld.
 	draw_line(Vector2(plot.position.x, plot.end.y), plot.end, GRID_COLOR, 1.0)
 	draw_line(plot.position, Vector2(plot.end.x, plot.position.y), GRID_COLOR, 1.0)
 	draw_string(font, Vector2(0.0, plot.position.y + float(LABEL_SIZE) * 0.5),
@@ -95,7 +85,7 @@ func _draw() -> void:
 
 	var points := plot_points(_values, plot, top_value)
 	if points.size() >= 2:
-		# Fläche unter der Kurve: lässt das Steigen auch bei flachem Verlauf lesen.
+		# Fläche unter der Kurve.
 		var area := PackedVector2Array([Vector2(points[0].x, plot.end.y)])
 		area.append_array(points)
 		area.append(Vector2(points[points.size() - 1].x, plot.end.y))
@@ -104,6 +94,7 @@ func _draw() -> void:
 	if points.size() == 1:
 		draw_line(points[0], Vector2(plot.end.x, points[0].y), LINE_COLOR, 2.0)
 	if not points.is_empty():
+	# Punkt am letzten Wert (Radius 3.5 px); Zeitachse 4 px über der Unterkante.
 		draw_circle(points[points.size() - 1], 3.5, LINE_COLOR)
 
 	var baseline := size.y - 4.0

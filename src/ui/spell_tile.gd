@@ -1,7 +1,7 @@
 class_name SpellTile
 extends Button
-## Ein Zauber im Laden als Kachel (scenes/ui/spell_tile.tscn): groß das Bild (oder das Zeichen, `SpellIcons`), unten
-## rechts, wie viele im Vorrat liegen. Name, Wirkung und Preis stehen im Hinweis. Ein Klick kauft einen; die Kachel meldet ihn nur, gekauft wird im SpellShop.
+## Ein Zauber im Laden als Kachel: Bild oder Zeichen, Anzahl im Vorrat; Name, Wirkung und
+## Preis im Hinweis. Ein Klick meldet `buy_pressed`, gekauft wird im SpellShop.
 
 signal buy_pressed(spell: Dictionary)
 
@@ -26,8 +26,7 @@ func setup(entry: Dictionary) -> void:
 	refresh()
 
 
-## Vorrat und Sperre nach dem aktuellen Stand. Gesperrt statt ausgeblendet; warum, sagt
-## der Hinweis.
+## Vorrat und Sperre nach dem aktuellen Stand; den Grund einer Sperre nennt der Hinweis.
 func refresh() -> void:
 	var id := str(spell.get("id", ""))
 	var owned := Inventory.count_of(id)
@@ -43,8 +42,7 @@ func refresh() -> void:
 	Hints.attach_live(self, hint)
 
 
-## Der Hinweis: Name, Wirkung, ob es geht, und der Preis als Münze mit Zahl (`prices`, wie
-## im Fähigkeitsbaum).
+## Der Hinweis: Name, Wirkung, ob es geht, und der Preis (`prices`).
 func hint(_at := Vector2.ZERO) -> Dictionary:
 	return {
 		"title": str(spell.get("name", spell.get("id", ""))),

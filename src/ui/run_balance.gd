@@ -1,19 +1,9 @@
 class_name RunBalance
 extends RefCounted
-## Sitzungsbilanz am Laufende (Issue #12): was dieser Lauf gebracht hat, für Stufe 2
-## des Wellenabschlusses (WaveStats).
-##
-## Hier wird nichts gezählt, sondern zusammengelesen: die Zähler kommen aus der laufenden
-## Sitzung (SessionLog.current()), die Wörter aus den Zeilen von
-## PlayerProgress.records_for_display() — mit DENSELBEN Regeln wie im Statistik-Screen
-## (StatsScreen.fresh_rows, StatsScreen.comeback_rows), nur auf den Zeitraum ab
-## Sitzungsbeginn eingeschränkt. Eine zweite Regel daneben liefe irgendwann auseinander.
-##
-## Gelesen wird VOR SessionLog.end(): das leert die laufende Sitzung. Der WaveRunner baut
-## die Bilanz deshalb beim Wellenende, nicht beim Rückweg ins Menü.
-##
-## Statisch und ohne Autoload, damit die Regel mit erfundenen Zeilen prüfbar ist
-## (tests/run_balance_test.gd) — dieselbe Aufteilung wie SessionLog.accuracy_trend.
+## Sitzungsbilanz am Laufende für den Wellenabschluss (WaveStats). Liest nur zusammen:
+## Zähler aus SessionLog.current(), Wörter aus PlayerProgress.records_for_display() nach
+## den Regeln von StatsScreen.fresh_rows/comeback_rows, ab Sitzungsbeginn. Muss vor
+## SessionLog.end() gebaut werden, das die laufende Sitzung leert.
 
 const STATS_SCREEN := preload("res://src/ui/stats_screen.gd")
 
@@ -22,20 +12,16 @@ const STATS_SCREEN := preload("res://src/ui/stats_screen.gd")
 ##   waves_cleared, wave_reached, answers, correct: int
 ##   mastered: int   — in dieser Sitzung erstmals gemeisterte Aufgaben
 ##   comeback: int   — davon zurückerobert (Comeback-Regel des Statistik-Screens)
-##   words: Array von { label: String, misses: int, comeback: bool } — Comebacks zuerst
-##                    (sie sind der Fund), danach die übrigen, jüngste zuerst; ungekappt,
-##                    gedeckelt wird in der Anzeige.
-## `wave_reached` ist die Welle, in der der Lauf gerade steht: nach einer Niederlage ist
-## sie noch nicht geräumt, steht also noch nicht in der Sitzung.
+##   words: Array von { label: String, misses: int, comeback: bool } — Comebacks zuerst,
+##                    dann die übrigen, jüngste zuerst; ungekappt.
+## `wave_reached`: die Welle, in der der Lauf steht (nach einer Niederlage noch nicht in
+## der Sitzung).
 static func build(session: Dictionary, rows: Array, wave_reached := 0) -> Dictionary:
 	if session.is_empty():
 		return {}
 	var since := int(session.get("started_at", 0))
-	# Ungekappt: gedeckelt wird erst in der Anzeige, gezählt wird alles.
 	var fresh: Array = STATS_SCREEN.fresh_rows(rows, since, rows.size())
-	# „In dieser Sitzung zurückerobert" = die Comeback-Regel über die Aufgaben, deren
-	# Meisterung in diese Sitzung fällt. Altbestand ohne Zeitstempel fällt damit weg —
-	# der kann nicht heute zurückerobert worden sein.
+	# Comeback-Regel nur über die in dieser Sitzung gemeisterten Aufgaben.
 	var comeback: Array = STATS_SCREEN.comeback_rows(fresh, fresh.size())
 	var comeback_ids := {}
 	var words: Array = []

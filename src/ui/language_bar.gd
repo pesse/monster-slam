@@ -1,15 +1,7 @@
 class_name LanguageBar
 extends HBoxContainer
-## Die Sprachwahl der Statistik (Issue #45): je Sprache eine Flagge, die sich an- und
-## abschalten lässt — mehrere zugleich, von Haus aus alle. Das Layout liegt in
-## language_bar.tscn, eine Flagge in language_choice.tscn, die Bilder unter
-## assets/ui/flags/<sprache>.svg.
-##
-## Wie die SortBar filtert die Leiste nicht selbst, sie meldet nur die gewählten Sprachen.
-## Die letzte gewählte Flagge lässt sich nicht abschalten: ohne Sprache gäbe es nichts zu
-## zählen, und eine leere Wahl als „alle" zu lesen, hieße das Gegenteil dessen anzuzeigen,
-## was gedrückt ist. Die Flaggen entstehen einmal vor dem Anzeigen (`setup`); beim
-## Umschalten ändert sich nur, welche gedrückt sind, die Leiste behält ihre Breite.
+## Die Sprachwahl der Statistik (Issue #45): je Sprache eine Flagge zum An- und Abschalten.
+## Meldet nur die gewählten Sprachen. Die letzte gewählte Flagge lässt sich nicht abschalten.
 
 signal changed(languages: Array)
 
@@ -20,9 +12,8 @@ const FLAG_PATH := "res://assets/ui/flags/%s.svg"
 var _buttons := {}
 
 
-## Legt je Sprache aus `languages` (Codes, in Anzeigereihenfolge) eine Flagge an. Eine Sprache
-## ohne Flaggenbild steht mit ihrem Namen da. `hint_body` erklärt an jeder Flagge, was der
-## Filter trifft und was nicht.
+## Legt je Sprachcode aus `languages` eine Flagge an, ohne Bild mit dem Namen. `hint_body`
+## steht im Hinweis jeder Flagge.
 func setup(languages: Array, hint_body: String) -> void:
 	for lang in languages:
 		var code := str(lang)
@@ -43,7 +34,6 @@ func set_languages(languages: Array) -> void:
 		(_buttons[code] as Button).set_pressed_no_signal(code in languages)
 
 
-## Die gedrückten Sprachen, in Anzeigereihenfolge.
 func selected() -> Array:
 	return _buttons.keys().filter(func(code): return (_buttons[code] as Button).button_pressed)
 

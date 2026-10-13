@@ -1,10 +1,6 @@
 class_name MapSelection
 extends RefCounted
-## Wo man auf der Karte steht: welches Buch, welche Unit (ADR 0006).
-##
-## Statisch, damit der Weg zurück aus dem Kampf wieder auf derselben Karte landet — die
-## Screens wechseln über change_scene_to_file und behalten nichts. Nicht gespeichert: ein
-## Neustart beginnt mit „Wer spielt?“.
+## Wo man auf der Karte steht (ADR 0006); statisch über Szenenwechsel, nicht gespeichert.
 
 ## Die Bibliothek ist eine Seite des Start-Screens (ProfileMenu.LIBRARY).
 const BOOKS_SCENE := "res://scenes/ui/profile_menu.tscn"
@@ -13,18 +9,15 @@ const AREA_SCENE := "res://scenes/ui/area_map.tscn"
 
 static var book := ""
 static var unit := 0
-## Kommt die Gebietskarte gerade aus der Buchkarte? Dann setzt sie deren Zoom fort; aus dem
-## Kampf zurück steht sie einfach da.
+## Kommt die Gebietskarte gerade aus der Buchkarte? Dann setzt sie deren Zoom fort.
 static var zoom_in := false
 ## Kommt die Buchkarte gerade aus einer Gebietskarte? Dann kommt sie aus dieser Unit heraus.
 static var zoom_out := false
-## Geht es gerade von der Buchkarte zurück in die Bibliothek? Dann beginnt der Start-Screen
-## dort, im offenen Buch.
+## Geht es von der Buchkarte zurück in die Bibliothek? Dann beginnt der Start-Screen dort.
 static var to_shelf := false
 
 
-## „Profil wechseln" an der Plakette einer Karte: zurück zum Start-Screen, dort auf
-## „Wer spielt?" — wie im Menü, nur ohne die Fahrt dorthin.
+## „Profil wechseln“ an der Plakette einer Karte: zurück zum Start-Screen auf „Wer spielt?“.
 static func to_profile_pick(from: Node) -> void:
 	to_shelf = false
 	zoom_in = false

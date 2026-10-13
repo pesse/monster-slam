@@ -1,13 +1,8 @@
 class_name SkillIcons
 extends RefCounted
 ## Die Bilder des Fähigkeitsbaums: Icon je Skill, Medaillon, Fokusring, Haken, Schloss.
-##
-## Die Zuordnung Skill → Icon steht in `assets/ui/skill_tree/skill_icons.json` und liegt in
-## der EXE, die Skills selbst kommen aus dem game-Pack. Ein Skill, den ein neuerer Pack
-## mitbringt, hat deshalb womöglich kein Bild — dann gibt es `null`, und der Graph zeichnet
-## das Zeichen aus seinem `icon`-Feld (`SkillTree.icon_of`). Ein neues Pack-Feld und ein
-## höheres `min_app_version` braucht es dafür nicht (tests/skill_icons_test.gd prüft, dass
-## jeder ausgelieferte Skill ein Bild hat).
+## Die Zuordnung liegt in der EXE, die Skills im game-Pack: ein Skill aus einem neueren Pack
+## hat womöglich kein Bild, dann zeichnet der Graph sein `icon`-Zeichen (`SkillTree.icon_of`).
 
 const MAP_PATH := "res://assets/ui/skill_tree/skill_icons.json"
 const DIR := "res://assets/ui/skill_tree/"
@@ -16,9 +11,8 @@ const DIR := "res://assets/ui/skill_tree/"
 static var _paths: Dictionary = {}
 static var _loaded := false
 
-## Pfad -> Textur. Festgehalten, weil der Graph in `_draw` lädt: hält sonst niemand die
-## Textur, gibt der Cache sie nach dem Zeichnen frei, das nächste `load()` legt sie neu an —
-## und eine Textur, die im selben Bild erst entsteht, zeichnet der Renderer weiß.
+## Pfad -> Textur. Festgehalten, weil der Graph in `_draw` lädt: eine Textur, die erst im
+## selben Bild neu entsteht, zeichnet der Renderer weiß.
 static var _textures: Dictionary = {}
 
 
@@ -37,7 +31,7 @@ static func of(id: String) -> Texture2D:
 	return _texture(path)
 
 
-## Ob es zu `id` einen Eintrag gibt — für den Test, nicht für die Anzeige.
+## Ob es zu `id` einen Eintrag gibt.
 static func has(id: String) -> bool:
 	of(id)
 	return _paths.has(id)
@@ -63,7 +57,7 @@ static func skill_point() -> Texture2D:
 	return _texture(DIR + "icons/skill_point.webp")
 
 
-## Gold, wie in der Statistik: der Preis fürs Verlernen.
+## Gold (Preis fürs Verlernen).
 static func gold() -> Texture2D:
 	return _texture("res://assets/ui/statistics/icons/gold_coins.webp")
 

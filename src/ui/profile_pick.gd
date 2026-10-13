@@ -1,12 +1,8 @@
 class_name ProfilePick
 extends Control
-## „Wer spielt?": die erste Seite des Start-Screens (profile_menu.tscn, run/main_scene).
-## Eine Kachel je Profil (profile_card.tscn), wer zuletzt gespielt hat, ist vorgewählt;
-## „Weiter" spielt mit der gewählten, darunter legt man ein neues Profil an.
-##
-## Die Seite schaltet selbst nichts um und wechselt keine Szene: sie meldet nur, wer
-## spielt (`picked`). Umschalten und das Schieben zum Hauptmenü macht profile_menu.gd —
-## die Kulisse dahinter läuft durch. Umbenennen bleibt in den Einstellungen.
+## „Wer spielt?": die erste Seite des Start-Screens. Eine Kachel je Profil, das zuletzt
+## gespielte ist vorgewählt; darunter legt man ein neues an. Die Seite schaltet selbst nichts
+## um, sie meldet nur `picked`.
 
 ## Dieses Profil soll spielen (bestehend oder eben angelegt).
 signal picked(id: String)
@@ -27,8 +23,8 @@ func _ready() -> void:
 	refresh()
 
 
-## Baut die Kacheln neu, vorgewählt ist das aktive Profil. profile_menu ruft das, bevor
-## die Seite zurückgeschoben wird — Level und Namen können sich inzwischen geändert haben.
+## Baut die Kacheln neu (Level und Namen können sich geändert haben), vorgewählt ist das
+## aktive Profil.
 func refresh() -> void:
 	for card in _profiles.get_children():
 		_profiles.remove_child(card)

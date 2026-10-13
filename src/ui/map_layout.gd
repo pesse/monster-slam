@@ -1,60 +1,30 @@
 class_name MapLayout
 extends RefCounted
-## Bilder und Punkte der Karten (docs/adr/0006-buchzentrierte-karte.md).
-##
-## Je Buch ein Verzeichnis unter assets/maps/<book>/:
-##
-##     book.webp         die Buchkarte — die Units sind ihre Gebiete
-##     unit<n>.webp      die Gebietskarte einer Unit — dort liegen ihre Level
-##     unit<n>_<mask>.webp  wo sich die Gebietskarte bewegt (`ambience`), je Fläche eine
-##     map.json          wo die Punkte liegen, in Anteilen des Bildes (0..1)
-##
-## Das Seitenverhältnis gibt das Bild vor (MapCanvas), gedacht ist 16:9.
+## Bilder und Punkte der Karten unter assets/maps/<book>/ (ADR 0006): `book.webp`,
+## `unit<n>.webp`, Masken `unit<n>_<mask>.webp` und `map.json` (Punkte in Anteilen 0..1,
+## gesetzt in scenes/dev/map_lab.tscn). Aufbau von `map.json`:
 ##
 ##     { "units": { "2": {"x": 0.41, "y": 0.62}, …, "path": [{x, y}, …] },
-##       "areas": { "2": { "t1": {x, y}, …, "all": {x, y}, "boss": {x, y},
-##                         "path": [{x, y}, …] } },
-##       "themes": { "2": "desert", "3": { "default": "outback", "t3": "homestead" }, … },
-##       "ambience": { "2": [ {"kind": "water", "style": "rings"},
-##                            {"kind": "mist"}, {"kind": "mist", "mask": "mist2", "speed": 2.0},
-##                            {"kind": "smoke", "x": …, "y": …, "size": 1.0,
-##                             "intensity": 1.5}, … ] } }
+##       "areas": { "2": { "t1": {x, y}, …, "all": {x, y}, "boss": {x, y}, "path": […] } },
+##       "themes": { "2": "desert", "3": { "default": "outback", "t3": "homestead" } },
+##       "ambience": { "2": [ {"kind": "water", "style": "rings"}, {"kind": "mist", "mask": "mist2"},
+##                            {"kind": "smoke", "x": …, "y": …, "size": 1.0, "intensity": 1.5} ] } }
 ##
-## `themes` nennt je Unit das BattleTheme des Kampfes, auf Wunsch je Stop ein eigenes
-## (BattleTheme.name_in); die Werkbank lässt es stehen.
-##
-## Die Dateien liegen im Export und nicht im Pack: Bild und Punkte gehören zusammen, und
-## ein Pack trägt nur JSON. Eine Unit, die ein Content-Update bringt, bevor es ihr Bild
-## gibt, bleibt trotzdem spielbar — MapCanvas legt die Punkte dann selbst aus.
-##
-## `ambience` nennt je Gebietskarte, was sich darauf bewegt (MapAmbience): Flächen
-## (`AREA_KINDS`) — wo, steht in ihrer Maske `unit<n>_<mask>.webp`, gemalt in der Werkbank
-## (Graustufen: schwarz still, weiß voll, dazwischen schwächer); `mask` ist ohne Angabe die
-## Art, jede weitere Fläche derselben Art heißt `<kind>2`, `<kind>3` … und hat ihre eigenen
-## Einstellungen —, Quellen
-## (`SPOT_KINDS`) als Punkt mit optionaler Größe. Ein Flächen-Eintrag ohne Maske bewegt
-## nichts. WebP, weil die PNGs unter assets/maps nicht in den Export gehen. Jeder
-## Eintrag kann `intensity` tragen (0..`INTENSITY_MAX`, ohne Angabe 1), eine Art mit mehreren
-## Formen (`STYLES`) dazu `style` — ohne Angabe die erste —, eine Fläche dazu die Werte aus
-## `PARAMS`.
-##
-## Punkte setzt man in der Werkbank scenes/dev/map_lab.tscn, nicht von Hand.
+## Zu `ambience` siehe docs/ARCHITECTURE.md „Karte und Laufanfrage“.
 
 const ROOT := "res://assets/maps"
-## WebP zuerst: die PNGs daneben sind die bearbeitbaren Quellen der Bilder.
+## WebP zuerst: die PNGs daneben sind die Quellen und gehen nicht in den Export.
 const EXTENSIONS := ["webp", "png", "jpg"]
-## Bewegte Flächen der Gebietskarte: Wasser, Wasserfall, Nebel — je ein Polygon.
+## Bewegte Flächen der Gebietskarte, je eine Maske.
 const AREA_KINDS := ["water", "falls", "mist"]
-## Bewegte Quellen: Rauch, Glut, Fackel — je ein Punkt.
+## Bewegte Quellen, je ein Punkt.
 const SPOT_KINDS := ["smoke", "ember", "torch"]
-## Formen je Art, die erste ist die ohne Angabe: Wasser als Wellenfeld oder als Ringe, die
-## sich von einzelnen Stellen ausbreiten (Regen, springende Fische).
+## Formen je Art, die erste ist die ohne Angabe.
 const STYLES := {"water": ["field", "rings"]}
-## So stark kann ein Effekt höchstens sein — das Doppelte des Gewohnten.
+## Höchste Intensität eines Effekts (1 ist normal).
 const INTENSITY_MAX := 2.0
-## Was sich je Flächen-Art außerdem einstellen lässt: der Schlüssel im Eintrag ist das
-## Uniform des Shaders, `default` sein Wert dort. `style` beschränkt einen Regler auf eine
-## Form. Die Werkbank baut ihre Regler aus dieser Liste.
+## Weitere Einstellungen je Flächen-Art: `key` ist das Uniform des Shaders, `default` sein
+## Wert dort, `style` beschränkt den Regler auf eine Form. Die Werkbank baut daraus ihre Regler.
 const PARAMS := {
 	"water": [
 		{"key": "wave_size", "label": "Wellengröße", "min": 0.4, "max": 3.0, "step": 0.05, "default": 1.0},
@@ -78,12 +48,11 @@ const PARAMS := {
 		{"key": "direction", "label": "Richtung (°)", "min": -180.0, "max": 180.0, "step": 5.0, "default": 14.0},
 	],
 }
-## So breit ist eine Maske; die Höhe folgt dem Seitenverhältnis des Bildes.
+## Breite einer Maske (px); die Höhe folgt dem Seitenverhältnis des Bildes.
 const MASK_WIDTH := 1024
 
-## Geladene Bilder, über den Szenenwechsel hinaus gehalten: der Ressourcen-Cache von Godot
-## vergisst ein Bild, sobald niemand es mehr hält — und der Zoom von der Buch- in die
-## Gebietskarte wechselt die Szene.
+## Geladene Bilder, über den Szenenwechsel hinaus gehalten: Godots Ressourcen-Cache vergisst
+## ein Bild, sobald niemand es mehr hält.
 static var _cache := {}
 ## Pfade, die im Hintergrund laden (ResourceLoader.load_threaded_request).
 static var _pending := {}
@@ -97,7 +66,6 @@ static func json_path(book: String) -> String:
 	return "%s/map.json" % dir_of(book)
 
 
-## Der Inhalt von map.json, oder {} ohne Datei.
 static func data(book: String) -> Dictionary:
 	var text := FileAccess.get_file_as_string(json_path(book))
 	if text.is_empty():
@@ -183,9 +151,7 @@ static func area_points(content: Dictionary, unit: int) -> Dictionary:
 	return _points_of(_area(content, unit))
 
 
-## Die höchste Teilnummer, für die die Gebietskarte einen Punkt hat („t6" -> 6), 0 ohne.
-## Ein Buch, dessen Units mehr Stationen haben, als der Inhalt schon füllt (Latein: sechs
-## Lektionen je Unit), zeigt so alle — die leeren gesperrt.
+## Die höchste Teilnummer, für die die Gebietskarte einen Punkt hat („t6“ -> 6), 0 ohne.
 static func area_parts(content: Dictionary, unit: int) -> int:
 	var highest := 0
 	for key in _points_of(_area(content, unit)):
@@ -200,11 +166,9 @@ static func area_path(content: Dictionary, unit: int) -> Array:
 	return _path_of(_area(content, unit))
 
 
-## Was sich auf der Gebietskarte einer Unit bewegt: { kind, intensity, style } für eine
-## Fläche (dazu je Schlüssel aus `PARAMS` sein Wert), { kind, at: Vector2, size, intensity }
-## für eine Quelle. Was nicht passt, fällt
-## weg, von zwei Flächen mit derselben Maske gilt die erste — eine Karte ohne Bewegung ist immer
-## noch eine Karte.
+## Was sich auf der Gebietskarte einer Unit bewegt: { kind, mask, intensity, style } und die
+## Werte aus `PARAMS` für eine Fläche, { kind, at: Vector2, size, intensity } für eine Quelle.
+## Was nicht passt, fällt weg; von zwei Flächen mit derselben Maske gilt die erste.
 static func ambience(content: Dictionary, unit: int) -> Array:
 	var all: Variant = content.get("ambience", {})
 	if not all is Dictionary:
@@ -262,7 +226,6 @@ static func mask_name(unit: int, mask: String) -> String:
 	return "unit%d_%s" % [unit, mask]
 
 
-## Wo die Werkbank die Maske schreibt.
 static func mask_path(book: String, unit: int, mask: String) -> String:
 	return "%s/%s.webp" % [dir_of(book), mask_name(unit, mask)]
 

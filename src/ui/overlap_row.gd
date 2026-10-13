@@ -1,15 +1,10 @@
 @tool
 class_name OverlapRow
 extends Container
-## Legt die Kinder in ihrer Mindestgröße nebeneinander, jedes um `overlap` Pixel in das
-## vorige geschoben und senkrecht mittig. Für Rahmen, die ineinandergreifen (die
-## Festungsanzeige der Gebietskarte): die Überlappung verdeckt die doppelte Kante, wo zwei
-## Rahmen sich treffen. Vorn liegt, was im Baum später kommt; die Plätze von links nennt
-## `order`, wenn sie davon abweichen. Kein `z_index`: der gilt für die ganze Canvas-Ebene
-## und hob das Teil auch über ein Fenster, das die Plakette über den Screen legt.
-##
-## Kein Abstand im Sinne der Abstands-Skala: `overlap` misst die Kante der Grafik, nicht
-## Luft zwischen Inhalten.
+## Legt die Kinder in ihrer Mindestgröße nebeneinander, jedes um `overlap` px in das vorige
+## geschoben und senkrecht mittig, für ineinandergreifende Rahmen. Vorn liegt, was im Baum
+## später kommt; `order` ändert nur die Plätze von links. Kein `z_index`: der hebt das Teil
+## auch über Fenster darüber. `overlap` misst die Grafik und gehört nicht zur Abstands-Skala.
 
 @export var overlap := 24:
 	set(value):

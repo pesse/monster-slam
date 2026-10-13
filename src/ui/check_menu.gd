@@ -1,12 +1,7 @@
 class_name CheckMenu
 extends MenuButton
-## Ein Dropdown mit Häkchen: mehrere Werte zugleich, keiner gewählt heißt „keine
-## Einschränkung" — deshalb gibt es keinen Eintrag „Alle …". Das Menü bleibt beim Anklicken
-## offen, damit sich mehrere Häkchen nacheinander setzen lassen.
-##
-## Die Beschriftung nennt die Wahl („Unit 1 +2"), ohne Wahl den Namen des Filters (`label`).
-## Der Knopf ist schmal und schneidet ab (clip_text in der Szene): die Breite ändert sich mit
-## der Wahl nicht.
+## Dropdown mit Häkchen für mehrere Werte; keine Wahl heißt „keine Einschränkung“. Das Menü
+## bleibt beim Anklicken offen. Die Beschriftung nennt die Wahl („Unit 1 +2“), ohne Wahl `label`.
 
 signal changed()
 

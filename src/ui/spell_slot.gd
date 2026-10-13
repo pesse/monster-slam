@@ -1,13 +1,11 @@
 class_name SpellSlot
 extends PanelContainer
-## Ein Platz im Zaubervorrat (scenes/ui/spell_slot.tscn): Bild des Zaubers (oder sein Zeichen, `SpellIcons`), Anzahl und
-## die Taste, die ihn im Kampf auslöst. Kampf-HUD (SpellSlots) und Laden nutzen dieselbe
-## Vorlage, damit ein Platz überall gleich aussieht. Hinweise hängt hier niemand an —
-## im Kampf gibt es keine (docs/CONVENTIONS.md), der Laden erklärt am Angebot.
+## Ein Platz im Zaubervorrat: Bild oder Zeichen des Zaubers, Anzahl und Kampftaste. Im
+## Kampf-HUD und im Laden dieselbe Vorlage; ohne Hinweise (Kampf-HUD).
 
-## So schwach steht ein leerer Platz.
+## Deckkraft eines leeren Platzes.
 const EMPTY_ALPHA := 0.45
-## So weit und so lange zittert ein Platz, dessen Zauber nichts bewirkt hätte.
+## Ausschlag (px) und Dauer (s) des Zitterns, wenn der Zauber nichts bewirkt hätte.
 const REFUSE_SHIFT := 6.0
 const REFUSE_TIME := 0.3
 
@@ -50,5 +48,5 @@ func _restart() -> void:
 	if _tween != null and _tween.is_valid():
 		_tween.custom_step(1000.0)
 		_tween.kill()
-	# Echte Zeit: in der Zeitlupe soll der Platz nicht mitschleichen.
+	# Echtzeit, unabhängig von der Zeitlupe.
 	_tween = create_tween().set_ignore_time_scale(true)

@@ -1,36 +1,15 @@
 extends Control
-## Der Fähigkeitsbaum-Screen: das Netz aller Bäume, der Punktestand und der Ausbau.
-##
-## Ein FENSTER über dem Start-Screen (profile_menu), kein eigener Screen: das Menü öffnet es
-## als Overlay, der Hintergrund bleibt stehen und nimmt keine Eingaben an. ✕ oder Escape
-## schließt (`closed`), das Menü gibt den Fokus an seinen Knopf zurück. Entwurf:
-## assets/ui/skill_tree/concept/ — dort steht auch, worin die Umsetzung vom Bild abweicht.
-##
-## Unter der Kopfzeile nichts als das gezeichnete Netz (`SkillGraph`, zoombar mit dem
-## Mausrad) — es gibt keine Tafel am Rand mehr, die daneben dasselbe noch einmal erklärt.
-## Unten links die Legende, unten rechts die Werkzeuge (−, Zoom, +, Einpassen, Umlernen).
-##
-## Alles, was zu einem Knoten zu sagen ist, steht am ZEIGER: die Karte aus `Hints` folgt
-## der Maus, ohne Verzögerung, und trägt Name, Wirkung und Zustand. Über dem NAMEN eines
-## Baums zeigt dieselbe Karte den Stand des ganzen Baums — das, was früher am rechten Rand
-## stand. Es ist dieselbe Karte, die im ganzen Spiel erklärt; dieser Screen liefert ihr nur
-## den Inhalt für seine Fläche (`_hint_at`). Und
-## ein Klick fragt nach, statt sofort zu buchen (`ConfirmDialog`): ein ausgegebener
-## Skillpunkt kommt nur gegen Gold zurück, das ist keine Entscheidung für einen
-## unbeabsichtigten Klick.
-##
-## Die REGELN stehen woanders: `SkillTree` in src/progression/ (statisch) rechnet Stufen,
-## Voraussetzungen, Kosten, Plätze und Boni — bis hin zu den Zeilen, die in der Karte
-## stehen (`state_name`, `tree_status`); `SkillBook` hält das Gelernte. Dieser Screen weiß
-## von beiden nur, was er zum Anzeigen braucht, und entscheidet nichts selbst.
+## Der Fähigkeitsbaum-Screen: ein Fenster über dem Hauptmenü (geöffnet von `ProfileBadge`)
+## mit dem Netz aller Bäume (`SkillGraph`), dem Punktestand und dem Ausbau. Die Karte am
+## Zeiger liefert `_hint_at`; ein Klick fragt über `ConfirmDialog` nach. Die Regeln rechnet
+## `SkillTree` (src/progression/), das Gelernte hält `SkillBook`; hier wird nichts entschieden.
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 
-## So lange blendet das Fenster auf (s).
+## Einblenden (s).
 const FADE_IN := 0.15
 
-## Das Fenster will zu. Wer es geöffnet hat, nimmt es weg; hängt niemand daran (der Screen
-## läuft allein, etwa aus dem Editor), geht es zurück ins Startmenü.
+## Das Fenster will zu. Ohne Verbindung geht `close` selbst ins Startmenü.
 signal closed()
 
 @onready var _graph: SkillGraph = %Graph
@@ -43,15 +22,12 @@ signal closed()
 @onready var _respec_button: Button = %RespecButton
 @onready var _confirm: ConfirmDialog = %Confirm
 
-## Das Buch, aus dem gelesen und in das gebucht wird — im Spiel das Autoload `SkillBook`.
-## Ein Test schiebt hier eine eigene Instanz mit erfundenem Baum unter und hängt damit
-## weder am echten Profil des Spielers noch an der Balance der ausgelieferten Bäume
-## (tests/skill_tree_screen_test.gd). Gesetzt wird es VOR dem Einhängen in den Baum.
+## Das Buch, aus dem gelesen und in das gebucht wird; im Spiel das Autoload `SkillBook`,
+## im Test eine eigene Instanz. Vor dem Einhängen in den Baum setzen.
 var book: Node = null
 
-## Worauf die offene Rückfrage hinausläuft: `{"kind": "learn", "id": …}`,
-## `{"kind": "forget", "id": …}` oder `{"kind": "respec"}`. Der Dialog kennt seinen Inhalt nicht — er fragt und meldet, und
-## was dann geschieht, steht hier. Leer heißt: es ist keine Frage offen.
+## Die offene Rückfrage: `{"kind": "learn"|"forget", "id": …}` oder `{"kind": "respec"}`;
+## leer, wenn keine offen ist.
 var _pending: Dictionary = {}
 
 
@@ -68,15 +44,12 @@ func _ready() -> void:
 	_graph.node_selected.connect(_on_node_selected)
 	_confirm.confirmed.connect(_on_confirmed)
 	_confirm.cancelled.connect(func() -> void: _pending = {})
-	# Die Fläche sucht ihre Treffer selbst, also antwortet sie auch selbst: `Hints` fragt
-	# bei jeder Bewegung nach, was an diesem Punkt zu sagen ist.
 	Hints.attach_live(_graph, _hint_at)
 	Hints.attach(_fit_button, "Ansicht einpassen", "Mausrad zoomt, Ziehen verschiebt")
 	Hints.attach(_zoom_in, "Näher heran")
 	Hints.attach(_zoom_out, "Weiter weg")
 	Hints.attach(%CloseButton as Control, "Schließen", "", "Esc")
-	# Beide Stände hängen am Signal, statt nachzufragen: das Gelernte ändert sich hier,
-	# das Gold beim Umlernen — und der Umlern-Knopf trägt beides in seinem Tooltip.
+	# Gold ändert Preis und Sperre des Umlern-Knopfs.
 	book.changed.connect(_rebuild)
 	Wallet.changed.connect(func(_gold: int) -> void:
 			_refresh_respec()
@@ -84,12 +57,9 @@ func _ready() -> void:
 	_rebuild()
 	modulate.a = 0.0
 	create_tween().tween_property(self, "modulate:a", 1.0, FADE_IN)
-	# Pfeile und Enter gehen sofort ans Netz — ohne dass erst jemand hineinklicken muss.
 	_graph.grab_focus.call_deferred()
 
 
-## Schließt das Fenster: meldet es dem, der es geöffnet hat (das Menü nimmt es weg), oder
-## geht allein zurück ins Startmenü.
 func close() -> void:
 	if closed.get_connections().is_empty():
 		get_tree().change_scene_to_file(MENU_SCENE)
@@ -97,34 +67,25 @@ func close() -> void:
 	closed.emit()
 
 
-## Escape schließt — außer eine Rückfrage ist offen: die fängt die Taste selbst
-## (`ConfirmDialog._input`), und hier kommt dann nichts mehr an.
+## Eine offene Rückfrage fängt Escape selbst (`ConfirmDialog._input`).
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
 		close()
 
 
-## Trägt den ganzen Stand neu ein. Ein gelernter Knoten verschiebt die Zustände seines
-## ganzen Astes und den Punktestand jedes anderen Knotens — einzeln nachzuführen hieße,
-## diese Abhängigkeit ein zweites Mal hinzuschreiben.
-##
-## Der AUSSCHNITT bleibt dabei stehen: `SkillGraph.setup()` passt nur ein, solange niemand
-## gezoomt oder geschoben hat. Nach einem Kauf soll das Netz nicht springen.
+## Trägt den ganzen Stand neu ein, weil ein gelernter Knoten die Zustände seines ganzen
+## Astes verschiebt. Der Ausschnitt bleibt (`SkillGraph.setup`).
 func _rebuild() -> void:
 	var entries: Array = book.entries()
 	_graph.setup(entries, book.unlocked, book.available())
 	_empty_hint.visible = SkillTree.trees(entries).is_empty()
-	# Die Karte trägt einen Stand, den es gerade nicht mehr gibt — ein gekaufter Knoten
-	# verschiebt die Zustände seines ganzen Astes. Nachfragen statt verstecken: sie steht
-	# sofort mit dem neuen da und nicht erst beim nächsten Mausschubser.
 	Hints.refresh()
 	_refresh_points(book.available())
 	_refresh_respec()
 
 
 func _refresh_points(points: int) -> void:
-	# Der Stern steht als Bild davor (PointsIcon).
 	if bool(book.get("unlimited_points")):
 		_points_label.text = "∞ Skillpunkte (Debug)"
 	elif points > 0:
@@ -135,17 +96,9 @@ func _refresh_points(points: int) -> void:
 
 # --- Die Auskunft am Zeiger ---------------------------------------------------
 
-## Was über einem Punkt des Netzes zu sagen ist — oder nichts. Die Karte erscheint damit
-## SOFORT und folgt der Maus; wer über ein Netz fährt, um es zu lesen, soll nicht auf jeden
-## Knoten eine halbe Sekunde warten.
-##
-## Über einem KNOTEN steht, was er tut und was ein Klick täte; über dem NAMEN eines Baums
-## steht sein Stand. Beide Zeilen kommen aus `SkillTree` — dieselbe Regel, ein Ort. Das
-## Zeichen gehört zum Namen und nicht zur Karte: die kennt Zeichenketten, keine Knoten.
-##
-## Geschwiegen wird an zwei Stellen. Beim ZIEHEN wandert das ganze Netz unter dem Zeiger
-## durch, eine mitlaufende Karte wäre nur Flackern. Und über einer offenen RÜCKFRAGE stünde
-## sie über dem abgedunkelten Bild.
+## Was die Karte über einem Punkt des Netzes zeigt, oder nichts: über einem Knoten seine
+## Wirkung und was ein Klick täte, über dem Namen eines Baums dessen Stand. Leer beim
+## Ziehen und bei offener Rückfrage.
 func _hint_at(local: Vector2) -> Dictionary:
 	if _graph.is_panning() or _confirm.visible:
 		return {}
@@ -161,9 +114,8 @@ func _hint_at(local: Vector2) -> Dictionary:
 			"note": SkillTree.tree_status(entries, book.unlocked, id),
 		}
 	var points: int = book.available()
-	# Was ein Klick kostet, steht als Zeichen im Kopf: ungelernt die Skillpunkte, gelernt
-	# das Gold fürs Verlernen. Einen Satz gibt es nur noch, wenn das Gold nicht reicht —
-	# Zustand und Vorstufe sagen Unterzeile und Liste schon.
+	# Der Preis eines Klicks steht im Kopf: ungelernt Skillpunkte, gelernt das Gold fürs
+	# Verlernen.
 	var prices: Array = [[SkillIcons.skill_point(), str(SkillTree.cost(node))]]
 	var note := ""
 	if book.is_unlocked(id):
@@ -174,7 +126,6 @@ func _hint_at(local: Vector2) -> Dictionary:
 	var state := SkillTree.state_of(node, book.unlocked, points)
 	var picture := SkillIcons.of(id)
 	return {
-		# Ohne Bild trägt der Name das Zeichen aus den Daten, wie im Netz selbst.
 		"title": str(node.get("name", "")) if picture != null \
 				else "%s %s" % [SkillTree.icon_of(node), str(node.get("name", ""))],
 		"icon": picture,
@@ -187,8 +138,7 @@ func _hint_at(local: Vector2) -> Dictionary:
 	}
 
 
-## Die Voraussetzungen als Zeilen der Karte, jede mit ihrem Zeichen: Haken für eine
-## erfüllte Vorstufe, Schloss für eine fehlende. Der Preis steht im Kopf (`prices`).
+## Die Voraussetzungen als Zeilen der Karte: Haken für erfüllt, Schloss für fehlend.
 func _facts(entries: Array, node: Dictionary) -> Array:
 	var rows: Array = []
 	for required in node.get("requires", []):
@@ -199,8 +149,7 @@ func _facts(entries: Array, node: Dictionary) -> Array:
 	return rows
 
 
-## Der Nachsatz an einem gelernten Knoten: nur, wenn das Gold fürs Verlernen nicht
-## reicht — sonst sagt der Preis im Kopf alles.
+## Nachsatz an einem gelernten Knoten, nur wenn das Gold fürs Verlernen nicht reicht.
 func _forget_note(id: String) -> String:
 	var cost: int = book.forget_cost(id)
 	if Wallet.can_afford(cost):
@@ -210,11 +159,8 @@ func _forget_note(id: String) -> String:
 
 # --- Klick und Rückfrage ------------------------------------------------------
 
-## Ein Klick ins Netz. Gefragt wird nur, wo es etwas zu entscheiden gibt: der Name eines
-## Baums ist nichts zum Lernen, und ein gesperrter oder unbezahlbarer Knoten führt zu
-## keinem Dialog — warum, steht schon in der Karte, und ein Dialog, der nur „geht nicht“
-## sagt, ist ein Klick zum Wegklicken. Ein GELERNTER Knoten fragt, ob er verlernt werden
-## soll — sofern das Gold dafür reicht; sonst gilt dasselbe wie beim unbezahlbaren.
+## Ein Klick ins Netz. Gefragt wird nur bei einem lernbaren Knoten und bei einem gelernten,
+## dessen Verlernen bezahlbar ist; sonst sagt die Karte schon, warum nicht.
 func _on_node_selected(id: String) -> void:
 	if id.is_empty():
 		return
@@ -248,8 +194,7 @@ func _on_node_selected(id: String) -> void:
 			"Lernen · %d P." % cost)
 
 
-## Die Rückfrage vor dem Verlernen nennt JEDEN Knoten, der mitfällt, beim Namen: dass die
-## Äste darüber mitgehen, ist die eine Stelle, an der das Verlernen überraschen könnte.
+## Die Rückfrage vor dem Verlernen nennt jeden Knoten, der mitfällt, beim Namen.
 func _ask_forget(node: Dictionary) -> void:
 	var id := str(node.get("id", ""))
 	var cost: int = book.forget_cost(id)
@@ -287,9 +232,7 @@ func _on_respec_pressed() -> void:
 	var cost: int = book.respec_cost()
 	if cost <= 0 or not Wallet.can_afford(cost):
 		return
-	# Die zurückkommenden Punkte stehen nicht in `respec_cost`, sondern stecken darin: der
-	# Preis ist Gold JE Punkt. Gerechnet statt daneben gezählt — sonst gäbe es hier eine
-	# zweite Wahrheit über die Zahl der ausgegebenen Punkte.
+	# `respec_cost` ist Gold je ausgegebenem Punkt; die Punkte werden daraus zurückgerechnet.
 	var spent := int(round(float(cost) / float(SkillTree.RESPEC_GOLD_PER_POINT)))
 	_pending = {"kind": "respec"}
 	Hints.refresh()
@@ -300,9 +243,7 @@ func _on_respec_pressed() -> void:
 			"Umlernen")
 
 
-## Der Kauf kann scheitern (Punkte inzwischen weg) — dann meldet SkillBook nichts und es
-## bleibt alles stehen. Geprüft wird dort, nicht hier: eine zweite Prüfung an der
-## Oberfläche könnte von der ersten abweichen.
+## Ein gescheiterter Kauf (Punkte inzwischen weg) ändert nichts; geprüft wird in SkillBook.
 func _on_confirmed() -> void:
 	match str(_pending.get("kind", "")):
 		"learn":
@@ -314,11 +255,8 @@ func _on_confirmed() -> void:
 	_pending = {}
 
 
-## Der Umlern-Knopf ist ein Zeichen, also trägt seine KARTE, was sonst auf ihm stünde: den
-## Preis, oder den Grund, aus dem es gerade nicht geht. Gesperrt wird er trotzdem — ein
-## Knopf, der sich drücken lässt und nichts tut, ist schlechter als einer, der grau ist und
-## sagt warum. Dass ein gesperrter Knopf überhaupt sprechen darf, hängt daran, dass
-## `disabled` die Trefferprüfung nicht anfasst (tests/hints_test.gd).
+## Der Umlern-Knopf ist ein Zeichen; seine Karte nennt Preis oder Sperrgrund. Ein gesperrter
+## Knopf zeigt seine Karte trotzdem (tests/hints_test.gd).
 func _refresh_respec() -> void:
 	var cost: int = book.respec_cost()
 	if cost <= 0:

@@ -1,12 +1,8 @@
 class_name PauseOverlay
 extends Control
-## Die Pause des Wellenkampfs: Strg+P überall, ein nacktes P bei geschlossener Eingabe
-## (in der offenen gehört jedes „p" ins Wort). Dazu der Knopf unter „Schnell auflösen".
-##
-## Läuft mit process_mode ALWAYS: in der Pause steht der Baum, und die Taste, die sie
-## beendet, muss trotzdem ankommen. Ob gerade pausiert werden DARF, weiß der WaveRunner —
-## hier wird nur die Taste erkannt und das Bild gezeigt. Das Bild ist abgedunkelt, damit
-## die Pause keine Bedenkzeit für die Wörter auf dem Feld ist.
+## Die Pause des Wellenkampfs: erkennt Strg+P bzw. P und zeigt das abgedunkelte Bild (keine
+## Bedenkzeit). Ob pausiert werden darf, entscheidet der Aufrufer. Läuft mit process_mode
+## ALWAYS, damit die Taste auch im angehaltenen Baum ankommt.
 
 ## Strg+P oder (wo erlaubt) P. `bare`: ohne Strg gedrückt.
 signal toggle_requested(bare: bool)

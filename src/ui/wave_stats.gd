@@ -1,90 +1,29 @@
 extends PanelContainer
-## Wellenabschluss in zwei Stufen: Ergebnis (Statistik + Schatzkiste) → nächste Welle.
-##
-## Die Auflösung der Vokabeln (LeakReveal) gehört zum Ergebnis, liegt aber in einem
-## eigenen Overlay und läuft VOR diesem Screen ab (siehe WaveRunner._finish_wave).
-##
-## Warum die Schwierigkeitswahl eine eigene Stufe hat: sie will eine Entscheidung, das
-## Ergebnis will gelesen werden. Zusammen auf einer Seite hieß es, die Zahlen zu
-## überfliegen und auf „Nächste Welle" zu klicken. Statistik und Kiste dagegen gehören
-## zusammen — beides ist das Ergebnis derselben Welle, links die Zahlen, rechts der Lohn.
-##
-## Die Kiste fällt aus, wenn die Welle nichts eingebracht hat (kein besiegtes Monster,
-## also kein Gold): eine leere Kiste ist keine Belohnung. An ihrem Platz steht dann ein
-## Trostwort mit einem Goldstück (ChestReward.CONSOLATION_GOLD), das ohne Zutun verbucht
-## wird — es gibt nichts zu öffnen. Nach einer Niederlage gibt es die Kiste trotzdem — verdient ist verdient, der Lauf endet danach in Stufe 2 ohne Wahl.
-##
-## **Die Größe des Screens steht fest**, solange er sichtbar ist: die Seiten liegen in
-## einem PageStack (Mindestgröße = größte Seite, auch unsichtbar), und innerhalb der
-## Ergebnisseite wird nichts ein- oder ausgeblendet, sondern nur gesperrt und beschriftet.
-## Der Screen hängt in der Bildmitte — jede Größenänderung verschiebt auch die Knöpfe.
-##
-## **Jedes umbrechende Label braucht hier eine Mindestbreite** (`custom_minimum_size.x`).
-## Ein Label mit `autowrap_mode` meldet als Mindestbreite 1 Pixel und dazu die Höhe, die
-## der Text bei EINEM Pixel Breite braucht; korrigiert wird das erst, wenn es einmal eine
-## echte Breite zugeteilt bekommen hat — und die bekommt es auf einer unsichtbaren Seite
-## nie. Der PageStack rechnet unsichtbare Seiten aber mit, und der Screen wird nicht
-## gescrollt: das Niederlage-Label ohne Mindestbreite machte den Abschluss 1878 statt 542
-## Pixel hoch, und weil er in der Bildmitte hängt, lagen Kiste und Menü-Knopf außerhalb
-## des Bildes — die Niederlage war eine Sackgasse
-## (`test_the_defeat_screen_fits_into_the_base_resolution`).
-##
-## **Stufe 2 trägt die Sitzungsbilanz** (Issue #12, `_show_balance`): was der Lauf bis
-## hier gebracht hat — Wellen, Antworten, neu gemeisterte und zurückeroberte Aufgaben mit
-## Wortlaut. Nach einer Niederlage ist das der Abschluss des Laufs; nach einem Sieg steht
-## sie über der Schwierigkeitswahl, damit sie auch beim Rückweg ins Menü zu sehen war.
-## Kein dritter Screen: die Seite war nach einer Niederlage fast leer, und ein
-## Zwischenschritt vor dem Menü hätte den Ausgang verzögert. Die Wortliste ist gedeckelt
-## (`BALANCE_WORDS` plus „und N weitere"), und jede Zeile ist einzeilig mit fester Breite
-## und Auslassung (Vorlage `BalanceLineTemplate`) — sonst wüchse die unsichtbare Seite mit
-## einem langen Wort und schöbe über den PageStack auch Stufe 1 aus dem Bild.
-##
-## **Enter geht weiter**, wo auch ein Knopf weitergeht: auf Stufe 1 „Weiter" (erst, wenn
-## die Kiste offen ist — gesperrt ist gesperrt), auf Stufe 2 die nächste Welle, nach einer
-## Niederlage der Weg zurück. Gespielt wird mit der Tastatur; der Griff zur Maus zwischen
-## zwei Wellen war der einzige im Lauf. Nach jedem Stufenwechsel zählt Enter erst nach
-## `enter_grace_ms`: das Enter der letzten Antwort oder der Auflösung soll nicht durch das
-## Ergebnis klicken, und ein doppeltes Enter nicht über die Schwierigkeitswahl hinweg
-## starten. Enter hält auch die Kiste auf (`ui_accept`); das gehaltene Enter schickt nur
-## Wiederholungen und geht deshalb nicht weiter — erst ein neuer Druck. Die Leertaste geht
-## nicht weiter: sie ist an der Kiste die Haltetaste und sonst nichts.
-##
-## **Zurück geht es Schritt für Schritt** (Issue #52): „◂ Zurück" in der Mitte der Fußzeile
-## (oder die Rücktaste) führt von der Wahl zum Ergebnis und vom Ergebnis zu den Antworten
-## der Welle (LeakReveal) — die sind das, woran gelernt wird. Den Weg zu den Antworten
-## geht der WaveRunner (`review_requested`): er blendet diesen Screen aus, zeigt das
-## Reveal noch einmal und holt ihn mit `resume()` zurück. Der Rückweg lässt alles stehen:
-## die Kiste bleibt, wie sie war, die gewählte Schwierigkeit gewählt. Ohne gespielte
-## Aufgaben (`review` fehlt) ist der Knopf auf dem Ergebnis gesperrt statt ausgeblendet.
-##
-## Das Layout liegt in wave_stats.tscn; hier nur die Befüllung (show_stats), der
-## Stufenwechsel und die Auswahl-Logik. Interaktive Controls haben focus_mode=FOCUS_NONE
-## (in der Szene gesetzt), sonst reißt die Antwort-LineEdit (die sich per _process den
-## Fokus zurückholt) den Klick weg.
+## Wellenabschluss in zwei Stufen: Ergebnis (Statistik + Schatzkiste) → nächste Welle mit
+## Sitzungsbilanz. Regeln zu Kiste, Trostgold, Bilanz und fester Größe: `docs/ARCHITECTURE.md`.
+## Jedes umbrechende Label braucht hier `custom_minimum_size.x` (CONVENTIONS „Fallen“).
+## Enter und Rücktaste drücken auf den Knopf rechts bzw. „◂ Zurück“, erst nach
+## `enter_grace_ms`; die Knöpfe haben `FOCUS_NONE`, sonst holt das Antwortfeld den Klick.
 
-## Der Spieler hat die nächste Welle gestartet; übergeben wird die Änderung der
-## Schwierigkeit RELATIV zur aktuellen (-2..+2), nicht ein absoluter Wert.
+## Der Spieler hat die nächste Welle gestartet; `difficulty_delta` ist relativ zur
+## aktuellen Schwierigkeit (-2..+2).
 signal next_wave_requested(difficulty_delta: int)
 
-## Der Spieler will zurück zum Profil-/Statistik-Menü (verlässt die laufende Partie).
+## Der Spieler will zurück ins Menü, auf die Karte oder zur Liste (verlässt die Partie).
 signal back_to_menu_requested
 
-## Der Spieler will die Antworten der Welle noch einmal sehen (siehe Kopf).
+## Der Spieler will die Antworten der Welle noch einmal sehen; zurück geht es mit `resume()`.
 signal review_requested
 
-## Die Schatzkiste ist offen: `gold` ist verdient und will verbucht werden. Der Screen
-## bucht nicht selbst, der Empfänger (WaveRunner -> Wallet) tut es. Den Gesamtstand
-## zeigt er bewusst nicht: „Insgesamt 3 Gold" nach einer mageren Welle frustriert nur.
+## Die Schatzkiste ist offen; `gold` verbucht der Empfänger, nicht der Screen.
 signal reward_collected(gold: int)
-## Das Trostgold einer Welle ohne Kiste (siehe CONSOLATION_TITLE). Ein eigenes Signal,
-## weil es keine geöffnete Kiste ist — Wallet zählt die Kisten mit.
+## Das Trostgold einer Welle ohne Kiste; keine geöffnete Kiste.
 signal consolation_collected(gold: int)
 
 const LINE_SCENE := preload("res://scenes/ui/record_row.tscn")
 ## Deltas der Schwierigkeitswahl, in Reihenfolge der Buttons in ChoiceRow (wave_stats.tscn).
 const CHOICE_DELTAS := [-2, -1, 0, 1, 2]
 ## So viele Aufgaben nennt die Sitzungsbilanz beim Namen; der Rest steht als Zahl da.
-## Gedeckelt, weil der Screen nicht scrollt (siehe Kopf).
 const BALANCE_WORDS := 4
 ## Der Rückweg eines Laufs von der Karte, der gerastet wird.
 const REST_TEXT := "⟵ Rasten"
@@ -92,11 +31,10 @@ const REST_TEXT := "⟵ Rasten"
 const DEFAULT_CHOICE := 2
 ## Aufforderung an der Kiste, solange sie zu ist.
 const CHEST_HINT := "2 Sekunden auf die Kiste drücken\n(oder Leertaste halten)"
-## Steht statt des Kistennamens, wenn kein Monster besiegt wurde. Zweizeilig, weil der
-## Titel nicht umbricht und die Spalte sonst den Screen verbreitern würde.
+## Steht statt des Kistennamens, wenn kein Monster besiegt wurde; der Titel bricht nicht um.
 const CONSOLATION_TITLE := "Kein Monster besiegt –\naller Anfang ist schwer"
-## So lange nach einem Stufenwechsel zählt Enter noch nicht (siehe Kopf). Eine Variable,
-## damit Tests ohne Warten auskommen.
+## So lange (ms) nach einem Stufenwechsel zählt Enter noch nicht, damit das Enter der
+## letzten Antwort nicht durchklickt. Variable für Tests.
 var enter_grace_ms := 400
 
 enum Stage {
@@ -153,11 +91,9 @@ func _ready() -> void:
 
 ## Befüllt den Screen mit den Statistiken einer Welle und zeigt ihn an (Stufe 1).
 ## Erwartete Felder in `data`: won, wave_number, difficulty, correct, leaked, total,
-## accuracy, fortress_health, mastered, fortress_tier,
-## xp_gained, levels_gained, optional review (gibt es Antworten zum Zurückblättern?),
-## optional chest = { tier, gold, name } (siehe
-## ChestReward.for_wave) und optional session = Sitzungsbilanz (siehe RunBalance.build;
-## leer oder fehlend = keine Bilanz).
+## accuracy, fortress_health, mastered, fortress_tier, xp_gained, levels_gained; optional
+## review (gibt es Antworten zum Zurückblättern?), chest (`ChestReward.for_wave`) und
+## session (`RunBalance.build`, leer = keine Bilanz).
 func show_stats(data: Dictionary) -> void:
 	_won = bool(data.get("won", true))
 	_can_review = bool(data.get("review", false))
@@ -169,9 +105,7 @@ func show_stats(data: Dictionary) -> void:
 	_add_line("Richtig besiegt", "%d von %d" % [int(data.get("correct", 0)), int(data.get("total", 0))])
 	_add_line("Durchgelassen", str(int(data.get("leaked", 0))))
 	_add_line("Genauigkeit", "%d %%" % int(round(float(data.get("accuracy", 0.0)))))
-	# Keine Punkte (ein interner Wert, aus dem die Kiste rechnet) — dafür, was in dieser
-	# Sitzung gemeistert wurde, und nur wenn es etwas gibt. Die Zahl kommt aus der
-	# Sitzungsbilanz, damit Stufe 1 und Stufe 2 nicht zweierlei zählen.
+	# Aus der Sitzungsbilanz, damit Stufe 1 und 2 dasselbe zählen.
 	var session_mastered := int((data.get("session", {}) as Dictionary).get("mastered", 0))
 	if session_mastered > 0:
 		_add_line("In dieser Sitzung gemeistert", str(session_mastered), "🏅")
@@ -179,26 +113,19 @@ func show_stats(data: Dictionary) -> void:
 	_add_line("Gemeisterte Aufgaben", str(int(data.get("mastered", 0))), "",
 			"Festungsstufe %d" % int(data.get("fortress_tier", 0)))
 	_add_line("Schwierigkeit", "%d / 5" % int(data.get("difficulty", 3)))
-	# Erfahrung: der Zuwachs kommt aus der Welle, der Stand aus dem Profil (PlayerLevel)
-	# — dieselbe Aufteilung wie beim Gold. Verbucht ist er längst (WaveRunner._defeat);
-	# hier wird nur gelesen.
+	# Der Zuwachs kommt aus der Welle, der Stand aus `PlayerLevel`; verbucht ist er schon.
 	var progress := PlayerLevel.progress()
 	_add_line("Erfahrung", "+%d XP" % int(data.get("xp_gained", 0)), "",
 			"Level %d, %d / %d XP bis Level %d" % [int(progress["level"]),
 			int(progress["xp_in_level"]), int(progress["xp_for_level_up"]),
 			int(progress["level"]) + 1])
-	# Der Aufstieg bekommt eine eigene Zeile, aber nur wenn es einen gab: eine
-	# Sichtbarkeits-Entscheidung ist hier erlaubt, solange sie VOR dem Anzeigen fällt
-	# (danach steht die Größe des Screens fest — siehe Kopf). Genannt wird der OFFENE Stand
-	# der Skillpunkte wie an der Plakette, nicht der verdiente.
+	# Inhaltsentscheidungen (Aufstieg, Kiste, Bilanz) fallen hier vor dem Anzeigen, danach
+	# steht die Größe fest. Genannt werden die offenen Skillpunkte, nicht die verdienten.
 	var levels := int(data.get("levels_gained", 0))
 	if levels > 0:
 		_add_line("Level %d erreicht" % int(progress["level"]), "", "⭐",
 				ProfileBadge.points_text(SkillBook.available(), SkillBook.unlimited_points))
 
-	# Kiste: die zweite Entscheidung über den Inhalt der Ergebnisseite (nach der
-	# Aufstiegs-Zeile), und wie jene fällt sie HIER — vor dem Anzeigen. Ab dann bleibt
-	# die Seite in ihrer Größe stehen.
 	var chest: Dictionary = data.get("chest", {})
 	_chest_gold = int(chest.get("gold", 0))
 	var consolation := int(chest.get("consolation", 0)) if _chest_gold <= 0 else 0
@@ -216,19 +143,14 @@ func show_stats(data: Dictionary) -> void:
 	if consolation > 0:
 		consolation_collected.emit(consolation)
 
-	# Gefallene Festung = Ende des Laufs. Es gibt keine nächste Welle, also auch keine
-	# Schwierigkeitswahl und keinen Startknopf — nur den Weg ins Menü. Damit muss der
-	# Wellenstart die HP auch nie „retten": ein neuer Lauf beginnt über GameState.reset().
+	# Gefallene Festung = Ende des Laufs: keine Schwierigkeitswahl, nur der Weg zurück.
 	_diff_label.visible = _won
 	_choice_row.visible = _won
 	_defeat_label.visible = not _won
 	_label_menu_button()
-	# Die Bilanz ist die dritte Inhalts-Entscheidung, und auch sie fällt hier: sie liegt
-	# auf der noch unsichtbaren Stufe 2, zählt über den PageStack aber schon jetzt zur
-	# Größe des Screens.
 	_show_balance(data.get("session", {}))
 
-	# Auswahl startet jedesmal bei "Gleich" – die Wahl ist relativ zur eben gespielten Welle.
+	# Die Wahl ist relativ zur eben gespielten Welle und startet bei „Gleich“.
 	_selected_choice = DEFAULT_CHOICE
 	_update_choice_highlight()
 	_goto_stage(Stage.RESULT)
@@ -236,8 +158,7 @@ func show_stats(data: Dictionary) -> void:
 
 
 ## Der Weg zurück auf Stufe 2. Ein Lauf von der Karte, dessen Festung steht, rastet dabei
-## (ADR 0020, WaveRunner.can_rest) — das sagt der Knopf, statt nur „zurück" zu sagen. Die
-## Hinweiskarte ist erlaubt: am Wellenende ist die Maus frei.
+## (ADR 0020, `WaveRunner.can_rest`).
 func _label_menu_button() -> void:
 	if RunRequest.is_level() and _won:
 		_menu_button.text = REST_TEXT
@@ -253,16 +174,13 @@ func hide_stats() -> void:
 	visible = false
 
 
-## Zurück von den Antworten: derselbe Screen in derselben Stufe, nichts neu befüllt.
-## Enter zählt erst nach der Schonfrist — das Enter auf „Weiter" im Reveal soll nicht
-## gleich hier durchklicken.
+## Zurück von den Antworten: derselbe Screen in derselben Stufe, nichts neu befüllt;
+## die Enter-Schonfrist beginnt neu.
 func resume() -> void:
 	_stage_since_ms = Time.get_ticks_msec()
 	visible = true
 
 
-## Aktuelle Stufe — für Tests und für den WaveRunner, der wissen will, ob der Screen
-## noch etwas vom Spieler will.
 func stage() -> Stage:
 	return _stage
 
@@ -274,15 +192,12 @@ func _goto_stage(next: Stage) -> void:
 	_stage_since_ms = Time.get_ticks_msec()
 	_result_page.visible = next == Stage.RESULT
 	_next_page.visible = next == Stage.NEXT
-	# Beide Stufen teilen die Fußzeile: links der Weg zurück, rechts der Weg weiter. Alle
-	# Knöpfe der Zeile sind gleich hoch — fehlt der Startknopf, wächst der Screen nicht.
+	# Beide Stufen teilen die Fußzeile: links zurück, rechts weiter.
 	_result_continue.visible = next == Stage.RESULT
 	_start_button.visible = next == Stage.NEXT and _won
 	_stage_back.disabled = next == Stage.RESULT and not _can_review
 	_title.text = _title_for(next)
-	# Ergebnis-Titel einfärben (passt zu den grün/rot-Feedbackfarben des Spiels); die
-	# Folgestufe nimmt die Theme-Farbe zurück — sie ist kein Urteil über die Welle, und
-	# ein hart gesetztes Weiß wäre eine zweite Textfarbe neben dem Theme.
+	# Nur der Ergebnis-Titel ist grün/rot eingefärbt; die Folgestufe nimmt die Theme-Farbe.
 	if next == Stage.RESULT:
 		_title.add_theme_color_override("font_color",
 				Color(0.3, 1.0, 0.45) if _won else Color(1.0, 0.35, 0.35))
@@ -290,8 +205,7 @@ func _goto_stage(next: Stage) -> void:
 		_title.remove_theme_color_override("font_color")
 
 
-## `_input` und nicht `_unhandled_input`: die Knöpfe haben keinen Fokus (siehe Kopf), und
-## was sonst gerade Enter bekäme, soll es hier nicht bekommen.
+## `_input`, damit Enter nicht zuerst ein anderer Knoten bekommt.
 func _input(event: InputEvent) -> void:
 	if not is_visible_in_tree():
 		return
@@ -308,8 +222,7 @@ func _input(event: InputEvent) -> void:
 	button.pressed.emit()
 
 
-## Der Knopf, auf den Enter drückt: rechts in der Fußzeile, nach einer Niederlage der
-## einzige Weg, den Stufe 2 noch hat.
+## Der Knopf, auf den Enter drückt; nach einer Niederlage der Weg zurück.
 func _forward_button() -> Button:
 	if _stage == Stage.RESULT:
 		return _result_continue
@@ -330,8 +243,7 @@ func _title_for(stage_value: Stage) -> String:
 			else "Festung gefallen (Welle %d)" % _wave_number
 
 
-## Eine Zeile wie in den Rekorden der Statistik: Bezeichnung links, Wert rechts, dazwischen
-## die feine Linie. `hint` steht als Karte am Zeiger — die Maus ist am Wellenende frei.
+## Eine Zeile wie in den Rekorden der Statistik; `hint` steht als Karte am Zeiger.
 func _add_line(name_text: String, value_text: String, mark := "", hint := "") -> void:
 	if _lines.get_child_count() > 0:
 		var rule := HSeparator.new()
@@ -342,7 +254,7 @@ func _add_line(name_text: String, value_text: String, mark := "", hint := "") ->
 	row.setup(name_text, value_text, mark, hint)
 
 
-## Die Zeilen der Ergebnisseite als „Bezeichnung: Wert" — für Tests und die Werkbank.
+## Die Zeilen der Ergebnisseite als „Bezeichnung: Wert“.
 func line_texts() -> Array[String]:
 	var texts: Array[String] = []
 	for row in _lines.get_children():
@@ -362,8 +274,7 @@ func _show_balance(balance: Dictionary) -> void:
 	if balance.is_empty():
 		return
 	var cleared := int(balance.get("waves_cleared", 0))
-	# Die erreichte Welle nur, wenn sie über die geräumten hinausgeht — nach einer
-	# Niederlage; nach einem Sieg wäre „3 geräumt (Welle 3)" dieselbe Zahl zweimal.
+	# Die erreichte Welle nur, wenn sie über die geräumten hinausgeht (nach einer Niederlage).
 	var reached := int(balance.get("wave_reached", cleared))
 	_add_balance_line("Wellen geräumt: %d%s" % [cleared,
 			"  (Welle %d erreicht)" % reached if reached > cleared else ""])
@@ -377,8 +288,7 @@ func _show_balance(balance: Dictionary) -> void:
 	_add_balance_line("Neu gemeistert: %d%s" % [mastered,
 			"  (davon %d zurückerobert)" % comeback if comeback > 0 else ""])
 	var words: Array = balance.get("words", [])
-	# Genau BALANCE_WORDS Zeilen für Wörter, nie eine mehr: bei einem Überhang nimmt
-	# „und N weitere" die letzte Zeile, statt eine fünfte anzuhängen.
+	# Höchstens BALANCE_WORDS Zeilen; bei Überhang nimmt „und N weitere“ die letzte.
 	var shown := words.size() if words.size() <= BALANCE_WORDS else BALANCE_WORDS - 1
 	for i in shown:
 		var word: Dictionary = words[i]
@@ -393,8 +303,7 @@ func _show_balance(balance: Dictionary) -> void:
 ## Jede Zeile aus der Vorlage in der Szene: feste Breite, einzeilig, mit Auslassung.
 func _add_balance_line(text: String) -> void:
 	var label := _balance_template.duplicate() as Label
-	# Der eindeutige Name gehört der Vorlage; eine Kopie mit demselben Namen wäre ein
-	# zweiter %BalanceLineTemplate.
+	# Der eindeutige Name gehört der Vorlage.
 	label.unique_name_in_owner = false
 	label.text = text
 	label.visible = true
@@ -403,17 +312,13 @@ func _add_balance_line(text: String) -> void:
 
 # --- Belohnung ----------------------------------------------------------------
 
-## Der Betrag steht groß, der Hinweis davor klein: in der großen Schrift bräche er dreizeilig
-## um, und die Karte spränge beim Öffnen in der Höhe.
+## Der Betrag steht groß, der Hinweis davor klein (in großer Schrift bräche er dreizeilig um).
 func _show_reward_gold(gold: int) -> void:
 	_reward_line.text = "+%s" % Wallet.label(gold)
 	_reward_line.theme_type_variation = &"StatGold"
 
 
-## Solange eine ungeöffnete Kiste dasteht, führt kein Weg an ihr vorbei: Weiter und Menü
-## sind GESPERRT, nicht ausgeblendet. Das Gold soll niemand aus Versehen liegen lassen
-## (zwei Sekunden Drücken sind kein Hindernis, ein weggeklickter Fund ist einer) — und
-## ein verschwindender Knopf würde den Screen in der Größe springen lassen.
+## Solange die Kiste zu ist, sind Weiter und Menü gesperrt (`docs/ARCHITECTURE.md`).
 func _update_reward_gate() -> void:
 	var locked := _chest_gold > 0 and not _chest.is_open()
 	_result_continue.disabled = locked
@@ -423,7 +328,6 @@ func _update_reward_gate() -> void:
 func _on_chest_opened(gold: int) -> void:
 	_show_reward_gold(gold)
 	_update_reward_gate()
-	# Verbucht wird im WaveRunner, nicht hier: der Screen meldet nur.
 	reward_collected.emit(gold)
 
 
@@ -434,7 +338,6 @@ func _on_choice_pressed(index: int) -> void:
 	_update_choice_highlight()
 
 
-## Markiert die gewählte Option: die Knöpfe sind eine Gruppe, die gewählte steht gedrückt.
 func _update_choice_highlight() -> void:
 	for i in _choice_buttons.size():
 		(_choice_buttons[i] as Button).set_pressed_no_signal(i == _selected_choice)

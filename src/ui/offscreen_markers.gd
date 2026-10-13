@@ -1,10 +1,7 @@
 class_name OffscreenMarkers
 extends Control
-## Pfeile am Bildrand für Monster, die in der Ich-Sicht gerade nicht im Bild sind. Ohne sie
-## weiß der Spieler nicht, wohin er sich drehen muss — und treffen kann er nur, was er sieht
-## (FirstPersonView.sees). Farbe je Wortart wie die Outline am Monster (WordTypePalette).
-##
-## Nur Anzeige: liest die Kamera und die Liste der aktiven Monster, schreibt nichts.
+## Pfeile am Bildrand für Monster, die in der Ich-Sicht nicht im Bild sind
+## (FirstPersonView.sees), in der Farbe ihrer Wortart. Nur Anzeige.
 
 const ARROW := 20.0
 
@@ -12,8 +9,7 @@ var _camera: Camera3D = null
 var _monsters := Callable()
 
 
-## `monsters` liefert die aktiven Monster (Array[Monster]) — eine Callable statt einer
-## Kopie, weil die Liste sich mit jedem Spawn und Treffer ändert.
+## `monsters` liefert die jeweils aktiven Monster (Array[Monster]).
 func track(camera: Camera3D, monsters: Callable) -> void:
 	_camera = camera
 	_monsters = monsters
@@ -33,7 +29,7 @@ func _draw() -> void:
 		if not is_instance_valid(entry):
 			continue
 		var monster := entry as Monster
-		var point := monster.global_position + Vector3(0.0, 1.5, 0.0)
+		var point := monster.global_position + Vector3(0.0, 1.5, 0.0)  # Brusthöhe (m)
 		if FirstPersonView.sees(_camera, point):
 			continue
 		var dir := edge_direction(_camera, point)
@@ -45,7 +41,7 @@ func _draw() -> void:
 
 
 ## Richtung vom Bildmittelpunkt zum Punkt, in Bildkoordinaten (y nach unten). Ein Punkt
-## HINTER der Kamera zeigt zur Seite, auf der er liegt, statt gespiegelt nach vorn.
+## hinter der Kamera zeigt zur Seite, auf der er liegt, statt gespiegelt nach vorn.
 static func edge_direction(camera: Camera3D, point: Vector3) -> Vector2:
 	var local := camera.global_transform.affine_inverse() * point
 	var dir := Vector2(local.x, -local.y)

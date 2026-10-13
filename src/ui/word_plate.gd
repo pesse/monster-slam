@@ -1,26 +1,27 @@
 class_name WordPlate
 extends Control
 ## Ein Wortschild über einem Monster: Plakette mit dem Prompt und darunter der Zipfel, der
-## auf den Kopf zeigt (Grafiken `assets/ui/gameplay/frames/word_plate_{rim,base}.webp` und
-## `word_plate_pointer_{rim,base}.webp`, zusammengesetzt in `word_plate.gdshader`). Wo es steht,
-## entscheidet `WordPlates`; das Schild kennt nur seinen Inhalt und seine Größe.
-##
-## Der Zipfel ist eine eigene Grafik und wird nicht gestreckt. Er sitzt mittig unter der
-## Plakette und überlappt ihre Unterkante um 2 Texturpixel (README des Pakets).
+## auf den Kopf zeigt (zusammengesetzt in `word_plate.gdshader`). Wo es steht, entscheidet
+## `WordPlates`.
 
+## Zipfel in Texturpixeln, ungestreckt; überlappt die Unterkante der Plakette.
 const POINTER_SIZE := Vector2(24.0, 12.0)
 const POINTER_OVERLAP := 2.0
+## Anteil, um den die Schrift von der Wortartfarbe zu Weiß aufgehellt wird.
 const TEXT_LIGHTEN := 0.35
-## Gemeistert (Monster.mastered): Rand und Schrift ziehen zu diesem Grau und dunkeln nach —
-## das Schild bleibt deckend und lesbar, verliert aber den Kontrast. Davor steht ein Haken.
+## Gemeistert (`Monster.mastered`): Rand und Schrift ziehen zu diesem Grau und dunkeln nach.
 const MASTERED_GRAY := Color(0.62, 0.64, 0.68)
 const MASTERED_RIM_GRAY := 0.6
 const MASTERED_RIM_DARKEN := 0.25
 const MASTERED_TEXT_GRAY := 0.7
 const MASTERED_TEXT_DARKEN := 0.1
 const MASTERED_MARK := "✓ "
-## So leuchtet ein Schild auf, das der Zauber aufdeckt (die Farbe von SpellFx, überhellt).
+## So leuchtet ein Schild auf, das der Zauber aufdeckt (überhellt).
 const REVEAL_GLOW := Color(1.6, 1.25, 2.0)
+## Startgröße des Aufspringens und Dauer von Rückfedern und Ausleuchten, s.
+const REVEAL_SCALE := 1.35
+const REVEAL_SETTLE := 0.35
+const REVEAL_FADE := 0.6
 
 var monster: Monster
 ## Geglättete Verschiebung gegenüber dem Wunschplatz über dem Kopf.
@@ -33,7 +34,7 @@ var push := Vector2.ZERO
 @onready var _pointer: TextureRect = $Pointer
 
 
-## `large`: die Größe der Ich-Sicht, in der das Schild vor der Nase lesbar bleiben muss.
+## `large`: Schildgröße der Ich-Sicht.
 func setup(of: Monster, large: bool) -> void:
 	monster = of
 	if large:
@@ -44,9 +45,7 @@ func setup(of: Monster, large: bool) -> void:
 	_alt.text = alt_line(of.alts())
 	_alt.visible = of.alts_shown
 	of.alts_revealed.connect(_on_alts_revealed)
-	# Die Wortart in Rand und Schrift, wie die Outline am Modell. Der Rand nimmt die Farbe
-	# voll an (word_plate.gdshader), die Schrift aufgehellt — auf der dunklen Fläche wäre
-	# etwa das Nomen-Blau sonst zu schwach.
+	# Wortartfarbe in Rand und Schrift; die Schrift aufgehellt für die dunkle Fläche.
 	var color := of.word_color()
 	var rim := color
 	var ink := color.lerp(Color.WHITE, TEXT_LIGHTEN)
@@ -60,9 +59,8 @@ func setup(of: Monster, large: bool) -> void:
 	_fit()
 
 
-## Der Zauber deckt auf: nach `delay` (der Lichtvorhang erreicht das Monster, SpellFx) springt
-## das Schild mit der zweiten Zeile auf und leuchtet kurz in der Farbe des Zaubers. Ohne
-## Verzögerung (FxWarmup, ein neues Monster im Orakelblick) steht die Zeile sofort da.
+## Der Zauber deckt auf: nach `delay` (s) springt das Schild mit der zweiten Zeile auf und
+## leuchtet kurz. Ohne Verzögerung steht die Zeile sofort da.
 func _on_alts_revealed(delay: float) -> void:
 	if delay > 0.0:
 		await get_tree().create_timer(delay, false).timeout
@@ -71,15 +69,15 @@ func _on_alts_revealed(delay: float) -> void:
 	_alt.visible = true
 	_fit()
 	pivot_offset = Vector2(size.x / 2.0, plate_size().y)
-	scale = Vector2.ONE * 1.35
+	scale = Vector2.ONE * REVEAL_SCALE
 	modulate = REVEAL_GLOW
 	var tw := create_tween().set_parallel(true)
-	tw.tween_property(self, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK) \
+	tw.tween_property(self, "scale", Vector2.ONE, REVEAL_SETTLE).set_trans(Tween.TRANS_BACK) \
 			.set_ease(Tween.EASE_OUT)
-	tw.tween_property(self, "modulate", Color.WHITE, 0.6)
+	tw.tween_property(self, "modulate", Color.WHITE, REVEAL_FADE)
 
 
-## Die zweite Zeile: „auch: walk, run" — dieselbe Lesart wie im Reveal.
+## Die zweite Zeile: „auch: walk, run“.
 static func alt_line(alts: Array) -> String:
 	return "auch: %s" % ", ".join(alts.map(func(a: Variant) -> String: return str(a)))
 

@@ -1,17 +1,8 @@
 class_name MapAmbience
 extends Control
-## Was sich auf einer Gebietskarte bewegt: Wasser kräuselt sich, Wasserfälle laufen, Nebel
-## zieht, aus Glut steigt Rauch (map.json `ambience`, MapLayout.ambience).
-##
-## Eine Ebene von MapCanvas zwischen Bild und Orten: sie liegt wie das Bild hinter der
-## Zeichnung der Karte (`show_behind_parent`), Weg und Orte stehen darüber. Bewegt wird nur
-## im Shader (TIME) — die Ebene zeichnet sich neu, wenn die Karte es tut (Größe, Zoom), und
-## braucht kein `_process`.
-##
-## Je Fläche ein eigenes Kind mit eigenem Material, denn ihre Maske steht als Uniform darin
-## (map_ambience.gdshaderinc); gezeichnet wird das ganze Kartenbild, der Shader verwirft,
-## was die Maske nicht trifft. Die Quellen einer Art teilen ein Kind und ein Material;
-## Versatz und Stärke jeder Quelle reisen in der Farbe ihres Rechtecks mit (r, g).
+## Was sich auf einer Gebietskarte bewegt (MapLayout.ambience, ARCHITECTURE „Karte und
+## Laufanfrage“). Je Fläche ein Kind mit eigenem Material (Maske als Uniform); die Quellen einer
+## Art teilen eins, Versatz und Stärke stecken in der Farbe ihres Rechtecks (r, g).
 
 const SHADERS := {
 	"water": preload("res://assets/shaders/map_water.gdshader"),
@@ -22,9 +13,8 @@ const SHADERS := {
 	"torch": preload("res://assets/shaders/map_torch.gdshader"),
 }
 const OVERLAY_SHADER := preload("res://assets/shaders/map_mask_overlay.gdshader")
-## Größe einer Quelle bei `size` 1, in Bildhöhen (Breite, Höhe). Rauch steht auf der
-## Quelle, die Glut sitzt mittig darauf, die Flamme der Fackel steigt aus ihr auf
-## (TORCH_BASE: wo die Quelle im Rechteck liegt, von oben; wie BASE in map_torch.gdshader).
+## Größe einer Quelle bei `size` 1, in Bildhöhen (Breite, Höhe). TORCH_BASE: Lage der Quelle
+## im Rechteck der Fackel von oben (Anteil), wie BASE in map_torch.gdshader.
 const SPOT_SIZE := {"smoke": Vector2(0.07, 0.2), "ember": Vector2(0.05, 0.05),
 		"torch": Vector2(0.03, 0.06)}
 const TORCH_BASE := 0.8
@@ -43,7 +33,6 @@ var _canvas: MapCanvas
 var _entries: Array = []
 var _texture: Texture2D
 var _masks: Dictionary = {}
-## Je Kind die Einträge, die es zeichnet.
 var _layer_entries: Dictionary = {}
 var _outline: Control
 
@@ -157,7 +146,7 @@ static func spot_rect(entry: Dictionary, rect: Rect2) -> Rect2:
 	return Rect2(Vector2(at.x - extent.x * 0.5, top), extent)
 
 
-## Ein fester Versatz 0..1 je Quelle, aus ihrer Lage: jede flackert und zieht anders.
+## Ein fester Versatz 0..1 je Quelle, aus ihrer Lage (übliches Shader-Hash).
 static func seed_of(at: Vector2) -> float:
 	return fposmod(sin(at.dot(Vector2(12.9898, 78.233))) * 43758.5453, 1.0)
 

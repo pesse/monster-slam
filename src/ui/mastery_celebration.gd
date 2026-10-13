@@ -1,40 +1,30 @@
 class_name MasteryCelebration
 extends Control
-## Kurze Feier im Kampf, wenn eine Aufgabe oder ein Wort zum ersten Mal gemeistert ist
-## (Issue #23). Hängt nur an EventBus.task_mastered / lexeme_mastered und meldet über
-## `started`, wie lange sie steht — das Anhalten selbst macht der WaveRunner über die
-## Baum-Pause (get_tree().paused). Engine.time_scale bleibt unberührt, es gehört SlowMotion.
-##
-## Regeln:
-## - Schließt eine Antwort Aufgabe UND Wort ab, läuft nur die Wort-Feier. Beide Signale
-##   kommen im selben Frame; gesammelt wird bis zum Frame-Ende (call_deferred), dann
-##   gewinnt die größere.
-## - Jede Meisterung wird gefeiert. Kommt eine während einer Feier, stellt sie sich an und
-##   läuft direkt danach; `started` kommt je Feier, `finished` erst, wenn keine mehr wartet.
-##
-## Die Szene steht auf process_mode ALWAYS: sie läuft, während der Kampf pausiert. Die
-## Effekte sind GPUParticles2D-Knoten in mastery_celebration.tscn (dort im Editor
-## einstellen); Knoten mit `Task` im Namen gehören zur Aufgaben-, `Word` zur Wort-Feier.
-## Nur die Blitze sind ein eigener Knoten (Lightning), das kann ein Partikelsystem nicht.
-##
-## Plaketten (Badges, Issue #63) laufen durch dieselbe Warteschlange: auch sie halten den
-## Kampf kurz an, aber kleiner — eine Medaille, ein Ring und ein paar Funken in ihrer Farbe,
-## kein Blitz, kein Bildflash. Sie kommen nach der Meister-Feier derselben Antwort und
-## verdrängen keine: jede gemeldete Plakette läuft.
+## Feier im Kampf, wenn eine Aufgabe oder ein Wort zum ersten Mal gemeistert ist (Issue #23),
+## dazu Plaketten (Issue #63). `started` meldet die Dauer, die Pause macht der Aufrufer. Im
+## selben Frame geht die Wort- vor der Aufgaben-Feier, Plaketten danach; weitere warten.
 
 signal started(duration_ms: int)
 signal finished()
 
 enum Kind { NONE, TASK, WORD, BADGE }
 
+## Dauer je Feier (ms).
 const TASK_MS := 1200
 const WORD_MS := 2000
 const BADGE_MS := 1300
-## Die zweite Funkenwelle der Wort-Feier kommt so viel später, die Glut steigt so lange,
-## die Blitze zucken so lange (alles ms).
+## Wort-Feier (ms): Versatz der zweiten Funkenwelle, Dauer von Glut und Blitzen.
 const WORD_GLITTER_DELAY_MS := 350
 const WORD_EMBERS_MS := 1300
 const WORD_LIGHTNING_MS := 900
+## Bildflash der Wort-Feier: Deckkraft und Abklingen (s).
+const FLASH_ALPHA := 0.6
+const FLASH_FADE_S := 0.35
+## Aufspringen des Inhalts: Anfangsgröße (Faktor), Sprung, Ein- und Ausblenden (s).
+const POP_FROM := 0.4
+const POP_S := 0.3
+const FADE_IN_S := 0.15
+const FADE_OUT_S := 0.3
 
 var _pending: Kind = Kind.NONE
 var _pending_id: String = ""
@@ -44,8 +34,7 @@ var _pending_badges: Array = []
 var _playing: bool = false
 ## Wartende Feiern als [Kind, id], älteste zuerst.
 var _queue_list: Array = []
-## Angehalten (hold): Feiern stellen sich an, starten aber erst mit release(). So kommt das
-## Standbild der Schreibweise (SpellingFreeze) vor der Feier derselben Antwort.
+## Angehalten (hold): Feiern stellen sich an, starten aber erst mit release().
 var _held: bool = false
 
 @onready var _flash: ColorRect = $Flash
@@ -77,8 +66,7 @@ func _on_lexeme_mastered(lexeme_id: String) -> void:
 	celebrate(Kind.WORD, lexeme_id)
 
 
-## Meldet eine Feier an — der Weg der EventBus-Signale, und der des Debug-Panels, das
-## feiern will, ohne eine Meisterung in die Spur zu schreiben.
+## Meldet eine Feier an, ohne dass eine Meisterung in die Spur geht.
 func celebrate(kind: Kind, id: String) -> void:
 	if kind > _pending:
 		_pending = kind
@@ -126,9 +114,8 @@ func release() -> void:
 		_run()
 
 
-## Vorwärmen beim Kampfstart (FxWarmup): zündet jedes Partikelsystem und zeigt die Schrift
-## der Wort-Feier, damit ihre Shader und Zeichen nicht erst bei der ersten Meisterung
-## entstehen. Ohne Klang, ohne `started`, an der Warteschlange vorbei. Danach cool_down().
+## Vorwärmen (FxWarmup): zündet jedes Partikelsystem und zeigt die Schriften, ohne Klang,
+## ohne `started`, an der Warteschlange vorbei. Danach cool_down().
 func warm_up() -> void:
 	if is_busy():
 		return
@@ -142,7 +129,7 @@ func warm_up() -> void:
 	_plate.setup(&"gold", "0123456789")
 	_badge_content.modulate = Color.WHITE
 	_badge_content.visible = true
-	_flash.modulate.a = 0.6
+	_flash.modulate.a = FLASH_ALPHA
 	visible = true
 	for particles in _all_particles():
 		_emit(particles)
@@ -165,8 +152,6 @@ func _all_particles() -> Array[GPUParticles2D]:
 	return found
 
 
-## Steht eine Feier an, läuft eine, oder wartet eine? Der WaveRunner hält damit das
-## Wellenende zurück: auch das letzte Monster bekommt seine Feier.
 func is_busy() -> bool:
 	return _playing or _flush_queued or not _queue_list.is_empty()
 
@@ -191,8 +176,7 @@ func _run() -> void:
 func _play(kind: Kind, id: String) -> void:
 	var big := kind == Kind.WORD
 	var duration := WORD_MS if big else TASK_MS
-	# Inhalt VOR dem Einblenden festlegen: ein sichtbares Overlay in der Bildmitte ändert
-	# seine Größe nicht mehr.
+	# Inhalt vor dem Einblenden festlegen (CONVENTIONS „Oberfläche“).
 	_headline.theme_type_variation = &"CelebrateWord" if big else &"CelebrateTask"
 	_headline.text = "Wort gemeistert!" if big else "Aufgabe gemeistert!"
 	_detail.text = _word_label(id) if big else TaskResolver.new().describe_learnable(id)
@@ -206,8 +190,7 @@ func _play(kind: Kind, id: String) -> void:
 	await _wait(duration)
 
 
-## Eine Plakette: Medaille, Titel und Detail springen auf, ein Ring und Funken in der Farbe
-## der Plakette gehen von der Medaille aus.
+## Eine Plakette: Medaille, Titel und Detail springen auf, Funken in ihrer Farbe.
 func _play_badge(badge: Dictionary) -> void:
 	var palette := StringName(badge.get("palette", &"gold"))
 	_plate.setup(palette, str(badge.get("mark", "")))
@@ -220,8 +203,7 @@ func _play_badge(badge: Dictionary) -> void:
 	Sfx.play(badge.get("sound", &"badge_earned"))
 	_pop_in(_badge_content, BADGE_MS)
 	started.emit(BADGE_MS)
-	# Erst nach dem Layout steht die Medaille dort, wo die Funken herkommen sollen. Gemessen
-	# am Stand OHNE das Aufspringen: der Inhalt ist gerade noch klein (_pop_in).
+	# Nach dem Layout messen, ohne die Skalierung von _pop_in.
 	await get_tree().process_frame
 	var medal := _plate.get_global_transform() * (_plate.size * BadgePlate.DISC_CENTER)
 	var unscaled := _badge_content.get_global_transform().affine_inverse() * medal
@@ -246,8 +228,8 @@ func _fire(big: bool) -> void:
 			_emit(child)
 	if not big:
 		return
-	_flash.modulate.a = 0.6
-	create_tween().tween_property(_flash, "modulate:a", 0.0, 0.35).set_ease(Tween.EASE_OUT)
+	_flash.modulate.a = FLASH_ALPHA
+	create_tween().tween_property(_flash, "modulate:a", 0.0, FLASH_FADE_S).set_ease(Tween.EASE_OUT)
 	_lightning.play(size.length() / 2.0, WORD_LIGHTNING_MS)
 	_embers.emitting = true
 	_stop_embers_later()
@@ -279,11 +261,11 @@ func _word_label(lexeme_id: String) -> String:
 
 func _pop_in(content: Control, duration_ms: int) -> void:
 	content.pivot_offset = content.size / 2.0
-	content.scale = Vector2.ONE * 0.4
+	content.scale = Vector2.ONE * POP_FROM
 	content.modulate = Color(1, 1, 1, 0)
 	var seconds := duration_ms / 1000.0
 	var tw := create_tween()
 	tw.set_parallel(true)
-	tw.tween_property(content, "scale", Vector2.ONE, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.tween_property(content, "modulate:a", 1.0, 0.15)
-	tw.chain().tween_property(content, "modulate:a", 0.0, 0.3).set_delay(seconds - 0.3 - 0.3)
+	tw.tween_property(content, "scale", Vector2.ONE, POP_S).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(content, "modulate:a", 1.0, FADE_IN_S)
+	tw.chain().tween_property(content, "modulate:a", 0.0, FADE_OUT_S).set_delay(seconds - POP_S - FADE_OUT_S)

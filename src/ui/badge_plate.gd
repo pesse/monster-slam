@@ -1,10 +1,8 @@
 @tool
 class_name BadgePlate
 extends Control
-## Die Plakette eines kleinen Erfolgs (Badges, Issue #63): eine Medaille am Band aus
-## `assets/ui/badges/` (Geometrie im README dort), darüber die Zahl der Stufe in der
-## Spielschrift — Zahlen stehen nie im Bild. Plaketten ohne Stufe tragen ihr Zeichen im Bild
-## und keine Zahl. Größe und Feld der Zahl stehen in badge_plate.tscn.
+## Plakette eines Erfolgs (Issue #63): Medaille aus `assets/ui/badges/` (Geometrie im
+## README dort), darüber die Zahl der Stufe. Plaketten ohne Stufe tragen ihr Zeichen im Bild.
 
 const ART_DIR := "res://assets/ui/badges/"
 ## Mitte der Scheibe als Anteil am Bild (128/256, 120/320, README in ART_DIR).
