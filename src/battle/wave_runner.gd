@@ -1550,6 +1550,7 @@ func _spawn(entry: Dictionary) -> void:
 	# Der Zeitwandler-Skill bremst erst hier, hinter der Formel: `plan["reward"]` und
 	# `plan["xp"]` bleiben, was `t - c` sagt.
 	monster.setup(plan["monster_def"], plan["task"], GOAL_Z, plan["speed"] * _monster_pace)
+	monster.mastered = bool(plan.get("mastered", false))
 	monster.damage = plan["damage"]
 	monster.reward = plan["reward"]
 	monster.xp = plan["xp"]

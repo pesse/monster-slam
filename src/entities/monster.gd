@@ -30,6 +30,11 @@ var spawned_at_ms: int = 0
 ## Entfernung lesbar sein. Vor add_child setzen.
 var screen_sized_label := false
 
+## Die Aufgabe ist schon gemeistert (WaveGenerator, beim Spawn): das Monster tritt zurück —
+## halb durchsichtig, ohne leuchtenden Rand —, sein Schild wird matt (WordPlate). Es bringt
+## kaum noch etwas, der Blick soll zu den anderen. Vor add_child setzen.
+var mastered := false
+
 ## Die Gruppe, aus der WordPlates die Schilder baut.
 const PLATE_GROUP := &"word_plate"
 
@@ -54,6 +59,12 @@ var _done: bool = false
 ## Position, Schild und Bahn unberührt bleiben.
 var _body: Node3D
 var _flinch: Tween = null
+
+## So deckend ist der Körper eines gemeisterten Monsters.
+const MASTERED_ALPHA := 0.5
+## Durchsichtige Kopien der Modell-Materialien, je Original eine — geladene Materialien sind
+## geteilt und bleiben unberührt, und alle gemeisterten Monster teilen sich die Kopie.
+static var _faded := {}
 
 ## So färbt sich der Rand, solange es eingefroren ist.
 const FROZEN_OUTLINE := Color(0.62, 0.86, 1.0)
@@ -172,8 +183,8 @@ func _apply_model() -> void:
 	var color := WordTypePalette.color_for(str(task.get("lexeme_type", "")))
 	if path == "" or not ResourceLoader.exists(path):
 		# Kein Modell -> Platzhalter-Kapsel behält die Wortart-Outline (Konsistenz).
-		_apply_outline(_placeholder, color, 1.0)
 		_body = _placeholder
+		_dress(_placeholder, color, 1.0)
 		return
 	var packed: PackedScene = load(path)
 	var inst := packed.instantiate() as Node3D
@@ -183,8 +194,42 @@ func _apply_model() -> void:
 	add_child(inst)
 	_body = inst
 	_placeholder.visible = false
-	_apply_outline(inst, color, model_scale)
+	_dress(inst, color, model_scale)
 	_setup_animation(inst)
+
+
+## Wortart-Rand, oder — gemeistert — durchsichtig und ohne Rand. Ohne Rand bleibt `_outline`
+## leer; eingefroren zeigt es dann nur die Eishülle.
+func _dress(root: Node3D, color: Color, model_scale: float) -> void:
+	if mastered:
+		_fade(root)
+	else:
+		_apply_outline(root, color, model_scale)
+
+
+func _fade(root: Node3D) -> void:
+	var meshes: Array = root.find_children("*", "MeshInstance3D", true, false)
+	if root is MeshInstance3D:
+		meshes.append(root)
+	for node in meshes:
+		var mi := node as MeshInstance3D
+		if mi.mesh == null:
+			continue
+		for i in mi.mesh.get_surface_count():
+			var mat := mi.get_active_material(i) as BaseMaterial3D
+			if mat != null:
+				mi.set_surface_override_material(i, faded(mat))
+
+
+## Die durchsichtige Kopie von `mat` (MASTERED_ALPHA). Der Tiefen-Vorlauf hält die Teile
+## des Modells in der richtigen Reihenfolge, sonst schiene der Rücken durch die Brust.
+static func faded(mat: BaseMaterial3D) -> BaseMaterial3D:
+	if not _faded.has(mat):
+		var copy := mat.duplicate() as BaseMaterial3D
+		copy.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_DEPTH_PRE_PASS
+		copy.albedo_color.a = MASTERED_ALPHA
+		_faded[mat] = copy
+	return _faded[mat]
 
 
 ## Legt die Wortart-Outline als material_overlay auf alle MeshInstance3D unterhalb von
