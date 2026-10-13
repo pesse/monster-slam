@@ -1,14 +1,11 @@
 class_name Lightning
 extends Node2D
-## Zuckende Blitze vom Bildrand zur Mitte, für die Wort-Feier (Issue #23). Die Linien sind
-## die Line2D-Kinder aus der Szene (Breite, Farbe, Mischung dort einstellen); hier kommt nur
-## der Zickzack dazu, BOLT_RESHAPE_HZ-mal je Sekunde neu — so zuckt ein Blitz. Das kann ein
-## Partikelsystem nicht, deshalb der eigene Knoten.
-##
-## Jeder Blitz besteht aus ZWEI aufeinanderliegenden Line2D (breiter Hof, heller Kern);
-## die Kinder stehen paarweise in dieser Reihenfolge.
+## Zuckende Blitze vom Bildrand zur Mitte, für die Wort-Feier (Issue #23). Aussehen kommt aus
+## den Line2D-Kindern der Szene; hier entsteht nur der Zickzack, `BOLT_RESHAPE_HZ`-mal je
+## Sekunde neu. Jeder Blitz sind zwei Kinder in dieser Reihenfolge: breiter Hof, heller Kern.
 
 const BOLT_SEGMENTS := 9
+## Seitlicher Ausschlag als Anteil von `reach`.
 const BOLT_JITTER := 0.05
 const BOLT_RESHAPE_HZ := 18.0
 

@@ -1,12 +1,9 @@
 class_name LightningBolt
 extends MeshInstance3D
-## Ein Blitz aus dem Himmel auf einen Punkt (Donnerschlag, ADR 0014): ein Zickzack von oben
-## nach unten mit zwei, drei Ästen, der RESHAPE_HZ-mal je Sekunde neu zuckt und flackernd
-## verlischt. Die Bänder baut ein ImmediateMesh, das Drehen zur Kamera macht der Shader
-## (lightning_bolt.gdshader) — deshalb steht der Knoten im Ursprung der Welt.
-## Wie `Lightning` (die 2D-Blitze der Wort-Feier), nur im Feld.
-##
-## Läuft nach Spielzeit wie die anderen Effekte und gibt sich nach LIFETIME selbst frei.
+## Ein Blitz aus dem Himmel auf einen Punkt (Donnerschlag, ADR 0014): Zickzack mit zwei, drei
+## Ästen, `RESHAPE_HZ`-mal je Sekunde neu. Die Bänder baut ein ImmediateMesh in Weltkoordinaten,
+## zur Kamera dreht sie der Shader; deshalb steht der Knoten im Ursprung der Welt. Läuft nach
+## Spielzeit und gibt sich nach `LIFETIME` (s) selbst frei.
 
 const SHADER := preload("res://assets/shaders/lightning_bolt.gdshader")
 
@@ -17,7 +14,7 @@ const SEGMENTS := 16
 const JITTER := 0.55
 ## Breite des Bands (Hof samt Kern) in Metern.
 const WIDTH := 3.2
-## So hoch über dem Ziel beginnt der Blitz.
+## So hoch über dem Ziel beginnt der Blitz (m).
 const HEIGHT := 34.0
 
 var _from := Vector3.ZERO
@@ -57,7 +54,7 @@ func _process(delta: float) -> void:
 		queue_free()
 		return
 	var t := _age / LIFETIME
-	# Hart flackern statt weich ausblenden — so verlischt ein Blitz.
+	# Hart flackern statt weich ausblenden.
 	var flicker := 1.0 if int(t * 14.0) % 3 != 2 else 0.25
 	_mat.set_shader_parameter("alpha", (1.0 - t * t) * flicker)
 	if _age >= _next_shape:

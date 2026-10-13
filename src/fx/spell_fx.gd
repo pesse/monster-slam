@@ -1,27 +1,9 @@
 class_name SpellFx
 extends Node3D
-## Das Bild der Zauber auf dem Feld (ADR 0014). Was ein Zauber TUT, steht im SpellCaster;
-## hier steht nur, wie es aussieht und klingt. Kampf (WaveRunner) und Werkbank
-## (battle_theme_lab, Reiter Zauber) nutzen denselben Knoten, damit die Werkbank zeigt, was
-## der Kampf zeigt.
-##
-## Was am Monster hängt, macht das Monster selbst: die Eishülle (FrostShell) beim Einfrieren
-## und den Schlamm (SlowAura) beim Bremsen. Hier entsteht, was zum Feld gehört:
-## - Drittes Auge, Orakelblick: ein Lichtvorhang fährt von der Festung zum Spawn; ein Schild
-##   geht auf, wenn er sein Monster erreicht (`reveal_delay`).
-## - Sumpf: unter jedem Monster spritzt es grün auf. Schwere Luft zusätzlich Bodennebel über
-##   dem Feld, solange die Welle läuft (`haze`), und jedes neue Monster spritzt beim
-##   Erscheinen (`on_spawn`).
-## - Frost: ein Eisring läuft von der Festung über das Feld, Schnee fällt, das Bild wird kalt.
-## - Donnerschlag: das Bild verdunkelt sich (Anlauf), dann schlägt nacheinander auf jedes
-##   Monster ein Blitz ein — Plasma, Brandfleck, Wackeln (`bolt`).
-## - Lebensquell, Eisenhaut: eine Lichtsäule mit aufsteigenden Funken an der Festung.
-## Alle Zauber leuchten dazu kurz in ihrer Farbe über dem ganzen Bild (`veil`, damit es auch
-## die Ich-Sicht sieht, die der Festung den Rücken zukehrt); das Banner mit Bild und Namen
-## macht die SpellBanner.
-##
-## Zeiten laufen nach Spielzeit wie bei den anderen Effekten: in der Zeitlupe dehnt sich auch
-## der Zauber, in der Pause steht er.
+## Bild und Ton der Zauber auf dem Feld (ADR 0014, ARCHITECTURE „Zauber“); was ein Zauber
+## tut, steht im SpellCaster. Was am Monster hängt (FrostShell, SlowAura), macht das Monster.
+## Kampf und Werkbank nutzen denselben Knoten. Zeiten laufen nach Spielzeit: die Zeitlupe
+## dehnt, die Pause hält an.
 
 const SHOCKWAVE_SHADER := preload("res://assets/shaders/shockwave.gdshader")
 const SPARK_SHADER := preload("res://assets/shaders/spark.gdshader")
@@ -40,14 +22,12 @@ const COLORS := {
 }
 ## Schwere Luft: blaugrauer Dunst.
 const HAZE_COLOR := Color(0.55, 0.6, 0.72)
-## Höhen der Nebelschichten (m); oben dünner. Unter der Augenhöhe der Ich-Sicht.
-## Viele dünne Schichten statt weniger dichter: wo eine Schicht ein Monster schneidet, bleibt
-## die Stufe klein.
+## Höhen der Nebelschichten (m), unter der Augenhöhe der Ich-Sicht; Dichte je Schicht.
+## Viele dünne Schichten, damit die Kante an einem Monster klein bleibt.
 const HAZE_LAYERS := [0.1, 0.28, 0.46, 0.64, 0.82, 1.0]
 const HAZE_DENSITY := [0.42, 0.36, 0.3, 0.24, 0.16, 0.09]
-## Der Ton je Wirkung beim Wirken. Schwere Luft (`slow` für die ganze Welle) klingt anders
-## als der Sumpf (`HAZE_SOUND`); der Donnerschlag lädt auf (`STRIKE_WINDUP`), den Donner
-## spielt der erste Blitz (`bolt`).
+## Der Ton je Wirkung beim Wirken; Schwere Luft (`slow` für die Welle) spielt `HAZE_SOUND`.
+## Den Donner spielt der erste Blitz (`bolt`).
 const SOUNDS := {
 	"reveal_alts": &"spell_reveal",
 	"slow": &"spell_slow",
@@ -60,16 +40,16 @@ const HAZE_SOUND := &"spell_haze"
 
 ## So lange fährt der Lichtvorhang von der Festung bis zum Spawn (s).
 const SWEEP_TIME := 0.9
-## Donnerschlag: so lange verdunkelt sich das Bild, bevor der erste Blitz fällt, und so viel
-## später fällt jeder weitere (s). Der Anlauf ist so lang wie sein Ton (`spell_thunder_windup`,
-## 1,1 s) — wer den Ton tauscht, passt ihn an.
+## Donnerschlag: Anlauf bis zum ersten Blitz und Abstand der weiteren (s). Der Anlauf ist so
+## lang wie der Ton `spell_thunder_windup`.
 const STRIKE_WINDUP := 1.1
 const STRIKE_STAGGER := 0.09
+## So weit reichen Vorhang, Schnee und Nebel seitlich über die Bahn hinaus (m).
+const FIELD_MARGIN := 6.0
 ## Wie lange ein Brandfleck liegt (s).
 const SCORCH_TIME := 5.0
-## So lange läuft das Bild eines Zaubers, bis das Wellenende es nicht mehr verdeckt (s):
-## je Wirkung ab dem Wirken, beim Donnerschlag ab dem letzten Einschlag (Blitz, Plasma,
-## Aufhellen). Der Brandfleck und der Nebel zählen nicht, sie liegen nur.
+## So lange hält ein Zauberbild das Wellenende auf (s): ab dem Wirken, beim Donnerschlag ab
+## dem letzten Einschlag. Brandfleck und Nebel zählen nicht.
 const SETTLE := {
 	"reveal_alts": SWEEP_TIME + 0.6,
 	"slow": 1.0,
@@ -79,17 +59,15 @@ const SETTLE := {
 }
 const STRIKE_SETTLE := 1.1
 
-## Das letzte laufende Zauberbild ist durch (`is_busy` wieder false). Das Wellenende wartet
-## darauf (WaveRunner._check_end), damit die Abrechnung den Zauber nicht verdeckt.
+## Das letzte laufende Zauberbild ist durch (`is_busy` wieder false).
 signal settled
 
-## Die Fläche über dem Bild, die sich verdunkelt und aufleuchtet (eine ColorRect über dem
-## Feld, unter dem HUD). Ohne sie bleibt das Bild, wie es ist.
+## Die Fläche über dem Feld und unter dem HUD, die sich verdunkelt und aufleuchtet; ohne sie
+## bleibt das Bild, wie es ist.
 var veil: ColorRect
 ## Lässt die Kamera wackeln: `shake.call(stärke)`.
 var shake := func(_magnitude: float) -> void: pass
-## Die Mauerfront (Ziel der Monster), der Spawn, die halbe Breite der Bahn und die Mitte
-## der Festung.
+## Mauerfront, Spawn (z), halbe Bahnbreite und Mitte der Festung (m).
 var front_z := 16.5
 var back_z := -24.0
 var half_width := 8.0
@@ -101,8 +79,8 @@ var _busy := 0
 var _veil_tween: Tween
 
 
-## Der Moment des Zaubers auf `field` (die Monster auf dem Feld). Vor `SpellCaster.cast`:
-## der Donnerschlag braucht seinen Anlauf, bevor `bolt` die Blitze schickt.
+## Der Moment des Zaubers auf `field`. Vor `SpellCaster.cast` rufen: der Donnerschlag braucht
+## seinen Anlauf, bevor `bolt` die Blitze schickt.
 func play(spell: Dictionary, field: Array[Monster]) -> void:
 	var effect := str(spell.get("effect", ""))
 	var whole_wave := str((spell.get("params", {}) as Dictionary).get("scope", "field")) == "wave"
@@ -131,7 +109,6 @@ func play(spell: Dictionary, field: Array[Monster]) -> void:
 		"strike":
 			# Bis der erste Blitz fällt; danach hält jeder Blitz selbst (`bolt`).
 			_hold(STRIKE_WINDUP)
-			# Anlauf: das Bild wird dunkel, die Erde grollt.
 			_veil(Color(0.03, 0.04, 0.12), 0.65, STRIKE_WINDUP, 0.0, 0.0)
 			shake.call(0.25)
 		"heal", "armor":
@@ -158,8 +135,8 @@ func reveal_delay(monster: Monster) -> float:
 	return clampf(inverse_lerp(front_z, back_z, monster.position.z), 0.0, 1.0) * SWEEP_TIME
 
 
-## Der `index`-te Blitz des Donnerschlags auf `monster`. Es steht schon (halt) und gilt als
-## erledigt; wenn der Blitz einschlägt, ruft `landed` den Aufrufer, der es freigibt.
+## Der `index`-te Blitz des Donnerschlags auf das schon angehaltene `monster`; `landed` wird
+## beim Einschlag gerufen.
 func bolt(monster: Monster, index: int, landed: Callable) -> void:
 	_busy += 1
 	var at := monster.position
@@ -182,10 +159,8 @@ func bolt(monster: Monster, index: int, landed: Callable) -> void:
 	_hold(STRIKE_SETTLE)
 
 
-## Ein Monster erscheint und bekommt, was für die ganze Welle gewirkt wurde (`effects`, aus
-## SpellCaster.on_spawn): unter Schwere Luft spritzt es dort auf, mit dem Ton des Sumpfs, nur
-## leiser — er kommt mit jedem Monster. Der Orakelblick braucht nichts: das Schild springt
-## ohnehin auf (WordPlate).
+## Ein Monster erscheint unter den Wirkungen der ganzen Welle (`effects`, aus
+## `SpellCaster.on_spawn`).
 func on_spawn(monster: Monster, effects: PackedStringArray) -> void:
 	if effects.has("slow"):
 		_splash(monster.position, COLORS["slow"])
@@ -214,9 +189,8 @@ func _haze_fade(from: float, to: float, time: float) -> Tween:
 	return tw
 
 
-## Je ein Stück von allem, was hier entsteht — für FxWarmup, damit der erste Zauber im Kampf
-## nicht auf seine Shader wartet. FxWarmup stellt sie bei `at` auf und gibt sie selbst wieder
-## frei; der Blitz steht im Ursprung der Welt und zielt deshalb selbst auf `at`.
+## Je ein Stück von allem, was hier entsteht, für FxWarmup. Der Aufrufer stellt sie bei `at`
+## auf und gibt sie frei; der Blitz steht im Ursprung und zielt selbst auf `at`.
 static func specimens(at: Vector3) -> Array[Node3D]:
 	var out: Array[Node3D] = []
 	var bolt_line := LightningBolt.new()
@@ -242,12 +216,12 @@ static func specimens(at: Vector3) -> Array[Node3D]:
 	return out
 
 
-## Der Lichtvorhang von „Drittes Auge"/„Orakelblick": quer über die Bahn, von der Mauer bis
-## zum Spawn. Der Orakelblick ist höher und heller und zieht Gold mit.
+## Der Lichtvorhang quer über die Bahn, von der Mauer bis zum Spawn; für die ganze Welle
+## (Orakelblick) höher, heller und goldener.
 func _sweep(color: Color, whole_wave: bool) -> void:
 	var height := 11.0 if whole_wave else 7.0
 	var curtain := MeshInstance3D.new()
-	curtain.mesh = _curtain_quad((half_width + 6.0) * 2.0, height)
+	curtain.mesh = _curtain_quad((half_width + FIELD_MARGIN) * 2.0, height)
 	var mat := _curtain_material(color.lerp(Color(1.0, 0.85, 0.4), 0.3) if whole_wave else color,
 			4.5 if whole_wave else 3.5)
 	curtain.material_override = mat
@@ -260,7 +234,6 @@ func _sweep(color: Color, whole_wave: bool) -> void:
 	tw.chain().tween_method(func(v: float) -> void: mat.set_shader_parameter("fade", v),
 			1.0, 0.0, 0.35)
 	tw.chain().tween_callback(curtain.queue_free)
-	# Funken, die der Vorhang hinter sich lässt.
 	var p := _motes(color, 70, 1.4)
 	p.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
 	p.emission_box_extents = Vector3(half_width + 2.0, 0.3, (front_z - back_z) * 0.5)
@@ -336,7 +309,7 @@ func _snow() -> void:
 	p.amount = 320
 	p.lifetime = 2.4
 	p.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
-	p.emission_box_extents = Vector3(half_width + 6.0, 2.0, (front_z - back_z) * 0.5)
+	p.emission_box_extents = Vector3(half_width + FIELD_MARGIN, 2.0, (front_z - back_z) * 0.5)
 	p.position = Vector3(0.0, 8.0, (front_z + back_z) * 0.5)
 	p.direction = Vector3.DOWN
 	p.spread = 25.0
@@ -430,13 +403,12 @@ func _motes(color: Color, amount: int, lifetime: float) -> CPUParticles3D:
 	return p
 
 
-## Dunst für Schwere Luft: große, langsame Schwaden knapp über dem Boden der Bahn.
-## Die Nebelschichten über dem ganzen Feld, je eine mit eigener Dichte. Ihre Materialien
-## liegen als Meta „materials" am Knoten; `haze` blendet über sie ein und aus.
+## Die Nebelschichten der Schweren Luft über dem Feld. Ihre Materialien liegen als Meta
+## „materials“ am Knoten.
 func _haze_layers() -> Node3D:
 	var root := Node3D.new()
 	var mats: Array[ShaderMaterial] = []
-	var size := Vector2((half_width + 6.0) * 2.0, front_z - back_z + 10.0)
+	var size := Vector2((half_width + FIELD_MARGIN) * 2.0, front_z - back_z + 10.0)
 	for i in HAZE_LAYERS.size():
 		var layer := MeshInstance3D.new()
 		var plane := PlaneMesh.new()

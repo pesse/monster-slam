@@ -80,7 +80,6 @@ func _ready() -> void:
 	add_child(flash)
 	create_tween().tween_property(flash, "light_energy", 0.0, 0.3)
 
-	# process_always = false: in der Baum-Pause (Meister-Feier) bleibt die Explosion stehen,
-	# statt mitten im Standbild zu verschwinden.
+	# process_always = false: in der Baum-Pause bleibt die Explosion stehen.
 	await get_tree().create_timer(p.lifetime + 0.4, false).timeout
 	queue_free()
