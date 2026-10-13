@@ -2,13 +2,12 @@ class_name CheckTreeDrop
 extends Control
 ## Ein aufklappender Baum mit Häkchen: Gruppen (Units) und ihre Einträge (Teile, Boni). Ein
 ## Häkchen an der Gruppe setzt alle ihre Einträge, ein Teil der Einträge zeigt die Gruppe
-## halb gesetzt. Gezählt werden nur die Einträge; keiner gewählt heißt „keine Einschränkung".
-##
-## Ein Overlay über dem ganzen Screen wie ConfirmDialog, kein Godot-Fenster: der Baum hängt
-## als Tafel unter seinem Knopf, ein Klick daneben oder Escape klappt ihn zu.
+## halb gesetzt. Gezählt werden nur die Einträge; keiner gewählt heißt „keine Einschränkung“.
+## Overlay wie ConfirmDialog; ein Klick daneben oder Escape klappt ihn zu.
 
 signal changed()
 
+## Abstand der Tafel unter dem Knopf (px).
 const GAP := 4.0
 
 @onready var _panel: Control = %DropPanel

@@ -3,10 +3,8 @@ extends RefCounted
 ## Setzt aus dem Update-Manifest die Notes zusammen, die der Dialog zeigt: alle Releases,
 ## die neuer sind als die installierte Fassung, neuester zuerst.
 ##
-## `history` trägt die Releases der letzten 7 Tage, mindestens 3
-## (tools/release/release_history.sh). Liegt die installierte Fassung weiter zurück, fehlt
-## der Rest — das sagt ein Verweis auf die Release-Seite, statt still zu kürzen. Ein
-## Manifest ohne `history` (bis 0.18.0 erzeugt) liefert nur `notes`.
+## Reicht `history` nicht bis zur installierten Fassung zurück, verweist ein Satz auf die
+## Release-Seite. Ohne `history` gilt `notes`.
 
 const RELEASES_URL := "https://github.com/pesse/monster-slam/releases"
 

@@ -1,18 +1,13 @@
 class_name SpeechBubble
 extends PanelContainer
-## Eine Sprechblase: der Kasten kommt aus dem Theme (`BossBubble`, `PlayerBubble`), die
-## Spitze zeichnet die Blase selbst, in Füllung und Rand ihres eigenen Panel-Stils.
-##
-## Die Spitze zeigt entweder in eine feste Richtung (`tail_direction`) oder auf einen Punkt
-## am Bildschirm (`point_at`) — im Bosskampf auf den Kopf des Skeletts, das dabei hin und
-## her läuft. Die Blase selbst bleibt, wo das Layout sie hinstellt; nur die Spitze wandert.
-##
-## `pop()` lässt sie kurz aufploppen. Das geht über `scale`, nicht über die Größe: das
-## Layout rechnet mit der Blase, als stünde sie still.
+## Sprechblase: der Kasten kommt aus dem Theme (`BossBubble`, `PlayerBubble`), die Spitze
+## zeichnet sie selbst im Panel-Stil. Die Spitze zeigt in `tail_direction` oder auf einen
+## Punkt (`point_at`); die Blase bleibt, wo das Layout sie hinstellt. Animiert wird nur
+## `scale`, nie die Größe.
 
-## Wie weit die Spitze aus dem Kasten ragt.
+## Wie weit die Spitze aus dem Kasten ragt (px).
 @export var tail_length := 28.0
-## Wie breit sie am Kasten ansetzt.
+## Wie breit sie am Kasten ansetzt (px).
 @export var tail_width := 32.0
 ## Wohin sie zeigt, solange niemand `point_at` gerufen hat.
 @export var tail_direction := Vector2.DOWN
@@ -29,8 +24,7 @@ func point_at(global_point: Vector2) -> void:
 	queue_redraw()
 
 
-## Kurzes Aufploppen, zur Spitze hin verankert — so sieht es aus, als käme die Blase aus
-## dem Mund dessen, der spricht.
+## Kurzes Aufploppen (von 80 % in 0,35 s), an der Spitze verankert.
 func pop() -> void:
 	if _pop != null:
 		_pop.kill()
@@ -89,7 +83,7 @@ func _tail() -> Array:
 	var out := Vector2(
 			maxf(box.position.x - aim.x, aim.x - box.end.x),
 			maxf(box.position.y - aim.y, aim.y - box.end.y))
-	var margin := tail_width + 16.0
+	var margin := tail_width + 16.0  # Abstand des Ansatzes von den Ecken (px)
 	var base: Vector2
 	var along: Vector2
 	if out.y >= out.x:
@@ -100,8 +94,7 @@ func _tail() -> Array:
 		var x := box.end.x if aim.x > box.end.x else box.position.x
 		base = Vector2(x, clampf(aim.y, margin, maxf(margin, box.size.y - margin)))
 		along = Vector2.DOWN
-	# Ein Stück in den Kasten hinein ansetzen, damit der Rand des Kastens an der Spitze
-	# verschwindet — die Füllung der Spitze deckt ihn zu.
+	# 3 px in den Kasten hinein, damit die Füllung der Spitze den Rand dort zudeckt.
 	var inward := (box.get_center() - base).normalized() * 3.0
 	var half := along * tail_width / 2.0
 	var tip := base + (aim - base).limit_length(tail_length)

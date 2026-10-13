@@ -2,14 +2,11 @@
 class_name XpRing
 extends Control
 ## Der Erfahrungsbogen im Porträtring der Kopfleiste: der Anteil am nächsten Aufstieg,
-## im Uhrzeigersinn von unten links über oben nach unten rechts — unten sitzt die
-## Levelplakette, ein Bogen dahinter wäre verdeckt. Wie im Hauptmenü (ProfileBadge).
-## Keine Zahl daneben — der Ring ist die ganze Auskunft.
-##
-## Die Geometrie ist die der Ringgrafik (`portrait_xp_arc` in
-## `assets/ui/gameplay/manifest.json`, gemessen auf 192 px) und wächst mit der Größe des
-## Knotens. Er liegt zwischen Ring und Levelplakette.
+## im Uhrzeigersinn von unten links über oben nach unten rechts; unten bleibt die
+## Levelplakette frei.
 
+## Geometrie der Ringgrafik (`portrait_xp_arc` in `assets/ui/gameplay/manifest.json`) in px
+## auf der 192-px-Vorlage, skaliert mit der Knotengröße.
 const CANVAS := 192.0
 const RADIUS := 61.2
 const WIDTH := 9.6

@@ -1,14 +1,8 @@
 class_name MarkdownToBbcode
 extends RefCounted
-## Release-Notes (Markdown, aus der GitHub-Release-Beschreibung) für RichTextLabel.
-##
-## Bewusst eine TEILMENGE — Überschriften, Listen, fett/kursiv, Code, Links. Was hier fehlt
-## (Tabellen, verschachtelte Listen, Bilder), erscheint als Klartext statt falsch: Release-Notes
-## sind kurze Aufzählungen, und ein vollständiger Markdown-Parser wäre für diesen Zweck mehr
-## Fehlerquelle als Gewinn.
-##
-## Der Text kommt aus dem Netz, deshalb wird er zuerst BBCode-entschärft: eine Notiz mit
-## `[img]` oder `[url=…]` darf nicht als Markup wirken.
+## Release-Notes (Markdown) für RichTextLabel: Überschriften, Listen, fett/kursiv, Code,
+## Links; der Rest bleibt Klartext. Der Text kommt aus dem Netz und wird zuerst
+## BBCode-entschärft.
 
 const CODE_COLOR := "#c8b88a"
 
@@ -37,9 +31,8 @@ static func _line(line: String) -> String:
 	return inline(line)
 
 
-## Zeichenauszeichnung innerhalb einer Zeile. Reihenfolge zählt: `**` vor `*`, sonst frisst
-## die Kursiv-Regel die Hälfte einer Fett-Auszeichnung. Öffentlich, weil das Handbuch
-## (Handbook) Absätze, Listen und Tabellen selbst gliedert und nur die Zeichen hier holt.
+## Zeichenauszeichnung innerhalb einer Zeile. `**` vor `*`, sonst frisst die Kursiv-Regel
+## die Hälfte einer Fett-Auszeichnung.
 static func inline(text: String) -> String:
 	var safe := text.replace("[", "[lb]")
 	safe = _wrap(safe, "**", "[b]", "[/b]")
@@ -49,8 +42,7 @@ static func inline(text: String) -> String:
 	return _links(safe)
 
 
-## Ersetzt paarweise Begrenzer. Ein unpaariger Rest bleibt stehen — als Zeichen, nicht als
-## halb geöffnetes Markup.
+## Ersetzt paarweise Begrenzer; ein unpaariger Rest bleibt als Zeichen stehen.
 static func _wrap(text: String, marker: String, open_tag: String, close_tag: String) -> String:
 	var parts := text.split(marker)
 	if parts.size() < 3:

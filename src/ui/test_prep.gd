@@ -1,13 +1,9 @@
 class_name TestPrep
 extends Control
-## „Für eine Arbeit üben": Wörter eines Buchs auswählen, als Liste speichern und spielen.
-##
-## Ausgewählt werden Wörter, keine Aufgaben. Form-Boni (ADR 0012) stehen als eigene Zeile in
-## der Tabelle: ihre Formen kommen nur mit, wenn die Zeile markiert ist. Gespielt wird die
-## Liste über RunRequest.start_test; welches Wort wann dran ist, entscheidet TestPlaylist.
-##
-## Die Tabelle ist ein `Tree` als flache Liste: Filter blenden Zeilen aus, ein Klick auf eine
-## Spaltenüberschrift sortiert. Layout in test_prep.tscn, hier wird nur befüllt.
+## „Für eine Arbeit üben“: Wörter eines Buchs auswählen, als Liste speichern und spielen.
+## Ausgewählt werden Wörter, keine Aufgaben; Form-Boni (ADR 0012) sind eigene Zeilen und
+## kommen nur markiert mit. Gespielt wird über `RunRequest.start_test`, die Reihenfolge
+## entscheidet `TestPlaylist`.
 
 const BATTLE_SCENE := "res://scenes/battle/battle.tscn"
 
@@ -384,8 +380,7 @@ func _update_count() -> void:
 			bonuses += 1
 		else:
 			words += 1
-	# Was markiert ist, aber gerade ein Filter verdeckt — sonst wirkt die Auswahl
-	# kleiner, als sie ist.
+	# Markierte Zeilen, die gerade ein Filter verdeckt, werden extra genannt.
 	var hidden := {"word": 0, "bonus": 0}
 	for row in _rows:
 		var item: TreeItem = row.get("item")

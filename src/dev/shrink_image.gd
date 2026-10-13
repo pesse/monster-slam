@@ -1,17 +1,8 @@
 extends SceneTree
-## Verkleinert Bilder auf die Größe, in der das Spiel sie zeigt — einmal, beim Erzeugen,
-## statt bei jedem Bild zur Laufzeit.
-##
+## Verkleinert ein Bild vorab mit Lanczos auf die Größe, in der das Spiel es zeigt, als
+## verlustfreies WebP. Nötig, weil ein 9-Slice-Rahmen (`StyleBoxTexture`) seine Ränder in
+## Texturpixeln zeichnet.
 ##     tools/godot.sh -s res://src/dev/shrink_image.gd -- <quelle> <ziel> <faktor>
-##         z. B. res://assets/ui/windows/tab_normal.webp res://assets/ui/statistics/tabs/tab_normal.webp 0.667
-##
-## Warum nicht einfach groß laden und klein zeichnen: Ein 9-Slice-Rahmen (`StyleBoxTexture`)
-## zeichnet seine Ränder in Texturpixeln, ein 28-px-Rand passt in keinen 40 px hohen Reiter.
-## Und ein stark verkleinertes Bild flimmert selbst mit Mipmaps an feinen Kanten; Lanczos
-## einmal vorab gerechnet sieht sauberer aus als der Filter der Grafikkarte.
-##
-## Gespeichert wird verlustfrei als WebP. Das Ziel bekommt beim nächsten `--import` seine
-## `.import`-Datei.
 
 
 func _initialize() -> void:

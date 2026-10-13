@@ -1,21 +1,14 @@
 extends SceneTree
-## Bringt ein einzeln erzeugtes Menü-Icon auf das Maß der übrigen: auf den Inhalt
-## beschneiden, auf 224 px einpassen, 16 px Rand — 256 × 256, wie `export-assets.cjs` die
-## Icons aus dem Atlas schneidet (`assets/ui/main_menu/`).
-##
+## Bringt ein einzeln erzeugtes Menü-Icon auf das Maß der übrigen, mit derselben Regel wie
+## `export-assets.cjs` (`assets/ui/main_menu/`): auf den Inhalt beschneiden, einpassen,
+## Rand. Verlustfreies WebP; nach `--import` Mipmaps einschalten wie bei den anderen Icons.
 ##     tools/godot.sh -s res://src/dev/trim_icon.gd -- <quelle> <ziel>
-##         z. B. res://assets/ui/main_menu/sources/handbook.webp res://assets/ui/main_menu/icons/handbook.webp
-##
-## Warum hier und nicht im Skript: `export-assets.cjs` braucht `sharp` aus einer
-## Windows-Node-Laufzeit; diese Werkbank läuft überall, wo `tools/godot.sh` läuft. Die
-## Regel ist dieselbe: Alpha über 8 zählt als Inhalt, 3 px Luft drumherum. Ohne den Schnitt
-## steht ein Icon, dessen Bild viel leeren Rand hat, kleiner da als seine Nachbarn.
-##
-## Gespeichert wird verlustfrei als WebP. Das Ziel bekommt beim nächsten `--import` seine
-## `.import`-Datei; Mipmaps einschalten wie bei den anderen Icons.
 
+## Alpha (0–255) darüber zählt als Inhalt.
 const ALPHA_MIN := 8
+## Luft um den Inhalt, in px der Quelle.
 const SLACK := 3
+## Inhalt eingepasst und Rand, in px; zusammen 256 × 256.
 const FIT := 224
 const PAD := 16
 

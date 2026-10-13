@@ -1,10 +1,7 @@
 class_name SpellSlots
 extends GridContainer
-## Der Zaubervorrat im Kampf-HUD, unten links (scenes/ui/spell_slots.tscn, ADR 0014): je
-## Platz ein SpellSlot mit der Taste davor, zwei Spalten breit und nach oben wachsend —
-## mit mehr Plätzen aus dem Fähigkeitsbaum werden es 2×3, 2×4.
-##
-## Liest nur `Inventory` und zeigt an; was eine Taste auslöst, entscheidet der WaveRunner.
+## Der Zaubervorrat im Kampf-HUD (ADR 0014): je Platz ein SpellSlot, zwei Spalten breit,
+## nach oben wachsend. Zeigt nur `Inventory` an.
 
 const SLOT_SCENE := preload("res://scenes/ui/spell_slot.tscn")
 
@@ -14,8 +11,7 @@ func _ready() -> void:
 	refresh()
 
 
-## Baut die Plätze nach dem Vorrat neu. Ihre Zahl ändert sich nur zwischen zwei Kämpfen
-## (Fähigkeitsbaum); hier entsteht nur, was fehlt.
+## Baut die Plätze nach dem Vorrat neu; es entsteht nur, was fehlt.
 func refresh() -> void:
 	var count := Inventory.slot_count()
 	while get_child_count() > count:

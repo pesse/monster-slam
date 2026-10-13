@@ -1,19 +1,10 @@
 class_name TraceSanitizer
 extends RefCounted
 ## Macht aus der Rohspur (TraceLog) die Fassung, die den Rechner verlassen darf (ADR 0021).
-##
-## Die Rohspur kennt Wörter: was das Kind getippt hat, die Lemmata der Aufgaben, die
-## Erklärung des Modells, den Profilnamen. Hinaus geht nur, was hier durchkommt:
-##
-## - **Allowlist je Ereignistyp** (`KEEP`), keine Denylist. Ein neues Ereignis oder ein
-##   neues Feld in TraceLog bleibt draußen, bis es hier bewusst eingetragen wird —
-##   `tests/trace_sanitizer_test.gd` erzwingt, dass jeder Typ entschieden ist.
-## - **Getipptes wird zu Zahlen**: Länge, Wortzahl und der Editierabstand zur nächsten
-##   akzeptierten Lösung der Monster auf dem Feld (`dist`, `near`). Die Lösungen stehen in
-##   den spawn-Zeilen davor; deshalb wird die Spur immer von vorn gelesen, auch wenn nur
-##   das Ende hinausgeht.
-##
-## TraceLog selbst bleibt unberührt und wirkt nie zurück; das hier ist ein Leser.
+## Allowlist je Ereignistyp (`KEEP`): ein neues Ereignis oder Feld bleibt draußen, bis es
+## hier eingetragen ist (tests/trace_sanitizer_test.gd). Getipptes wird zu Zahlen (Länge,
+## Wortzahl, Editierabstand zur nächsten Lösung); die Lösungen stehen in früheren
+## spawn-Zeilen, deshalb wird die Spur immer von vorn gelesen.
 
 ## Felder, die je Ereignistyp hinausgehen dürfen. `at`, `ms` und `e` gehen immer mit.
 const KEEP := {
@@ -38,15 +29,13 @@ const KEEP := {
 	"mastered": ["id"],
 	"word_mastered": ["lex"],
 	"badge": ["id", "tier"],
-	# Spielstand (ADR 0024): ob und wo Spielstände kaputtgehen. Nur Endungen, Zeitpunkte
-	# und Werte — der Profilname steckt nicht darin.
+	# Spielstand (ADR 0024): nur Endungen, Zeitpunkte und Werte, kein Profilname.
 	"save_refused": ["part", "reason"],
 	"save_restored": ["parts", "backup_at"],
 	"save_damaged": ["parts"],
 }
 
-## Längere Eingaben werden für den Abstand gekappt: ein Kind, das die Tastatur flutet, soll
-## keine quadratische Rechnung über tausend Zeichen auslösen.
+## Höchstlänge einer Eingabe für den Editierabstand (Zeichen), gegen quadratische Rechnung.
 const MAX_COMPARE := 64
 
 var _evaluator := AnswerEvaluator.new()
@@ -54,8 +43,8 @@ var _evaluator := AnswerEvaluator.new()
 var _answers := {}
 
 
-## Bereinigt die Zeilen in `lines` (älteste zuerst) und gibt nur die zurück, die nach
-## `after` ([at, ms]) liegen. Die davor werden trotzdem gelesen — für die Lösungen.
+## Bereinigt `lines` (älteste zuerst) und gibt nur die Zeilen nach `after` ([at, ms]) zurück.
+## Die davor werden für die Lösungen trotzdem gelesen.
 func sanitize(lines: Array, after: Array = [0, 0]) -> Array:
 	var out: Array = []
 	for raw in lines:

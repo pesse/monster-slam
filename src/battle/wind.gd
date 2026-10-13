@@ -1,14 +1,9 @@
 class_name Wind
 extends Node
-## Wind in Bäumen und Gras des Kampfes, dazu die Zeit, nach der die Wolkenschatten ziehen.
-##
-## `sway` tauscht die Materialien eines Modells gegen den Windshader (assets/shaders/
-## wind.gdshaderinc), der es genauso zeichnet, aber mit der Höhe biegt. Nur Modelle aus SWAY
-## schwanken — Häuser, Zelte und Kakteen stehen im Platz `trees` mancher Themen und sollen
-## stillstehen; ein neuer Baum ohne Eintrag steht still, bis er einen bekommt.
-##
-## Ein Wind-Knoten im Baum treibt `wind_time` (globaler Shader-Parameter, project.godot)
-## mit dem skalierten delta: in der Zeitlupe (SlowMotion) wehen Bäume und Wolken langsamer.
+## Wind in Bäumen und Gras des Kampfes. `sway` tauscht die Materialien eines Modells gegen
+## den Windshader (assets/shaders/wind.gdshaderinc), der mit der Höhe biegt; nur Modelle aus
+## SWAY schwanken. Ein Wind-Knoten treibt den globalen Shader-Parameter `wind_time` (auch für
+## die Wolkenschatten) mit dem skalierten delta, also langsamer in der Zeitlupe.
 
 const SHADER := preload("res://assets/shaders/wind.gdshader")
 const SHADER_DOUBLE := preload("res://assets/shaders/wind_double.gdshader")
@@ -28,9 +23,9 @@ const SWAY := {
 }
 
 static var _time := 0.0
-## Umgebautes Material je Ausgangsmaterial, Höhe und Ausschlag — geteilt über alle Instanzen
-## und Kämpfe, damit ein Wald aus 80 Bäumen nicht 80 Materialien hat. Der Eintrag hält das
-## Ausgangsmaterial mit fest: sonst könnte dessen Id nach dem Freigeben ein anderes treffen.
+## Umgebautes Material je Ausgangsmaterial, Höhe und Ausschlag, geteilt über alle Instanzen
+## und Kämpfe. Der Eintrag hält das Ausgangsmaterial fest, sonst könnte dessen Id nach dem
+## Freigeben ein anderes treffen.
 static var _cache := {}
 
 
@@ -60,8 +55,7 @@ static func sway(node: Node3D, model: String, strength := 1.0) -> void:
 				mi.set_surface_override_material(s, _windy(src as BaseMaterial3D, height, amount))
 
 
-## Der Windshader mit den Werten von `src`. Das Ausgangsmaterial bleibt unberührt: es ist
-## geladen und damit geteilt (docs/CONVENTIONS.md, „Geladene Ressourcen sind geteilt").
+## Der Windshader mit den Werten von `src`; das geladene Ausgangsmaterial bleibt unberührt.
 static func _windy(src: BaseMaterial3D, height: float, amount: float) -> ShaderMaterial:
 	var key := "%d/%.3f/%.4f" % [src.get_instance_id(), height, amount]
 	if _cache.has(key):

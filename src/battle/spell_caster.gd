@@ -1,28 +1,16 @@
 class_name SpellCaster
 extends RefCounted
-## Was ein Zauber im Wellenkampf tut (docs/adr/0014-zauber-zum-verbrauchen.md). Ohne Bild:
-## Blitze, Licht und Ton macht SpellFx, Eis und Schlamm zeigt das Monster selbst.
-##
-## Zwei Schritte, damit nur verbraucht wird, was auch wirkt: `can_cast` fragt, ob der
-## Zauber jetzt etwas bewirken würde, `cast` tut es. Dazwischen nimmt der WaveRunner den
-## Zauber aus dem Vorrat und meldet ihn (`spell_activated`) — so steht er in der Spur vor
-## seinen Folgen.
-##
-## „Auf dem Feld" heißt die Liste, die hereingegeben wird (WaveRunner._active), nicht „im
-## Blickfeld". Was für die ganze Welle gilt (`scope: wave`), merkt sich der SpellCaster und
-## gibt es jedem neuen Monster mit (`on_spawn`), bis `reset_wave` es zurücknimmt.
-##
-## Kein Zauber rührt den Lernstand an: Antwortzeiten (`spawned_at_ms`) bleiben, wie sie
-## sind, und der Donnerschlag nimmt Monster über denselben Weg vom Feld wie das Katapult
-## (`strike`, im WaveRunner `_strike`).
+## Was ein Zauber im Wellenkampf tut, ohne Bild (ADR 0014). `can_cast` fragt, ob er jetzt
+## etwas bewirken würde, erst dann wird er verbraucht und `cast` gerufen. „Auf dem Feld“ ist
+## die hereingegebene Liste, nicht das Blickfeld. Was für die ganze Welle gilt
+## (`scope: wave`), bekommt jedes neue Monster über `on_spawn` bis `reset_wave`.
 
 ## Die Wirkungen, die es gibt — was in `effect` eines Zaubers stehen darf.
 const EFFECTS := ["reveal_alts", "slow", "freeze", "strike", "heal", "armor"]
 
 ## Nimmt ein Monster per Blitz vom Feld (WaveRunner).
 var strike: Callable
-## Nach wie vielen Sekunden das Schild eines Monsters aufgeht (WaveRunner: wenn der
-## Lichtvorhang es erreicht, SpellFx.reveal_delay). Ohne: sofort.
+## Nach wie vielen Sekunden das Schild eines Monsters aufgeht. Ohne: sofort.
 var reveal_delay := func(_monster: Monster) -> float: return 0.0
 ## Tempo-Anteil für den Rest der Welle (1 = ungebremst).
 var wave_pace := 1.0

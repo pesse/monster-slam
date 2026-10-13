@@ -1,50 +1,35 @@
 class_name AmbientParticles
 extends RefCounted
-## Was in der Luft des Schlachtfelds treibt: Laub, Schnee, Pollen, Glühwürmchen, Asche, Glut.
-##
-## Welches, sagt das Thema (`BattleTheme.particles`); wie es aussieht, steht hier. Kleine
-## einfarbige Plättchen ohne Textur, wie der Rest der Low-Poly-Welt. Nur was dort auch
-## wirklich in der Luft wäre: Schweben braucht einen Grund (Schnee fällt, Pollen und
-## Glühwürmchen fliegen) — schwebender Staub über der Wüste hatte keinen und ist raus.
-##
-## Laub fällt aus den Kronen der Laubbäume (`crowns`, LEAF_TREES), nicht aus der Luft: es
-## sind Blätter, keine Plättchen, und sie kippen im Fallen (scale_curve_x). Ohne Kronen
-## fällt es über der ganzen Fläche. Kirschblüten (`blossoms`) fallen genauso, aber unabhängig
-## von der Art des Themas: wo ein Blütenbaum steht (BLOSSOM_TREES), fallen sie — auch
-## neben den Pollen der Frühlingswiese. CPUParticles3D, weil
-## gl_compatibility die GPU-Partikel nur eingeschränkt kann; die paar hundert kosten nichts.
-## Sie laufen mit dem skalierten delta, in der Zeitlupe also langsamer.
-##
-## Asche und Glut haben ihren Grund in einem brennenden Gebiet (Ruinen nach der Katastrophe):
-## Asche rieselt langsam und taumelnd, Glut steigt leuchtend auf und flackert. Zur Asche
-## gehört immer etwas Glut (`with`), allein steigt nur Glut auf.
-##
-## Dicht ist je 1000 m² Boden, damit ein breiteres Fenster nicht dünner schneit.
+## Was in der Luft des Schlachtfelds treibt (Art aus `BattleTheme.particles`). Laub fällt aus
+## den Kronen der Laubbäume, Kirschblüten aus jedem Blütenbaum, unabhängig vom Thema.
+## CPUParticles3D, weil gl_compatibility GPU-Partikel nur eingeschränkt kann; sie laufen mit
+## dem skalierten delta.
 
 const KINDS := ["leaves", "snow", "pollen", "fireflies", "ash", "embers"]
 ## Arten, die beim Schweben aufblinken statt gleichmäßig zu leuchten.
 const BLINKING := ["fireflies", "embers"]
 
-## Bäume, deren Kronen Laub abwerfen (Dateiname ohne Endung) — kein Nadelbaum, kein Haus.
+## Bäume, deren Kronen Laub abwerfen (Dateiname ohne Endung).
 const LEAF_TREES := ["autumn_red", "autumn_orange", "autumn_yellow", "tree", "park_tree", "plane_tree", "vine_row"]
 ## Blätter je Krone, die gleichzeitig unterwegs sind.
 const LEAVES_PER_CROWN := 5.0
 ## Startpunkte je Krone: im oberen Teil der Krone verteilt.
 const POINTS_PER_CROWN := 8
-## Aus der Krone: so lange und so schnell, dass ein Blatt aus 7 m knapp unter dem Boden
-## ausblendet — länger fiele es unsichtbar weiter und fehlte in der Luft.
+## Fallzeit (s) und Tempo (m/s, von–bis) aus der Krone: ein Blatt aus 7 m blendet knapp unter
+## dem Boden aus.
 const CROWN_FALL_TIME := 7.0
 const CROWN_FALL_SPEED := Vector2(0.7, 1.0)
 
 ## Bäume, aus deren Kronen Blütenblätter fallen.
 const BLOSSOM_TREES := ["blossom_tree"]
-## Blüten: kleiner als Laub, mehr davon, sie segeln langsamer.
-## Unbeleuchtet: zartes Rosa käme fast weiß heraus, deshalb kräftiger als die Krone.
+## Blüten je Krone, Größe (m), Fallzeit (s), Tempo (m/s), Drehung (Grad/s), Farben. Kräftiger
+## als die Krone, weil unbeleuchtetes Rosa fast weiß herauskommt.
 const BLOSSOM := {"per_crown": 10.0, "size": 0.3, "fall_time": 9.0, "speed": Vector2(0.45, 0.75),
 	"spin": 260.0, "colors": [Color(0.96, 0.55, 0.72), Color(0.9, 0.45, 0.64), Color(1.0, 0.72, 0.84)]}
 
-## Je Art: Dichte, Lebensdauer, Höhe (von–bis), Richtung, Tempo (von–bis), Streuung in Grad,
-## Größe, Drehung in Grad/s, Farben (zufällig je Teilchen) und Helligkeit des Materials.
+## Je Art: Dichte (je 1000 m² Boden), Lebensdauer (s), Höhe (m, von–bis), Richtung, Tempo
+## (m/s, von–bis), Streuung (Grad), Größe (m), Drehung (Grad/s), Farben (zufällig je
+## Teilchen), Helligkeit des Materials und ein Begleiter (`with`).
 const SPEC := {
 	"leaves": {"density": 25.0, "lifetime": 10.0, "y": [1.0, 12.0], "dir": Vector3(0.5, -1.0, 0.35),
 		"speed": [0.9, 1.4], "spread": 25.0, "size": 0.42, "spin": 200.0,
@@ -117,9 +102,7 @@ static func build(kind: String, area: Rect2, crowns: Array[AABB] = []) -> CPUPar
 	return p
 
 
-## Laub: Blattform, kippt im Fallen, und — mit Kronen — fällt es von den Bäumen. Die
-## Lebensdauer reicht von der Krone bis knapp unter den Boden; was darunter ist, verdeckt
-## der Boden.
+## Laub: Blattform, kippt im Fallen und fällt, wenn es Kronen gibt, von den Bäumen.
 static func _as_leaves(p: CPUParticles3D, spec: Dictionary, crowns: Array[AABB]) -> void:
 	p.mesh = _leaf(spec.size, spec.glow)
 	p.split_scale = true

@@ -1,11 +1,7 @@
 class_name SortBar
 extends HBoxContainer
-## Die kleine Sortierwahl über den Wortlisten der Statistik: „Beste zuerst",
-## „Schwächste zuerst", „A–Z". Das Layout liegt in sort_bar.tscn; die Reihenfolge der
-## Knöpfe ist die von `StatsScreen.SortMode`.
-##
-## Die Leiste sortiert nicht selbst, sie meldet nur die Wahl — die Regel steht einmal in
-## `StatsScreen.sort_rows`.
+## Sortierwahl über den Wortlisten der Statistik. Die Knöpfe stehen in der Reihenfolge von
+## `StatsScreen.SortMode`; sortiert wird in `StatsScreen.sort_rows`.
 
 signal changed(mode: int)
 

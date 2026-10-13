@@ -1,54 +1,24 @@
 extends CanvasLayer
-## Die Auskunft am Zeiger — eine Karte für das ganze Spiel.
-##
-## Godot bringt das schon mit, nur schlecht: sein Tooltip erscheint nach einer halben
-## Sekunde, bleibt dann stehen, wo er aufgegangen ist, und bringt die Typografie der Engine
-## statt die des Spiels mit. Über einem Netz heißt das eine halbe Sekunde je Knoten —
-## deshalb hatte der Fähigkeiten-Screen längst eine eigene Karte, und deshalb gibt es sie
-## jetzt für alle.
-##
-## Hier steht der Träger: eine eigene Zeichenschicht über allem (`LAYER`), in der genau
-## EINE `HintCard` hängt. Wer etwas zu sagen hat, meldet es an seinem Control an
-## (`attach`); gefragt wird nicht das Control, sondern der Zeiger — jeden Frame steht in
-## `Viewport.gui_get_hovered_control()`, was gerade unter ihm liegt.
-##
-## Warum eine eigene Schicht: ein `ScrollContainer` beschneidet seine Kinder
-## (`clip_contents`), eine Karte über einer Statistikzeile wäre am Rand halb weg —
-## dasselbe Argument, aus dem die Karte im Fähigkeiten-Screen schon nie am `SkillGraph`
-## hing. Ein `CanvasLayer` ist kein `CanvasItem`; seine Kinder hängen an einem eigenen
-## Canvas, und damit endet jede Beschneidung an seiner Grenze.
-##
-## Warum gefragt und nicht gemeldet (kein `mouse_entered`/`mouse_exited`): jedes Signal
-## bräuchte sein Gegenstück zum Abmelden, und jedes deckte nur EINEN Weg ab, auf dem eine
-## Auskunft ungültig wird. Die Frage deckt alle auf einmal ab — weggescrollt, zugeklappt,
-## freigegeben, Szene gewechselt, Dialog davor. Und sie geht von dem Control unter dem
-## Zeiger nach OBEN weiter, während Godots eigene Suche am ersten `MOUSE_FILTER_STOP`-Kind
-## abbricht: genau deshalb musste die Fortschrittszeile ihren Text zweimal setzen, einmal
-## für sich und einmal für ihren Knopf.
+## Die Auskunft am Zeiger: eine eigene Zeichenschicht über allem (`LAYER`) mit einer
+## `HintCard`. Controls melden ihre Auskunft an (`attach`); jeden Frame wird der Zeiger
+## gefragt (`gui_get_hovered_control()`) und von dort nach oben gesucht. Die eigene Schicht
+## entgeht der Beschneidung durch ScrollContainer; das Fragen statt `mouse_entered` deckt
+## Wegscrollen, Freigeben und Szenenwechsel ohne Abmelden ab.
 
-## Der Schlüssel, unter dem die Auskunft am Control hängt. Metadaten statt einer Liste hier:
-## eine Liste könnte ihre Knoten überleben, ein Meta stirbt mit seinem Knoten. Deshalb gibt
-## es auch kein Abmelden — ein leerer Hinweis IST das Abmelden.
+## Meta-Schlüssel der Auskunft am Control; sie stirbt mit ihrem Knoten.
 const META := &"hint"
 
-## Über allem, was die Szenen selbst mitbringen: `battle.tscn` legt sein UI auf 1, und der
-## Wellenabschluss samt Schatzkiste hängt darin.
 const LAYER := 128
 
-## Abstand der Pfeilspitze zur Mausposition, wenn die Karte UNTER dem Zeiger hängt. Weiter
-## als darüber (`TIP_GAP_ABOVE`), weil das Bild des Mauszeigers von seiner Spitze nach unten
-## reicht — der Pfeil soll auf den Zeiger zeigen, nicht in ihm stecken.
+## Abstand der Pfeilspitze zur Maus (px); unten größer, das Zeigerbild reicht nach unten.
 const TIP_GAP_BELOW := 22.0
 const TIP_GAP_ABOVE := 6.0
-## So weit links vom Zeiger beginnt die Karte: der Pfeil sitzt dann nahe ihrer linken Ecke,
-## und die Karte liegt rechts neben dem, worauf man gerade zeigt.
+## So weit links vom Zeiger beginnt die Karte (px).
 const POINTER_LEAD := 32.0
 
 @onready var _card: HintCard = %Card
 
-## Was beim letzten Blick unter dem Zeiger lag. Der Vergleich spart das Neubauen der Karte
-## in jedem Frame, in dem sich nichts bewegt hat — und bei einer Fläche, die ihre Auskunft
-## selbst sucht (`attach_live`), spart er den Aufruf gleich mit.
+## Was beim letzten Blick unter dem Zeiger lag; ohne Änderung wird nicht neu gebaut.
 var _last_id: int = 0
 var _last_at := Vector2.INF
 
@@ -62,23 +32,13 @@ func _process(_delta: float) -> void:
 	_look(false)
 
 
-## Fragt sofort nach, was unter dem Zeiger liegt. Öffentlich, weil sich der INHALT ändern
-## kann, ohne dass sich der Zeiger bewegt: nach einem gelernten Knoten steht in der Karte
-## ein Stand, den es nicht mehr gibt.
+## Fragt sofort nach, was unter dem Zeiger liegt: für Inhalte, die sich ohne Bewegung ändern.
 func refresh() -> void:
 	_look(true)
 
 
-## Hängt einem Control seine Auskunft an. Ein durchweg leerer Hinweis nimmt sie wieder ab —
-## „keine Auskunft" und „leere Auskunft" sind dasselbe, und die Aufrufstellen bleiben
-## einzeilig (Dutzende Statistikzeilen bekommen gar keine, die fliegenden Münzen der
-## Schatzkiste auch nicht).
-##
-## Angehängt wird an das KLEINSTE, was der Text meint. Die Suche geht von dort nach oben,
-## eine Auskunft an einer Zeile gilt also auch für deren Knöpfe und Balken — eine an einer
-## Screen-Wurzel dagegen für das ganze Bild, und das will niemand.
-##
-## `list` sind Zeilen `[zeichen, bezeichnung, wert]` für eine Aufzählung (siehe `HintCard`).
+## Hängt einem Control seine Auskunft an; ein durchweg leerer Hinweis nimmt sie ab. Sie gilt
+## auch für alle Kinder. `list`: Zeilen `[zeichen, bezeichnung, wert]` (siehe `HintCard`).
 func attach(target: Control, title: String, body := "", note := "", list := []) -> void:
 	if title.is_empty() and body.is_empty() and note.is_empty() and list.is_empty():
 		if target.has_meta(META):
@@ -87,18 +47,14 @@ func attach(target: Control, title: String, body := "", note := "", list := []) 
 	target.set_meta(META, {"title": title, "body": body, "note": note, "list": list})
 
 
-## Eine Fläche, die ihre Treffer selbst sucht (`SkillGraph`): statt fester Zeilen hängt hier
-## eine Funktion, die für einen Punkt IN der Fläche die Karte liefert — oder ein leeres
-## Dictionary für „hier ist nichts". Nur hier kann die Karte Bilder tragen (`"image"` unter
-## der Überschrift, `"icon"` davor, Texture2D als Zeichen einer Listenzeile) und eine
-## farbige Unterzeile (`"subtitle"`, `"tint"`) — ein fester Hinweis bleibt Text. Leer heißt wirklich nichts: gefragt wird dann nicht
-## beim Elternknoten weiter, denn die Fläche hat schon geantwortet.
+## Eine Fläche, die ihre Treffer selbst sucht: `provider(local: Vector2) -> Dictionary`
+## liefert die Karte für einen Punkt in der Fläche. Nur so trägt sie Bilder (`image`,
+## `icon`, Texture2D als Zeichen), `subtitle`/`tint` und `prices`. Leer heißt nichts, auch
+## nicht beim Elternknoten.
 func attach_live(target: Control, provider: Callable) -> void:
 	target.set_meta(META, provider)
 
 
-## Was an einem Control hängt — leer, wenn nichts hängt. Für Tests und für Stellen, die
-## ihren eigenen Hinweis nachlesen wollen.
 func hint_of(target: Control) -> Dictionary:
 	if not target.has_meta(META):
 		return {}
@@ -106,28 +62,20 @@ func hint_of(target: Control) -> Dictionary:
 	return value if value is Dictionary else {}
 
 
-## Die Karte selbst. Für Tests — im Spiel fasst sie niemand an.
+## Die Karte selbst, für Tests.
 func card() -> HintCard:
 	return _card
 
 
 ## Tut so, als läge der Zeiger bei `at` über `control`, und stellt die Karte entsprechend.
-##
-## Das ist die Naht für Tests, und sie hat einen handfesten Grund: Godot befördert in der
-## kopflosen Betriebsart keine Mausereignisse, `gui_get_hovered_control()` ist dort also
-## immer leer. Geprüft wird damit alles außer der Trefferprüfung der Engine selbst — die
-## Suche nach oben, die Breitenregel, das Umklappen am Rand, das Abmelden.
-##
-## Gezeigt wird nur bis zum nächsten Frame: `_process` fragt dann wieder den echten Zeiger.
-## Tests dazu kommen deshalb ohne `await` aus — was ohnehin die Zusage ist.
+## Die Naht für Tests (kopflos keine Mausereignisse, CONVENTIONS „Fallen“); gilt nur bis zum
+## nächsten Frame.
 func probe(control: Control, at := Vector2.INF) -> void:
 	var point := at if at.is_finite() else control.get_global_rect().get_center()
 	_show(_hint_under(control, point), point)
 
 
-## Die Karte für ein Control, das den Tastaturfokus bekommen hat — dieselbe wie unter der
-## Maus, auf seine Mitte gesetzt. Sie bleibt stehen, bis sich der Zeiger bewegt: `_look`
-## fragt nur nach, wenn sich unter ihm etwas geändert hat.
+## Die Karte für ein fokussiertes Control; sie bleibt, bis sich der Zeiger bewegt.
 func show_for(control: Control) -> void:
 	probe(control)
 
@@ -158,8 +106,8 @@ func _show(found: Dictionary, at: Vector2) -> void:
 	_card.show()
 
 
-## Godots eigene Suche, nur ohne ihren Abbruch: von dem Control unter dem Zeiger nach oben,
-## bis eines eine Auskunft trägt.
+## Vom Control unter dem Zeiger nach oben, bis eines eine Auskunft trägt; anders als Godots
+## Suche ohne Abbruch an `MOUSE_FILTER_STOP`.
 func _hint_under(node: Node, at: Vector2) -> Dictionary:
 	var walk := node
 	while walk != null:
@@ -167,9 +115,7 @@ func _hint_under(node: Node, at: Vector2) -> Dictionary:
 		if control != null and control.has_meta(META):
 			var value: Variant = control.get_meta(META)
 			if value is Callable:
-				# Der Punkt IN der Fläche, aus `at` gerechnet statt über
-				# `get_local_mouse_position()`: derselbe Wert, aber auch dann richtig, wenn
-				# der Zeiger gar nicht wirklich dort steht (siehe `probe`).
+				# Aus `at` gerechnet statt `get_local_mouse_position()`, damit `probe` stimmt.
 				var local: Vector2 = control.get_global_transform().affine_inverse() * at
 				var answer: Variant = (value as Callable).call(local)
 				return answer if answer is Dictionary else {}
@@ -178,14 +124,8 @@ func _hint_under(node: Node, at: Vector2) -> Dictionary:
 	return {}
 
 
-## Unter den Zeiger, der Pfeil auf seine Spitze — aber nie über den Bildrand hinaus: am
-## unteren Rand klappt die Karte über den Zeiger, am rechten rückt sie nach links, und der
-## Pfeil wandert auf ihrer Kante mit, sodass er weiter auf den Zeiger zeigt. Eine halb
-## abgeschnittene Auskunft ist keine.
-##
-## Gemessen wird gegen das BILD und nicht gegen einen Screen: die Karte hängt in einer
-## eigenen Schicht und kennt keinen. Das ist zugleich der Fall, der im maximierten Fenster
-## stimmt, wo das Spiel breiter ist als die Grundauflösung (docs/CONVENTIONS.md).
+## Unter den Zeiger, nie über den Rand des sichtbaren Bildes: unten klappt die Karte über den
+## Zeiger, rechts rückt sie nach links, der Pfeil wandert mit.
 func _place(at: Vector2) -> void:
 	var room := get_viewport().get_visible_rect().size
 	var size := _card.size

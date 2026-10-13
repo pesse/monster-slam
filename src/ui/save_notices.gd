@@ -1,10 +1,6 @@
 class_name SaveNotices
 extends RefCounted
-## Was der Spieler über seinen Spielstand erfährt (ADR 0024): die Texte zu den Hinweisen des
-## SaveCoordinator (`take_notices`). Das Startmenü zeigt sie nacheinander im ConfirmDialog.
-##
-## Ein Spielstand geht nie still verloren — auch nicht still repariert: wer aus einer
-## Sicherung zurückgeholt wurde, soll wissen, dass die Zeit danach fehlt.
+## Texte zu den Spielstand-Hinweisen des SaveCoordinator (`take_notices`, ADR 0024).
 
 const HANDBOOK := "Mehr im Handbuch unter „Spielstand und Sicherungen“."
 

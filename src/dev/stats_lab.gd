@@ -9,11 +9,9 @@ extends Node
 ##     … -- --shoot --day=29           Karte des Tages 29, als hätte er den Tastaturfokus
 ##     … -- --shoot --scroll=400       Überblick um so viele Pixel nach unten geschoben
 ##     … -- --shoot --language=fr,la   Sprachwahl auf diese Sprachen gestellt (Issue #45)
-##     … -- --sizes                    druckt die Mindestgrößen der Überblick-Abschnitte —
-##                                     wer das Fenster breiter drückt als das Bild
-##
-## Gezeigt wird der echte Stand des Entwicklungsprofils — der Screen liest nur, er schreibt
-## nichts. Die Bilder bleiben unter reports/ (gitignored): Listen tragen Wörter.
+##     … -- --sizes                    druckt die Mindestgrößen der Überblick-Abschnitte
+## Zeigt den echten Stand des Entwicklungsprofils, schreibt nichts. Die Bilder tragen Wörter
+## und bleiben unter reports/ (gitignored).
 
 const SCREEN_SCENE := "res://scenes/ui/stats_screen.tscn"
 const SHOT_DIR := "res://reports/stats"

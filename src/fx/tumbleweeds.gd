@@ -1,38 +1,33 @@
 class_name Tumbleweeds
 extends Node3D
-## Steppenläufer: selten rollt ein verdorrter Busch mit dem Wind durch Wüste und Savanne,
-## hüpft über den Boden und verschwindet am Rand. Statt schwebendem Staub — der hatte dort
-## keinen Grund, ein rollender Busch hat einen.
-##
-## Welche Themen, sagt `BattleTheme.tumbleweeds`. Die Form entsteht hier im Code (ein Knäuel
-## aus dünnen Zweigen), gerollt wird nach dem skalierten delta: in der Zeitlupe langsamer.
-## Ein Busch rollt um die Burg herum nicht hindurch — er verschwindet vorher (`keep_out`).
+## Steppenläufer: selten rollt ein verdorrter Busch mit dem Wind über das Feld, hüpft und
+## verschwindet am Rand oder vor der Burg (`keep_out`). Welche Themen, sagt
+## `BattleTheme.tumbleweeds`. Gerollt wird nach dem skalierten delta.
 
 ## Windrichtung wie im Windshader (wind.gdshaderinc, WIND_DIR).
 const WIND_DIR := Vector2(0.8, 0.6)
-## Abstand zwischen zwei Büschen in Sekunden: selten, er soll etwas Besonderes bleiben.
-## Der erste kommt etwas früher, damit man ihn in einer Welle auch einmal sieht.
+## Abstand zwischen zwei Büschen und Wartezeit bis zum ersten (s, von–bis).
 const INTERVAL := Vector2(10.0, 60.0)
 const FIRST := Vector2(10.0, 25.0)
 ## Immer nur einer.
 const MAX_ALIVE := 1
-## Größer als ein echter, damit er im schrägen Blick aus der Ferne noch zu lesen ist.
+## Radius (m, von–bis), größer als ein echter, damit er aus der Ferne zu lesen ist.
 const RADIUS := Vector2(0.75, 1.1)
+## Tempo (m/s, von–bis).
 const SPEED := Vector2(7.0, 12.0)
 ## Sprünge: so hoch (in Radien) und so oft je Meter.
 const HOP := 0.8
 const HOPS_PER_M := 0.18
-## So lange schrumpft ein Busch weg, wenn er die Fläche verlässt oder an die Burg kommt.
+## So lange schrumpft ein Busch weg, wenn er die Fläche verlässt oder an die Burg kommt (s).
 const FADE := 0.6
 
 var area: Rect2
-## Höhe des Bodens bei (x, z) (WaveRunner.terrain_height).
+## Höhe des Bodens bei (x, z).
 var height: Callable
 ## Hier rollt keiner hinein (Burg und Hof).
 var keep_out := Rect2()
-## Liegt (x, z) im Bild? Gestartet wird knapp außerhalb davon — die Fläche ist der Umriss des
-## schrägen Blicks und viel größer als das Bild, ein Start an ihrem Rand bliebe lange
-## unsichtbar. Ohne gilt die Fläche.
+## Liegt (x, z) im Bild? Gestartet wird knapp außerhalb davon, denn die Fläche ist viel größer
+## als das Bild. Ohne gilt die Fläche.
 var on_screen := Callable()
 var rng := RandomNumberGenerator.new()
 
@@ -70,15 +65,13 @@ func _process(delta: float) -> void:
 	step(delta)
 
 
-## Schickt sofort einen Busch los (auch der Knopf der Werkbank). Er startet knapp
-## außerhalb der Fläche gegen den Wind, irgendwo quer dazu, und rollt mit ihm hindurch, bis
-## er sie auf der anderen Seite verlässt.
+## Schickt sofort einen Busch los: knapp außerhalb des Bilds gegen den Wind, er rollt mit ihm
+## hindurch.
 func roll() -> void:
 	var dir := WIND_DIR.normalized().rotated(rng.randf_range(-0.25, 0.25))
 	var across := Vector2(-dir.y, dir.x)
 	var centre := area.get_center()
-	# Die Fläche ist der Umriss des schrägen Blicks, größer als das Bild: nah an der Mitte
-	# vorbei, sonst rollt er ungesehen am Rand entlang.
+	# Nah an der Mitte vorbei, sonst rollt er ungesehen am Rand der großen Fläche entlang.
 	var through := centre + across * rng.randf_range(-0.12, 0.12) * area.size.length()
 	if not _inside(through):
 		through = centre
@@ -113,7 +106,7 @@ func step(delta: float) -> void:
 	for weed: Dictionary in _weeds.duplicate():
 		var node: MeshInstance3D = weed.node
 		# Böen: das Tempo schwankt mit dem Weg.
-		var speed: float = weed.speed * (0.75 + 0.35 * sin(weed.travel * 0.4))
+		var speed: float = weed.speed * (0.75 + 0.35 * sin(weed.travel * 0.4))  # 40–110 %
 		var move: Vector2 = weed.dir * speed * delta
 		weed.at += move
 		weed.travel += move.length()
@@ -144,8 +137,8 @@ func _shrink(weed: Dictionary) -> float:
 	return 1.0 if weed.fade < 0.0 else maxf(1.0 - weed.fade / FADE, 0.0)
 
 
-## Das Knäuel: fünfzig dünne Zweige zwischen Punkten in einer Kugel vom Radius 1, dazu ein
-## paar Gegenzweige durch die Mitte. Flach schattiert, in trockenen Brauntönen.
+## Das Knäuel: dünne Zweige zwischen Punkten in einer Kugel vom Radius 1; liegen die Enden zu
+## nah beieinander, geht der Zweig durch die Mitte. Flach schattiert.
 static func mesh() -> Mesh:
 	if _mesh != null:
 		return _mesh

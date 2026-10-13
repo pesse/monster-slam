@@ -1,18 +1,8 @@
 class_name GrammarRules
 extends RefCounted
-## Der Regelkatalog je `grammar_tag` — das, was der Erklärer über die Grammatik eines
-## Satzes erfährt (docs/adr/0005-bosskampf-mit-erklaerung.md, Entscheidung 5).
-##
-## Gemessen wurde er in der Werkstatt `prompt-eval` (`rules/grammar.json`): mit ihm nennt
-## Gemma bei Einzelsätzen reproduzierbar öfter den richtigen Grund, und keinen der Wort-
-## und Rollenfehler hat es dabei in eine Regel gepresst. Die Einträge sind allgemeine
-## Grammatik, geschrieben aus dem Tag und nicht aus Lehrbuch oder Antwortbogen — sonst
-## lernte der Erklärer eine Lösung abzuschreiben. Deshalb steht der Katalog im öffentlichen
-## Repo; Lemmata stehen darin keine.
-##
-## Geändert wird er zuerst in der Werkstatt und erst gemessen hier. Die Einträge ab
-## `past_perfect` sind für die Tags des Bestands dazugekommen, die der Antwortbogen nicht
-## kennt; sie folgen demselben Muster (Form, Verwendung, typische Verwechslung).
+## Der Regelkatalog je `grammar_tag`: was der Erklärer über die Grammatik eines Satzes
+## erfährt (ADR 0005, Entscheidung 5). Allgemeine Grammatik ohne Lemmata. Geändert wird er
+## nur in der Messumgebung (CONVENTIONS).
 
 const RULES := {
 	"past_simple": "Simple Past (saw, went, played) für Handlungen, die zu einem abgeschlossenen Zeitpunkt in der Vergangenheit passiert sind. Signalwörter: yesterday, last week, ago, in 2010. Ein deutsches Perfekt (\"haben gesehen\") wird dann mit dem Simple Past übersetzt, nicht mit have + Partizip. Unregelmäßige Verben haben eine eigene Vergangenheitsform (see – saw – seen); das Partizip (seen) steht nie allein als Vergangenheit.",
@@ -31,8 +21,7 @@ const RULES := {
 	"present_simple": "Simple Present für Gewohnheiten, Tatsachen und Regeln (every day, usually, always). Nach he/she/it bekommt das Verb ein -s (she plays, he goes). Fragen und Verneinungen mit do/does, das Vollverb bleibt dann in der Grundform (does she play, he doesn't play).",
 }
 
-## Tags, unter denen der Bestand dieselbe Grammatik anders nennt. Ein zweiter Eintrag mit
-## demselben Text liefe irgendwann auseinander.
+## Tags, unter denen der Bestand dieselbe Grammatik anders nennt: Tag -> Tag in RULES.
 const ALIASES := {
 	"simple_past": "past_simple",
 	"present_progressive": "present_continuous",
@@ -50,9 +39,8 @@ static func rule_for(tag: String) -> String:
 	return str(RULES.get(str(ALIASES.get(tag, tag)), ""))
 
 
-## Die Regeln zu den `grammar_tags` eines Satzes, eine je Zeile mit Spiegelstrich — genau
-## die Form, in der die Werkstatt sie in den Prompt setzt. Ein Tag ohne Regel fällt weg,
-## zwei Tags derselben Regel ergeben eine Zeile.
+## Die Regeln zu den `grammar_tags` eines Satzes, eine je Zeile mit Spiegelstrich. Ein Tag
+## ohne Regel fällt weg, zwei Tags derselben Regel ergeben eine Zeile.
 static func focus(sentence: Dictionary) -> String:
 	var lines := PackedStringArray()
 	for tag in sentence.get("grammar_tags", []):

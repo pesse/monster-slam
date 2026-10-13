@@ -1,47 +1,12 @@
 class_name TreasureChest
 extends Control
-## Schatzkiste, die man aufdrücken muss: zwei Sekunden lang draufhalten, dabei wackelt sie
-## immer heftiger, dann springt der Deckel ab und das Gold fliegt heraus.
-##
-## Das Halten ist Absicht und kein Widerstand: ein Klick wäre in der Sekunde vorbei, in
-## der der Blick noch auf der Statistik liegt. Zwei Sekunden Wackeln sind lang genug, dass
-## das Aufgehen ein Ereignis ist — und sie sind der Grund, aus dem die Kiste überhaupt
-## eine eigene Stufe im Wellenabschluss bekommt (siehe WaveStats).
-##
-## Gehalten wird mit der Maus AUF der Kiste oder mit Leertaste/Enter (`ui_accept`) — das
-## Spiel wird mit der Tastatur gespielt, und der Griff zur Maus soll nicht die einzige
-## Möglichkeit sein. Losgelassen wird zurückgesetzt, nicht weitergezählt: „gedrückt
-## halten" heißt gedrückt halten.
-##
-## Die Kiste ist ein KayKit-Modell in einem SubViewport (siehe assets/models/CREDITS.md):
-## dasselbe Pack, aus dem die Festung und die Fässer im Kampf kommen, mit demselben
-## Texturatlas — die Kiste im Wellenabschluss sieht damit aus wie die Kisten im Spiel.
-## Der Deckel ist im Modell ein eigener Knoten mit dem Scharnier als Ursprung, also lässt
-## er sich einfach aufdrehen und wegschleudern; eine eingebackene Animation gibt es nicht
-## und wird auch nicht gebraucht.
-##
-## `own_world_3d` ist gesetzt: der Wellenabschluss hängt IM Kampf, und ohne eigene Welt
-## stünde die Kiste zwischen den Skeletten und ihr Licht in der Schlacht.
-##
-## Daneben gibt es die Kiste weiter GEZEICHNET (`use_model = false`, `_draw_chest`). Das
-## ist kein Altbestand: in der Werkbank stehen beide Fassungen zum Vergleich, und fehlt
-## das Modell einmal, zeichnet die Kiste sich eben selbst statt leer zu bleiben.
-##
-## Die herausfliegenden Münzen sind Modelle aus demselben Pack (`coin.gltf`) und fliegen
-## IN dieser Welt: eine je Goldstück, taumelnd aus dem Kistenmaul heraus und unten aus
-## dem Bild. Sie brauchen mehr Platz als die Kiste — deshalb ist der Ausschnitt GRÖSSER
-## als das Widget (siehe STAGE_PAD und _layout_stage).
-##
-## Die gezeichnete Kiste behält ihre gezeichneten Münzen (day_coin.tscn, Zustand EARNED):
-## ohne 3D-Welt gibt es nichts, worin ein Modell fliegen könnte.
-##
-## Die Kiste verbucht NICHTS. Sie sagt per `opened` nur, dass sie offen ist und wie viel
-## drin war; das Gold bucht der Aufrufer (WaveRunner -> Wallet), die Zahl zeigt der
-## Aufrufer. So ist dieselbe Kiste später auch am Tagesziel oder nach einem Boss zu haben.
+## Schatzkiste, die man aufdrücken muss: `hold_time` lang mit der Maus auf der Kiste oder
+## mit `ui_accept` halten, dabei wackelt sie immer heftiger, dann springt der Deckel auf und
+## eine Münze je Goldstück fliegt heraus. Loslassen setzt zurück. Die Kiste ist ein
+## KayKit-Modell in einem SubViewport mit eigener Welt; ohne Modell (`use_model = false`)
+## zeichnet sie sich selbst. Sie verbucht nichts, sie meldet nur `opened`.
 
-## Der Deckel ist ab: `gold` ist der Inhalt, den der Aufrufer jetzt verbuchen darf.
-## Kommt beim PLATZEN, nicht am Ende des Münzflugs — die Zahl soll neben den fliegenden
-## Münzen stehen, nicht nach ihnen.
+## Der Deckel ist ab (beim Platzen, nicht nach dem Münzflug); `gold` ist zu verbuchen.
 signal opened(gold: int)
 ## Das Aufdrücken hat begonnen bzw. wurde vor dem Ende losgelassen (für Hinweistexte).
 signal hold_started
@@ -49,86 +14,55 @@ signal hold_cancelled
 
 const COIN_SCENE := preload("res://scenes/ui/day_coin.tscn")
 
-## So lange muss gedrückt werden. Der Wert im Spiel; `hold_time` ist die Stellschraube
-## daneben, damit die Werkbank (scenes/dev/chest_lab.tscn) ihn ausprobieren kann, ohne
-## dass eine Konstante zur Variablen mit zwei Bedeutungen wird.
+## Haltezeit im Spiel, s. Die Werkbank verstellt `hold_time`.
 const HOLD_TIME := 2.0
-## Wackel-Frequenz (Hz) und Höchstauslenkung. Die Auslenkung wächst mit dem Fortschritt:
-## am Anfang zittert die Kiste nur, am Ende schlägt sie aus.
+## Wackel-Frequenz (Hz) und Höchstauslenkung (Grad, Skalenanteil, Hüpfen in
+## Modell-Einheiten); die Auslenkung wächst mit dem Fortschritt.
 const WOBBLE_HZ := 4.5
 const WOBBLE_MAX_DEG := 9.0
 const WOBBLE_MAX_SCALE := 0.08
-## Das Modell hüpft beim Wackeln zusätzlich ein Stück (Modell-Einheiten) — eine reine
-## Drehung sieht am Boden festgeschraubt aus, und die Kiste will raus.
 const WOBBLE_HOP := 0.12
 
+## Dauer des Münzflugs und des Deckelaufschlags, s.
 const COIN_FLIGHT := 1.0
 const LID_TIME := 0.4
-## Versatz zwischen zwei Münzen beim Herausfliegen und die Gesamtzeit, über die er sich
-## verteilen darf. Der Versatz macht aus dem Schwung eine Garbe statt einer Wand; die
-## Deckelung hält den großen Fund bei einem Platzen: 60 Münzen à 0,03 s wären knapp zwei
-## Sekunden Nachschub, also ein Rinnsal.
+## Versatz zwischen zwei Münzen (s) und die Gesamtzeit, auf die er gedeckelt ist (s).
 const COIN_STAGGER := 0.03
 const COIN_STAGGER_TOTAL := 0.5
-## Der Münzflug in Modell-Einheiten: aus dem Kistenmaul heraus, Gipfel und Streuung,
-## Umdrehungen unterwegs. Gefallen wird nicht auf einen Wert, sondern UNTER die Kante des
-## Bildfelds (siehe _floor_y): eine Münze, die im Bild liegen bleibt, wäre kein Fund
-## mehr, sondern Müll auf dem Tisch.
+## Der Münzflug in Modell-Einheiten: Startpunkt im Kistenmaul, Gipfelhöhe (min, max),
+## Streubreite und Umdrehungen (min, max). Gefallen wird unter die Bildkante (`_floor_y`).
 const COIN_MOUTH := Vector3(0.0, 0.62, 0.0)
 const COIN_RISE := Vector2(1.1, 2.4)
 const COIN_SPREAD := 2.0
 const COIN_TURNS := Vector2(1.5, 3.5)
-## So weit (Modell-Einheiten, auf dem Bild gemessen) fällt eine Münze unter die Kante:
-## eine Münze ist kein Punkt, sie muss GANZ draußen sein.
+## So weit (Modell-Einheiten, im Bild) fällt eine Münze unter die Kante, ganz hinaus.
 const COIN_CLEARANCE := 0.4
 
 # --- Modell -------------------------------------------------------------------
 
 const MODEL_DIR := "res://assets/models/props"
-## EINE Kiste für alle Güten. `chest_gold` aus dem Pack ist keine goldene Kiste, sondern
-## dieselbe Kiste mit einem Münzhaufen darin (1052 ihrer 1571 Vertices) — und dieser
-## Haufen sind bei uns die fliegenden Münzen, er darf also nicht schon in der Kiste
-## liegen. Die große Variante (`chest_large*`) fehlt aus einem anderen Grund: mit offenem
-## Deckel passt sie nicht in den Ausschnitt, kleingerechnet ist sie nicht von dieser zu
-## unterscheiden.
+## Ein Modell für alle Güten; `chest_gold` aus dem Pack enthält schon einen Münzhaufen.
 const CHEST_MODEL := "chest"
 const COIN_MODEL := "coin"
 
-## Der Beschlag der Güte kommt aus dem ATLAS, nicht aus einem Farbfilter.
-##
-## Der Texturatlas des Packs ist ein Raster aus 8×4 Farbfeldern, jedes ein senkrechter
-## Verlauf von hell nach dunkel (die eingebackene Beleuchtung). Die Kiste benutzt genau
-## zwei davon: Feld (1,0) für den grauen Beschlag, Feld (4,0) für das Holz — und KEIN
-## Dreieck liegt in beiden. Verschiebt man die UV-Koordinaten der Beschlag-Vertices um
-## ein ganzes Feld weiter, bekommt der Beschlag eine andere Farbe, das Holz behält seine,
-## und der Verlauf bleibt erhalten, weil die Felder deckungsgleich im Raster liegen.
-##
-## Das ist der Grund, aus dem hier kein `material_override` mehr steht: ein Filter auf
-## dem geteilten Atlas-Material hätte Holz und Beschlag gemeinsam getroffen (und mit dem
-## Material auch die Fässer im Kampf).
+## Der Beschlag der Güte kommt aus dem Texturatlas: ein Raster aus 8×4 Feldern, jedes ein
+## senkrechter Verlauf. Die Kiste benutzt Feld (1,0) für den Beschlag und (4,0) für das
+## Holz, kein Dreieck liegt in beiden. Rücken die UV-Koordinaten der Beschlag-Vertices um
+## ganze Felder weiter, wechselt nur der Beschlag die Farbe, der Verlauf bleibt. Ein Filter
+## auf dem geteilten Atlas-Material träfe auch Holz und alle anderen Modelle des Packs.
 const ATLAS_CELLS := Vector2i(8, 4)
 const METAL_CELL := Vector2i(1, 0)
-## Beschlag je Güte (Reihenfolge von ChestReward.Tier): dunkler Stahl, Kupfer, helles
-## Silber, Gold. Das Gold ist Feld (7,2) — dasselbe Feld, aus dem die Münze ihre Farbe
-## nimmt. Der Beschlag der Goldkiste hat also genau die Farbe dessen, was herausfliegt.
+## Beschlag je Güte (Reihenfolge von ChestReward.Tier): Stahl, Kupfer, Silber, Gold. Das
+## Gold (7,2) ist das Feld der Münze.
 const TIER_METAL := [
 	Vector2i(1, 0),
 	Vector2i(6, 0),
 	Vector2i(0, 1),
 	Vector2i(7, 2),
 ]
-## Kamera: dieselbe Blickrichtung wie im Kampf (orthografisch, von schräg oben), damit
-## die Kiste nicht wie aus einem anderen Spiel aussieht. `CAM_SIZE` ist die Höhe des
-## Bildfelds in Modell-Einheiten, `CAM_HEIGHT` der Punkt, auf den die Kamera zielt.
-##
-## Die Werte sind nicht nach Augenmaß gesetzt, sondern so, dass die Kiste MIT offenem
-## Deckel im Widget bleibt (siehe tests/treasure_chest_test.gd). Ein aufgeklappter
-## Deckel braucht die doppelte Höhe der zugesperrten Kiste — deshalb sitzt die Kiste im
-## unteren Drittel; der Platz darüber ist der, durch den die Münzen fliegen.
-##
-## `CAM_SIZE` bezieht sich auf die HÖHE DES WIDGETS. Der gerenderte Ausschnitt ist um
-## STAGE_PAD größer, das Bildfeld der Kamera also um denselben Faktor — sonst würde die
-## Kiste kleiner, sobald man den Münzen mehr Platz gibt.
+## Kamera wie im Kampf (orthografisch, Grad). `CAM_SIZE`: Bildfeldhöhe über der
+## Widget-Höhe in Modell-Einheiten (siehe `_cam_size`), `CAM_HEIGHT` der Zielpunkt. Die
+## Kiste bleibt mit offenem Deckel im Widget (tests/treasure_chest_test.gd).
 const CAM_PITCH := -22.0
 const CAM_YAW := 35.0
 const CAM_SIZE := 2.9
@@ -137,14 +71,10 @@ const CAM_HEIGHT := 0.88
 const SUN_ROT := Vector3(-55.0, -35.0, 0.0)
 const FILL_ROT := Vector3(-20.0, 150.0, 0.0)
 ## So weit steht der 3D-Ausschnitt je Seite über das Widget hinaus, als Anteil der
-## Widget-Größe. Ein Control wird von Godot nicht beschnitten, ein SubViewport schon hart
-## an seiner Kante — ohne dieses Polster wären die Münzen im Kistenfenster gefangen.
-## Gezeichnet wird darin nur die Kiste und was fliegt; der Rest ist durchsichtig.
+## Widget-Größe: ein SubViewport schneidet hart an seiner Kante, die Münzen brauchen Platz.
 const STAGE_PAD := Vector2(0.5, 0.75)
-## So weit dreht der Deckel auf, und so weit hebt er sich dabei vom Scharnier ab
-## (Modell-Einheiten). Bewusst zurückhaltend: der Deckel soll aufschlagen und im Bild
-## BLEIBEN. Der SubViewport schneidet hart an der Kante ab, ein weggeschleuderter Deckel
-## wäre also kein Abflug, sondern ein Abschnitt — das Platzen machen Licht und Münzen.
+## Öffnungswinkel des Deckels (Grad) und Abheben vom Scharnier (Modell-Einheiten). Klein
+## genug, dass der Deckel im Ausschnitt bleibt.
 const LID_OPEN_DEG := 70.0
 const LID_FLY := 0.15
 
@@ -154,26 +84,25 @@ enum State {
 	OPENED,   ## Deckel ab, Münzen fliegen bzw. sind geflogen.
 }
 
-## Farben je Güte für die GEZEICHNETE Kiste, in der Reihenfolge von ChestReward.Tier:
-## [Korpus, Deckel, Beschlag]. Das Gold der Goldkiste ist dasselbe wie das der Münze
-## (DayCoin.FACE_GOLD) — eine goldene Kiste voll Gold soll wie aus einem Stück aussehen.
+## Farben je Güte für die gezeichnete Kiste, in der Reihenfolge von ChestReward.Tier:
+## [Korpus, Deckel, Beschlag].
 const PALETTES := [
 	[Color(0.42, 0.28, 0.16), Color(0.52, 0.35, 0.2), Color(0.58, 0.47, 0.32)],
 	[Color(0.36, 0.24, 0.15), Color(0.45, 0.3, 0.18), Color(0.78, 0.48, 0.22)],
 	[Color(0.28, 0.29, 0.34), Color(0.35, 0.36, 0.42), Color(0.8, 0.83, 0.88)],
 	[Color(0.38, 0.29, 0.13), Color(0.47, 0.36, 0.16), Color(0.98, 0.84, 0.38)],
 ]
-## Fortschrittsbalken unter der Kiste: gedämpfte Spur, bernsteinfarbene Füllung wie die
-## Hinweistexte im Menü.
+## Fortschrittsbalken unter der Kiste: Spur und Füllung.
 const TRACK := Color(0.25, 0.25, 0.3)
 const FILL := Color(1.0, 0.8, 0.35)
 ## Licht, das beim Platzen aus der Kiste kommt.
 const GLOW := Color(1.0, 0.9, 0.55)
+## Anteil von COIN_FLIGHT, über den das Licht verblasst.
+const GLOW_SHARE := 0.6
 
 ## Haltezeit dieser Kiste. Voreingestellt ist HOLD_TIME; die Werkbank verstellt sie.
 var hold_time: float = HOLD_TIME
-## Modell oder Zeichnung. Umschaltbar für den Vergleich in der Werkbank; wirkt beim
-## nächsten `present()`.
+## Modell oder Zeichnung; wirkt beim nächsten `present()`.
 var use_model := true
 
 var _state: State = State.CLOSED
@@ -190,32 +119,27 @@ var _coins_override := -1
 @onready var _stage: SubViewportContainer = %Stage
 @onready var _view: SubViewport = %View
 @onready var _pivot: Node3D = %Pivot
-## Zwei Münzschichten, von denen immer nur eine belegt ist: Modelle in der 3D-Welt,
-## Zeichnungen in der 2D-Schicht darüber (für die gezeichnete Kiste).
+## Münzschichten (3D-Modelle oder 2D-Zeichnungen), immer nur eine belegt.
 @onready var _coins_3d: Node3D = %Coins3D
 @onready var _coin_layer: Control = %Coins
 
 var _model: Node3D = null
 var _lid_node: Node3D = null
 var _lid_home := Vector3.ZERO
-## Alles, was für die AKTUELLE Kiste läuft: Deckel, Licht, Münzflüge. `present()` bricht
-## sie ab, sonst zieht der Lichtring der vorigen Kiste über die neue hinweg — und ein
-## Tween auf einer schon weggeräumten Münze meldet sich in der Konsole.
+## Alle Tweens der aktuellen Kiste; `present()` bricht sie ab.
 var _tweens: Array[Tween] = []
 
 
 func _ready() -> void:
-	# Die Kiste ist das anklickbare Element; Viewport und Münzschicht dürfen den Griff
-	# nicht abfangen, sonst reißt eine im Weg liegende Münze das Halten ab (mouse_filter
-	# steht in der Szene).
+	# Viewport und Münzschicht ignorieren die Maus (in der Szene gesetzt), sonst risse eine
+	# Münze im Weg das Halten ab.
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	_setup_view()
 	_layout_stage()
 
 
-## Kamera und Licht per Code, damit die .tscn keine Transform-Basis-Mathematik enthalten
-## muss (wie in WaveRunner._setup_view).
+## Kamera und Licht per Code, damit die .tscn keine Transform-Basen enthält.
 func _setup_view() -> void:
 	var cam_pivot := %CamPivot as Node3D
 	cam_pivot.rotation_degrees = Vector3(CAM_PITCH, CAM_YAW, 0.0)
@@ -228,11 +152,9 @@ func _setup_view() -> void:
 	(%Fill as DirectionalLight3D).rotation_degrees = FILL_ROT
 
 
-## Legt den 3D-Ausschnitt um STAGE_PAD über das Widget hinaus. Anker bleiben auf Vollbild,
-## verschoben wird über die Offsets — so überlebt das Polster jeden Layout-Durchgang des
-## übergeordneten Containers. Die Größe des SubViewports wird zusätzlich von Hand gesetzt:
-## der Container tut das selbst erst bei seiner nächsten Größenänderung, und Tests (wie
-## der Rahmen-Test) messen sofort.
+## Legt den 3D-Ausschnitt um STAGE_PAD über das Widget hinaus, über die Offsets bei
+## Vollbild-Ankern. Die SubViewport-Größe wird von Hand gesetzt, weil der Container sie
+## erst bei seiner nächsten Größenänderung nachzieht.
 func _layout_stage() -> void:
 	if _stage == null:
 		return
@@ -241,7 +163,7 @@ func _layout_stage() -> void:
 	_stage.offset_top = -pad.y
 	_stage.offset_right = pad.x
 	_stage.offset_bottom = pad.y
-	# Vor dem ersten Layout-Durchgang ist die Größe noch 0 — ein SubViewport will mehr.
+	# Vor dem ersten Layout-Durchgang ist die Größe noch 0.
 	_view.size = Vector2i((size + pad * 2.0).max(Vector2.ONE))
 
 
@@ -250,20 +172,14 @@ func stage_pad() -> Vector2:
 	return (size * STAGE_PAD).round()
 
 
-## Höhe des Bildfelds in Modell-Einheiten. Wächst mit dem Polster, damit die Kiste im
-## Widget immer gleich groß bleibt (siehe CAM_SIZE).
+## Höhe des Bildfelds in Modell-Einheiten, mit dem Polster gewachsen.
 func _cam_size() -> float:
 	return CAM_SIZE * (1.0 + 2.0 * STAGE_PAD.y)
 
 
-## Auf dieser Höhe ist eine Münze über `x`/`z` aus dem Bild gefallen. Aus dem Bildfeld
-## gerechnet und nicht als Konstante daneben: sonst hängen zwei Zahlen aneinander, von
-## denen die eine still falsch wird, wenn man an der anderen dreht.
-##
-## Über die Bildachse der Kamera und nicht über die Welthöhe: die Kamera blickt schräg von
-## oben, ein Fall um Δy rückt im Bild also nur um Δy·cos(Neigung) weiter, und wo die Münze
-## vorn oder seitlich landet, verschiebt sie zusätzlich. Mit der Welthöhe allein blieben
-## gerade die weit gestreuten Münzen knapp über der Kante liegen.
+## Auf dieser Höhe ist eine Münze über `x`/`z` aus dem Bild gefallen. Gerechnet über die
+## Bildachse der schrägen Kamera, nicht über die Welthöhe: Δy rückt im Bild nur um
+## Δy·cos(Neigung), und `x`/`z` verschieben zusätzlich.
 func _floor_y(x: float, z: float) -> float:
 	var up := Basis.from_euler(Vector3(deg_to_rad(CAM_PITCH), deg_to_rad(CAM_YAW), 0.0)).y
 	var goal := -_cam_size() * 0.5 - COIN_CLEARANCE
@@ -271,12 +187,8 @@ func _floor_y(x: float, z: float) -> float:
 	return CAM_HEIGHT + (goal - up.x * x - up.z * z) / up.y
 
 
-## Stellt eine Kiste der Güte `tier` mit `gold` Inhalt hin — geschlossen und wartend.
-## Mehrfach aufrufbar: dieselbe Kiste dient der nächsten Welle wieder.
-##
-## `coins` > 0 setzt die Zahl der herausfliegenden Münzen von Hand, statt eine je Gold
-## zu nehmen (siehe coin_count). Das braucht die Werkbank, um den Effekt einzeln zu
-## beurteilen; im Spiel bleibt es beim Standard -1.
+## Stellt eine Kiste der Güte `tier` mit `gold` Inhalt hin, geschlossen und wartend.
+## Mehrfach aufrufbar. `coins` > 0 setzt die Zahl der Münzen von Hand statt `coin_count`.
 func present(tier: int, gold: int, coins := -1) -> void:
 	_kill_tweens()
 	_clear_coins()
@@ -300,19 +212,17 @@ func is_open() -> bool:
 	return _state == State.OPENED
 
 
-## Haltefortschritt 0..1 — die Anzeige zeichnet er selbst, der Wert ist für Tests und
-## Hinweistexte.
+## Haltefortschritt 0..1.
 func progress() -> float:
 	return clampf(_hold / maxf(0.01, hold_time), 0.0, 1.0)
 
 
-## Zahl der gerade fliegenden Münzen — Modelle wie Zeichnungen. Immer nur eine der beiden
-## Schichten ist belegt (siehe _coins_3d), die Summe ist also die Zahl im Flug.
+## Zahl der gerade fliegenden Münzen, Modelle wie Zeichnungen.
 func coins_in_flight() -> int:
 	return _coins_3d.get_child_count() + _coin_layer.get_child_count()
 
 
-## Das gerade gezeigte Modell — null, wenn gezeichnet wird. Für Tests und Werkbank.
+## Das gerade gezeigte Modell, null, wenn gezeichnet wird.
 func model() -> Node3D:
 	return _model
 
@@ -325,8 +235,7 @@ func _gui_input(event: InputEvent) -> void:
 	accept_event()
 
 
-## Der Zeiger verlässt die Kiste, während gedrückt wird: das ist ein Loslassen. Sonst
-## könnte man die Maus wegziehen und die Kiste ginge trotzdem auf.
+## Verlässt der Zeiger die Kiste, gilt das als Loslassen.
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_MOUSE_EXIT:
 		_mouse_held = false
@@ -336,8 +245,7 @@ func _notification(what: int) -> void:
 
 
 func _process(delta: float) -> void:
-	# Unsichtbare Knoten laufen weiter: ohne diesen Riegel würde eine gedrückte Leertaste
-	# irgendwo im Wellenabschluss die noch nicht gezeigte Kiste aufdrücken.
+	# Unsichtbar läuft `_process` weiter; eine gedrückte Taste darf die Kiste dann nicht öffnen.
 	if not is_visible_in_tree():
 		return
 	if _state == State.OPENED:
@@ -356,9 +264,7 @@ func _process(delta: float) -> void:
 
 # --- Aufdrücken ---------------------------------------------------------------
 #
-# Öffentlich, damit das Aufdrücken ohne Maus, ohne Fenster und ohne zwei Sekunden
-# Wartezeit prüfbar ist (siehe tests/treasure_chest_test.gd). `_process` entscheidet nur,
-# ob gerade gedrückt wird.
+# Öffentlich für Tests; `_process` entscheidet nur, ob gerade gedrückt wird.
 
 func begin_hold() -> void:
 	if _state != State.CLOSED:
@@ -368,8 +274,7 @@ func begin_hold() -> void:
 	hold_started.emit()
 
 
-## Schiebt den Haltefortschritt um `delta` Sekunden weiter und öffnet die Kiste, sobald
-## HOLD_TIME erreicht ist.
+## Schiebt den Haltefortschritt um `delta` s weiter; bei `hold_time` platzt die Kiste.
 func hold(delta: float) -> void:
 	if _state != State.HOLDING:
 		return
@@ -395,24 +300,21 @@ func _burst() -> void:
 	_state = State.OPENED
 	_hold = hold_time
 	_apply_wobble()
-	# Derselbe knappe Schlag wie ein erledigtes Monster — bis es einen eigenen
-	# Kistenklang gibt, ist das der vorhandene „etwas platzt"-Laut im Spiel.
 	Sfx.play(&"monster_kill")
 	var tw := _new_tween()
 	tw.set_parallel(true)
-	# BACK schießt über und federt zurück: der Deckel schlägt auf, statt sanft zu öffnen.
 	tw.tween_method(_set_lid, 0.0, 1.0, LID_TIME).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.tween_method(_set_burst, 0.0, 1.0, COIN_FLIGHT * 0.6)
+	tw.tween_method(_set_burst, 0.0, 1.0, COIN_FLIGHT * GLOW_SHARE)
 	_fly_coins()
 	opened.emit(_gold)
 
 
-## Deckelstellung 0..1: beim Modell dreht der eigene Deckel-Knoten um sein Scharnier auf
-## und fliegt dabei weg, bei der Zeichnung fährt derselbe Wert die gezeichnete Klappe.
+## Deckelstellung 0..1, für Modell und Zeichnung.
 func _set_lid(value: float) -> void:
 	_lid = value
 	if _lid_node != null:
 		_lid_node.rotation.x = deg_to_rad(-LID_OPEN_DEG * value)
+		# Beim Abheben rückt der Deckel um gut ein Drittel davon nach hinten.
 		_lid_node.position = _lid_home + Vector3(0.0, LID_FLY * value, -LID_FLY * 0.35 * value)
 	queue_redraw()
 
@@ -424,14 +326,12 @@ func _set_burst(value: float) -> void:
 
 # --- Modell aufbauen ----------------------------------------------------------
 
-## Hängt das Modell der aktuellen Güte unter den Pivot. Fehlt die Datei oder ist die
-## Zeichnung gewählt, bleibt der Viewport aus und `_draw` übernimmt.
+## Hängt das Modell der aktuellen Güte unter den Pivot; ohne Modell zeichnet `_draw`.
 func _build_model() -> void:
 	_lid_node = null
 	if _model != null:
 		_pivot.remove_child(_model)
-		# Sofort und nicht per queue_free(): _lid_node zeigt eine Zeile höher schon auf
-		# null, und der Deckel-Tween ist in present() abgebrochen.
+		# Sofort freigeben: `_lid_node` ist schon null, die Tweens sind abgebrochen.
 		_model.free()
 		_model = null
 	_stage.visible = use_model
@@ -449,9 +349,7 @@ func _build_model() -> void:
 	_recolor_metal(_model, TIER_METAL[_tier])
 
 
-## Der Deckel heißt im Pack wie das Modell mit `_lid` hinten dran (`chest_lid`) und hängt
-## unter dem Korpus. Über den Namen gesucht und nicht über die Reihenfolge: die Reihenfolge
-## der Kinder ist eine Eigenschaft des Exports, der Name eine des Packs.
+## Der Deckel (`chest_lid`), über den Namen gesucht: die Reihenfolge hängt vom Export ab.
 func _find_lid(node: Node) -> Node3D:
 	for child in node.get_children():
 		if child is Node3D and child.name.ends_with("_lid"):
@@ -462,9 +360,7 @@ func _find_lid(node: Node) -> Node3D:
 	return null
 
 
-## Gibt dem Beschlag die Farbe der Güte, indem seine UV-Koordinaten ein Atlas-Feld weiter
-## rücken (siehe TIER_METAL). Das Holz bleibt unberührt, weil kein Dreieck in beiden
-## Feldern liegt.
+## Gibt dem Beschlag die Farbe der Güte (siehe ATLAS_CELLS).
 func _recolor_metal(node: Node, cell: Vector2i) -> void:
 	if cell != METAL_CELL:
 		var mesh := node as MeshInstance3D
@@ -474,12 +370,9 @@ func _recolor_metal(node: Node, cell: Vector2i) -> void:
 		_recolor_metal(child, cell)
 
 
-## Kopie des Meshes, in der die Beschlag-Vertices auf `cell` zeigen.
-##
-## `surface_get_arrays` gibt die Daten als KOPIE heraus, und das neue Mesh ist ein eigenes
-## ArrayMesh — das Mesh aus dem Pack bleibt also unangetastet. Es muss auch: Godot hält
-## geladene Ressourcen im Cache, eine Änderung daran träfe jede weitere Kiste und jedes
-## andere Teil, das dasselbe Mesh benutzt.
+## Kopie des Meshes, in der die Beschlag-Vertices auf `cell` zeigen. `surface_get_arrays`
+## liefert eine Kopie und das Ergebnis ist ein eigenes ArrayMesh: das geladene Mesh ist
+## geteilt und bleibt unangetastet (CONVENTIONS „Fallen“).
 func _mesh_with_metal_cell(source: Mesh, cell: Vector2i) -> ArrayMesh:
 	var shift := Vector2(cell - METAL_CELL) / Vector2(ATLAS_CELLS)
 	var out := ArrayMesh.new()
@@ -495,14 +388,13 @@ func _mesh_with_metal_cell(source: Mesh, cell: Vector2i) -> ArrayMesh:
 	return out
 
 
-## Atlas-Feld, in dem eine UV-Koordinate liegt. Öffentlich für den Test, der nachrechnet,
-## welche Farbe der Beschlag je Güte bekommt.
+## Atlas-Feld, in dem eine UV-Koordinate liegt.
 static func cell_of(uv: Vector2) -> Vector2i:
 	return Vector2i(int(uv.x * float(ATLAS_CELLS.x)), int(uv.y * float(ATLAS_CELLS.y)))
 
 
-## Wackeln des Modells: drehen, kippen, hüpfen und größer werden, alles mit dem
-## Fortschritt wachsend. Im gezeichneten Fall macht das `_draw` selbst.
+## Wackeln des Modells, mit dem Fortschritt wachsend. Gekippt wird mit halber Frequenz
+## und 0,4-facher, gedreht mit 1,6-facher Auslenkung.
 func _apply_wobble() -> void:
 	if _pivot == null:
 		return
@@ -523,8 +415,7 @@ func _apply_wobble() -> void:
 
 # --- Münzen -------------------------------------------------------------------
 
-## Eine Münze je Goldstück, aus der Kiste heraus. Steht ein Modell, fliegen Modelle in
-## der 3D-Welt; zeichnet sich die Kiste selbst, fliegen die gezeichneten Münzen.
+## Eine Münze je Goldstück, als Modell in der 3D-Welt oder gezeichnet.
 func _fly_coins() -> void:
 	var count := _coins_override if _coins_override > 0 else coin_count(_gold)
 	if count <= 0:
@@ -535,9 +426,8 @@ func _fly_coins() -> void:
 		_fly_coins_2d(count)
 
 
-## Der Flug in der 3D-Welt: aus dem Kistenmaul hoch und auseinander, dabei taumelnd, dann
-## unter die Kante des Bildfelds. Alle Münzen teilen Mesh und Material des Packs, es gibt
-## also nichts zu kopieren — die Zahl der Münzen kostet Knoten und Tweens, nicht Material.
+## Der Flug in der 3D-Welt. Streuung in Modell-Einheiten, Teilzeiten als Anteile von
+## `COIN_FLIGHT`.
 func _fly_coins_3d(count: int) -> void:
 	var path := "%s/%s.gltf" % [MODEL_DIR, COIN_MODEL]
 	if not ResourceLoader.exists(path):
@@ -552,9 +442,9 @@ func _fly_coins_3d(count: int) -> void:
 		_coins_3d.add_child(coin)
 		coin.position = COIN_MOUTH + Vector3(
 				rng.randf_range(-0.2, 0.2), 0.0, rng.randf_range(-0.15, 0.15))
-		# Aufgestellt: die Münze liegt im Modell flach, als Scheibe ist sie zu erkennen.
+		# Aufgestellt: die Münze liegt im Modell flach.
 		coin.rotation = Vector3(PI * 0.5, rng.randf() * TAU, 0.0)
-		# Fächer über die ganze Breite, aber immer nach OBEN aus der Kiste heraus.
+		# Fächer über die ganze Breite, immer nach oben aus der Kiste heraus.
 		var side := (float(i) + rng.randf()) / float(count) - 0.5
 		var peak := coin.position + Vector3(
 				side * COIN_SPREAD,
@@ -568,7 +458,6 @@ func _fly_coins_3d(count: int) -> void:
 				.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT).set_delay(delay)
 		tw.tween_property(coin, "position", gone, COIN_FLIGHT * 0.75) \
 				.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-		# Unten angekommen ist sie nicht mehr im Flug — und nicht mehr im Bild.
 		tw.tween_callback(coin.queue_free)
 		var turn := Vector3(rng.randf_range(-0.5, 0.5), rng.randf_range(COIN_TURNS.x, COIN_TURNS.y), 0.0)
 		var spin := _new_tween()
@@ -576,12 +465,10 @@ func _fly_coins_3d(count: int) -> void:
 				.set_delay(delay)
 
 
-## Der gezeichnete Flug: derselbe Bogen in 2D, für die gezeichnete Kiste. Die Münzen
-## verblassen hier statt aus dem Bild zu fallen — die Schicht ist so groß wie das Widget.
+## Der gezeichnete Flug, Weiten als Anteil der Widget-Größe. Die Schicht ist so groß wie
+## das Widget, deshalb verblassen die Münzen.
 func _fly_coins_2d(count: int) -> void:
 	var center := size * 0.5
-	# Bei vielen Münzen rücken sie zusammen, damit die Garbe nicht länger wird als der
-	# Flug selbst (siehe COIN_STAGGER_TOTAL).
 	var step := minf(COIN_STAGGER, COIN_STAGGER_TOTAL / float(count))
 	var rng := RandomNumberGenerator.new()
 	rng.randomize()
@@ -592,7 +479,7 @@ func _fly_coins_2d(count: int) -> void:
 		coin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var coin_size := coin.custom_minimum_size
 		coin.position = center - coin_size * 0.5
-		# Fächer über die ganze Breite, aber immer nach OBEN aus der Kiste heraus.
+		# Fächer über die ganze Breite, immer nach oben aus der Kiste heraus.
 		var spread := (float(i) + rng.randf()) / float(count) - 0.5
 		var peak := coin.position + Vector2(spread * size.x * 1.4, -size.y * rng.randf_range(0.5, 1.0))
 		var fall := peak + Vector2(spread * size.x * 0.4, size.y * rng.randf_range(0.6, 1.1))
@@ -608,7 +495,6 @@ func _fly_coins_2d(count: int) -> void:
 		fade.tween_callback(coin.queue_free)
 
 
-## Ein Tween, den `present()` wieder loswird (siehe _tweens).
 func _new_tween() -> Tween:
 	var tw := create_tween()
 	_tweens.append(tw)
@@ -622,9 +508,7 @@ func _kill_tweens() -> void:
 	_tweens.clear()
 
 
-## Die Münzen der vorigen Kiste sofort weg — nicht per queue_free() zum Frame-Ende
-## vormerken: bis dahin hingen sie noch in der Schicht und wären mitgezählt. Ihre Tweens
-## sind vorher abgebrochen (siehe _kill_tweens), also hält sie niemand mehr.
+## Sofort statt per queue_free(), sonst zählten die Münzen bis zum Frame-Ende mit.
 func _clear_coins() -> void:
 	for layer: Node in [_coins_3d, _coin_layer]:
 		for child in layer.get_children():
@@ -632,17 +516,14 @@ func _clear_coins() -> void:
 			child.free()
 
 
-## So viele Münzen fliegen für `gold` heraus: genau eine je Goldstück. Der Haufen in der
-## Luft IST der Fund — eine gedeckelte Zahl hätte gelogen, sobald die Wellen größer
-## werden, und die Zahl der Münzen ist das erste, was man an der Kiste abliest.
+## So viele Münzen fliegen für `gold` heraus: genau eine je Goldstück, ungedeckelt.
 static func coin_count(gold: int) -> int:
 	return maxi(0, gold)
 
 
 # --- Zeichnen -----------------------------------------------------------------
 #
-# Der Fortschrittsbalken und das Licht beim Platzen werden IMMER gezeichnet: sie liegen
-# hinter dem (transparenten) Viewport. Der Korpus selbst nur, wenn kein Modell dasteht.
+# Balken und Licht liegen hinter dem Viewport; den Korpus zeichnet nur, wer kein Modell hat.
 
 func _draw() -> void:
 	var center := size * 0.5
@@ -653,9 +534,7 @@ func _draw() -> void:
 		else:
 			_draw_progress(p)
 		return
-	# Nur die KISTE wackelt, der Fortschrittsbalken darunter nicht: ein mitschwingender
-	# Balken ist nicht mehr zu lesen. Deshalb die Verschiebung im Zeichnen und nicht als
-	# rotation/scale des Knotens — die nähme die Münzen und den Balken mit.
+	# Gewackelt wird im Zeichnen, damit Balken und Münzen ruhig bleiben.
 	var angle := 0.0
 	var zoom := 1.0
 	if _state == State.HOLDING:
@@ -675,7 +554,8 @@ func _draw_glow(at: Vector2, radius: float) -> void:
 	draw_arc(at, r, 0.0, TAU, 32, Color(GLOW, 0.6 * (1.0 - _burst_t)), 2.0, true)
 
 
-## Zeichnet die Kiste um den Ursprung (der ist per draw_set_transform die Mitte).
+## Zeichnet die Kiste um den Ursprung (per draw_set_transform die Mitte). Alle Maße sind
+## Anteile der Kistenbreite `cw` bzw. -höhe `ch`.
 func _draw_chest() -> void:
 	var palette: Array = PALETTES[_tier]
 	var body_color: Color = palette[0]
@@ -693,8 +573,7 @@ func _draw_chest() -> void:
 		_draw_glow(Vector2(0.0, top + lid_h), cw * 0.35)
 
 	draw_rect(body, body_color)
-	# Waagerechter Beschlag und senkrechter Riemen: erst die machen aus dem Kasten eine
-	# Kiste.
+	# Waagerechter Beschlag und senkrechter Riemen.
 	draw_rect(Rect2(body.position.x, body.position.y, body.size.x, body.size.y * 0.16), fitting)
 	draw_rect(Rect2(-cw * 0.08, body.position.y, cw * 0.16, body.size.y), fitting)
 	# Schloss.
@@ -715,8 +594,7 @@ func _draw_chest() -> void:
 			lid_rect.size.x, lid_h * 0.24), Color(fitting, 1.0 - 0.7 * _lid))
 
 
-## Fortschritt des Aufdrückens als Balken unter der Kiste. Er steht ruhig, während die
-## Kiste wackelt — er ist die Auskunft, das Wackeln ist die Wirkung.
+## Fortschritt des Aufdrückens als Balken unter der Kiste, px.
 func _draw_progress(p: float) -> void:
 	var track_h := 6.0
 	var track_w := size.x * 0.6

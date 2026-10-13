@@ -1,10 +1,7 @@
 class_name ProfileCard
 extends Button
-## Eine Kachel in „Wer spielt?" (profile_pick): Büste, Name und Level eines Profils.
-## Gewählt ist die Kachel golden und die Büste farbig, sonst silbern.
-##
-## „✓ Ausgewählt" steht auf jeder Kachel und wird nur sichtbar geschaltet — so behält die
-## Kachel ihre Höhe, wenn die Wahl wechselt.
+## Eine Kachel in „Wer spielt?“: Büste, Name und Level eines Profils; gewählt farbig,
+## sonst silbern. „✓ Ausgewählt“ wird nur durchsichtig, damit die Höhe bleibt.
 
 var profile_id := ""
 

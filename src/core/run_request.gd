@@ -1,16 +1,8 @@
 class_name RunRequest
 extends RefCounted
-## Was der nächste Kampf spielt — und wohin es danach zurückgeht (ADR 0006).
-##
-## Zwei Wege führen in einen Kampf: die Karte (ein Level einer Unit) und der Expertenmodus
-## („Runde vorbereiten" mit den gespeicherten Filtern des Profils). Kampf und Boss lesen
-## ihren Bereich HIER und nicht mehr direkt aus UserSettings — sonst spielte ein Level
-## von der Karte mit den Filtern, die jemand irgendwann im Expertenmodus gesetzt hat.
-##
-## Der Zustand ist statisch, damit er den Szenenwechsel überdauert; er gehört dem Lauf,
-## nicht dem Profil. Gespeichert wird er nur in einem begonnenen Lauf von der Karte, und
-## dort nur seine Orte (RunSave, ADR 0020). Ohne gesetztes Level gilt der
-## Expertenmodus — so verhält sich jeder Einstieg, der RunRequest nicht kennt, wie bisher.
+## Was der nächste Kampf spielt und wohin es danach zurückgeht (ADR 0006): ein Level der
+## Karte, eine Testliste oder der Expertenmodus (ohne gesetztes Level). Statisch, damit es
+## den Szenenwechsel überdauert; gehört dem Lauf, nicht dem Profil.
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 const AREA_SCENE := "res://scenes/ui/area_map.tscn"
@@ -19,25 +11,21 @@ const TEST_SCENE := "res://scenes/ui/test_prep.tscn"
 ## Das Level von der Karte (MapLevel.levels_for), oder leer im Expertenmodus.
 static var _level: Dictionary = {}
 
-## Die Wahl „Ich-Sicht" — auf der Gebietskarte oder zuletzt im Kampf umgeschaltet. Nur der
-## Wunsch: ob er gilt, entscheidet `first_person()` mit dem Skill-Baum. Hält wie das Level
-## nur bis zum Programmende.
+## Gewünschte Ich-Sicht; ob sie gilt, entscheidet `first_person()` mit dem Skill-Baum.
 static var _first_person_wanted := false
 
-## Die Testliste (TestLists), wenn der Lauf eine Arbeit vorbereitet — sonst leer. Ein
-## Testlauf ist weder Level noch Expertenmodus: er spielt genau die Wörter der Liste.
+## Die Testliste (TestLists) eines Testlaufs, sonst leer. Er spielt genau ihre Wörter.
 static var _test: Dictionary = {}
 ## Ihr Scope (TestLists.run_scope), beim Start einmal gerechnet.
 static var _test_scope: Array = []
 
-## Der begonnene Lauf, den der nächste Kampf fortsetzt (RunSave), sonst leer. Der Kampf
-## nimmt ihn genau einmal (`take_resume`): ein „Nochmal" von der Karte beginnt neu.
+## Der begonnene Lauf, den der nächste Kampf fortsetzt (RunSave), sonst leer; genau einmal
+## über `take_resume` abzuholen.
 static var _resume: Dictionary = {}
 
 
-## Der nächste Kampf spielt dieses Level (von der Gebietskarte).
-## `resume` ist ein begonnener Lauf (RunSave), den der Kampf fortsetzt; `level` ist dann
-## das aus seinen Orten neu gebaute Level (RunSave.resumable_level).
+## Der nächste Kampf spielt dieses Level. Mit `resume` (RunSave) setzt er einen begonnenen
+## Lauf fort; `level` ist dann RunSave.resumable_level.
 static func start_level(level: Dictionary, resume: Dictionary = {}) -> void:
 	_level = level.duplicate(true)
 	_test = {}
@@ -68,13 +56,12 @@ static func test_list() -> Dictionary:
 	return _test
 
 
-## Die Liste hat sich im Lauf geändert (neue Runde) — der Stand wird mitgeführt.
+## Führt den Stand der Testliste im Lauf mit.
 static func update_test(list: Dictionary) -> void:
 	if is_test():
 		_test = list.duplicate(true)
 
 
-## Auf der Gebietskarte oder im Kampf (WaveRunner._toggle_view) gewählt oder abgewählt.
 static func want_first_person(on: bool) -> void:
 	_first_person_wanted = on
 
@@ -83,18 +70,13 @@ static func wants_first_person() -> bool:
 	return _first_person_wanted
 
 
-## Beginnt der nächste Wellenkampf aus der Ich-Sicht? Jeder Wellenkampf — Karte,
-## Expertenmodus, Testlauf; umschalten lässt sie sich im Kampf ohnehin — aber nur mit
-## gelerntem Späherblick: wer den Knoten verlernt, steht wieder auf der Festung, ohne
-## dass ein zweiter Merker nachgezogen werden muss. Der Bosskampf fragt nicht: er bleibt,
-## wie er ist.
+## Beginnt der nächste Wellenkampf aus der Ich-Sicht? Nur gewünscht und mit gelerntem
+## Späherblick.
 static func first_person() -> bool:
 	return first_person_with(SkillBook.bonuses(), OS.is_debug_build())
 
 
-## Steht der Schalter auf der Gebietskarte und im Kampf? Mit gelerntem Späherblick — und im Debug-Build
-## immer, damit man die Ich-Sicht ohne fünf Skillpunkte ausprobieren kann (wie das
-## Debug-Panel gibt es das im veröffentlichten Build nicht).
+## Steht der Schalter zur Verfügung? Mit gelerntem Späherblick, im Debug-Build immer.
 static func first_person_selectable() -> bool:
 	return first_person_selectable_with(SkillBook.bonuses(), OS.is_debug_build())
 
@@ -103,8 +85,7 @@ static func first_person_selectable_with(bonuses: Dictionary, debug: bool) -> bo
 	return debug or FirstPersonView.unlocked(bonuses)
 
 
-## Dieselbe Regel mit übergebenen Boni und Build — prüfbar ohne das SkillBook des Profils
-## und unabhängig davon, dass die Tests selbst im Debug-Build laufen.
+## Dieselbe Regel mit übergebenen Boni und Build, für Tests.
 static func first_person_with(bonuses: Dictionary, debug := false) -> bool:
 	return _first_person_wanted and first_person_selectable_with(bonuses, debug)
 
@@ -124,7 +105,6 @@ static func level() -> Dictionary:
 	return _level
 
 
-## Der Curriculum-Scope des Laufs.
 static func scope() -> Array:
 	if is_test():
 		return _test_scope.duplicate()
@@ -140,8 +120,7 @@ static func tags() -> Array:
 	return Array(UserSettings.selected_tags())
 
 
-## Der Aufgaben-Pool des Wellenkampfs. Ein Level spielt alle Aufgaben- und Wortarten
-## seines Bereichs; der Expertenmodus die Auswahl des Profils (WaveGenerator).
+## Der Aufgaben-Pool des Wellenkampfs; ein Level spielt alle Aufgaben- und Wortarten.
 static func task_pool() -> Dictionary:
 	if is_test():
 		return {
@@ -162,15 +141,14 @@ static func task_pool() -> Dictionary:
 	}
 
 
-## Die Unit des Levels („<book>/<unit>"), leer im Expertenmodus. Nur ein Boss mit Unit
-## zählt als Sieg auf der Karte (BossRecord).
+## Die Unit des Levels („<book>/<unit>“), leer außerhalb eines Levels.
 static func unit_key() -> String:
 	if not is_level():
 		return ""
 	return "%s/%d" % [_level.get("book", ""), int(_level.get("unit", 0))]
 
 
-## Wohin „Zurück" nach dem Kampf führt: auf die Gebietskarte des Levels oder ins Menü.
+## Wohin „Zurück“ nach dem Kampf führt.
 static func return_scene() -> String:
 	if is_test():
 		return TEST_SCENE

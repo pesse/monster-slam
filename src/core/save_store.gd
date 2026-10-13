@@ -1,53 +1,23 @@
 class_name SaveStore
 extends RefCounted
-## Schreibt und liest Spielstand-Dateien so, dass ein Absturz sie nicht still zerstört
-## (docs/adr/0024-spielstand-sicher-speichern.md).
+## Schreibt und liest Spielstand-Dateien absturzsicher: `.tmp`, zurücklesen, umbenennen;
+## Prüfsumme als erstes Feld `_save` derselben Datei (ADR 0024).
 ##
-## Zwei Regeln, aus einem Vorfall: Ein Spielstand fiel von Level 26 auf Level 1, weil die
-## Erfahrung bei jedem Kill direkt überschrieben wurde (FileAccess.WRITE leert die Datei
-## sofort) und eine danach unlesbare Datei als „neues Profil" galt.
-##
-## 1. Geschrieben wird erst in `<datei>.tmp`, zurückgelesen und geprüft, dann umbenannt.
-##    Die alte Datei ist bis zum Umbenennen unberührt.
-## 2. Jede Datei trägt die Prüfsumme ihres Inhalts. `read` unterscheidet deshalb drei
-##    Fälle, die vorher einer waren: keine Datei (MISSING, ein neues Profil), eine
-##    beschädigte (CORRUPT) und eine aus einer neueren Fassung (NEWER). Beschädigt ist
-##    NIE „neu" — was damit geschieht, entscheidet der SaveCoordinator.
-##
-## Format — die Prüfsumme steht als erstes Feld in derselben Datei (keine Datei daneben:
-## zwei Dateien lassen sich nicht gemeinsam ersetzen):
-##
-##     {"_save":{"format":1,"sha256":"<64 hex>"},<JSON.stringify(data, "\t") ohne das erste "{">
-##
-## Die Prüfsumme gilt den Bytes von `JSON.stringify(data, "\t")`; beim Prüfen werden sie aus
-## der Datei zurückgewonnen („{" plus alles hinter dem Kopf), ohne Neu-Serialisieren
-## (Kommazahlen kämen sonst nicht Byte für Byte gleich heraus). Die Datei bleibt das
-## gewohnte JSON-Objekt mit einem Feld mehr: eine ältere Fassung des Spiels liest sie wie
-## bisher und übergeht `_save` — wer zurückwechselt (ein älterer Branch, ein Downgrade),
-## verliert nichts.
-##
-## Dateien aus der Zeit davor (ohne `_save`) gelten als OK mit `legacy`, wenn sie sich als
-## Dictionary lesen lassen, und bekommen die Prüfsumme beim nächsten Schreiben.
-##
-## Was Godot nicht kann: ein fsync. `flush()` leert nur den Puffer des Programms; nach einem
-## Stromausfall kann Windows die Umbenennung behalten und den Inhalt verlieren. Dagegen hilft
-## nur, was die Prüfsumme erkennt und die Sicherungen (Backups) ersetzen. Und
-## `DirAccess.rename_absolute` ist unter Windows „Ziel löschen, dann verschieben" — dazwischen
-## gibt es kurz nur die `.tmp`. `pending_tmp` und der SaveCoordinator räumen das beim Öffnen auf.
+## Die Prüfsumme gilt den Bytes von `JSON.stringify(data, "\t")` und wird beim Prüfen an
+## den Dateibytes gerechnet, nicht neu serialisiert (Kommazahlen kämen anders heraus).
+## Dateien ohne `_save` gelten als OK mit `legacy`. Umbenennen ist unter Windows „Ziel
+## löschen, dann verschieben“; eine liegengebliebene `.tmp` räumt der SaveCoordinator auf.
 
 enum Status { OK, MISSING, CORRUPT, NEWER }
 
 const FORMAT := 1
 const TMP_SUFFIX := ".tmp"
-## Die Zeile, mit der eine gesicherte settings.cfg beginnt (ConfigFile überliest Kommentare).
+## Erste Zeile einer gesicherten settings.cfg (für ConfigFile ein Kommentar).
 const CFG_HASH_PREFIX := "; sha256="
 
 const _PREFIX_PATTERN := "^\\{\"_save\":\\{\"format\":(\\d+),\"sha256\":\"([0-9a-f]{64})\"\\},?"
 
-## Ein Zwischenformat ({"format":1,"sha256":…,"data":<daten>}), das nur auf dem
-## Entwicklungsrechner geschrieben wurde, bevor die Hülle abwärtskompatibel wurde. Gelesen
-## wird es als `legacy` und beim nächsten Schreiben umgestellt. Kann weg, sobald dort
-## alles umgeschrieben ist.
+## Zwischenformat {"format":1,"sha256":…,"data":…}, gelesen als `legacy`.
 const _INTERIM_PATTERN := "^\\{\"format\":1,\"sha256\":\"([0-9a-f]{64})\",\"data\":"
 
 static var _prefix_regex: RegEx
@@ -56,9 +26,8 @@ static var _interim_regex: RegEx
 
 ## Liest `path`. Ergebnis:
 ##   { status: Status, data: Dictionary, legacy: bool, error: String }
-## `data` ist nur bei OK gefüllt. Mit `parse = false` wird eine Datei mit Hülle nur über die
-## Prüfsumme geprüft und nicht gelesen (`data` bleibt leer) — für große Dateien, deren
-## Inhalt der Aufrufer nicht braucht.
+## `data` ist nur bei OK gefüllt. Mit `parse = false` wird eine Datei mit Hülle nur über
+## die Prüfsumme geprüft (`data` bleibt leer).
 static func read(path: String, parse := true) -> Dictionary:
 	if not FileAccess.file_exists(path):
 		return _result(Status.MISSING)
@@ -69,7 +38,7 @@ static func read(path: String, parse := true) -> Dictionary:
 static func decode(bytes: PackedByteArray, parse := true) -> Dictionary:
 	if bytes.is_empty():
 		return _result(Status.CORRUPT, {}, false, "leer")
-	var head := bytes.slice(0, mini(bytes.size(), 120)).get_string_from_ascii()
+	var head := bytes.slice(0, mini(bytes.size(), 120)).get_string_from_ascii()   # reicht für den Kopf
 	var found := _regex().search(head)
 	if found == null:
 		return _decode_interim(bytes, head) if head.begins_with('{"format":1,') else _decode_legacy(bytes)
@@ -87,7 +56,6 @@ static func decode(bytes: PackedByteArray, parse := true) -> Dictionary:
 	return _result(Status.OK, parsed)
 
 
-## Die Datei, wie sie geschrieben wird (siehe Kopf).
 static func encode(data: Dictionary) -> PackedByteArray:
 	var body := JSON.stringify(data, "\t").to_utf8_buffer()
 	var out := ('{"_save":{"format":%d,"sha256":"%s"}' % [FORMAT, sha256_hex(body)]).to_utf8_buffer()
@@ -134,20 +102,19 @@ static func promote(path: String) -> Error:
 		err = DirAccess.rename_absolute(tmp, path)
 		if err == OK:
 			return OK
-		OS.delay_msec(50)
+		OS.delay_msec(50)   # Wartezeit je Versuch
 	push_warning("SaveStore: '%s' nicht ersetzt (%d)" % [path, err])
 	return err
 
 
-## Liegt eine `.tmp` neben `path`, die vollständig ist? Dann ist ein Schreiben zwischen
-## „Ziel gelöscht" und „umbenannt" abgebrochen (Windows) oder vor dem Umbenennen.
+## Liegt eine vollständige `.tmp` neben `path`, also ein vor dem Umbenennen
+## abgebrochenes Schreiben?
 static func pending_tmp(path: String) -> bool:
 	var tmp := path + TMP_SUFFIX
 	return FileAccess.file_exists(tmp) and int(read(tmp)["status"]) == Status.OK
 
 
-## Liest eine settings.cfg: { status, text, legacy }. `text` ist der ConfigFile-Text ohne
-## die Prüfzeile.
+## Liest eine settings.cfg: { status, text, legacy }; `text` ohne die Prüfzeile.
 static func read_cfg(path: String) -> Dictionary:
 	if not FileAccess.file_exists(path):
 		return {"status": Status.MISSING, "text": "", "legacy": false}
@@ -216,9 +183,9 @@ static func _decode_interim(bytes: PackedByteArray, head: String) -> Dictionary:
 		_interim_regex = RegEx.create_from_string(_INTERIM_PATTERN)
 	var found := _interim_regex.search(head)
 	var end := bytes.size()
-	while end > 0 and bytes[end - 1] in [9, 10, 13, 32]:
+	while end > 0 and bytes[end - 1] in [9, 10, 13, 32]:   # Tab, LF, CR, Leerzeichen
 		end -= 1
-	if found == null or end <= found.get_end() or bytes[end - 1] != 125:
+	if found == null or end <= found.get_end() or bytes[end - 1] != 125:   # "}"
 		return _result(Status.CORRUPT, {}, false, "abgeschnitten")
 	var body := bytes.slice(found.get_end(), end - 1)
 	if sha256_hex(body) != found.get_string(1):

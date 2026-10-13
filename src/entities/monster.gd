@@ -1,53 +1,44 @@
 class_name Monster
 extends Node3D
-## Ein normales Monster in 3D: trägt eine aufgelöste Aufgabe (den Prompt zeigt sein
-## Wortschild, siehe WordPlates) und bewegt sich entlang +Z auf die Festung zu. Präsentation +
-## Bewegung; Kampf-/Wellenlogik liegt im WaveRunner. Das Monster kennt die Aufgabe
-## nur als { prompt, accepted_answers, learnable_id, ... } (siehe TaskResolver).
+## Ein normales Monster in 3D: trägt eine aufgelöste Aufgabe (siehe TaskResolver), deren
+## Prompt sein Wortschild zeigt (WordPlates), und läuft entlang +Z auf die Festung zu.
+## Nur Darstellung und Bewegung; die Kampflogik liegt im WaveRunner.
 
-## Wird ausgelöst, wenn dieses Monster die Festung erreicht (Node-Handling im WaveRunner).
+## Das Monster hat die Festung erreicht.
 signal reached_goal(monster: Monster)
-## Das Schild soll jetzt auch die Alternativen der Aufgabe zeigen (Zauber, ADR 0014) —
-## nach `delay` Sekunden, wenn der Lichtvorhang des Zaubers es erreicht (SpellFx).
+## Das Schild soll die Alternativen der Aufgabe zeigen (ADR 0014), nach `delay` Sekunden.
 signal alts_revealed(delay: float)
 
 var monster_def: Dictionary = {}
 var task: Dictionary = {}
 
-## Aus der monster_task_rule abgeleitet und vom WaveGenerator gesetzt.
+## Aus der monster_task_rule abgeleitet, vom WaveGenerator gesetzt.
 var damage: int = 10
 var reward: int = 10
-## Erfahrung für dieses Monster, vom WaveGenerator aus seiner Schwierigkeit bestimmt
-## (Experience.for_monster) und beim SPAWN festgelegt: nach dem Treffer ist die
-## Confidence schon angehoben, und dann wäre nicht mehr zu sehen, ob die Aufgabe vorher
-## gemeistert war. Verbucht wird sie im WaveRunner (PlayerLevel).
+## Erfahrung für dieses Monster, beim Spawn festgelegt (Experience.for_monster): nach dem
+## Treffer ist die Confidence schon angehoben.
 var xp: int = Experience.MONSTER_XP_MIN
 
-## Zeitpunkt des Spawns (ms) für die Antwortzeit-Messung; vom WaveRunner gesetzt.
+## Zeitpunkt des Spawns (ms) für die Antwortzeit-Messung.
 var spawned_at_ms: int = 0
 
-## Ich-Sicht: das Wortschild steht in der größeren Ausführung — dort muss es auf jede
-## Entfernung lesbar sein. Vor add_child setzen.
+## Ich-Sicht: das Wortschild in der größeren Ausführung. Vor add_child setzen.
 var screen_sized_label := false
 
-## Die Aufgabe ist schon gemeistert (WaveGenerator, beim Spawn): das Monster tritt zurück —
-## halb durchsichtig, ohne leuchtenden Rand —, sein Schild wird matt (WordPlate). Es bringt
-## kaum noch etwas, der Blick soll zu den anderen. Vor add_child setzen.
+## Die Aufgabe ist schon gemeistert: halb durchsichtig, ohne Rand. Vor add_child setzen.
 var mastered := false
 
 ## Die Gruppe, aus der WordPlates die Schilder baut.
 const PLATE_GROUP := &"word_plate"
 
 var _speed: float = 2.0
-## Anteil des eigenen Tempos, mit dem es läuft — unter 1 nach einem Zauber (`slow_to`).
-## Das Tempo selbst bleibt die Schwierigkeit; das hier bremst nur.
+## Anteil des eigenen Tempos, unter 1 nach einem Zauber (`slow_to`).
 var pace := 1.0
-## Zeigt das Schild die Alternativen der Aufgabe (`reveal_alts`)?
+## Zeigt das Schild die Alternativen der Aufgabe (`show_alts`)?
 var alts_shown := false
 ## Wie lange es noch eingefroren ist (s Spielzeit).
 var _frozen_left := 0.0
-## Das Eis, solange es eingefroren ist, und der Schlamm, solange es gebremst ist — das Bild
-## der Zauber am Monster (FrostShell, SlowAura).
+## Bild der Zauber am Monster, solange sie wirken.
 var _frost: FrostShell
 var _aura: SlowAura
 var _anim: AnimationPlayer
@@ -55,36 +46,30 @@ var _outline: ShaderMaterial
 var _outline_color := Color.WHITE
 var _target_z: float = 0.0
 var _done: bool = false
-## Was sichtbar ist — das Modell oder der Platzhalter. `flinch` wackelt nur daran, damit
-## Position, Schild und Bahn unberührt bleiben.
+## Das sichtbare Modell oder der Platzhalter; `flinch` bewegt nur ihn.
 var _body: Node3D
 var _flinch: Tween = null
 
-## So deckend ist der Körper eines gemeisterten Monsters.
+## Deckkraft des Körpers eines gemeisterten Monsters.
 const MASTERED_ALPHA := 0.5
-## Durchsichtige Kopien der Modell-Materialien, je Original eine — geladene Materialien sind
-## geteilt und bleiben unberührt, und alle gemeisterten Monster teilen sich die Kopie.
+## Durchsichtige Kopien der Modell-Materialien, je Original eine (geladene Materialien sind
+## geteilt, siehe CONVENTIONS „Fallen“).
 static var _faded := {}
 
-## So färbt sich der Rand, solange es eingefroren ist.
+## Randfarbe, solange es eingefroren ist.
 const FROZEN_OUTLINE := Color(0.62, 0.86, 1.0)
 
-## Wortart-Outline: Inverted-Hull-Shader, Farbe je Wortart (siehe WordTypePalette).
+## Wortart-Outline: Inverted-Hull-Shader, Farbe je Wortart (WordTypePalette).
 const OUTLINE_SHADER := preload("res://assets/shaders/monster_outline.gdshader")
-const OUTLINE_WORLD_WIDTH := 0.12   # gewünschte Rand-Dicke in Welteinheiten
-const OUTLINE_GLOW_STRENGTH := 1.0  # Emission-Faktor; genau 1.0 => kein Kanal-Clipping,
-                                    # Outline-Farbe == Legenden-Farbe. Der Glow-Halo kommt
-                                    # aus dem WorldEnvironment (niedrige HDR-Schwelle).
+const OUTLINE_WORLD_WIDTH := 0.12   # Rand-Dicke in m
+const OUTLINE_GLOW_STRENGTH := 1.0  # Emission-Faktor; genau 1.0, damit die Randfarbe der Legende entspricht
 
 @onready var _plate_anchor: Marker3D = $PlateAnchor
 @onready var _placeholder: MeshInstance3D = $Placeholder
 
 
-## Muss VOR add_child aufgerufen werden, damit _ready Label/Modell korrekt setzt.
-## `speed_units` ist die vom WaveGenerator aus der Schwierigkeit (Grundschwierigkeit
-## der Aufgabe + Confidence + Wellenfaktor) berechnete Geschwindigkeit; sie wird hier
-## auf 3D-Einheiten/s heruntergerechnet. Geschwindigkeit IST Schwierigkeit — das Monster
-## selbst trägt kein eigenes Tempo mehr.
+## Vor add_child aufrufen. `speed_units` ist das Tempo aus dem WaveGenerator (die
+## Schwierigkeit); 20 dieser Einheiten sind ein Meter.
 func setup(def: Dictionary, task_data: Dictionary, target_z: float, speed_units: float) -> void:
 	monster_def = def
 	task = task_data
@@ -97,24 +82,20 @@ func _ready() -> void:
 	_apply_model()
 
 
-## Was auf dem Wortschild steht.
 func prompt() -> String:
 	return str(task.get("prompt", "?"))
 
 
-## Die Farbe der Wortart, wie die Outline am Modell (WordTypePalette).
 func word_color() -> Color:
 	return WordTypePalette.color_for(str(task.get("lexeme_type", "")))
 
 
-## Die Alternativen der Aufgabe („go, auch: walk"), wie sie das Reveal zeigt. Nur
-## Übersetzungen haben welche.
+## Die Alternativen der Aufgabe („go, auch: walk“); nur Übersetzungen haben welche.
 func alts() -> Array:
 	return task.get("prompt_alt", []) as Array
 
 
-## Zeigt die Alternativen am Schild, sichtbar nach `delay` Sekunden. False, wenn es keine
-## gibt oder sie schon stehen.
+## Zeigt die Alternativen nach `delay` Sekunden. False, wenn es keine gibt oder sie schon stehen.
 func show_alts(delay := 0.0) -> bool:
 	if alts_shown or alts().is_empty():
 		return false
@@ -123,8 +104,8 @@ func show_alts(delay := 0.0) -> bool:
 	return true
 
 
-## Bremst auf `factor` des eigenen Tempos. Zwei Bremsen multiplizieren sich nicht: es
-## gilt die stärkere. False, wenn es schon so langsam ist.
+## Bremst auf `factor` des eigenen Tempos; es gilt die stärkere Bremse. False, wenn es schon
+## so langsam ist.
 func slow_to(factor: float) -> bool:
 	if factor >= pace:
 		return false
@@ -136,8 +117,8 @@ func slow_to(factor: float) -> bool:
 	return true
 
 
-## Friert `seconds` lang ein (Spielzeit, steht also auch in der Pause). Ein zweites
-## Einfrieren verlängert nicht über das längere hinaus.
+## Friert `seconds` lang ein (Spielzeit). Ein zweites Einfrieren verlängert nur bis zum
+## längeren der beiden.
 func freeze(seconds: float) -> void:
 	if _done:
 		return
@@ -166,23 +147,20 @@ func plate_anchor() -> Vector3:
 	return _plate_anchor.global_position
 
 
-## Im Bild heißt: der Körper oder das Schild über ihm. Aus der Nähe ist das Schild über
-## dem Bildrand, von weit weg der Körper hinter dem Schild zu klein, um zu zählen. Danach
-## trifft eine Antwort in der Ich-Sicht (WaveRunner._hittable) und steht ein Wortschild.
+## Im Bild ist der Körper oder das Schild über ihm. Danach trifft eine Antwort in der Ich-Sicht.
 func in_view(camera: Camera3D) -> bool:
+	# 1.2 m: etwa die Körpermitte.
 	return FirstPersonView.sees(camera, global_position + Vector3(0.0, 1.2, 0.0)) \
 			or FirstPersonView.sees(camera, plate_anchor())
 
 
-## Lädt das 3D-Modell aus dem "model"-Feld (GLTF/GLB/scn). Fehlt es oder existiert
-## die Datei (noch) nicht, bleibt das Platzhalter-Mesh sichtbar.
-## Optionale JSON-Felder: "model_scale" (Standard 1.0) und "model_yaw" (Grad,
-## um das Modell in Laufrichtung zu drehen).
+## Lädt das Modell aus "model" (GLTF/GLB/scn); fehlt es, bleibt der Platzhalter sichtbar.
+## Optional: "model_scale" (Standard 1.0) und "model_yaw" (Grad, Drehung in Laufrichtung).
 func _apply_model() -> void:
 	var path := str(monster_def.get("model", ""))
 	var color := WordTypePalette.color_for(str(task.get("lexeme_type", "")))
 	if path == "" or not ResourceLoader.exists(path):
-		# Kein Modell -> Platzhalter-Kapsel behält die Wortart-Outline (Konsistenz).
+		# Kein Modell: die Platzhalter-Kapsel bekommt dieselbe Wortart-Outline.
 		_body = _placeholder
 		_dress(_placeholder, color, 1.0)
 		return
@@ -198,8 +176,7 @@ func _apply_model() -> void:
 	_setup_animation(inst)
 
 
-## Wortart-Rand, oder — gemeistert — durchsichtig und ohne Rand. Ohne Rand bleibt `_outline`
-## leer; eingefroren zeigt es dann nur die Eishülle.
+## Wortart-Rand oder, gemeistert, durchsichtig ohne Rand. Ohne Rand bleibt `_outline` leer.
 func _dress(root: Node3D, color: Color, model_scale: float) -> void:
 	if mastered:
 		_fade(root)
@@ -221,8 +198,8 @@ func _fade(root: Node3D) -> void:
 				mi.set_surface_override_material(i, faded(mat))
 
 
-## Die durchsichtige Kopie von `mat` (MASTERED_ALPHA). Der Tiefen-Vorlauf hält die Teile
-## des Modells in der richtigen Reihenfolge, sonst schiene der Rücken durch die Brust.
+## Die durchsichtige Kopie von `mat`. Der Tiefen-Vorlauf hält die Teile des Modells in der
+## richtigen Reihenfolge, sonst schiene der Rücken durch die Brust.
 static func faded(mat: BaseMaterial3D) -> BaseMaterial3D:
 	if not _faded.has(mat):
 		var copy := mat.duplicate() as BaseMaterial3D
@@ -232,10 +209,8 @@ static func faded(mat: BaseMaterial3D) -> BaseMaterial3D:
 	return _faded[mat]
 
 
-## Legt die Wortart-Outline als material_overlay auf alle MeshInstance3D unterhalb von
-## `root`. Eine eigene ShaderMaterial-Instanz je Monster (kein geteiltes preload), damit
-## jede Wortart ihre Farbe bekommt, ohne importierte GLB-Materialien anzufassen.
-## Die Welt-Dicke bleibt trotz model_scale konstant, indem sie herausgerechnet wird.
+## Legt die Wortart-Outline als material_overlay auf alle Meshes unter `root`. Eine eigene
+## ShaderMaterial-Instanz je Monster; die Welt-Dicke rechnet model_scale heraus.
 func _apply_outline(root: Node3D, color: Color, model_scale: float) -> void:
 	var mat := ShaderMaterial.new()
 	_outline = mat
@@ -250,8 +225,6 @@ func _apply_outline(root: Node3D, color: Color, model_scale: float) -> void:
 		(mi as MeshInstance3D).material_overlay = mat
 
 
-## KayKit-Charaktere haben keine eigenen Animationen — sie kommen aus der geteilten
-## Bewegungs-Library (RigAnimations); das Monster loopt "Walking_A".
 func _setup_animation(model_root: Node3D) -> void:
 	var lib := RigAnimations.movement()
 	if lib == null:
@@ -265,22 +238,20 @@ func _setup_animation(model_root: Node3D) -> void:
 			return
 
 
-## Ohne Modell (Platzhalter) oder ohne Maße: ungefähr die Kopfhöhe der Modelle.
+## Kopfhöhe ohne Modell oder Maße (m).
 const DEFAULT_HEAD_HEIGHT := 2.4
-## Der Kopf sitzt so weit oben am Modell (Anteil der Höhe) — dorthin trifft ein Pfeil.
+## Höhe des Kopfes als Anteil der Modellhöhe; dorthin trifft ein Pfeil.
 const HEAD_SHARE := 0.82
 
 
-## Wie hoch über dem Boden der Kopf ist: aus der Hülle des Körpers (`body_box`).
+## Kopfhöhe über dem Boden (m), aus `body_box`.
 func head_height() -> float:
 	var box := body_box()
 	return DEFAULT_HEAD_HEIGHT if box.size == Vector3.ZERO else box.end.y * HEAD_SHARE
 
 
-## Die Hülle aller Meshes des Modells im Rahmen des Monsters, in Metern der Welt
-## (model_scale steckt in den Transformen). Ein Skinned Mesh meldet die Hülle der Ruhepose —
-## für Ziel und Eishülle genau genug. Ohne Modell: eine leere Hülle (Größe 0). Die Effekte
-## am Monster (Eis, Schlamm) zählen nicht mit.
+## Die Hülle aller Meshes des Modells im Rahmen des Monsters (m, model_scale eingerechnet).
+## Ein Skinned Mesh meldet die Ruhepose. Ohne Modell leer; Eis und Schlamm zählen nicht mit.
 func body_box() -> AABB:
 	var box := AABB()
 	var found := false
@@ -298,20 +269,18 @@ func body_box() -> AABB:
 	return box
 
 
-## Wie schnell und wohin es gerade läuft (Einheiten je Sekunde Spielzeit): geradeaus auf die
-## Festung zu, oder gar nicht, wenn es steht. Das Wachkatapult hält damit vor.
+## Geschwindigkeit in m je Sekunde Spielzeit; null, wenn es steht.
 func velocity() -> Vector3:
 	return Vector3.ZERO if _done or is_frozen() else Vector3(0.0, 0.0, _speed * pace)
 
 
-## Bleibt stehen, wo es ist, und erreicht die Festung nicht mehr — getroffen, aber das
-## Platzen kommt später (Sturmangriff in der Ich-Sicht).
+## Bleibt stehen und erreicht die Festung nicht mehr; das Platzen kommt später.
 func halt() -> void:
 	_done = true
 
 
-## Neben einer Explosion (Blast) bei `from`: der Körper duckt sich, kippt vom Knall weg und
-## federt zurück. Nur das Bild — Position, Tempo und Aufgabe bleiben, wie sie sind.
+## Neben einer Explosion bei `from`: der Körper kippt 0,55 s lang vom Knall weg und federt
+## zurück. Nur das Bild, Position und Tempo bleiben.
 func flinch(from: Vector3) -> void:
 	if _body == null:
 		return
@@ -328,7 +297,8 @@ func flinch(from: Vector3) -> void:
 	_flinch.tween_method(func(t: float) -> void: _lean(rest, axis, t), 0.0, 1.0, 0.55)
 
 
-## Ein Schlag, der ausschwingt: kippt bis ~20° und staucht, dann gedämpft zurück.
+## Ein Schlag, der ausschwingt: 2,5 Halbschwingungen, Dämpfung 4, bis 22° Neigung und 18 %
+## Stauchung.
 func _lean(rest: Transform3D, axis: Vector3, t: float) -> void:
 	# (1 - t): am Ende genau wieder in Ruhe, nicht nur fast.
 	var swing := sin(t * PI * 2.5) * exp(-t * 4.0) * (1.0 - t)

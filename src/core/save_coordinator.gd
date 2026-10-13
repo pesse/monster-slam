@@ -1,44 +1,14 @@
 extends Node
-## Der eine Ort, an dem der Spielstand gespeichert wird (Autoload `SaveCoordinator`,
-## docs/adr/0024-spielstand-sicher-speichern.md).
-##
-## Die Profildaten liegen in mehreren Dateien (Lernstand, Sitzungen, Gold, Erfahrung,
-## Skills, Zauber, Boss-Siege, Plaketten, Testlisten). Gespeichert werden sie GEMEINSAM, an
-## einer Wellengrenze, und nie mitten in der Welle:
-##
-## - Der Kampf hält das Speichern an (`hold`) und schreibt am Wellenende (`commit`). Was in
-##   der Welle verdient wurde, kommt dann zusammen auf die Platte. Ein Absturz oder ein
-##   Abbruch mitten in der Welle kostet genau diese Welle (`discard_uncommitted`), nie mehr.
-## - Außerhalb des Kampfs (Skills, Laden, Testlisten) speichert jede Änderung am Ende des
-##   Frames (`mark_dirty`). Was im selben Frame zusammen geändert wird — Gold und Skills
-##   beim Verlernen —, landet in einem Commit.
-##
-## Ein Commit schreibt alle Dateien in `.tmp`, prüft sie, legt ein Journal an und benennt
-## dann um. Bricht er dazwischen ab, vervollständigt das nächste Öffnen ihn aus dem Journal
-## oder verwirft die `.tmp`. Danach entsteht eine Sicherung des ganzen Profils (Backups).
-##
-## Beim Öffnen eines Profils (Start, Profilwechsel) wird jede Datei geprüft. Ist eine
-## beschädigt — oder fehlt eine, die die letzte Sicherung hatte —, wandert die ganze
-## Live-Menge in die Quarantäne (user://quarantine, gelöscht wird nie) und die neueste
-## gültige Sicherung kommt vollständig zurück. Gibt es keine, speichert das Profil nicht,
-## bis der Spieler entscheidet (`start_blank` oder Import) — eine unlesbare Datei ist nie
-## „neu" und wird nie überschrieben. Was passiert ist, sagt das Startmenü (`take_notices`).
-##
-## Die Speicher (PlayerProgress, SessionLog, Wallet, PlayerLevel, SkillBook, Inventory und
-## im Kampf die Plaketten) melden sich mit `register` an und bieten:
-##   player_id, save_suffix(), save_path(), save_payload(), reload()
-## Eine Instanz, die nicht angemeldet ist (Tests), oder eine mit einem anderen Profil
-## schreibt sofort und einzeln — sicher und mit Plausibilitätssperre, aber ohne Sicherung.
-##
-## Der Statistik-Kanal liest nur fertige Sicherungen (`latest_generation`), nie die
-## Live-Dateien; dieses Autoload wartet nie auf ihn.
+## Der eine Ort, an dem der Spielstand gespeichert wird (Autoload, ADR 0024): alle Dateien
+## eines Profils gemeinsam an der Wellengrenze, mit Journal, Sicherung und Prüfung beim Öffnen.
+## Speicher melden sich mit `register` an und bieten
+## player_id, save_suffix(), save_path(), save_payload(), reload(). Nicht angemeldete
+## Instanzen oder andere Profile schreiben sofort und einzeln, ohne Sicherung.
 
 const SAVE_DIR := "user://progress"
 const BACKUP_DIR := "user://backups"
 const QUARANTINE_DIR := "user://quarantine"
-## Die Dateien eines Profils, die zu einer Sicherung gehören. `_runs` fehlt bewusst: ein
-## begonnener Lauf ist mit dem Fortsetzen verbraucht (ADR 0020), ihn zurückzuspielen hieße,
-## eine schlechte Welle ungeschehen zu machen.
+## Die Dateien eines Profils, die zu einer Sicherung gehören (ohne `_runs`, ADR 0024).
 const PROFILE_SUFFIXES := ["", "_sessions", "_wallet", "_level", "_skills", "_inventory",
 		"_bosses", "_badges", "_test_lists"]
 const JOURNAL_SUFFIX := ".commit.json"
@@ -65,9 +35,7 @@ var _auto_pending := false
 ## Endungen beschädigter Dateien ohne Sicherung: solange nicht leer, speichert nichts.
 var _blocked: Array = []
 var _notices: Array = []
-## Während der Testsuite schreibt das Autoload nichts: user:// ist dasselbe Verzeichnis wie
-## beim Spielen, und das aktive Profil gehört dem Spieler (dieselbe Regel wie TraceLog).
-## Geprüft wird an eigenen Instanzen (tests/save_coordinator_test.gd).
+## Unter gdUnit4 schreibt das Autoload nichts (user:// enthält das Spielerprofil).
 var _quiet := false
 
 
@@ -79,8 +47,7 @@ func _ready() -> void:
 		_add_notice(settings_notice)
 	if not _quiet:
 		open_profile(profile)
-	# Als ERSTER am Signal (dieses Autoload steht vor allen Speichern): der alte Stand wird
-	# gesichert, bevor die Speicher umschalten.
+	# Als erster am Signal: der alte Stand wird gesichert, bevor die Speicher umschalten.
 	UserSettings.active_profile_changed.connect(_on_profile_changed)
 	EventBus.save_refused.connect(_on_save_refused)
 	_check_plausible.call_deferred()
@@ -97,8 +64,8 @@ func unregister(store: Object) -> void:
 	_stores.erase(store)
 
 
-## Ein Speicher hat sich geändert. Angemeldet und im aktuellen Profil: gespeichert wird am
-## Ende des Frames, oder — solange `hold` gilt — beim nächsten `commit`. Sonst sofort.
+## Ein Speicher hat sich geändert: gespeichert wird am Frame-Ende oder, solange `hold`
+## gilt, beim nächsten `commit`. Nicht angemeldete sofort.
 func mark_dirty(store: Object) -> void:
 	if store in _stores and str(store.player_id) == profile:
 		if _quiet:
@@ -129,9 +96,8 @@ func is_held() -> bool:
 
 
 ## Speichert alle angemeldeten Speicher des Profils gemeinsam und legt eine Sicherung an.
-## `allow_drop` nennt Endungen, deren monotone Werte hier sinken dürfen (Zurücksetzen).
-## False, wenn nichts geschrieben wurde (gesperrt, verweigert, Schreibfehler) — dann ist
-## der Stand auf der Platte der vorige, unversehrt.
+## `allow_drop` nennt Endungen, deren monotone Werte hier sinken dürfen. False, wenn nichts
+## geschrieben wurde; dann gilt der vorige Stand auf der Platte.
 func commit(reason: String, allow_drop: Array = []) -> bool:
 	if _quiet:
 		return false
@@ -172,8 +138,7 @@ func commit(reason: String, allow_drop: Array = []) -> bool:
 	return true
 
 
-## Verwirft, was seit dem letzten Commit geändert wurde: die Speicher laden ihren Stand neu.
-## Das Sitzungs-Log bleibt (`keep_on_discard`) — es ist ein Protokoll, kein Verdienst.
+## Lädt alle Speicher außer `keep_on_discard` auf den letzten Commit zurück.
 func discard_uncommitted() -> void:
 	for store in _stores:
 		if str(store.player_id) != profile or not store.has_method("reload"):
@@ -191,8 +156,7 @@ func _auto_commit() -> void:
 
 # --- Profil öffnen ------------------------------------------------------------
 
-## Prüft die Dateien des Profils `id` und repariert, was zu reparieren ist (siehe Kopf).
-## Läuft, bevor die Speicher laden.
+## Prüft die Dateien des Profils `id` und repariert, was geht. Läuft, bevor die Speicher laden.
 func open_profile(id: String) -> void:
 	_blocked = []
 	_finish_journal(id)
@@ -224,19 +188,16 @@ func open_profile(id: String) -> void:
 		_restore(id, newest, damaged)
 		return
 	for suffix: String in legacy:
-		# Dieselben Daten, jetzt mit Hülle — die Sperre braucht es dafür nicht.
 		SaveStore.write(_path(id, suffix), SaveStore.read(_path(id, suffix))["data"])
 	if any and (newest.is_empty() or not legacy.is_empty()):
 		_backup("open", id)
 
 
-## Ist das Profil gesperrt (beschädigt ohne Sicherung)?
 func is_blocked() -> bool:
 	return not _blocked.is_empty()
 
 
-## Gesperrtes Profil: die beschädigten Dateien in die Quarantäne, und mit leerem Stand für
-## genau diese weiter. Die Entscheidung des Spielers — die Sperre fragt vorher.
+## Gesperrtes Profil: beschädigte Dateien in die Quarantäne, für sie mit leerem Stand weiter.
 func start_blank() -> void:
 	if _quiet or _blocked.is_empty():
 		return
@@ -257,9 +218,8 @@ func latest_generation(id: String) -> Dictionary:
 	return Backups.latest(backup_dir, id)
 
 
-## Setzt die Dateien aus einem Archiv (SaveArchive.read) als Spielstand des aktuellen
-## Profils ein. Vorher wird der jetzige Stand gesichert; ersetzte und beschädigte Dateien
-## wandern in die Quarantäne. False bei einem Schreibfehler.
+## Setzt ein Archiv (SaveArchive.read) als Spielstand des aktuellen Profils ein; vorher
+## Sicherung, Ersetztes in die Quarantäne. False bei einem Schreibfehler.
 func import_files(files: Dictionary) -> bool:
 	if _quiet:
 		return false
@@ -267,10 +227,7 @@ func import_files(files: Dictionary) -> bool:
 		commit("before_import")
 	else:
 		_backup("before_import")
-	# Was ersetzt wird, und was beschädigt ist, geht in die Quarantäne — auch wenn die
-	# Sicherung davor scheiterte (ein gesperrtes Profil hat eine kaputte Datei, die keine
-	# Sicherung nimmt). Heile Dateien, die das Archiv nicht hat, bleiben: ein Teil-Archiv
-	# (nur Erfahrung) soll den Lernstand nicht mitnehmen.
+	# Heile Dateien, die das Archiv nicht hat, bleiben.
 	var into := _quarantine_folder(profile)
 	for suffix: String in PROFILE_SUFFIXES:
 		var path := _path(profile, suffix)
@@ -309,7 +266,7 @@ func take_notices() -> Array:
 func _on_profile_changed(id: String) -> void:
 	if id == profile:
 		return
-	# Die Speicher stehen noch auf dem alten Profil (siehe _ready).
+	# Die Speicher stehen noch auf dem alten Profil.
 	if _blocked.is_empty():
 		commit("profile_switch")
 	profile = id
@@ -325,9 +282,7 @@ func _on_save_refused(file: String, reason: String) -> void:
 	_add_notice({"kind": "refused", "profile": profile, "file": file, "reason": reason})
 
 
-## Nach dem Start, wenn alle Speicher geladen sind: mehr Skillpunkte ausgegeben als
-## verdient heißt, die Erfahrung ist verloren gegangen (so fiel der Vorfall auf, der zu
-## diesem Autoload führte). Nur melden — reparieren kann das Spiel es nicht.
+## Mehr Skillpunkte ausgegeben als verdient heißt verlorene Erfahrung; wird nur gemeldet.
 func _check_plausible() -> void:
 	if SkillBook.unlimited_points or SkillBook.available() >= 0:
 		return
@@ -353,9 +308,8 @@ func _restore(id: String, generation: Dictionary, damaged: Array) -> void:
 	EventBus.save_restored.emit(damaged, at)
 
 
-## Bringt einen abgebrochenen Commit zu Ende (Journal) und räumt `.tmp` auf: eine
-## vollständige `.tmp` ersetzt ein fehlendes oder kaputtes Ziel (Windows löscht beim
-## Umbenennen erst das Ziel), sonst ist sie ein nie vollendetes Schreiben.
+## Vollendet einen abgebrochenen Commit aus dem Journal. Eine vollständige `.tmp` ersetzt
+## auch ein fehlendes oder kaputtes Ziel (Windows löscht beim Umbenennen erst das Ziel).
 func _finish_journal(id: String) -> void:
 	var journal := _journal_path(id)
 	var listed: Array = []

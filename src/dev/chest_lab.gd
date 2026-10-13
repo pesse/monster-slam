@@ -1,21 +1,8 @@
 extends Control
-## Werkbank für die Schatzkiste (scenes/dev/chest_lab.tscn) — eine eigenständige Szene,
-## um die Kiste ohne Spiel auszuprobieren.
-##
-## Wozu: die Kiste kommt im Spiel erst nach einer geräumten Welle, und um eine
-## Wackel-Amplitude oder die Zahl der Münzen zu beurteilen, will man sie zwanzigmal
-## hintereinander sehen — nicht zwanzig Wellen spielen. Hier sind Güte, Inhalt, Münzzahl
-## und Haltezeit einstellbar, und der Block rechts rechnet die Belohnung einer erfundenen
-## Welle aus (ChestReward), damit auch die Wirtschaft ohne Spiel beurteilbar ist.
-##
-## Starten: im Editor mit F6 auf dieser Szene, oder
-## `tools/godot.sh res://scenes/dev/chest_lab.tscn` (headless zeichnet nichts — zum
-## Ansehen braucht es den Editor).
-##
-## **Hier wird kein Gold verbucht.** Die Kiste meldet ihren Inhalt nur per `opened`; die
-## Werkbank schreibt ihn in die Statuszeile und nicht in die Geldbörse (die gehört dem
-## Spieler, siehe Wallet). Die Szene liegt unter scenes/dev/ und ist im Export
-## ausgeschlossen (`exclude_filter`).
+## Werkbank für die Schatzkiste: Güte, Inhalt, Münzzahl und Haltezeit einstellbar, rechts
+## die Belohnung einer erfundenen Welle (ChestReward). Kein Gold wird verbucht: `opened`
+## geht nur in die Statuszeile.
+##     GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/chest_lab.tscn   (oder F6 im Editor)
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 
@@ -38,8 +25,7 @@ var _room: Window
 
 
 func _ready() -> void:
-	# Eine Werkbank bekommt mehr Platz als das Spiel — am Fensterrand zu ziehen hilft
-	# dagegen nicht, das Bild skaliert dann bloß mit (LabRoom).
+	# Mehr Platz als das Spiel (LabRoom).
 	_room = get_window()
 	LabRoom.enlarge(_room)
 	for i in ChestReward.TIER_NAMES.size():
@@ -55,7 +41,7 @@ func _ready() -> void:
 	(%BackButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(MENU_SCENE))
 	_tier_select.item_selected.connect(func(_i: int): _present())
 	_hold_slider.value_changed.connect(func(_v: float): _apply_hold_time())
-	# Modell oder Zeichnung: der eigentliche Grund für die Werkbank ist der Vergleich.
+	# Modell oder Zeichnung.
 	_model_toggle.toggled.connect(_on_look_toggled)
 
 	_apply_hold_time()
@@ -63,21 +49,20 @@ func _ready() -> void:
 
 
 
-## Das Fenster gehört dem Spiel; die Werkbank gibt es zurück. Hier und nicht an den beiden
-## Ausgängen: es gibt Knopf, Escape und das Beenden, und drei Stellen wären zwei zu viel.
+## Gibt das geliehene Fenster zurück, bei jedem Ausgang.
 func _exit_tree() -> void:
 	LabRoom.restore(_room)
 
 
 func _input(event: InputEvent) -> void:
-	# Escape führt zurück ins Menü — dieselbe Geste wie im Kampf.
+	# Escape führt zurück ins Menü.
 	if event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
 		get_tree().change_scene_to_file(MENU_SCENE)
 
 
-## Umschalten wirkt erst bei der nächsten Kiste (siehe TreasureChest.use_model), also
-## gleich eine hinstellen — sonst sieht es aus, als täte der Schalter nichts.
+## Umschalten wirkt erst bei der nächsten Kiste (TreasureChest.use_model), also gleich eine
+## hinstellen.
 func _on_look_toggled(on: bool) -> void:
 	_chest.use_model = on
 	_present()
@@ -89,8 +74,7 @@ func _apply_hold_time() -> void:
 
 
 ## Stellt eine neue Kiste nach den Einstellungen hin. Münzzahl 0 heißt „aus dem Gold
-## rechnen" (TreasureChest.coin_count: eine Münze je Gold) — das ist der Fall, der im
-## Spiel gilt; jede andere Zahl ist der Blick auf den Effekt allein.
+## rechnen“ wie im Spiel (TreasureChest.coin_count).
 func _present() -> void:
 	var tier := _tier_select.get_selected_id()
 	var gold := int(_gold_spin.value)
@@ -115,7 +99,7 @@ func _on_opened(gold: int) -> void:
 		Wallet.label(gold), _chest.coins_in_flight()]
 
 
-## Belohnung einer erfundenen Welle: dieselbe Rechnung, die der WaveRunner benutzt.
+## Belohnung einer erfundenen Welle mit der Rechnung des Kampfs.
 func _from_wave() -> void:
 	var reward := ChestReward.for_wave(
 			int(_score_spin.value), int(_correct_spin.value), int(_leaked_spin.value))

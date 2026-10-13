@@ -1,39 +1,22 @@
 class_name BookSelect
 extends Control
-## Bibliothek: der erste Schritt nach „Spielen" (ADR 0006, Entwurf
-## `assets/ui/library/concept/library-v6.webp`). Eine Seite des Start-Screens (ProfileMenu):
-## rechts neben dem Hauptmenü, und die Kamera der Kulisse fährt dafür durch die Mauer in den
-## Turm (MenuBackdrop, library_room.tscn). Diese Seite hat kein eigenes 3D — sie stellt ihre
-## Bücher in den Raum der Kulisse und schaut durch deren Kamera.
-##
-## Die Bücher stehen in einer Reihe auf dem Lesepult, frontal und ein wenig gedreht, sodass
-## links der Rücken zu sehen ist: Englisch vorn, die übrigen Sprachen dahinter
-## (`shelf_rows`). Das Pult hat SLOTS Plätze; gibt es mehr Bücher, blättern die Pfeile am
-## Rand — nur die Reihe rückt, der Raum bleibt stehen.
-##
-## Unter dem Zeiger — oder mit ←/→ — wird ein Buch vom Pult genommen: groß in der Bildmitte,
-## gerade zur Kamera, und auf dem Cover erscheint sein Stand (Book3D). Ein Klick schlägt das Buch auf; die Doppelseite trägt
-## die Buchkarte, und die Kamera fliegt in sie hinein, bis die Karte den Bildschirm füllt —
-## dort steht die Buchkarte, und der Wechsel fällt nicht auf. Zurück geht es denselben Weg
-## rückwärts (`return_from_book`); erst wenn das Buch wieder zu ist, lässt sich ein anderes
-## nehmen — sonst stünden zwei vorn.
-##
-## Die Zahlen kommen aus FortressTier.unit_tiers und BossRecord — derselben Zählung wie
-## Karte und Kampf.
+## Bibliothek, eine Seite des Start-Screens (ADR 0006). Ohne eigenes 3D: die Bücher stehen im
+## Raum der Kulisse (MenuBackdrop) auf dem Lesepult, SLOTS je Seite. Ein Klick schlägt eins
+## auf, und die Kamera fliegt hinein, bis die Karte den Bildschirm füllt wie die Buchkarte.
 
-## „Zurück" (und Esc): ProfileMenu schiebt ins Hauptmenü.
+## „Zurück“ oder Esc.
 signal back_requested
 
 const BOOK_SCENE := preload("res://scenes/ui/book_3d.tscn")
 
-## So lang fliegt die Kamera in die Doppelseite hinein und wieder heraus.
+## Dauer des Flugs in die Doppelseite (s).
 const DIVE_TIME := 1.1
 ## Ab diesem Anteil des Flugs blendet die flache Buchkarte über die Karte im Buch.
 const BLEND_FROM := 0.8
 ## Plätze auf dem Pult und ihr Abstand (Mitte zu Mitte, in Metern).
 const SLOTS := 5
 const SLOT_WIDTH := 1.1
-## So lang rückt die Reihe beim Blättern um eine Seite.
+## Dauer des Blätterns um eine Seite (s).
 const PAGE_TIME := 0.36
 
 @onready var _stage: Control = %Stage
@@ -64,19 +47,15 @@ func _ready() -> void:
 	_stage.gui_input.connect(_on_stage_input)
 
 
-## Die Kulisse, in deren Turm die Bücher stehen. ProfileMenu ruft das einmal auf.
-## Das Medaillon des Start-Screens blendet beim Flug ins Buch NICHT mit aus: es steht auf
-## der Buchkarte an derselben Stelle.
+## Die Kulisse, in deren Turm die Bücher stehen; einmal aufzurufen.
 func setup(backdrop: MenuBackdrop) -> void:
 	_backdrop = backdrop
 	_camera = backdrop.camera()
 	_books = backdrop.library_books()
 
 
-## Stellt die Bücher neu auf, bevor die Seite hereinfährt — der Stand kann sich seit dem
-## letzten Besuch geändert haben (anderes Profil, gespielte Runde). Aufgeschlagen ist die
-## Seite mit dem zuletzt geöffneten Buch, herausgenommen ist keines: das tut erst die Maus
-## (oder ←/→), sonst stünde nach dem Hereinfahren immer ein Buch im Vordergrund.
+## Stellt die Bücher neu auf, bevor die Seite hereinfährt. Aufgeschlagen ist die Seite mit
+## dem zuletzt geöffneten Buch; herausgenommen ist keines.
 func enter() -> void:
 	_fill()
 	var book := _book_of(MapSelection.book)
@@ -88,8 +67,8 @@ func leave() -> void:
 	_select(-1)
 
 
-## Aus der Buchkarte zurück: die Kamera steht im aufgeschlagenen Buch, die flache Karte
-## deckt noch den Bildschirm wie eben auf der Buchkarte; dann geht es heraus.
+## Aus der Buchkarte zurück: der Flug beginnt im aufgeschlagenen Buch, die flache Karte
+## deckt noch den Bildschirm.
 func return_from_book() -> void:
 	var book := _book_of(MapSelection.book)
 	if book == null or book.texture() == null:
@@ -163,10 +142,8 @@ func _place_book(book: String, i: int, shelves: Dictionary, wins: Dictionary) ->
 	return node
 
 
-## Die Bücher je Sprache: Englisch zuerst, die übrigen Sprachen alphabetisch danach.
-## Innerhalb einer Sprache bleibt die Reihenfolge von `books`. `language_of` liefert die
-## Sprache eines Buchs (ContentRegistry.book_language) — als Callable, damit die Regel ohne
-## Autoload prüfbar bleibt.
+## Die Bücher je Sprache: Lexeme.DEFAULT_LANGUAGE zuerst, die übrigen alphabetisch; innerhalb
+## einer Sprache die Reihenfolge von `books`. `language_of`: Buch -> Sprache.
 static func shelf_rows(books: Array, language_of: Callable) -> Array:
 	var by_language := {}
 	for book in books:
@@ -182,8 +159,6 @@ static func shelf_rows(books: Array, language_of: Callable) -> Array:
 	return languages.map(func(lang): return by_language[lang])
 
 
-## Der Stand eines Buchs: Units, gemeisterte Wörter, Bosskronen. Die Festungsstufe gilt je
-## Unit und steht deshalb auf der Buchkarte, nicht hier.
 static func stats(units: Array, wins: Dictionary) -> Dictionary:
 	var done := 0
 	var total := 0
@@ -210,7 +185,6 @@ func _page_to(first: int, instant := false) -> void:
 	if _selected >= 0 and (_selected < first or _selected >= first + SLOTS):
 		_select(-1)
 	var x := -first * SLOT_WIDTH
-	# Die Bücher rücken zur Mitte des Bildes, nicht zur Mitte der Reihe.
 	for node: Book3D in _books.get_children():
 		node.center_x = -x
 	if _page_tween != null:
@@ -257,12 +231,10 @@ func _on_stage_input(event: InputEvent) -> void:
 	if not _run.is_empty() or _books == null:
 		return
 	var motion := event as InputEventMouseMotion
-	# Nur eine echte Bewegung zählt — ein Zeiger, der beim Hereinfahren zufällig über
-	# einem Platz steht, nimmt noch kein Buch heraus.
+	# Nur eine echte Bewegung zählt, kein Zeiger, der beim Hereinfahren schon dort steht.
 	if motion != null and motion.relative != Vector2.ZERO:
 		var index := book_at(motion.position)
-		# Wer das herausgenommene Buch liest, lässt es nicht fallen, nur weil der Zeiger
-		# dabei über keinem Platz steht.
+		# Über dem herausgenommenen Buch bleibt es draußen, auch ohne Platz darunter.
 		if index >= 0 or _selected < 0 or not _selected_body_at(motion.position):
 			_select(index)
 		return
@@ -276,8 +248,7 @@ func _on_stage_input(event: InputEvent) -> void:
 			_open(_books.get_child(_selected) as Book3D)
 
 
-## Welches Buch seinen Platz unter `point` (Bildschirmkoordinaten) hat, sonst -1. Gezielt
-## wird auf die Plätze in der Reihe (Book3D.hit), nicht auf das herausgenommene Buch.
+## Welches Buch seinen Platz unter `point` (Bildschirmkoordinaten) hat, sonst -1 (Book3D.hit).
 func book_at(point: Vector2) -> int:
 	var origin := _camera.project_ray_origin(point)
 	var direction := _camera.project_ray_normal(point)
@@ -291,8 +262,6 @@ func book_at(point: Vector2) -> int:
 	return best
 
 
-## Liegt `point` auf dem herausgenommenen Buch? Ein Klick dort öffnet es, auch wo es über
-## keinem Platz steht.
 func _selected_body_at(point: Vector2) -> bool:
 	var book := _books.get_child(_selected) as Book3D
 	return book.hit_body(_camera.project_ray_origin(point),
@@ -342,9 +311,7 @@ func _process(delta: float) -> void:
 		get_tree().change_scene_to_file(MapSelection.BOOK_SCENE)
 
 
-## Fliegt die Kamera vom Pult in die Doppelseite, bis ihre Karte den Bildschirm füllt wie
-## auf der Buchkarte (oder mit `back` von dort zurück). Am Ende blendet die flache Buchkarte
-## darüber — sie steht genau da, wo die Karte im Buch steht.
+## Fliegt die Kamera vom Pult in die Doppelseite (mit `back` zurück).
 func _start_dive(book: Book3D, back: bool) -> void:
 	var screen := get_viewport_rect().size
 	var inside := book.spread_view(_camera.fov, screen.x / maxf(screen.y, 1.0))
@@ -356,9 +323,10 @@ func _start_dive(book: Book3D, back: bool) -> void:
 	_show_dive(1.0 if back else 0.0)
 
 
-## Stellt den Flug bei `t` dar: 0 = Kamera vor dem Pult, 1 = in der Doppelseite. Sanft
-## an- und auslaufend; die Kopfzeile geht früh, die flache Karte kommt erst am Ende.
+## Stellt den Flug bei `t` dar: 0 = Kamera vor dem Pult, 1 = in der Doppelseite. Die
+## Kopfzeile geht in den ersten 30 %, die flache Karte kommt ab BLEND_FROM.
 func _show_dive(t: float) -> void:
+	# Smootherstep.
 	var k := t * t * t * (t * (t * 6.0 - 15.0) + 10.0)
 	var home: Transform3D = _run["home"]
 	var inside: Transform3D = _run["inside"]
@@ -369,7 +337,6 @@ func _show_dive(t: float) -> void:
 	_dive.visible = blend > 0.0
 
 
-## Die Kopfzeile ein- und ausblenden.
 func _set_ui_alpha(alpha: float) -> void:
 	_ui.modulate.a = alpha
 

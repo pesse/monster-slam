@@ -1,47 +1,27 @@
 class_name ProfileMenu
 extends Control
-## Start-Screen (run/main_scene) mit drei Seiten in derselben Kulisse: „Wer spielt?"
-## (profile_pick.tscn), das Hauptmenü und die Bibliothek (book_select.tscn). „Weiter" schiebt
-## die Profilwahl nach links hinaus und das Menü von rechts herein, „Spielen" ebenso das Menü
-## und die Bibliothek; die Kamera der Kulisse fährt mit — zur Bibliothek durch die Mauer in
-## den Turm. „Zurück" und „Profil wechseln" schieben zurück. Wer aus einem anderen Screen
-## hierher zurückkehrt, landet gleich im Menü (`intro_done`), aus der Buchkarte in der
-## Bibliothek (MapSelection.to_shelf).
-##
-## Das Medaillon (ProfileBadge) gibt es einmal für Menü und Bibliothek: es liegt über den
-## Seiten (BadgeLayer), fährt mit dem Menü herein und bleibt zwischen Menü und Bibliothek
-## stehen; auf dem Weg in die Bibliothek wird es kompakt. Im Menü hält ein leerer Platz
-## (BadgeSlot) ihm die Spalte frei.
-##
-## Das Layout liegt in profile_menu.tscn (im Editor sichtbar, Entwurf unter
-## assets/ui/main_menu/sources/); hier wird nur bedient und angezeigt. Hinter dem Menü
-## steht die 3D-Kulisse (menu_backdrop.tscn). Einstellungen (Profil, Standard-Schwierigkeit, Reset) liegen im
-## Einstellungs-Fenster (settings_menu), der Lernstand im Statistik-Fenster (stats_screen).
-##
-## Unten rechts steht immer „Auf Updates prüfen" mit der laufenden Version (Issue #53): ein
-## Klick prüft beide Kanäle laut (UpdateService.check, ContentService.refresh). Was es gibt,
-## erscheint wie nach der stillen Startprüfung als Abzeichen darüber; der Link selbst sagt
-## nur, ob er sucht, ob alles aktuell ist oder ob die Prüfung nicht durchkam.
+## Start-Screen (run/main_scene): drei Seiten in einer 3D-Kulisse — „Wer spielt?" (0),
+## Hauptmenü (1), Bibliothek (2) — zwischen denen geschoben wird; die Kamera fährt mit.
+## Wer zurückkehrt, landet im Menü (`intro_done`), aus der Buchkarte in der Bibliothek
+## (MapSelection.to_shelf). Das Medaillon (ProfileBadge) liegt einmal über allen Seiten
+## (BadgeLayer). Layout in profile_menu.tscn.
 
 const SESSION_SETUP_SCENE := "res://scenes/ui/session_setup.tscn"
 const SETTINGS_SCENE := "res://scenes/ui/settings_menu.tscn"
 const CONTENT_SCENE := "res://scenes/ui/content_manager.tscn"
-## So lange blendet die Kulisse auf (s).
+## Aufblenden der Kulisse (s).
 const VEIL_FADE := 0.6
-## So lange schiebt die Seite (s) zwischen „Wer spielt?" und Menü, und so lange zwischen
-## Menü und Bibliothek — dort ist der Weg weiter, durch die Mauer in den Turm.
+## Schiebezeit (s) zwischen „Wer spielt?" und Menü bzw. zwischen Menü und Bibliothek.
 const SLIDE_TIME := 0.8
 const LIBRARY_SLIDE_TIME := 1.3
-## So lange blendet der Schatten hinter den Menüknöpfen auf, wenn das Menü angekommen ist (s).
+## Aufblenden des Schattens hinter den Menüknöpfen (s).
 const SHADE_FADE := 0.4
 const INTRO := 0.0
 const MENU := 1.0
-## „Spielen" führt über die Karte (ADR 0006); das freie Zusammenstellen der Runde ist der
-## unauffällige Expertenmodus darunter.
 const LIBRARY := 2.0
 
 ## Ob in diesem Programmlauf schon jemand „Wer spielt?" beantwortet hat. Statisch, weil
-## jeder Rückweg aus Kampf, Karte oder Einstellungen diese Szene neu lädt.
+## jeder Rückweg diese Szene neu lädt.
 static var intro_done := false
 
 @onready var _badge: ProfileBadge = %ProfileBadge
@@ -58,8 +38,7 @@ static var intro_done := false
 @onready var _shade: Control = %Shade
 
 var _page := MENU
-## Ob in diesem Besuch geklickt wurde — erst dann sagt der Link „Alles aktuell" oder benennt
-## einen Fehlschlag; die stille Startprüfung behelligt niemanden.
+## Ob in diesem Besuch geklickt wurde; erst dann meldet der Link Ergebnis oder Fehlschlag.
 var _checked := false
 var _slide: Tween
 ## Hinweise zum Spielstand, die noch kommen, der gerade gezeigte, und was danach folgt.
@@ -83,8 +62,7 @@ func _ready() -> void:
 	(%QuitButton as Button).pressed.connect(get_tree().quit)
 	Hints.attach(%QuitButton, "Beenden", "Schließt das Spiel.")
 	_badge.switch_pressed.connect(_back_to_intro)
-	# Was ein Fenster geändert haben kann und kein Signal meldet: ob es nach einer
-	# Installation etwas zu spielen gibt (Inhalte).
+	# Eine Installation im Fenster meldet kein Signal.
 	_badge.window_closed.connect(_refresh_play_gate)
 	_intro.picked.connect(_play_as)
 	_update_button.pressed.connect((%UpdateDialog as Control).open)
@@ -103,8 +81,7 @@ func _ready() -> void:
 	_refresh_update_badge()
 	_refresh_content_badge()
 	_refresh_play_gate()
-	# Beide Kanäle still prüfen: das Abzeichen soll dastehen, ohne dass jemand nachsieht.
-	# Netzfehler bleiben in der Konsole (siehe UpdateService._fail / ContentService._fail_refresh).
+	# Still prüfen, Fehler nur in der Konsole; UpdateService prüft beim Start selbst.
 	ContentService.refresh()
 	if MapSelection.to_shelf:
 		MapSelection.to_shelf = false
@@ -159,9 +136,8 @@ func _on_save_notice_closed(accepted: bool) -> void:
 	_next_save_notice.call_deferred()
 
 
-## Einmal je Rechner, bevor die erste Statistik hinausgeht (ADR 0021). Nur in einer
-## Fassung, die überhaupt senden kann — eine ohne Schlüssel hat nichts mitzuteilen.
-## Auch Escape gilt als gesehen: der Hinweis informiert, er fragt nicht.
+## Einmal je Rechner, bevor die erste Statistik hinausgeht (ADR 0021), nur in einer Fassung
+## mit Schlüssel. Auch Escape gilt als gesehen.
 func _show_stats_notice() -> void:
 	if not StatsUploader.configured() or UserSettings.stats_notice_seen():
 		return
@@ -181,18 +157,14 @@ func _show_stats_notice() -> void:
 ## Schaltet auf das Profil `id` und schiebt ins Menü.
 func _play_as(id: String) -> void:
 	intro_done = true
-	# Lernstand, Geldbörse, Erfahrung und Fähigkeiten schalten über
-	# UserSettings.active_profile_changed selbst um; der SaveCoordinator sichert vorher den
-	# alten Stand und prüft den neuen.
+	# Die Profildaten schalten über UserSettings.active_profile_changed selbst um.
 	UserSettings.set_active_profile(id)
 	_badge.refresh()
 	_slide_to(MENU)
 	_show_save_notices()
 
 
-## Fähigkeiten, Statistik, Inhalte und Einstellungen öffnen als Fenster über dem Menü, nicht
-## als eigener Screen: die Kulisse bleibt stehen. Geöffnet wird über die Plakette — dieselbe
-## Stelle, an der sie in Bibliothek und Karte Fähigkeiten und Statistik öffnet.
+## Öffnet ein Fenster über dem Menü (über die Plakette); die Kulisse bleibt stehen.
 func _open_window(path: String, opener: Control) -> void:
 	_badge.open_window(path, opener)
 
@@ -203,7 +175,6 @@ func _back_to_intro() -> void:
 
 
 func _open_library() -> void:
-	# Die Bücher stehen, bevor die Seite hereinfährt — nichts baut sich im Bild auf.
 	_library.enter()
 	_badge.refresh()
 	_slide_to(LIBRARY)
@@ -218,16 +189,14 @@ func _slide_to(target: float) -> void:
 		_slide.kill()
 	if _page >= LIBRARY - 0.01 and target < LIBRARY:
 		_library.leave()
-	# Alle Seiten auf dem Weg stehen während der Fahrt; bedienbar ist keine, bis sie
-	# angekommen ist.
+	# Während der Fahrt sind alle Seiten auf dem Weg sichtbar, aber keine bedienbar.
 	get_viewport().gui_release_focus()
 	for i in _pages().size():
 		var page := _pages()[i]
 		page.visible = i >= floorf(minf(_page, target)) and i <= ceilf(maxf(_page, target))
 		page.process_mode = Node.PROCESS_MODE_DISABLED
 	(%BadgeLayer as Control).process_mode = Node.PROCESS_MODE_DISABLED
-	# Der Schatten links hinter den Knöpfen endet mitten im Bild; mitgeschoben sähe er
-	# aus wie eine Kante. Er kommt erst, wenn das Menü steht (_settle).
+	# Der Schatten endet mitten im Bild; er kommt erst in _settle zurück.
 	_shade.modulate.a = 0.0
 	_slide = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 	_slide.tween_method(_show_page, _page, target, _slide_time(_page, target))
@@ -243,14 +212,14 @@ static func _slide_time(from: float, to: float) -> float:
 	return SLIDE_TIME * outside + LIBRARY_SLIDE_TIME * inside
 
 
-## `page` 0 = „Wer spielt?", 1 = Menü, 2 = Bibliothek. Über die Anker und nicht in Pixeln, damit eine
-## Größenänderung des Fensters die Seiten nicht verrutscht.
+## `page` wie INTRO/MENU/LIBRARY, auch dazwischen. Über Anker, damit Fenstergrößen nichts
+## verrutschen.
 func _show_page(page: float) -> void:
 	_page = page
 	var slide := %Slide as Control
 	slide.anchor_left = -page
 	slide.anchor_right = 1.0 - page
-	# Das Medaillon steht mit dem Menü, ab dort still: von „Wer spielt?" kommt es mit herein.
+	# Das Medaillon fährt nur zwischen „Wer spielt?" und Menü mit.
 	var layer := %BadgeLayer as Control
 	var shift := maxf(0.0, MENU - page)
 	layer.anchor_left = shift
@@ -273,9 +242,8 @@ func _settle() -> void:
 		create_tween().tween_property(_shade, "modulate:a", 1.0, SHADE_FADE)
 
 
-## Der erste Auftritt der Kulisse übersetzt ihre Shader und hält das Bild kurz an
-## (docs/CONVENTIONS.md „Fallen"). Das Menü steht sofort; die Kulisse blendet danach auf, statt
-## halb gezeichnet zu ruckeln.
+## Blendet die Kulisse erst nach zwei gezeichneten Bildern auf, wenn ihre Shader übersetzt
+## sind (docs/CONVENTIONS.md „Fallen").
 func _unveil() -> void:
 	var veil := %Veil as ColorRect
 	await RenderingServer.frame_post_draw
@@ -285,9 +253,7 @@ func _unveil() -> void:
 	create_tween().tween_property(veil, "modulate:a", 0.0, VEIL_FADE)
 
 
-## Das Abzeichen erscheint nur, wenn es etwas zu tun gibt. Ein Fehlschlag der Prüfung wird
-## hier NICHT gezeigt — die Startprüfung soll niemanden mit einem Netzproblem behelligen,
-## das ihn nicht betrifft.
+## Das Abzeichen erscheint nur, wenn es etwas zu tun gibt, nie bei einem Fehlschlag.
 func _refresh_update_badge() -> void:
 	_update_button.visible = UpdateService.state in [
 		UpdateService.State.AVAILABLE,
@@ -299,22 +265,15 @@ func _refresh_update_badge() -> void:
 		_update_button.text = "⬆ Update auf %s" % UpdateService.version
 
 
-## Ohne Vokabeln gibt es nichts zu spielen: der Kampf hätte keine Monster, kein
-## Wellenende und (vor dem Abbruch per Escape) keinen Rückweg. Der Knopf sperrt also,
-## bis Inhalte da sind, und sagt wohin.
-##
-## Bewusst UNGEFILTERT geprüft (leerer Pool = keine Einschränkung) und nicht mit der
-## Profil-Auswahl: sonst sperrt eine zu enge Filterauswahl genau den Weg zum Screen,
-## auf dem man sie wieder lockern könnte. Die Auswahl prüft das Session-Setup selbst.
+## Sperrt „Spielen", solange keine Vokabeln installiert sind. Ungefiltert geprüft, damit
+## eine zu enge Filterauswahl nicht den Weg zu ihrer Lockerung sperrt.
 func _refresh_play_gate() -> void:
 	var playable := WaveGenerator.new().has_playable({})
 	_play_button.disabled = not playable
 	_play_hint.visible = not playable
 
 
-## Zeigt an, wenn sich Inhalte aktualisieren lassen — derselbe Knopf wie beim App-Update,
-## darunter. Er öffnet den Content-Manager, der die betroffenen Packs schon vorwählt.
-## „Programm zu alt" zählt hier nicht mit — dagegen hilft das Update-Abzeichen, nicht dieses.
+## Zeigt an, wenn sich Inhalte aktualisieren lassen; „Programm zu alt" zählt nicht mit.
 func _refresh_content_badge() -> void:
 	var count := ContentService.update_count()
 	_content_update_button.visible = count > 0
@@ -340,9 +299,8 @@ func _refresh_update_check() -> void:
 	_update_check.text = update_check_text(busy, found, failed, _checked, SemVer.app_version())
 
 
-## Zwei Zeilen wie „Eigene Runde / Expertenmodus" gegenüber: oben, was der Link tut oder was
-## herauskam, unten die laufende Version. Ein Fund steht nicht hier, sondern als Abzeichen
-## darüber — hier steht dann wieder das Angebot, noch einmal zu prüfen.
+## Zwei Zeilen: Zustand der Prüfung, darunter die laufende Version. Ein Fund steht als
+## Abzeichen darüber, nicht hier.
 static func update_check_text(busy: bool, found: bool, failed: bool, checked: bool,
 		version: String) -> String:
 	var first := "Auf Updates prüfen"

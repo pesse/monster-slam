@@ -1,12 +1,8 @@
 class_name FrostShell
 extends Node3D
-## Das Eis um ein eingefrorenes Monster (Frost, ADR 0014): eine durchscheinende Hülle in der
-## Größe des Körpers, ein Kranz Eiskristalle an den Füßen und Raureif am Boden. Sie wächst
-## beim Gefrieren mit einem Aufleuchten heran, bekommt in den letzten Sekunden Risse
-## (`tick`) und zerspringt beim Auftauen in Splitter (`shatter`).
-##
-## Hängt am Monster (Monster.freeze) und geht mit ihm: wer es vorher besiegt, nimmt das Eis
-## mit. Die Kristalle sind Körper wie die Modelle, die Splitter weich wie die übrigen Effekte.
+## Das Eis um ein eingefrorenes Monster (ADR 0014): Hülle in der Größe des Körpers,
+## Kristalle an den Füßen, Raureif am Boden. Bekommt vor dem Auftauen Risse (`tick`) und
+## zerspringt (`shatter`). Hängt am Monster und vergeht mit ihm.
 
 const SHADER := preload("res://assets/shaders/ice_shell.gdshader")
 const MARK_SHADER := preload("res://assets/shaders/ground_mark.gdshader")
@@ -15,6 +11,7 @@ const SPARK_SHADER := preload("res://assets/shaders/spark.gdshader")
 const TINT := Color(0.62, 0.86, 1.0)
 ## So lange vor dem Auftauen ziehen die Risse auf (s).
 const CRACK_TIME := 1.6
+## So lange wächst die Hülle beim Gefrieren heran (s).
 const GROW_TIME := 0.28
 
 var _mat := ShaderMaterial.new()
@@ -64,6 +61,7 @@ func tick(left: float) -> void:
 		return
 	var crack := clampf(1.0 - left / CRACK_TIME, 0.0, 1.0)
 	_mat.set_shader_parameter("cracks", crack)
+	# Zittern: bis 3 cm Ausschlag.
 	_shell.position.x = _box.get_center().x + sin(left * 70.0) * 0.03 * crack
 
 

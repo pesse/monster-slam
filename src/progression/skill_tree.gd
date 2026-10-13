@@ -1,24 +1,10 @@
 class_name SkillTree
 extends RefCounted
-## Die Regeln der Fähigkeitsbäume: was ein Knoten kostet, wann er lernbar ist und was das
-## Gelernte im Lauf bewirkt.
-##
-## Reine Rechnung ohne Zustand, Szene und Autoload — deshalb statisch und für sich
-## prüfbar (siehe tests/skill_tree_test.gd), genau wie Experience für die Erfahrung und
-## ChestReward für das Gold. Wer die gelernten Knoten HÄLT, ist SkillBook; wer sie
-## ANWENDET, sind GameState und SlowMotion.
-##
-## Jede Funktion bekommt die Einträge übergeben (ContentRegistry.skills.values()), statt
-## sie selbst zu holen: so lässt sich jede Regel mit einer handvoll erfundener Knoten
-## prüfen, ohne Autoload und ohne installierte Inhalte.
-##
-## Nicht zu verwechseln mit den ZAUBERN (data/spells/, ContentRegistry.spells): die werden
-## mit Gold gekauft und verbrauchen sich im Kampf (docs/adr/0014-zauber-zum-verbrauchen.md).
-## Skills sind dauerhaft und werden mit Skillpunkten gekauft (docs/adr/0003-skills-und-spells.md).
+## Die Regeln der Fähigkeitsbäume: Kosten, Lernbarkeit, Wirkung und Platz eines Knotens.
+## Reine Rechnung ohne Zustand über übergebene Einträge (ContentRegistry.skills.values());
+## das Gelernte hält SkillBook. Skills sind dauerhaft und kosten Skillpunkte (ADR 0003).
 
-## Was der Spieler mit einem Knoten tun kann. Die Reihenfolge der Prüfung steckt in
-## `state_of` und ist eine Regel, keine Anzeige-Entscheidung — deshalb steht sie hier und
-## nicht im Screen.
+## Was der Spieler mit einem Knoten tun kann; die Rangfolge steht in `state_of`.
 enum State {
 	LEARNED,        ## schon gelernt
 	AVAILABLE,      ## Vorstufe erfüllt, Punkte reichen
@@ -26,91 +12,52 @@ enum State {
 	LOCKED,         ## Vorstufe fehlt
 }
 
-## Gold je zurückgegebenem Skillpunkt beim Umlernen. Kein Punkt geht verloren — bezahlt
-## wird mit der anderen Währung, damit die Entscheidung revidierbar bleibt, ohne folgenlos
-## zu sein.
+## Gold je zurückgegebenem Skillpunkt beim Umlernen.
 const RESPEC_GOLD_PER_POINT := 25
 
-## Gold je verlerntem KNOTEN beim einzelnen Verlernen. Gezählt werden Knoten, nicht Punkte:
-## der Preis wächst mit dem, was mitfällt (der Knoten und seine Kindeskinder), nicht mit
-## dem, was er einmal gekostet hat — ein teures Blatt kostet so viel wie ein billiges.
-## Unter RESPEC_GOLD_PER_POINT, und jeder Knoten kostet mindestens einen Punkt: einzeln
-## ist damit immer günstiger als alles, weil man auch nur einen Teil zurücknimmt.
+## Gold je verlerntem Knoten (er selbst und alles, was über ihm hängt). Liegt unter
+## RESPEC_GOLD_PER_POINT, damit einzeln verlernen nie teurer ist als alles umlernen.
 const FORGET_GOLD_PER_NODE := 15
 
-## Untergrenze des Zeitlupen-Faktors. `Engine.time_scale` auf 0 wäre ein eingefrorenes
-## Spiel: die Monster stünden still, aber auch die Haltedauer liefe weiter — der Lauf
-## käme nie zum Ende. Der Baum darf also beliebig tief gehen, nur nicht bis zum Stillstand.
+## Untergrenze des Zeitlupen-Faktors: bei `Engine.time_scale` 0 käme der Lauf nie zum Ende.
 const MIN_SLOW_FACTOR := 0.05
 
-## Untergrenze des Lauftempos der Monster (`monster_speed`, Zeitwandler). Auch das ruhigste
-## Feld soll noch ein Feld mit Druck sein: halbes Tempo, nicht weniger.
+## Untergrenze des Lauftempos der Monster (`monster_speed`), Anteil.
 const MIN_MONSTER_PACE := 0.5
 
 ## --- Wo ein Knoten im Netz steht ------------------------------------------------
-##
-## Der Screen zeichnet kein Raster aus Karten, sondern ein Netz: jeder Baum hat seinen
-## EIGENEN Anfangspunkt, seine Knoten fächern von dort nach außen auf. Gerechnet wird das
-## aus `tier` und `branch` — es steht KEINE Position in der JSON. Ein neuer Ast bleibt
-## damit ein Eintrag in den Daten, und ein vierter Baum verschiebt die drei vorhandenen
-## automatisch, statt dass jemand Koordinaten nachträgt.
-##
-## Wo die Rechnung nicht schön ist, setzt man einen Knoten von Hand (Werkbank
-## scenes/dev/skill_tree_lab.tscn, gespeichert in SkillLayout.PATH). Die Übersteuerung gilt
-## je Id: jeder Knoten ohne Eintrag bleibt gerechnet, auch ein neuer.
-##
-## Die Rechnung steht hier und nicht im Screen, weil sie prüfbar sein muss: dass sich zwei
-## Bäume nicht überlappen, ist eine Aussage über Zahlen und nicht über Pixel auf einem
-## Bildschirm (tests/skill_graph_layout_test.gd).
+## Jeder Baum hat einen eigenen Anfangspunkt und fächert nach außen auf. Die Plätze werden
+## aus `tier` und `branch` gerechnet, nicht in der JSON gespeichert. Einzelne Knoten setzt
+## man von Hand (scenes/dev/skill_tree_lab.tscn, gespeichert in SkillLayout.PATH).
 
-## Abstand des Wurzelknotens von der Mitte des Netzes.
+## Abstand des Wurzelknotens von der Mitte des Netzes, px.
 const ANCHOR_RADIUS := 150.0
 
-## Abstand einer Stufe zur nächsten, nach außen.
+## Abstand einer Stufe zur nächsten, px.
 const TIER_STEP := 120.0
 
-## Radius eines gezeichneten Knotens. Steht hier, weil das Layout gegen ihn geprüft wird:
-## zwei Knoten näher als zwei Radien wären zwei Knoten, die sich berühren.
+## Radius eines gezeichneten Knotens, px. Das Layout wird gegen ihn geprüft.
 const NODE_RADIUS := 34.0
 
-## Anteil seines Sektors, den ein Baum auffächert. Bei drei Bäumen bekommt jeder 120°,
-## davon 48° Fächer und 72° Abstand zum Nachbarn. Ein ANTEIL und keine feste Gradzahl,
-## damit der Abstand zwischen den Bäumen auch beim vierten und fünften erhalten bleibt,
-## statt aufgebraucht zu werden. Unter 0.5, damit zwischen zwei Bäumen immer mehr Platz
-## ist als innerhalb eines Baums — daran erkennt man, was zusammengehört, noch bevor man
-## die Farbe sieht.
+## Anteil seines Sektors, den ein Baum auffächert. Unter 0.5, damit zwischen zwei Bäumen
+## mehr Platz ist als innerhalb eines Baums.
 const FAN_SHARE := 0.4
 
-## Luft zwischen dem äußeren Rand eines Anfangsknotens und dem gemeinsamen Hof, auf dem
-## alle Bäume beginnen. Der Hof umschließt die Anfangsknoten GANZ — er liegt hinter ihnen
-## und nicht als Ring durch sie hindurch.
+## Luft zwischen Anfangsknoten und dem Rand des gemeinsamen Hofes, px.
 const ROOT_HALO_PAD := 16.0
 
-## Obergrenze des Fächers. Ohne sie zöge ein einzelner Baum seine Äste über einen halben
-## Kreis auseinander, nur weil niemand daneben steht.
+## Obergrenze des Fächers, rad.
 const MAX_FAN := PI * 70.0 / 180.0
 
-## Luft zwischen dem äußersten Knoten eines Baums und seiner Beschriftung. Der Name steht
-## AUSSERHALB des Fächers auf dessen Achse, nicht an seinem Anfang: innen laufen die
-## Linien zusammen, dort liegen bei mehreren Bäumen auch die Namen der Nachbarn — außen
-## ist nichts. Der Abstand nimmt zusätzlich mit, dass unter jedem Knoten sein eigener Name
-## hängt (`SkillGraph._draw_name`).
+## Luft zwischen dem äußersten Knoten eines Baums und seinem Namen auf der Fächerachse, px.
 const TITLE_GAP := 32.0
 
-## Streckung des Netzes je Achse. Der Kreis passt nicht auf den Bildschirm: die Fläche ist
-## 16:9, ein rundes Netz ließe beim Einpassen links und rechts die Hälfte leer und würde
-## dafür auf halbe Größe verkleinert. Waagerecht etwas weiter, senkrecht enger — wie im
-## Entwurf (assets/ui/skill_tree/concept/). Gestreckt werden nur die PLÄTZE, nicht die
-## Knoten: ein Kreis bleibt ein Kreis, nur der Abstand zwischen zwei Stufen wird senkrecht
-## kürzer. Unter 0.85 senkrecht rückt der Name unter einem Knoten an den Knoten der
-## nächsten Stufe heran — nachsehen mit scenes/dev/skill_tree_lab.tscn.
+## Streckung der Plätze je Achse, damit das Netz die 16:9-Fläche füllt; die Knoten bleiben
+## rund. Senkrecht unter 0.85 rückt ein Knotenname an die nächste Stufe heran.
 const STRETCH := Vector2(1.25, 0.85)
 
 
-## Die Effekt-Schlüssel, die es gibt. Steht hier und nicht verstreut in den Anwendern,
-## damit ein Tippfehler in den Daten auffällt (tests/skill_data_test.gd) statt still
-## wirkungslos zu bleiben. Alle Werte sind ADDITIV auf den Grundwert — es gibt keine
-## Frage „welcher Knoten gewinnt", nur eine Summe.
+## Die Effekt-Schlüssel, die es gibt. Alle Werte addieren sich auf den Grundwert.
 const EFFECT_KEYS: Array[String] = [
 	"heal_per_correct",
 	"fortress_armor",
@@ -130,8 +77,7 @@ const EFFECT_KEYS: Array[String] = [
 ]
 
 
-## Die Baum-Köpfe (kind == "tree"), in ihrer `order`. Bei gleichem `order` entscheidet die
-## Id, damit die Reihenfolge nicht vom Zufall der Dateiliste abhängt.
+## Die Baum-Köpfe (kind == "tree"), nach `order`, bei Gleichstand nach Id.
 static func trees(entries: Array) -> Array:
 	var out: Array = []
 	for entry in entries:
@@ -144,12 +90,8 @@ static func trees(entries: Array) -> Array:
 	return out
 
 
-## Die Knoten eines Baums, nach Stufen gebündelt: ein Array je Stufe, darin nach `branch`
-## sortiert. Genau die Form, die der Screen zeichnet — eine Zeile je Stufe, darin die Äste
-## nebeneinander.
-##
-## Gebündelt wird über die vorhandenen Stufen, nicht über 1..max: ein Baum darf später
-## eine Stufe überspringen, ohne eine leere Zeile zu erzeugen.
+## Die Knoten eines Baums, nach Stufen gebündelt: ein Array je vorhandener Stufe, darin
+## nach `branch` sortiert.
 static func tiers_of(entries: Array, tree_id: String) -> Array:
 	var by_tier: Dictionary = {}
 	for entry in entries:
@@ -173,8 +115,7 @@ static func tiers_of(entries: Array, tree_id: String) -> Array:
 	return out
 
 
-## Sucht einen Knoten über seine Id. Ein leeres Dictionary heißt „gibt es nicht" — das ist
-## kein Fehler, sondern der Normalfall nach einer Pack-Deinstallation.
+## Leer heißt „gibt es nicht“, etwa nach einer Pack-Deinstallation.
 static func node_by_id(entries: Array, id: String) -> Dictionary:
 	for entry in entries:
 		if str((entry as Dictionary).get("id", "")) == id:
@@ -186,7 +127,6 @@ static func cost(node: Dictionary) -> int:
 	return maxi(0, int(node.get("cost", 1)))
 
 
-## Sind alle Vorstufen gelernt? Ein Knoten ohne `requires` ist eine Wurzel.
 static func requirements_met(node: Dictionary, unlocked: PackedStringArray) -> bool:
 	for required in node.get("requires", []):
 		if str(required) not in unlocked:
@@ -194,9 +134,7 @@ static func requirements_met(node: Dictionary, unlocked: PackedStringArray) -> b
 	return true
 
 
-## Die erste noch fehlende Vorstufe — für die Beschriftung eines gesperrten Knotens
-## („🔒 braucht Verband"). Leer, wenn nichts fehlt. Mit zwei Ästen nebeneinander ist sonst
-## nicht zu sehen, welcher Knoten woran hängt.
+## Name der ersten noch fehlenden Vorstufe, leer, wenn nichts fehlt.
 static func missing_requirement(entries: Array, node: Dictionary,
 		unlocked: PackedStringArray) -> String:
 	for required in node.get("requires", []):
@@ -206,7 +144,6 @@ static func missing_requirement(entries: Array, node: Dictionary,
 	return ""
 
 
-## Lernbar heißt: noch nicht gelernt, Vorstufen da, Punkte reichen.
 static func can_unlock(node: Dictionary, unlocked: PackedStringArray, points_left: int) -> bool:
 	if str(node.get("id", "")) in unlocked:
 		return false
@@ -215,9 +152,7 @@ static func can_unlock(node: Dictionary, unlocked: PackedStringArray, points_lef
 	return points_left >= cost(node)
 
 
-## Der Zustand eines Knotens — in genau dieser Reihenfolge: gelernt schlägt gesperrt,
-## gesperrt schlägt zu teuer. Sonst stünde an einem Knoten ohne Vorstufe „2 P. nötig", und
-## der Spieler suchte die Punkte statt der Vorstufe.
+## Der Zustand eines Knotens: gelernt schlägt gesperrt, gesperrt schlägt zu teuer.
 static func state_of(node: Dictionary, unlocked: PackedStringArray, points_left: int) -> State:
 	if str(node.get("id", "")) in unlocked:
 		return State.LEARNED
@@ -228,9 +163,6 @@ static func state_of(node: Dictionary, unlocked: PackedStringArray, points_left:
 	return State.AVAILABLE
 
 
-## Der Zustand in einem Wort, wie er in der Unterzeile der Karte neben dem Zweig steht
-## („Späher · Lernbar"). Der Preis steht als Zeichen im Kopf der Karte, die fehlende
-## Vorstufe beim Namen in ihrer Liste (`missing_requirement`).
 static func state_name(state: State) -> String:
 	match state:
 		State.LEARNED:
@@ -242,12 +174,7 @@ static func state_name(state: State) -> String:
 	return "Gesperrt"
 
 
-## Summe der Kosten aller gelernten Knoten. Gerechnet und nicht gespeichert — aus
-## demselben Grund, aus dem PlayerLevel nur die Gesamt-Erfahrung sichert: ein zweiter
-## Zähler könnte abweichen, und dann wäre nicht zu sagen, welcher stimmt.
-##
-## Eine Id, die die Einträge nicht kennen (Pack deinstalliert), zählt nicht mit — sie gibt
-## auch keinen Bonus, also wäre sie sonst bezahlter Nichts.
+## Summe der Kosten aller gelernten Knoten. Unbekannte Ids (Pack deinstalliert) zählen nicht.
 static func spent(entries: Array, unlocked: PackedStringArray) -> int:
 	var total := 0
 	for id in unlocked:
@@ -257,9 +184,7 @@ static func spent(entries: Array, unlocked: PackedStringArray) -> int:
 	return total
 
 
-## Alle Boni der gelernten Knoten, aufsummiert: Effekt-Schlüssel -> Betrag. Nur bekannte
-## Schlüssel (EFFECT_KEYS) kommen durch; ein Tippfehler in den Daten wirkt damit nicht
-## versehentlich woanders.
+## Summe der Boni aller gelernten Knoten: Effekt-Schlüssel -> Betrag, nur EFFECT_KEYS.
 static func bonuses(entries: Array, unlocked: PackedStringArray) -> Dictionary:
 	var out: Dictionary = {}
 	for key in EFFECT_KEYS:
@@ -275,42 +200,29 @@ static func bonuses(entries: Array, unlocked: PackedStringArray) -> Dictionary:
 	return out
 
 
-## Faktor auf das Lauftempo jedes Monsters (`monster_speed`, negativ = langsamer), geklemmt
-## auf MIN_MONSTER_PACE..1. Wirkt NACH der Tempo-Formel des WaveGenerators und bewusst nicht
-## auf Punkte und Erfahrung: die kommen aus `t - c`, und ein gelernter Skill ist Können des
-## Spielers, keine leichtere Aufgabe — wie Rüstung oder Zeitlupe kostet er keine Beute.
+## Faktor auf das Lauftempo der Monster, geklemmt auf MIN_MONSTER_PACE..1. Wirkt nach der
+## Tempo-Formel des WaveGenerators und nicht auf Punkte und Erfahrung.
 static func monster_pace(bonuses: Dictionary) -> float:
 	return clampf(1.0 + float(bonuses.get("monster_speed", 0.0)), MIN_MONSTER_PACE, 1.0)
 
 
-## Faktor auf den Abstand zwischen zwei Spawns (`spawn_gap`, Anteil). Nie unter 1: der
-## Skill zieht die Folge nur auseinander.
+## Faktor auf den Abstand zwischen zwei Spawns (`spawn_gap`, Anteil), nie unter 1.
 static func spawn_gap_scale(bonuses: Dictionary) -> float:
 	return maxf(1.0, 1.0 + float(bonuses.get("spawn_gap", 0.0)))
 
 
-## Was das Umlernen kostet: Gold je zurückgegebenem Punkt. Ohne ausgegebene Punkte gibt es
-## nichts zurückzunehmen und der Preis ist 0 — der Knopf sperrt dann ohnehin.
 static func respec_cost(spent_points: int) -> int:
 	return maxi(0, spent_points) * RESPEC_GOLD_PER_POINT
 
 
-## Was mit einem Knoten verlernt wird: er selbst und jeder gelernte Knoten, der über ihn
-## hängt — auch über Zwischenstufen. In der Reihenfolge von `unlocked`, damit Dialog und
-## Buchung dieselbe Liste sehen.
-##
-## Die Äste darüber fallen MIT, statt stehen zu bleiben: ein gelernter Knoten ohne seine
-## Vorstufe wäre ein Zustand, den das Lernen nie herstellen kann. Und sie fallen nicht
-## still — der Screen nennt jeden beim Namen, bevor gefragt wird.
-##
-## Leer, wenn der Knoten gar nicht gelernt ist: dann gibt es nichts zurückzunehmen.
+## Was mit einem Knoten verlernt wird: er und alles Gelernte, was darüber hängt, in der
+## Reihenfolge von `unlocked`. Leer, wenn er nicht gelernt ist.
 static func forget_set(entries: Array, id: String,
 		unlocked: PackedStringArray) -> PackedStringArray:
 	if id not in unlocked:
 		return PackedStringArray()
 	var gone := PackedStringArray([id])
-	# Bis nichts mehr dazukommt: `requires` zeigt nach UNTEN, gesucht wird nach oben, und
-	# die Liste ist nicht nach Stufen sortiert.
+	# Bis nichts mehr dazukommt: `requires` zeigt nach unten, die Liste ist nicht nach Stufen sortiert.
 	var grew := true
 	while grew:
 		grew = false
@@ -330,27 +242,15 @@ static func forget_set(entries: Array, id: String,
 	return out
 
 
-## Was das Verlernen eines Knotens kostet: FORGET_GOLD_PER_NODE je Knoten, der fällt —
-## er selbst und jeder gelernte Nachfahre. Ein Blatt ist das Billigste, eine Wurzel mit
-## ausgebautem Ast kostet entsprechend mehr.
 static func forget_cost(entries: Array, id: String, unlocked: PackedStringArray) -> int:
 	return forget_set(entries, id, unlocked).size() * FORGET_GOLD_PER_NODE
 
 
 # --- Das Netz -----------------------------------------------------------------
 
-## Wo jeder Knoten im Netz liegt: Id -> Position, Ursprung in der Mitte. Enthalten sind
-## auch die BAUM-KÖPFE — deren Punkt ist der Anfangspunkt des Baums: er liegt zur Mitte
-## hin vor der Wurzel und trägt im Screen den Namen.
-##
-## `tier` wird zum Radius, `branch` zum Winkel innerhalb des eigenen Fächers. Der Winkel
-## kommt aus der POSITION in der Stufe und nicht aus dem Zahlenwert von `branch`: die
-## Werte dürfen Lücken haben (ein Ast, der später dazwischenkommt), der Fächer soll
-## trotzdem gleichmäßig bleiben.
-##
-## `overrides` (Id -> Position, aus SkillLayout) setzt einzelne Plätze von Hand. Ein Baumname
-## ohne eigenen Eintrag rückt dann hinter den äußersten Knoten seines Baums, wo der auch
-## steht.
+## Id -> Position im Netz, Ursprung in der Mitte; Baum-Köpfe mit dem Platz ihres Namens.
+## `tier` wird zum Radius, die Position in der Stufe (nicht der Wert von `branch`) zum
+## Winkel. `overrides` (aus SkillLayout) setzt einzelne Plätze.
 static func layout(entries: Array, overrides: Dictionary = {}) -> Dictionary:
 	var out: Dictionary = {}
 	var tree_list := trees(entries)
@@ -358,11 +258,8 @@ static func layout(entries: Array, overrides: Dictionary = {}) -> Dictionary:
 	var fan := minf(TAU / float(count) * FAN_SHARE, MAX_FAN)
 	for i in tree_list.size():
 		var tree_id := str((tree_list[i] as Dictionary).get("id", ""))
-		# -PI/2: der erste Baum steht oben, die weiteren im Uhrzeigersinn daneben.
+		# -PI/2: der erste Baum steht oben, die weiteren im Uhrzeigersinn.
 		var base := -PI * 0.5 + float(i) * TAU / float(count)
-		# Der Platz des Baum-KOPFES ist der seines Namens, nicht der seines Anfangs: der
-		# Kopf ist nichts, was man lernt. Wie weit außen er liegt, steht erst fest, wenn
-		# die Stufen gezählt sind — deshalb unten.
 		var reach := ANCHOR_RADIUS
 		for tier in tiers_of(entries, tree_id):
 			var row: Array = tier
@@ -375,32 +272,22 @@ static func layout(entries: Array, overrides: Dictionary = {}) -> Dictionary:
 				var radius := ANCHOR_RADIUS + float(steps) * TIER_STEP
 				var id := str(node.get("id", ""))
 				var at: Vector2 = overrides.get(id, Vector2.from_angle(base + spread) * radius * STRETCH)
-				# Der Abstand von der Mitte, ungestreckt — bei einem gerechneten Platz genau
-				# `radius`, bei einem gesetzten so weit, wie er wirklich draußen liegt.
+				# Ungestreckter Abstand von der Mitte, auch für gesetzte Plätze.
 				reach = maxf(reach, (at / STRETCH).length())
 				out[id] = at
-		# Der Abstand des Namens wird NICHT gestaucht: er ist Luft über einem Knoten, und
-		# ein Knoten ist rund. Nur der Platz des Knotens, über dem er hängt, ist gestreckt.
+		# Der Abstand des Namens wird nicht gestreckt, nur der Platz des Knotens darunter.
 		var axis := Vector2.from_angle(base)
 		out[tree_id] = overrides.get(tree_id, axis * reach * STRETCH + axis * (NODE_RADIUS + TITLE_GAP))
 	return out
 
 
-## Halbachsen des gemeinsamen Hofes um die Mitte. EIN Hof für alle Bäume: die
-## Anfangspunkte sind getrennt, aber sie liegen alle auf demselben Abstand zur Mitte, und
-## was sie verbindet, ist der Anfang selbst. Ein Hof je Baum hätte dreimal dasselbe gesagt.
-## Eine Ellipse und kein Kreis, weil das Netz gestreckt ist (`STRETCH`): die Anfangsknoten
-## liegen waagerecht weiter außen als senkrecht.
-##
-## Die Größe steht hier und nicht im Screen, weil er eine Bedingung an das Layout ist:
-## kein Knoten außer den Anfangsknoten darf hineinragen
-## (tests/skill_graph_layout_test.gd).
+## Halbachsen des gemeinsamen Hofes um die Anfangsknoten aller Bäume, px. Eine Ellipse wegen
+## `STRETCH`. Kein anderer Knoten darf hineinragen (tests/skill_graph_layout_test.gd).
 static func root_halo_size() -> Vector2:
 	return ANCHOR_RADIUS * STRETCH + Vector2.ONE * (NODE_RADIUS + ROOT_HALO_PAD)
 
 
-## Das Rechteck, in dem alle Knoten liegen — mit dem Knotenradius als Rand, damit ein
-## Knoten am Rand nicht halb abgeschnitten wird. Leer, wenn es nichts zu zeichnen gibt.
+## Das Rechteck um alle Knoten, mit dem Knotenradius als Rand. Leer ohne Knoten.
 static func bounds(positions: Dictionary) -> Rect2:
 	if positions.is_empty():
 		return Rect2()
@@ -410,8 +297,7 @@ static func bounds(positions: Dictionary) -> Rect2:
 	return box.grow(NODE_RADIUS)
 
 
-## Die Farbe eines Baums, aus seinem `color`-Feld (`"#5fd08a"`). Ohne Angabe ein neutrales
-## Grau — ein Baum aus einem fremden Pack soll gezeichnet werden, nicht unsichtbar sein.
+## Die Farbe eines Baums aus seinem `color`-Feld (`"#5fd08a"`), sonst neutrales Grau.
 static func color_of(tree: Dictionary) -> Color:
 	var raw := str(tree.get("color", ""))
 	if raw.is_empty() or not Color.html_is_valid(raw):
@@ -419,8 +305,7 @@ static func color_of(tree: Dictionary) -> Color:
 	return Color.html(raw)
 
 
-## Das Zeichen im Knoten. Ohne `icon` ein Stern — lieber ein sichtbarer Platzhalter als
-## ein leerer Kreis, an dem niemand sieht, dass etwas fehlt.
+## Das Zeichen im Knoten, ohne `icon` ein Stern.
 static func icon_of(node: Dictionary) -> String:
 	var icon := str(node.get("icon", ""))
 	return icon if not icon.is_empty() else "\u2605"
@@ -428,9 +313,7 @@ static func icon_of(node: Dictionary) -> String:
 
 # --- Was der Spieler davon hat ------------------------------------------------
 
-## Der Stand EINES Baums: wie viele seiner Knoten gelernt sind, wie viele es gibt, und
-## welche Boni dabei herauskommen. Steht hier und nicht im Screen, weil es dieselbe
-## Rechnung ist wie `bonuses()` — nur auf einen Baum eingeschränkt.
+## { learned, total, bonuses } eines Baums.
 static func tree_summary(entries: Array, unlocked: PackedStringArray,
 		tree_id: String) -> Dictionary:
 	var own: Array = []
@@ -452,10 +335,7 @@ static func tree_summary(entries: Array, unlocked: PackedStringArray,
 	}
 
 
-## Der Stand eines Baums als EINE Zeile („2/5 gelernt · +2 HP je besiegtem Monster").
-## Sie steht im Tooltip seines Namens und ist das, was früher am rechten Bildrand stand:
-## wie weit der Baum ausgebaut ist und was er dafür bringt. Zusammengesetzt hier und
-## nicht im Screen, weil beide Hälften schon hier gerechnet werden.
+## Der Stand eines Baums als eine Zeile („2/5 gelernt · +2 HP je besiegtem Monster“).
 static func tree_status(entries: Array, unlocked: PackedStringArray,
 		tree_id: String) -> String:
 	var stand := tree_summary(entries, unlocked, tree_id)
@@ -466,9 +346,7 @@ static func tree_status(entries: Array, unlocked: PackedStringArray,
 	return line + " · " + ", ".join(gains)
 
 
-## Was ein Effektwert dem Spieler sagt. Die Sätze stehen bei den Schlüsseln, nicht im
-## Screen: ein neuer Effekt bekommt seinen Namen und seine Beschriftung an derselben
-## Stelle, sonst zeigt der Screen ihn als leere Zeile.
+## Was ein Effektwert dem Spieler sagt. Ein neuer Effekt-Schlüssel braucht hier seine Zeile.
 static func effect_label(key: String, value: float) -> String:
 	match key:
 		"heal_per_correct":
@@ -505,8 +383,7 @@ static func effect_label(key: String, value: float) -> String:
 	return ""
 
 
-## Alle Boni als lesbare Zeilen, in der Reihenfolge von EFFECT_KEYS. Ein Bonus von 0 fällt
-## weg — „+0 Rüstung" ist keine Auskunft, sondern eine Zeile zum Überlesen.
+## Alle Boni als lesbare Zeilen in der Reihenfolge von EFFECT_KEYS, ohne Nullwerte.
 static func effect_lines(values: Dictionary) -> Array[String]:
 	var out: Array[String] = []
 	for key in EFFECT_KEYS:
@@ -519,6 +396,5 @@ static func effect_lines(values: Dictionary) -> Array[String]:
 	return out
 
 
-## Zahl mit Komma statt Punkt — das Spiel spricht Deutsch.
 static func _decimal(value: float, digits: int) -> String:
 	return String.num(value, digits).replace(".", ",")

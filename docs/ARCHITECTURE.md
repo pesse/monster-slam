@@ -413,8 +413,8 @@ Erspielte.
   das Widget (`STAGE_PAD`) — die Kiste selbst bleibt in ihrem Platz im Layout, geprüft
   gegen das Widget-Rechteck. Verblasst wird keine Münze: `GeometryInstance3D.transparency`
   gibt es im `gl_compatibility`-Renderer nicht, deshalb fallen sie unter die Bildkante.
-  Die Einzelheiten zu Atlas, Mesh-Kopie, Kamera und Polster stehen im Kopf von
-  `treasure_chest.gd`.
+  Die Einzelheiten zu Atlas, Mesh-Kopie, Kamera und Polster stehen in `treasure_chest.gd`
+  an `ATLAS_CELLS`, `_mesh_with_metal_cell`, `CAM_SIZE` und `STAGE_PAD`.
 - **Die Größe des Abschluss-Screens steht fest**, solange er sichtbar ist: er hängt in
   der Bildmitte, und eine Größenänderung beim Weiterblättern verschiebt die Knöpfe unter
   dem Zeiger. Dafür der `PageStack` plus die Regel, innerhalb einer Seite nur zu sperren
@@ -711,7 +711,10 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
   „Schön" zeigt alles, „Mittel" lässt Glow weg und halbiert MSAA, „Schnell" lässt dazu MSAA,
   Wolken, Teilchen, Bodenflecken und die Farbkorrektur weg. Die Büschel des Bewuchses
   halbiert „Mittel", „Schnell" lässt sie weg; die Sträucher bleiben. Schatten, Wind und der Weg
-  bleiben überall. Die Kosten misst `battle_theme_lab -- --fps`. Das alte `graphics_simple`
+  bleiben überall: Schatten geben die Tiefe, Wind kostet fast nichts, der Weg trägt den
+  Bildaufbau. Die Kosten misst `battle_theme_lab -- --fps`; gemessen waren MSAA 11–29 % der
+  Bildzeit, Glow 11–15 %, Schatten 7–15 %, Weg und Bodenflecken um 14 %, Wolken, Teilchen,
+  Wind und Farbkorrektur je 0–8 %. Das alte `graphics_simple`
   wird als „Schnell" gelesen, solange keine Stufe gespeichert ist.
 
 ## Fähigkeitsbäume: wofür die Punkte da sind
@@ -1002,7 +1005,7 @@ Ein Zauber ist ein Verbrauchsgegenstand: `price` in Gold, `effect` aus
 - **Bild** (`SpellFx`, `src/fx/spell_fx.gd`, im Kampf und in der Werkbank dasselbe):
   Schleier über dem ganzen Bild (`SpellVeil`), Banner mit Bild und Name
   (`SpellBanner`), dazu je Wirkung ein Effekt im Feld — Lichtvorhang, nach dem die
-  Schilder der Reihe nach aufspringen (`SpellCaster.reveal_delay`), Schlamm-Spritzer,
+  Schilder der Reihe nach aufspringen (`SpellFx.reveal_delay`), Schlamm-Spritzer,
   Dunst für die ganze Welle, Eisring und Schnee, verdunkeltes Bild mit gestaffelten
   Blitzen (`LightningBolt`, Plasma-`Blast`, Brandfleck), Lichtsäule an der Festung. Am
   Monster hängen `FrostShell` (wächst, reißt in den letzten Sekunden, zerspringt) und

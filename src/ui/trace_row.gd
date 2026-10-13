@@ -1,10 +1,8 @@
 class_name TraceRow
 extends HBoxContainer
 ## Eine Zeile der Protokoll-Ansicht (Einstellungen, Reiter „Protokoll"): Uhrzeit links, das
-## Ereignis rechts. Was darin steht, rechnet `TraceView.rows()`; hier wird nur eingesetzt.
-##
-## Die Karte am Zeiger hängt an der ZEILE (siehe StatRow): dort stehen Lösung, Sicherheit
-## und Antwortzeit, die in der Zeile keinen Platz haben.
+## Ereignis rechts. Was darin steht, rechnet `TraceView.rows()`. Die Karte am Zeiger hängt
+## an der ganzen Zeile.
 
 ## `entry` wie von `TraceView.rows()`.
 func setup(entry: Dictionary) -> void:

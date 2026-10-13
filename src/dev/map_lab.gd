@@ -1,38 +1,12 @@
 extends Control
-## Werkbank für die Landkarten (scenes/dev/map_lab.tscn, ADR 0006): Punkte aufs Bild setzen.
-##
-## Buch und Karte wählen (Buchkarte oder eine Gebietskarte). Die linke Maustaste wählt
-## einen Ort, einen Wegpunkt oder eine Quelle (weißer Ring), Ziehen verschiebt sie,
-## „Auswahl löschen" (Entf) nimmt sie weg. Die rechte setzt Neues: den oben gewählten Ort —
-## und die Auswahl rückt zum nächsten weiter —, bei „path" einen Wegpunkt; ohne Wegpunkte
-## verbindet die Karte die Orte direkt.
-## „Speichern" schreibt assets/maps/<book>/map.json (MapLayout.save) — nur im Editor-Lauf,
-## im Export ist res:// read-only und diese Werkbank ohnehin ausgeschlossen.
-##
-## Die Seitenleiste rechts gehört der Bewegung der Gebietskarte (map.json `ambience`,
-## MapAmbience): oben einen Effekt wählen oder mit Art und „+ Effekt" anlegen. Eine Fläche
-## (Wasser, Wasserfall, Nebel) malt man mit dem Pinsel in ihre Maske
-## (assets/maps/<book>/unit<n>_<mask>.webp, MapLayout.mask_path; jede weitere Fläche einer
-## Art bekommt eine eigene, `<kind>2` …): links malt, rechts
-## radiert, „Rückgängig" (Strg+Z) nimmt den letzten Strich zurück. Eine Quelle (Rauch,
-## Glut, Fackel) setzt die rechte Maustaste, die linke greift sie. Steht oben „Punkte
-## setzen", gelten die Klicks wieder den Orten.
-##
-## Darunter steht, was zum gewählten Effekt passt: die Karte mit der Maske bzw. der
-## Ausschnitt um die Quelle, Art, Intensität, Form (nur Wasser: Feld oder Ringe), Größe
-## (nur Quellen) und der Pinsel (nur Flächen: Größe in Bildschirm-Pixeln, Härte des Randes,
-## Stärke). Was dem Gewohnten entspricht, schreibt die Werkbank nicht in map.json. Neue
-## Masken sieht das Spiel erst nach einem Import (`tools/godot.sh --import`).
-##
-##     GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/map_lab.tscn -- --shoot --book=aplusx --unit=1
-##         speichert reports/map_ambience/aplusx_unit1.png und beendet sich (`--outline`
-##         mit Umrissen, `--crop=x,y,w` nur der Ausschnitt ab x,y in w Bildbreite, doppelt
-##         groß; `--later` ein zweites Bild eine halbe Sekunde später, zum Vergleich;
-##         `--select=N` zeigt Effekt N in der Leiste, `--style=rings` probiert eine Form aus,
-##         ohne zu speichern).
-##
-## Die Bilder selbst entstehen außerhalb dieses Repos und werden als
-## assets/maps/<book>/book.webp bzw. unit<n>.webp abgelegt; danach einmal importieren.
+## Werkbank für die Landkarten (ADR 0006): Orte, Wege und Bewegung (`ambience`) aufs Bild
+## setzen. Bedienung der Leiste: docs/ADDING_CONTENT.md „Bewegung auf einer Gebietskarte“.
+## Punkte: links wählen und ziehen, rechts setzen (die Auswahl rückt weiter), Entf löscht.
+## „Speichern“ schreibt assets/maps/<book>/map.json (MapLayout.save) und die Masken.
+##     GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/map_lab.tscn -- --shoot --book=<id> --unit=<n>
+##         Bild nach reports/map_ambience/<book>_unit<n>.png. Dazu: --outline (Umrisse),
+##         --crop=x,y,w (Ausschnitt, doppelt groß), --later (zweites Bild 0.5 s später),
+##         --select=N (Effekt N in der Leiste), --style=rings (Form probieren, ohne Speichern).
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 const PARAM_SCENE := preload("res://scenes/dev/map_lab_param.tscn")
@@ -88,18 +62,18 @@ var _room: Window
 var _content: Dictionary = {}
 ## 0 = Buchkarte, sonst die Unit.
 var _unit := 0
-## Bonus-Schlüssel -> Titel, wie ihn die Karte ohne eigenen Eintrag zeigt — für einen neu
-## gesetzten Bonus-Punkt, damit `title` in map.json gleich zum Anpassen dasteht.
+## Bonus-Schlüssel -> Titel, wie ihn die Karte ohne eigenen Eintrag zeigt; ein neuer
+## Bonus-Punkt bekommt ihn als `title` in map.json.
 var _titles: Dictionary = {}
 ## Was gewählt ist: { type: "point" (key) | "path" (index) | "spot" (entry) }, oder {}.
 var _selection: Dictionary = {}
 ## Solange die Maus gedrückt ist, folgt die Auswahl ihr.
 var _dragging := false
 ## Die Masken der gewählten Gebietskarte: mask -> { bytes: PackedByteArray (L8), size:
-## Vector2i, texture: ImageTexture }. Die Bytes sind die Wahrheit, die Textur folgt ihnen.
+## Vector2i, texture: ImageTexture }. Die Bytes sind maßgeblich, die Textur folgt ihnen.
 var _masks: Dictionary = {}
-## Vorige Stände der Masken, je Strich einer: [{ kind, bytes }] — Kopien, denn ein
-## Packed-Array teilt sich in GDScript, statt beim Schreiben kopiert zu werden.
+## Vorige Stände der Masken, je Strich einer: [{ kind, bytes }]. Kopien, weil sich ein
+## Packed-Array in GDScript teilt, statt beim Schreiben kopiert zu werden.
 var _undo: Array = []
 ## Ein Strich läuft: so lange malt (oder radiert) jede Bewegung.
 var _painting := false
@@ -107,8 +81,7 @@ var _stroke_erases := false
 ## Wo der letzte Abdruck saß (Pixel der Maske) — Bewegungen dazwischen füllt der Strich auf.
 var _last_stamp := Vector2.INF
 ## Für welche Art und Form die Regler aus MapLayout.PARAMS gebaut sind, und je Schlüssel
-## ihr Regler — gebaut wird nur neu, wenn sich das ändert, sonst risse es den Regler unter
-## der Maus weg.
+## ihr Regler. Neu gebaut nur bei Änderung, sonst verschwände der Regler unter der Maus.
 var _param_for := ""
 var _param_rows: Dictionary = {}
 ## Wo die Maus über der Karte steht, für den Pinsel-Umriss; INF außerhalb.
@@ -191,8 +164,7 @@ func _load_book() -> void:
 	_pick_map()
 
 
-## Die Units mit Inhalt, dazu jede, für die es schon ein Gebietsbild gibt — die Bewegung
-## lässt sich setzen, bevor der Inhalt da ist.
+## Die Units mit Inhalt oder mit Gebietsbild.
 func _map_units() -> Array:
 	var units: Array = ContentRegistry.units_for(_book()).map(func(u): return int(u))
 	for key in MapLayout.unit_points(_content):
@@ -313,8 +285,7 @@ func _handles() -> Array:
 
 
 ## Das Greifbare unter `local`, das nächste zuerst; {} wenn nichts in HIT liegt. Bei
-## Gleichstand gewinnt der gewählte Effekt — sonst bekäme man eine Quelle, die auf einem Ort
-## liegt, nie zu fassen.
+## Gleichstand gewinnt der gewählte Effekt, damit eine Quelle auf einem Ort greifbar bleibt.
 func _handle_at(local: Vector2) -> Dictionary:
 	var best := {}
 	var nearest := INF
@@ -441,8 +412,7 @@ func _redraw() -> void:
 		nodes.append({"key": key, "pos": points[key], "glyph": key, "caption": key,
 				"boss": key == "boss"})
 	var path := MapLayout.book_path(_content) if _unit == 0 else MapLayout.area_path(_content, _unit)
-	# Wie im Spiel: auf der Gebietskarte kleine Orte; den Weg zeigt die Werkbank immer, sonst
-	# sähe man die gesetzten Wegpunkte nicht.
+	# Den Weg zeigt die Werkbank immer, damit die Wegpunkte sichtbar sind.
 	_canvas.node_radius = MapCanvas.NODE_RADIUS if _unit == 0 else MapCanvas.AREA_NODE_RADIUS
 	_canvas.setup(texture, nodes, path, func(node: Dictionary) -> Dictionary:
 		return {"title": str(node["key"])})
@@ -746,8 +716,8 @@ func _mask_size() -> Vector2i:
 	return Vector2i(MapLayout.MASK_WIDTH, roundi(MapLayout.MASK_WIDTH / ratio))
 
 
-## Liest die Masken der gewählten Karte von der Platte — direkt aus der Datei, nicht über den
-## Import: eben gemalte und gespeicherte Masken hat noch niemand importiert.
+## Liest die Masken der gewählten Karte direkt aus der Datei, weil eben gespeicherte Masken
+## noch nicht importiert sind.
 func _load_masks() -> void:
 	_masks.clear()
 	_undo.clear()
@@ -881,8 +851,7 @@ func _show_mask(mask: String) -> void:
 
 ## Ein Abdruck des Pinsels in `bytes` (L8, `size`) um `center` (Pixel): innen bis
 ## `radius * hardness` voll, nach außen weich. Malen hebt bis `strength`, Radieren senkt um
-## sie — beides nie über das hinaus, was der Abdruck selbst gäbe: ein Strich mit halber
-## Stärke bleibt halb, wie oft er auch über dieselbe Stelle geht.
+## sie, nie über den Abdruck hinaus: halbe Stärke bleibt halb, auch bei mehreren Strichen.
 static func stamp(bytes: PackedByteArray, size: Vector2i, center: Vector2, radius: float,
 		hardness: float, strength: float, erase: bool) -> PackedByteArray:
 	var inner := radius * clampf(hardness, 0.0, 0.99)
@@ -925,7 +894,7 @@ func _undo_stroke() -> void:
 
 
 ## Schreibt die Masken der Karte als verlustfreies WebP; eine Maske ohne Eintrag verliert
-## ihre Datei (samt .import) — nur genau diese, einzeln benannt.
+## ihre Datei samt .import.
 func _save_masks() -> Error:
 	var masks := _mask_textures()
 	for mask in masks:

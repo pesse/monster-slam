@@ -1,7 +1,6 @@
 class_name SentenceJudge
 extends Node
-## Der Vertrag für alle Bewertungsstufen — und die Zusicherung, dass keine davon blockiert
-## (docs/adr/0004-satzbewertung-ohne-modell.md, Entscheidung 4).
+## Der Vertrag für alle Bewertungsstufen; keine davon blockiert (ADR 0004 und 0005).
 ##
 ##     Antwort ─► Stufe 0  Prüfkarte (offline, deterministisch, immer vorhanden)
 ##                  ├─ klarer Treffer oder bekannter Fehler ─► fertig
@@ -11,51 +10,24 @@ extends Node
 ##                                   │               └─► explained (Grund oder leer)
 ##                                   └─ Zeitlimit / nichts ─► gave_up, Ergebnis aus Stufe 0
 ##
-## `judge()` gibt das Ergebnis der Prüfkarte SOFORT zurück — es liegt bereit, während der
-## Boss ausholt. Meldet sich Stufe 1 rechtzeitig, kommt die Verfeinerung als `refined`
-## nach; meldet sie sich nicht, schlägt der Boss trotzdem zu. Kein Zustand des Kampfes
-## hängt an einem Modell, die Wartezeit ist Inszenierung und keine Blockade.
-##
-## **Stufe 1 darf nur heben, nie senken — und sie ist das EINZIGE, was aus einem Zweifel
-## einen Treffer machen kann.** Gefragt wird sie nur, wo die Karte nichts gefunden hat:
-## keine bekannte Lösung, aber auch keinen bekannten Fehler. Dort steht die Güte der Karte
-## seit der Messung am Antwortbogen auf 0 (SentenceCard.NO_VERDICT) — sie hat kein Urteil,
-## und ohne Stufe 1 bleibt die Antwort kein Treffer.
-##
-## Beides zusammen ist der Grund, aus dem die Regel trägt: die falschen Antworten in diesem
-## Topf sind schon abgewiesen, ein Modell kann sie also gar nicht durchwinken; anzuheben
-## hat es nur, was richtig und bloß nicht hinterlegt ist.
-##
-## **Wo es nicht hebt, darf es erklären** (docs/adr/0005-bosskampf-mit-erklaerung.md,
-## Entscheidung 2). Sein Tadel war der Fehler, um dessentwillen ADR 0004 kein Modell
-## ausliefert — es lehnt richtige Antworten ab. Deshalb erklärt ein ZWEITER Aufruf, ohne
-## Lösungsschlüssel und unabhängig vom ersten; findet er keinen Fehler, gibt es keine
-## Erklärung, und es bleibt bei der Rückmeldung der Karte und der Musterlösung. Die
-## Begründung des Urteils selbst wird nie gezeigt: sie ist mit dem Schlüssel vor Augen
-## geschrieben.
-##
-## Stufe 1 ist NICHT Teil der Auslieferung: ohne `model_backend` existiert sie für das
-## Spiel nicht. Wer sie will, startet einen lokalen Dienst (siehe LocalModelBackend).
+## `judge()` gibt das Ergebnis der Prüfkarte sofort zurück, Stufe 1 meldet sich über
+## Signale. Stufe 1 darf nur heben, nie senken. Ohne `model_backend` gibt es sie nicht.
 
 ## Stufe 0 hat geantwortet — immer, sofort, für jede Antwort.
 signal judged(result: Dictionary)
 ## Stufe 1 hat rechtzeitig geantwortet und das Ergebnis verfeinert.
 signal refined(result: Dictionary)
-## Stufe 1 hat geurteilt: kein Treffer. Die Güte bleibt die der Karte (0); `sure` ist jetzt
-## wahr, `stage` ist "model". Die Rückmeldung bleibt die der Karte — was falsch ist, sagt
-## erst `explained`.
+## Stufe 1 hat geurteilt: kein Treffer. Güte und Rückmeldung bleiben die der Karte;
+## `sure` ist wahr, `stage` ist "model".
 signal denied(result: Dictionary)
 ## Die Erklärung zu einem `denied`. Kommt nach jedem `denied`, sofern ein `explainer`
-## eingehängt ist — auch wenn es keine Erklärung gibt: dann ist "explanation" leer und die
-## Anzeige zeigt die Musterlösung. So muss niemand auf etwas warten, das nicht kommt.
+## eingehängt ist; ohne Erklärung ist "explanation" leer.
 signal explained(result: Dictionary)
-## Stufe 1 war zu langsam oder hatte nichts beizutragen. Für die Werkbank und für eine
-## Anzeige, die sagen will, woran es lag — der Aufrufer hat sein Ergebnis längst.
+## Stufe 1 war zu langsam oder hatte nichts beizutragen.
 signal gave_up()
 
-## Wie lange auf eine Antwort von Stufe 1 gewartet wird, je Aufruf. Etwas länger als das
-## Backend: gäbe der Richter früher auf, bliebe die Anfrage offen und jede weitere fiele in
-## dessen Sperre. Der Bosskampf hat keinen Zeitdruck (ADR 0005, Entscheidung 7).
+## Wartezeit auf Stufe 1 je Aufruf (s). Länger als das Backend, sonst bliebe dessen Anfrage
+## offen und jede weitere fiele in seine Sperre.
 const DEFAULT_TIMEOUT := LocalModelBackend.HTTP_TIMEOUT + 2.0
 
 ## func(sentence: Dictionary, answer: String, on_done: Callable) -> void
@@ -68,11 +40,10 @@ var model_backend: Callable = Callable()
 var explainer: Callable = Callable()
 var timeout: float = DEFAULT_TIMEOUT
 
-## Laufende Nummer der Anfrage. Eine Antwort auf eine ältere Frage ist keine Antwort —
-## im Kampf tippt der Spieler weiter, während das Modell noch rechnet.
+## Laufende Nummer der Anfrage; Antworten auf ältere Anfragen werden verworfen.
 var _ticket := 0
 var _open := false
-## Wartet gerade eine Erklärung? Getrennt von `_open`, weil das Urteil schon da ist.
+## Wartet gerade eine Erklärung (das Urteil ist schon da)?
 var _explaining := false
 var _card: Dictionary = {}
 var _sentence: Dictionary = {}
@@ -135,10 +106,7 @@ func _on_model(ticket: int, reply: Dictionary) -> void:
 			merged["feedback"] = said
 		refined.emit(merged)
 		return
-	# Nicht gehoben: die Güte bleibt, die Rückmeldung auch. Nur `sure` sagt jetzt, dass
-	# jemand geurteilt hat.
-	# `_explaining` VOR dem Signal: wer auf `denied` hört, fragt `explaining()`, um zu
-	# wissen, ob noch eine Erklärung kommt.
+	# `_explaining` vor dem Signal setzen: wer auf `denied` hört, fragt `explaining()`.
 	_explaining = explainer.is_valid()
 	denied.emit(merged)
 	if not _explaining or ticket != _ticket:
@@ -158,9 +126,8 @@ func _on_explained(ticket: int, denied_result: Dictionary, reply: Dictionary) ->
 	explained.emit(with_explanation(denied_result, reply))
 
 
-## Das Ergebnis mit der Erklärung. Eine Erklärung gibt es nur, wenn der Erklärer einen
-## Fehler gefunden UND ihn benannt hat; dann ersetzt sie die Rückmeldung der Karte. Sonst
-## ist "explanation" leer, und es bleibt bei Karte und Musterlösung.
+## Das Ergebnis mit der Erklärung. Nur wenn der Erklärer einen Fehler gefunden und benannt
+## hat, ersetzt sie die Rückmeldung der Karte; sonst ist "explanation" leer.
 static func with_explanation(result: Dictionary, reply: Dictionary) -> Dictionary:
 	var out := result.duplicate(true)
 	var text := str(reply.get("explanation", "")).strip_edges()

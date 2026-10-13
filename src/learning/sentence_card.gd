@@ -1,64 +1,31 @@
 class_name SentenceCard
 extends RefCounted
-## Stufe 0 der Satzbewertung — die „Prüfkarte" aus
-## docs/adr/0004-satzbewertung-ohne-modell.md.
+## Stufe 0 der Satzbewertung, die „Prüfkarte“ (ADR 0004): wertet den Lösungsschlüssel
+## eines Satzes (`accepted`, `must_contain`, `pitfalls`) deterministisch aus, ohne Modell.
+## Reine Rechnung ohne Zustand. Treffer- und Urteilsregeln: ADR 0004 und CONVENTIONS.
 ##
-## Bewerten ist nur deshalb teuer, weil man es als offene Aufgabe behandelt. Der Autor des
-## Satzes kennt aber die Lösung, die gleichwertigen Formulierungen (`accepted`), die
-## Lexeme, um derentwillen der Satz überhaupt gestellt wird (`must_contain`), und die
-## Fehler, die zu erwarten sind (`pitfalls`). Diese Klasse ist die Auswertung dieses
-## Schlüssels: deterministisch, unter einer Millisekunde, ohne Modell, ohne Netz.
-##
-## Sie ist reine Rechnung ohne Zustand, Szene und Autoload — wie ChestReward und
-## Experience — und damit für sich prüfbar (tests/sentence_card_test.gd). Wer sie aufruft
-## und wer eine zweite Stufe daneben stellt, ist SentenceJudge.
-##
-## **Ein Treffer schlägt jede Stolperstelle.** In einem Lernspiel für Kinder ist der zu
-## Unrecht getadelte richtige Satz der teuerste Fehler, den das System machen kann —
-## teurer als eine durchgewinkte falsche Antwort. Wer einmal erlebt hat, dass das Spiel
-## seine richtige Übersetzung nicht anerkennt, glaubt ihm den nächsten Tadel nicht mehr.
-## Dieselbe Regel steht als Datentest daneben (tests/sentence_data_test.gd: keine
-## Stolperstelle darf auf eine akzeptierte Lösung passen).
-##
-## **Ohne Schlüsseltreffer gibt es KEIN Urteil, und kein Urteil heißt 0.** Das war einmal
-## anders: die Karte gab dort die Wort-Überschneidung als Güte aus. Gemessen an einem
-## Antwortbogen (src/dev/answer_sheet.json) stammten daraufhin ALLE Fehlurteile aus genau
-## diesem Zweig — und die teuersten waren Falsch-Positive: „Always she walks to school."
-## enthält dieselben Wörter wie die Musterlösung und bekam 1,00. Eine Überschneidung von
-## Wortmengen sieht weder Reihenfolge noch Beugung, also genau das nicht, was ein
-## Bosskampf übt; keine Schwelle heilt das. Die Zahl steht jetzt als `overlap` daneben und
-## wählt nur noch die Rückmeldung — urteilen darf sie nicht.
-##
-## Rückgabe (der Vertrag aus dem ADR, plus was die Werkbank und die zweite Stufe brauchen):
-##   "quality":   0..1 — und 0, solange `sure` falsch ist
+## Rückgabe:
+##   "quality":   0..1, 0 solange `sure` falsch ist
 ##   "feedback":  Rückmeldung an den Spieler
 ##   "matched":   die getroffene Lösung in Originalschreibweise, "" ohne Treffer
 ##   "stage":     welche Stufe geantwortet hat
-##   "sure":      Karte weiß Bescheid (Treffer oder bekannter Fehler) — sonst darf
-##                Stufe 1 nachbessern, und nur sie kann daraus einen Treffer machen
-##   "overlap":   wie nah die Antwort am Wortlaut der Lösungen liegt (0..1). NUR für die
-##                Wortwahl der Rückmeldung und für die Werkbank; 0, wo es ein Urteil gibt
+##   "sure":      Treffer oder bekannter Fehler; sonst darf Stufe 1 nachbessern
+##   "overlap":   Nähe zum Wortlaut der Lösungen (0..1), nur für die Wortwahl der
+##                Rückmeldung; 0, wo es ein Urteil gibt
 ##   "missing":   geforderte Wörter, die in der Antwort fehlen (Anzeige-Form)
 ##   "reference": die hinterlegte Musterlösung
 
-## Wer geantwortet hat. Steht im Ergebnis, damit die Werkbank (und später der Kampf)
-## Karte und Modell auseinanderhalten kann, ohne zwei Verträge zu kennen.
+## Kennung der Stufe im Ergebnis.
 const STAGE := "card"
 
-## Ein Volltreffer.
 const MATCH_QUALITY := 1.0
-## Getroffen, aber es wurde etwas Optionales weggelassen (Klammergruppe, Platzhalter) —
-## dieselbe Unterscheidung, die AnswerEvaluator.evaluate() für Vokabeln macht.
+## Getroffen, aber Optionales weggelassen (wie `AnswerEvaluator.evaluate()` bei Vokabeln).
 const PARTIAL_QUALITY := 0.7
-## Ein vorweggenommener Fehler. Nicht 0: der Satz steht ja im Wesentlichen da, es hakt an
-## einer Stelle — und genau die benennt die Rückmeldung.
+## Ein vorweggenommener Fehler (Stolperstelle).
 const PITFALL_QUALITY := 0.35
-## Die Karte hat kein Urteil. Ein eigener Name, weil dieselbe 0 zweierlei heißen kann —
-## „nichts getippt" (sicher) und „ich weiß es nicht" (unsicher). Der Unterschied steht in
-## `sure`, und nur der zweite Fall ist etwas für Stufe 1.
+## Die Karte hat kein Urteil (`sure` falsch), im Unterschied zu „nichts getippt“.
 const NO_VERDICT := 0.0
-## Ab dieser NÄHE heißt die Rückmeldung „nah dran" statt „anderer Satz". Eine Schwelle auf
-## `overlap`, nicht auf der Güte: sie wählt Worte, sie urteilt nicht.
+## Ab dieser Nähe (`overlap`) heißt die Rückmeldung „nah dran“ statt „anderer Satz“.
 const NEAR_QUALITY := 0.6
 
 const EMPTY_FEEDBACK := "Da steht noch nichts."
@@ -101,12 +68,8 @@ static func evaluate(sentence: Dictionary, answer: String) -> Dictionary:
 		result["quality"] = PITFALL_QUALITY
 		return result
 
-	# Weder bekannte Lösung noch bekannter Fehler: die Karte hat KEIN Urteil, und sie sagt
-	# das, statt eine Zahl zu erfinden. Aus einem solchen Fall kann nur Stufe 1 einen
-	# Treffer machen (siehe SentenceJudge) — bleibt sie aus, ist die Antwort kein Treffer.
-	#
-	# Die Nähe wird trotzdem gerechnet: sie entscheidet, ob die Rückmeldung „nah dran" oder
-	# „ein anderer Satz" sagt. Das ist eine Frage der Worte und keine Bewertung.
+	# Kein Urteil: nur Stufe 1 kann daraus einen Treffer machen. Die Nähe wählt nur die
+	# Rückmeldung.
 	result["sure"] = false
 	result["quality"] = NO_VERDICT
 	result["overlap"] = overlap(tokens, keys, evaluator)
@@ -121,9 +84,7 @@ static func evaluate(sentence: Dictionary, answer: String) -> Dictionary:
 	return result
 
 
-## Alle Lösungen, die als richtig durchgehen: die Musterlösung und die gleichwertigen
-## Formulierungen. EINE Liste, damit „Referenz" und „Alternative" nicht zwei Wege durch
-## die Bewertung nehmen — für den Spieler ist beides einfach richtig.
+## Alle Lösungen, die als richtig durchgehen: Musterlösung und `accepted`.
 static func solutions(sentence: Dictionary) -> Array:
 	var out: Array = []
 	for candidate in [sentence.get("reference_translation", "")] + Array(sentence.get("accepted", [])):
@@ -133,11 +94,8 @@ static func solutions(sentence: Dictionary) -> Array:
 	return out
 
 
-## Die erste passende Stolperstelle, oder {}. Eine Stolperstelle passt, wenn ALLE ihre
-## Bestandteile in der Antwort vorkommen — sie ist eine Liste von Bestandteilen und kein
-## regulärer Ausdruck, damit ein Generierungslauf sie zuverlässig erzeugen und ein Test sie
-## prüfen kann. Ein fehlerhaftes Muster in den Daten kostet dann höchstens eine
-## ausbleibende Rückmeldung.
+## Die erste passende Stolperstelle, oder {}. Sie passt, wenn alle ihre Bestandteile
+## (`contains`) als Wortfolgen in der Antwort vorkommen.
 static func pitfall_for(
 	sentence: Dictionary, tokens: PackedStringArray, evaluator: AnswerEvaluator
 ) -> Dictionary:
@@ -156,8 +114,8 @@ static func pitfall_for(
 	return {}
 
 
-## Geforderte Wörter, die in der Antwort fehlen — als Anzeige-Form (die erste hinterlegte
-## Form bzw. das Lemma), denn genau die soll in der Rückmeldung stehen.
+## Geforderte Wörter, die in der Antwort fehlen, in Anzeige-Form (erste hinterlegte Form
+## bzw. Lemma).
 static func missing_words(
 	sentence: Dictionary, tokens: PackedStringArray, evaluator: AnswerEvaluator
 ) -> Array:
@@ -177,9 +135,7 @@ static func missing_words(
 	return out
 
 
-## Die zulässigen Formen einer must_contain-Forderung. Stehen sie nicht in den Daten,
-## kommen sie aus dem Bestand (Lemma + lexeme_forms) — dieselbe Quelle, gegen die
-## tests/sentence_data_test.gd die hinterlegten Formen prüft.
+## Die zulässigen Formen einer must_contain-Forderung; ohne `forms` aus dem Bestand.
 static func forms_of(required: Dictionary) -> Array:
 	var listed := Array(required.get("forms", []))
 	if not listed.is_empty():
@@ -205,8 +161,8 @@ static func known_forms(lexeme_id: String) -> Array:
 	return out
 
 
-## Kommt `phrase` als zusammenhängende Wortfolge in `tokens` vor? Wortweise und nicht als
-## Teilzeichenkette, damit „reef" nicht in „reeforama" steckt und „go" nicht in „going".
+## Kommt `phrase` als zusammenhängende Wortfolge in `tokens` vor? Wortweise, damit „go“
+## nicht in „going“ steckt.
 static func contains_phrase(
 	tokens: PackedStringArray, phrase: String, evaluator: AnswerEvaluator
 ) -> bool:
@@ -225,12 +181,7 @@ static func contains_phrase(
 
 
 ## Die beste Wort-Übereinstimmung mit einer der Lösungen (F1 über die Wortmengen, 0..1).
-##
-## **Das ist keine Bewertung und darf nie eine werden.** Sie vergleicht Wortmengen: eine
-## umgestellte oder falsch gebeugte Antwort bekommt dieselbe Zahl wie die richtige („Always
-## she walks to school." gegen „She always walks to school." — beide 1,00). Sie taugt für
-## die Unterscheidung „nah dran" gegen „ganz anderer Satz" und für sonst nichts; wer sie
-## als Güte ausgibt, winkt genau die Fehler durch, um derentwillen ein Bosskampf stattfindet.
+## Keine Güte: sie sieht weder Reihenfolge noch Beugung (ADR 0004).
 static func overlap(
 	tokens: PackedStringArray, keys: Array, evaluator: AnswerEvaluator
 ) -> float:

@@ -1,22 +1,16 @@
 class_name SpellShop
 extends Control
-## Der Zauberladen (scenes/ui/spell_shop.tscn, docs/adr/0014-zauber-zum-verbrauchen.md):
-## oben der Vorrat mit seinen Plätzen und das Gold, darunter je Zauber eine Kachel (SpellTile).
-##
-## Öffnet als Fenster wie Fähigkeiten und Statistik (`ProfileBadge.open_window`): über den
-## Knopf im Hauptmenü und über die Knopfreihe der kompakten Plakette — überall außer im
-## Kampf, dort wird nur eingesetzt. Derselbe Rahmen, dasselbe Schließen-X, Escape schließt.
-##
-## Gekauft wird über `Inventory.buy`, das auch das Gold abbucht; der Laden zeigt nur an
-## und hängt an `Inventory.changed` und `Wallet.changed`.
+## Der Zauberladen (ADR 0014): oben Vorrat und Gold, darunter je Zauber eine Kachel
+## (SpellTile). Öffnet als Fenster über `ProfileBadge.open_window`. Gekauft wird über
+## `Inventory.buy`; der Laden zeigt nur an.
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 const TILE_SCENE := preload("res://scenes/ui/spell_tile.tscn")
 const SLOT_SCENE := preload("res://scenes/ui/spell_slot.tscn")
-## So lange blendet das Fenster auf (s) — wie die anderen Fenster.
+## Aufblenden des Fensters (s).
 const FADE_IN := 0.15
 
-## Das Fenster will zu (siehe settings_menu.gd).
+## Das Fenster will zu.
 signal closed()
 
 @onready var _stock: GridContainer = %Stock

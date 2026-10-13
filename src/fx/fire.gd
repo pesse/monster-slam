@@ -1,25 +1,16 @@
 class_name Fire
 extends Node3D
-## Ein Feuer in der Deko: eine weiche, züngelnde Flamme (flame.gdshader) und — wenn noch
-## eins frei ist — ein kleines Licht, das mit ihr flackert und den Boden ringsum warm färbt.
-##
-## Wo es brennt, sagt das Modell: die Forge (src/dev/model_forge.gd, `fire_at`) setzt dort
-## einen leeren Knoten „Fire…", dessen Größe die der Flamme ist. Das Modell selbst trägt nur
-## die Glut darunter; die Flamme gehört hierher, denn sie bewegt sich (Effekte weich per
-## Shader, nicht als Low-Poly-Kegel).
-##
-## Lichter kosten: im Compatibility-Renderer zeichnet jedes Punktlicht alles, was es trifft,
-## noch einmal. Deshalb gibt es je Kampf nur wenige (GraphicsQuality.fire_lights), und eine
-## Flamme ohne Licht leuchtet trotzdem über den Glow.
-##
-## Das Flackern läuft nach der Uhr wie die Flamme im Shader (TIME), nicht nach dem
-## skalierten delta: Licht und Flamme bleiben beieinander, auch in der Zeitlupe.
+## Ein Feuer in der Deko: eine Flamme (flame.gdshader) an jedem Knoten „Fire…“ des Modells,
+## dessen Größe die der Flamme ist, und höchstens wenige flackernde Lichter: im
+## Compatibility-Renderer zeichnet jedes Punktlicht alles, was es trifft, noch einmal.
+## Das Flackern läuft nach der Uhr wie `TIME` im Shader, damit Licht und Flamme auch in der
+## Zeitlupe beieinander bleiben.
 
 const MARKER := "Fire"
 const SHADER := preload("res://assets/shaders/flame.gdshader")
 ## Höhe zu Breite der Flamme.
 const ASPECT := 1.7
-## Licht je Meter Flamme: Reichweite und Helligkeit, und wie weit es über ihr sitzt.
+## Licht je Meter Flamme: Reichweite (m), Helligkeit und Höhe über dem Fuß (Anteil der Breite).
 const LIGHT_RANGE := 5.0
 const LIGHT_ENERGY := 1.6
 const LIGHT_LIFT := 0.45
@@ -58,6 +49,7 @@ func _ready() -> void:
 	flame.mesh = _flame_mesh()
 	flame.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(flame)
+	# Phase aus dem Ort, damit benachbarte Feuer nicht im Takt flackern.
 	_phase = fmod(absf(global_position.x * 3.1 + global_position.z * 1.7), TAU)
 
 
@@ -80,6 +72,7 @@ func _process(_delta: float) -> void:
 		_light.omni_range = LIGHT_RANGE * size
 		_energy = LIGHT_ENERGY * size
 	var t := Time.get_ticks_msec() / 1000.0 * FLICKER_SPEED + _phase
+	# Drei unharmonische Sinus, Ausschlag höchstens ±1.
 	var flicker := sin(t) * 0.5 + sin(t * 2.3 + 1.1) * 0.3 + sin(t * 5.7 + 2.0) * 0.2
 	_light.light_energy = _energy * (1.0 + FLICKER * flicker)
 

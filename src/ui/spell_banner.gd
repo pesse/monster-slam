@@ -1,12 +1,9 @@
 class_name SpellBanner
 extends Control
-## Bild und Name eines Zaubers, groß über dem Feld, wenn er gewirkt wird (ADR 0014,
-## scenes/ui/spell_banner.tscn): springt auf, steht kurz und steigt verblassend weg. Der
-## Name leuchtet in der Farbe des Zaubers (SpellFx.COLORS). Was auf dem Feld geschieht,
-## macht SpellFx.
-##
-## Echtzeit: in der Zeitlupe des Tippens soll das Banner nicht kleben bleiben.
+## Bild und Name eines Zaubers groß über dem Feld, wenn er gewirkt wird (ADR 0014): springt
+## auf, steht kurz, steigt verblassend weg. Läuft in Echtzeit, unabhängig von der Zeitlupe.
 
+## Dauern (s): Aufspringen, Stehen, Verblassen.
 const POP := 0.22
 const HOLD := 0.45
 const FADE := 0.45
@@ -48,6 +45,6 @@ func play(spell: Dictionary) -> void:
 	_tween.chain().tween_callback(func() -> void: visible = false)
 
 
-## Ob gerade ein Banner steht — für die Werkbank.
+## Ob gerade ein Banner steht.
 func is_busy() -> bool:
 	return visible

@@ -1,28 +1,16 @@
 class_name SpellingFreeze
 extends Control
-## Das Standbild nach einem Treffer, der nicht ganz stimmte (ADR 0008, ADR 0010): die
-## Antwort zählte, war aber anders geschrieben („ecole" für „l'école") oder unvollständig
-## („meinung zu" für „die Meinung (zu etwas)"). Das Monster ist schon zerplatzt, dann steht
-## das Bild, die Kamera fährt auf die Stelle zu, ein heller Schleier legt sich darüber und
-## in der Mitte steht die richtige Form: Schreibfehler rot (`SpellingMark`), fehlende Teile
-## blau (`SpellingMissing`). Danach fährt die Kamera zurück und der Kampf läuft weiter.
-##
-## Wie die Meister-Feier meldet die Szene über `started`, wie lange sie steht — das
-## Anhalten macht der WaveRunner über die Baum-Pause, Engine.time_scale bleibt SlowMotion.
-## Die Kamera bewegt der WaveRunner: er übergibt `play` eine Funktion, die für k von 0
-## (Spielbild) bis 1 (ganz herangefahren) die Kamera setzt.
-##
-## Über einem Akzent steht klein sein Name, französisch wie im Unterricht („accent aigu").
-## Fehlende Bindestriche und Apostrophe sind keine Akzente und bleiben ohne Namen.
-##
-## Keine Taste beendet das Bild vorzeitig: das Kind soll nichts tun müssen, um weiterzuspielen.
-## Was es währenddessen tippt, hebt der WaveRunner auf wie bei der Feier.
+## Standbild nach einem Treffer, der nicht ganz stimmte (ADR 0008, ADR 0010): die richtige
+## Form groß in der Mitte, Schreibfehler rot (`SpellingMark`), fehlende Teile blau
+## (`SpellingMissing`), über Akzenten ihr französischer Name. `started` meldet, wie lange
+## das Bild steht; anhalten und die Kamera bewegen muss der Aufrufer (`zoom` in `play`,
+## k von 0 = Spielbild bis 1 = herangefahren). Keine Taste beendet das Bild vorzeitig.
 
 signal started(duration_ms: int)
 signal finished()
 
-## So lange läuft die Explosion noch, bevor das Bild steht — sonst friert ein Bild ohne
-## Trümmer ein. Echtzeit, auch in der Zeitlupe.
+## Dauern (ms, Echtzeit): Vorlauf, damit die Explosion noch Trümmer zeigt, dann Heranfahren,
+## Stehen, Zurückfahren.
 const LEAD_MS := 150
 const ZOOM_IN_MS := 220
 const HOLD_MS := 900
@@ -40,11 +28,11 @@ const ACCENT_NAMES := {
 	"ç": "cédille",
 	"œ": "e dans l'o", "æ": "e dans l'a",
 }
-## Abstand zweier Namen in einer Zeile; rücken sie näher, steht der linke eine Zeile höher.
+## Mindestabstand zweier Namen in einer Zeile (px); näher, steht der linke eine Zeile höher.
 const NAME_GAP := 8.0
 
-## Wartende Standbilder als [Form, Schreibfehler, Kamerafahrt, fehlende Teile]. Kommen zwei kurz nacheinander
-## (ein Pfeil war noch unterwegs), folgt das zweite direkt; `finished` kommt nach dem letzten.
+## Wartende Standbilder als [Form, Schreibfehler, Kamerafahrt, fehlende Teile];
+## `finished` kommt nach dem letzten.
 var _queue: Array = []
 var _running := false
 
@@ -82,7 +70,7 @@ func _run() -> void:
 
 func _show(canonical: String, marks: PackedInt32Array, zoom: Callable,
 		missing: PackedInt32Array) -> void:
-	# Inhalt VOR dem Einblenden: ein sichtbares Overlay in der Bildmitte ändert seine Größe nicht.
+	# Inhalt vor dem Einblenden setzen (docs/CONVENTIONS.md, „Oberfläche“).
 	_word.text = markup(canonical, marks, get_theme_color("font_color", &"SpellingMark"),
 			missing, get_theme_color("font_color", &"SpellingMissing"))
 	_place_names(canonical, marks)
@@ -103,8 +91,7 @@ func _show(canonical: String, marks: PackedInt32Array, zoom: Callable,
 	await tw.finished
 
 
-## Vorwärmen (FxWarmup): Schleier und Schrift samt Markierung einmal zeigen, damit ihre
-## Shader und Zeichen nicht erst beim ersten Fehler entstehen. Danach cool_down().
+## Vorwärmen (FxWarmup): Schleier und Schrift samt Markierung einmal zeigen. Danach cool_down().
 func warm_up() -> void:
 	if is_busy():
 		return
@@ -125,8 +112,7 @@ func cool_down() -> void:
 
 
 ## Die Namen der markierten Akzente als Gruppen { name, first, last } (Indizes in `text`).
-## Derselbe Akzent mit höchstens einem Buchstaben dazwischen („été") ist EIN Name über
-## beiden — zweimal „accent aigu" nebeneinander läse sich nicht.
+## Derselbe Akzent mit höchstens einem Buchstaben dazwischen („été") wird ein Name über beiden.
 static func accent_groups(text: String, marks: PackedInt32Array) -> Array:
 	var groups: Array = []
 	for i in marks:
@@ -159,8 +145,7 @@ func _place_names(text: String, marks: PackedInt32Array) -> void:
 		_names.add_child(label)
 		label.position.x = (x0 + x1 - label.get_combined_minimum_size().x) / 2.0
 		labels.append(label)
-	# Namen, die sich ins Gehege kämen, bilden eine Kette und wechseln die Zeile. Gelesen wird
-	# von oben nach unten und von links nach rechts: der linke einer Kette steht oben.
+	# Überlappende Namen bilden eine Kette und wechseln die Zeile, der linke steht oben.
 	var chain: Array[Label] = []
 	for label in labels:
 		if not chain.is_empty() and label.position.x < chain[-1].position.x \
@@ -188,8 +173,7 @@ func _clear_names() -> void:
 
 
 ## BBCode für `text` mit den Zeichen an `marks` (Schreibfehler) und `missing` (fehlende
-## Teile) farbig und unterstrichen. Eckige Klammern im Wort werden maskiert, sonst läsen
-## sie sich als Tags.
+## Teile) farbig und unterstrichen; „[" wird maskiert.
 static func markup(text: String, marks: PackedInt32Array, mark_color: Color,
 		missing := PackedInt32Array(), missing_color := Color.BLUE) -> String:
 	var out := ""

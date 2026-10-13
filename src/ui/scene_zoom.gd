@@ -1,26 +1,14 @@
 class_name SceneZoom
 extends CanvasLayer
-## Der Zoom zwischen Karte und Kampf (ADR 0006): dieselbe Bewegung wie zwischen Buch- und
-## Gebietskarte (MapCanvas), für Szenen, die keine MapCanvas sind.
-##
-## Ein dunkler Schleier über allem blendet aus (`reveal`) oder ein (`cover`); die Bewegung
-## darunter macht die Szene selbst, über `apply(k)` mit k von 0 bis 1 — der Kampf mit seiner
-## Kamera, der Bosskampf mit seiner Größe. Der Schleier hat die Farbe des Hintergrunds der
-## Karten, damit Aus- und Einblenden über dieselbe Farbe gehen.
-##
-## Gerechnet wird nach der Wanduhr mit gedeckeltem Schritt (MapCanvas.MAX_ZOOM_STEP): der
-## erste Frame eines Kampfs baut Gelände und Monster und dauert lang, und `Engine.time_scale`
-## gehört SlowMotion — eine Zeitlupe beim Verlassen soll den Zoom nicht mitbremsen.
+## Zoom zwischen Karte und Kampf (ADR 0006) für Szenen, die keine MapCanvas sind. Ein
+## Schleier blendet aus (`reveal`) oder ein (`cover`); die Bewegung darunter macht die Szene
+## selbst über `apply(k)`, k von 0 bis 1. Gerechnet nach der Wanduhr mit gedeckeltem Schritt,
+## unabhängig von `Engine.time_scale` und langen ersten Frames.
 
 signal finished
 
-## So groß steht die Welt am Anfang von `reveal` und am Ende von `cover` da. Weniger als
-## auf der Karte (MapCanvas.ZOOM_FROM): der Kampf müsste sonst weit über seinen Bildrand
-## hinaus Gelände bauen.
+## Maßstab der Welt am Anfang von `reveal` und am Ende von `cover`.
 const FROM := 0.8
-
-## Liegt als scenes/ui/scene_zoom.tscn in der Szene: Ebene 100, über dem Kampf-UI und unter
-## der Hinweiskarte (Hints.LAYER); läuft auch in der Pause.
 
 @onready var _veil: ColorRect = $Veil
 var _apply := Callable()
@@ -38,8 +26,7 @@ func reveal(apply: Callable = Callable()) -> void:
 	_start(apply, false)
 
 
-## Hält den Schleier geschlossen, bis `reveal` kommt — für Szenen, die vor dem Einblenden
-## noch etwas im Dunkeln zeigen (FxWarmup).
+## Hält den Schleier geschlossen, bis `reveal` kommt (z. B. für FxWarmup).
 func hold() -> void:
 	_veil.modulate.a = 1.0
 
@@ -70,8 +57,7 @@ func _process(_delta: float) -> void:
 	advance(step)
 
 
-## Einen Schritt weiter, `step` in Sekunden, höchstens MapCanvas.MAX_ZOOM_STEP. Öffentlich
-## für Tests.
+## Einen Schritt weiter, `step` in Sekunden, höchstens MapCanvas.MAX_ZOOM_STEP.
 func advance(step: float) -> void:
 	if _t < 0.0:
 		return

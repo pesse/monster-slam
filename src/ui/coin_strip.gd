@@ -1,21 +1,12 @@
 class_name CoinStrip
 extends VBoxContainer
-## Monatsreihe der Statistik: ein Medaillon je Tag des laufenden Monats — auf geübten Tagen
-## liegt die Münze darauf, heute trägt einen leisen Ring, die Tage danach sind leere Plätze
-## (Issue #6, Entwurf `assets/ui/statistics/concept/statistics-v3.webp`).
-##
-## Eine Reihe und kein Wochenraster: ein Kalender zeigt vor allem die Lücken und liest sich
-## wie eine Buchhaltung. Die Reihe zeigt einen Vorrat, der wächst. Der Monat als Rahmen
-## (statt der letzten N Tage) gibt ihm ein Ziel: „4 von 30 Tagen geübt".
-##
-## Die Münzen sind MARKEN für geübte Tage und keine Währung — Gold als Währung liegt in
-## der Geldbörse (Wallet) und wird in Schatzkisten verdient.
-##
-## Das Layout liegt in coin_strip.tscn, der Tag in stats_day.tscn; hier wird nur gerechnet
-## und befüllt. Die Zustandsfolge und die Monatslänge stehen als statische Funktionen,
-## damit sie ohne Szene, Autoload und Systemuhr prüfbar sind (siehe tests/coin_strip_test.gd).
+## Monatsreihe der Statistik: ein Medaillon je Tag, auf geübten Tagen eine Münze (Issue #6,
+## keine Währung). Zustandsfolge und Monatslänge sind statisch, damit sie ohne Uhr prüfbar sind.
 
 const DAY_SCENE := preload("res://scenes/ui/stats_day.tscn")
+## Sekunden je Tag; Mittag als Versatz, damit ein Tagesindex sicher in seinem Tag landet.
+const DAY_SECONDS := 86400
+const NOON_SECONDS := 43200
 ## Wochentagskürzel in Godots Zählung (0 = Sonntag), für die Karte am Zeiger.
 const WEEKDAYS := ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"]
 const MONTH_NAMES := ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli",
@@ -27,11 +18,10 @@ const MONTH_NAMES := ["Januar", "Februar", "März", "April", "Mai", "Juni", "Jul
 
 
 ## Baut die Leiste für den laufenden Monat neu und gibt zurück, an wie vielen Tagen
-## darin geübt wurde. Die geübten Tage kommen als lokale Tagesindizes vom SessionLog —
-## dieselbe Zeitrechnung wie die Tages-Serie, damit beide an derselben Tagesgrenze hängen.
+## geübt wurde. Tagesindizes aus SessionLog, wie die Tages-Serie.
 func refresh() -> int:
 	var today_index: int = SessionLog.local_day(int(Time.get_unix_time_from_system()))
-	var today := Time.get_datetime_dict_from_unix_time(today_index * 86400 + 43200)
+	var today := Time.get_datetime_dict_from_unix_time(today_index * DAY_SECONDS + NOON_SECONDS)
 	var month: int = int(today["month"])
 	var first_index: int = today_index - (int(today["day"]) - 1)
 	var day_count := days_in_month(int(today["year"]), month)
@@ -39,7 +29,7 @@ func refresh() -> int:
 	var played := {}
 	# Ein Tag Luft an beiden Enden: die Grenzen sind Sekunden, die Indizes ganze Tage.
 	for index in SessionLog.played_days(
-			(first_index - 1) * 86400, (first_index + day_count + 1) * 86400):
+			(first_index - 1) * DAY_SECONDS, (first_index + day_count + 1) * DAY_SECONDS):
 		played[int(index)] = true
 
 	for child in _coins.get_children():
@@ -62,13 +52,8 @@ func refresh() -> int:
 	return earned
 
 
-## Zustandsfolge des Monats, Tag 1 zuerst.
-##
-## Heute ohne Sitzung ist OPEN und nicht MISSED — der Tag läuft noch, genau wie ihn die
-## Tages-Serie nicht als Lücke zählt. Die Tage danach sind FUTURE: leere Plätze, keine
-## versäumten. Der laufende Monat ist der Normalfall; für einen vergangenen Monat (ein
-## Zurückblättern gibt es noch nicht) liegt `today_index` hinter dem Monat und alles ist
-## verdient oder verpasst.
+## Zustandsfolge des Monats, Tag 1 zuerst. Heute ohne Sitzung ist OPEN, nicht MISSED: der
+## Tag läuft noch. Die Tage danach sind FUTURE.
 static func states(played: Dictionary, today_index: int, first_index: int, day_count: int) -> Array:
 	var out: Array = []
 	for i in day_count:
@@ -84,8 +69,7 @@ static func states(played: Dictionary, today_index: int, first_index: int, day_c
 	return out
 
 
-## Länge eines Monats in Tagen, mit der gregorianischen Schaltjahr-Regel (durch 4, aber
-## nicht durch 100, außer durch 400).
+## Länge eines Monats in Tagen, mit gregorianischer Schaltjahr-Regel.
 static func days_in_month(year: int, month: int) -> int:
 	if month == 2:
 		var leap := year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)
@@ -93,16 +77,14 @@ static func days_in_month(year: int, month: int) -> int:
 	return 30 if month in [4, 6, 9, 11] else 31
 
 
-## Datum eines lokalen Tagesindex als „Mo, 1. September". Die Umrechnung ist die Umkehrung
-## von SessionLog.local_day: dessen Zeitzonen-Versatz fällt hier wieder heraus.
+## Datum eines lokalen Tagesindex als „Mo, 1. September“ (Umkehrung von SessionLog.local_day).
 static func date_label(day_index: int) -> String:
-	var d := Time.get_datetime_dict_from_unix_time(day_index * 86400 + 43200)
+	var d := Time.get_datetime_dict_from_unix_time(day_index * DAY_SECONDS + NOON_SECONDS)
 	return "%s, %d. %s" % [WEEKDAYS[int(d["weekday"])], int(d["day"]),
 			MONTH_NAMES[int(d["month"]) - 1]]
 
 
-## Der Stand eines Tages in Worten. Das DATUM steht nicht darin: es ist die Überschrift der
-## Karte am Zeiger (`StatsDay.setup`).
+## Der Stand eines Tages in Worten, ohne Datum (das ist die Überschrift der Hinweiskarte).
 static func state_text(day_state: DayCoin.State, today := false) -> String:
 	var text: String
 	match day_state:

@@ -3,8 +3,7 @@ extends RefCounted
 ## SHA-256 als Hex-String — für Download-Prüfsummen und den Dateizustand installierter Packs.
 
 
-## Prüfsumme einer Datei. Godots eigene Implementierung liest gepuffert; eine 120-MB-EXE
-## landet also nicht als Ganzes im Speicher.
+## Prüfsumme einer Datei, gepuffert gelesen.
 static func of_file(path: String) -> String:
 	if not FileAccess.file_exists(path):
 		return ""

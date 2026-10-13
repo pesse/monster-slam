@@ -1,21 +1,12 @@
 extends Control
 ## Das Handbuch-Fenster: links die Kapitel, rechts die Seite (ADR 0019).
-##
-## Geöffnet wird es nur über `Handbook.open`, das es in eine eigene Zeichenschicht über
-## allem hängt — es kommt aus dem Startmenü genauso wie aus der Statistik oder einer Karte,
-## und was darunter liegt, bleibt, wie es war. Rahmen, Titelband und Schließen-X sind die
-## der anderen Fenster.
-##
-## Bedienung ohne Maus: ↑/↓ wechseln das Kapitel (der Fokus bleibt in der Liste), Bild↑/Bild↓
-## und Pos1/Ende blättern die Seite, Esc oder F1 schließt. Alle übrigen Tasten schluckt das
-## Fenster, damit darunter nichts weiterläuft.
-##
-## Die Seite wird bei jedem Kapitelwechsel aus Vorlagen neu gebaut (`Handbook.blocks`);
-## ein Kapitel hat höchstens ein paar Dutzend Blöcke.
+## Geöffnet nur über `Handbook.open`. ↑/↓ wechseln das Kapitel, Bild↑/↓ und Pos1/Ende
+## blättern, Esc oder F1 schließt; alle übrigen Tasten schluckt das Fenster.
 
 ## Das Fenster will zu; `Handbook` nimmt seine Schicht weg.
 signal closed()
 
+## Einblenden (s).
 const FADE_IN := 0.15
 const CHAPTER_SCENE := preload("res://scenes/ui/handbook_chapter.tscn")
 const HEADING_SCENE := preload("res://scenes/ui/handbook_heading.tscn")
@@ -23,10 +14,9 @@ const TEXT_SCENE := preload("res://scenes/ui/handbook_text.tscn")
 const ITEM_SCENE := preload("res://scenes/ui/handbook_item.tscn")
 const HEADING_ROLES := {1: &"HandbookTitle", 2: &"HandbookHeading"}
 const HEADING_ROLE_DEEPER := &"HandbookSubheading"
-## Einzug eines Unterpunkts, eine Stufe der Abstands-Skala.
+## Einzug eines Unterpunkts (px).
 const SUB_INDENT := 24
-## Bild↑/Bild↓ blättert um diesen Anteil der sichtbaren Höhe — ein Rest der alten Seite
-## bleibt stehen, damit man den Anschluss findet.
+## Bild↑/Bild↓ blättert um diesen Anteil der sichtbaren Höhe.
 const PAGE_STEP := 0.85
 
 @onready var _chapter_list: VBoxContainer = %ChapterList
@@ -129,7 +119,7 @@ func _fill(blocks: Array[Dictionary]) -> void:
 
 
 ## Fährt die Seite an eine Überschrift, "" an den Anfang, und holt das Kapitel in der Liste
-## ins Bild. Erst nach dem Layout: vorher haben die umbrechenden Absätze noch keine Höhe.
+## ins Bild. Erst nach dem Layout, vorher haben umbrechende Absätze keine Höhe.
 func _scroll_to(anchor: String) -> void:
 	var build := _build
 	_page_scroll.scroll_vertical = 0

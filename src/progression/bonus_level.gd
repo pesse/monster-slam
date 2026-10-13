@@ -1,26 +1,18 @@
 class_name BonusLevel
 extends RefCounted
-## Bonus-Level: Formen älterer Wörter, die eine spätere Lektion lehrt (ADR 0012) — das
-## Perfekt der Verben aus Lektion 1–10 in Lektion 11 —, oder zusätzliche Wörter zu einer
-## Unit (Wort-Bonus, ADR 0013).
-##
-## WAS ein Bonus ist, leitet ContentRegistry aus den Daten ab (_index_bonuses,
-## bonuses_of). Hier steht, wie er gezählt und benannt wird. Er zählt nicht zur Festung
-## und nicht zu den Wörtern seiner Unit, sondern für sich: gemeisterte von allen seinen
-## Aufgaben. Die eine Stelle dafür — Karte und Statistik zählen hier.
-##
-## Reine Rechnung ohne Zustand, wie FortressTier (tests/bonus_level_test.gd).
+## Bonus-Level: Formen älterer Wörter, die eine spätere Lektion lehrt (ADR 0012), oder
+## zusätzliche Wörter zu einer Unit (Wort-Bonus, ADR 0013). Was ein Bonus ist, leitet
+## ContentRegistry ab; hier wird er gezählt und benannt. Er zählt für sich (gemeisterte
+## von allen seinen Aufgaben), nicht zur Festung und nicht zu seiner Unit.
 
-## Der Name des Punkts auf der Gebietskarte (assets/maps/<book>/map.json, unter `areas`):
-## „bonus/<lektion>/<formart>", beim Wort-Bonus „bonus/0/<thema>". Der Punkt trägt neben x
-## und y den `title`.
+## Der Name des Punkts in assets/maps/<book>/map.json unter `areas`:
+## „bonus/<lektion>/<formart>“, beim Wort-Bonus „bonus/0/<thema>“.
 static func map_key(bonus: Dictionary) -> String:
 	return "bonus/%d/%s" % [int(bonus["part"]), str(bonus.get("topic", bonus.get("form_type", "")))]
 
 
-## Der Titel eines Bonus — was er enthält, etwa „Perfekt der Verben aus Lektion 1–10". Steht
-## am Punkt in map.json (`layout` ist MapLayout.data); ohne ihn „Bonus · <Lektion>", beim
-## Wort-Bonus „Bonus · <Unit>".
+## Der Titel eines Bonus aus dem Punkt in map.json (`layout` ist MapLayout.data), sonst
+## „Bonus · <Lektion>“, beim Wort-Bonus „Bonus · <Unit>“.
 static func title(bonus: Dictionary, layout: Dictionary) -> String:
 	var areas: Dictionary = layout.get("areas", {}) if layout.get("areas") is Dictionary else {}
 	var area: Dictionary = areas.get(str(int(bonus["unit"])), {}) \
@@ -45,7 +37,7 @@ static func counts(bonus: Dictionary, is_mastered: Callable) -> Dictionary:
 	return {"done": done, "total": ids.size()}
 
 
-## Der Anteil 0..1 eines Bonus aus `counts` — für den Stern unter dem Unit-Ort.
+## Der Anteil 0..1 eines Bonus aus `counts`.
 static func share(counted: Dictionary) -> float:
 	var total := int(counted.get("total", 0))
 	if total <= 0:
@@ -53,6 +45,6 @@ static func share(counted: Dictionary) -> float:
 	return clampf(float(counted.get("done", 0)) / float(total), 0.0, 1.0)
 
 
-## Die Anteile aller Boni einer Liste in ihrer Reihenfolge — `node["bonus"]` für MapCanvas.
+## Die Anteile aller Boni einer Liste in ihrer Reihenfolge.
 static func shares(bonuses: Array, is_mastered: Callable) -> Array:
 	return bonuses.map(func(b): return share(counts(b, is_mastered)))

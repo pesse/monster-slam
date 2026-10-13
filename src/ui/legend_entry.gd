@@ -1,7 +1,6 @@
 class_name LegendEntry
 extends HBoxContainer
-## Ein Eintrag der Wortart-Legende: Farbraute + Name. Das Layout liegt in
-## legend_entry.tscn (im Editor gestaltbar); die Legende befüllt Farbe & Text via setup().
+## Ein Eintrag der Wortart-Legende: Farbraute und Name.
 
 func setup(color: Color, text: String) -> void:
 	($Swatch as Diamond).color = color

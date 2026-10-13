@@ -1,14 +1,7 @@
 class_name AccessCodes
 extends RefCounted
-## Hinterlegte Zugangscodes für geschützte Content-Packs.
-##
-## Ablage ist user://codes.cfg. Das ist KEINE Geheimnis-Ablage — Godot hat keinen Zugriff
-## auf einen Schlüsselbund des Betriebssystems, und wer die Datei lesen kann, kann auch die
-## entpackten Vokabeln daneben lesen. Der Code schützt den öffentlichen Download, nicht den
-## lokalen Rechner.
-##
-## Mitgeführt wird die `keyVersion`, unter der ein Code gespeichert wurde: daran erkennt die
-## App eine Codeänderung und kann sie benennen, statt still zu scheitern.
+## Hinterlegte Zugangscodes für geschützte Content-Packs, mit der `keyVersion`, unter der sie
+## gespeichert wurden. Bewusst keine Geheimnis-Ablage (ADR 0001).
 
 const PATH := "user://codes.cfg"
 const SECTION := "codes"

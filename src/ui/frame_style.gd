@@ -1,16 +1,8 @@
 @tool
 class_name FrameStyle
 extends StyleBox
-## Ein 9-Slice-Rahmen, der seine Grafik VERKLEINERT zeichnet.
-##
-## `StyleBoxTexture` zeichnet die Slice-Ränder in Texturpixeln: ein Rahmen aus
-## `assets/ui/gameplay/frames/` (101 px hoch, 40 px Ecken) sähe in der HUD-Höhe von 60 px
-## klobig aus. Hier wird die ganze Rahmengeometrie mit `scale` verkleinert und erst dann das
-## gerade Mittelstück gestreckt — so verlangt es das Paket (README „Skalierung"). Die Grafik
-## bleibt in voller Auflösung: bei größeren Fenstern (canvas_items dehnt die UI) wird sie
-## nicht hochgerechnet, sondern nur weniger verkleinert.
-##
-## Die Innenabstände sind die normalen `content_margin_*` des StyleBox, in Bildschirmpixeln.
+## 9-Slice-Rahmen, der Ecken und Kanten mit `scale` verkleinert und erst dann das Mittelstück
+## streckt (`assets/ui/gameplay/`, README „Skalierung“). `content_margin_*` in Bildschirmpixeln.
 
 @export var texture: Texture2D:
 	set(value):
@@ -42,9 +34,8 @@ extends StyleBox
 	set(value):
 		modulate = value
 		emit_changed()
-## Fläche hinter einem Rahmen mit leerer Mitte (`assets/ui/frames/silver_gold`): ein
-## Rechteck, `fill_inset` Texturpixel vom Rand eingerückt, also unter die Schiene. Unsichtbar
-## (Alpha 0) wird nichts gezeichnet.
+## Fläche hinter einem Rahmen mit leerer Mitte, `fill_inset` Texturpixel vom Rand eingerückt.
+## Bei Alpha 0 wird nichts gezeichnet.
 @export var fill := Color(0, 0, 0, 0):
 	set(value):
 		fill = value
@@ -54,8 +45,7 @@ extends StyleBox
 		fill_inset = value
 		emit_changed()
 ## Das Mittelstück einer Kante nicht stauchen, sondern nur so viel aus seiner Mitte nehmen,
-## wie hineinpasst. Für einen Rahmen, der kürzer ist als seine Grafik (die breite
-## Festungsleiste als quadratische Zauberkachel): gestaucht verschmiert die Metallstruktur.
+## wie hineinpasst. Für Rahmen, die kürzer sind als ihre Grafik.
 @export var crop_middle := false:
 	set(value):
 		crop_middle = value
@@ -66,8 +56,7 @@ func _draw(to_canvas_item: RID, rect: Rect2) -> void:
 	if texture == null:
 		return
 	var tex := texture.get_size()
-	# Ein Rahmen, der schmaler ist als seine beiden Ecken, verkleinert die Ecken weiter statt
-	# sie zu überlappen.
+	# Schmaler als beide Ecken: die Ecken schrumpfen weiter, statt zu überlappen.
 	var s := scale
 	if slice_left + slice_right > 0.0:
 		s = minf(s, rect.size.x / (slice_left + slice_right))

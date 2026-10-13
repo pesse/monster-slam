@@ -1,12 +1,7 @@
 class_name SpellIcons
 extends RefCounted
-## Die Bilder der Zauber (ADR 0014), wie `SkillIcons` für die Fähigkeiten.
-##
-## Die Zuordnung Zauber → Icon steht in `assets/ui/spells/spell_icons.json` und liegt in der
-## EXE, die Zauber selbst kommen aus dem game-Pack. Ein Zauber, den ein neuerer Pack
-## mitbringt, hat womöglich kein Bild — dann gibt es `null`, und Kachel und Platz zeigen das
-## Zeichen aus seinem `icon`-Feld. Ein neues Pack-Feld braucht es dafür nicht
-## (tests/spell_icons_test.gd prüft, dass jeder ausgelieferte Zauber ein Bild hat).
+## Die Bilder der Zauber (ADR 0014), wie `SkillIcons` für die Fähigkeiten: ohne Bild zeigen
+## Kachel und Platz das Zeichen aus dem `icon`-Feld.
 
 const MAP_PATH := "res://assets/ui/spells/spell_icons.json"
 
@@ -34,7 +29,7 @@ static func of(id: String) -> Texture2D:
 	return _textures[path]
 
 
-## Ob es zu `id` einen Eintrag gibt — für den Test, nicht für die Anzeige.
+## Ob es zu `id` einen Eintrag gibt.
 static func has(id: String) -> bool:
 	of(id)
 	return _paths.has(id)

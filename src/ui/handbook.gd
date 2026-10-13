@@ -1,26 +1,15 @@
 class_name Handbook
 extends RefCounted
 ## Das Handbuch im Spiel: liest `docs/handbuch/` und öffnet das Fenster dazu (ADR 0019).
-##
-## Die Kapitel sind dieselben Markdown-Dateien wie auf GitHub, sie kommen über den
-## `include_filter` der Export-Presets in die EXE. Es gibt keine zweite Fassung für das
-## Spiel: was im Repo steht, steht im Fenster.
-##
-## Hier steht nur das Lesen. Gegliedert wird in Blöcke (Überschrift, Absatz, Listenpunkt,
-## Tabelle), weil Überschriften eigene Labels mit eigener Typografie sind und ein
-## Listenpunkt einen hängenden Einzug braucht, den BBCode für nummerierte Listen mit
-## Folgeabsätzen nicht kann. Die Zeichen innerhalb eines Blocks (fett, kursiv, Code, Links)
-## macht `MarkdownToBbcode.inline`. Unterstützt ist, was das Handbuch benutzt; der Test
-## `handbook_test.gd` prüft, dass in keinem Kapitel Markdown übrig bleibt.
+## Gegliedert in Blöcke, weil BBCode keinen hängenden Einzug kann; innerhalb eines Blocks
+## übersetzt `MarkdownToBbcode.inline`. Unterstützt ist, was das Handbuch benutzt.
 
 const DIR := "res://docs/handbuch/"
-## Die Startseite, zugleich das Inhaltsverzeichnis: Reihenfolge und Titel der Kapitel stehen
-## in ihrer Liste unter „## Inhalt“.
+## Die Startseite, zugleich das Inhaltsverzeichnis (Liste unter „## Inhalt“).
 const INDEX := "README.md"
 const INDEX_TITLE := "Überblick"
 const WINDOW_SCENE := "res://scenes/ui/handbook.tscn"
-## Über jedem Fenster und dem Kampf-UI, unter der Auskunft am Zeiger (Hints.LAYER 128): auch
-## im Handbuch erklären die Knöpfe sich selbst.
+## Über jedem Fenster und dem Kampf-UI, unter Hints.LAYER.
 const LAYER := 110
 
 static var _layer: CanvasLayer = null
@@ -54,8 +43,7 @@ static func title_of(file: String) -> String:
 
 
 ## Der Anker einer Überschrift wie auf GitHub: klein, Leerzeichen zu „-“, alles außer
-## Buchstaben, Ziffern, „-“ und „_“ fällt weg. Damit gelten Links wie
-## `18-wie-das-spiel-lernt.md#wann-eine-aufgabe-wiederkommt` hier wie dort.
+## Buchstaben, Ziffern, „-“ und „_“ fällt weg.
 static func anchor(heading: String) -> String:
 	var out := ""
 	for c in heading.strip_edges().to_lower():
@@ -72,8 +60,7 @@ static func anchor(heading: String) -> String:
 ## - `{kind: "item", marker, depth, bbcode}` — ein Listenpunkt; ein Folgeabsatz im selben
 ##   Punkt hat den Marker "".
 ## - `{kind: "table", columns, bbcode}`
-## Ab der ersten Linie (`---`) ist Schluss: darunter steht die Blätterzeile für GitHub, im
-## Fenster blättert die Kapitelliste.
+## Ab der ersten Linie (`---`) ist Schluss: darunter steht die Blätterzeile für GitHub.
 static func blocks(markdown: String) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var lines := markdown.split("\n")
@@ -224,9 +211,7 @@ static func resolve(url: String, current_file: String) -> Dictionary:
 	return {"file": file, "section": parts[1] if parts.size() > 1 else ""}
 
 
-## Öffnet das Handbuch über allem, was gerade läuft — auf einem Kapitel und, wenn
-## angegeben, an einer Überschrift (ihr Text oder ihr Anker). Ist es schon offen, blättert
-## es dorthin.
+## Öffnet das Handbuch auf einem Kapitel, optional an einer Überschrift (Text oder Anker).
 static func open(file := INDEX, section := "") -> void:
 	var tree := Engine.get_main_loop() as SceneTree
 	if tree == null:

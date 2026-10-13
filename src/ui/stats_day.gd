@@ -1,19 +1,12 @@
 class_name StatsDay
 extends VBoxContainer
-## Ein Tag der Monatsreihe in der Statistik: ein dunkles Medaillon, auf einem geübten Tag
-## die Münze darüber, darunter die Tageszahl (Entwurf `assets/ui/statistics/concept/`).
-##
-## Nicht dieselbe Zeichnung wie `DayCoin`: die fliegt weiter aus der Schatzkiste und
-## braucht kein Medaillon. Die Zustände sind aber dieselben (`DayCoin.State`), gerechnet
-## wird in `CoinStrip.states` — eine Regel für „heute ist keine Lücke", nicht zwei.
-##
-## Maus und Tastatur zeigen denselben goldenen Ring und dieselbe Karte: Datum als
-## Überschrift, der Stand darunter.
+## Ein Tag der Monatsreihe in der Statistik: Medaillon, auf einem geübten Tag die Münze
+## darüber, darunter die Tageszahl. Die Zustände rechnet `CoinStrip.states` (`DayCoin.State`).
+## Maus und Tastatur zeigen denselben Ring und dieselbe Karte.
 
-## Heute ohne Zeiger: der Ring halb, damit man den Tag findet, ohne ihn mit dem Zeiger
-## zu verwechseln.
+## Deckkraft des Rings am heutigen Tag ohne Zeiger.
 const TODAY_RING := 0.45
-## Ein Tag, der erst kommt: leiser als ein verpasster — ein leerer Platz, keine Lücke.
+## Deckkraft des Medaillons an einem Tag, der erst kommt.
 const FUTURE_ALPHA := 0.4
 
 var state: DayCoin.State = DayCoin.State.MISSED

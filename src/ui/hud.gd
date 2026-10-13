@@ -1,16 +1,7 @@
 extends Control
-## Kopfleiste im Kampf (Grafiken: `assets/ui/gameplay/`). Links das Porträt mit Level und
-## Erfahrungsring, daneben die Festungstafel (Rüstung, HP) und darunter die Namensplakette;
-## rechts die Welle mit Fortschritt, darunter nur Zahlen hinter Bildern: besiegte Monster,
-## in dieser Sitzung gemeisterte Wörter und das Gold. Das Layout liegt in hud.tscn; hier wird nur auf Signale reagiert und der Zustand
-## dargestellt (die Werte LIEST das HUD aus GameState und PlayerLevel — die rechnen).
-##
-## Level und Erfahrung hängen am Porträt, nicht an der Welle: sie gehören zum Profil, nicht
-## zum Lauf — deshalb kommt der Wert von PlayerLevel und nicht aus GameState. Die Erfahrung
-## ist nur der Ring, ohne Zahl: gefragt ist „wie weit noch", nicht wie viel.
+## Kopfleiste im Kampf. Liest nur GameState, PlayerLevel und Wallet und reagiert auf Signale.
 
-## Farbschwellen des Lebensbalkens (Anteil 0..1): darüber grün, darüber amber, sonst rot.
-## Die Farben stehen im Theme (HudHp, HudHpWarn, HudHpLow).
+## Farbschwellen des Lebensbalkens (Anteil 0..1) für HudHp, HudHpWarn, sonst HudHpLow.
 const HP_OK := 0.6
 const HP_WARN := 0.3
 
@@ -31,40 +22,32 @@ const HP_WARN := 0.3
 @onready var _player_name: Label = %PlayerName
 @onready var _level_text: Label = %LevelText
 @onready var _xp_ring: XpRing = %XpRing
-## Das goldene Aufleuchten des Level-Badges beim Aufstieg. Öffentlich, weil der Kampf es
-## beim Start vorwärmt (FxWarmup) und das Debug-Panel es auslöst.
+## Das Aufleuchten des Level-Badges beim Aufstieg; öffentlich für FxWarmup und Debug-Panel.
 @onready var level_flare: LevelFlare = %LevelFlare
 
 
 func _ready() -> void:
-	# Profilname ändert sich während des Kampfes nicht -> nur einmal setzen.
 	set_player_name(UserSettings.display_name())
 	EventBus.fortress_damaged.connect(func(_amount): _refresh())
 	EventBus.monster_defeated.connect(func(_monster, _correct): _refresh())
 	EventBus.monster_catapulted.connect(func(_task): _refresh())
 	EventBus.monster_struck.connect(func(_task): _refresh())
-	# Aufgeschoben: das Signal kommt VOR der Wirkung (Spur), Lebensquell und Eisenhaut
-	# haben HP und Rüstung erst danach geändert.
+	# Aufgeschoben: das Signal kommt vor der Wirkung auf HP und Rüstung.
 	EventBus.spell_activated.connect(func(_id): _refresh(), CONNECT_DEFERRED)
-	# Gemeistert wird in PlayerProgress.record(), und das läuft VOR diesem Signal.
+	# Gemeistert wird in PlayerProgress.record(), vor diesem Signal.
 	EventBus.item_reviewed.connect(func(_id, _correct, _rt): _refresh())
-	# Wellenstart setzt wave_total/wave_resolved zurück -> sofort auffrischen.
-	# Die HP rührt er nicht an, der Stand läuft über die Wellen weiter.
 	EventBus.wave_started.connect(func(_wave_id): _refresh())
 	EventBus.wave_totals.connect(func(_total): _refresh())
 	# Gold kommt mit der Kiste nach der Welle, nicht über den EventBus.
 	Wallet.changed.connect(func(_gold): _refresh())
-	# Erfahrung meldet sich selbst (Profilstand, kein Lauf-Zustand) — der Ring hängt am
-	# Signal statt an jedem Refresh, weil er sich nur beim Verbuchen ändert.
 	PlayerLevel.changed.connect(func(_total_xp, _level): _refresh_level())
-	# `changed` kommt vorher: das Badge zeigt schon die neue Zahl, wenn es aufleuchtet.
+	# `changed` kommt vorher, das Badge zeigt beim Aufleuchten schon die neue Zahl.
 	PlayerLevel.leveled_up.connect(func(_level, _points): level_flare.play())
 	_refresh_level()
 	_refresh()
 
 
-## Die Namensplakette ist so breit wie der Name, höchstens so breit wie die Festungstafel
-## darüber; ein längerer Name endet mit einer Ellipse. Die Schrift wird nicht kleiner.
+## Die Namensplakette ist so breit wie der Name, höchstens wie die Festungstafel darüber.
 func set_player_name(player_name: String) -> void:
 	_player_name.text = player_name
 	var font := _player_name.get_theme_font("font")
@@ -76,8 +59,7 @@ func set_player_name(player_name: String) -> void:
 
 
 func _refresh() -> void:
-	# Das Maximum ist Lauf-Zustand (Talente können es anheben), keine Konstante ->
-	# bei jedem Refresh neu lesen, sonst zeigt der Balken einen veralteten Nenner.
+	# Das Maximum kann im Lauf steigen, deshalb jedes Mal neu lesen.
 	var max_hp: float = float(GameState.fortress_max_health)
 	_hp_bar.max_value = max_hp
 	_hp_bar.value = GameState.fortress_health
@@ -89,9 +71,7 @@ func _refresh() -> void:
 		_hp_bar.theme_type_variation = &"HudHpWarn"
 	else:
 		_hp_bar.theme_type_variation = &"HudHpLow"
-	# Ohne Bollwerk-Skill gibt es keine Rüstungszeile — eine leere Leiste wäre ein
-	# Versprechen auf etwas, das es nicht gibt. Die Tafel behält ihre Höhe (die HP-Zeile
-	# steht dann mittig), damit die Namensplakette darunter nicht springt.
+	# Ohne Rüstung keine Rüstungszeile; die Tafel behält ihre Höhe.
 	var armor_max: int = GameState.fortress_armor_max
 	_armor_row.visible = armor_max > 0
 	if armor_max > 0:
@@ -99,7 +79,6 @@ func _refresh() -> void:
 		_armor_bar.value = GameState.fortress_armor
 		_armor_text.text = "%d / %d" % [GameState.fortress_armor, armor_max]
 
-	# Wellen-Fortschritt: erledigte (besiegt + durchgelassen) von gesamt.
 	var total: int = GameState.wave_total
 	_wave_title.text = "Welle %d" % GameState.wave_number
 	_wave_bar.max_value = maxi(1, total)
@@ -107,10 +86,6 @@ func _refresh() -> void:
 	_wave_text.text = "%d / %d" % [GameState.wave_resolved, total]
 
 	_kills_label.text = str(GameState.monsters_defeated)
-	# Keine Punkte: sie sind ein interner Wert (aus ihnen wird das Gold der Kiste), und
-	# eine Zahl, mit der der Spieler nichts anfangen kann, lenkt nur ab. Stattdessen, was
-	# er in dieser Sitzung gelernt hat — und erst, wenn es etwas gibt: eine „0 gemeistert"
-	# wäre eine Mahnung. Dieselbe Regel wie die Sitzungsbilanz (RunBalance, fresh_rows).
 	var session := SessionLog.current()
 	var mastered := 0
 	if not session.is_empty():
@@ -121,8 +96,7 @@ func _refresh() -> void:
 	_gold_label.text = Wallet.digits()
 
 
-## Level und Erfahrungsring. Der Ring zeigt den Stand IM Level (0..Kosten des nächsten
-## Aufstiegs) und nicht die Gesamt-Erfahrung: die wächst ohne Obergrenze.
+## Level und Erfahrungsring; der Ring zeigt den Stand im Level, nicht die Gesamt-Erfahrung.
 func _refresh_level() -> void:
 	var progress := PlayerLevel.progress()
 	_level_text.text = str(int(progress["level"]))

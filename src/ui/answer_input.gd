@@ -1,18 +1,8 @@
 extends LineEdit
-## Texteingabe für Übersetzungen. Bei Enter wird die Antwort entkoppelt über den
-## EventBus verschickt; die Kampf-Logik entscheidet, ob sie passt.
-##
-## Eine Eingabe für beide Sichten (ADR 0016): zwischen zwei Antworten ist sie zu, Enter
-## öffnet sie, das zweite Enter schickt ab und schließt, Escape schließt ohne abzuschicken.
-## Solange sie offen ist, gehört jede Taste dem Wort — auch Ziffern und P; zu sind die
-## Ziffern Zauber und P die Pause (WaveRunner), in der Ich-Sicht die Buchstaben das Laufen.
-## Solange sie offen ist, hält die Zeitlupe (typing_started bis typing_stopped). Gesperrt
-## und umbeschriftet statt ausgeblendet — das Feld steht in der Bildmitte und behält seine
-## Größe.
-##
-## Wichtig: In Godot 4 sind "Fokus" und "Editier-Zustand" getrennt. mouse_filter=IGNORE
-## auf den Welt-ColorRects verhindert Fokusklau, und der _process-Guard holt den Fokus der
-## offenen Eingabe im Zweifel zurück.
+## Texteingabe für Übersetzungen; schickt die Antwort über den EventBus.
+## Zwischen zwei Antworten zu: Enter öffnet, das zweite Enter schickt ab, Escape schließt
+## (ADR 0016). Offen gehört jede Taste dem Wort, und die Zeitlupe hält. In Godot 4 sind
+## Fokus und Editier-Zustand getrennt; `_process` holt den Fokus der offenen Eingabe zurück.
 
 const PLACEHOLDER_OPEN := "Übersetzung eingeben…"
 const PLACEHOLDER_CLOSED := "Enter: antworten"
@@ -26,9 +16,7 @@ var first_person := false:
 		if not _open:
 			placeholder_text = _closed_text()
 
-## Ich-Sicht mit zwei gelernten Waffen: die geschlossene Eingabe nennt auch Tab. Dafür
-## fällt WASD weg — mit allen vier passt es nicht in das Feld, und Laufen kennt man, bevor
-## man eine zweite Waffe hat.
+## Ich-Sicht mit zwei gelernten Waffen: die geschlossene Eingabe nennt Tab statt WASD.
 var weapon_switch := false:
 	set(value):
 		weapon_switch = value
@@ -42,9 +30,7 @@ func _ready() -> void:
 	keep_editing_on_text_submit = false
 	text_submitted.connect(_on_text_submitted)
 	text_changed.connect(_on_text_changed)
-	# Taucht die Eingabe nach einer Pause wieder auf (Rückfrage, Wellenende), fängt sie
-	# zu an: sonst stünde der Spieler nach „Abbrechen" mit offenem Feld da. Offen
-	# verschwunden heißt: auch die Zeitlupe, die das Öffnen gestartet hat, endet.
+	# Nach dem Ausblenden fängt die Eingabe zu an; war sie offen, endet auch ihre Zeitlupe.
 	visibility_changed.connect(func() -> void:
 		if _open:
 			EventBus.typing_stopped.emit()
@@ -58,16 +44,13 @@ func is_typing() -> bool:
 
 
 func _process(_delta: float) -> void:
-	# Nur zurückholen, wenn sichtbar — sonst würde die (unsichtbare) Kampfeingabe
-	# den Fokus anderer Controls klauen, z.B. dem Kommentarfeld im Leak-Reveal.
+	# Nur sichtbar zurückholen, sonst klaut die Eingabe anderen Controls den Fokus.
 	if visible and _open and not has_focus():
 		grab_focus()
 
 
-## `_input` und nicht `gui_input`: die geschlossene Eingabe hat keinen Fokus und bekäme
-## das Enter sonst nie. Das öffnende Enter wird verschluckt, bevor die LineEdit es sieht —
-## sonst schickte es sofort ein leeres Feld ab. Escape im offenen Feld schließt nur;
-## erst das nächste bricht den Kampf ab (WaveRunner._input läuft nach diesem hier).
+## `_input`, weil die geschlossene Eingabe keinen Fokus hat. Das öffnende Enter wird
+## verschluckt, sonst schickte die LineEdit ein leeres Feld ab.
 func _input(event: InputEvent) -> void:
 	if not visible:
 		return
@@ -77,8 +60,7 @@ func _input(event: InputEvent) -> void:
 	if not _open and key.keycode in [KEY_ENTER, KEY_KP_ENTER]:
 		get_viewport().set_input_as_handled()
 		_set_open(true)
-		# Die Zeitlupe beginnt mit dem Öffnen, nicht erst mit dem ersten Buchstaben — und
-		# hält, bis abgeschickt oder geschlossen wird (typing_stopped).
+		# Die Zeitlupe beginnt mit dem Öffnen, nicht erst mit dem ersten Buchstaben.
 		EventBus.typing_started.emit()
 	elif _open and event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
@@ -106,8 +88,7 @@ func _closed_text() -> String:
 	return PLACEHOLDER_CLOSED_TAB if weapon_switch else PLACEHOLDER_CLOSED_WALK
 
 
-## Nur bei nicht-leerem Feld: das clear() nach dem Absenden löst selbst ein
-## text_changed aus und würde die eben beendete Slow-Mo sonst neu starten.
+## Nur bei nicht-leerem Feld: das clear() nach dem Absenden löst selbst text_changed aus.
 func _on_text_changed(new_text: String) -> void:
 	if not new_text.is_empty():
 		EventBus.typing_activity.emit()

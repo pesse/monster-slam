@@ -1,58 +1,30 @@
 class_name HintCard
 extends PanelContainer
-## Die Karte am Zeiger — im ganzen Spiel dieselbe.
-##
-## Sie kennt vier Teile und sonst nichts: Überschrift, Text, Liste, Nachsatz — dazu
-## höchstens ein Bild unter der Überschrift (die Vorschau einer Gebietskarte), ein kleines
-## Zeichen vor ihr und eine farbige Unterzeile (Zweig und Zustand eines Fähigkeitsknotens).
-## Was leer ist, steht nicht da. Die Liste ist eine echte Tabelle (Zeichen | Bezeichnung | Wert) und
-## kein Text mit „·" dazwischen: eine Aufzählung liest man Zeile für Zeile, und die Werte
-## sollen untereinander stehen, damit man sie vergleichen kann. Sie weiß nicht, ob sie einen Fähigkeitsknoten, eine Wortzeile oder eine
-## Schatzkiste erklärt — das ist genau der Grund, aus dem es sie nur einmal gibt. Was in
-## ihr steht, entscheidet die Stelle, die sie anmeldet (`Hints.attach`); Regeln wie
-## `SkillTree.state_name` bleiben dort, wo sie hingehören.
-##
-## Gehalten wird sie vom Autoload `Hints`, das sie über allem einblendet und dem Zeiger
-## nachführt. Godots eigener Tooltip erscheint verzögert, bleibt stehen, wo er aufgegangen
-## ist, und bringt die Typografie der Engine mit — diese Karte erscheint sofort, folgt dem
-## Zeiger und kommt aus dem Theme.
-##
-## Aussehen (assets/ui/tooltip/): Rahmen und Pfeil sind nur die goldene Kontur, innen und
-## außen durchsichtig. Die Füllung (`fill`, eine Farbe von `HintCard` im Theme) zeichnet die
-## Karte selbst, als Fläche genau innerhalb dieser Kontur: abgeschrägte Ecken wie der Rahmen,
-## der Pfeil entlang der Mitte seiner Schenkel. Eine rechteckige oder gerundete Füllung stand
-## an den Ecken und unter dem Pfeil als dunkelblaue Zacke über das Gold hinaus. `panel` trägt
-## nur noch den Innenabstand. Wo der Pfeil sitzt, entscheidet `Hints` (`point_at`) — die
-## Karte weiß nicht, wo die Maus ist.
+## Die Karte am Zeiger, geführt vom Autoload `Hints`. Was leer ist, steht nicht da. Rahmen
+## und Pfeil (assets/ui/tooltip/) sind nur die Goldkontur; die Füllung (Theme-Farbe `fill`)
+## zeichnet die Karte selbst, `panel` trägt nur den Innenabstand.
 
-## So breit wie ihr Text, höchstens so breit: gut ein Viertel der Grundauflösung (1152).
-## Darüber wird aus einer Auskunft am Zeiger ein Absatz quer über das Bild.
+## Breite der Karte (px): so breit wie ihr Text, in diesen Grenzen.
 const MAX_WIDTH := 320.0
-## Und mindestens so breit: „Umlernen" allein wäre sonst ein Stummel, und beim Streichen
-## über ein Netz zappelte die Karte bei jedem Knoten auf eine andere Breite.
 const MIN_WIDTH := 140.0
 
-## Größe, in der der Pfeil gezeichnet wird: seine Textur (64 × 36) auf fünf Achtel — in
-## voller Größe wäre er bei einer Karte von 140 px Breite ein Dach über der halben Karte.
+## Gezeichnete Größe des Pfeils (px), seine Textur auf fünf Achtel.
 const POINTER_SIZE := Vector2(40, 22)
-## So weit reicht der Fuß des Pfeils in die Karte hinein. Er deckt dort die Randlinie des
-## Rahmens ab, sonst liefe sie quer unter dem Pfeil durch.
+## So weit reicht der Fuß des Pfeils in die Karte hinein (px).
 const POINTER_INSET := 8.0
-## Näher als so an eine Ecke kommt der Pfeil nicht: die Ecken des Rahmens sind abgeschrägt.
+## Mindestabstand des Pfeils zu einer Ecke (px).
 const POINTER_MARGIN := 24.0
-## Die Kontur in den Texturen (`frame.webp` 256², `pointer_up.webp` 64 × 36; gemessen an
-## den Pixeln). Der Rahmen steht mit seinen 24-px-Rändern 1:1 auf dem Bild, seine Goldlinie
-## liegt an der Außenkante und schrägt die Ecke auf 11 px ab. Die Füllung folgt der MITTE
-## der Linie — dort deckt das Gold ihre harte Kante.
+## Die Goldlinie in `frame.webp` (px, an der Textur gemessen): Mitte der Linie und
+## Eckenabschrägung. Die Füllung folgt der Mitte, dort deckt das Gold ihre Kante.
 const FRAME_LINE := 1.0
 const FRAME_CHAMFER := 11.0
-## Pfeil, Mitte der Schenkel: Spitze und die beiden Enden, in Texturpixeln von `pointer_up`.
-## `pointer_down` ist dasselbe Bild gespiegelt.
+## Pfeil, Mitte der Schenkel: Spitze und Enden in Texturpixeln von `pointer_up`
+## (`pointer_down` gespiegelt).
 const POINTER_TEXTURE := Vector2(64, 36)
 const POINTER_APEX := Vector2(31.5, 3.5)
 const POINTER_ARM_LEFT := Vector2(4.0, 27.5)
 const POINTER_ARM_RIGHT := Vector2(59.0, 27.5)
-## Kantenlänge eines Zeichens in der Liste, wenn es ein Bild ist.
+## Kantenlänge eines Bild-Zeichens in der Liste (px).
 const LIST_ICON := 20.0
 ## Ein Preis im Kopf: Zeichen und Zahl (`fill`, `prices`).
 const PRICE_SCENE := preload("res://scenes/ui/hint_price.tscn")
@@ -73,29 +45,13 @@ var _pointer_x := NAN
 var _pointer_up := true
 
 
-## Trägt die vier Teile ein und stellt die Karte auf die Breite ein, die ihr Text braucht.
-##
-## Nur an einer EINGEHÄNGTEN Karte aufrufen: `update_minimum_size()` steigt ohne Baum aus,
-## und dann misst `_fit()` einen alten Stand. `Hints` hängt sie beim Start ein, also immer
-## erfüllt — deshalb gibt es hier kein Merken-und-später-eintragen mehr.
-##
-## `list` ist ein Array von Zeilen, jede `[zeichen, bezeichnung, wert]`; ein leeres Zeichen
-## lässt die Spalte in dieser Zeile frei, die Bezeichnungen stehen trotzdem untereinander.
-##
-## Ein Bild macht die Karte so breit, wie sie werden darf (`MAX_WIDTH`): eine Vorschau in
-## Textbreite wäre eine Briefmarke.
-##
-## `icon` steht vor der Überschrift, `subtitle` darunter — in `tint` gefärbt, weil die
-## Farbe eines Fähigkeitsbaums aus seinen Daten kommt und nicht aus dem Theme. Gefärbt
-## wird über `self_modulate` auf weißer Schrift (`HintSubtitle`), nicht über einen
-## Theme-Override. Mit einer Unterzeile trennt ein Strich den Kopf vom Text.
-##
-## `prices` stehen rechts im Kopf, jeder `[zeichen, zahl]` — was ein Klick kostet, als
-## Zeichen statt als Satz (Stern für Skillpunkte, Münzen für Gold).
+## Trägt die Teile ein und stellt die Karte auf die Breite ihres Texts ein. Nur an einer
+## eingehängten Karte aufrufen, sonst misst `_fit()` einen alten Stand.
+## `list`: Zeilen `[zeichen, bezeichnung, wert]`; das Zeichen darf leer oder ein Bild sein.
+## Ein Bild macht die Karte MAX_WIDTH breit. `subtitle` wird über `self_modulate` in `tint`
+## gefärbt (Farbe aus Daten). `prices`: rechts im Kopf, je `[zeichen, zahl]`.
 func fill(title: String, body := "", note := "", list := [], image: Texture2D = null,
 		icon: Texture2D = null, subtitle := "", tint := Color.WHITE, prices := []) -> void:
-	# Eine leere Zeile verschwindet, statt eine leere Zeile zu hinterlassen: die Karte für
-	# eine Münze ist eine Zeile hoch und kein Kasten mit Luft.
 	_title.text = title
 	_title.visible = not title.is_empty()
 	_body.text = body
@@ -127,16 +83,14 @@ func _fill_prices(prices: Array) -> void:
 	_prices.visible = not prices.is_empty()
 
 
-## Die Zellen kommen bei jedem Aufruf neu: eine Karte zeigt mal zwei, mal sechs Zeilen.
-## `remove_child` vor `queue_free`, sonst misst `_fit()` die alten Zellen noch mit.
+## Baut die Zellen neu; `remove_child` vor `queue_free`, sonst misst `_fit()` sie noch mit.
 func _fill_list(list: Array) -> void:
 	for child in _list.get_children():
 		_list.remove_child(child)
 		child.queue_free()
 	for row in list:
 		for i in 3:
-			# Das Zeichen darf ein Bild sein (Stern, Haken, Schloss) — dann steht es in
-			# fester Größe da, damit die Bezeichnungen trotzdem in einer Flucht beginnen.
+			# Ein Bild-Zeichen in fester Größe, damit die Bezeichnungen fluchten.
 			if i == 0 and i < row.size() and row[i] is Texture2D:
 				var mark := TextureRect.new()
 				mark.texture = row[i]
@@ -158,8 +112,6 @@ func _fill_list(list: Array) -> void:
 	_list.visible = not list.is_empty()
 
 
-## Die Bezeichnungen der Liste — die mittlere Spalte, die einzige, die umbrechen darf.
-## Zeichen und Werte sind kurz und bleiben einzeilig, damit sie in einer Flucht stehen.
 func _list_names() -> Array:
 	var names := []
 	var cells := _list.get_children()
@@ -168,7 +120,6 @@ func _list_names() -> Array:
 	return names
 
 
-## Die Werte der Liste — die rechte Spalte.
 func _list_values() -> Array:
 	var values := []
 	var cells := _list.get_children()
@@ -186,12 +137,10 @@ func _list_mark_width() -> float:
 	return mark + 2.0 * _list.get_theme_constant("h_separation")
 
 
-## Breite der Werte-Spalte, ungebrochen gemessen.
 func _list_value_width() -> float:
 	return _widest(_list_values())
 
 
-## Breite der Bezeichnungen, ungebrochen gemessen.
 func _list_name_width() -> float:
 	return _widest(_list_names())
 
@@ -203,24 +152,17 @@ func _widest(labels: Array) -> float:
 	return widest
 
 
-## Die Breitenregel, in der einzigen Reihenfolge, in der sie funktioniert.
-##
-## Ein `Label` mit `autowrap_mode` meldet als Mindestbreite 1 Pixel und dazu die Höhe, die
-## der Text bei EINEM Pixel Breite braucht (docs/CONVENTIONS.md, dieselbe Falle wie bei
-## `RevealCard.set_width()`). Man kann also nicht in einem Zug fragen, wie breit der Text
-## gern wäre und wie hoch er dann wird. Zum MESSEN wird der Umbruch deshalb abgeschaltet.
+## Die Breitenregel, in dieser Reihenfolge. Zum Messen wird der Umbruch abgeschaltet
+## (umbrechende Labels: CONVENTIONS „Fallen“).
 func _fit() -> void:
 	var labels := [_title, _subtitle, _body, _note]
 	var names := _list_names()
 	var values := _list_values()
-	# 1. Ohne Umbruch messen — und die Breite des VORIGEN Aufrufs vorher weg. Ohne diese
-	#    Null wäre jede Karte so breit wie die breiteste, die je zu sehen war.
+	# 1. Ohne Umbruch messen, die Breite des vorigen Aufrufs vorher weg.
 	for label: Label in labels + names + values:
 		label.autowrap_mode = TextServer.AUTOWRAP_OFF
 		label.custom_minimum_size.x = 0.0
 	_image.custom_minimum_size = Vector2.ZERO
-	# Gemessen wird an der Tafel, der Innenabstand aus `PanelContainer/styles/panel` steckt
-	# also schon drin. Mehrzeilige Hinweise messen sich über ihre längste Zeile.
 	var outer := clampf(get_combined_minimum_size().x, MIN_WIDTH, MAX_WIDTH)
 	if _image.visible:
 		outer = MAX_WIDTH
@@ -228,9 +170,8 @@ func _fit() -> void:
 	if _image.visible:
 		var picture := _image.texture.get_size()
 		_image.custom_minimum_size = Vector2(inner, inner * picture.y / maxf(picture.x, 1.0))
-	# 2. Umbruch wieder an und die Breite in die Labels DRÜCKEN, bevor jemand nach der
-	#    Höhe fragt. `size.x` löst den Umbruch aus, `custom_minimum_size.x` hält ihn, wenn
-	#    der Container gleich neu sortiert — beides, nicht eins von beidem.
+	# 2. Umbruch an und die Breite setzen: `size.x` löst den Umbruch aus,
+	#    `custom_minimum_size.x` hält ihn beim nächsten Sortieren; beides nötig.
 	# Überschrift und Unterzeile teilen sich die Breite mit dem Zeichen davor.
 	var head := inner
 	if _icon.visible:
@@ -241,13 +182,8 @@ func _fit() -> void:
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		label.custom_minimum_size.x = width
 		label.size.x = width
-	# Die Bezeichnungen der Liste bekommen, was neben Zeichen und Werten übrig bleibt —
-	# damit rücken die Werte zugleich an den rechten Rand, in eine Flucht. Die Werte nehmen
-	# höchstens die Hälfte und brechen sonst selbst um: ein langer Wert („die Einstellung
-	# (zu etwas) / die Meinung (zu etwas)") ließ der Bezeichnung sonst keinen Pixel, und
-	# sie stand Buchstabe für Buchstabe untereinander. Passen Bezeichnung und Wert aber
-	# beide ungebrochen nebeneinander, bricht nichts — sonst bräche ein Wert wie
-	# „Kräuterbeutel" knapp über der Hälfte mitten im Wort.
+	# Die Bezeichnungen bekommen, was neben Zeichen und Werten übrig bleibt. Passt nicht
+	# alles ungebrochen, nehmen die Werte höchstens die Hälfte und brechen selbst um.
 	var mark_width := _list_mark_width()
 	var value_width := _list_value_width()
 	if mark_width + _list_name_width() + value_width > inner:
@@ -262,14 +198,11 @@ func _fit() -> void:
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		label.custom_minimum_size.x = name_width
 		label.size.x = name_width
-	# 3. Den Umbruch JETZT erzwingen. `get_minimum_size()` rechnet ihn NICHT nach — es gibt
-	#    den Stand der letzten Umbruchrechnung zurück, und die lief noch mit der Breite von
-	#    vorhin. `get_line_count()` bricht dagegen sofort um; ohne diese Schleife meldete
-	#    die Karte die Höhe für die Breite der VORIGEN Karte (beim ersten Mal: für einen
-	#    Pixel, also 2056 statt 133).
+	# 3. Den Umbruch erzwingen: `get_minimum_size()` liefert den Stand der letzten
+	#    Umbruchrechnung, `get_line_count()` bricht sofort um.
 	for label: Label in labels + names + values:
 		label.get_line_count()
-	# 4. Erst jetzt die Höhe lesen: sie ist für DIESE Breite gerechnet.
+	# 4. Erst jetzt ist die Höhe für diese Breite gerechnet.
 	size = Vector2(outer, get_combined_minimum_size().y)
 	queue_redraw()
 
@@ -290,18 +223,14 @@ static func pointer_reach() -> float:
 	return POINTER_SIZE.y - POINTER_INSET
 
 
-## Wo die Spitze gerade liegt (Kartenkoordinaten) — für den Test, dass sie auf die Maus
-## zeigt. NaN ohne Pfeil.
+## Wo die Spitze gerade liegt (Kartenkoordinaten), NaN ohne Pfeil.
 func pointer_tip() -> Vector2:
 	if is_nan(_pointer_x):
 		return Vector2(NAN, NAN)
 	return Vector2(_pointer_x, -pointer_reach() if _pointer_up else size.y + pointer_reach())
 
 
-## Erst die Füllung innerhalb der Kontur, dann der Rahmen, dann unter dem Pfeil noch einmal
-## die Füllung — sie deckt die Randlinie zwischen seinen Schenkeln, sonst liefe sie quer unter
-## dem Pfeil durch —, zuletzt der Pfeil. Alles vor dem Inhalt: Kinder werden nach dem
-## Elternknoten gezeichnet.
+## Die Füllung unter dem Pfeil deckt die Randlinie zwischen seinen Schenkeln.
 func _draw() -> void:
 	var color := get_theme_color("fill")
 	draw_colored_polygon(fill_outline(size), color)
@@ -315,8 +244,7 @@ func _draw() -> void:
 			POINTER_SIZE), false)
 
 
-## Die Fläche der Karte ohne Pfeil: ein Rechteck mit abgeschrägten Ecken auf der Mitte der
-## Goldlinie. Statisch, damit der Test die Ecken prüfen kann.
+## Die Fläche ohne Pfeil: Rechteck mit abgeschrägten Ecken auf der Mitte der Goldlinie.
 static func fill_outline(card: Vector2) -> PackedVector2Array:
 	var a := FRAME_LINE
 	var c := FRAME_CHAMFER
@@ -327,8 +255,7 @@ static func fill_outline(card: Vector2) -> PackedVector2Array:
 	])
 
 
-## Die Fläche unter dem Pfeil, in Kartenkoordinaten: das Dreieck aus Spitze und den Enden
-## der Schenkel, auf der Mitte der Goldlinie — also nirgends außerhalb des Pfeils.
+## Die Fläche unter dem Pfeil (Kartenkoordinaten): Dreieck auf der Mitte der Goldlinie.
 func pointer_outline() -> PackedVector2Array:
 	var scale := POINTER_SIZE / POINTER_TEXTURE
 	var origin := Vector2(_pointer_x - POINTER_SIZE.x * 0.5, pointer_tip().y)

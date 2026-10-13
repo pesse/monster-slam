@@ -1,9 +1,7 @@
 class_name SlowAura
 extends Node3D
-## Zäher Schlamm unter einem gebremsten Monster (Sumpf, Schwere Luft, ADR 0014): ein
-## glänzender, moosgrüner Fleck, der mitläuft, mit Ringen und ein paar aufsteigenden Blasen.
-## Er quillt beim Bremsen auf und bleibt, solange das Monster gebremst ist — also bis zum Ende
-## seiner Welle, mit ihm zusammen.
+## Schlamm unter einem gebremsten Monster (ADR 0014): ein mitlaufender Fleck mit Ringen und
+## Blasen. Quillt beim Bremsen auf und bleibt, solange das Monster lebt.
 
 const MARK_SHADER := preload("res://assets/shaders/ground_mark.gdshader")
 const SPARK_SHADER := preload("res://assets/shaders/spark.gdshader")
@@ -11,7 +9,7 @@ const SPARK_SHADER := preload("res://assets/shaders/spark.gdshader")
 ## Brauner Schlamm, damit er sich vom Gras abhebt; das Grün kommt aus dem Leuchten.
 const COLOR := Color(0.5, 0.38, 0.16, 0.9)
 const GLOW := Color(0.55, 0.9, 0.2)
-## Breit genug, dass der Fleck unter dem Monster hervorschaut.
+## Kantenlänge des Flecks (m), breit genug, dass er unter dem Monster hervorschaut.
 const SIZE := 6.0
 
 var _mat := ShaderMaterial.new()
