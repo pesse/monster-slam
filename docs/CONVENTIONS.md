@@ -94,6 +94,19 @@ am Tag liest ein Kind schnell zehn davon hintereinander. Deshalb kompakt: je Neu
 fetter Titel und ein, zwei Sätze aus Spielersicht, keine technischen Details, keine
 Aufzählung von Kleinkram; unter ~600 Zeichen je Release.
 
+## Kommentare
+
+Ein Kommentar sagt, was der Code nicht sagen kann: ein nicht offensichtliches Warum, eine
+Einheit, einen Vertrag, eine Engine-Falle.
+- Kein Hergang („war früher“, „hat schon einmal“), keine Abwägung gegen nicht gewählte
+  Alternativen, keine Spielgefühl-Prosa, keine Liste der Aufrufer — das gehört in die
+  Commit-Message, ein ADR, das Handbuch oder einen Testnamen.
+- Was hier oder in einem ADR steht, wird nicht wiederholt; ein Verweis („ADR 0004“) genügt.
+- Klassenkopf höchstens ~5 Zeilen, Konstanten: Bedeutung und Einheit.
+- Magische Zahlen im Funktionsrumpf werden benannt oder kommentiert.
+- Keine Großbuchstaben zur Betonung.
+- `##` ist Editor-Doku: Verträge an `class_name`, Funktionen, Signalen und Exporten bleiben `##`.
+
 ## Harte Regeln
 
 **Packs** (`docs/PACK_FORMAT.md`, ADR 0001) — die EXE enthält keine Sprachdaten:
