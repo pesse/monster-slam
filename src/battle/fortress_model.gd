@@ -1,52 +1,38 @@
 class_name FortressModel
 extends RefCounted
-## Die Festung aus Teilen des Hexagon-Packs, eine Anordnung je Stufe (0..4). Additiv: höhere
-## Stufen zeigen mehr Türme, Mauern und Nebengebäude. Nur die -z-Front (Angriffsfront) liegt
-## im Kampfbild, Burg und Nebengebäude laufen nach hinten (+z) aus dem sichtbaren Feld.
-##
-## Zwei Nutzer: der Kampf (`WaveRunner`, auf dem Gelände) und die Werkbank
-## `src/dev/fortress_icons.gd`, die daraus die Bilder der Festungsanzeige rendert — so zeigt
-## die Karte dieselbe Festung, die im Kampf steht.
+## Die Festung aus Teilen des Hexagon-Packs, eine Anordnung je Stufe (0..4); höhere Stufen
+## zeigen mehr. Die Angriffsfront liegt auf -z, Burg und Nebengebäude laufen nach +z aus dem
+## Bild. Auch die Bilder der Festungsanzeige entstehen hieraus.
 
 const HEX_DIR := "res://assets/models/hexagon"
 const SCALE := 5.0
-## Maßstab, für den die Abstände in `build` gesetzt sind. Bei einem anderen SCALE wachsen sie
-## mit (`grow`), so dass die Festung als Ganzes größer wird und nicht auseinanderfällt.
+## Maßstab, für den die Abstände in `build` gesetzt sind; bei anderem SCALE wachsen sie mit.
 const LAYOUT_SCALE := 3.0
-## Halbe Tiefe der Mauerteile in Modelleinheiten. Die Mauer rückt um den Zuwachs nach hinten:
-## ihre Vorderkante bleibt, wo die Monster ankommen, egal wie groß die Festung ist.
+## Halbe Tiefe der Mauerteile in Modelleinheiten; hält die Vorderkante bei jeder Größe fest.
 const WALL_HALF_DEPTH := 0.4
-## Gierwinkel der Mauerteile: im Pack liegen die Zinnen auf +z, hier gehören sie auf die
-## Feindseite (-z), der Wehrgang dahinter zu den Verteidigern. Die Teile sind mittig, die
-## Drehung verschiebt nichts.
+## Gierwinkel (Grad) der Mauerteile: im Pack liegen die Zinnen auf +z, die Feindseite ist -z.
 const WALL_YAW := 180.0
-## Ab dieser Stufe tragen die Ecktürme Katapulte — und nur dann wirft das Wachkatapult
-## (Bollwerk): es hilft beim letzten Stück einer Unit, nicht am Anfang.
+## Ab dieser Stufe tragen die Ecktürme Katapulte, nur dann wirft das Wachkatapult.
 const CATAPULT_TIER := 4
 ## Die beweglichen Teile des Katapultturms im Modell des Packs, und wo am Arm der Löffel
 ## sitzt (in Modelleinheiten, -z am Arm).
 const CATAPULT_TURRET := "catapult_turret_blue"
 const CATAPULT_ARM := "catapult_arm_blue"
 const CATAPULT_BUCKET := Vector3(0.0, 0.05, -0.6)
-## Ein Wurf: zum Ziel drehen, Arm hochschlagen (so weit, dass der Löffel über den Scheitel
-## kippt), kurz oben halten, langsam zurück.
+## Ein Wurf: zum Ziel drehen, Arm hochschlagen, kurz oben halten, langsam zurück (s, Grad).
 const CATAPULT_TURN_TIME := 0.25
 const CATAPULT_SWING_TIME := 0.14
 const CATAPULT_SWING_DEG := 110.0
 const CATAPULT_HOLD_TIME := 0.12
 const CATAPULT_RETURN_TIME := 0.7
-## Die Festung vom Krieg gezeichnet (BattleTheme.fortress_wear): ein Material für alle Teile,
-## denn alle tragen denselben Atlas des Packs.
+## Abnutzung (BattleTheme.fortress_wear).
 const WEAR_SHADER := preload("res://assets/shaders/fortress_wear.gdshader")
-## Je Grad der Abnutzung ein Material, geteilt von allen Teilen — eins für die ganze Festung,
-## nicht eins je Turm.
+## Je Atlas und Grad der Abnutzung ein Material, geteilt von allen Teilen.
 static var _wear_materials := {}
 
 
 ## Setzt die Teile der Stufe unter `parent`; `front_z` ist die Mauerfront, `ground_y(x, z)`
-## gibt die Höhe des Geländes (ohne Gelände: `func(_x, _z): return 0.0`). `scale` weicht nur
-## in der Werkbank von SCALE ab (battle_theme_lab, Regler Festungsgröße). `wear` (0..1) ist
-## die Abnutzung des Themas: über 0 tragen alle Teile Ruß und Schmutz (fortress_wear.gdshader).
+## die Geländehöhe, `wear` (0..1) die Abnutzung des Themas.
 static func build(parent: Node3D, tier: int, front_z: float, ground_y: Callable,
 		scale: float = SCALE, wear := 0.0) -> void:
 	var k := scale / LAYOUT_SCALE
@@ -55,14 +41,11 @@ static func build(parent: Node3D, tier: int, front_z: float, ground_y: Callable,
 	var put := _Put.new(parent, ground_y, scale, wear)
 
 	if tier <= 0:
-		# Baustelle: Turmstumpf + Baugerüst. Kleine Stufe an den hinteren Rand
-		# (Verteidiger-Rückseite = +z, näher zur Kamera) gezogen, weg von der
-		# Monster-Front, aber noch komplett im Bild.
+		# Baustelle: Turmstumpf + Baugerüst, nach hinten (+z) weg von der Front, noch im Bild.
 		put.at("building_tower_base_blue", 0.0, fz + 3.5 * k)
 		put.at("building_scaffolding", seg * 0.7, fz + 3.5 * k)
 		return
 
-	# Ab Stufe 2: Wehrmauer mit Tor + Ecktürmen.
 	if tier >= 2:
 		put.at("wall_straight", -seg, fz, WALL_YAW)
 		put.at("wall_straight_gate", 0.0, fz, WALL_YAW)
@@ -81,7 +64,6 @@ static func build(parent: Node3D, tier: int, front_z: float, ground_y: Callable,
 		# Stufe 1 ohne Mauer: Turm an den hinteren Rand (+z), weg von der Front.
 		put.at("building_tower_A_blue", 0.0, fz + 3.0 * k)
 
-	# Vollausbau: Nebengebäude hinter der Mauer.
 	if tier >= 4:
 		put.at("building_barracks_blue", -seg * 1.3, fz + 4.5 * k, 20.0)
 		put.at("building_blacksmith_blue", seg * 1.3, fz + 4.5 * k, -20.0)
@@ -91,9 +73,8 @@ static func build(parent: Node3D, tier: int, front_z: float, ground_y: Callable,
 		put.at("building_windmill_blue", -seg * 1.9, fz + 2.5 * k)
 
 
-## Die Katapulte unter `parent`, die sich bewegen lassen: der Drehkranz jedes
-## Katapultturms (ab CATAPULT_TIER). Das Modell des Packs bringt Kranz und Wurfarm als eigene
-## Knoten mit — gedreht wird dort, nicht am Turm.
+## Der Drehkranz jedes Katapultturms unter `parent`. Kranz und Wurfarm sind eigene Knoten
+## im Modell des Packs; gedreht wird dort, nicht am Turm.
 static func catapults(parent: Node) -> Array[Node3D]:
 	var out: Array[Node3D] = []
 	for node in parent.find_children(CATAPULT_TURRET, "Node3D", true, false):
@@ -102,15 +83,13 @@ static func catapults(parent: Node) -> Array[Node3D]:
 	return out
 
 
-## Ein Wurf: der Kranz dreht sich zu `target`, der Arm schlägt hoch, und im Scheitel kehrt
-## es mit dem Punkt zurück, an dem der Stein den Löffel verlässt. Der Arm schwingt danach
-## von selbst zurück. In Spielzeit wie die Monster: in der Zeitlupe wirft es langsamer, und
-## der Vorhalt (WaveRunner.catapult_lead) stimmt trotzdem. Gewartet wird auf einen Timer und nicht auf den Tween: fällt der Turm mitten im Wurf weg
-## (Festungsausbau), bleibt der Stein sonst für immer im Löffel.
+## Ein Wurf zu `target` in Spielzeit. Kehrt im Scheitel mit dem Punkt zurück, an dem der
+## Stein den Löffel verlässt; der Arm schwingt danach von selbst zurück. Gewartet wird auf
+## einen Timer statt auf den Tween, weil der Turm mitten im Wurf wegfallen kann.
 static func fire(turret: Node3D, target: Vector3) -> Vector3:
 	var arm := turret.get_node(CATAPULT_ARM) as Node3D
-	# Der Pack wirft nach +z seines Kranzes: die Richtung zum Ziel im Raum des Turms. Der
-	# kürzere Weg herum, sonst dreht er sich bei jedem zweiten Wurf einmal ganz.
+	# Der Pack wirft nach +z seines Kranzes. Der kürzere Weg herum, sonst dreht er sich
+	# bei jedem zweiten Wurf einmal ganz.
 	var local := (turret.get_parent() as Node3D).to_local(target) - turret.position
 	var yaw := turret.rotation.y + wrapf(atan2(local.x, local.z) - turret.rotation.y, -PI, PI)
 	var tw := turret.create_tween()
@@ -128,8 +107,7 @@ static func fire(turret: Node3D, target: Vector3) -> Vector3:
 	return release
 
 
-## Wie viel größer als LAYOUT_SCALE die Festung steht — für alles, was an ihrer Größe hängt
-## (flaches Innenfeld, Kamerafahrt beim Ausbau).
+## Wie viel größer als LAYOUT_SCALE die Festung steht.
 static func grow() -> float:
 	return SCALE / LAYOUT_SCALE
 
@@ -161,8 +139,7 @@ class _Put:
 		return inst
 
 
-## Legt das Material der Abnutzung `wear` über alle Meshes von `part`. Als Override: das
-## Material des Packs bleibt, wie es ist (geladene Ressourcen sind geteilt).
+## Legt das Material der Abnutzung `wear` als Override über alle Meshes von `part`.
 static func wear_down(part: Node3D, wear: float) -> void:
 	for mi: MeshInstance3D in part.find_children("*", "MeshInstance3D", true, false):
 		var atlas := _atlas_of(mi)

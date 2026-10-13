@@ -1,64 +1,50 @@
 class_name FirstPersonView
 extends Node3D
-## Die Ich-Sicht im Wellenkampf (Späher-Baum): der Spieler steht auf dem Feld statt über
-## ihm, läuft mit WASD und sieht sich mit der Maus um. Sonst ändert sie am Kampf nichts —
-## Monster, Wellen, Schwierigkeit und Auswertung sind dieselben. Die eine Regel, die sie
-## dazubringt: eine Antwort trifft nur ein Monster, das im Bild ist (`sees`, geprüft im
-## WaveRunner).
-##
-## Gelaufen wird nach der Wanduhr: `Engine.time_scale` gehört SlowMotion, und weder die
-## Zeitlupe noch der Zeitraffer von „Schnell auflösen" sollen den Spieler mitnehmen.
-## Während der Eingabe (AnswerInput.is_typing) gehören die Buchstaben dem Wort, und die
-## Maus ist frei: die Zeit steht ohnehin, und so ist „Schnell auflösen" einen Klick entfernt.
-##
-## Die Maus ist nur im laufenden Kampf und außerhalb der Eingabe gefangen (`active`). Alt
-## gibt sie auch dann frei, solange es gehalten wird: für die Hinweise.
+## Die Ich-Sicht im Wellenkampf (Späher-Baum): Laufen mit WASD, Umsehen mit der Maus. Eine
+## Antwort trifft nur ein Monster im Bild (`sees`). Gelaufen wird nach der Wanduhr; die Maus
+## ist nur im laufenden Kampf außerhalb der Eingabe gefangen, Alt gibt sie frei.
+## Siehe docs/ARCHITECTURE.md, „Ich-Sicht (Späher-Baum)“.
 
-## Grundtempo in Welteinheiten je Sekunde; `walk_speed` aus dem Baum legt Anteile darauf.
+## Grundtempo in m/s; `walk_speed` aus dem Baum legt Anteile darauf.
 const BASE_SPEED := 6.0
+## Augenhöhe (m), Maus-Empfindlichkeit (rad je Pixel), größte Neigung des Blicks.
 const EYE_HEIGHT := 2.2
 const LOOK_SENSITIVITY := 0.0025
 const PITCH_LIMIT := deg_to_rad(70.0)
-## Blickweite: weiter reicht der Boden nicht (WaveRunner baut ihn für die Iso-Kamera).
-## Der Nebel beginnt davor und hat die Farbe des Hintergrunds — so endet die Welt im Dunst
-## statt an einer Kante.
+## Nebel von bis (m), in der Farbe des Hintergrunds: weiter reicht der Boden nicht.
 const FOG_BEGIN := 24.0
 const FOG_END := 60.0
-## Sturmangriff: so schnell rast der Spieler auf das getroffene Monster zu, so weit davor
-## kracht er hinein, und so weit reißt das Blickfeld dabei auf. Die Dauer ist gedeckelt:
-## ein Anlauf über das halbe Feld soll ein Ruck sein, keine Reise.
+## Sturmangriff: Tempo (m/s), Abstand vor dem Monster beim Aufprall (m), Dauer (s,
+## gedeckelt) und Aufreißen des Blickfelds (Grad).
 const CHARGE_SPEED := 45.0
 const CHARGE_STOP := 2.5
 const CHARGE_MIN_TIME := 0.12
 const CHARGE_MAX_TIME := 0.45
 const CHARGE_FOV_KICK := 18.0
-## Bogen: so schnell fliegt der Pfeil, so hoch steigt seine Bahn (Anteil der Strecke), und
-## die Flugzeit ist gedeckelt wie der Anlauf. Größer als in der Hand, sonst sähe man ihn
-## über das Feld nicht fliegen.
+## Bogen: Pfeiltempo (m/s), Flugzeit (s, gedeckelt), Bahnhöhe (Anteil der Strecke) und
+## Größe des fliegenden Pfeils gegenüber dem in der Hand.
 const ARROW_SPEED := 38.0
 const ARROW_MIN_TIME := 0.1
 const ARROW_MAX_TIME := 0.55
 const ARROW_LIFT := 0.04
 const ARROW_SCALE := 3.0
-## Ein Treffer fliegt schneller und fast gerade — er soll Wucht haben; der Fehlschuss
-## behält seinen Bogen. Beim Abschuss zuckt das Blickfeld kurz auf.
+## Ein Treffer fliegt schneller und fast gerade; das Blickfeld zuckt um HIT_FOV_KICK Grad.
 const HIT_SPEED := 75.0
 const HIT_MAX_TIME := 0.32
 const HIT_LIFT := 0.004
 const HIT_FOV_KICK := 6.0
-## Ein Fehlschuss geht so weit neben dem Monster vorbei (und etwas darüber) und fliegt so
-## weit hinter ihm weiter, bis er im Boden steckt.
+## Ein Fehlschuss geht so weit (m) neben und über dem Monster vorbei und steckt so weit
+## dahinter im Boden.
 const MISS_WIDE := 1.8
 const MISS_HIGH := 0.6
 const MISS_OVERSHOOT := 4.0
-## Ohne Monster im Bild: so weit geradeaus.
+## Ohne Monster im Bild: so weit (m) geradeaus.
 const MISS_BLIND := 22.0
 
 ## Was ein Treffer in der Ich-Sicht tut. NONE: das Monster platzt, wo es ist.
 enum Weapon { NONE, CHARGE, BOW }
 
-## Die zuletzt gewählte Waffe, über Kämpfe hinweg — aber nicht gespeichert: eine Vorliebe
-## der Sitzung, kein Ursprungswert.
+## Die zuletzt gewählte Waffe, über Kämpfe hinweg, nicht gespeichert.
 static var _preferred := Weapon.BOW
 
 ## Der Späherblick ist gelernt.
@@ -76,8 +62,7 @@ static func bows_for(bonuses: Dictionary) -> bool:
 	return float(bonuses.get("bow", 0.0)) > 0.0
 
 
-## Der Explosionspfeil ist gelernt: ein Treffer mit dem Bogen platzt als Feuerball (Blast).
-## Nur das Bild — besiegt wird dasselbe Monster wie ohne.
+## Der Explosionspfeil ist gelernt: ein Bogentreffer platzt als Blast (nur das Bild).
 static func explodes_for(bonuses: Dictionary) -> bool:
 	return float(bonuses.get("explosive_arrow", 0.0)) > 0.0
 
@@ -106,9 +91,8 @@ static func arrow_time(distance: float, speed: float = ARROW_SPEED,
 	return clampf(distance / speed, ARROW_MIN_TIME, longest)
 
 
-## Wo ein Fehlschuss landet: an `target` vorbei auf der Seite `side` (±1), etwas darüber,
-## und auf derselben Linie weiter, bis er MISS_OVERSHOOT dahinter im Boden (y = `ground`)
-## steckt.
+## Wo ein Fehlschuss landet: an `target` vorbei auf der Seite `side` (±1) und
+## MISS_OVERSHOOT dahinter im Boden (y = `ground`).
 static func miss_end(from: Vector3, target: Vector3, side: float, ground: float = 0.0) -> Vector3:
 	var flat := Vector3(target.x - from.x, 0.0, target.z - from.z)
 	if flat.length_squared() < 0.0001:
@@ -122,9 +106,7 @@ static func miss_end(from: Vector3, target: Vector3, side: float, ground: float 
 	return Vector3(end.x, ground, end.z)
 
 
-## Welcher der Punkte am nächsten an der Bildmitte liegt — der kleinste Winkel zur
-## Blickrichtung. -1 ohne Punkte. Darauf zielt ein Fehlschuss: es gibt kein Fadenkreuz,
-## und eine falsche Antwort gehört zu keinem Monster.
+## Index des Punkts mit dem kleinsten Winkel zur Blickrichtung, -1 ohne Punkte.
 static func nearest_to_view(eye: Vector3, forward: Vector3, points: Array[Vector3]) -> int:
 	var best := -1
 	var best_dot := -INF
@@ -139,8 +121,7 @@ static func nearest_to_view(eye: Vector3, forward: Vector3, points: Array[Vector
 	return best
 
 
-## Wo der Anlauf endet: auf der Linie zum Ziel, CHARGE_STOP davor, im Feld. Steht der
-## Spieler schon näher, bleibt er, wo er ist.
+## Wo der Anlauf endet: CHARGE_STOP vor dem Ziel, im Feld; wer näher steht, bleibt.
 static func charge_end(from: Vector3, target: Vector3, field: Rect2) -> Vector3:
 	var to := Vector3(target.x - from.x, 0.0, target.z - from.z)
 	var dist := to.length()
@@ -154,19 +135,17 @@ static func yaw_towards(from: Vector3, target: Vector3) -> float:
 	return atan2(-(target.x - from.x), -(target.z - from.z))
 
 
-## Tempo mit den Boni des Baums — eine Summe auf das Grundtempo, wie jeder Skill.
+## Tempo mit den Boni des Baums.
 static func speed_for(bonuses: Dictionary) -> float:
 	return BASE_SPEED * (1.0 + maxf(0.0, float(bonuses.get("walk_speed", 0.0))))
 
 
-## Ist der Punkt im Bild dieser Kamera? Das ist „sichtbar" im Sinne der Trefferregel:
-## im Blickfeld, nicht unbedingt unverdeckt — die Prompt-Schilder stehen ohnehin über allem.
+## „Sichtbar“ im Sinne der Trefferregel: im Sichtkegel, auch wenn verdeckt.
 static func sees(camera: Camera3D, point: Vector3) -> bool:
 	return camera.is_position_in_frustum(point)
 
 
-## Die Laufrichtung in der Welt aus Tasten (x = rechts, y = vorwärts) und Blickrichtung.
-## Nur der Gierwinkel zählt: wer nach oben sieht, läuft nicht in die Luft.
+## Die Laufrichtung in der Welt aus Tasten (x = rechts, y = vorwärts), nur nach Gierwinkel.
 static func walk_direction(input: Vector2, yaw: float) -> Vector3:
 	if input.is_zero_approx():
 		return Vector3.ZERO
@@ -239,22 +218,17 @@ func is_active() -> bool:
 	return _active
 
 
-## Wackeln in der Bildebene. Die Iso-Kamera verschiebt dafür ihre Position; hier geht das
-## über die Bildverschiebung, damit der Blick selbst nicht wandert.
+## Wackeln über die Bildverschiebung, damit der Blick selbst nicht wandert.
 func shake(offset: Vector2) -> void:
 	camera.h_offset = offset.x
 	camera.v_offset = offset.y
 
 
-## Rast auf `target` zu und kehrt zurück, wenn der Spieler hineingekracht ist — der Aufrufer
-## lässt das Monster erst dann platzen. Nach der Wanduhr wie das Laufen (die Zeitlupe endet
-## zwar mit dem Abschicken, aber ihre Rampe soll den Ruck nicht dämpfen); in der Pause der
-## Meister-Feier steht er mit allem anderen. Kommt ein zweiter Treffer, während der erste
-## noch läuft, springt der erste ans Ziel: jedes Monster platzt, keins wartet ewig.
+## Rast nach der Wanduhr auf `target` zu und kehrt nach dem Aufprall zurück. Ein zweiter
+## Treffer während eines Anlaufs lässt den ersten sofort ans Ziel springen.
 func charge_at(target: Vector3) -> void:
 	if _charge != null and _charge.is_valid() and _charge.is_running():
-		# Vorher loslassen: der alte Anlauf soll das Blickfeld nicht zurückstellen, während
-		# der neue es aufreißt.
+		# Vorher loslassen, sonst stellte der alte Anlauf das Blickfeld des neuen zurück.
 		var old := _charge
 		_charge = null
 		old.custom_step(CHARGE_MAX_TIME * 2.0)
@@ -277,15 +251,14 @@ func is_charging() -> bool:
 	return _charge != null
 
 
-## Schießt einen Pfeil auf `target` und kehrt zurück, wenn er dort ist — der Aufrufer lässt
-## das Monster dann platzen. Der Pfeil geht mit dem Monster.
+## Schießt einen Pfeil auf `target` und kehrt zurück, wenn er dort ist.
 func shoot_at(target: Vector3) -> void:
 	var arrow := await _loose(target)
 	arrow.queue_free()
 
 
-## Ein Fehlschuss: an `target` vorbei (seitlich zufällig) und dahinter in den Boden. Ohne
-## Ziel (kein Monster im Bild) geradeaus. Kehrt zurück, wenn er steckt.
+## Ein Fehlschuss an `target` vorbei in den Boden, ohne Ziel geradeaus. Kehrt zurück,
+## wenn er steckt.
 func shoot_past(target: Variant) -> void:
 	var from := _bow.release().origin if _bow != null else camera.global_position
 	var end: Vector3
@@ -304,8 +277,8 @@ func shoot_past(target: Variant) -> void:
 func _loose(target: Vector3) -> Arrow:
 	if _bow != null and _bow.visible:
 		_bow.swing_to(target)
-		# Ein Timer und nicht das Ende des Schwenks: den kann ein Senken abbrechen, und ein
-		# nie endendes await hielte das Wellenende fest. Er steht in der Pause mit allem.
+		# Ein Timer statt des Schwenk-Tweens: den kann ein Senken abbrechen, und ein nie
+		# endendes await hielte das Wellenende fest.
 		await get_tree().create_timer(Bow.SWING_TIME, false, false, true).timeout
 	var from := _bow.release().origin if _bow != null else camera.global_position
 	# Die Nocke hält vor dem Ziel an, sonst ragte der Pfeil vor dem Knall hinten heraus.
@@ -362,7 +335,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _process(_delta: float) -> void:
 	var now := Time.get_ticks_usec()
-	# Gedeckelt wie SceneZoom: der erste Frame eines Kampfs baut die Welt und dauert lang.
+	# Auf 0.1 s gedeckelt: der erste Frame eines Kampfs baut die Welt und dauert lang.
 	var real_delta := minf(float(now - _last_usec) / 1_000_000.0, 0.1)
 	_last_usec = now
 	_update_mouse()

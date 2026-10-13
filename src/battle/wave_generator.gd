@@ -1,56 +1,32 @@
 class_name WaveGenerator
 extends RefCounted
-## Wählt für einen Spawn eine konkrete Aufgabe und deren Darstellung.
-##
-## Ablauf (siehe docs/ARCHITECTURE.md, "Nutzung im Spiel"):
-##   1. Kandidaten aus dem Wave-Pool erzeugen: task_definitions × passende Lexeme
-##      (allowed_types / requires_relation / requires_form), gefiltert nach
-##      task_types/direction und den Lexem-tags.
-##   2. Gewichtet ziehen: Fälliges, Unsicheres und Neues oft, Gemeistertes selten (ordered()).
-##   3. Aufgabe über TaskResolver auflösen (prompt + accepted_answers).
-##   4. monster_task_rules mappt (task_type, direction) -> monster_type + Basiswerte.
-##   5. Tempo, Punkte und Erfahrung = Schwierigkeit: aus Aufgaben-Grundschwierigkeit +
-##      Confidence (+ Wellenfaktor, der die Erfahrung bewusst NICHT anhebt).
-##   6. Schaden = base_damage der Regel × Wellennummer-Faktor (wave_damage_scale).
-##
-## pick(pool) -> {
-##   "task": Dictionary,          # aufgelöste Laufzeit-Aufgabe
-##   "monster_def": Dictionary,   # reine Darstellung (monsters-Eintrag)
-##   "speed": float, "damage": int, "reward": int, "xp": int,
-## }  oder {} wenn nichts Spielbares gefunden wurde.
+## Wählt für einen Spawn eine Aufgabe und ihr Monster (ADR 0018). Tempo, Punkte und
+## Erfahrung kommen aus `t - c` (docs/ARCHITECTURE.md, „Tempo = Schwierigkeit“).
+## pick(pool) -> {task, monster_def, speed, damage, reward, xp} oder {}, wenn nichts
+## Spielbares da ist.
 
 var _resolver := TaskResolver.new()
 
-## Referenztempo = Nullpunkt der Schwierigkeitsskala (Netto-Können e = 0): die Confidence
-## deckt die Grundschwierigkeit der Aufgabe genau. KEIN kosmetisches Attribut — Geschwindigkeit
-## IST Schwierigkeit und entsteht ausschließlich hieraus. REFERENCE_SPEED zu ändern verschiebt
-## die gesamte Skala für alle Aufgaben gleichzeitig; mit Vorsicht behandeln.
+## Tempo bei `t - c` = 0; ändern verschiebt die Schwierigkeit aller Aufgaben.
 const REFERENCE_SPEED := 35.0
-## Empfindlichkeit: wie stark das Netto-Können (c - t) das Tempo auslenkt. Klein halten,
-## da jede Tempo-Änderung eine Schwierigkeits-Änderung ist.
+## Wie stark `t - c` das Tempo auslenkt.
 const SPEED_SENSITIVITY := 0.3
 ## Obergrenze der difficulty-Skala für die Normalisierung auf 0..1.
 const DIFFICULTY_MAX := 5
 
-## Referenz-Punktzahl bei neutraler Schwierigkeit (Netto-Können e = 0). Wie beim Tempo
-## ist die Schwierigkeit die einzige Quelle — es gibt keine per-Regel-Punkte mehr.
+## Punkte bei `t - c` = 0.
 const REFERENCE_REWARD := 12
-## Empfindlichkeit: wie stark die Schwierigkeit (t - c) die Punkte auslenkt.
+## Wie stark `t - c` die Punkte auslenkt.
 const REWARD_SENSITIVITY := 0.6
-## Anteil der Punkte, den ein Monster mit schon gemeisterter Aufgabe bringt — und damit
-## auch des Golds, das aus den Punkten kommt (ChestReward). Dieselbe Absicht wie
-## Experience.MASTERED_XP: Beute kommt aus dem Lernen, nicht aus dem Wiederholen. Nicht 0,
-## denn die Wiederholungen wählt der Scheduler, nicht der Spieler.
+## Anteil der Punkte für ein Monster mit gemeisterter Aufgabe, wie Experience.MASTERED_XP.
 const MASTERED_REWARD_FACTOR := 0.1
 
-## Schadensfaktor der ersten Wellen (Welle 1, 2): zum Hineinfinden weniger als
-## `base_damage`, das genau in Welle 3 gilt. Danach wächst er je Welle um
-## DAMAGE_GROWTH_PER_WAVE, ohne Deckel (Issue #51).
+## Schadensfaktor der Wellen 1 und 2; ab Welle 3 gilt `base_damage` und wächst je Welle um
+## DAMAGE_GROWTH_PER_WAVE, ohne Deckel.
 const EARLY_WAVE_DAMAGE: Array[float] = [0.6, 0.8]
 const DAMAGE_GROWTH_PER_WAVE := 0.15
 
-## Die Gruppen der Auswahl (siehe ordered()), so auch in der Spur. Sie benennen nur, woher
-## ein Kandidat kommt; gewählt wird nach seinem Gewicht (selection_weight()).
+## Die Gruppen der Auswahl, so auch in der Spur; gewählt wird nach Gewicht.
 const GROUP_DUE := "due"
 const GROUP_NEW := "new"
 const GROUP_REST := "rest"
@@ -58,22 +34,16 @@ const GROUP_REST := "rest"
 ## Gewicht eines neuen Worts. Ein unsicheres, fälliges Wort (c 0.5) liegt bei 0.5–1, ein
 ## gemeistertes bei 0.05–0.3 (selection_weight()).
 const NEW_WEIGHT := 1.0
-## So viel des Gesamtgewichts haben die neuen Wörter mindestens, solange es welche gibt —
-## sonst verdrängen viele fällige Wiederholungen eine frische Lektion (Issue #18).
+## Mindestanteil der neuen Wörter am Gesamtgewicht, solange es welche gibt.
 const NEW_SHARE := 0.3
-## Bedarf (1 − c) einer gemeisterten Aufgabe sinkt nicht unter diesen Wert: sie kommt
-## seltener, aber nicht nie.
+## Untergrenze des Bedarfs (1 − c): Gemeistertes kommt selten, aber nicht nie.
 const NEED_FLOOR := 0.05
-## Dringlichkeit ist der Anteil des Intervalls, der verstrichen ist — gedeckelt, damit ein
-## lange liegengebliebenes Wort nicht alles andere verdrängt.
+## Obergrenze der Dringlichkeit (verstrichener Anteil des Intervalls).
 const URGENCY_CAP := 2.0
 
-## Globaler Tempo-Multiplikator, vom WaveRunner aus der gewählten Wellen-Schwierigkeit gesetzt
-## (1.0 = neutral, >1 schneller/schwerer, <1 langsamer/leichter). Ist selbst eine
-## Schwierigkeits-Quelle und wirkt daher multiplikativ auf das Referenztempo.
+## Wellenfaktor auf Tempo und Punkte, nicht auf Erfahrung (1.0 = neutral, >1 schwerer).
 var speed_scale: float = 1.0
-## Schadens-Multiplikator, vom WaveRunner je Welle aus wave_damage_scale() gesetzt. Trifft
-## nur den Schaden — Tempo, Punkte und Erfahrung bleiben bei `t - c`.
+## Schadens-Multiplikator der Welle (wave_damage_scale()); trifft nur den Schaden.
 var damage_scale: float = 1.0
 
 
@@ -84,12 +54,8 @@ static func wave_damage_scale(wave_number: int) -> float:
 		return EARLY_WAVE_DAMAGE[n - 1]
 	return 1.0 + DAMAGE_GROWTH_PER_WAVE * (n - EARLY_WAVE_DAMAGE.size() - 1)
 
-## Start-Confidence (Prior) für eine noch ungesehene Aufgabe, abgeleitet aus den
-## deskriptiven Lexem-Metadaten `cefr` / `frequency_band`. Das bricht NICHT das Prinzip
-## „Schwierigkeit = Projektion der Confidence": difficulty bleibt an der task_definition,
-## der Prior ist nur eine bessere Anfangsschätzung des Lernstands als der Pauschal-Default.
-## Schwerere/seltenere Wörter starten unsicherer -> langsameres Monster, mehr Punkte.
-## Fehlen beide Felder, bleibt es beim neutralen PlayerProgress.DEFAULT_CONFIDENCE.
+## Start-Confidence (Prior) einer ungesehenen Aufgabe aus `cefr` / `frequency_band` des
+## Lexems; ohne beide gilt PlayerProgress.DEFAULT_CONFIDENCE.
 const CEFR_PRIOR := {
 	"A1": 0.50, "A2": 0.40, "B1": 0.30, "B2": 0.20, "C1": 0.12, "C2": 0.08,
 }
@@ -98,8 +64,7 @@ const FREQUENCY_PRIOR := {
 }
 
 
-## Mittelt die vorhandenen Prior-Signale (CEFR, Frequenzband) eines Lexems; ohne
-## Signal -> neutraler Default. Ergebnis in 0..1.
+## Mittelt die Prior-Signale eines Lexems, 0..1.
 func _confidence_prior(source: Dictionary) -> float:
 	var priors: Array = []
 	var cefr := str(source.get("cefr", "")).to_upper()
@@ -116,28 +81,17 @@ func _confidence_prior(source: Dictionary) -> float:
 	return sum / float(priors.size())
 
 
-## Start-Confidence einer Formaufgabe, deren Form aus der Regel folgt — ein Verb ohne
-## `irregular`, dessen Vergangenheit auf *-ed* gebildet ist (ADR 0009, Nachtrag). Wer die
-## Regel kann, kann jedes solche Verb; die Aufgabe soll ein-, zweimal kommen und dann als
-## gemeistert hinten stehen, statt die unregelmäßigen zu verdrängen. Gemessen an der
-## Fortschreibung in PlayerProgress.record (10–40 % des Abstands zu 1 je Treffer, nach
-## Abstand; Meisterung ab 0.8): 0.65 ist nach zwei Treffern gemeistert, 0.6 nach drei in
-## einer Sitzung oder zwei an zwei Tagen. Ein Fehler halbiert die Confidence wie bei jeder
-## Aufgabe.
+## Start-Confidence einer Formaufgabe, deren Form aus der Regel folgt (Verb ohne
+## `irregular`, Vergangenheit auf -ed; ADR 0009): gemeistert nach zwei Treffern.
 const RULE_FORM_PRIOR := 0.65
-## Regel mit Schreibfalle: verdoppelter Konsonant (preferred, snorkelled) oder y → ied
-## (bullied). Regelmäßig, aber nicht geschenkt.
+## Regel mit Schreibfalle: verdoppelter Konsonant oder y → ied.
 const SPELLING_FORM_PRIOR := 0.6
-## Formen, bei denen eine Sprache „regelmäßig" kennt (ADR 0009, Punkt 2). Latein und
-## Französisch fehlen: dort gibt es die Formaufgaben nur bei unregelmäßigen Verben, oder
-## die Regel hängt an der Konjugation, die das Lexem nicht trägt.
+## Formen, bei denen eine Sprache „regelmäßig“ kennt (ADR 0009, Punkt 2).
 const RULE_FORMS := {"en": ["past_simple", "past_participle"]}
 
 
-## Wie eine englische Vergangenheitsform zu ihrer Grundform steht: "plain" (settled,
-## discussed), "spelling" (preferred, bullied) oder "" (nicht nach der Regel — took, oder
-## Daten, die nicht passen). Bei mehreren Wörtern („bump into") zählt das erste, der Rest
-## muss gleich bleiben.
+## Wie eine englische Vergangenheitsform zu ihrer Grundform steht: "plain", "spelling"
+## (Schreibfalle) oder "" (nicht nach der Regel). Bei mehreren Wörtern zählt das erste.
 static func rule_form_kind(base: String, value: String) -> String:
 	var parts := base.split(" ", false, 1)
 	if parts.is_empty():
@@ -156,8 +110,7 @@ static func rule_form_kind(base: String, value: String) -> String:
 	return ""
 
 
-## Prior einer Formaufgabe nach der Regel (siehe RULE_FORM_PRIOR), oder -1, wenn die
-## Aufgabe keine solche ist — dann gilt der Prior des Lexems.
+## Prior einer Formaufgabe nach der Regel (RULE_FORM_PRIOR), sonst -1.
 func _rule_form_prior(definition: Dictionary, source: Dictionary) -> float:
 	var form_type := str(definition.get("requires_form", ""))
 	if not form_type in RULE_FORMS.get(Lexeme.language(source), []):
@@ -182,11 +135,8 @@ func _rule_form_prior(definition: Dictionary, source: Dictionary) -> float:
 	return SPELLING_FORM_PRIOR if spelling else RULE_FORM_PRIOR
 
 
-## Aufgaben-Pool aus der Auswahl des aktiven Profils (Session-Setup). EINE Quelle für
-## beide Fragen: welche Aufgaben der Kampf spawnt (WaveRunner._generate_wave) und ob
-## überhaupt etwas spielbar ist (has_playable, Menü-Knöpfe). Getrennte Pools hier hießen:
-## der Knopf gibt frei, wo die Welle nichts findet — oder umgekehrt.
-## Semantik der LEEREN Auswahl: keine Einschränkung (siehe _candidates()).
+## Aufgaben-Pool aus der Auswahl des Profils (Expertenmodus); leer schränkt nicht ein. Der
+## Kampf liest seinen Pool über RunRequest.task_pool().
 static func pool_from_settings() -> Dictionary:
 	return {
 		"task_types": Array(UserSettings.selected_task_types()),
@@ -196,21 +146,11 @@ static func pool_from_settings() -> Dictionary:
 	}
 
 
-## Wie viele Kandidaten die Stichprobe in has_playable() höchstens erzeugt, bevor sie
-## den ganzen Pool durchsieht. Der volle Kandidatensatz kostet bei ~2000 Lexemen rund
-## 300 ms — zu viel für einen Screen, der nach jeder Filteränderung neu fragt.
+## Stichprobe in has_playable() vor dem ganzen Pool (~300 ms bei ~2000 Lexemen).
 const PROBE_CANDIDATES := 64
 
 
-## Gibt der Pool überhaupt eine auflösbare Aufgabe her? Hält beim ersten Treffer an.
-##
-## Ohne das hängt der Kampf: ein Spawn ohne Plan zählt nicht mit (_spawned), das
-## Wellenende tritt nie ein und aus dem leeren Schlachtfeld führt kein Weg zurück.
-## Deshalb fragen die Menüs VOR dem Kampf und der WaveRunner vor dem Wellenstart.
-##
-## Zwei Durchläufe: eine Stichprobe genügt praktisch immer und ist in Millisekunden
-## fertig; erst wenn davon KEIN Kandidat auflösbar ist, wird der ganze Pool durchgesehen.
-## Ein „nein" bleibt damit ein belastbares „nichts Spielbares", kein Stichprobenglück.
+## Gibt der Pool eine auflösbare Aufgabe her? Ein „nein“ prüft den ganzen Pool.
 func has_playable(pool: Dictionary) -> bool:
 	for limit in [PROBE_CANDIDATES, 0]:
 		for candidate in _candidates(pool, limit):
@@ -219,17 +159,9 @@ func has_playable(pool: Dictionary) -> bool:
 	return false
 
 
-## `exclude_sources` (als Set: Lexem-id -> true) verhindert, dass ein Grundwort
-## gewählt wird, das bereits als Monster auf dem Feld steht (Aufrufer: WaveRunner).
-## `shown_sources` (Lexem-id -> laufende Spawn-Nummer der letzten Zeigung) sind die in
-## dieser Welle schon gezeigten Grundwörter; sie kommen erst dran, wenn der Rest des
-## Pools erschöpft ist (siehe ordered()).
-##
-## Der Plan trägt in `task["pick"]` den Grund der Wahl (siehe pick_reason()); die Spur
-## schreibt ihn in jede spawn-Zeile.
-##
-## `order` (Grundwort-Ids) ist die Playlist einer Testliste (TestPlaylist.wave_order): dann
-## kommt das Wort nach seinem Platz darin, nicht nach Fälligkeit.
+## `exclude_sources` (Lexem-id -> true): Grundwörter auf dem Feld. `shown_sources` (Lexem-id
+## -> Spawn-Nummer): in dieser Welle gezeigte, sie kommen nach dem Rest. `order`: Playlist
+## einer Testliste (TestPlaylist.wave_order). Der Grund der Wahl steht in `task["pick"]`.
 func pick(pool: Dictionary, exclude_sources: Dictionary = {}, shown_sources: Dictionary = {},
 		order: Array = []) -> Dictionary:
 	var candidates := listing(pool, shown_sources)
@@ -241,26 +173,21 @@ func pick(pool: Dictionary, exclude_sources: Dictionary = {}, shown_sources: Dic
 	return plan
 
 
-## Alle Kandidaten des Pools, ungeordnet — für die Playlist einer Testliste, die daraus
-## die Grundwörter und ihre Aufgaben nimmt.
+## Alle Kandidaten des Pools, ungeordnet, für die Playlist einer Testliste.
 func candidates(pool: Dictionary) -> Array:
 	return _candidates(pool)
 
 
 ## Die Kandidaten des Pools in der Reihenfolge, in der pick() sie probiert, jeder mit
-## `group`, `repeat` und `weight` (siehe ordered()). `now`: Bezugszeit (unix, -1 = jetzt) —
-## die Werkbank fragt mit verstellter Uhr.
+## `group`, `repeat` und `weight` (siehe ordered()). `now`: Bezugszeit (unix, -1 = jetzt).
 func listing(pool: Dictionary, shown_sources: Dictionary, now := -1) -> Array:
 	if now < 0:
 		now = int(Time.get_unix_time_from_system())
 	return ordered(_candidates(pool), PlayerProgress.state_of, shown_sources, now)
 
 
-## Wählt aus einer listing() den ersten spielbaren Kandidaten.
-##
-## Der Reihe nach durchprobieren, bis eine Aufgabe auflösbar ist. Erster Durchlauf meidet
-## bereits sichtbare Grundwörter; findet sich damit nichts Spielbares, lässt der zweite
-## Durchlauf die Sperre fallen (lieber ein Duplikat als eine hängende Welle).
+## Wählt aus einer listing() den ersten spielbaren Kandidaten. Findet sich ohne die
+## Grundwörter auf dem Feld nichts, fällt die Sperre.
 func pick_with(ordered_candidates: Array, exclude_sources: Dictionary = {}) -> Dictionary:
 	for respect_exclude in [true, false]:
 		for i in ordered_candidates.size():
@@ -275,12 +202,10 @@ func pick_with(ordered_candidates: Array, exclude_sources: Dictionary = {}) -> D
 	return {}
 
 
-## Warum der Kandidat an Stelle `index` gewählt wurde — für die Spur, das Debug-Panel und
-## die Werkbank. Nur Ids und Zahlen, keine Wörter: die stehen schon in der spawn-Zeile.
+## Warum der Kandidat an Stelle `index` gewählt wurde. Nur Ids und Zahlen, keine Wörter.
 ##   group:    "due" | "new" | "rest" (siehe ordered())
 ##   repeat:   das Wort war in dieser Welle schon dran (alle anderen sind verbraucht)
-##   pos:      Stelle in der Reihenfolge (0 = vorn); davor lagen Wörter auf dem Feld
-##             oder Unauflösbares
+##   pos:      Stelle in der Reihenfolge (0 = vorn)
 ##   pool:     Zahl der Kandidaten
 ##   counts:   je Gruppe, wie viele noch nicht gezeigte es gab, dazu `repeat`
 ##   fallback: die Sperre gegen Wörter auf dem Feld musste fallen
@@ -314,8 +239,7 @@ static func pick_reason(candidates: Array, index: int, fallback: bool, net: floa
 const GROUP_LABELS := {"due": "fällig", "new": "neu", "rest": "Rest"}
 
 
-## Der Grund als eine Zeile, z. B. „fällig (seit 2 T) · Platz 1 von 34 · fällig 3 / neu 12
-## / Rest 19 / gezeigt 0 · t−c +0.25". `now`: Bezugszeit für die Fälligkeit (unix).
+## Der Grund als eine Zeile. `now`: Bezugszeit für die Fälligkeit (unix).
 static func describe_reason(why: Dictionary, now: int) -> String:
 	if why.is_empty():
 		return ""
@@ -359,29 +283,11 @@ static func span_text(seconds: int) -> String:
 	return "%d T" % roundi(span / 86400.0)
 
 
-## Die Auswahlreihenfolge von pick(), statisch und ohne Autoload prüfbar (ADR 0018).
-##
-## Oberste Stufe ist „in dieser Welle schon gezeigt" (Issue #24): erst alle Kandidaten,
-## deren Grundwort noch nicht dran war, danach die Wiederholungen, geordnet nach Grundwort —
-## das am längsten nicht gezeigte (kleinste Nummer in `shown`) zuerst. Die Sperre greift am
-## Grundwort, nicht am learnable_id — sonst käme dasselbe Wort über eine andere Richtung
-## oder Aufgabenart sofort wieder.
-##
-## Innerhalb einer Stufe wird gewichtet gezogen, ohne Zurücklegen (selection_weight()): ein
-## Kandidat mit doppeltem Gewicht steht doppelt so oft vor dem anderen. Bis 0.26 galt hart
-## fällig → neu → Rest; damit stand ein frisch gemeistertes, morgen fälliges Wort vor jedem
-## neuen, und ein gemeistertes, nicht fälliges kam praktisch nie (Issue #18).
-##
-## `state`: learnable_id -> {} (nie beantwortet) oder { confidence, last_seen, due_at }
-## (PlayerProgress.state_of). `now`: Bezugszeit (unix).
-##
-## Jeder Kandidat bekommt dabei `group` ("due" | "new" | "rest"), `repeat` (Wort in dieser
-## Welle schon gezeigt), `last_seen` (Grundwort zuletzt beantwortet), `due_at` und `weight` —
-## der Grund der Wahl kommt so aus derselben Rechnung und nicht aus einer zweiten Regel
-## daneben.
+## Die Auswahlreihenfolge von pick() (ADR 0018). `state`: learnable_id -> {} oder
+## PlayerProgress.state_of. `now`: Bezugszeit (unix). Setzt an jedem Kandidaten `group`,
+## `repeat`, `last_seen` (des Grundworts), `due_at` und `weight`.
 static func ordered(candidates: Array, state: Callable, shown: Dictionary, now: int) -> Array:
-	# Am Grundwort, wie die Sperre: „convict" kam eben in der einen Richtung, also auch
-	# in der anderen nicht gleich wieder.
+	# `last_seen` am Grundwort, über alle Richtungen und Aufgabenarten.
 	var states := {}
 	var word_seen := {}
 	for c in candidates:
@@ -421,13 +327,8 @@ static func ordered(candidates: Array, state: Callable, shown: Dictionary, now: 
 ## Gewicht eines Kandidaten: Bedarf × Dringlichkeit, ein neues Wort NEW_WEIGHT.
 ##
 ##   Bedarf        1 − c, mindestens NEED_FLOOR — gemeistert heißt selten, nicht nie.
-##   Dringlichkeit verstrichener Anteil des Intervalls (1 = gerade fällig), bis URGENCY_CAP.
-##                 Gemessen ab der letzten Antwort auf das GRUNDWORT (`word_seen`): die andere
-##                 Richtung eines eben gezeigten Worts wartet, auch wenn sie fällig ist.
-##
-## Ein Fehler hebt beides: die Confidence halbiert sich, und die Aufgabe ist nach zehn Minuten
-## wieder fällig (SpacedRepetition.RELEARN_SECONDS) — zwanzig Minuten später wiegt sie mehr
-## als ein neues Wort.
+##   Dringlichkeit verstrichener Anteil des Intervalls (1 = gerade fällig), bis URGENCY_CAP,
+##                 gemessen ab der letzten Antwort auf das Grundwort (`word_seen`).
 static func selection_weight(state: Dictionary, word_seen: int, now: int) -> float:
 	if state.is_empty():
 		return NEW_WEIGHT
@@ -460,8 +361,7 @@ static func _with_new_share(candidates: Array) -> Array:
 
 
 ## Gewichtete Zufallsreihenfolge ohne Zurücklegen (Efraimidis–Spirakis): Schlüssel
-## ln(u) / w, der größte zuerst. Ein Gewicht 0 steht hinten, fällt aber nicht weg — die
-## Rückfallebene in pick() braucht jeden Kandidaten.
+## ln(u) / w, der größte zuerst. Ein Gewicht 0 steht hinten, fällt aber nicht weg.
 static func weighted_order(candidates: Array) -> Array:
 	var keyed: Array = []
 	for c in candidates:
@@ -471,12 +371,8 @@ static func weighted_order(candidates: Array) -> Array:
 	return keyed.map(func(k): return k[1])
 
 
-## Erzeugt alle spielbaren Kandidaten (Definition × Lexeme [× Form/Relation]) für den
-## Wave-Pool. Jeder Kandidat kennt bereits seinen learnable_id für die Bucket-Zuordnung.
-##
-## `limit` > 0 bricht ab, sobald so viele Kandidaten zusammen sind — nur für die
-## Stichprobe in has_playable(). pick() braucht ALLE: die Auswahl fällt über die
-## Fälligkeits-Buckets, und eine abgeschnittene Menge verzerrte sie.
+## Alle spielbaren Kandidaten (Definition × Lexem [× Form/Relation]) mit learnable_id.
+## `limit` > 0 schneidet ab, nur für die Stichprobe in has_playable().
 func _candidates(pool: Dictionary, limit: int = 0) -> Array:
 	var task_types: Array = pool.get("task_types", [])
 	var tags: Array = pool.get("tags", [])
@@ -488,9 +384,8 @@ func _candidates(pool: Dictionary, limit: int = 0) -> Array:
 	_resolver.scope = scope
 	if not lexeme_types.is_empty():
 		lexemes = lexemes.filter(func(lx): return str(lx.get("type", "")) in lexeme_types)
-	# Ein Wort, das nur über einen Bonus dabei ist, bringt nur seine Bonus-Formen mit — keine
-	# Übersetzung, keine andere Form (ADR 0012): der Bonus übt das Perfekt, nicht Lektion 1.
-	# Ein Wort aus einem Wort-Bonus (ADR 0013) ist dagegen selbst der Stoff des Bonus.
+	# Ein Wort, das nur über einen Form-Bonus dabei ist, bringt nur seine Bonus-Formen mit
+	# (ADR 0012); eins aus einem Wort-Bonus (ADR 0013) alle Aufgaben.
 	var bonus_only := {}
 	if not scope.is_empty():
 		var own := {}
@@ -521,16 +416,9 @@ func _candidates(pool: Dictionary, limit: int = 0) -> Array:
 	return result
 
 
-## Passt eine task_definition zu den Filtern des Pools? Statisch und ohne Autoload, damit
-## die Regel für sich prüfbar bleibt — dieselbe Begründung wie bei
-## PlayerProgress.mastered_lexemes_in und StatsScreen.unit_rows.
-##
-## Leere `task_types` und leere `direction` heißen „keine Einschränkung".
-##
-## Die Wellen-Schwierigkeit filtert hier bewusst NICHT: ein Riegel über die `difficulty`
-## der Definition nahm auf niedrigen Stufen ganze Aufgabenarten (Formen, Relationen) aus
-## dem Pool, ohne dass der Spieler es sehen konnte. Die `difficulty` bleibt das `t` in
-## `t - c` und wirkt nur über Tempo, Punkte und Erfahrung.
+## Passt eine task_definition zu den Filtern des Pools? Leere `task_types` und leere
+## `direction` heißen „keine Einschränkung“. Nach `difficulty` wird nicht gefiltert
+## (docs/ARCHITECTURE.md, „Ein Filter nach Schwierigkeit“).
 static func definition_allowed(definition: Dictionary, task_types: Array,
 		direction: String) -> bool:
 	var task_type := str(definition.get("task_type", ""))
@@ -541,11 +429,8 @@ static func definition_allowed(definition: Dictionary, task_types: Array,
 	return true
 
 
-## Verbindet eine Definition mit allen kompatiblen Lexemen und hängt die Kandidaten an.
-## Relations-/Formaufgaben expandieren über die tatsächlich vorhandenen Relationen/Formen,
-## sodass nie eine unauflösbare Instanz entsteht.
-## `bonus_only` (Lexem-Id -> true) nennt die Wörter, die nur über einen Bonus dabei sind:
-## von ihnen kommen nur die Formaufgaben, deren Form in einem Bonus steht.
+## Hängt die Kandidaten einer Definition an. Von Wörtern in `bonus_only` (Lexem-Id -> true)
+## kommen nur ihre Bonus-Formaufgaben.
 func _expand(definition: Dictionary, lexemes: Array, result: Array, limit: int = 0,
 		scope: Array = [], bonus_only: Dictionary = {}) -> void:
 	for source in lexemes:
@@ -570,27 +455,10 @@ func _bonus_task(definition: Dictionary, source: Dictionary, scope: Array) -> bo
 	return false
 
 
-## Die `extra`-Bausteine, mit denen eine Definition auf EIN Lexem passt — eine leere
-## Liste, wenn sie gar nicht passt. Relations-/Formaufgaben fächern über die tatsächlich
-## vorhandenen Relationen/Formen auf, sodass nie eine unauflösbare Instanz entsteht.
-##
-## Die eine Stelle, die sagt, welche Aufgaben es zu einem Wort gibt: der Wave-Pool
-## (_expand) und die Statistik (learnables_of) fragen dieselbe.
-##
-## `excluded_task_types` am Lexem nimmt einzelne Aufgabenarten heraus — für ein Wort, das
-## im Buch keinen eigenen Eintrag hat und dessen deutschen Prompt sich ein Nachbar teilt,
-## ohne dass das Buch eine Unterscheidung anbietet. Es bleibt im Bestand (en→de-Lesen,
-## Relationen), stellt aber keine Ratefrage. Weil beide Seiten durch dieses Nadelöhr gehen,
-## verschwindet es damit auch aus der Aufgabenzahl der Statistik — und
-## `PlayerProgress.masterable()` nimmt es aus dem NENNER des Fortschrittsbalkens, sonst
-## stünde die Unit dauerhaft bei „N-1 von N".
-##
-## Eine Definition gilt nur für Lexeme ihrer Sprache (`language`, ohne Feld englisch):
-## sonst stellte die englische Übersetzung ein lateinisches Wort und umgekehrt.
-##
-## `scope` lässt nur Formen zu, die dort schon gelehrt sind und deren Bonus, wenn sie in
-## einem stehen, dort mitspielt (ContentRegistry.form_task_in_scope); leer, wie für die
-## Statistik, zählt jede Form.
+## Die `extra`-Bausteine, mit denen eine Definition auf ein Lexem passt, leer, wenn nicht.
+## Die eine Stelle, die sagt, welche Aufgaben es zu einem Wort gibt; beachtet
+## `excluded_task_types` (docs/ADDING_CONTENT.md) und die Sprache (ohne Feld englisch).
+## `scope` filtert Formen über ContentRegistry.form_task_in_scope, leer zählt jede.
 func _instances(definition: Dictionary, source: Dictionary, scope: Array = []) -> Array:
 	if Lexeme.language(definition) != Lexeme.language(source):
 		return []
@@ -615,12 +483,7 @@ func _instances(definition: Dictionary, source: Dictionary, scope: Array = []) -
 	return [{}]
 
 
-## Alle learnable_ids, die es zu einem Lexem überhaupt gibt — Definitionen × vorhandene
-## Formen/Relationen, also das, was der Wave-Pool daraus auch spawnen würde.
-##
-## Für die Statistik: dort steht neben einem Wort, wie viele Aufgaben es dazu gibt und
-## wie viele davon sitzen. Aus dem Katalog gerechnet und nicht aus dem Lernstand, sonst
-## wäre eine noch nie gespawnte Aufgabe für die Anzeige nicht vorhanden.
+## Alle learnable_ids eines Lexems, aus dem Katalog gerechnet.
 func learnables_of(lexeme: Dictionary) -> Array:
 	var ids: Array = []
 	for definition in ContentRegistry.task_definitions.values():
@@ -632,8 +495,7 @@ func learnables_of(lexeme: Dictionary) -> Array:
 	return ids
 
 
-## Normalisiert die Aufgaben-Grundschwierigkeit (task_definition.difficulty,
-## 1..DIFFICULTY_MAX) auf 0..1 — damit sie mit der Confidence vergleichbar ist.
+## task_definition.difficulty (1..DIFFICULTY_MAX) auf 0..1, wie die Confidence.
 func _difficulty_norm(difficulty: int) -> float:
 	return clampf(float(difficulty - 1) / float(DIFFICULTY_MAX - 1), 0.0, 1.0)
 
@@ -667,47 +529,31 @@ func _build_plan(candidate: Dictionary) -> Dictionary:
 		push_warning("WaveGenerator: unbekannter monster_type '%s'" % rule.get("monster_type", ""))
 		return {}
 
-	# Schwierigkeit dieses konkreten Monsters, aus zwei Quellen (+ Wellenfaktor):
-	#   t = Grundschwierigkeit der Aufgaben-Art (task_definition.difficulty, 0..1)
-	#   c = Confidence des Spielers für diese konkrete Aufgabe (0..1)
-	#   e = c - t   (Netto-Können; e<0 = für den Spieler schwer, e>0 = sicher beherrscht)
+	# t = Grundschwierigkeit der Aufgaben-Art (0..1), c = Confidence für diese Aufgabe (0..1).
 	var t := _difficulty_norm(int(task.get("difficulty", 1)))
-	# Prior aus den Lexem-Metadaten: gilt als Confidence, solange die Aufgabe ungesehen ist,
-	# und als Start-Confidence des Records beim ersten echten Kontakt (siehe WaveRunner).
-	# Eine Form nach der Regel hat ihren eigenen, höheren Prior (siehe RULE_FORM_PRIOR).
+	# Ungesehen gilt der Prior.
 	var prior := _rule_form_prior(candidate["definition"], candidate["source"])
 	if prior < 0.0:
 		prior = _confidence_prior(candidate["source"])
 	task["initial_confidence"] = prior
 	var c := PlayerProgress.confidence(task["learnable_id"], prior)
 
-	# Netto-Schwierigkeit dieses Monsters: t - c, also -1 (sicher beherrscht) bis +1
-	# (harte Aufgabe, unsicherer Spieler). Sie ist die EINE Größe, aus der Tempo, Punkte
-	# und Erfahrung entstehen — jedes weitere Schwierigkeitsmaß daneben liefe auseinander,
-	# sobald eines von beiden justiert wird.
+	# Netto-Schwierigkeit, -1 (sicher beherrscht) bis +1 (hart und unsicher): das einzige Maß
+	# für Tempo, Punkte und Erfahrung.
 	var net := t - c
 
-	# Tempo = sichtbare Projektion der Schwierigkeit: schwer -> langsamer (Zeit zum
-	# Abrufen), nur wenn die Confidence die Grundschwierigkeit übersteigt -> schneller.
+	# Schwer heißt langsamer (Zeit zum Abrufen), Tempo höchstens ±30 %.
 	var speed := REFERENCE_SPEED * clampf(1.0 - SPEED_SENSITIVITY * net, 0.7, 1.3) * speed_scale
 
-	# Punkte skalieren mit derselben Schwierigkeit, aber invers zum Tempo: je schwerer
-	# das Monster (hohe Grundschwierigkeit, niedrige Confidence, härtere Welle), desto
-	# mehr Punkte. So lohnt sich das Abrufen unsicherer/harter Aufgaben.
-	# Eine schon gemeisterte Aufgabe bringt nur einen Bruchteil (MASTERED_REWARD_FACTOR),
-	# geprüft beim Spawn wie die Erfahrung unten.
+	# Punkte invers zum Tempo: schwer heißt mehr Punkte (0,4- bis 1,6-fach).
 	var mastered := c >= PlayerProgress.MASTERY_CONFIDENCE
 	var reward_scale := clampf(1.0 + REWARD_SENSITIVITY * net, 0.4, 1.6) * speed_scale
 	if mastered:
 		reward_scale *= MASTERED_REWARD_FACTOR
 	var reward := maxi(1, int(round(REFERENCE_REWARD * reward_scale)))
 
-	# Erfahrung aus derselben Schwierigkeit, aber OHNE `speed_scale`: XP ist
-	# Lernfortschritt und keine Beute — eine härtere Welle macht das einzelne Wort nicht
-	# schwerer, sie bringt nur mehr Monster und mehr Punkte. Eine schon gemeisterte
-	# Aufgabe bringt fast nichts (siehe Experience.MASTERED_XP); geprüft wird das HIER,
-	# beim Spawn, denn nach dem Treffer hat PlayerProgress die Confidence bereits
-	# angehoben — das Monster, das die Meisterung bringt, zählt noch voll.
+	# Erfahrung ohne `speed_scale`; `net` auf 0..1 abgebildet. Gemeistert beim Spawn geprüft,
+	# damit das Monster, das die Meisterung bringt, noch voll zählt.
 	var xp := Experience.for_monster(0.5 + 0.5 * net, mastered)
 	return {
 		"task": task,
@@ -717,6 +563,6 @@ func _build_plan(candidate: Dictionary) -> Dictionary:
 		"reward": reward,
 		"xp": xp,
 		"net": net,
-		# Dasselbe Urteil wie bei Punkten und Erfahrung: das Monster zeigt es (Monster.mastered).
+		# Dasselbe Urteil wie bei Punkten und Erfahrung (Monster.mastered).
 		"mastered": mastered,
 	}

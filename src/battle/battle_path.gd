@@ -1,36 +1,30 @@
 class_name BattlePath
 extends RefCounted
-## Der Weg über das Schlachtfeld: vom hinteren Bildrand in sanften Bögen über die Bahn bis
-## ins Festungstor. Er ist Bildgestaltung, kein Spielfeld: die Monster laufen über die ganze
-## Bahn, der Weg führt nur das Auge zur Festung. Deshalb hat jeder Kampf einen.
-##
-## WIE er aussieht (Trampelpfad, Weg, Bohlenweg, Pflaster) und welche Farbe er hat, sagt das
-## Thema (`BattleTheme.path`, `path_color`); WO er liegt, steht hier. Gezeichnet wird er im
-## Bodenshader (battle_ground.gdshader), der dieselbe Mittellinie rechnet wie `centre_x` —
-## die Form steht deshalb zweimal, die Zahlen nur hier (`apply_to`). Die Streudeko fragt
-## `blocks`, damit kein Fels mitten auf dem Weg liegt.
+## Der Weg über das Schlachtfeld bis ins Festungstor, reine Bildgestaltung. Art und Farbe
+## sagt das Thema (`BattleTheme.path`). Der Bodenshader rechnet dieselbe Mittellinie wie
+## `centre_x`, die Zahlen bekommt er über `apply_to`.
 
 ## Die Arten in der Reihenfolge, in der der Shader sie nummeriert (path_kind), mit halber
-## Breite in Metern. Pflaster und Weg sind breiter, ein Trampelpfad schmal.
+## Breite in Metern.
 const KINDS := {"trail": 1.6, "road": 2.0, "boardwalk": 1.5, "cobble": 2.2}
-## Detailtextur je Art (assets/textures/ground/), wenn das Thema keine eigene nennt. Bohlenweg
-## und Pflaster fehlen: deren Bretter und Steine zeichnet der Shader.
+## Detailtextur je Art (assets/textures/ground/); Bohlenweg und Pflaster zeichnet der Shader.
 const TEXTURES := {"trail": "dry_earth", "road": "gravel"}
-## So weit vor dem Tor läuft der Weg gerade auf die Torachse (x = 0) zu, und über diese
-## Länge geht er aus dem Bogen in die Gerade über.
+## So weit vor dem Tor (m) läuft der Weg gerade auf die Torachse (x = 0) zu, und über diese
+## Länge (m) geht er aus dem Bogen in die Gerade über.
 const STRAIGHT := 4.0
 const STRAIGHT_BLEND := 10.0
-## Der Verlauf ist eine Summe aus zwei Bögen und einer Schräge, alle drei je Kampf
-## gewürfelt: so kommt der Weg mal in einem langen Schwung, mal in kurzen Kehren, mal schräg
-## aus einer hinteren Ecke. Ausschlag und Länge des großen und des kleinen Bogens:
+## So weit hinter der Mauerfront (m) gilt der Weg noch als Weg.
+const PAST_GATE := 1.0
+## Der Verlauf ist eine Summe aus zwei je Kampf gewürfelten Bögen und einer Schräge.
+## Ausschlag und Wellenlänge (m) des großen und des kleinen Bogens:
 const BIG_AMPLITUDE := Vector2(1.5, 2.6)
 const BIG_WAVELENGTH := Vector2(34.0, 56.0)
 ## Zusammen höchstens etwa 1 m quer je m längs: darauf baut der Shader, der weitab vom Weg
 ## nichts rechnet (path_at).
 const SMALL_AMPLITUDE := Vector2(0.3, 0.8)
 const SMALL_WAVELENGTH := Vector2(14.0, 22.0)
-## Höchste Schräge (Meter quer je Meter längs), gezählt ab dem Anfang der Geraden vor dem
-## Tor. Mit den Bögen zusammen bleibt der Weg am Spawn in der Bahn (LANE_HALF_WIDTH).
+## Höchste Schräge (m quer je m längs) ab der Geraden vor dem Tor; der Weg bleibt so in
+## der Bahn (LANE_HALF_WIDTH).
 const DRIFT := 0.06
 
 var kind := "trail"
@@ -42,8 +36,8 @@ var drift := 0.0
 var gate_z := 16.5
 
 
-## Ein Weg der Art `path_kind` (BattleTheme.path) mit gewürfeltem Verlauf vor dem Tor bei
-## `gate`. Eine unbekannte Art wird zum Trampelpfad: einen Weg gibt es immer.
+## Ein Weg der Art `path_kind` mit gewürfeltem Verlauf vor dem Tor bei `gate`. Eine
+## unbekannte Art wird zum Trampelpfad.
 static func make(path_kind: String, gate: float, rng: RandomNumberGenerator) -> BattlePath:
 	var path := BattlePath.new()
 	path.kind = path_kind if KINDS.has(path_kind) else "trail"
@@ -76,7 +70,7 @@ func distance(x: float, z: float) -> float:
 
 ## Läge etwas bei (x,z) mit dem Radius `margin` auf dem Weg? Hinter dem Tor gibt es keinen.
 func blocks(x: float, z: float, margin := 0.5) -> bool:
-	return z < gate_z + 1.0 and distance(x, z) < half_width() + margin
+	return z < gate_z + PAST_GATE and distance(x, z) < half_width() + margin
 
 
 ## Form und Art an das Bodenmaterial.

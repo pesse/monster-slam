@@ -1,26 +1,8 @@
 class_name BattleTheme
 extends Resource
-## Wie das Schlachtfeld einer Unit aussieht: Farben von Boden und Licht, dazu die Deko.
-##
-## Die Gebietskarte zeigt je Unit eine eigene Landschaft (Wiese, Wüste, Gletscher …), und
-## der Kampf soll in derselben stehen. Ein Thema ist eine `.tres` unter
-## `assets/battle_themes/`; welche Unit welches Thema hat, steht in `map.json` des Buchs:
-##
-##     { "units": …, "areas": …, "themes": { "2": "desert", … } }
-##
-## Liegt auf einer Karte eine Siedlung zwischen Busch und Strand, bekommt die Unit statt
-## eines Namens ein Wörterbuch: `default` gilt für die ganze Unit, ein Stop-Schlüssel
-## (`t1` … `all`, `boss`) für diesen Stop allein:
-##
-##     "themes": { "1": { "default": "sydney_bush", "t2": "suburb", "boss": "harbour" } }
-##
-## Das Licht gehört dabei der Unit, nicht dem Ort: ein Thema mit `light_from` nimmt
-## Hintergrund, Umgebungslicht und Sonne von dort, so dass eine Unit zu einer Tageszeit
-## spielt, auch wo Boden und Deko wechseln.
-##
-## Die Vorgaben hier SIND das Aussehen ohne Thema (Expertenmodus, Unit ohne Eintrag) —
-## eine `.tres` setzt nur, was abweicht. Gespielt wird davon nichts: Bahn, Hügelform und
-## Festung sind in jedem Thema dieselben, und die Deko steht an denselben Stellen.
+## Wie das Schlachtfeld einer Unit aussieht (docs/ARCHITECTURE.md, „Karte und
+## Laufanfrage“). Die Vorgaben hier sind das Aussehen ohne Thema; eine `.tres` setzt nur,
+## was abweicht. Auf das Spiel wirkt nichts davon.
 
 const DIR := "res://assets/battle_themes"
 ## Die zwei Töne, zwischen denen der Boden fleckig streut.
@@ -28,89 +10,68 @@ const DIR := "res://assets/battle_themes"
 @export var ground_high := Color(0.42, 0.56, 0.28)
 ## Farbe, zu der die Hügel mit der Höhe hin kippen (höchstens zu HILL_MIX_MAX).
 @export var hill := Color(0.44, 0.44, 0.30)
-## Kuppen ab `peak_height` bekommen diese Farbe — Schnee im Gebirge. INF heißt: keine.
+## Kuppen ab `peak_height` (m) bekommen diese Farbe, etwa Schnee. INF heißt: keine.
 @export var peak := Color(0.92, 0.94, 0.98)
 @export var peak_height := INF
-## Flecken in Kuppenfarbe auch in der Ebene: überall, wo der Streuwert `t` darüber liegt
-## (0..1, also 0.7 ≈ ein Drittel der Fläche), mit weichem Rand (PATCH_BLEND). Über 1 heißt:
-## keine — Schnee liegt dann nur auf den Kuppen, und um das flache Feld stünde er als Ring.
+## Flecken in Kuppenfarbe auch in der Ebene, wo der Streuwert `t` (0..1) darüber liegt
+## (0.7 ≈ ein Drittel der Fläche), mit weichem Rand (PATCH_BLEND). Über 1 heißt: keine.
 @export var patches := 2.0
-## Dritter Bodenton in größeren Flecken (trockenes Gras, Erde, Moos) und wie viel Fläche er
-## ungefähr deckt (0 = keine). Gerechnet im Bodenshader, nicht in den Vertexfarben: so
-## bekommen die Flecken einen Rand, der feiner ist als das Raster des Geländes.
+## Dritter Bodenton in größeren Flecken und sein Flächenanteil (0 = keine), im Bodenshader.
 @export var ground_patch := Color(0.5, 0.46, 0.27)
 @export_range(0.0, 1.0) var ground_patch_amount := 0.3
-## Der Weg zum Tor (BattlePath): "trail" (Trampelpfad), "road" (Weg), "boardwalk"
-## (Bohlenweg) oder "cobble" (Pflaster). Einen Weg gibt es immer.
+## Art des Wegs zum Tor (BattlePath).
 @export_enum("trail", "road", "boardwalk", "cobble") var path := "trail"
-## Grundfarbe des Wegs, gelesen wie die Bodenfarben: Erde, Kies, Holz oder Stein.
+## Grundfarbe des Wegs.
 @export var path_color := Color(0.48, 0.38, 0.24)
-## Detailtextur des Wegs, wie `ground_texture` eine graue Kachel unter
-## `assets/textures/ground/`. Leer: die der Wegart (BattlePath.TEXTURES); Bohlenweg und
-## Pflaster haben keine, ihr Muster rechnet der Shader.
+## Detailtextur des Wegs wie `ground_texture`. Leer: die der Wegart (BattlePath.TEXTURES).
 @export var path_texture := ""
 @export_range(0.0, 1.0) var path_texture_strength := 0.9
-## Bewuchs (GroundCover): wie dicht kleine Halmbüschel in der Farbe des Bodens stehen
-## (0 = keine, 1 = karg, 3 = dichte Wiese), welche Blüten darin stehen und in wie vielen
-## Büscheln.
+## Bewuchs (GroundCover): Dichte der Halmbüschel (0 = keine, 1 = karg, 3 = dichte Wiese),
+## Blütenfarben und Anteil der Büschel mit Blüten.
 @export_range(0.0, 4.0) var cover := 1.0
-## Farbe der Büschel. Ohne (Alpha 0) die des Bodens darunter, etwas heller — auf Sand und
-## Stein wäre das weißes Gras, dort steht eine eigene.
+## Farbe der Büschel. Ohne (Alpha 0) die des Bodens darunter, etwas heller.
 @export var cover_color := Color(0.0, 0.0, 0.0, 0.0)
 @export var cover_flowers: Array[Color] = []
 @export_range(0.0, 1.0) var cover_flower_amount := 0.08
-## Sträucher um die Bäume: Farbe und wie viele (0 = keine, 1 = bis zu drei je Baum).
+## Sträucher um die Bäume: Farbe und Anteil von GroundCover.BUSHES_PER_TREE (0 = keine).
 @export var bush_color := Color(0.2, 0.36, 0.13)
 @export_range(0.0, 1.0) var bushes := 0.6
-## Detailtextur des Bodens: Name einer grauen Kachel unter `assets/textures/ground/` (ohne
-## Endung), die die Bodenfarben in der Helligkeit moduliert. Leer, oder die Datei fehlt
-## noch: der Boden bleibt glatt wie ohne Thema. Was dort liegen soll, steht im BRIEF.md.
+## Detailtextur des Bodens: graue Kachel unter `assets/textures/ground/` (ohne Endung).
+## Leer: der Boden bleibt glatt.
 @export var ground_texture := ""
 ## Wie stark die Textur wirkt (0..1).
 @export_range(0.0, 1.0) var ground_texture_strength := 0.6
-## Hintergrund. In der Draufsicht verdeckt ihn der Boden; in der Ich-Sicht ist er der
-## Horizont, und der Nebel nimmt seine Farbe an (WaveRunner._setup_first_person).
+## Hintergrund; in der Ich-Sicht der Horizont, dessen Farbe der Nebel annimmt.
 @export var background := Color(0.09, 0.08, 0.13)
 @export var ambient := Color(0.5, 0.52, 0.62)
 @export var ambient_energy := 1.0
 @export var sun_color := Color(1.0, 1.0, 1.0)
 @export var sun_energy := 1.0
-## Farbkorrektur des ganzen Bilds (Environment.adjustment_*): unter 1 entsättigt — der
-## stärkste Hebel für ein düsteres Gebiet, ohne dass die Monster im Dunkel verschwinden.
-## Die Vorgaben sind die der Kampfszene.
+## Farbkorrektur des ganzen Bilds (Environment.adjustment_*).
 @export_range(0.0, 2.0) var saturation := 1.08
 @export_range(0.5, 2.0) var contrast := 1.08
 @export_range(0.5, 1.5) var brightness := 1.0
-## Dunst über dem Feld, auch in der Draufsicht: Dichte des Nebels (0 = klare Luft, 0.02
-## ≈ Rauch über einer Stadt) und seine Farbe — ohne (Alpha 0) die des Hintergrunds. Er
-## liegt am Boden dichter als oben (`HAZE_HEIGHT`): Türme und Monster ragen heraus. In der
-## Ich-Sicht gilt deren eigener Nebel.
+## Dunst der Draufsicht: Dichte (0 = klare Luft, 0.02 ≈ Rauch über einer Stadt) und Farbe,
+## ohne (Alpha 0) die des Hintergrunds. Am Boden dichter (`HAZE_HEIGHT`).
 @export_range(0.0, 0.1) var haze := 0.0
 @export var haze_color := Color(0.0, 0.0, 0.0, 0.0)
-## Thema, dessen Licht (Hintergrund, Umgebungslicht, Sonne, Farbkorrektur, Dunst) dieses
-## übernimmt — die Werte oben gelten dann nicht. Leer: das eigene. Nur eine Stufe: das
-## Licht dort zählt, wie es in der Datei steht.
+## Thema, dessen Licht dieses übernimmt. Leer: das eigene. Nur eine Stufe tief.
 @export var light_from := ""
 ## Wie stark Bäume und Gras im Wind schwanken (Wind.sway), 1 = wie in Wind.SWAY, 0 = still.
 @export_range(0.0, 3.0) var wind := 1.0
-## Wie dunkel die Wolkenschatten über den Boden ziehen: der Anteil der Sonne, den eine
-## Wolke nimmt (battle_ground.gdshader). 0 = wolkenlos.
+## Anteil der Sonne, den ein Wolkenschatten nimmt. 0 = wolkenlos.
 @export_range(0.0, 1.0) var clouds := 0.6
 ## Was in der Luft treibt: eine Art aus AmbientParticles.KINDS ("leaves", "snow",
 ## "pollen", "fireflies"), leer heißt nichts.
 @export var particles := ""
-## Ab und zu rollt ein verdorrter Busch durchs Bild (Tumbleweeds) — Wüste, Steppe, Savanne.
+## Ab und zu rollt ein verdorrter Busch durchs Bild (Tumbleweeds).
 @export var tumbleweeds := false
 
-## Wie mitgenommen die Festung aussieht (FortressModel, fortress_wear.gdshader): 0 wie im
-## Pack, 1 verrußt, ausgeblichen und fleckig — ein Gebiet nach der Katastrophe. Gespielt
-## wird davon nichts.
+## Abnutzung der Festung (FortressModel): 0 wie im Pack, 1 verrußt und fleckig.
 @export_range(0.0, 1.0) var fortress_wear := 0.0
 
-## Die Deko je Platz: Modelle unter `assets/models/` (etwa "props/tree.glb"), aus denen der
-## Kampf zufällig zieht. Größe und Menge gehören dem PLATZ, nicht dem Modell — ein Modell
-## für einen Platz ist dafür bemessen (src/dev/model_forge.gd). Leer heißt: dort nichts.
-## Bäume an den Seitenstreifen und im Umland.
+## Die Deko je Platz: Modelle unter `assets/models/`, zufällig gezogen; Größe und Menge
+## gehören dem Platz. Leer heißt: dort nichts.
 @export var trees: Array[String] = ["props/tree.glb"]
 ## Felsen auf dem Feld und im Umland.
 @export var rocks: Array[String] = ["props/rock.glb"]
@@ -121,12 +82,12 @@ const DIR := "res://assets/battle_themes"
 ## Wenige große Stücke (Ruinen, Felsnadeln) an den Seitenstreifen und im Umland.
 @export var landmarks: Array[String] = []
 
-## Unter dieser Höhe wird der Dunst dichter (Environment.fog_height), und wie sehr.
+## Unter dieser Höhe (m) wird der Dunst dichter (Environment.fog_height), und wie sehr.
 const HAZE_HEIGHT := 3.0
 const HAZE_HEIGHT_DENSITY := 0.25
-## Wie weit ein Hügel höchstens zur Hügelfarbe kippt — der Rest bleibt Bodenfarbe.
+## Höchster Anteil der Hügelfarbe.
 const HILL_MIX_MAX := 0.55
-## Über wie viel Höhe eine Kuppe von Boden zu voller Kuppenfarbe übergeht.
+## Über wie viel Höhe (m) eine Kuppe von Boden zu voller Kuppenfarbe übergeht.
 const PEAK_BLEND := 0.8
 ## Halbe Breite des Übergangs am Rand eines Flecks, in Einheiten von `t`.
 const PATCH_BLEND := 0.12
@@ -153,8 +114,7 @@ static func name_for(book: String, unit: int, key := "") -> String:
 	return name_in(MapLayout.data(book).get("themes", {}), unit, key)
 
 
-## Der Name für Unit und Stop aus einem `themes`-Block: ein Name gilt für die ganze Unit,
-## ein Wörterbuch nennt `default` und Stops, die abweichen.
+## Der Name für Unit und Stop aus einem `themes`-Block.
 static func name_in(themes: Variant, unit: int, key := "") -> String:
 	if not themes is Dictionary:
 		return ""
@@ -208,10 +168,10 @@ func decor_models() -> Array[String]:
 
 
 ## Farbe des Bodens an einer Ecke. `t` (0..1) streut zwischen den Bodentönen, `height` ist
-## ihre Höhe. Alles stetig in `t` und `height`: der Boden ist glatt schattiert, und jeder
-## Sprung stünde als Linie im Gelände.
+## ihre Höhe (m). Muss stetig bleiben: jeder Sprung stünde als Linie im Gelände.
 func ground_color(t: float, height: float) -> Color:
 	var col := ground_low.lerp(ground_high, t)
+	# Volle Hügelfarbe wäre bei 3 m erreicht, gedeckelt auf HILL_MIX_MAX.
 	col = col.lerp(hill, clampf(height / 3.0, 0.0, HILL_MIX_MAX))
 	if height > peak_height:
 		col = col.lerp(peak, clampf((height - peak_height) / PEAK_BLEND, 0.0, 1.0))
@@ -220,8 +180,7 @@ func ground_color(t: float, height: float) -> Color:
 	return col
 
 
-## Wie weit der Boden an dieser Stelle in Kuppenfarbe liegt (0..1) — Schnee, auf dem kein
-## Gras wächst (GroundCover). Dieselben Übergänge wie in `ground_color`.
+## Anteil der Kuppenfarbe an dieser Stelle (0..1), wie in `ground_color`.
 func ground_snow(t: float, height: float) -> float:
 	var snow := 0.0
 	if height > peak_height:
@@ -231,15 +190,12 @@ func ground_snow(t: float, height: float) -> float:
 	return snow
 
 
-## Der Streuwert `t` des Bodens bei (x,z) aus dem Rauschen des Terrains — für die Ecken des
-## Bodens (WaveRunner) und für den Bewuchs darauf (GroundCover) derselbe.
+## Der Streuwert `t` (0..1) des Bodens bei (x,z) aus dem Rauschen des Terrains.
 static func ground_t(noise: FastNoiseLite, x: float, z: float) -> float:
 	return noise.get_noise_2d(x * 2.3 + 100.0, z * 2.3) * 0.5 + 0.5
 
 
-## Material des Bodens: immer der Bodenshader; mit Detailtextur, wenn das Thema eine hat und
-## die Datei da ist, sonst glatt. Mit `battle_path` liegt der Weg darauf, in Art und Farbe
-## dieses Themas.
+## Material des Bodens, mit `battle_path` samt Weg.
 func ground_material(battle_path: BattlePath = null) -> Material:
 	var mat := ShaderMaterial.new()
 	mat.shader = GROUND_SHADER
@@ -257,8 +213,7 @@ func ground_material(battle_path: BattlePath = null) -> Material:
 	if detail != null:
 		mat.set_shader_parameter("detail", detail)
 	mat.set_shader_parameter("strength", ground_texture_strength if detail != null else 0.0)
-	# Der Shader beleuchtet selbst (light()): Grundhelligkeit ist das Umgebungslicht, die
-	# Sonne nimmt davon nur weg (Schatten, abgewandte Hänge) oder legt wenig dazu.
+	# Der Shader beleuchtet selbst: Grundhelligkeit ist das Umgebungslicht, die Sonne nimmt weg.
 	var amb := ambient.srgb_to_linear() * ambient_energy
 	mat.set_shader_parameter("ambient_light", Vector3(amb.r, amb.g, amb.b))
 	mat.set_shader_parameter("clouds", clouds)
@@ -269,9 +224,7 @@ func ground_texture_path() -> String:
 	return "%s/%s.png" % [GROUND_TEXTURE_DIR, ground_texture]
 
 
-## Die Textur MIT Mipmaps. Aus der Ferne liegen mehrere Texel auf einem Bildpunkt; ohne
-## Mipmaps flimmert der Boden, sobald die Kamera wackelt. Der Import legt sie nur an, wenn
-## man ihn darum bittet — hier hängt es nicht davon ab, wie die Datei importiert wurde.
+## Die Textur mit Mipmaps, sonst flimmert der Boden beim Wackeln.
 func _detail(texture_name: String) -> Texture2D:
 	var path := "%s/%s.png" % [GROUND_TEXTURE_DIR, texture_name]
 	if texture_name.is_empty() or not ResourceLoader.exists(path):
@@ -291,8 +244,7 @@ func _detail(texture_name: String) -> Texture2D:
 	return ImageTexture.create_from_image(img)
 
 
-## Hintergrund, Umgebungslicht und Sonne. Auf einer KOPIE des Environments: das der
-## Szene ist eine geteilte Ressource und käme sonst beim nächsten Kampf gefärbt wieder.
+## Hintergrund, Umgebungslicht und Sonne, auf einer Kopie des geteilten Environments.
 func apply(world: WorldEnvironment, sun: DirectionalLight3D) -> void:
 	var env := world.environment.duplicate() as Environment
 	env.background_color = background
@@ -307,8 +259,7 @@ func apply(world: WorldEnvironment, sun: DirectionalLight3D) -> void:
 	sun.light_energy = sun_energy
 
 
-## Der Dunst der Draufsicht auf `env` (eine eigene Kopie, nicht die der Szene): ohne Dunst
-## aus. Die Ich-Sicht stellt danach ihren eigenen Nebel.
+## Der Dunst der Draufsicht auf `env` (eine eigene Kopie, nicht die der Szene).
 func apply_haze(env: Environment) -> void:
 	env.fog_enabled = haze > 0.0
 	if not env.fog_enabled:

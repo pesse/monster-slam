@@ -1,17 +1,13 @@
 class_name CatapultStone
 extends Node3D
-## Ein Stein des Wachkatapults (Bollwerk): ein grauer, facettierter Brocken, Low-Poly wie
-## die Modelle des Kampfs. Der Knall beim Aufschlag ist nicht seiner, der kommt aus `Blast`
-## — weich und gerechnet, wie beim Explosionspfeil.
-##
-## Geflogen wird in Spielzeit wie die Monster und anders als der Pfeil: das Katapult hält
-## auf den Ort vor, an dem das Monster beim Einschlag steht, und das stimmt nur, wenn beide
-## dieselbe Uhr haben — auch in der Zeitlupe. In der Pause der Meister-Feier steht er mit
-## allem anderen, der Tween hängt an ihm.
+## Ein Stein des Wachkatapults (Bollwerk), ein facettierter Brocken; den Aufschlag zeigt
+## `Blast`. Fliegt anders als der Pfeil in Spielzeit: das Katapult hält auf den Ort vor, an
+## dem das Monster beim Einschlag steht, das stimmt nur mit derselben Uhr.
 
+## Radius in m.
 const RADIUS := 0.75
 const COLOR := Color(0.52, 0.53, 0.56)
-## So viele Umdrehungen je Sekunde, um eine schräge Achse: ein geworfener Brocken taumelt.
+## Umdrehungen je Sekunde um eine schräge Achse.
 const SPIN := 1.3
 
 var _rock: MeshInstance3D
@@ -23,8 +19,7 @@ func _ready() -> void:
 	sphere.height = RADIUS * 1.7
 	sphere.radial_segments = 7
 	sphere.rings = 3
-	# Flache Facetten wie die Steine der Festung: ohne geteilte Ecken bekommt jedes Dreieck
-	# seine eigene Normale.
+	# Flache Facetten: ohne geteilte Ecken bekommt jedes Dreieck seine eigene Normale.
 	var st := SurfaceTool.new()
 	st.create_from(sphere, 0)
 	st.deindex()

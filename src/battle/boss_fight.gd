@@ -1,52 +1,22 @@
 extends Control
-## Der Bosskampf (scenes/battle/boss_fight.tscn) — docs/adr/0005-bosskampf-mit-erklaerung.md.
-##
-## Der Satzmeister stellt fünf Sätze aus seiner `sentence_rule` über dem Bereich des Laufs
-## (RunRequest: eine Unit von der Karte oder die Auswahl des Expertenmodus). Jeder Treffer
-## kostet ihn 1 HP; ist er bei 0, ist er besiegt, sind die Sätze vorher aus, zieht er ab.
-## Kein Zeitdruck und keine Strafe — kein Gold, keine Erfahrung und kein Lernstand (ADR
-## 0005, Entscheidung 6). Ein Sieg über den Boss einer Unit wird gezählt (BossRecord, ADR
-## 0006) und macht ihn auf der Karte golden.
-##
-## Bewertet wird über SentenceJudge, also in Stufen:
-##
-##     Prüfkarte sicher      ─► Ergebnis sofort
-##     Prüfkarte unsicher    ─► Modell urteilt (3–7 s auf der CPU), Ergebnis sofort danach
-##                              └─ „falsch" ─► die Erklärung kommt nach, „Weiter" ist schon frei;
-##                                 Rückmeldung und Musterlösung erst mit ihr
-##     kein Modell / Zeitlimit ─► kein Treffer, Musterlösung
-##
-## **Die Musterlösung steht nach jedem Urteil da**, auch nach einem Treffer — nur nicht
-## VOR der Erklärung: rechnet die noch, kommt sie mit ihr. Ein leerer Versuch zeigt sie nie,
-## sonst holte man sie sich mit Enter.
-##
-## **Der Dienst startet beim Betreten und endet beim Verlassen** (LocalModelServer hängt
-## als Kind an dieser Szene und beendet ihn in seinem _exit_tree). Solange er lädt, ist
-## „Angreifen" gesperrt und beschriftet; der erste Satz steht schon da.
-##
-## **Die Szene ändert ihre Größe nicht, solange sie sichtbar ist**: jedes Feld ist immer da,
-## es wird gesperrt und umbeschriftet statt ein- und ausgeblendet, und das Ergebnis steht in
-## einem Rollbereich fester Höhe.
-##
-## **Zu sehen ist ein Kampf, keine Werkbank** (für die ist scenes/dev/boss_lab.tscn da): der
-## Spieler steht im Gewölbe und schaut das Skelett an (BossStage). Was der Boss sagt, steht
-## in seinen Sprechblasen — oben der Satz, rechts die Erklärung —, was der Spieler tippt, in
-## seiner eigenen unten. Treffer und Fehlschläge spielt die Bühne vor; dazu ein Ausruf in
-## der Bildmitte. Aufploppen und Ausblenden gehen über `scale` und `modulate`, nie über die
-## Größe: das Layout steht still, auch wenn die Blasen es nicht tun.
+## Der Bosskampf (scenes/battle/boss_fight.tscn, ADR 0005): Sätze aus der `sentence_rule`
+## des Bosses über dem Bereich des Laufs, je Treffer 1 HP. Bewertet über SentenceJudge;
+## die Musterlösung kommt nach jedem Urteil, nie nach einem leeren Versuch. Der Dienst
+## (LocalModelServer, ein Kind dieser Szene) läuft vom Betreten bis zum Verlassen. Blasen
+## ploppen über `scale` und `modulate`, nie über die Größe, damit das Layout stillsteht.
 
 const SELF_SCENE := "res://scenes/battle/boss_fight.tscn"
 const BOSS_ID := "boss.grammar_golem"
 
-## Ab welcher Güte eine Antwort den Satzmeister trifft. Ein Volltreffer (1,0) und ein Treffer mit
-## weggelassener Kleinigkeit (0,7) treffen, eine Stolperstelle (0,35) nicht.
+## Ab welcher Güte (0..1) eine Antwort trifft: 0,7 (weggelassene Kleinigkeit) ja, eine
+## Stolperstelle (0,35) nicht.
 const HIT_QUALITY := 0.6
 ## Wie viele Sätze, wenn der Boss es nicht selbst sagt.
 const DEFAULT_COUNT := 5
 ## Wie viel HP, wenn der Boss es nicht selbst sagt.
 const DEFAULT_HP := 3
 
-## Was der Boss sagt — in seiner Blase, also in der Ich-Form.
+## Was der Boss in seiner Blase sagt (Ich-Form).
 const WAKING_TEXT := "Wer stört meinen Schlaf …? Warte, gleich bin ich wach."
 const IDLE_TEXT := "Übersetze das, wenn du kannst!"
 const THINKING_TEXT := "Hmm … lass mich sehen …"
@@ -70,14 +40,13 @@ const NO_MODEL_NOTE := "Ohne Sprachmodell zählt nur, was als Lösung hinterlegt
 const MODEL_NOTE := "Das Sprachmodell läuft auf diesem Rechner; nichts verlässt ihn."
 const FAILED_MODEL_NOTE := "Das Sprachmodell ließ sich nicht starten — es zählt nur, was als Lösung hinterlegt ist."
 
-## Ob beim Betreten der lokale Dienst gestartet wird. Aus für Tests: kein Test startet
-## llama-server. Vor dem Einhängen setzen.
+## Ob beim Betreten der lokale Dienst gestartet wird; aus für Tests. Vor dem Einhängen setzen.
 var start_service := true
 ## Für Tests: ein erfundenes Stufe-1-Backend statt LocalModelBackend. Vor dem Einhängen setzen.
 var fake_backend: Callable = Callable()
 var fake_explainer: Callable = Callable()
-## Ob ein Sieg von der Karte in BossRecord gebucht wird. Aus für Tests, die sonst ins
-## Entwicklungsprofil schrieben. Vor dem Einhängen setzen.
+## Ob ein Sieg von der Karte in BossRecord gebucht wird; aus für Tests. Vor dem Einhängen
+## setzen.
 var record_wins := true
 
 var boss: Dictionary = {}
@@ -121,8 +90,8 @@ var _answer := ""
 var _hp_tween: Tween
 var _shout_tween: Tween
 var _result_shown := false
-## Hinter dem Schleier wird noch vorgewärmt — solange führt kein Weg hinaus, sonst liefe
-## das Einblenden danach über das Ausblenden.
+## Hinter dem Schleier wird noch vorgewärmt; solange führt kein Weg hinaus, sonst liefe
+## das Einblenden über das Ausblenden.
 var _warming := false
 
 
@@ -142,8 +111,7 @@ func _ready() -> void:
 	var chosen := ContentRegistry.get_entry("bosses", BOSS_ID)
 	begin(chosen, pick_sentences(chosen))
 	_attach_stage_one()
-	# Erst im Dunkeln vorwärmen (wie der Kampf, FxWarmup), dann aus dem Dunkel heran, wie
-	# der Kampf und die Karten (SceneZoom).
+	# Erst hinter dem Schleier vorwärmen (FxWarmup), dann einblenden.
 	_scene_zoom.hold()
 	await _warm_up()
 	if not is_inside_tree():
@@ -152,7 +120,7 @@ func _ready() -> void:
 
 
 ## Bühne und Ausruf einmal zeigen, solange der Schleier zu ist. Der Ausruf bekommt danach
-## seine Größe zurück: ein längerer Text hätte ihn sonst dauerhaft verbreitert.
+## seine Größe zurück, sonst bliebe er so breit wie der lange Text.
 func _warm_up() -> void:
 	_warming = true
 	var shout_size := _shout.size
@@ -179,7 +147,7 @@ func _process(_delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	# Escape führt zurück ins Menü — dieselbe Geste wie im Kampf.
+	# Escape führt zurück.
 	if event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
 		_leave()
@@ -203,8 +171,7 @@ static func pick_sentences(the_boss: Dictionary) -> Array:
 	return out
 
 
-## Stellt den Kampf auf. Die Naht für Tests: ein erfundener Boss mit erfundenen Sätzen,
-## statt dem, was auf diesem Rechner installiert ist.
+## Stellt den Kampf auf; Tests geben hier eigenen Boss und eigene Sätze hinein.
 func begin(the_boss: Dictionary, the_sentences: Array) -> void:
 	boss = the_boss
 	sentences = the_sentences
@@ -281,8 +248,7 @@ func _present() -> void:
 	EventBus.boss_sentence_presented.emit(sentence)
 
 
-## Sperrt oder öffnet die Eingabe je nach Zustand — und beschriftet den Knopf so, dass er
-## sagt, worauf gewartet wird.
+## Sperrt oder öffnet die Eingabe; der Knopf sagt, worauf gewartet wird.
 func _render_answer_gate() -> void:
 	if _over or _decided:
 		return
@@ -332,9 +298,8 @@ func _submit() -> void:
 
 ## Die Runde ist entschieden. `headline` überschreibt die Zeile über dem Ergebnis.
 ##
-## `explanation_coming`: das Urteil steht, die Erklärung rechnet noch. Dann bleiben
-## Rückmeldung und Musterlösung leer, bis sie da ist (_on_explained) — die Rückmeldung der
-## Karte („nah dran …") ist nicht das Urteil des Modells und stünde nur im Weg.
+## `explanation_coming`: die Erklärung rechnet noch; Rückmeldung und Musterlösung bleiben
+## leer bis `_on_explained`, die Rückmeldung der Karte ist nicht das Urteil des Modells.
 func _decide(result: Dictionary, headline := "", explanation_coming := false) -> void:
 	_decided = true
 	var hit := float(result.get("quality", 0.0)) >= HIT_QUALITY
@@ -366,8 +331,7 @@ func _on_refined(result: Dictionary) -> void:
 	_decide(result)
 
 
-## Das Modell sagt „falsch". Das steht sofort da; die Erklärung rechnet noch, und „Weiter"
-## ist schon frei — wer nicht warten will, muss nicht.
+## Das Modell sagt „falsch“. Das steht sofort da, „Weiter“ ist frei, die Erklärung kommt nach.
 func _on_denied(result: Dictionary) -> void:
 	_decide(result, "", _judge.explaining())
 	if _judge.explaining():
@@ -383,8 +347,8 @@ func _on_explained(result: Dictionary) -> void:
 	_result_bubble.wobble(false)
 	_explanation_label.text = text
 	_reference_label.text = _reference_text()
-	# Ohne gefundenen Fehler keine Rückmeldung, nur die Musterlösung (ADR 0005). Mit ihm
-	# ersetzt die Erklärung die allgemeine Rückmeldung der Karte, sie steht nicht daneben.
+	# Ohne gefundenen Fehler nur die Musterlösung (ADR 0005); sonst ersetzt die Erklärung die
+	# Rückmeldung der Karte.
 	_verdict_label.text = "" if text.is_empty() else "Das stimmt noch nicht:"
 	if not text.is_empty():
 		var sentence: Dictionary = sentences[index]
@@ -392,8 +356,7 @@ func _on_explained(result: Dictionary) -> void:
 	_result_bubble.pop()
 
 
-## Aus dem Satz selbst, nicht aus dem Ergebnis: so ist sie da, egal welche Stufe geurteilt
-## hat — auch nach einem Treffer, dessen Ergebnis keine Musterlösung mitbringt.
+## Aus dem Satz, nicht aus dem Ergebnis: so ist sie da, egal welche Stufe geurteilt hat.
 func _reference_text() -> String:
 	return "Musterlösung: %s" % str(sentences[index].get("reference_translation", ""))
 
@@ -444,8 +407,7 @@ func _finish() -> void:
 		_record_win()
 
 
-## Ein Sieg am Ende einer Unit zählt auf der Karte (ADR 0006); einer aus dem Expertenmodus
-## gehört zu keiner Unit.
+## Ein Sieg zählt auf der Karte (ADR 0006); einer aus dem Expertenmodus gehört zu keiner Unit.
 func _record_win() -> void:
 	var unit := RunRequest.unit_key()
 	if unit.is_empty() or not record_wins:
@@ -464,8 +426,7 @@ func _render_hp() -> void:
 	_hp_tween.tween_property(_hp_bar, "value", float(hp), 0.4).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 
-## Die Bühne spielt das Urteil vor. Ohne Urteil (`judged` = false) gibt es nichts zu feiern
-## und nichts zu verspotten — der Boss geht einfach weiter.
+## Die Bühne spielt das Urteil vor; ohne Urteil (`judged` = false) geht der Boss weiter.
 func _react(hit: bool, judged: bool) -> void:
 	_boss_bubble.wobble(false)
 	_boss_bubble.pop()
@@ -498,8 +459,7 @@ func _cheer(text: String, tint: Color) -> void:
 	_shout_tween.tween_property(_shout, "modulate:a", 0.0, 0.4)
 
 
-## Die Blase mit Rückmeldung und Erklärung. Leer ist sie nur durchsichtig, nicht weg: das
-## Layout rechnet mit ihr.
+## Die Blase mit Rückmeldung und Erklärung; leer ist sie durchsichtig, nicht weg.
 func _show_result(on: bool) -> void:
 	if not on:
 		_result_bubble.wobble(false)
