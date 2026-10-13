@@ -1,24 +1,8 @@
 class_name UiScale
 extends RefCounted
-## Wie groß die Oberfläche auf dem Bildschirm steht: „Klein", „Mittel" (Vorgabe) oder
-## „Groß" (Issue #38, ADR 0017).
-##
-## Die Skalierung bleibt `canvas_items`/`expand`, aber die Bezugsgröße
-## (`Window.content_scale_size`) ist nicht mehr fest 1152×648, sondern wird aus dem Fenster
-## gerechnet: Fenster ÷ gewünschte Skala. Ein großes Fenster gibt damit mehr Platz statt
-## größerer Menüs; die 3D-Welt rendert ohnehin in Fensterauflösung und ist nicht betroffen.
-##
-## Die gewünschte Skala ist die Skalierung des Betriebssystems mal die Stufe — „Mittel"
-## heißt: so groß, wie der Rechner seine eigenen Fenster zeichnet. Dadurch wirken die
-## Menüs auf jedem Bildschirm etwa gleich groß, ohne dass eine Vorgabe gespeichert wird.
-##
-## 1152×648 bleibt die kleinste Bezugsgröße (`game_size()`): wird das Fenster dafür zu
-## klein, sinkt die Skala, wie bisher. Mehr Platz gibt es nur nach oben; das Vollbild auf
-## 16:9 bei kleiner Skala ist weiterhin der schmalste Fall, den die Layout-Tests prüfen.
-##
-## Die Bezugsgröße setzt nur `apply()` — beim Start und nach jeder Größenänderung
-## (UserSettings). Eine Werkbank, die mehr Platz braucht, hebt die Untergrenze (`floor_size`,
-## LabRoom), statt die Bezugsgröße selbst zu schreiben.
+## Menügröße „Klein“, „Mittel“ (Vorgabe) oder „Groß“ (ADR 0017): die Bezugsgröße
+## (`content_scale_size`) ist Fenster ÷ (Systemskalierung × Stufe), je Achse mindestens
+## `game_size()`. Gesetzt wird sie nur in `apply()`; Werkbänke heben `floor_size`.
 
 enum Size { SMALL, MEDIUM, LARGE }
 
@@ -28,8 +12,8 @@ const FACTORS := {
 	Size.MEDIUM: 1.0,
 	Size.LARGE: 1.2,
 }
-## Was der DisplayServer als Systemskalierung meldet, wird hierauf begrenzt — unter Linux
-## ist `screen_get_dpi` die physische Dichte und kann daneben liegen.
+## Grenzen der gemeldeten Systemskalierung; unter Linux ist `screen_get_dpi` die
+## physische Dichte und kann daneben liegen.
 const OS_SCALE_MIN := 1.0
 const OS_SCALE_MAX := 4.0
 
@@ -41,8 +25,7 @@ static func level() -> Size:
 	return UserSettings.ui_size()
 
 
-## Die Grundauflösung des Spiels — aus den Projekteinstellungen gelesen und nicht als
-## zweite Konstante daneben gelegt.
+## Die Grundauflösung des Spiels aus den Projekteinstellungen.
 static func game_size() -> Vector2i:
 	return Vector2i(
 			int(ProjectSettings.get_setting("display/window/size/viewport_width", 1152)),
@@ -61,14 +44,13 @@ static func base_size(window_size: Vector2i, factor: float, least := game_size()
 	return Vector2i(base).max(least)
 
 
-## Skalierung des Betriebssystems für den Bildschirm des Fensters. Unter Windows meldet
-## `screen_get_dpi` die wirksame DPI (150 % → 144), unter macOS `screen_get_scale` den
-## Retina-Faktor; kopflos ist beides 1.
+## Skalierung des Betriebssystems für den Bildschirm des Fensters: unter Windows die
+## wirksame DPI ÷ 96, unter macOS der Retina-Faktor.
 static func os_scale(window: Window) -> float:
 	var screen := window.current_screen if window != null else DisplayServer.SCREEN_OF_MAIN_WINDOW
 	var os := DisplayServer.screen_get_scale(screen)
 	if OS.get_name() != "macOS":
-		os = DisplayServer.screen_get_dpi(screen) / 96.0
+		os = DisplayServer.screen_get_dpi(screen) / 96.0   # 96 DPI = 100 %
 	return clampf(os, OS_SCALE_MIN, OS_SCALE_MAX)
 
 
@@ -77,15 +59,13 @@ static func desired_scale(window: Window, at := level()) -> float:
 	return os_scale(window) * float(FACTORS[at])
 
 
-## Setzt die Bezugsgröße des Fensters. Beim Start (UserSettings), nach jeder Änderung der
-## Fenstergröße und nach dem Umschalten der Stufe.
+## Setzt die Bezugsgröße des Fensters.
 static func apply(window: Window, at := level()) -> void:
 	if window == null or not is_instance_valid(window):
 		return
 	var least := game_size().max(floor_size)
 	var base := least
-	# Kopflos ist das Fenster 100×100 und gibt kein Maß — Tests und CI rechnen weiter mit
-	# der Untergrenze, wie vor der Menügröße.
+	# Kopflos ist das Fenster 100×100 und gibt kein Maß.
 	if DisplayServer.get_name() != "headless":
 		base = base_size(window.size, desired_scale(window, at), least)
 	# Unverändert nicht neu setzen: das Setzen löst selbst eine Größenänderung aus.

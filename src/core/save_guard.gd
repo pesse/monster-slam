@@ -1,17 +1,8 @@
 class_name SaveGuard
 extends RefCounted
-## Die Plausibilitätssperre des Spielstands (docs/adr/0024-spielstand-sicher-speichern.md).
-##
-## Manche Werte eines Profils wachsen nur: die Gesamt-Erfahrung, das insgesamt verdiente
-## Gold, die geöffneten Kisten, die Zahl der Lernstände, Sitzungen und Boss-Siege. Ein
-## Speichern, das einen davon SENKEN würde, ist ein Fehler — genau so ging ein Spielstand
-## verloren: eine unlesbare Datei wurde als „0 XP" geladen und beim nächsten Kill
-## gespeichert. Ein solches Schreiben wird verweigert, gemeldet und die Datei bleibt, wie
-## sie ist.
-##
-## Verglichen wird mit der Datei auf der Platte, nicht mit einem Zähler daneben — es gibt
-## keinen zweiten gespeicherten Wert. Sinken darf ein Wert nur über eine ausdrückliche
-## Ausnahme (`allow_drop`): „Fortschritt zurücksetzen", Import, „leer weiterspielen".
+## Die Plausibilitätssperre des Spielstands (ADR 0024, Punkt 4): ein Speichern, das einen
+## monotonen Wert gegenüber der Datei auf der Platte senken würde, wird verweigert und
+## gemeldet. Sinken darf er nur mit `allow_drop`.
 
 ## Monotone Werte je Datei-Endung. `#feld` zählt die Einträge einer Liste oder eines
 ## Dictionaries.
@@ -48,8 +39,8 @@ static func drops(suffix: String, before: Dictionary, after: Dictionary) -> Arra
 	return out
 
 
-## Darf `data` nach `path` (Endung `suffix`)? "" heißt ja; sonst der Grund. Eine Datei, die
-## nicht lesbar ist oder aus einer neueren Fassung stammt, wird nie überschrieben.
+## Darf `data` nach `path` (Endung `suffix`)? "" heißt ja, sonst der Grund. Eine
+## beschädigte oder neuere Datei wird nie überschrieben.
 static func check(path: String, suffix: String, data: Dictionary, allow_drop := false) -> String:
 	var watched := MONOTONIC.has(suffix) and not allow_drop
 	var current := SaveStore.read(path, watched)
@@ -79,8 +70,7 @@ static func write(path: String, suffix: String, data: Dictionary, allow_drop := 
 	return SaveStore.write(path, data)
 
 
-## Meldet ein verweigertes Speichern. Eine Warnung und kein Fehler: der Spielstand ist
-## sicher, nur der neue Stand kam nicht an.
+## Meldet ein verweigertes Speichern (Warnung und EventBus.save_refused).
 static func refuse(path: String, reason: String) -> void:
 	push_warning("Speichern verweigert: %s — %s" % [path, reason])
 	EventBus.save_refused.emit(path.get_file(), reason)

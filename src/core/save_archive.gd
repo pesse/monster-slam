@@ -2,10 +2,6 @@ class_name SaveArchive
 extends RefCounted
 ## Ein Spielstand als Datei zum Mitnehmen (ADR 0024): „Sichern…“ schreibt die neueste
 ## Sicherung eines Profils als Zip, „Laden…“ spielt so eine Datei ins aktive Profil ein.
-##
-## Für den Fall, dass alles andere weg ist — ein neuer Rechner, ein gelöschter Ordner. Die
-## Sicherungen unter user://backups liegen auf derselben Platte wie der Spielstand.
-##
 ##     monster-slam.json            Kopf: Format, Version, Name, Zeitpunkt, Prüfsummen
 ##     spielstand<endung>.json      die Dateien der Sicherung, Bytes unverändert
 ##
@@ -15,7 +11,7 @@ extends RefCounted
 const FORMAT := 1
 const HEAD := "monster-slam.json"
 const ENTRY_PREFIX := "spielstand"
-## Ein Spielstand nach Jahren liegt bei wenigen MB; was weit darüber liegt, ist keiner.
+## Größengrenze eines Archivs in Bytes (ein echter Spielstand hat wenige MB).
 const MAX_BYTES := 64 * 1024 * 1024
 
 
@@ -120,7 +116,7 @@ static func read(path: String) -> Dictionary:
 				zip.close()
 				return _fail("Die Datei ist beschädigt.")
 	zip.close()
-	# Jede Datei, die der Kopf nennt, muss auch da sein — sonst fehlte still ein Teil.
+	# Jede Datei, die der Kopf nennt, muss da sein.
 	for suffix: String in head["files"]:
 		if not data.has(suffix):
 			return _fail("Die Datei ist unvollständig.")
@@ -140,9 +136,8 @@ static func files_for(data: Dictionary, profile: String) -> Dictionary:
 	return out
 
 
-## Was die Rückfrage vor dem Einspielen zeigt: Name, Zeitpunkt, welche Teile die Datei hat
-## (ein Teil-Archiv ersetzt nur diese) und Level bzw. Gold nur, wenn sie drin sind — sonst
-## fehlen die Schlüssel; ein Archiv nur mit Erfahrung hat kein Gold, auch keine 0.
+## Was die Rückfrage vor dem Einspielen zeigt: Name, Zeitpunkt, enthaltene Teile, Level und
+## Gold. Fehlt ein Teil, fehlt sein Schlüssel (nicht 0).
 static func preview(archive: Dictionary) -> Dictionary:
 	var data: Dictionary = archive.get("data", {})
 	var head: Dictionary = archive.get("head", {})

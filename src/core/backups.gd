@@ -1,29 +1,10 @@
 class_name Backups
 extends RefCounted
-## Sicherungen des Spielstands (docs/adr/0024-spielstand-sicher-speichern.md).
-##
-## Eine Sicherung ist eine GENERATION des ganzen Profils: alle seine Dateien zusammen, so
-## wie sie nach einem Speichern dastanden, dazu eine Kopie der settings.cfg und ein
-## Manifest mit den Prüfsummen. Gesichert wird nie Datei für Datei — zurückgespielt kämen
-## sonst Erfahrung aus der einen und Skills aus einer anderen Sicherung zusammen, und das
-## gibt wieder negative Skillpunkte.
-##
+## Sicherungen des Spielstands als Generationen des ganzen Profils (ADR 0024):
 ##     user://backups/<profil>/<YYYY-MM-DD-HHMMSS-mmm>/
-##         <profil>.json, <profil>_level.json, …   (Bytes der Live-Dateien, mit Hülle)
-##         settings.cfg
-##         manifest.json                          (zuletzt geschrieben)
-##
-## Gültig ist eine Generation nur mit gültigem Manifest und passenden Prüfsummen; eine, die
-## beim Anlegen abbrach, hat kein Manifest und zählt nicht. Im Manifest stehen keine
-## Kennzahlen (Level, Gold) — die stehen in den Dateien, ein zweiter Wert daneben könnte
-## abweichen.
-##
-## Aufbewahrt wird gestaffelt (`retained`): die 3 neuesten, dazu die neueste je Tag der
-## letzten 7 Tage und je Woche der letzten 8 Wochen — höchstens 18. Fünf Sicherungen je
-## Welle reichten nur zehn Minuten zurück; ein Fehler, der still falsche Werte schreibt,
-## hätte sie alle erreicht, bevor ihn jemand bemerkt.
-##
-## Statisch und mit Ordner-Argumenten, damit Tests in eigenen Ordnern laufen.
+##         <profil>*.json (Bytes der Live-Dateien), settings.cfg, manifest.json (zuletzt)
+## Gültig nur mit gültigem Manifest und passenden Prüfsummen. Statisch mit
+## Ordner-Argumenten, damit Tests in eigenen Ordnern laufen.
 
 const MANIFEST := "manifest.json"
 const SETTINGS_COPY := "settings.cfg"
@@ -44,8 +25,7 @@ static func stamp_name(at_ms: int) -> String:
 
 
 ## Legt eine Generation an und gibt ihren Ordner zurück ("" bei einem Fehler). Kopiert
-## werden die Dateien `suffixes` des Profils, die es gibt — eine unlesbare bricht ab: eine
-## Sicherung mit einer kaputten Datei wäre beim Zurückspielen eine Falle.
+## werden die vorhandenen Dateien `suffixes` des Profils; eine unlesbare bricht ab.
 static func create(base: String, profile: String, progress_dir: String, suffixes: Array,
 		reason: String, at_ms: int, settings_path := "user://settings.cfg") -> String:
 	var root := base.path_join(profile)
@@ -153,9 +133,8 @@ static func latest(base: String, profile: String) -> Dictionary:
 	return {}
 
 
-## Spielt eine Generation (Manifest aus `verify`) als Profil `profile` zurück: jede ihrer
-## Dateien sicher an ihren Platz. Die settings.cfg bleibt außen vor — sie gilt allen
-## Profilen. Was die Live-Menge sonst noch hatte, muss der Aufrufer vorher beiseitelegen.
+## Spielt eine Generation (Manifest aus `verify`) als Profil `profile` zurück, ohne die
+## settings.cfg. Übrige Live-Dateien legt der Aufrufer vorher beiseite.
 static func restore(manifest: Dictionary, profile: String, progress_dir: String) -> Error:
 	var dir := str(manifest.get("dir", ""))
 	var files: Dictionary = manifest.get("files", {})
@@ -192,7 +171,7 @@ static func newest_settings(base: String) -> PackedByteArray:
 
 ## Welche Zeitpunkte (ms) bleiben? Die KEEP_LATEST neuesten, die neueste je lokalem Tag der
 ## letzten KEEP_DAYS Tage und je Woche der letzten KEEP_WEEKS Wochen. Zeitpunkte in der
-## Zukunft (verstellte Uhr) bleiben immer. Rein rechnend, ohne Dateien.
+## Zukunft (verstellte Uhr) bleiben immer.
 static func retained(stamps: Array, now_ms: int, utc_offset_s: int) -> Array:
 	var sorted := stamps.duplicate()
 	sorted.sort()
@@ -208,8 +187,7 @@ static func retained(stamps: Array, now_ms: int, utc_offset_s: int) -> Array:
 			continue
 		if i < KEEP_LATEST:
 			keep[at] = true
-		# Auch die neuesten belegen ihren Tag und ihre Woche: sonst bliebe am selben Tag eine
-		# vierte stehen.
+		# Auch die neuesten belegen ihren Tag und ihre Woche.
 		var age := today - _day(at, utc_offset_s)
 		if age < KEEP_DAYS and not days_seen.has(age):
 			days_seen[age] = true
@@ -226,14 +204,12 @@ static func retained(stamps: Array, now_ms: int, utc_offset_s: int) -> Array:
 
 
 ## Räumt die Sicherungen eines Profils nach `retained` auf. Eine unvollständige Generation
-## fällt weg, sobald es eine neuere gültige gibt. Gelöscht wird jede Datei einzeln mit
-## Namen, dann der leere Ordner.
+## fällt weg, sobald es eine neuere gültige gibt.
 static func prune(base: String, profile: String, now_ms: int, utc_offset_s: int) -> void:
 	var valid := {}
 	var newest_valid := ""
 	for dir in generation_dirs(base, profile):
-		# Nur das Manifest, ohne die Prüfsummen aller Dateien: Aufräumen läuft nach jedem
-		# Speichern, und welche Sicherung taugt, prüft erst das Zurückspielen (verify).
+		# Nur das Manifest; die Prüfsummen prüft erst das Zurückspielen (verify).
 		var manifest := manifest_of(dir)
 		if not manifest.is_empty():
 			valid[dir] = int(manifest.get("created_ms", 0))
@@ -248,7 +224,7 @@ static func prune(base: String, profile: String, now_ms: int, utc_offset_s: int)
 
 
 static func _day(at_ms: int, utc_offset_s: int) -> int:
-	return floori((at_ms / 1000.0 + utc_offset_s) / 86400.0)
+	return floori((at_ms / 1000.0 + utc_offset_s) / 86400.0)   # s je Tag
 
 
 static func _put(path: String, bytes: PackedByteArray) -> bool:
