@@ -1,12 +1,6 @@
 extends Node
-## Autoload `UpdateService`: der App-Kanal — prüfen, laden, verifizieren, ersetzen.
-##
-## Getrennt vom Content-Kanal (`ContentService`), weil beide unterschiedlich oft laufen und
-## unterschiedlich groß sind: die EXE ist ~120 MB und ändert sich selten, ein Vokabel-Pack
-## ist ein paar KB und ändert sich wöchentlich. Siehe docs/adr/0001-app-und-content-update.md.
-##
-## Jeder Netzfehler ist ein Zustand, kein Abbruch: die Startprüfung schweigt in die Konsole,
-## das Spiel läuft mit dem, was installiert ist.
+## Autoload `UpdateService`: der App-Kanal (ADR 0001) — prüfen, laden, verifizieren,
+## ersetzen. Jeder Netzfehler ist ein Zustand, kein Abbruch; die Startprüfung bleibt still.
 
 ## Zustand hat sich geändert. Empfänger lesen `state`, `version`, `notes`, `progress`, `error`.
 signal changed
@@ -24,15 +18,13 @@ enum State {
 
 const MANIFEST_URL := "https://github.com/pesse/monster-slam/releases/latest/download/latest.json"
 
-## Schlüssel der Plattform-Blöcke in latest.json. Der macOS-Build ist universal (Intel und
-## Apple Silicon in einer App).
+## Schlüssel der Plattform-Blöcke in latest.json.
 const PLATFORM_WINDOWS := "windows-x86_64"
 const PLATFORM_MACOS := "macos-universal"
 
 const DOWNLOAD_DIR := "user://updates"
 
-## Ein Manifest ist ein paar KB. Die Schranke verhindert, dass ein falsch geroutetes
-## Ziel (Fehlerseite, HTML) als Download durchläuft.
+## Größenschranke des Manifests in Bytes, gegen falsch geroutete Ziele.
 const MAX_MANIFEST_BYTES := 256 * 1024
 
 var state: State = State.IDLE
@@ -47,8 +39,7 @@ var ready_path := ""
 var _http: HTTPRequest
 ## Der Plattform-Block des Manifests: url, sha256, signature.
 var _entry: Dictionary = {}
-## True, solange der laufende Vorgang von einem Klick ausgelöst wurde. Nur dann werden
-## Fehler in der Oberfläche benannt — die Startprüfung bleibt still.
+## Vom Klick ausgelöst: nur dann werden Fehler in der Oberfläche benannt.
 var _loud := false
 
 
@@ -56,11 +47,10 @@ func _ready() -> void:
 	_http = HTTPRequest.new()
 	# Ohne Thread blockiert das Schreiben der 120-MB-Datei den Renderer.
 	_http.use_threads = true
-	_http.download_chunk_size = 1 << 20
+	_http.download_chunk_size = 1 << 20   # 1 MiB
 	add_child(_http)
 	_cleanup_leftovers()
 	_cleanup_old_executable()
-	# Stille Startprüfung: im Editor gar nicht, sonst ohne jede Meldung bei Netzfehlern.
 	check()
 
 
@@ -75,11 +65,8 @@ func _process(_delta: float) -> void:
 		changed.emit()
 
 
-## Holt das Manifest und vergleicht es mit der laufenden Fassung.
-##
-## `loud` unterscheidet den Klick von der Startprüfung: still bleibt still. Im Editor wird
-## ohne `loud` nicht geprüft — committet steht in project.godot immer die Version des
-## LETZTEN Releases, die Prüfung meldete dort also dauerhaft ein Update auf sich selbst.
+## Holt das Manifest und vergleicht es mit der laufenden Fassung. `loud` = Klick. Im Editor
+## nur mit `loud`: dort steht die Version des letzten Releases, also immer ein Update.
 func check(loud := false) -> void:
 	if state in [State.CHECKING, State.DOWNLOADING, State.VERIFYING, State.INSTALLING]:
 		return
@@ -87,8 +74,7 @@ func check(loud := false) -> void:
 		return
 	_loud = loud
 	_set_state(State.CHECKING)
-	# Erst anfragen, dann verbinden: request_completed wird nie synchron aus request()
-	# heraus gemeldet, und so gibt es keinen Callable, den ein Fehlerpfad wieder lösen muss.
+	# Erst anfragen, dann verbinden: so muss kein Fehlerpfad das Signal wieder lösen.
 	var err := _http.request(MANIFEST_URL)
 	if err != OK:
 		_fail("Update-Prüfung nicht möglich (Fehler %d)." % err)
@@ -114,7 +100,6 @@ func _on_manifest(result: int, code: int, _headers: PackedStringArray, body: Pac
 	var manifest: Dictionary = parsed
 	var platforms: Dictionary = manifest.get("platforms", {})
 	if not platforms.has(platform()):
-		# Kein Fehler des Nutzers: für diese Plattform gibt es das Release nicht.
 		_set_state(State.IDLE)
 		return
 	var entry: Dictionary = platforms[platform()]
@@ -134,8 +119,7 @@ func _on_manifest(result: int, code: int, _headers: PackedStringArray, body: Pac
 	_set_state(State.AVAILABLE)
 
 
-## Der Plattform-Block in latest.json, der für diesen Build gilt. "" auf einer Plattform,
-## für die es keine Releases gibt — dann wird nie etwas angeboten.
+## Der Plattform-Block in latest.json für diesen Build, "" ohne Releases.
 static func platform() -> String:
 	if OS.has_feature("windows"):
 		return PLATFORM_WINDOWS
@@ -144,9 +128,8 @@ static func platform() -> String:
 	return ""
 
 
-## Ob das Spiel sich selbst ersetzen kann. Nur unter Windows: auf dem Mac ist das Spiel ein
-## signiertes `.app`-Bundle, und eine darin ausgetauschte Programmdatei bräche die Signatur.
-## Dort öffnet `open_download()` stattdessen den Download im Browser.
+## Ob das Spiel sich selbst ersetzen kann. Nur unter Windows: im signierten macOS-Bundle
+## bräche eine getauschte Programmdatei die Signatur.
 static func can_self_install() -> bool:
 	return OS.has_feature("windows")
 
@@ -187,8 +170,7 @@ func _on_download(result: int, code: int, _headers: PackedStringArray, _body: Pa
 
 	progress = 1.0
 	_set_state(State.VERIFYING)
-	# Einen Frame durchlassen, damit „Wird geprüft" sichtbar wird, bevor Hash und
-	# Signatur den Frame belegen.
+	# Einen Frame durchlassen, damit „Wird geprüft“ sichtbar wird.
 	await get_tree().process_frame
 
 	var problem := ReleaseVerifier.problem(
@@ -204,12 +186,8 @@ func _on_download(result: int, code: int, _headers: PackedStringArray, _body: Pa
 	_set_state(State.READY)
 
 
-## Ersetzt die laufende Programmdatei durch die geprüfte Fassung und startet neu.
-##
-## Reihenfolge und Rückrollpfad sind der eigentliche Inhalt dieser Funktion: ein halb
-## ersetztes Spiel ist der einzige Ausgang, den es nicht geben darf. Deshalb wird zuerst
-## umbenannt (unter Windows auch für die laufende Datei erlaubt) und erst dann geschrieben —
-## scheitert der zweite Schritt, kommt der alte Name zurück.
+## Ersetzt die laufende Programmdatei durch die geprüfte Fassung und startet neu. Erst
+## umbenennen (unter Windows auch laufend erlaubt), dann schreiben, sonst zurückrollen.
 func install() -> void:
 	if state != State.READY or not can_self_install():
 		return
@@ -254,10 +232,7 @@ func _swap() -> String:
 	return ""
 
 
-## Löscht die verdrängte Programmdatei des vorigen Starts.
-##
-## Nicht früher: bis zum Prozessende ist die Datei gesperrt, das Löschen scheiterte also
-## genau in dem Moment, in dem es versucht würde.
+## Löscht die verdrängte Programmdatei des vorigen Starts (bis zum Prozessende gesperrt).
 func _cleanup_old_executable() -> void:
 	if OS.has_feature("editor") or not can_self_install():
 		return
@@ -266,10 +241,7 @@ func _cleanup_old_executable() -> void:
 		DirAccess.remove_absolute(backup)
 
 
-## Räumt liegengebliebene Downloads eines früheren Starts weg.
-##
-## Beim Start ist nie etwas anderes im Verzeichnis unterwegs, deshalb kann es vollständig
-## leer gemacht werden: ein abgebrochener Download ist eine halbe Datei und wertlos.
+## Leert das Download-Verzeichnis; beim Start läuft dort nichts.
 func _cleanup_leftovers() -> void:
 	var dir := DirAccess.open(DOWNLOAD_DIR)
 	if dir == null:
