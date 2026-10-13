@@ -1,13 +1,9 @@
 class_name PackCrypto
 extends RefCounted
-## Hülle geschützter Content-Packs: Kopf lesen, Zugangscode prüfen, entschlüsseln.
-##
-## Format und Begründung: docs/PACK_FORMAT.md. Zweitimplementierungen sind
-## tools/packs/build_packs.py (Erzeuger) und tools/packs/verify_pack.py (Prüfer) — eine
-## Änderung hier ist eine Änderung an allen drei Stellen und braucht eine neue Formatversion.
-##
-## AES-CBC mit HMAC statt AES-GCM, weil Godots AESContext kein GCM kennt; PBKDF2 statt
-## scrypt, weil Godot kein scrypt hat. Beides mit den Folgen, die in PACK_FORMAT.md stehen.
+## Hülle geschützter Content-Packs: Kopf lesen, Zugangscode prüfen, entschlüsseln. Format und
+## Begründung: docs/PACK_FORMAT.md. Dasselbe Format implementieren tools/packs/build_packs.py
+## und tools/packs/verify_pack.py; eine Änderung trifft alle drei und braucht eine neue
+## Formatversion.
 
 const MAGIC := "MSPACK"
 const FORMAT_VERSION := 1
@@ -24,9 +20,8 @@ const LABEL_ENC := "monster-slam:enc"
 const LABEL_MAC := "monster-slam:mac"
 const LABEL_VERIFY := "monster-slam:verify"
 
-## Obergrenze für den Kostenparameter im Kopf. Ohne sie könnte eine manipulierte Datei die
-## App vor der MAC-Prüfung beliebig lange rechnen lassen — der Kopf ist an dieser Stelle
-## noch nicht verifiziert.
+## Obergrenze für den Kostenparameter im noch nicht verifizierten Kopf: sonst ließe eine
+## manipulierte Datei die App vor der MAC-Prüfung beliebig lange rechnen.
 const MAX_ITERATIONS := 5_000_000
 
 
@@ -82,8 +77,8 @@ static func derive(code: String, salt: PackedByteArray, iterations: int) -> Dict
 	}
 
 
-## PBKDF2-HMAC-SHA256, RFC 8018. In GDScript, weil Godot keine eigene Ableitung anbietet;
-## 600 000 Iterationen kosten hier rund 0,9 s (gemessen, siehe PACK_FORMAT.md).
+## PBKDF2-HMAC-SHA256, RFC 8018. In GDScript, weil Godot keine eigene Ableitung anbietet
+## (Kosten: PACK_FORMAT.md).
 static func pbkdf2_sha256(
 	password: PackedByteArray, salt: PackedByteArray, iterations: int, length: int
 ) -> PackedByteArray:
@@ -106,12 +101,8 @@ static func pbkdf2_sha256(
 	return out.slice(0, length)
 
 
-## Prüft einen Zugangscode allein am Kopf — ohne den ganzen Pack zu laden.
-##
-## Der Verifier steht vorn, der MAC am Ende: eine Codeprüfung über den MAC müsste die
-## komplette Datei ziehen. Ein Angreifer erfährt dadurch nichts Zusätzliches — wer die
-## Datei hat, könnte ebenso gegen den MAC raten; die Kosten pro Versuch bestimmt allein
-## die Ableitung.
+## Prüft einen Zugangscode allein am Kopf, ohne den ganzen Pack zu laden (Verifier,
+## PACK_FORMAT.md).
 static func code_matches(header: Header, code: String) -> bool:
 	if not header.error.is_empty():
 		return false
@@ -133,8 +124,8 @@ static func decrypt(blob: PackedByteArray, code: String) -> Dictionary:
 	if not constant_time_eq(keys["verify"], header.verifier):
 		return {"error": "Falscher Zugangscode.", "zip": PackedByteArray()}
 
-	# VOR dem Entschlüsseln: ein veränderter Kopf — etwa ein herabgesetzter
-	# Kostenparameter — darf nicht erst nach dem Entpacken auffallen.
+	# MAC vor dem Entschlüsseln: ein veränderter Kopf soll nicht erst nach dem Entpacken
+	# auffallen.
 	var expected := Crypto.new().hmac_digest(
 		HashingContext.HASH_SHA256, keys["mac"], header.signed_prefix + ciphertext
 	)
@@ -150,8 +141,7 @@ static func decrypt(blob: PackedByteArray, code: String) -> Dictionary:
 	return _unpad(padded)
 
 
-## PKCS#7 abziehen. Godot padded nicht selbst, also wird hier auch nicht darauf vertraut:
-## eine unplausible Füllung ist ein Fehler, kein zu kürzender Rest.
+## PKCS#7 abziehen; Godot padded nicht selbst. Eine unplausible Füllung ist ein Fehler.
 static func _unpad(padded: PackedByteArray) -> Dictionary:
 	if padded.is_empty():
 		return {"error": "Pack ist leer.", "zip": PackedByteArray()}

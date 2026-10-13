@@ -1002,7 +1002,7 @@ Ein Zauber ist ein Verbrauchsgegenstand: `price` in Gold, `effect` aus
 - **Bild** (`SpellFx`, `src/fx/spell_fx.gd`, im Kampf und in der Werkbank dasselbe):
   Schleier über dem ganzen Bild (`SpellVeil`), Banner mit Bild und Name
   (`SpellBanner`), dazu je Wirkung ein Effekt im Feld — Lichtvorhang, nach dem die
-  Schilder der Reihe nach aufspringen (`SpellCaster.reveal_delay`), Schlamm-Spritzer,
+  Schilder der Reihe nach aufspringen (`SpellFx.reveal_delay`), Schlamm-Spritzer,
   Dunst für die ganze Welle, Eisring und Schnee, verdunkeltes Bild mit gestaffelten
   Blitzen (`LightningBolt`, Plasma-`Blast`, Brandfleck), Lichtsäule an der Festung. Am
   Monster hängen `FrostShell` (wächst, reißt in den letzten Sekunden, zerspringt) und
