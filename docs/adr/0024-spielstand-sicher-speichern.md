@@ -35,7 +35,8 @@ des ganzen Profils zurückgeholt.
    ist nie „neu“, und über eine beschädigte oder neuere Datei wird nie geschrieben.
 2. **Gespeichert wird an der Wellengrenze (`SaveCoordinator`).** Die Speicher melden nur
    noch „geändert“. Im Kampf hält der WaveRunner das Speichern an (`hold`); geschrieben wird
-   am Wellenende, nach der Schatzkiste, nach dem Bosskampf, beim Rasten. In Menüs am Ende
+   am Wellenende, nach der Schatzkiste, nach dem Bosskampf, beim Rasten (auch mitten in der
+   Welle, ADR 0020 Nachtrag: Rasten ist eine künstliche Wellengrenze). In Menüs am Ende
    des Frames. Fenster zu, Absturz oder Abbruch mitten in der Welle: die Welle verfällt.
    Beim Abbruch werden die Speicher auf den letzten Stand zurückgeladen
    (`discard_uncommitted`). Nur die Lernzeiten behalten die Antworten, sie zählen echtes

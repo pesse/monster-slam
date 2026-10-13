@@ -58,7 +58,7 @@ func _ready() -> void:
 	UserSettings.active_profile_changed.connect(switch_to)
 	EventBus.run_started.connect(begin)
 	EventBus.run_ended.connect(end)
-	EventBus.run_suspended.connect(func(_next_wave): note_suspended())
+	EventBus.run_suspended.connect(func(_next_wave, _remaining): note_suspended())
 	EventBus.run_resumed.connect(func(_next_wave, started_at, _added): note_resumed(started_at))
 	EventBus.wave_cleared.connect(func(_wave_id): note_wave_cleared())
 	EventBus.item_reviewed.connect(func(_id, correct, response_time_ms): note_answer(correct, response_time_ms))

@@ -2,8 +2,9 @@ class_name RunSave
 extends RefCounted
 ## Begonnene Läufe von der Karte (docs/adr/0020-rasten-und-fortsetzen.md).
 ##
-## Ein Platz je Buch: Englisch und Latein nebeneinander dürfen sich nicht gegenseitig den
-## Lauf verwerfen. Expertenmodus und Testvorbereitung rasten nicht (ADR 0020, „Bewusst
+## Ein Platz je Unit (ADR 0020, Nachtrag „Ein Platz je Unit"): ein fast gemeisterter Lauf in
+## Unit 1 bleibt liegen, während das Kind schon in Unit 2 lernt, und Englisch und Latein
+## verwerfen sich nicht gegenseitig den Lauf. Expertenmodus und Testvorbereitung rasten nicht (ADR 0020, „Bewusst
 ## nicht"), sie kommen hier nie an.
 ##
 ## Ein Speicherstand trägt nur Ursprungswerte (`GameState.run_snapshot()` plus Wellennummer,
@@ -12,9 +13,10 @@ extends RefCounted
 ## (`keys`), nicht der Inhalt: ein Pack-Update kommt beim Fortsetzen an. Erweitern darf
 ## man ihn innerhalb der Unit (`continues`), verkleinern nicht.
 ##
-## Ablage: user://progress/<profil>_runs.json als { "runs": { <book>: <stand> } },
+## Ablage: user://progress/<profil>_runs.json als { "runs": { <book>/<unit>: <stand> } },
 ## geschrieben über SaveStore (temporäre Datei, Prüfsumme), damit ein Absturz beim Schreiben
-## nicht die Läufe der anderen Bücher mitnimmt. Statisch und mit Profil-Argument wie BossRecord,
+## nicht die Läufe der anderen Units mitnimmt. Ältere Dateien trugen nur <book> als Schlüssel;
+## `all` schlüsselt sie beim Lesen über den Stand um (`key_of`). Statisch und mit Profil-Argument wie BossRecord,
 ## damit Tests auf einem `zz-`-Profil laufen.
 
 const SAVE_DIR := "user://progress"
@@ -26,7 +28,7 @@ static func path(profile: String) -> String:
 	return "%s/%s_runs.json" % [SAVE_DIR, profile]
 
 
-## Alle begonnenen Läufe des Profils: Buch -> Stand.
+## Alle begonnenen Läufe des Profils: "<book>/<unit>" -> Stand.
 static func all(profile: String) -> Dictionary:
 	var read := SaveStore.read(path(profile))
 	if int(read["status"]) == SaveStore.Status.CORRUPT:
@@ -38,40 +40,73 @@ static func all(profile: String) -> Dictionary:
 	if int(read["status"]) != SaveStore.Status.OK:
 		return {}
 	var runs: Variant = (read["data"] as Dictionary).get("runs", {})
-	return runs if runs is Dictionary else {}
+	if not runs is Dictionary:
+		return {}
+	var out := {}
+	for key in runs:
+		var state: Variant = runs[key]
+		if not state is Dictionary:
+			continue
+		# Ein Platz je Buch (vor dem Nachtrag): der Stand kennt seine Unit selbst.
+		var unit_key := str(key) if "/" in str(key) else key_of(state)
+		if not unit_key.is_empty():
+			out[unit_key] = state
+	return out
 
 
-## Der begonnene Lauf eines Buchs, oder {}.
-static func of_book(book: String, profile: String) -> Dictionary:
-	var state: Variant = all(profile).get(book, {})
-	return state if state is Dictionary else {}
-
-
-## Legt `state` auf den Platz seines Buchs (`state.level.book`) und ersetzt, was dort lag.
-static func store(state: Dictionary, profile: String) -> void:
-	var book := str((state.get("level", {}) as Dictionary).get("book", ""))
+## Der Platz eines Stands: "<book>/<unit>" wie RunRequest.unit_key(), oder "" ohne Buch.
+static func key_of(state: Dictionary) -> String:
+	var level: Dictionary = state.get("level", {})
+	var book := str(level.get("book", ""))
 	if book.is_empty():
+		return ""
+	return "%s/%d" % [book, int(level.get("unit", 0))]
+
+
+## Der begonnene Lauf einer Unit, oder {}.
+static func of_unit(book: String, unit: int, profile: String) -> Dictionary:
+	return all(profile).get("%s/%d" % [book, unit], {})
+
+
+## Die begonnenen Läufe eines Buchs, der zuletzt gerastete zuerst.
+static func of_book(book: String, profile: String) -> Array:
+	var out: Array = []
+	var runs := all(profile)
+	for key in runs:
+		if str(key).get_slice("/", 0) == book:
+			out.append(runs[key])
+	out.sort_custom(func(a, b): return int(a.get("saved_at", 0)) > int(b.get("saved_at", 0)))
+	return out
+
+
+## Legt `state` auf den Platz seiner Unit (`key_of`) und ersetzt, was dort lag.
+static func store(state: Dictionary, profile: String) -> void:
+	var key := key_of(state)
+	if key.is_empty():
 		return
 	var runs := all(profile)
-	runs[book] = state
+	runs[key] = state
 	_write(runs, profile)
 
 
-## Verwirft den Lauf eines Buchs. Ohne Lauf ein No-op.
-static func discard(book: String, profile: String) -> void:
+## Verwirft den Lauf einer Unit. Ohne Lauf ein No-op.
+static func discard(book: String, unit: int, profile: String) -> void:
 	var runs := all(profile)
-	if not runs.has(book):
+	var key := "%s/%d" % [book, unit]
+	if not runs.has(key):
 		return
-	runs.erase(book)
+	runs.erase(key)
 	_write(runs, profile)
 
 
-## Baut den Stand am Wellenende. `level` ist RunRequest.level() (MapLevel.combine),
-## gespeichert werden davon nur Buch, Unit und Orte — der Scope wird beim Fortsetzen aus
-## den Orten neu gebaut. `next_wave` ist die Welle, mit der es weitergeht.
+## Baut den Stand. `level` ist RunRequest.level() (MapLevel.combine), gespeichert werden
+## davon nur Buch, Unit und Orte — der Scope wird beim Fortsetzen aus den Orten neu gebaut.
+## `next_wave` ist die Welle, mit der es weitergeht. Mitten in der Welle gerastet ist das
+## die angefangene, und `wave` trägt, was sie schon hinter sich hat (`WaveRunner._open_wave`,
+## ADR 0020 Nachtrag); an der Wellengrenze bleibt es leer.
 static func build(level: Dictionary, next_wave: int, difficulty: int, run: Dictionary,
-		run_started_at: int, now: int) -> Dictionary:
-	return {
+		run_started_at: int, now: int, wave := {}) -> Dictionary:
+	var state := {
 		"format": FORMAT,
 		"app_version": SemVer.app_version(),
 		"level": {
@@ -85,6 +120,18 @@ static func build(level: Dictionary, next_wave: int, difficulty: int, run: Dicti
 		"run_started_at": run_started_at,
 		"saved_at": now,
 	}
+	if not wave.is_empty():
+		state["wave"] = wave
+	return state
+
+
+## Die angefangene Welle eines Stands, oder {}, wenn er an einer Wellengrenze gerastet
+## wurde oder von der Welle nichts mehr übrig ist.
+static func open_wave(state: Dictionary) -> Dictionary:
+	var wave: Variant = state.get("wave", {})
+	if not wave is Dictionary or int((wave as Dictionary).get("remaining", 0)) <= 0:
+		return {}
+	return wave
 
 
 ## Ob die Auswahl `keys` in Unit `unit` den begonnenen Lauf fortsetzt: sie muss jeden

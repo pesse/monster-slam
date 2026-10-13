@@ -107,24 +107,32 @@ Aufhören kostet dich den Lauf nicht. Wählst du nach einer gewonnenen Welle **�
 merkt sich das Spiel den Lauf: die Welle, mit der es weitergeht, die HP und die Rüstung
 der Festung, die Schwierigkeit und welche Orte markiert waren.
 
-- **Je Buch ein begonnener Lauf.** Englisch und Latein haben jedes ihren eigenen.
-- **Weiterspielen:** Auf der Buchkarte steht unten rechts „Lauf fortsetzen · Unit 4, Welle 23“.
-  Der Knopf öffnet die Unit, und die Orte des Laufs sind markiert. Auf der Gebietskarte
+Du kannst auch **mitten in einer Welle** rasten: drück Escape und wähle „Rasten“
+([Kapitel 7](07-abbrechen.md)). Dann geht beim Fortsetzen dieselbe Welle mit ihren
+übrigen Monstern weiter. Am Ende zählt sie als eine Welle: Kiste, Erfahrung und Auflösung
+gelten für die ganze Welle, auch für den Teil vor der Rast. Ist die Festung in der ersten
+Hälfte gewachsen, wird sie am Ende der Welle ausgebaut wie sonst.
+
+- **Je Unit ein begonnener Lauf.** Du kannst in Unit 1 rasten und in Unit 2 einen neuen Lauf
+  beginnen, ohne dass der erste verloren geht. Auf der Buchkarte trägt jede Unit mit einem
+  begonnenen Lauf ein 🔥, und ihre Hinweiskarte nennt die Welle.
+- **Weiterspielen:** Auf der Buchkarte steht unten rechts „Lauf fortsetzen · Unit 4, Welle 23“
+  für den Lauf, in dem du zuletzt gerastet hast. Der Knopf öffnet die Unit, und die Orte des
+  Laufs sind markiert. Die anderen erreichst du über ihre Unit. Auf der Gebietskarte
   heißt „Spielen“ dann **„Fortsetzen“**. Damit geht der Lauf mit der nächsten Welle weiter.
 - **Hast du inzwischen Fähigkeiten gelernt** oder ist die Festung gewachsen, hat sie beim
   Fortsetzen das neue Maximum. Die HP bleiben, wie sie beim Rasten waren.
 - **Erweitern:** Du darfst weitere Orte derselben Unit dazunehmen, etwa erst Teil 1, beim
   nächsten Mal Teil 1 und 2, dann Gesamt. „Fortsetzen“ bleibt stehen, und der Lauf geht mit
   den neuen Wörtern weiter. Rastest du danach, gehören die neuen Orte fest zum Lauf.
-- **Wegnehmen** startet einen neuen Lauf: Fehlt ein Ort des Laufs in deiner Auswahl, oder
-  wählst du eine andere Unit im selben Buch, fragt das Spiel vorher nach, denn der
-  begonnene Lauf geht dabei verloren.
+- **Wegnehmen** startet einen neuen Lauf: Fehlt ein Ort des Laufs in deiner Auswahl, fragt
+  das Spiel vorher nach, denn der begonnene Lauf dieser Unit geht dabei verloren.
 - **Der Bosskampf gehört zu keinem Lauf.** Du kannst ihn jederzeit spielen, der begonnene
   Lauf bleibt liegen.
 - **Mit denselben Orten neu anfangen:** das **✕** neben „Fortsetzen“ verwirft den
   begonnenen Lauf.
 - **Nur einmal:** Ein fortgesetzter Lauf ist nicht mehr gespeichert, bis du wieder rastest.
-  Fällt die Festung oder brichst du mitten in einer Welle ab, ist er vorbei.
+  Fällt die Festung, ist er vorbei.
 - Haben sich die Wörter einer Unit so geändert, dass ein markierter Ort fehlt, lässt sich
   der Lauf nicht fortsetzen. Die Gebietskarte sagt dir das, und der nächste Lauf beginnt
   neu.

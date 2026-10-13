@@ -172,6 +172,14 @@ func _on_wave_totals(total: int) -> void:
 	wave_total = total
 
 
+## Eine mitten in der Welle gerastete Welle geht weiter (ADR 0020 Nachtrag). Gehört direkt
+## HINTER ihr `wave_started`: die Instandsetzung gab es an ihrem echten Anfang schon, die
+## Rüstung steht wieder auf `armor`, und der Balken bei `resolved` erledigten Monstern.
+func continue_wave(resolved: int, armor: int) -> void:
+	fortress_armor = clampi(armor, 0, fortress_armor_max)
+	wave_resolved = maxi(0, resolved)
+
+
 func _on_fortress_damaged(amount: int) -> void:
 	# Rüstung zuerst: sie liegt VOR dem Leben. Was sie schluckt, kostet keine HP — das
 	# Monster ist trotzdem durchgekommen, deshalb zählen Serie und Statistik unverändert

@@ -56,14 +56,18 @@ func _ready() -> void:
 ## Buchtitel und „Für eine Arbeit üben" bei 1152 Pixel Breite schon fast voll.
 func _setup_resume() -> void:
 	var button := %ResumeButton as Button
-	var saved := RunSave.of_book(MapSelection.book, UserSettings.active_profile())
-	button.visible = not saved.is_empty()
-	if saved.is_empty():
+	var runs := RunSave.of_book(MapSelection.book, UserSettings.active_profile())
+	button.visible = not runs.is_empty()
+	if runs.is_empty():
 		return
+	# Je Unit ein Lauf (ADR 0020, Nachtrag): der Knopf führt zum zuletzt gerasteten, die
+	# anderen zeigt das Lagerfeuer an ihrem Ort (`add_runs`).
+	var saved: Dictionary = runs[0]
 	var level: Dictionary = saved["level"]
 	button.text = "Lauf fortsetzen · %s" % AreaMap.saved_label(saved)
 	Hints.attach(button, "Lauf fortsetzen",
-			"Öffnet die Unit mit den Orten des begonnenen Laufs; „Fortsetzen“ startet ihn.")
+			"Öffnet die Unit des zuletzt gerasteten Laufs mit seinen Orten; „Fortsetzen“ startet ihn.",
+			"Weitere begonnene Läufe tragen auf der Karte ein 🔥 an ihrer Unit.")
 	button.pressed.connect(func() -> void:
 		_on_unit_selected("%s/%d" % [MapSelection.book, int(level.get("unit", 0))]))
 
@@ -101,6 +105,7 @@ func _fill() -> void:
 	var nodes := nodes_for(book, units, MapLayout.unit_points(layout),
 			BossRecord.wins(UserSettings.active_profile()))
 	add_bonuses(nodes, book, layout, PlayerProgress.is_mastered)
+	add_runs(nodes, RunSave.of_book(book, UserSettings.active_profile()))
 	# Die Gebietskarten schon jetzt im Hintergrund laden, auch die gesperrter Units: die
 	# Hinweiskarte zeigt sie als Vorschau, und der Zoom hinein soll nicht auf das Bild warten.
 	MapLayout.preload_unit_textures(book, nodes.map(func(n): return int(n["unit"])))
@@ -176,6 +181,17 @@ static func add_bonuses(nodes: Array, book: String, layout: Dictionary, is_maste
 			node["bonus_lines"] = lines
 
 
+## Markiert jede Unit mit begonnenem Lauf (RunSave.of_book): `resting` ist die Welle, mit
+## der er weitergeht. MapCanvas zeichnet dafür ein Lagerfeuer an den Ort.
+static func add_runs(nodes: Array, runs: Array) -> void:
+	var waves := {}
+	for state in runs:
+		waves[int((state.get("level", {}) as Dictionary).get("unit", 0))] = int(state.get("next_wave", 1))
+	for node in nodes:
+		if waves.has(int(node["unit"])) and not bool(node.get("missing", false)):
+			node["resting"] = waves[int(node["unit"])]
+
+
 ## Die Karte am Zeiger für eine Unit: ihr Stand, wie oft ihr Boss besiegt ist, und ein
 ## Blick auf ihre Gebietskarte. Die Festungsstufe steht erst im Kopf der Gebietskarte.
 static func hint_lines(unit: Dictionary, book_name: String) -> Dictionary:
@@ -190,6 +206,8 @@ static func hint_lines(unit: Dictionary, book_name: String) -> Dictionary:
 	var wins := int(unit.get("wins", 0))
 	if wins > 0:
 		body += "\n👑 Boss %d× besiegt" % wins
+	if int(unit.get("resting", 0)) > 0:
+		body += "\n🔥 Begonnener Lauf: Welle %d" % int(unit["resting"])
 	return {
 		"title": "%s, %s" % [book_name, unit_label],
 		"image": MapLayout.unit_texture(book, int(unit["unit"])) if not book.is_empty() else null,

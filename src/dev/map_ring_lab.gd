@@ -1,7 +1,7 @@
 extends Control
 ## Werkbank für die Orte der Landkarten (scenes/dev/map_ring_lab.tscn): goldener
 ## Fortschrittsring, Leuchten bei 100 %, Bonus-Sterne unter einer Unit, Bonus-Level auf der
-## Gebietskarte und der Pfeil über einem markierten Ort.
+## Gebietskarte, das Lagerfeuer eines begonnenen Laufs und der Pfeil über einem markierten Ort.
 ##
 ## Gezeigt werden die echten Bilder und Punkte eines Buches mit ausgedachten Ständen
 ## (`PresetSelect`); der Regler füllt den ersten Ort, damit man den Sprung auf 100 % sieht.
@@ -29,6 +29,8 @@ const MIXED := [60, 100, 35, 82, 0, 100, 15, 55]
 ## Bonus-Anteile je Unit für „Gemischt", der Reihe nach: einer gemeistert, zwei davon einer,
 ## keiner, einer offen.
 const MIXED_BONUS := [[1.0], [1.0, 0.4], [], [0.0]]
+## Begonnene Läufe: die Welle, mit der sie weitergehen, an der ersten und dritten Unit.
+const RUNS := [23, 4]
 ## Anteil der Bonus-Level einer Gebietskarte für „Gemischt", der Reihe nach: einer
 ## gemeistert, einer offen.
 const BONUS_SHARES := [1.0, 0.4]
@@ -161,6 +163,11 @@ func _book_nodes() -> Array:
 	for i in nodes.size():
 		if not bool(nodes[i].get("missing", false)):
 			nodes[i]["bonus"] = _bonus(i)
+	# Begonnene Läufe an der ersten und dritten Unit (RUNS), wie BookMap sie markiert.
+	var runs: Array = []
+	for i in range(0, mini(units.size(), RUNS.size() * 2), 2):
+		runs.append({"level": {"unit": int(units[i]["unit"])}, "next_wave": RUNS[i / 2]})
+	BookMap.add_runs(nodes, runs)
 	return nodes
 
 

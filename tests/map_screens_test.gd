@@ -423,6 +423,20 @@ func test_a_unit_without_content_is_a_grey_locked_point() -> void:
 	assert_object(BookMap.hint_lines(locked[0], "Access 3")["image"]).is_not_null()
 
 
+## Je Unit ein begonnener Lauf (ADR 0020, Nachtrag): jeder trägt ein Lagerfeuer an seinem Ort,
+## eine Unit ohne Inhalt keins.
+func test_every_unit_with_a_run_rests_at_its_point() -> void:
+	var units := [{"key": "b/1", "unit": 1, "done": 0, "total": 5, "tier": 0},
+			{"key": "b/2", "unit": 2, "done": 0, "total": 5, "tier": 0}]
+	var nodes := BookMap.nodes_for("b", units, {"3": Vector2(0.6, 0.6)}, {})
+	BookMap.add_runs(nodes, [{"level": {"book": "b", "unit": 2}, "next_wave": 23},
+			{"level": {"book": "b", "unit": 1}, "next_wave": 4},
+			{"level": {"book": "b", "unit": 3}, "next_wave": 9}])
+	assert_array(nodes.map(func(n): return int(n.get("resting", 0)))).is_equal([4, 23, 0])
+	assert_str(str(BookMap.hint_lines(nodes[1], "B")["body"])).contains("Begonnener Lauf: Welle 23")
+	assert_str(str(BookMap.hint_lines(nodes[2], "B")["body"])).not_contains("Lauf")
+
+
 func test_the_book_hint_shows_words_boss_wins_and_a_preview_but_no_fortress() -> void:
 	var lines := BookMap.hint_lines(
 			{"key": "access4/2", "unit": 2, "done": 14, "total": 40, "tier": 2, "wins": 2}, "Access 4")
