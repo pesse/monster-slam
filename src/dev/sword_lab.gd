@@ -1,13 +1,9 @@
 extends Node3D
 ## Werkbank: wie das Skelett im Hauptmenü sein Schwert hält (scenes/dev/sword_lab.tscn).
 ##
-## Die Kulisse (MenuBackdrop) steht still: kein Spaziergang, keine Kamerafahrt. Gespielt
-## wird die gewählte Animation auf der Stelle, angehalten lässt sie sich mit dem Regler
-## „Zeitpunkt" durchfahren. Oberarm und Handgelenk sind die Zusatzdrehungen beim Gehen
-## (MenuBackdrop.WALK_ARM), der Griff die Lage des Schwerts in der Hand (SWORD_TURN, gilt
-## auch im Stehen). „Werte kopieren" legt beide Konstanten in die Zwischenablage und
-## schreibt sie in die Konsole — sie werden in menu_backdrop.gd übernommen, nicht hier.
-##
+## Die Kulisse steht still, die gewählte Animation läuft auf der Stelle („Zeitpunkt“ fährt
+## sie angehalten durch). Regler für MenuBackdrop.WALK_ARM und SWORD_TURN; „Werte kopieren“
+## gibt sie zum Übernehmen in menu_backdrop.gd aus.
 ##     GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/sword_lab.tscn
 ##         Leertaste hält an, ←/→ wechselt den Blick, Mausrad oder +/− ändert den Abstand,
 ##         C kopiert, R setzt auf die Werte im Spiel zurück, Escape beendet.
@@ -43,8 +39,7 @@ var _room: Window
 func _ready() -> void:
 	_room = get_window()
 	LabRoom.enlarge(_room)
-	# Die Kulisse soll stillstehen; ihr _ready hat Animationen, Schwert und Modifier schon
-	# aufgebaut.
+	# Stillstand; ihr _ready hat Animationen, Schwert und Modifier schon aufgebaut.
 	_backdrop.set_process(false)
 	_anim = _backdrop._anim
 	_backdrop._walk_arm.influence = 1.0

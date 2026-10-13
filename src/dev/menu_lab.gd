@@ -1,49 +1,22 @@
 extends Node
 ## Werkbank: das Hauptmenü samt Kulisse als Bild, zum Abgleich mit dem Entwurf
-## (assets/ui/main_menu/sources/approved-concept.png).
-##
-##     GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/menu_lab.tscn -- --shoot
-##         speichert reports/menu/menu_<breite>x<höhe>.png und beendet sich.
-##     … -- --shoot --size=1920x1080     anderes Fenster (Bezugsgröße nach Menügröße, UiScale)
-##     … -- --shoot --backdrop           nur die Kulisse, ohne Menü
-##     … -- --shoot --intro              „Wer spielt?" statt des Menüs
-##     … -- --shoot --intro --slide=0.5  mitten im Schieben (0 = „Wer spielt?", 1 = Menü,
-##                                       2 = Bibliothek)
-##     … -- --shoot --library            die Bibliothek (kein Buch herausgenommen)
-##     … -- --shoot --library --book=<id> … mit diesem Buch herausgenommen
-##     … -- --shoot --to-library         schiebt wie „Spielen" in die Bibliothek
-##     … -- --shoot --intro --to-menu    schiebt wie „Weiter" ins Menü (ohne Profilwechsel)
-##     … -- --shoot --stats              drückt „Statistik": das Fenster über der Kulisse
-##     … -- --shoot --stats=close        … und schließt es wieder; druckt, wer den Fokus hat
-##     … -- --shoot --content            drückt „Inhalte": das Fenster über der Kulisse
-##     … -- --shoot --spells             drückt „Zauber": der Laden über der Kulisse (auf einer
-##                                       Karte über die Knopfreihe der Plakette)
-##     … -- --shoot … --stock=<id>:<n>,…  Vorrat für das Bild, nur im Speicher
-##                                       (z. B. --stock=spell.frost:3,,spell.mend:1)
-##     … -- --shoot … --slots=<n>         so viele Zauberplätze wie mit gelernten Skills
-##     … -- --shoot --settings[=<reiter>] drückt „Einstellungen", Reiter 1–3 (Profil, Melden,
-##                                       Protokoll)
-##     … -- --shoot --handbook[=<datei>[#<anker>]]  das Handbuch über dem Menü, auf einem
-##                                       Kapitel (z. B. 18-wie-das-spiel-lernt.md#weiteres)
-##     … -- --shoot --hint=<knoten>      die Karte an diesem Knoten (Name, eindeutig im Baum)
-##     … -- --shoot --badge-hint         die Karte am Medaillon der Plakette (Level, XP, Punkte)
-##     … -- --shoot --map=book [--book=<id>]            die Buchkarte
-##     … -- --shoot --map=area [--book=<id>] [--unit=N] die Gebietskarte einer Unit
-##     … -- --shoot --map=area --stats   … mit dem Statistik-Fenster der Plakette darüber
-##     … -- --shoot --updates            beide Update-Hinweise sichtbar (App und Inhalte)
-##     … -- --shoot … --hour=<h>         Sonne fest auf diese Stunde (6–18, SunCycle) statt
-##                                       nach der Uhr — für Vergleichsbilder des Lichts
-##     … -- --timelapse=<n>              Zeitraffer: die Sonne läuft n-mal so schnell wie nach
-##                                       der Uhr (dort ein Tag je Stunde; 60 = ein Tag je
-##                                       Minute), ab --hour oder ab der Uhrzeit
-##
-## Ohne --shoot bleibt das Fenster offen und lässt sich bedienen; unten rechts steht die
-## Uhrzeit der Sonne (auf den Bildern nicht).
-##     … -- --shoot … --name=<Name> --gold=<n>       Name und Gold der Plakette, nur im Speicher
-##                                       (für Bilder ohne echten Profilnamen und Debug-Gold)
-##
-## Das Menü liest das aktive Profil nur (Name, Gold, Level); geschrieben wird nichts.
-## Headless gibt es keinen Renderer — deshalb GODOT_WINDOW=1.
+## (assets/ui/main_menu/sources/approved-concept.png). Liest das aktive Profil, schreibt nichts.
+##     GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/menu_lab.tscn [-- <Argumente>]
+## Ohne --shoot bleibt das Fenster bedienbar, unten rechts die Uhrzeit der Sonne.
+## Mit --shoot nach reports/menu/menu_<breite>x<höhe>.png, dazu:
+##     --size=1920x1080       Fenstergröße
+##     --backdrop             nur die Kulisse
+##     --intro [--slide=0.5]  „Wer spielt?“; --slide: 0 = Wer spielt?, 1 = Menü, 2 = Bibliothek
+##     --library [--book=<id>]  Bibliothek, wahlweise mit herausgenommenem Buch
+##     --to-library, --intro --to-menu  schiebt wie „Spielen“ bzw. „Weiter“
+##     --stats[=close], --content, --spells, --settings[=1..3]  drückt den Knopf
+##     --stock=<id>:<n>,…, --slots=<n>, --name=<Name>, --gold=<n>  Werte nur im Speicher
+##     --handbook[=<datei>[#<anker>]]  Handbuch auf einem Kapitel
+##     --hint=<knoten>, --badge-hint  Hinweiskarte an einem Knoten bzw. am Medaillon
+##     --map=book|area [--book=<id>] [--unit=N]  Buch- oder Gebietskarte
+##     --updates              beide Update-Hinweise
+##     --hour=<6..18>         Sonne fest auf diese Stunde
+## --timelapse=<n>: die Sonne läuft n-mal so schnell wie nach der Uhr (dort ein Tag je Stunde).
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 const BACKDROP_SCENE := "res://scenes/ui/menu_backdrop.tscn"

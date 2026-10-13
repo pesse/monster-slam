@@ -1,37 +1,19 @@
 extends Node
-## Werkbank: der Fähigkeiten-Screen als Bild, zum Abgleich mit dem Entwurf
-## (assets/ui/skill_tree/concept/skill-tree-v5.webp).
-##
-##     GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/skill_tree_lab.tscn -- --shoot
-##         speichert reports/skill_tree/skill_tree_<breite>x<höhe>.png und beendet sich.
-##     … -- --shoot --size=1920x1080     anderes Fenster (Bezugsgröße nach Menügröße, UiScale)
-##     … -- --shoot --points=3           echte Punkte statt der unbegrenzten des Debug-Builds
-##     … -- --shoot --hint=skill.scout.bow   zeigt die Hinweiskarte, als stünde die Maus
-##                                         auf dem Knoten (Bildname bekommt die Id dazu)
-##     … -- --shoot --hint=skill.scout.bow --dy=-400   Maus darüber/darunter versetzt, um
-##                                         das Umklappen am Rand zu sehen
-##     … -- --shoot --hint=… --card=4   nur die Hinweiskarte, vierfach vergrößert (Pixel
-##                                         einzeln sichtbar — für Kanten und Pfeil)
-##     … -- --shoot --rewire=skill.armor.builder:skill.armor.portcullis   hängt vor dem Bild
-##                                         um wie „Umhängen an …" (ohne Speichern)
-##     … -- --medallion                  misst den Ring von medallions/available.webp
-##
-## Unten liegt eine Leiste zum Setzen der Plätze: „Knoten verschieben" schaltet das Ziehen
-## ein (linke Taste zieht einen Knoten oder Baumnamen, die mittlere schiebt das Netz),
-## „Alle berechnen" nimmt jede Setzung zurück (erst mit Speichern dauerhaft).
-## „Bearbeiten": ein Klick wählt einen Knoten, darunter stehen Stufe, Vorstufe und seine
-## Kosten (änderbar). „Umhängen an …" macht den NÄCHSTEN Klick zur neuen Vorstufe — er und
-## alles, was über ihm hängt, rückt dorthin, auch in einen anderen Baum (Regeln in
-## SkillRewire); beim Überfahren sagt die Statuszeile vorher, was geschähe. Ein Klick
-## daneben oder die rechte Taste bricht ab, ohne gewählten Knoten wählt die rechte Taste
-## ab. „Daten verwerfen" lädt die Dateien neu. „Speichern" schreibt die Plätze
-## (SkillLayout.PATH) und jede geänderte Datei unter data/skills/. Nur im Editor-Lauf, im
-## Export ist res:// read-only.
-##
-## Der Screen bekommt ein eigenes Buch mit dem Lernstand des Entwurfs (Späher ausgebaut bis
-## auf die Stiefel). Es liest die Bäume aus data/skills/ (nicht aus der Registry: geschrieben
-## wird ins Repo), lädt und speichert aber kein Profil — das Entwicklungsprofil bleibt
-## unberührt.
+## Werkbank: der Fähigkeiten-Screen, zum Abgleich mit dem Entwurf
+## (assets/ui/skill_tree/concept/skill-tree-v5.webp) und zum Setzen und Umhängen der Knoten.
+##     GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/skill_tree_lab.tscn [-- <Argumente>]
+##     --shoot              Bild nach reports/skill_tree/skill_tree_<breite>x<höhe>.png, dazu:
+##         --size=1920x1080     Fenstergröße
+##         --points=3           echte Punkte statt der unbegrenzten des Debug-Builds
+##         --hint=<id> [--dy=<px>] [--card=4]  Hinweiskarte am Knoten, Maus versetzt, Karte
+##                              vergrößert
+##         --rewire=<id>:<neue vorstufe>  hängt vor dem Bild um, ohne Speichern
+##     --medallion          misst den Ring von medallions/available.webp
+## Leiste: „Knoten verschieben“ (links zieht Knoten/Baumnamen, Mitte schiebt das Netz),
+## „Alle berechnen“, „Bearbeiten“ (Klick wählt, Kosten änderbar), „Umhängen an …“ (der
+## nächste Klick wird neue Vorstufe, Regeln in SkillRewire; rechts bricht ab), „Daten
+## verwerfen“, „Speichern“ (SkillLayout.PATH und geänderte Dateien unter data/skills/).
+## Liest die Bäume aus data/skills/, nicht aus der Registry; lädt und speichert kein Profil.
 
 const REWIRE := preload("res://src/dev/skill_rewire.gd")
 
@@ -135,7 +117,7 @@ func _setup_arrange(graph: SkillGraph) -> void:
 		_choose("")
 		_show_status())
 	%CostSpin.value_changed.connect(_set_cost)
-	# Das Theme zeigt „eingedrückt" kaum: ein Punkt vor dem Text sagt, welcher Modus läuft.
+	# Ein Punkt vor dem Text zeigt den Modus; „eingedrückt“ ist im Theme kaum sichtbar.
 	for toggle: Button in [%ArrangeButton, %EditButton, %RewireButton]:
 		var label := toggle.text
 		toggle.toggled.connect(func(on: bool) -> void:
@@ -171,8 +153,8 @@ func _save_layout() -> void:
 # --- Bearbeiten ---------------------------------------------------------------------
 
 
-## Im Bearbeiten gehören linke und rechte Taste über dem Netz der Werkbank: der Screen
-## würde sonst nach dem Lernen fragen. Rad und mittlere Taste gehen weiter ans Netz.
+## Im Bearbeiten fängt die Werkbank linke und rechte Taste ab, sonst fragte der Screen nach
+## dem Lernen. Rad und mittlere Taste gehen weiter ans Netz.
 func _input(event: InputEvent) -> void:
 	if not %EditButton.button_pressed:
 		return

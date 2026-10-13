@@ -3,19 +3,12 @@ extends SceneTree
 ##
 ##     tools/godot.sh -s res://src/dev/model_forge.gd
 ##
-## Die Modelle sind Code und keine Handarbeit: wer eines ändern will, ändert es HIER und
-## erzeugt neu — die .glb ist Ergebnis, nicht Quelle. Deterministisch (fester Samen je
-## Modell), damit ein erneuter Lauf dieselben Dateien schreibt und der Diff leer bleibt.
-##
-## Stil wie die gekauften Modelle (KayKit, Quaternius): flache Facetten, eine Farbe je
-## Fläche, keine Textur. Jede Farbe wird eine eigene Fläche mit eigenem Material, damit
-## der glTF-Import sie ohne Vertexfarben richtig zeigt.
-##
-## Jedes Modell ist für seinen Platz in einem BattleTheme bemessen: der Kampf skaliert je
-## Platz (Baum, Fels, Gras, Wahrzeichen) gleich, egal welches Modell dort steht. Zum
-## Vergleich bei Skalierung 1: tree.glb ist 7.3 hoch (Bäume stehen bei ~1), rock.glb ein
-## Kieselhaufen von 1.1 Breite (Felsen bei ~2.3), grass.glb 1.0 hoch (Gras bei ~1.6),
-## pillar.gltf 4.0 (Wahrzeichen bei ~0.9). Die Burg ist 4.0 hoch (im Kampf × FortressModel.SCALE).
+## Die .glb ist Ergebnis, geändert wird hier. Fester Samen je Modell, damit ein neuer Lauf
+## dieselben Dateien schreibt. Jede Farbe ist eine eigene Fläche mit eigenem Material, damit
+## der glTF-Import sie ohne Vertexfarben zeigt.
+## Bemessen für den Platz im BattleTheme (der Kampf skaliert je Platz). Vergleich bei
+## Skalierung 1, in m: tree.glb 7.3 hoch (Bäume bei ~1), rock.glb 1.1 breit (Felsen bei ~2.3),
+## grass.glb 1.0 (Gras bei ~1.6), pillar.gltf 4.0 (Wahrzeichen bei ~0.9), Burg 4.0.
 
 const OUT := "res://assets/models/forge"
 
@@ -275,9 +268,8 @@ func _cactus_column(f: Forge, a: Vector3, b: Vector3, r: float) -> void:
 const SANDSTONE := [Color(0.62, 0.36, 0.22), Color(0.72, 0.46, 0.28), Color(0.80, 0.57, 0.36)]
 
 
-## Sandsteinbrocken: verbeulte Kugel, unten flach, in Schichten gefärbt — die Farbe hängt
-## an der Höhe der Facette, das ergibt waagerechte Bänder. Etwa 1.1 hoch, 2.5 breit (vor
-## der Verkleinerung in _initialize).
+## Sandsteinbrocken: verbeulte Kugel, Farbe nach Höhe der Facette (waagerechte Bänder).
+## Etwa 1.1 hoch, 2.5 breit, vor der Verkleinerung in _initialize.
 func _sandstone_rock() -> Forge:
 	var f := Forge.new()
 	var rng := _rng(23)
@@ -513,9 +505,8 @@ const MOSS := Color(0.18, 0.28, 0.11)
 const BOULDER_TOP := Color(0.41, 0.41, 0.42)
 
 
-## Findling, flach auf dem Boden. `cover` (Schnee, Moos) liegt nur auf den Facetten, die
-## fast flach nach oben zeigen — eine Kappe, kein Überzug; ohne (`r` < 0) bleibt er grau.
-## Etwa 0.5 hoch und 1 breit — der Kampf stellt Felsen mit ~2.3 hin.
+## Findling, etwa 0.5 hoch und 1 breit. `cover` (Schnee, Moos) liegt nur auf fast
+## waagerechten Facetten; `cover.r` < 0 heißt keiner.
 func _boulder(seed_value: int, cover: Color) -> Forge:
 	var f := Forge.new()
 	var rng := _rng(seed_value)
@@ -525,9 +516,8 @@ func _boulder(seed_value: int, cover: Color) -> Forge:
 	return f
 
 
-## Farbe einer Steinfacette: oben `top`, an den Seiten `a` und `b` — nach Neigung, mit
-## etwas Zufall an der Grenze, damit die Töne nicht als Ringe um den Stein liegen. `cover`
-## (r < 0: keine) nur auf fast waagerechten Flächen oben.
+## Farbe einer Steinfacette nach Neigung: oben `top`, seitlich `a`/`b`, mit Zufall an der
+## Grenze gegen Ringe. `cover` (r < 0: keine) nur auf fast waagerechten Flächen.
 func _stone_paint(rng: RandomNumberGenerator, top: Color, a: Color, b: Color,
 		cover := Color(-1, -1, -1)) -> Callable:
 	return func(_m: Vector3, n: Vector3) -> Color:
@@ -563,9 +553,7 @@ const DUNE_A := Color(0.62, 0.62, 0.34)
 const DUNE_B := Color(0.50, 0.52, 0.28)
 
 
-## Grasbüschel wie dry_grass, in den Farben `a`/`b` und `height` mal so hoch: grünes Gras
-## für Wiesen und Wälder, Dünengras für Strände. Grüne Themen bekamen sonst das gekaufte
-## grass.glb oder dry_grass, und deren Orange stand auf der Wiese wie Herbstlaub.
+## Grasbüschel wie dry_grass, in den Farben `a`/`b` und `height` mal so hoch.
 func _grass(seed_value: int, a: Color, b: Color, height: float) -> Forge:
 	var f := Forge.new()
 	var rng := _rng(seed_value)
@@ -692,10 +680,8 @@ const GUM_B := Color(0.27, 0.36, 0.24)
 const GUM_C := Color(0.44, 0.52, 0.40)
 
 
-## Eukalyptus: heller, glatter Stamm mit leichtem Knick, der sich in vier schräge Äste
-## gabelt, jeder noch einmal geteilt; an den Enden viele kleine, graugrüne Laubballen in
-## verschiedener Höhe — die Krone ist licht und unregelmäßig, weder Kugel noch Schirm.
-## Etwa 7 hoch.
+## Eukalyptus: heller Stamm, vier gegabelte Äste, an den Enden kleine graugrüne
+## Laubballen. Etwa 7 hoch.
 func _eucalyptus() -> Forge:
 	var f := Forge.new()
 	var rng := _rng(89)
@@ -729,9 +715,8 @@ const PAN_A := Color(0.34, 0.50, 0.20)
 const PAN_B := Color(0.26, 0.40, 0.15)
 
 
-## Schraubenbaum (Pandanus): auf sechs Stelzwurzeln ein kräftiger Stamm mit drei kurzen
-## Ästen; an jedem ein dichter Schopf langer, bandförmiger Blätter, die erst steigen und
-## dann überhängen. Etwa 4.5 hoch.
+## Schraubenbaum (Pandanus): sechs Stelzwurzeln, drei kurze Äste mit Schöpfen
+## bandförmiger Blätter. Etwa 4.5 hoch.
 func _pandanus() -> Forge:
 	var f := Forge.new()
 	var rng := _rng(107)
@@ -863,9 +848,7 @@ const BRAIN_A := Color(0.88, 0.50, 0.50)
 const BRAIN_B := Color(0.76, 0.40, 0.42)
 
 
-## Angespülter Korallenstock: ein flacher, sandfarbener Kalkbrocken, darauf eine rosa
-## Hirnkoralle mit Windungen und zwei verzweigte Geweihkorallen in Orange und Violett.
-## Etwa 0.8 hoch und 1 breit — im Felsplatz.
+## Korallenstock auf einem Kalkbrocken, für den Felsplatz. Etwa 0.8 hoch und 1 breit.
 func _coral() -> Forge:
 	var f := Forge.new()
 	var rng := _rng(137)
@@ -1062,8 +1045,7 @@ const RUST := Color(0.56, 0.32, 0.20)
 const DOOR := Color(0.26, 0.20, 0.15)
 
 
-## Wellblechschuppen: Kasten mit Satteldach, Wände und Dach in Rippen aus zwei Tönen, ein
-## paar rostige Bahnen, großes Tor vorn (+z), daneben ein kleiner Tank. Etwa 3.4 hoch,
+## Wellblechschuppen mit Satteldach, Tor vorn (+z) und kleinem Tank. Etwa 3.4 hoch,
 ## 4.4 breit.
 func _tin_shed() -> Forge:
 	var f := Forge.new()
@@ -1453,9 +1435,8 @@ const WATER_B := Color(0.46, 0.70, 0.80)
 
 
 ## Halbrunder Bogen in der x-y-Ebene, `c` die Mitte der Kämpferlinie, `depth` tief entlang
-## z: Keilsteine zwischen `r_in` und `r_out`, abwechselnd `col_a` und `col_b`. Die Zwickel
-## bis zur Oberkante `c.y + r_out` füllt `spandrel` — so steht der Bogen in einer Wand.
-## `stones` gerade, damit die Fuge im Scheitel liegt und die Zwickel sauber teilen.
+## z: Keilsteine zwischen `r_in` und `r_out`, abwechselnd `col_a` und `col_b`. `spandrel`
+## füllt die Zwickel bis `c.y + r_out`. `stones` gerade, damit die Fuge im Scheitel liegt.
 func _arch(f: Forge, c: Vector3, r_in: float, r_out: float, depth: float, col_a: Color,
 		col_b: Color, spandrel: Color, stones := 8) -> void:
 	var dz := Vector3(0, 0, depth * 0.5)
@@ -1712,9 +1693,7 @@ func _crane() -> Forge:
 	return f
 
 
-## Hafenbecken im Pflaster: eine Wasserfläche mit Kaimauer ringsum, Pollern und einem
-## festgemachten Ruderboot. Etwa 7 lang, 3.6 breit, flach — das Wasser liegt knapp unter
-## der Kante.
+## Hafenbecken mit Kaimauer, Pollern und Ruderboot. Etwa 7 lang, 3.6 breit, flach.
 func _harbour_basin() -> Forge:
 	var f := Forge.new()
 	f.box(Vector3(0, -0.1, 0), Vector3(6.4, 0.3, 3.0), WATER_A, 0.0)
@@ -1867,9 +1846,8 @@ const SKY_SOIL := Color(0.54, 0.48, 0.32)
 const EMBER := Color(0.98, 0.70, 0.30)
 
 
-## Schwebende Scholle: ein umgekehrter Felskegel über dem Boden, oben Erde mit einem
-## Säulenstumpf und einer Zypresse; in Rissen glimmt es. Darunter zwei kleine Brocken.
-## Etwa 5 hoch, die Unterseite 1 über dem Boden.
+## Schwebende Scholle: umgekehrter Felskegel mit Säulenstumpf und Zypresse. Etwa 5 hoch,
+## die Unterseite 1 über dem Boden.
 func _floating_rock() -> Forge:
 	var f := Forge.new()
 	var rng := _rng(277)
@@ -2076,9 +2054,7 @@ const SPINES := [
 ]
 
 
-## Bücherregal: Rahmen, Rückwand, fünf Fächer voller Buchrücken in wechselnder Höhe und
-## Farbe, hier und da eine Lücke und ein schräg gelehntes Buch. Etwa 2.0 breit, 3.0 hoch,
-## 0.5 tief, vorn +z.
+## Bücherregal mit fünf Fächern. Etwa 2.0 breit, 3.0 hoch, 0.5 tief, vorn +z.
 func _bookcase() -> Forge:
 	var f := Forge.new()
 	var rng := _rng(73)
@@ -2126,8 +2102,8 @@ const WAX_B := Color(0.86, 0.8, 0.66)
 const WICK := Color(0.12, 0.1, 0.08)
 
 
-## Drei Kerzen verschiedener Höhe auf einem Klecks Wachs; die Flamme setzt die Szene dazu
-## (leuchtend, das kann ein .glb ohne Material nicht). Die Dochte enden bei `candle_tops`.
+## Drei Kerzen auf einem Klecks Wachs; die Flammen setzt die Szene an `CANDLE_TOPS`, weil
+## ein .glb ohne Material nicht leuchtet.
 func _candles() -> Forge:
 	var f := Forge.new()
 	var rng := _rng(79)
@@ -2140,7 +2116,7 @@ func _candles() -> Forge:
 	return f
 
 
-## Wo die Dochte der drei Kerzen enden — dort sitzen in der Szene die Flammen.
+## Enden der Dochte, in m.
 const CANDLE_TOPS := [Vector3(-0.08, 0.34, 0.02), Vector3(0.06, 0.24, -0.04), Vector3(0.1, 0.14, 0.08)]
 
 
@@ -2198,9 +2174,7 @@ func _mansard(f: Forge, c: Vector3, hx0: float, hz0: float, hx1: float, hz1: flo
 	f.tri_out(hi[0], hi[2], hi[3], top, inside)
 
 
-## Pariser Mietshaus als Ruine: Kalksteinblock mit Gesimsen, drei Fensterachsen, ein
-## eiserner Balkon, darüber das Mansarddach mit Gauben und Schornsteinen. Die rechte Ecke
-## ist eingestürzt, Efeu wächst die Fassade hoch, unten liegt Schutt. Etwa 5 hoch.
+## Pariser Mietshaus als Ruine mit Mansarddach, die rechte Ecke eingestürzt. Etwa 5 hoch.
 func _haussmann_ruin() -> Forge:
 	var f := Forge.new()
 	var rng := _rng(331)
@@ -2300,9 +2274,8 @@ const TUFFEAU_A := Color(0.92, 0.88, 0.78)
 const TUFFEAU_B := Color(0.82, 0.78, 0.67)
 
 
-## Schlossruine an der Loire: runder Turm aus hellem Tuffstein mit Pechnasenkranz und
-## spitzem Schieferhelm, daneben ein Stück Mauer mit Bogenfenster, oben abgebrochen,
-## Efeu an Turm und Mauer. Etwa 7.4 hoch (× 1.3 beim Export).
+## Schlossruine: runder Turm mit Schieferhelm und Mauerstück. Etwa 7.4 hoch (× 1.3 beim
+## Export).
 func _chateau_tower() -> Forge:
 	var f := Forge.new()
 	var rng := _rng(341)
@@ -2395,9 +2368,7 @@ const EIFFEL_A := Color(0.42, 0.32, 0.24)
 const EIFFEL_B := Color(0.34, 0.26, 0.19)
 
 
-## Der Eiffelturm, verrostet und unten zugewachsen: vier Beine, die sich über die beiden
-## Plattformen zur Spitze krümmen, Bögen zwischen den Füßen, Kreuzstreben im Mittelteil.
-## Etwa 9.6 hoch (× 1.1 beim Export) — ein Wahrzeichen in der Ferne, nicht am Feld.
+## Der Eiffelturm, verrostet. Etwa 9.6 hoch (× 1.1 beim Export).
 func _eiffel_tower() -> Forge:
 	var f := Forge.new()
 	var rng := _rng(353)
@@ -2454,8 +2425,8 @@ const FADED_PAINT := Color(0.34, 0.38, 0.40)
 const FLAT_TYRE := Color(0.08, 0.08, 0.08)
 
 
-## Ein Feuer bei `c`, `size` hoch: im Modell nur die Glut — ein paar glühende Brocken —,
-## die Flamme darüber brennt im Kampf (Forge.fire_at, Fire).
+## Ein Feuer bei `c`, `size` hoch: im Modell nur die Glut, die Flamme setzt Fire im Kampf
+## (Forge.fire_at).
 func _flames(f: Forge, c: Vector3, size: float, rng: RandomNumberGenerator) -> void:
 	f.glow(FLAME_A, 1.1)
 	f.glow(CINDER, 1.1)
@@ -2477,10 +2448,8 @@ func _soot_streak(f: Forge, c: Vector3, width: float, height: float, facing: Vec
 			SOOT_A, inside)
 
 
-## Pariser Mietshaus nach dem Brand: nur noch die rußgeschwärzten Außenmauern, oben in
-## Stufen abgebrochen, das Dach eingestürzt. Von oben sieht man hinein auf Schutt und
-## verkohlte Balken, im Erdgeschoss glüht noch ein Feuer. Etwa 4.6 hoch, wie haussmann_ruin
-## für den Baumplatz.
+## Pariser Mietshaus nach dem Brand: rußige Außenmauern, innen Schutt und ein Feuer.
+## Etwa 4.6 hoch, für den Baumplatz.
 func _haussmann_burnt() -> Forge:
 	var f := Forge.new()
 	var rng := _rng(373)
@@ -2539,9 +2508,7 @@ func _haussmann_burnt() -> Forge:
 	return f
 
 
-## Eiffelturm nach dem Einsturz: die unteren beiden Etagen stehen, der obere Turm ist am
-## zweiten Absatz abgeknickt und hängt schräg zur Seite, Träger liegen am Fuß. Rostbraun.
-## Etwa 7.5 hoch (× 1.1 beim Export).
+## Eiffelturm, am zweiten Absatz abgeknickt. Etwa 7.5 hoch (× 1.1 beim Export).
 func _eiffel_broken() -> Forge:
 	var f := Forge.new()
 	var rng := _rng(379)
@@ -2599,9 +2566,8 @@ func _eiffel_broken() -> Forge:
 	return f
 
 
-## Autowrack: verbeulte Karosserie in verblichenem Lack mit Rostflecken, Scheiben leer,
-## die Reifen platt. `burning`: aus der Motorhaube schlagen Flammen, der Lack ist verkohlt.
-## Etwa 3.1 lang (entlang x) und 1.2 hoch — Kram am Feldrand.
+## Autowrack; `burning`: Flammen aus der Motorhaube, Lack verkohlt. Etwa 3.1 lang (x) und
+## 1.2 hoch.
 func _car_wreck(burning: bool) -> Forge:
 	var f := Forge.new()
 	var rng := _rng(383 if burning else 389)
@@ -2632,8 +2598,7 @@ func _car_wreck(burning: bool) -> Forge:
 	return f
 
 
-## Rostige Öltonne, in der ein Feuer brennt — Licht und Wärme in der Ruinenstadt. Etwa
-## 1.6 hoch mit den Flammen.
+## Rostige Öltonne mit Feuer. Etwa 1.6 hoch mit den Flammen.
 func _burning_barrel() -> Forge:
 	var f := Forge.new()
 	var rng := _rng(397)
@@ -2698,9 +2663,8 @@ const DOME_B := Color(0.78, 0.78, 0.76)
 const HULL_PAINT := Color(0.24, 0.32, 0.42)
 
 
-## Verlassenes Steinhaus: Mauern oben in Stufen abgebrochen, das Dach zur Hälfte
-## eingestürzt — links liegen die Ziegel noch, rechts ragen nur die Sparren auf, darunter
-## Schutt. Leere Fenster, Efeu. Etwa 4.2 hoch, für den Baumplatz wie haussmann_ruin.
+## Verlassenes Steinhaus, das Dach zur Hälfte eingestürzt. Etwa 4.2 hoch, für den
+## Baumplatz.
 func _house_ruin(seed_value: int, wall_a: Color, wall_b: Color, tile_a: Color, tile_b: Color) -> Forge:
 	var f := Forge.new()
 	var rng := _rng(seed_value)
@@ -2750,9 +2714,7 @@ func _house_ruin(seed_value: int, wall_a: Color, wall_b: Color, tile_a: Color, t
 	return f
 
 
-## Turmruine: runder Turm ohne Dach, die Krone schief abgebrochen, schmale Fenster, daneben
-## ein Mauerstumpf, Efeu und Schutt am Fuß. Etwa 5.2 hoch (× 1.3 beim Export) — Schloss an
-## der Loire oder Fort über dem Hafen, je nach Stein.
+## Turmruine ohne Dach mit Mauerstumpf. Etwa 5.2 hoch (× 1.3 beim Export).
 func _tower_ruin(seed_value: int, stone_a: Color, stone_b: Color) -> Forge:
 	var f := Forge.new()
 	var rng := _rng(seed_value)
@@ -2996,8 +2958,7 @@ class Forge:
 	func fire_at(at: Vector3, size: float) -> void:
 		fires.append(Vector4(at.x, at.y, at.z, size))
 
-	## Flächen in `col` leuchten selbst (Flammen, Glut), mit `energy` über der Schwelle
-	## des Glows — so blühen sie im Kampf auf, ohne dass ein Licht nötig ist.
+	## Flächen in `col` leuchten selbst (Flammen, Glut), `energy` über der Glow-Schwelle.
 	func glow(col: Color, energy: float) -> void:
 		_glowing[col] = energy
 
@@ -3115,10 +3076,8 @@ class Forge:
 						n = -n
 					tri_out(p0, p1, p2, paint.call(m, n.normalized()), c)
 
-	## Stein um `c` mit Halbachsen `radii`, unten bei `floor_y` abgeflacht: eine runde,
-	## leicht verbeulte Grundform, von der `cuts` Ebenen wie mit dem Meißel abgeschlagen sind.
-	## So bleibt er Low-Poly, besteht aber aus wenigen großen Bruchflächen und vielen kleinen
-	## Kanten dazwischen statt aus einer Handvoll riesiger Facetten wie `lump`.
+	## Stein um `c` mit Halbachsen `radii`, unten bei `floor_y` abgeflacht: verbeulte
+	## Grundform, von der `cuts` Ebenen abgeschlagen sind.
 	func rock(c: Vector3, radii: Vector3, rng: RandomNumberGenerator, cuts: int,
 			paint: Callable, floor_y := -INF) -> void:
 		var planes: Array[Vector4] = []

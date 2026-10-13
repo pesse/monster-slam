@@ -1,45 +1,19 @@
 extends Node
-## Misst die Satzbewertung gegen einen festen Antwortbogen — das Werkzeug, das die Frage
-## beantwortet, die docs/SATZBEWERTUNG_MODELLE.md unter „Was zu messen wäre" offen lässt.
-##
-##     tools/godot.sh res://scenes/dev/measure_sentences.tscn
-##     tools/godot.sh res://scenes/dev/measure_sentences.tscn -- --serve --timeout=60
-##     tools/godot.sh res://scenes/dev/measure_sentences.tscn -- --model
-##     tools/godot.sh res://scenes/dev/measure_sentences.tscn -- --model \
-##         --url=http://127.0.0.1:1234/v1/chat/completions --name=qwen2.5:3b-instruct
-##
-## `--serve` startet den Dienst SELBST (LocalModelServer, Programm und Gewichte aus
-## user://model/) — das ist der Durchstich für „Stufe 1 muss installierbar sein". `--model`
-## setzt dagegen einen voraus, den jemand anders gestartet hat (Ollama, LM Studio).
-##
-## Eine Szene und kein `-s`-Skript, obwohl es nichts zeichnet: mit `--script` registriert
-## Godot die Autoloads nicht, und schon SentenceCard bezieht sich auf die ContentRegistry
-## (für Forderungen, die ihre Formen nicht selbst nennen). Die Klasse ließe sich dann gar
-## nicht erst übersetzen — gemessen würde nichts.
-##
-## Wozu ein Skript und nicht die Werkbank: scenes/dev/boss_lab.tscn beurteilt EINE Antwort
-## und liefert einen Eindruck. Die Entscheidung über eine zweite Stufe hängt aber an einer
-## Zahl, und zwar an der teuersten — wie viele RICHTIGE Antworten abgewiesen werden. Die
-## bekommt man nur aus einem festen Bogen, der sich nicht mit der Laune des Tippenden
-## ändert und der nach einem Modellwechsel dieselbe Messung wiederholt.
-##
-## Der Bogen ist der Maßstab, nicht das Erwartungsprotokoll des Codes: `expect` sagt, was
-## eine Lehrkraft gelten ließe. Weicht die Messung ab, ist das ein Befund und kein
-## kaputter Test — deshalb ist das hier ein Messskript und keine gdUnit-Suite. Dass der
-## Bogen IN SICH stimmt (keine Stolperstelle auf einer richtigen Lösung), hält daneben
-## tests/answer_sheet_test.gd.
-##
-## Gemessen wird ohne das private Submodule: die Sätze im Bogen sind erfunden und nennen
-## ihre `forms` selbst. Das Skript liegt unter src/dev/ und ist damit aus dem Export
-## ausgeschlossen; es verbucht nichts und schreibt nichts.
+## Misst die Satzbewertung gegen den festen Antwortbogen (docs/SATZBEWERTUNG_MODELLE.md
+## „Gemessen wird gegen einen Antwortbogen“). `expect` ist der Maßstab: eine Abweichung ist
+## ein Befund, kein kaputter Test. Schreibt und verbucht nichts.
+##     tools/godot.sh res://scenes/dev/measure_sentences.tscn [-- <Argumente>]
+##     --serve [--timeout=60]  startet den Dienst selbst (LocalModelServer, user://model/)
+##     --model [--url=… --name=…]  nutzt einen fremden Dienst (Ollama, LM Studio)
+##     --pass=<güte>, --sheet=<pfad>, --model-dir=<pfad>, --port=<n>, --quiet
+## Eine Szene statt `-s`-Skript: ohne Autoloads ließe sich SentenceCard nicht übersetzen
+## (sie liest die ContentRegistry).
 
 const SHEET := "res://src/dev/answer_sheet.json"
 
-## Ab welcher Güte eine Antwort als angenommen gilt. **Das ist eine Annahme dieses
-## Skripts und keine entschiedene Spielregel** — ADR 0004 spricht von einer „Güteschwelle",
-## ohne sie festzulegen. Weil die Zahl der Falsch-Negativen vollständig an ihr hängt,
-## steht sie im Bogen, ist per --pass= verstellbar, und darunter läuft die Messung noch
-## einmal über eine ganze Reihe von Schwellen.
+## Ab welcher Güte eine Antwort als angenommen gilt. Eine Annahme dieses Skripts, keine
+## Spielregel (ADR 0004 legt die „Güteschwelle“ nicht fest); der Bogen und --pass= stechen,
+## `SWEEP` misst eine Reihe von Schwellen.
 const DEFAULT_PASS := 0.6
 const SWEEP := [0.4, 0.5, 0.6, 0.7, 0.8]
 
@@ -60,8 +34,7 @@ var _verbose := true
 var _judge: SentenceJudge
 var _backend: LocalModelBackend
 var _server: LocalModelServer
-## Gefüllt vom `refined`-Signal, geleert vor jeder Frage — der Unterschied zwischen
-## „Stufe 1 hat angehoben" und „Stufe 1 hatte nichts beizutragen".
+## Gefüllt vom `refined`-Signal, geleert vor jeder Frage; leer heißt, Stufe 1 hob nicht an.
 var _lift: Dictionary = {}
 ## Dasselbe für „Stufe 1 sagt falsch" und die Erklärung dazu (ADR 0005).
 var _deny: Dictionary = {}
@@ -124,8 +97,8 @@ func _parse_args() -> void:
 			_use_model = true
 
 
-## Eine Zeile je Antwort: der Satz OHNE seine Antworten (die Bewertung soll genau das
-## sehen, was der Kampf ihr gäbe), dazu Erwartung, Art und Anmerkung aus dem Bogen.
+## Eine Zeile je Antwort: der Satz ohne seine Antworten, wie im Kampf, dazu Erwartung, Art
+## und Anmerkung aus dem Bogen.
 func _load_rows() -> Array:
 	var raw := FileAccess.get_file_as_string(_sheet_path)
 	var parsed: Variant = JSON.parse_string(raw)
@@ -179,12 +152,11 @@ func _report(title: String, rows: Array, field: String) -> void:
 	_matrix(rows, _pass, field)
 
 
-## Eine Antwortzeile. Das Zeichen vorn ist das Urteil ÜBER das Urteil:
+## Eine Antwortzeile. Das Zeichen vorn bewertet das Urteil:
 ##   ·  richtig eingeordnet
-##   ✗  Falsch-Negativ — eine richtige Antwort abgewiesen. Der teuerste Fehler.
-##   !  Falsch-Positiv — eine falsche Antwort durchgewinkt. Seit die Prüfkarte ohne Urteil
-##      keine Güte mehr ausgibt, kann das nur noch aus dem SCHLÜSSEL kommen: eine falsche
-##      Lösung in `accepted` oder eine Stolperstelle, die zu spät greift.
+##   ✗  Falsch-Negativ: eine richtige Antwort abgewiesen
+##   !  Falsch-Positiv: eine falsche Antwort durchgewinkt; kommt aus dem Schlüssel (falsche
+##      Lösung in `accepted` oder eine Stolperstelle, die zu spät greift)
 func _line(row: Dictionary, field: String) -> String:
 	var result: Dictionary = row.get(field, {})
 	var quality := float(result.get("quality", 0.0))
@@ -221,9 +193,7 @@ func _matrix(rows: Array, threshold: float, field: String) -> Dictionary:
 			% [tally["fn"], tally["pos"], _percent(tally["fn"], tally["pos"]),
 			tally["fp"], tally["neg"], _percent(tally["fp"], tally["neg"])])
 
-	# Der Topf ohne Urteil ist das, was Stufe 1 auflösen muss, und die Aufteilung darin ist
-	# ihr Auftrag: die richtigen anheben, die falschen liegen lassen. Weil sie nur heben
-	# darf, kann sie an den falschen gar nichts verderben.
+	# Den Topf ohne Urteil muss Stufe 1 auflösen: die richtigen anheben, die falschen lassen.
 	var split := _unsure_split(rows)
 	print("\n    Ohne Urteil     %d von %d (%.1f %%)" % [
 			tally["unsure"], rows.size(), _percent(tally["unsure"], rows.size())])
@@ -232,9 +202,7 @@ func _matrix(rows: Array, threshold: float, field: String) -> Dictionary:
 	print("    Fehlurteile     %d, davon %d aus dem Pfad ohne Urteil"
 			% [tally["fn"] + tally["fp"], _misjudged_unsure(rows, threshold, field)])
 
-	# Die Zusicherung aus SentenceCard: wo eine Stufe kein Urteil hat, trägt sie auch keine
-	# Güte. Beide Lesarten müssen deshalb dasselbe ergeben — täten sie es nicht, wäre die
-	# Schwelle wieder der Hebel, und der Wortsalat käme durch.
+	# Zusicherung aus SentenceCard: ohne Urteil keine Güte. Beide Lesarten müssen gleich sein.
 	var strict := _tally(rows, threshold, field, true)
 	if strict["fn"] != tally["fn"] or strict["fp"] != tally["fp"]:
 		print("    ACHTUNG: eine Stufe meldet eine Güte über der Schwelle, ohne sich sicher "
@@ -253,8 +221,7 @@ func _unsure_split(rows: Array) -> Dictionary:
 	return out
 
 
-## Wie viele der Fehlurteile aus dem RATENDEN Teil stammen. Steht diese Zahl auf der Summe
-## der Fehlurteile, ist nicht der Schlüssel schlecht, sondern das Raten daneben.
+## Wie viele der Fehlurteile aus dem ratenden Teil (ohne Urteil) stammen.
 func _misjudged_unsure(rows: Array, threshold: float, field: String) -> int:
 	var count := 0
 	for row in rows:
@@ -267,9 +234,7 @@ func _misjudged_unsure(rows: Array, threshold: float, field: String) -> int:
 	return count
 
 
-## `require_sure` liest dasselbe Ergebnis nach dem Vertrag statt nach der Zahl: eine
-## Antwort gilt nur als getroffen, wenn die bewertende Stufe auch sagt, dass sie ein
-## Urteil HAT. Der Unterschied zwischen beiden Lesarten ist die Frage dieses Skripts.
+## `require_sure`: eine Antwort gilt nur als getroffen, wenn die Stufe auch ein Urteil hat.
 func _tally(rows: Array, threshold: float, field: String, require_sure := false) -> Dictionary:
 	var out := {"tp": 0, "fn": 0, "fp": 0, "tn": 0, "pos": 0, "neg": 0, "unsure": 0}
 	for row in rows:
@@ -289,10 +254,7 @@ func _tally(rows: Array, threshold: float, field: String, require_sure := false)
 	return out
 
 
-## Dieselbe Messung über eine Reihe von Schwellen. Sie kostet nichts und beantwortet die
-## Frage, die sonst als Erstes kommt: „liegt es an der Schwelle?" — die Antwort lautet
-## inzwischen fast überall nein, und das ist der Sinn der Änderung: eine Antwort ohne
-## Urteil ist kein Treffer, bei welcher Schwelle auch immer.
+## Dieselbe Messung über die Schwellen in `SWEEP`.
 func _report_sweep(rows: Array) -> void:
 	var head := "\n  Schwelle     "
 	var fn := "    Falsch-Neg.  "
@@ -313,10 +275,8 @@ func _percent(part: int, whole: int) -> float:
 
 # ── Stufe 1 ─────────────────────────────────────────────────────────────────────────
 
-## Fragt für jede Antwort, bei der die Prüfkarte zweifelt, den lokalen Dienst — über
-## GENAU den Weg, den auch das Spiel nähme (SentenceJudge → LocalModelBackend). Eine
-## Anfrage nach der anderen: das Backend lässt bewusst nur eine zur Zeit zu, und gemessen
-## wird hier ohnehin nicht der Durchsatz.
+## Fragt für jede Antwort, bei der die Prüfkarte zweifelt, den lokalen Dienst über denselben
+## Weg wie das Spiel (SentenceJudge → LocalModelBackend), eine Anfrage nach der anderen.
 func _run_model(rows: Array) -> void:
 	print("\n%s\nStufe 1 · lokales Modell\n%s" % [RULE, RULE])
 	if _serve and not await _start_server():
@@ -328,9 +288,7 @@ func _run_model(rows: Array) -> void:
 	_backend = LocalModelBackend.new()
 	_backend.url = _url
 	_backend.model = _model
-	# Die HTTP-Seite muss länger warten dürfen als der Kampf. Ein 3-B-Modell auf der CPU
-	# ist nach 3,5 s nicht fertig, und ohne das lief jede Anfrage in den Abbruch — gemeldet
-	# als „kein Dienst erreichbar", während der Dienst einwandfrei rechnete.
+	# Mindestens so lang wie --timeout, sonst bricht die Anfrage vor dem Richter ab.
 	_backend.http_timeout = maxf(_timeout, LocalModelBackend.HTTP_TIMEOUT)
 	add_child(_backend)
 	_judge.model_backend = _backend.judge
@@ -361,14 +319,10 @@ func _run_model(rows: Array) -> void:
 		while _judge.pending():
 			await get_tree().process_frame
 		var verdict_seconds := _backend.last_seconds
-		# Nach „falsch" erklärt der zweite Aufruf — gemessen wird die ganze Kette, die ein
-		# Kind im Bosskampf sähe.
+		# Nach „falsch“ erklärt der zweite Aufruf; gemessen wird die ganze Kette.
 		while _judge.explaining() or (not _deny.is_empty() and _explanation.is_empty()):
 			await get_tree().process_frame
-		# Erst weiter, wenn die Leitung wieder frei ist. Gibt SentenceJudge früher auf,
-		# als das Backend wartet (--timeout kleiner als LocalModelBackend.HTTP_TIMEOUT),
-		# steht die Anfrage noch — und die nächste fiele in „eine Anfrage zur Zeit",
-		# ohne je gestellt worden zu sein. Gemessen würde dann eine einzige Frage.
+		# Erst weiter, wenn das Backend frei ist: es nimmt nur eine Anfrage zur Zeit an.
 		while _backend.busy():
 			await get_tree().process_frame
 		if not _deny.is_empty():
@@ -414,9 +368,8 @@ func _run_model(rows: Array) -> void:
 	_report("Stufe 0 + 1 · nach dem Modell", rows, "final")
 
 
-## Startet den Dienst aus user://model/ und richtet die Messung auf ihn. Fehlt etwas, sagt
-## das Skript WO es gesucht hat und hört auf — eine Messung gegen einen Dienst, der nicht
-## läuft, ist die teuerste Art, nichts zu erfahren (einmal passiert, 25 Anfragen, 0 Antworten).
+## Startet den Dienst aus user://model/ und richtet die Messung auf ihn. Fehlt etwas, nennt
+## das Skript den Suchpfad und hört auf.
 func _start_server() -> bool:
 	_server = LocalModelServer.new()
 	_server.dir = _model_dir
@@ -435,10 +388,7 @@ func _start_server() -> bool:
 		return false
 	print("  ✓ bereit nach %.1f s" % (float(Time.get_ticks_msec() - started) / 1000.0))
 	_url = _server.url()
-	# Und der Name im Protokoll ist die Datei, die wirklich antwortet. llama-server ist das
-	# Feld gleichgültig, das Protokoll nicht: es stand sonst „qwen2.5:3b-instruct" über
-	# einer Messung, die EuroLLM gemessen hat — die Vorgabe aus LocalModelBackend.MODEL,
-	# die für einen fremden Ollama-Dienst gilt und hier niemanden meint. Ein --name= sticht.
+	# Im Protokoll steht die Datei der Gewichte statt der Ollama-Vorgabe; --name= sticht.
 	if _model == LocalModelBackend.MODEL:
 		_model = ProjectSettings.globalize_path(_server.weights_path()).get_file()
 	return true

@@ -1,53 +1,23 @@
 extends Control
-## Werkbank für die Satzbewertung (scenes/dev/boss_lab.tscn) — eine eigenständige Szene,
-## um Sätze und ihren Lösungsschlüssel ohne Spiel auszuprobieren
-## (docs/adr/0004-satzbewertung-ohne-modell.md).
-##
-## Wozu: um eine Bewertungsregel zu beurteilen, will man zwanzig Antworten durchprobieren
-## und nicht zwanzig Wellen spielen. Hier steht links die Auswahl (welcher Satz käme
-## dran?), in der Mitte der Satz mit seinem Schlüssel und der getippten Antwort, rechts
-## das Urteil BEIDER Stufen nebeneinander: die Prüfkarte, die immer antwortet, und das
-## Modell, das nur antwortet, wenn auf diesem Rechner eines läuft.
-##
-## **Stufe 1 startet die Werkbank selbst** (`LocalModelServer`, Knopf „Dienst starten"):
-## `llama-server.exe` aus `user://model/`, geholt über den Knopf im Inhalte-Screen. Vorher
-## musste man den Dienst von Hand starten und dabei wissen, dass das URL-Feld auf Ollamas
-## Port zeigte und nicht auf unseren — zwei Stolperstellen vor der ersten Antwort.
-##
-## **Stufe 1 fragt zweimal** (docs/adr/0005-bosskampf-mit-erklaerung.md): erst das Urteil,
-## dann — nur bei „falsch" — die Erklärung. Die Spalte zeigt beides mit der Zeit, die jeder
-## Aufruf gebraucht hat, und darunter, was das Modell wörtlich geschrieben hat. Die Zeit
-## steht dabei, weil sie auf der CPU das ist, was der Bosskampf inszenieren muss.
-##
-## **Die Zeitlimits sind hier großzügiger als im Kampf** (`LAB_HTTP_TIMEOUT`). Beurteilt
-## wird hier, ob ein Modell die Aufgabe KANN — auch auf einem langsamen Rechner, auf dem
-## der Kampf-Wert knapp wäre.
-##
-## Der Schlüssel ist hier **veränderbar**. Eine Stolperstelle beurteilt man, indem man sie
-## formuliert und sofort dagegen tippt; der Umweg über eine Datei im Submodule und einen
-## Neustart wäre genau die Reibung, die dazu führt, dass es niemand tut. Geschrieben wird
-## nichts — was hier steht, gilt für diesen Klick.
-##
-## Starten: im Editor mit F6 auf dieser Szene, oder
-## `tools/godot.sh res://scenes/dev/boss_lab.tscn` (headless zeichnet nichts).
-## Die Szene liegt unter scenes/dev/ und ist im Export ausgeschlossen (`exclude_filter`).
-## Sie ist **nicht** in den Spielfluss eingehängt (der Bosskampf ist scenes/battle/
-## boss_fight.tscn), sie verbucht nichts und sie meldet nichts an PlayerProgress.
+## Werkbank für die Satzbewertung (ADR 0004, 0005): Satz wählen, Antwort tippen, das Urteil
+## beider Stufen nebeneinander. Stufe 1 fragt erst nach dem Urteil, nur bei „falsch“ nach der
+## Erklärung; gezeigt werden beide mit Dauer und Rohtext. „Dienst starten“ startet
+## `llama-server` aus `user://model/` (LocalModelServer). Zeitlimits großzügiger als im Kampf
+## (`LAB_HTTP_TIMEOUT`). Der Schlüssel ist editierbar und gilt nur für diesen Klick; die
+## Werkbank schreibt und verbucht nichts.
+##     GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/boss_lab.tscn   (oder F6 im Editor)
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 
-## So viele Sätze stehen höchstens zur Wahl. Der Bestand hat über tausend; eine
-## Auswahlliste mit tausend Einträgen ist keine Auswahl mehr.
+## So viele Sätze stehen höchstens zur Wahl.
 const MAX_CHOICES := 60
 
-## Wie lange die Werkbank auf eine Antwort wartet. Großzügig, und mit Absicht nicht die
-## Vorgabe aus dem Kampf: siehe oben. Der Richter wartet etwas LÄNGER als das Backend —
-## gäbe er früher auf, stünde die Anfrage noch und jede weitere fiele in die Sperre.
+## Wartezeit auf eine Antwort, in s. Der Richter wartet länger als das Backend, sonst
+## stünde die Anfrage noch und jede weitere fiele in die Sperre.
 const LAB_HTTP_TIMEOUT := 120.0
 const LAB_JUDGE_TIMEOUT := LAB_HTTP_TIMEOUT + 2.0
 
-## Die Felder, die den Lösungsschlüssel ausmachen — und damit das, was in der Werkbank
-## veränderbar ist.
+## Die Felder des Lösungsschlüssels, in der Werkbank veränderbar.
 const KEY_FIELDS := ["accepted", "must_contain", "pitfalls"]
 
 @onready var _boss_select: OptionButton = %BossSelect
@@ -79,8 +49,7 @@ var _verdict_text := ""
 
 
 func _ready() -> void:
-	# Eine Werkbank bekommt mehr Platz als das Spiel — drei Spalten nebeneinander passen
-	# nicht in 1152×648, und am Fensterrand zu ziehen hilft dagegen nicht (LabRoom).
+	# Drei Spalten passen nicht in 1152×648 (LabRoom).
 	_room = get_window()
 	LabRoom.enlarge(_room)
 	_judge = SentenceJudge.new()
@@ -91,15 +60,12 @@ func _ready() -> void:
 	_judge.explained.connect(_on_explained)
 	_judge.gave_up.connect(_on_gave_up)
 	_backend = LocalModelBackend.new()
-	# VOR dem Einhängen: LocalModelBackend liest den Wert in seinem _ready().
+	# Vor dem Einhängen: LocalModelBackend liest den Wert in seinem _ready().
 	_backend.http_timeout = LAB_HTTP_TIMEOUT
 	add_child(_backend)
-	# Angelegt, nicht gestartet. Der Knoten kostet nichts, und mit ihm steht die Adresse
-	# fest, die der Knopf gleich bedient — das URL-Feld muss niemand von Hand richten.
+	# Angelegt, nicht gestartet; so steht die Adresse für den Knopf fest.
 	_server = LocalModelServer.new()
-	# In der Werkbank will man llama-servers EIGENES Log sehen — warum er die Gewichte
-	# ablehnt, steht dort und sonst nirgends. Im Spiel wäre dieses Fenster ein zweites,
-	# das niemand bestellt hat.
+	# Nur llama-servers eigenes Log sagt, warum er die Gewichte ablehnt.
 	_server.show_console = true
 	add_child(_server)
 
@@ -123,22 +89,21 @@ func _ready() -> void:
 	_refill()
 
 
-## Das Fenster gehört dem Spiel; die Werkbank gibt es zurück. Hier und nicht an den beiden
-## Ausgängen: es gibt Knopf, Escape und das Beenden, und drei Stellen wären zwei zu viel.
+## Gibt das geliehene Fenster zurück, bei jedem Ausgang.
 func _exit_tree() -> void:
 	LabRoom.restore(_room)
 
 
 func _input(event: InputEvent) -> void:
-	# Escape führt zurück ins Menü — dieselbe Geste wie im Kampf.
+	# Escape führt zurück ins Menü.
 	if event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
 		get_tree().change_scene_to_file(MENU_SCENE)
 
 
 ## Der Pool, nach dem ausgewählt wird: die Regel des gewählten Bosses, wahlweise über der
-## Auswahl des aktiven Profils. Ohne Profil-Häkchen bleiben Scope und Themen leer — und
-## leer heißt im Wave-Pool wie hier „keine Einschränkung".
+## Auswahl des aktiven Profils. Ohne Profil-Häkchen bleiben Scope und Themen leer, also
+## ohne Einschränkung.
 func pool() -> Dictionary:
 	var out := {"scope": [], "tags": [], "grammar_tags": [], "difficulty_max": 0}
 	if _use_profile.button_pressed:
@@ -155,9 +120,7 @@ func pool() -> Dictionary:
 	return out
 
 
-## Alles, was zum Pool passt — und zwar dieselbe Menge, aus der auch „Satz ziehen"
-## zieht. Zwei Mengen hießen: die Liste zeigt nur Sätze mit Schlüssel, der Knopf legt
-## einen ohne daneben.
+## Alles, was zum Pool passt; dieselbe Menge, aus der „Satz ziehen“ zieht.
 func _pool_sentences() -> Array:
 	var found := SentenceSelector.new().candidates(pool())
 	if _only_keyed.button_pressed:
@@ -178,11 +141,8 @@ func _refill() -> void:
 	show_sentences(found.slice(0, MAX_CHOICES))
 
 
-## Warum nichts zur Wahl steht. Der häufigste Grund ist kein leerer Bestand, sondern ein
-## liegengebliebener Pack: er gewinnt bei gleicher Id gegen das Submodule, und ein Pack von
-## vor den Schlüsselfeldern macht aus tausend Sätzen tausend OHNE Schlüssel. Ohne diesen
-## Satz tut „Satz ziehen wie im Spiel" dann schlicht nichts — es gibt nichts zu ziehen, und
-## warum, steht nirgends: die Herkunft steht sonst AM Satz, und einen Satz gibt es ja nicht.
+## Warum nichts zur Wahl steht. Häufigster Grund ist ein liegengebliebener Pack ohne
+## Schlüsselfelder, der das Submodule verdeckt.
 static func empty_note(pool_sentences: Array) -> String:
 	if pool_sentences.is_empty():
 		return "Nichts zur Wahl: kein Satz passt zu dieser Auswahlregel."
@@ -200,9 +160,8 @@ static func empty_note(pool_sentences: Array) -> String:
 			+ "Aufräumen unter user://content.")
 
 
-## Stellt eine Liste von Sätzen zur Wahl und zeigt den ersten. Die Naht, an der die Tests
-## hängen: sie sollen eine Bewertungsregel an einem erfundenen Satz prüfen können und
-## nicht an dem, was auf diesem Rechner gerade installiert ist.
+## Stellt eine Liste von Sätzen zur Wahl und zeigt den ersten. Naht für Tests mit
+## erfundenen Sätzen.
 func show_sentences(list: Array) -> void:
 	_choices = list
 	_sentence_select.clear()
@@ -231,8 +190,7 @@ func _roll() -> void:
 			_sentence_select.select(i)
 			_show_sentence()
 			return
-	# Gezogen wird aus dem ganzen Pool, die Liste zeigt nur den Anfang davon — der
-	# gezogene Satz stellt sich dann vorn dazu.
+	# Die Liste zeigt nur den Anfang des Pools; der gezogene Satz kommt vorn dazu.
 	show_sentences(([picked] + _choices).slice(0, MAX_CHOICES))
 
 
@@ -259,17 +217,13 @@ func _show_sentence() -> void:
 	_model_result.text = _model_idle_text()
 
 
-## Woher der Satz kommt. Steht dabei, weil ein installierter Pack bei gleicher Id gegen
-## das Submodule GEWINNT (ContentRegistry liest user:// zuletzt): ein Satz ohne Schlüssel,
-## der im Submodule längst einen hat, ist sonst ein Rätsel. Aufräumen heißt dann: den Pack
-## unter `user://content` entfernen oder neu bauen.
+## Woher der Satz kommt: ein installierter Pack verdeckt das Submodule (CONVENTIONS „Tests“).
 static func origin_label(sentence_id: String) -> String:
 	var pack := ContentRegistry.pack_of("sentences", sentence_id)
 	return "aus Pack „%s“" % pack if not pack.is_empty() else "aus dem Submodule"
 
 
-## Der Lösungsschlüssel eines Satzes als eigenes Dictionary — das, was in der Werkbank
-## veränderbar ist.
+## Der Lösungsschlüssel eines Satzes als eigenes Dictionary.
 static func key_of(sentence: Dictionary) -> Dictionary:
 	var out := {}
 	for field in KEY_FIELDS:
@@ -285,9 +239,8 @@ func selected() -> Dictionary:
 	return _choices[index]
 
 
-## Der gewählte Satz MIT dem Schlüssel, wie er gerade im Feld steht. Steht dort Unsinn,
-## gilt der Schlüssel aus den Daten — eine halb getippte Klammer soll die Bewertung nicht
-## anhalten, sie soll es nur sagen.
+## Der gewählte Satz mit dem Schlüssel aus dem Feld. Ist das Feld kein gültiges JSON,
+## gilt der Schlüssel aus den Daten.
 func sentence_under_test() -> Dictionary:
 	var sentence := selected().duplicate(true)
 	if sentence.is_empty():
@@ -336,17 +289,13 @@ static func describe(result: Dictionary) -> String:
 	if bool(result.get("sure", true)):
 		lines.append("sicher")
 	else:
-		# Ohne Urteil ist die Güte 0 — was die Karte trotzdem weiß, ist die Nähe am
-		# Wortlaut. Sie steht hier, damit in der Werkbank nicht bloß „0 %" dasteht, wo die
-		# Karte in Wahrheit nichts sagt.
+		# Ohne Urteil ist die Güte 0; die Nähe zeigt, was die Karte trotzdem weiß.
 		lines.append("kein Urteil (Nähe %d %%) — Stufe 1 darf ran"
 				% roundi(float(result.get("overlap", 0.0)) * 100.0))
 	return "\n".join(lines)
 
 
-## Startet den Dienst aus `user://model/` — oder beendet ihn wieder. Nach einem
-## erfolgreichen Start ist Stufe 1 an: wer hier drückt, will sie benutzen, und ein zweiter
-## Schalter dazwischen wäre nur eine Stelle, an der man hängenbleibt.
+## Startet den Dienst aus `user://model/` oder beendet ihn. Nach dem Start ist Stufe 1 an.
 func _on_serve_pressed() -> void:
 	if _server.running():
 		_server.stop()
@@ -359,14 +308,12 @@ func _on_serve_pressed() -> void:
 	if started:
 		_model_url.text = _server.url()
 		_model_toggle.button_pressed = true
-		# Setzen löst `toggled` nur aus, wenn sich etwas ÄNDERT — war Stufe 1 schon an,
-		# bekäme das Backend die Adresse sonst nicht.
+		# `toggled` feuert nur bei einer Änderung; war Stufe 1 schon an, fehlte sonst die Adresse.
 		_on_model_toggled(true)
 	_render_serve()
 
 
-## Was der Knopf gerade anbietet und woran es sonst liegt. Der Pfad steht immer dabei:
-## „Kein Modell" ist keine Auskunft, solange man nicht weiß, wo gesucht wurde.
+## Was der Knopf gerade anbietet und woran es sonst liegt, immer mit dem Suchpfad.
 func _render_serve() -> void:
 	if _server.running():
 		_serve_button.text = "Dienst beenden"
@@ -395,7 +342,7 @@ func _on_refined(result: Dictionary) -> void:
 		_backend.last_seconds, describe(result), _raw_output()]
 
 
-## Das Urteil „falsch" steht sofort da — wie im Kampf. Die Erklärung rechnet noch.
+## Das Urteil „falsch“ steht sofort da, die Erklärung rechnet noch.
 func _on_denied(_result: Dictionary) -> void:
 	_verdict_text = "Urteil: falsch (%.1f s)%s" % [_backend.last_seconds, _raw_output()]
 	_model_result.text = _verdict_text + "\n\nErklärung wird geschrieben …"
@@ -406,9 +353,8 @@ func _on_explained(result: Dictionary) -> void:
 			+ _raw_output()
 
 
-## Die Erklärung, wie der Kampf sie zeigt — oder, wo der Erklärer keinen Fehler fand, die
-## Musterlösung. Das ist der Fall, in dem Aufruf 1 eine richtige Antwort abgewiesen haben
-## kann; eine Erklärung dazu wäre erfunden.
+## Die Erklärung wie im Kampf, oder die Musterlösung, wo der Erklärer keinen Fehler fand
+## (ADR 0005).
 static func explanation_text(result: Dictionary, seconds: float) -> String:
 	var text := str(result.get("explanation", ""))
 	if text.is_empty():
@@ -417,16 +363,14 @@ static func explanation_text(result: Dictionary, seconds: float) -> String:
 	return "Erklärung (%.1f s):\n%s" % [seconds, text]
 
 
-## Was das Modell wörtlich geschrieben hat — um Prompt und Antwort gegen die Werkstatt
-## `prompt-eval` halten zu können.
+## Was das Modell wörtlich geschrieben hat, zum Abgleich der Prompts.
 func _raw_output() -> String:
 	var raw := _backend.last_content.strip_edges()
 	return "" if raw.is_empty() else "\n\nRoh: %s" % raw
 
 
 func _on_gave_up() -> void:
-	# Warum nichts kam, weiß das Backend — „kein Dienst" und „Modell hält sich nicht an
-	# die Form" sehen sonst gleich aus, und man sucht am falschen Ende.
+	# Das Backend unterscheidet „kein Dienst“ von „Modell hält sich nicht an die Form“.
 	var note := _backend.last_note
 	if note.is_empty():
 		note = "Zeitlimit überschritten — oder das Modell hatte nichts beizutragen."
