@@ -5,14 +5,8 @@ extends RefCounted
 ##     Aufruf 1  URTEIL      mit Lösungsschlüssel, binär          — „B-de"
 ##     Aufruf 2  ERKLÄRUNG   ohne Schlüssel, mit Grammatikregeln  — „X-ref-regel"
 ##
-## **Die Texte sind wörtlich aus der Werkstatt `prompt-eval` übernommen**
-## (`prompts/judge-keyed-de.json`, `prompts/explain-ref-regel.json`), dort gemessen gegen den
-## Antwortbogen mit Gemma 4 E4B. Ein Wort hier zu ändern heißt, ungemessen zu ändern: erst
-## dort, dann hierher. Deshalb sind sie Englisch, obwohl das Modell auf Deutsch antworten
-## soll — so wurden sie gemessen.
-##
-## Die Platzhalter `{{name}}` heißen wie die Variablen der Werkstatt, damit ein Prompt
-## zwischen beiden Orten ohne Übersetzung hin- und hergeht.
+## Die Texte sind wörtlich aus der Messumgebung übernommen und werden nur dort geändert
+## (CONVENTIONS, ADR 0005). Die Platzhalter `{{name}}` heißen wie die Variablen dort.
 
 const VERDICT_SYSTEM := "You are an English teacher. A student (age 10-14) translated a German sentence into English. Decide whether the translation is acceptable.\n\nYou also get a solution key. Use it like this:\n1. The key is EVIDENCE, NOT A WHITELIST. Wordings that are not in the key can still be correct. A student who writes good English that means the same thing has translated the sentence.\n2. The required words show which vocabulary the exercise practises. A translation that avoids them entirely usually misses the point of the exercise; a different grammatical form of a required word is fine.\n3. Judge \"incorrect\" when the English is ungrammatical, when the tense or structure does not match the German, when a word is mistranslated, or when nothing was written.\n4. Minor spelling slips are correct as long as the intended word is unambiguous. Punctuation and capitalisation alone never make a translation incorrect.\n5. Never invent grammar rules and never make claims about other languages.\n\nReply with JSON only: an object with the key \"verdict\" (the string \"correct\" or the string \"incorrect\") and the key \"reason\".\n\nThe \"reason\" is the only thing the student ever sees, and the student is a German-speaking child. Write it in GERMAN, the way a teacher writes in the margin:\n- one short sentence, addressed to the student\n- name the rule and give the correct English form in quotation marks\n- German for the explanation, English only for the words being quoted\n- no praise, no \"leider\", no meta-talk about the key or the exercise\n\nExamples of the tone (do not copy them):\n„Mit ‚yesterday‘ steht das Simple Past: ‚saw‘.\"\n„Häufigkeitsadverbien stehen VOR dem Vollverb: ‚she always walks‘.\"\n„Ein fester Plan steht mit ‚be going to‘, nicht mit ‚will‘.\"\n\nWhen the translation is correct, say briefly in German what makes it work — „Andere Wörter, gleiche Aussage.\" or „‚on foot‘ ist genauso richtig wie ‚walks‘.\"\n\nTwo examples of well-formed replies:\n{\"verdict\": \"correct\", \"reason\": \"Andere Wörter, gleiche Aussage.\"}\n{\"verdict\": \"incorrect\", \"reason\": \"Mit ‚yesterday‘ steht das Simple Past: ‚saw‘.\"}\n\nNever copy the reason from an example. Write one that fits the translation you are judging."
 
@@ -22,8 +16,7 @@ const EXPLAIN_SYSTEM := "You are an English teacher. A German-speaking student (
 
 const EXPLAIN_USER := "German sentence: {{source_text}}\n\nOne possible correct translation (there are others): {{reference}}\n\nWhat this sentence practises:\n{{focus}}\n\nStudent translation: {{student_answer}}"
 
-## Was in einem leeren Feld des Schlüssels steht. Die Werkstatt schreibt dort einen
-## Gedankenstrich — ein leerer Platz nach dem Doppelpunkt lädt das Modell ein, ihn zu füllen.
+## Was in einem leeren Feld des Schlüssels steht (wie in der Messumgebung).
 const NONE := "—"
 
 
@@ -42,9 +35,8 @@ static func verdict_messages(sentence: Dictionary, answer: String) -> Array:
 	]
 
 
-## Aufruf 2: die Nachrichten für die Erklärung. KEIN Schlüssel außer der Musterlösung, und
-## die ausdrücklich als eine von mehreren — ohne Schlüssel kann das Modell nicht über den
-## Schlüssel reden, und es urteilt unabhängig von Aufruf 1.
+## Aufruf 2: die Nachrichten für die Erklärung. Kein Schlüssel außer der Musterlösung, und
+## die ausdrücklich als eine von mehreren.
 static func explain_messages(sentence: Dictionary, answer: String) -> Array:
 	return [
 		{"role": "system", "content": EXPLAIN_SYSTEM},
@@ -57,8 +49,7 @@ static func explain_messages(sentence: Dictionary, answer: String) -> Array:
 	]
 
 
-## Die geforderten Wörter als eine Zeile: Formen einer Forderung mit „/", Forderungen mit
-## „, " — dieselbe Form wie in der Werkstatt (`required_words`).
+## Die geforderten Wörter als eine Zeile: Formen einer Forderung mit „/“, Forderungen mit „, “.
 static func required_words(sentence: Dictionary) -> String:
 	var groups := PackedStringArray()
 	for raw in sentence.get("must_contain", []):

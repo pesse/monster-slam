@@ -1,30 +1,19 @@
 class_name SentenceSelector
 extends RefCounted
-## Welcher Satz drankommt (docs/adr/0004-satzbewertung-ohne-modell.md).
+## Welcher Satz drankommt (ADR 0004). Maß ist `t - c`: `difficulty` des Satzes minus die
+## mittlere Confidence seiner Lexeme (`sentence_lexemes`). Ein Satz zählt zum Scope des
+## Laufs, wenn eines seiner Lexeme dazu zählt.
 ##
-## Die Auswahl benutzt das VORHANDENE Schwierigkeitsmaß und baut kein zweites daneben —
-## aus demselben Grund, aus dem Punkte und Erfahrung sich eines teilen (WaveGenerator):
-## Grundschwierigkeit der Aufgabe minus Confidence des Spielers. Für einen Satz ist die
-## Grundschwierigkeit sein `difficulty`, und die Confidence der Durchschnitt über die
-## Lexeme, um derentwillen er gestellt wird (`sentence_lexemes`).
-##
-## Der Weg vom Satz zum Lehrplan geht ebenfalls über `sentence_lexemes`: Satz -> Lexem ->
-## `book`/`unit` gegen den Scope des Laufs (RunRequest). Ein Satz zählt zum Scope, wenn
-## EINES seiner Lexeme dazu zählt — er wird ja um dieses Wortes willen gestellt.
-##
-## Pool (wie WaveGenerator.pool_from_settings, leere Einträge = keine Einschränkung):
+## Pool (leere Einträge = keine Einschränkung):
 ##   { "scope": Array, "tags": Array, "grammar_tags": Array, "difficulty_max": int }
 
-## Obergrenze der difficulty-Skala für die Normalisierung auf 0..1 — dieselbe wie in
-## WaveGenerator, damit „schwer" in beiden Aufgabenarten dasselbe heißt.
+## Obergrenze der difficulty-Skala für die Normalisierung auf 0..1.
 const DIFFICULTY_MAX := WaveGenerator.DIFFICULTY_MAX
 
-## Die Richtung, in der ein Satz übt: deutscher Satz, englische Antwort. Also dieselbe
-## Richtung, deren Confidence der Lernstand für das einzelne Wort führt.
+## Die Richtung, in der ein Satz übt: deutscher Satz, englische Antwort.
 const DIRECTION := "de_to_en"
 
-## Untergrenze des Gewichts. Auch ein längst sitzender Satz darf drankommen — sonst würde
-## der Vorrat mit jedem gelernten Wort kleiner statt bunter.
+## Untergrenze des Gewichts: auch ein längst sitzender Satz darf drankommen.
 const MIN_WEIGHT := 0.05
 
 
@@ -38,16 +27,12 @@ static func pool_for_scope(scope: Array, tags: Array, difficulty: int = 0) -> Di
 	}
 
 
-## Der Pool aus dem Bereich des Laufs (RunRequest: Level der Karte oder die Auswahl des
-## Expertenmodus) — EINE Quelle mit dem Kampf, damit ein Boss nicht in einem Buch fragt,
-## das der Spieler gar nicht spielt.
+## Der Pool aus dem Bereich des Laufs (RunRequest).
 static func pool_from_settings(difficulty: int = 0) -> Dictionary:
 	return pool_for_scope(RunRequest.scope(), RunRequest.tags(), difficulty)
 
 
-## Der Pool eines Bosses: seine Auswahlregel über dem Bereich — ohne `base` der des Laufs.
-## Ein Boss trägt seit ADR 0004 keine Sätze mehr selbst — er sagt, WELCHE Sätze zu ihm
-## passen, und der Vorrat kommt aus dem Content (data/bosses/grammar_golem.json).
+## Der Pool eines Bosses: seine `sentence_rule` über dem Bereich; ohne `base` der des Laufs.
 static func pool_for_boss(boss: Dictionary, difficulty: int = 0, base: Dictionary = {}) -> Dictionary:
 	var pool := base.duplicate(true) if not base.is_empty() else pool_from_settings(difficulty)
 	var rule: Dictionary = boss.get("sentence_rule", {})
@@ -58,9 +43,7 @@ static func pool_for_boss(boss: Dictionary, difficulty: int = 0, base: Dictionar
 	return pool
 
 
-## Alle Satz-Lexem-Verknüpfungen auf einmal: Satz-id -> [Lexem-ids]. Ein Durchlauf statt
-## einem je Satz — `lexeme_ids` für jeden Kandidaten einzeln ginge über alle Verknüpfungen
-## je Satz und kostete beim Öffnen einer Gebietskarte zwei Frames.
+## Alle Satz-Lexem-Verknüpfungen in einem Durchlauf: Satz-id -> [Lexem-ids].
 static func links() -> Dictionary:
 	var out := {}
 	for entry in ContentRegistry.sentence_lexemes.values():
@@ -87,9 +70,8 @@ static func lexeme_ids(sentence_id: String) -> Array:
 	return out
 
 
-## Der Lernstand zu einem Satz: das Mittel der Confidence über seine Lexeme, in der
-## Richtung, die der Satz übt. Ohne Lexeme (oder ohne Lernstand) der neutrale Default —
-## derselbe Nullpunkt, mit dem auch ein neues Monster startet.
+## Der Lernstand zu einem Satz: das Mittel der Confidence über seine Lexeme in DIRECTION.
+## Ohne Lexeme PlayerProgress.DEFAULT_CONFIDENCE.
 static func confidence(sentence_id: String) -> float:
 	var ids := lexeme_ids(sentence_id)
 	if ids.is_empty():
@@ -100,8 +82,7 @@ static func confidence(sentence_id: String) -> float:
 	return sum / float(ids.size())
 
 
-## Das Netto-Maß `t - c`: Grundschwierigkeit minus Können, auf 0..1 normalisiert wie im
-## WaveGenerator. Größer heißt: hier ist noch etwas zu holen.
+## Das Netto-Maß `t - c`, `t` auf 0..1 normalisiert. Größer heißt: noch etwas zu holen.
 static func net_difficulty(sentence: Dictionary) -> float:
 	var t := clampf(float(sentence.get("difficulty", 1)) / float(DIFFICULTY_MAX), 0.0, 1.0)
 	return t - confidence(str(sentence.get("id", "")))
@@ -115,8 +96,7 @@ func candidates(pool: Dictionary) -> Array:
 	if not scope.is_empty() or not tags.is_empty():
 		for lexeme in ContentRegistry.lexemes_scoped(scope, tags):
 			in_scope[str((lexeme as Dictionary).get("id", ""))] = true
-		# Ein Filter, der kein Lexem trifft, lässt nichts übrig — und nicht alles: für
-		# `matches` hieße die leere Menge „keine Einschränkung".
+		# Trifft der Filter kein Lexem, bleibt nichts; für `matches` hieße {} „alles“.
 		if in_scope.is_empty():
 			return []
 	var out: Array = []
@@ -127,10 +107,8 @@ func candidates(pool: Dictionary) -> Array:
 	return out
 
 
-## Passt ein Satz zum Pool? `in_scope` ist die vorberechnete Lexem-Menge des Scopes; eine
-## LEERE Menge heißt „keine Einschränkung" (dieselbe Semantik wie im Wave-Pool).
-##
-## `linked` ist `links()`, wenn der Aufrufer viele Sätze prüft; ohne wird je Satz gesucht.
+## Passt ein Satz zum Pool? `in_scope` ist die vorberechnete Lexem-Menge des Scopes, leer
+## heißt „keine Einschränkung“. `linked` ist `links()`; ohne wird je Satz gesucht.
 static func matches(sentence: Dictionary, pool: Dictionary, in_scope: Dictionary = {},
 		linked: Dictionary = {}) -> bool:
 	var difficulty_max := int(pool.get("difficulty_max", 0))
@@ -161,12 +139,7 @@ func pick(pool: Dictionary, exclude: Dictionary = {}) -> Dictionary:
 			func(s): return not exclude.has(str((s as Dictionary).get("id", "")))))
 
 
-## Zieht aus einer FERTIGEN Liste. Gewichtet nach dem Netto-Maß: was noch nicht sitzt,
-## kommt öfter dran, aber nichts ist ausgeschlossen (MIN_WEIGHT).
-##
-## Getrennt von pick(), weil nicht jeder Aufrufer den Pool als Filter ausdrücken kann: die
-## Werkbank siebt ihre Liste selbst (nur Sätze mit Schlüssel) und soll trotzdem ziehen wie
-## das Spiel. Ein zweiter Ziehen-Code daneben wäre eine zweite Gewichtung.
+## Zieht aus einer fertigen Liste, gewichtet nach dem Netto-Maß (mindestens MIN_WEIGHT).
 static func pick_from(pickable: Array) -> Dictionary:
 	if pickable.is_empty():
 		return {}

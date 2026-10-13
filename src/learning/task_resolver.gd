@@ -1,12 +1,7 @@
 class_name TaskResolver
 extends RefCounted
-## Löst eine task_definition (ERM) + ein Lexem in eine spielbare Laufzeit-Aufgabe auf.
-##
-## Trennt Aufgaben-Regel (task_definitions) von Sprachdaten (lexemes/forms/relations)
-## und Darstellung: der WaveRunner bekommt nur noch { prompt, accepted_answers, ... }
-## und muss die Sprachdaten nicht kennen. Die konkrete Aufgabe entsteht erst zur
-## Laufzeit aus Definition × Lexeme (× Form/Relation) — es gibt keine per-Wort-Aufgaben
-## mehr. Sprachdaten werden über die ContentRegistry (Autoload) nachgeschlagen.
+## Löst eine task_definition + ein Lexem (× Form/Relation) zur Laufzeit in eine spielbare
+## Aufgabe auf; Sprachdaten kommen aus der ContentRegistry.
 ##
 ## resolve(definition, source, extra) -> {
 ##   "learnable_id": String,          # kanonischer, deterministischer Fortschritts-Key
@@ -21,7 +16,7 @@ extends RefCounted
 ##   opposite/synonym/confusables -> { "target_lexeme_id": String }
 ##   conjugation                  -> { "form_type": String }
 ## Gibt {} zurück, wenn die Aufgabe nicht auflösbar ist (fehlende Daten oder ein
-## noch zurückgestellter task_type wie fill_gap/sentence).
+## nicht unterstützter task_type wie fill_gap/sentence).
 
 ## Menschlich lesbare Labels für Formen (UI-Sprache Deutsch).
 const FORM_LABELS := {
@@ -45,17 +40,15 @@ const FORM_LABELS := {
 	"fr_passe_compose": "Passé composé, je",
 }
 
-## Genus wird als Buchstabe hinterlegt (m/f/n); getippt werden darf auch das Wort dazu.
-## Der Punkt am Ende („m.") fällt schon in der Normalisierung weg.
+## Genus ist als Buchstabe hinterlegt (m/f/n); getippt werden darf auch das Wort dazu.
 const GENDER_ANSWERS := {
 	"m": ["m", "maskulin", "maskulinum", "männlich"],
 	"f": ["f", "feminin", "femininum", "weiblich"],
 	"n": ["n", "neutrum", "sächlich"],
 }
 
-## Formen, die das Reveal einer lateinischen Übersetzung als Lexikonform dazuschreibt —
-## „Gen. amīcī · m" bzw. „clāmō · Perf. clāmāvī" —, damit man die Vokabel so sieht, wie das Buch sie
-## lernen lässt. In dieser Reihenfolge.
+## Formen, die das Reveal einer lateinischen Übersetzung als Lexikonform dazuschreibt
+## („Gen. amīcī · m“), in dieser Reihenfolge, mit Präfix.
 const DICTIONARY_FORMS := {
 	"la_present_1sg": "",
 	"la_genitive": "Gen.",
@@ -64,9 +57,8 @@ const DICTIONARY_FORMS := {
 	"la_ppp": "PPP",
 }
 
-## Curriculum-Scope des Laufs: Formen, die das Buch erst später lehrt, stehen weder in der
-## Aufgabe noch im Reveal (ContentRegistry.form_in_scope). Setzt der WaveGenerator; leer
-## heißt alle Formen.
+## Curriculum-Scope des Laufs: Formen außerhalb (ContentRegistry.form_in_scope) stehen
+## weder in der Aufgabe noch im Reveal. Leer heißt alle Formen.
 var scope: Array = []
 
 
@@ -84,7 +76,6 @@ func resolve(definition: Dictionary, source: Dictionary, extra: Dictionary = {})
 		"conjugation", "tense", "forms":
 			return _resolve_conjugation(definition, source, extra)
 		"fill_gap", "sentence":
-			# Satz-/Boss-Feature ist zurückgestellt (siehe docs/ARCHITECTURE.md).
 			push_warning("TaskResolver: task_type '%s' noch nicht unterstützt (%s)" % [task_type, definition.get("id", "")])
 			return {}
 		_:
@@ -109,10 +100,8 @@ func learnable_id(task_type: String, direction: String, source_id: String, extra
 			return "%s:%s:%s" % [task_type, direction, source_id]
 
 
-## Wandelt einen learnable_id in ein menschenlesbares Label für die Statistik-Liste.
-## Kehrt das id-Schema aus learnable_id() um und schlägt die Lemmata über die
-## ContentRegistry nach. Nicht auflösbare ids (fehlendes Lexem) fallen auf den rohen
-## id-String zurück, damit nie ein Eintrag verschluckt wird.
+## Wandelt einen learnable_id in ein lesbares Label (Umkehrung von learnable_id()).
+## Nicht auflösbare ids bleiben roh stehen.
 func describe_learnable(id: String) -> String:
 	var parts := id.split(":")
 	if parts.size() < 3:
@@ -147,22 +136,18 @@ func _resolve_translate(definition: Dictionary, source: Dictionary, extra: Dicti
 	var direction := str(definition.get("direction", Lexeme.to_foreign(Lexeme.language(source))))
 	var prompt: String
 	var answers: Array = []
-	# Die Alternativen der Aufgabenseite zeigt das Reveal neben der Aufgabe — „go,
-	# auch: walk" —, damit dort beide Seiten vollständig stehen.
+	# Alternativen der Aufgabenseite fürs Reveal („go, auch: walk“).
 	var prompt_alt: Array = []
 	if _asks_foreign(direction, source):
 		prompt = Lexeme.foreign(source)
 		prompt_alt.append_array(Lexeme.foreign_alt(source))
-		# Primäre + alternative deutsche Übersetzungen (z. B. go -> gehen/laufen).
 		answers.append(str(source.get("lemma_de", "")))
 		answers.append_array(source.get("lemma_de_alt", []))
 	else: # de_to_<sprache> (Standard)
 		prompt = str(source.get("lemma_de", ""))
 		prompt_alt.append_array(source.get("lemma_de_alt", []))
-		# Primäre + alternative fremdsprachige Übersetzungen (z. B. gehen -> go/walk).
 		answers.append(Lexeme.foreign(source))
 		answers.append_array(Lexeme.foreign_alt(source))
-		# Synonyme sind ebenfalls gültige Antworten.
 		for rel in ContentRegistry.relations_of(str(source.get("id", "")), "synonym"):
 			var syn := _lexeme(rel.get("to_lexeme_id", ""))
 			if not syn.is_empty():
@@ -175,8 +160,7 @@ func _asks_foreign(direction: String, lex: Dictionary) -> bool:
 	return direction == Lexeme.from_foreign(Lexeme.language(lex))
 
 
-## „Gen. amīcī · m" — die Formen, die das Buch mit der Vokabel lernen lässt, fürs Reveal
-## einer Übersetzung. Leer ohne solche Formen (also für jedes englische Lexem).
+## Die Lexikonform fürs Reveal (DICTIONARY_FORMS), leer ohne solche Formen.
 func _dictionary_form(lex: Dictionary) -> String:
 	var bits: Array = []
 	for form_type in DICTIONARY_FORMS:
@@ -193,23 +177,17 @@ func _resolve_relation(definition: Dictionary, source: Dictionary, extra: Dictio
 	var relation_type := str(definition.get("task_type", "")) # "opposite" | "synonym"
 	var label := "Gegenteil von" if relation_type == "opposite" else "Synonym für"
 	var prompt := "%s %s" % [label, Lexeme.foreign(source)]
-	# Das konkrete Ziel-Lexem der Relation kommt aus der Enumeration (WaveGenerator).
 	var target := _lexeme(extra.get("target_lexeme_id", ""))
 	if target.is_empty():
 		push_warning("TaskResolver: kein Ziel-Lexem für %s (%s)" % [relation_type, definition.get("id", "")])
 		return {}
 	var answers: Array = [Lexeme.foreign(target)]
 	answers.append_array(Lexeme.foreign_alt(target))
-	# Das gesuchte Wort steht nur in der Fremdsprache da — die Bedeutung kommt im Reveal dazu.
 	return _build(definition, source, prompt, answers, extra, _meaning_of(target))
 
 
-## „Confusables": typische Verwechslungspaare (borrow/lend, say/tell …). Der Spieler
-## bekommt die deutsche Bedeutung des Quell-Lexems plus BEIDE englischen Kandidaten und
-## muss den passenden wählen (Freitext). Baut auf `confused_with`-Relationen auf; das
-## konkrete Partner-Lexem kommt aus der Enumeration (WaveGenerator). Antwort = das
-## Quell-Lemma; die Optionen sind alphabetisch sortiert, damit die Lösung nicht immer
-## an derselben Position steht.
+## Verwechslungspaare (`confused_with`): die deutsche Bedeutung des Quell-Lexems plus
+## beide fremdsprachigen Kandidaten, alphabetisch sortiert; Antwort ist das Quell-Lemma.
 func _resolve_confusables(definition: Dictionary, source: Dictionary, extra: Dictionary) -> Dictionary:
 	var target := _lexeme(extra.get("target_lexeme_id", ""))
 	if target.is_empty():
@@ -235,12 +213,11 @@ func _resolve_conjugation(definition: Dictionary, source: Dictionary, extra: Dic
 	for form in forms:
 		var value := str(form.get("value", ""))
 		answers.append_array(GENDER_ANSWERS.get(value, [value]) if form_type == "la_gender" else [value])
-	# „bully → Past Participle" sagt nicht, was bully heißt — im Reveal steht es dabei.
 	return _build(definition, source, prompt, answers, extra, _meaning_of(source))
 
 
-## „bully = schikanieren" — die Bedeutung eines Lexems für die Auflösung, primäre
-## Übersetzung plus Alternativen. Leer, wenn eine der beiden Seiten fehlt.
+## Die Bedeutung eines Lexems fürs Reveal („bully = schikanieren“), mit Alternativen.
+## Leer, wenn eine der beiden Seiten fehlt.
 func _meaning_of(lex: Dictionary) -> String:
 	var foreign := Lexeme.foreign(lex)
 	var de: Array = [str(lex.get("lemma_de", ""))]

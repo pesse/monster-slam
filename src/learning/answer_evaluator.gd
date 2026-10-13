@@ -1,52 +1,19 @@
 class_name AnswerEvaluator
 extends RefCounted
 ## Wertet Vokabel-Antworten aus: toleranter Abgleich gegen die hinterlegten Lösungen,
-## offline und deterministisch.
-##
-## GANZE SÄTZE bewertet diese Klasse nicht mehr. Das war einmal eine Token-Überschneidung
-## (`evaluate_sentence`), deren Ergebnis niemand sehen sollte; seit
-## docs/adr/0004-satzbewertung-ohne-modell.md liegt die Satzbewertung in SentenceCard
-## (Stufe 0, Lösungsschlüssel aus den Daten) und SentenceJudge (Vertrag und optionale
-## Stufe 1). Die Normalisierung teilen sich beide — sie ist hier zu Hause und steht
-## dafür über `tokens()` offen.
+## offline und deterministisch. `tokens()` ist die eine Normalisierung, die auch die
+## Satzbewertung (SentenceCard) nutzt.
 
-## Wegkürzbare Anlaute: der deutsche Artikel (Ziel ist Englisch lernen, nicht Deutsch),
-## das englische "the" und das englische "to" vor dem Infinitiv. Das Lehrbuch schreibt
-## beide mal mit und mal ohne — "the underground" neben "underground", "to brainstorm"
-## neben "brainstorm" —, und abgefragt wird die Vokabel und nicht die Notation des
-## Eintrags. Wird auf Eingabe UND hinterlegte Antwort angewendet, sodass "das Haus"/
-## "Haus", "the underground"/"underground" und "to brainstorm"/"brainstorm" gleichwertig
-## sind (symmetrisch, also ohne Datenmigration).
-##
-## Der englische UNBESTIMMTE Artikel steht bewusst NICHT hier: "a few" ist nicht "few"
-## und "a little" nicht "little" — das ist der Unterschied, den das Buch lehrt, und beide
-## Paare stehen als eigene Vokabeln im Bestand.
-##
-## Nur mit folgendem Leerzeichen, damit die Vokabeln "to" und "the" selbst nicht
-## verschwinden.
+## Wegkürzbare Anlaute auf Eingabe und hinterlegter Antwort. Der englische unbestimmte
+## Artikel fehlt mit Absicht: "a few" ist nicht "few".
 const _OPTIONAL_PREFIXES := ["der ", "die ", "das ", "eine ", "ein ", "the ", "to "]
 
-## Grammatik-Platzhalter aus dem Lehrbuch ("criticize sb. (for)"). Sie werden auf EIN
-## Wildcard-Token abgebildet, sodass Schreibweise und Sprache der Notation gleichgültig
-## sind: "sb." = "sb" = "somebody" = "jn." = "jmd." = "jemanden". Zusätzlich darf jeder
-## Platzhalter ganz entfallen. Längere Alternativen zuerst, damit die Alternation nicht
-## kürzer greift. "jmd."/"jmdn."/"jmdm." stehen nicht im Buch, aber so kürzen Kinder ab.
-## Französisch: "qn" = "quelqu'un", "qc"/"qch" = "quelque chose" (ADR 0008).
-##
-## Mit Schrägstrich verbundene Platzhalter ("wait for sb./sth.", "jn./etwas") sind EINE
-## Stelle mit zwei Lesarten, nicht zwei Stellen: "wait for sb", "wait for sth" und
-## "wait for sb / sth" sind alle vollständig.
-##
-## Wort-Alternativen mit Schrägstrich ("turn left/right", "einen Bus/eine Fähre nehmen",
-## "aus dem Bus/Boot/Flugzeug aussteigen") sind eine Wahl, keine Auslassung: jede
-## Alternative allein ist vollständig, die ganze Notation auch. Wie weit eine Alternative
-## reicht, steht nicht da — "Bus/eine Fähre" heißt "einen Bus" oder "eine Fähre", "links/
-## rechts" nur je ein Wort. Deshalb gilt jede Breite von 1 bis MAX_SLASH_WIDTH Wörtern je
-## Seite (`_slash_alternatives`). Die schiefen Lesarten ("einen eine Fähre nehmen") tippt
-## niemand; sie kosten nichts.
-##
-## Auslassungspunkte sind KEIN Platzhalter: weggelassen wären sie sonst „unvollständig".
-## Sie fallen schon in `_normalize` weg (ELLIPSIS_PATTERN).
+## Grammatik-Platzhalter ("criticize sb. (for)") werden auf ein Wildcard-Token abgebildet,
+## gleich in welcher Schreibweise oder Sprache ("sb." = "somebody" = "jn."); jeder darf auch
+## ganz entfallen. Längere Alternativen zuerst, damit die Alternation nicht kürzer greift.
+## Mit Schrägstrich verbundene Platzhalter ("sb./sth.") sind eine Stelle mit zwei Lesarten.
+## Wort-Alternativen mit Schrägstrich ("left/right") sind eine Wahl: jede Alternative allein
+## ist vollständig, in jeder Breite bis MAX_SLASH_WIDTH (`_slash_alternatives`).
 const WILDCARD := "•"
 const _PLACEHOLDER_ATOM := \
 	"(?:quelque chose|quelqu'un|qch\\.?|qn\\.?|qc\\.?|somebody|someone|something|jemandem|jemanden|jemand|etwas|etw\\.?" \
@@ -54,13 +21,10 @@ const _PLACEHOLDER_ATOM := \
 const PLACEHOLDER_PATTERN := \
 	"(?<!\\p{L})" + _PLACEHOLDER_ATOM + "(?:\\s*/\\s*" + _PLACEHOLDER_ATOM + ")*"
 
-## Klammergruppen sind optional: "(for)", "(wegen)", aber auch Glossen wie "(Kleidung)"
-## oder "(Pl.)". Für die Auswertung ist beides dasselbe — was in Klammern steht, darf
-## getippt werden, mit oder ohne Klammern, oder eben nicht.
+## Klammergruppen ("(for)", "(Pl.)") sind optional: mit oder ohne Klammern tippen oder weglassen.
 const GROUP_PATTERN := "\\(([^)]*)\\)"
 
-## Deckel gegen Kombinatorik. Im Bestand liegt das Maximum bei einer Klammergruppe und
-## zwei Platzhaltern (10 Varianten); was darüber liegt, wird nur noch "behalten".
+## Deckel gegen Kombinatorik; weitere Gruppen und Platzhalter bleiben wörtlich.
 const MAX_GROUPS := 3
 const MAX_PLACEHOLDERS := 4
 ## Wörter je Seite einer Schrägstrich-Alternative, höchstens ("seit 10 Uhr/letzter Woche").
@@ -68,28 +32,21 @@ const MAX_SLASH_WIDTH := 3
 ## Schrägstrich-Stellen je Eintrag, höchstens; weitere bleiben wörtlich.
 const MAX_SLASHES := 2
 
-## Längenzeichen des Lateinischen. Kein Kind tippt „ā", und das Buch fragt die Vokabel ab,
-## nicht die Quantität: auf Eingabe UND hinterlegter Antwort auf den Grundbuchstaben
-## gefaltet. Umlaute sind keine Längenzeichen und bleiben.
+## Längenzeichen des Lateinischen, auf Eingabe und hinterlegter Antwort auf den
+## Grundbuchstaben gefaltet. Umlaute bleiben.
 const _MACRONS := {"ā": "a", "ē": "e", "ī": "i", "ō": "o", "ū": "u", "ȳ": "y",
 		"ă": "a", "ĕ": "e", "ĭ": "i", "ŏ": "o", "ŭ": "u"}
 
-## Diakritika, die der NACHSICHTIGE Vergleich faltet (ADR 0008): Französisch lässt sich
-## auf der deutschen Tastatur kaum tippen (ç, œ gar nicht), die Schreibweise ist aber
-## Lernstoff. Anders als die Makrons nicht in `_normalize` — ein so getroffenes Wort wird
-## mit richtiger Schreibweise eingeblendet. Umlaute und ß fehlen mit Absicht: sie sind die
-## deutsche Seite.
+## Diakritika, die nur der nachsichtige Vergleich faltet (ADR 0008); ein so getroffenes Wort
+## wird mit richtiger Schreibweise eingeblendet. Umlaute und ß fehlen mit Absicht.
 const _DIACRITICS := {"à": "a", "â": "a", "á": "a", "é": "e", "è": "e", "ê": "e", "ë": "e",
 		"î": "i", "ï": "i", "í": "i", "ô": "o", "ó": "o", "û": "u", "ù": "u", "ú": "u",
 		"ÿ": "y", "ç": "c", "œ": "oe", "æ": "ae"}
-## Zeichen, die nachsichtig als Leerzeichen getippt werden oder fehlen dürfen: die
-## Wortverbinder („est ce que", „aujourdhui") und das Komma („yes please"). Ein Komma
-## ist Schreibweise wie ein Bindestrich — wer es weglässt, kennt das Wort trotzdem.
+## Zeichen, die nachsichtig als Leerzeichen getippt werden oder fehlen dürfen.
 const _JOINERS := ["'", "-", ","]
 
-## Auslassungspunkte („not only … but also", „either ... or"): eine Lücke im Eintrag,
-## kein Bestandteil. Wie ein Satzpunkt ganz wegnormalisiert, ob als „…", „..." oder
-## „..", getippt oder nicht — weglassen ist also vollständig.
+## Auslassungspunkte („either … or“): kein Platzhalter, sondern in `_normalize` ganz
+## entfernt; weglassen ist also vollständig.
 const ELLIPSIS_PATTERN := "…|\\.{2,}"
 
 static var _group_re: RegEx = RegEx.create_from_string(GROUP_PATTERN)
@@ -101,17 +58,13 @@ static var _ellipsis_re: RegEx = RegEx.create_from_string(ELLIPSIS_PATTERN)
 ##
 ## Rückgabe:
 ##   "matched":   passt die Antwort?
-##   "complete":  passt sie OHNE dass etwas Optionales weggelassen wurde? Notation darf
-##                abweichen ("criticize sb for" ist vollständig), ein fehlender Bestandteil
-##                nicht ("criticize" ist richtig, aber unvollständig).
-##   "canonical": die getroffene hinterlegte Antwort in Originalschreibweise — bei
-##                unvollständigem Treffer die Form, die der Spieler noch sehen soll.
-##   "exact":     traf sie ohne Nachsicht bei der Schreibweise? Nur bei `lenient` kann
-##                das false sein; `canonical` ist dann die richtige Schreibweise.
+##   "complete":  passt sie, ohne dass Optionales weggelassen wurde? Notation darf
+##                abweichen, ein fehlender Bestandteil nicht.
+##   "canonical": die getroffene hinterlegte Antwort in Originalschreibweise
+##   "exact":     traf sie ohne Nachsicht bei der Schreibweise? Nur bei `lenient` false.
 ##
-## `lenient` erlaubt fehlende Akzente, Bindestriche und Apostrophe (ADR 0008) — aber erst,
-## wenn der exakte Vergleich nichts Vollständiges fand. Der Wellenkampf fragt so, die
-## Satzbewertung nicht.
+## `lenient` erlaubt fehlende Akzente, Bindestriche und Apostrophe (ADR 0008), aber erst,
+## wenn der exakte Vergleich nichts Vollständiges fand.
 func evaluate(accepted: Array, answer: String, lenient := false) -> Dictionary:
 	var result := _best_match(accepted, answer, false)
 	if not lenient or bool(result["complete"]):
@@ -143,7 +96,6 @@ func _best_match(accepted: Array, answer: String, loose: bool) -> Dictionary:
 			result["exact"] = not loose
 			result["canonical"] = candidate
 		if complete:
-			# Bester Fall — die Suche kann hier aufhören.
 			result["complete"] = true
 			result["canonical"] = candidate
 			return result
@@ -151,9 +103,8 @@ func _best_match(accepted: Array, answer: String, loose: bool) -> Dictionary:
 
 
 ## Richtet `typed` Zeichen für Zeichen an `canonical` aus (kleinste Kosten, wie eine
-## Editierdistanz). Rückgabe: `marked` — die Indizes in `canonical`, deren Schreibweise
-## nachgesehen wurde —, und `typed_against` — je Zeichen von `canonical`, ob ihm etwas
-## Getipptes gegenübersteht. Gemeinsame Grundlage von spelling_marks() und missing_marks().
+## Editierdistanz). Rückgabe: `marked` (Indizes in `canonical`, deren Schreibweise
+## nachgesehen wurde) und `typed_against` (je Zeichen, ob ihm Getipptes gegenübersteht).
 static func _align(canonical: String, typed: String) -> Dictionary:
 	var a := _spelling_chars(canonical)
 	var b := _spelling_chars(typed.strip_edges())
@@ -200,22 +151,16 @@ static func _align(canonical: String, typed: String) -> Dictionary:
 	return {"marked": marked, "typed_against": typed_against}
 
 
-## Die Stellen in `canonical`, an denen `typed` von der Schreibweise abwich: Indizes der
-## Zeichen mit Akzent, Cédille oder Ligatur, die ohne getippt wurden, und der Bindestriche
-## und Apostrophe, die fehlten oder als Leerzeichen kamen. Für die Einblendung nach einem
-## nachsichtigen Treffer (ADR 0008, `exact` false): das Kind sieht die richtige Form mit
-## markierten Fehlern, nicht seine eigene.
-##
-## Ausgerichtet wird Zeichen für Zeichen (kleinste Kosten, wie eine Editierdistanz). Was
-## weggelassen werden durfte (Artikel, Klammerteile, Platzhalter), ist kein Schreibfehler
-## und bleibt unmarkiert — markiert wird nur, was `_loosen` nachsieht.
+## Die Indizes in `canonical`, an denen `typed` von der Schreibweise abwich: Diakritika und
+## Ligaturen, die ohne getippt wurden, und Verbinder, die fehlten oder als Leerzeichen kamen
+## (ADR 0008). Was weggelassen werden durfte, bleibt unmarkiert.
 static func spelling_marks(canonical: String, typed: String) -> PackedInt32Array:
 	var aligned := _align(canonical, typed)
 	var marked: Array[int] = aligned["marked"]
 	var typed_against: Array[bool] = aligned["typed_against"]
 	var m := typed_against.size()
-	# Ein ausgelassener Verbinder ist nur ein Fehler MITTEN im Getippten („lecole"), nicht
-	# am Rand eines weggelassenen Teils („école" für „l'école": der Artikel durfte fehlen).
+	# Ein ausgelassener Verbinder ist nur mitten im Getippten ein Fehler, nicht am Rand
+	# eines weggelassenen Teils („école“ für „l'école“).
 	var marks := PackedInt32Array()
 	for k in marked:
 		var dropped := not typed_against[k]
@@ -225,14 +170,9 @@ static func spelling_marks(canonical: String, typed: String) -> PackedInt32Array
 	return marks
 
 
-## Die Stellen in `canonical`, die bei einem unvollständigen Treffer fehlten (ADR 0010):
-## Klammergruppen und Platzhalter, von denen nichts getippt wurde („etwas" in „die Meinung
-## (zu etwas)" für getipptes „meinung zu"). Was nicht zur Vollständigkeit zählt — Artikel,
-## „the", „to", Auslassungspunkte —, ist kein Bereich und bleibt unmarkiert; Leerzeichen
-## auch. Eine ganz weggelassene Klammergruppe ist samt ihren Klammern markiert.
-##
-## Dieselbe Ausrichtung wie spelling_marks(): ein Bereich fehlt, wenn keinem seiner Zeichen
-## etwas Getipptes gegenübersteht.
+## Die Indizes in `canonical`, die bei einem unvollständigen Treffer fehlten (ADR 0010):
+## Klammergruppen und Platzhalter, deren Zeichen nichts Getipptes gegenübersteht.
+## Leerzeichen bleiben unmarkiert, eine weggelassene Klammergruppe samt Klammern markiert.
 static func missing_marks(canonical: String, typed: String) -> PackedInt32Array:
 	var typed_against: Array[bool] = _align(canonical, typed)["typed_against"]
 	var lower := "".join(_spelling_chars(canonical))
@@ -259,6 +199,7 @@ static func missing_marks(canonical: String, typed: String) -> PackedInt32Array:
 
 
 ## Die möglichen Schritte von (i, j): [neues i, neues j, Kosten, markiert a[i]?].
+## Kosten: 0 gleich, 1 nachgesehene Schreibweise, 2 Auslassung, 3 Ersetzung.
 static func _spelling_steps(a: PackedStringArray, b: PackedStringArray, i: int, j: int) -> Array:
 	var out: Array = []
 	if i < a.size():
@@ -278,8 +219,7 @@ static func _spelling_steps(a: PackedStringArray, b: PackedStringArray, i: int, 
 					out.append([i + 1, j + 1, 3, false])
 				if folded.length() == 2 and j + 1 < b.size() and folded == t + b[j + 1]:
 					out.append([i + 1, j + 2, 1, true])
-		# Ein fehlender Verbinder ist ein Schreibfehler, ein fehlender Buchstabe ein
-		# weggelassener Bestandteil (Artikel, Klammer, Platzhalter).
+		# Fehlender Verbinder: Schreibfehler; fehlender Buchstabe: weggelassener Bestandteil.
 		out.append([i + 1, j, 1 if joiner else 2, joiner])
 	if j < b.size():
 		out.append([i, j + 1, 2, false])
@@ -293,8 +233,7 @@ static func _spelling_chars(s: String) -> PackedStringArray:
 	return chars
 
 
-## Returns true if `answer` matches any accepted answer.
-## Nimmt direkt die Liste gültiger Antworten (z. B. task.accepted_answers).
+## Trifft `answer` eine der Antworten in `accepted`?
 func evaluate_answers(accepted: Array, answer: String) -> bool:
 	return bool(evaluate(accepted, answer)["matched"])
 
@@ -305,34 +244,23 @@ func evaluate_vocab(entry: Dictionary, answer: String) -> bool:
 
 
 ## Die Vergleichs-Token eines Strings: normalisiert, ohne Satzzeichen, ohne Leerstellen.
-## Öffentlich, weil die Satzbewertung dieselbe Zerlegung braucht (SentenceCard) — zwei
-## Normalisierungen nebeneinander liefen irgendwann auseinander.
 func tokens(s: String) -> PackedStringArray:
 	return _tokens(s)
 
 
-## Alle Schreibweisen, unter denen ein String akzeptiert wird: Variante -> „vollständig".
-## Vollständig heißt: bei der Erzeugung wurde nichts weggelassen. Ein Vergleich zweier
-## Strings ist damit der Schnitt ihrer Variantenmengen — symmetrisch, sodass es keine
-## Rolle spielt, ob Klammern und Platzhalter in den Daten oder in der Eingabe stehen.
-##
-## Öffentlich, weil die Datenvalidierung dieselbe Frage stellt wie die Auswertung: ob sich
-## zwei Lemmata unterscheiden lassen, entscheidet der Schnitt ihrer VOLLSTÄNDIGEN Varianten
-## (tests/lexeme_data_test.gd). Eine zweite Normalisierung daneben liefe davon weg.
-##
-## `loose` faltet jede Variante zusätzlich nachsichtig (`_loosen`, ADR 0008).
+## Alle Schreibweisen, unter denen ein String akzeptiert wird: Variante -> vollständig
+## (nichts weggelassen). Ein Vergleich zweier Strings ist der Schnitt ihrer Variantenmengen,
+## also symmetrisch. `loose` faltet zusätzlich nachsichtig (`_loosen`, ADR 0008).
 func variants(s: String, loose := false) -> Dictionary:
 	var base := _normalize(s)
 	if base.is_empty():
 		return {}
 	var result := {}
-	# Erst die Klammern, dann die Platzhalter: ein Platzhalter kann INNERHALB einer
-	# Klammergruppe stehen ("prefer sth. (to sth.)"), und auch der soll zum Wildcard
-	# werden. Zwei Stufen, weil sich die Bereiche sonst überlappen würden.
+	# Erst Klammern, dann Platzhalter: ein Platzhalter kann in einer Klammergruppe stehen.
 	for group_form in _expand(base, _group_slots(base)):
 		for form in _expand(str(group_form[0]), _placeholder_slots(str(group_form[0]))):
 			var complete: bool = bool(group_form[1]) and bool(form[1])
-			# Nach den Platzhaltern: "sb./sth." ist dann schon EIN Wildcard.
+			# Nach den Platzhaltern: "sb./sth." ist dann schon ein Wildcard.
 			for alternative in _slash_alternatives(str(form[0])):
 				var key := _strip_optional_prefix(str(alternative))
 				if key.is_empty():
@@ -367,10 +295,9 @@ func _loosen(key: String) -> Array:
 	return forms
 
 
-## Die Lesarten eines Strings mit Wort-Alternativen ("bus/eine fähre"): er selbst und je
-## Schrägstrich-Wort jede Alternative in jeder Breite (siehe MAX_SLASH_WIDTH). Ein Wort
-## mit mehr als zwei Teilen ("bus/boot/flugzeug") wechselt nur Einzelwörter. Ein leerer
-## Teil (eine weggekürzte Auslassung: "stunden/wochen/") ist keine Alternative.
+## Die Lesarten eines Strings mit Wort-Alternativen: er selbst und je Schrägstrich-Wort jede
+## Alternative in jeder Breite bis MAX_SLASH_WIDTH. Mehr als zwei Teile wechseln nur
+## Einzelwörter; ein leerer Teil ist keine Alternative.
 func _slash_alternatives(s: String) -> Array:
 	var words := s.split(" ", false)
 	# Ein Schrägstrich vor einer weggekürzten Auslassung („woche/…") hängt allein.
@@ -379,8 +306,7 @@ func _slash_alternatives(s: String) -> Array:
 			words[k] = words[k].trim_suffix("/").trim_prefix("/")
 	var forms: Array = [" ".join(words)]
 	var seen := 0
-	# Von rechts nach links: eine Alternative ändert nur Wörter ab ihrem Anfang, links davon
-	# stehen die Wörter dann noch an ihrer Stelle.
+	# Von rechts nach links, damit die Wörter links einer Alternative an ihrer Stelle bleiben.
 	for k in range(words.size() - 1, -1, -1):
 		if not _is_slash_word(words[k]):
 			continue
@@ -392,7 +318,6 @@ func _slash_alternatives(s: String) -> Array:
 		for f in forms:
 			next.append(f)
 			var fw := str(f).split(" ", false)
-			# Nur Formen, in denen das Wort und alles links davon noch an seiner Stelle steht.
 			if fw.size() <= k or fw.slice(0, k + 1) != head:
 				continue
 			next.append_array(_alternatives_at(fw, k))
@@ -460,9 +385,7 @@ func _placeholder_slots(s: String) -> Array:
 
 
 ## Setzt den String aus seinen festen Teilen und allen Kombinationen der optionalen
-## Bereiche neu zusammen. Positionsbasiert und nicht über replace(), weil derselbe
-## Platzhalter mehrfach vorkommen kann ("prefer sth. (to sth.)") und dann jedes
-## Vorkommen einzeln entscheidbar sein muss.
+## Bereiche neu zusammen, positionsbasiert: jedes Vorkommen entscheidet einzeln.
 ## Rückgabe: Array von [String, bool complete].
 func _expand(s: String, slots: Array) -> Array:
 	if slots.is_empty():
@@ -509,10 +432,8 @@ func _strip_optional_prefix(s: String) -> String:
 	return s
 
 
-## Mehrfach-Leerzeichen zusammenziehen — entsteht beim Weglassen von Bestandteilen.
-## Auch direkt an den Klammern, sonst bliebe aus "(to sth.)" ohne Platzhalter ein
-## "(to )" stehen, das die getippte Form "(to)" nicht mehr trifft. Ebenso vor dem Komma:
-## aus "les uns…, les autres" wird ohne Lücke "les uns, les autres", nicht "les uns , …".
+## Zieht Mehrfach-Leerzeichen zusammen, auch innen an Klammern und vor dem Komma, damit
+## "(to )" die getippte Form "(to)" trifft.
 func _collapse(s: String) -> String:
 	var out := " ".join(s.split(" ", false))
 	return out.replace("( ", "(").replace(" )", ")").replace(" ,", ",")

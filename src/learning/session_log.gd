@@ -1,32 +1,20 @@
 extends Node
-## Verlauf je Spiel-Sitzung (Autoload `SessionLog`).
-##
-## PlayerProgress hält den Lernstand PRO AUFGABE, GameState den Zustand DES LAUFENDEN
-## LAUFS — beides ohne Zeitachse. Dieses Log ist die dritte Ebene: ein Eintrag je Lauf,
-## damit „heute", „diese Woche" und jeder Trend überhaupt darstellbar sind (Issue #3).
-## Ein Lauf ist alles zwischen `EventBus.run_started` und `run_ended`, also über mehrere
-## Wellen hinweg bis zur gefallenen Festung oder zum Rückweg ins Menü.
-##
-## Hier wird nur erfasst und persistiert; die Anzeige liegt bei den Statistik-Screens.
-## Persistenz: JSON unter user://progress/<player_id>_sessions.json — Spielerdaten
-## gehören nach user://, nicht in die Quell-JSON unter res://data/.
-##
-## Was NICHT hier steht: die Zahl neu gemeisterter Aufgaben wird nicht mitgezählt,
-## sondern am Laufende bei PlayerProgress erfragt (`mastered_since`, Issue #4). Eine
-## zweite Buchführung über dieselbe Sache läuft irgendwann auseinander.
+## Verlauf je Spiel-Sitzung (Autoload `SessionLog`): ein Eintrag je Lauf, also alles
+## zwischen `EventBus.run_started` und `run_ended`. Neu gemeisterte Aufgaben werden nicht
+## mitgezählt, sondern am Laufende bei PlayerProgress erfragt (`mastered_since`).
+## Persistenz: user://progress/<player_id>_sessions.json.
 
 const SAVE_DIR := "user://progress"
-## Bis zu dieser Antwortzeit gilt eine Antwort als „Blitzantwort".
+## Bis zu dieser Antwortzeit (ms) gilt eine Antwort als „Blitzantwort“.
 const FAST_ANSWER_MS := 2000
-## Unter so vielen Antworten ist die Genauigkeit einer Sitzung kein Wert, sondern Rauschen.
+## Mindestzahl Antworten, ab der eine Genauigkeit ausgewiesen wird.
 const MIN_ACCURACY_ANSWERS := 5
 ## Der Vergleichswert der Sitzungs-Genauigkeit mittelt über so viele Tage davor.
 const ACCURACY_WINDOW_DAYS := 7
 
 ## Abgeschlossene Sitzungen, älteste zuerst. Felder eines Eintrags:
 ##   started_at, ended_at, last_activity_at: int (unix)
-##   waves_cleared: int          — geräumte Wellen; zugleich die höchste geräumte Welle,
-##                                 weil Wellen strikt in Folge gespielt werden
+##   waves_cleared: int          — geräumte Wellen (zugleich die höchste)
 ##   wave_reached, difficulty_last: int
 ##   last_wave_won: bool         — Ausgang der letzten Welle des Laufs
 ##   answers, correct: int
@@ -34,18 +22,15 @@ const ACCURACY_WINDOW_DAYS := 7
 ##   response_time_sum_ms, timed_answers, fast_answers: int
 ##   monsters_defeated, monsters_leaked, best_no_leak_streak: int
 ##   min_fortress_health: int    — tiefster HP-Stand des Laufs; -1 heißt „unbekannt"
-##                                 (der Wert wird erst in end() von GameState abgelesen,
-##                                 eine laufende oder abgebrochene Sitzung hat ihn nicht)
+##                                 (erst end() liest ihn von GameState ab)
 ##   aborted: bool               — nur bei hart beendeten Läufen (siehe load_sessions)
 ##   suspended: bool             — nur bei begonnenen Läufen (ADR 0020)
-##   continues: int              — nur bei fortgesetzten: started_at des Laufs, den diese
-##                                 Sitzung fortsetzt (der ersten Sitzung, nicht der letzten)
+##   continues: int              — nur bei fortgesetzten: started_at der ersten Sitzung des Laufs
 var _sessions: Array = []
 ## Die laufende Sitzung; leer = gerade kein Lauf.
 var _current: Dictionary = {}
 var player_id: String = "default"
-## Eine verworfene Welle (SaveCoordinator.discard_uncommitted) nimmt dem Log nichts: es ist
-## ein Protokoll dessen, was gespielt wurde, kein Verdienst.
+## Eine verworfene Welle (SaveCoordinator.discard_uncommitted) nimmt dem Log nichts.
 var keep_on_discard := true
 
 
@@ -53,8 +38,6 @@ func _ready() -> void:
 	player_id = UserSettings.active_profile()
 	load_sessions()
 	SaveCoordinator.register(self)
-	# Profilwechsel mitschalten, damit Sitzungen nicht im falschen Profil landen. Über das
-	# Signal statt über einen Aufruf im UI: der Wechsel wird an drei Stellen ausgelöst.
 	UserSettings.active_profile_changed.connect(switch_to)
 	EventBus.run_started.connect(begin)
 	EventBus.run_ended.connect(end)
@@ -66,12 +49,9 @@ func _ready() -> void:
 
 # --- Erfassung ----------------------------------------------------------------
 #
-# Öffentliche Methoden, die die Signal-Handler oben nur weiterreichen: so ist das Log
-# ohne EventBus und ohne Szene prüfbar (siehe tests/session_log_test.gd).
+# Öffentlich, damit das Log ohne EventBus prüfbar ist.
 
-## Beginnt eine neue Sitzung. Ein noch offener Lauf wird vorher ordentlich beendet —
-## ohne das würde ein Szenenwechsel ohne Rückweg über das Menü die alte Sitzung
-## überschreiben, statt sie aufzuschreiben.
+## Beginnt eine neue Sitzung; eine noch offene wird vorher beendet.
 func begin() -> void:
 	if not _current.is_empty():
 		end()
@@ -82,9 +62,7 @@ func begin() -> void:
 		"answers": 0, "correct": 0, "newly_mastered": 0,
 		"response_time_sum_ms": 0, "timed_answers": 0, "fast_answers": 0,
 		"monsters_defeated": 0, "monsters_leaked": 0, "best_no_leak_streak": 0,
-		# -1 und nicht der volle Stand: solange der Lauf läuft, ist der tiefste HP-Stand
-		# UNBEKANNT — end() liest ihn von GameState ab. Stünde hier das Maximum, trüge
-		# jede abgebrochene Sitzung (load_sessions) einen makellosen Lauf in die Rekorde.
+		# Unbekannt bis end(); sonst trüge eine abgebrochene Sitzung einen makellosen Lauf.
 		"min_fortress_health": -1,
 	}
 
@@ -103,15 +81,13 @@ func note_suspended() -> void:
 	_current["suspended"] = true
 
 
-## Verbucht eine beantwortete Aufgabe (richtig oder falsch).
 func note_answer(correct: bool, response_time_ms: int = 0) -> void:
 	if _current.is_empty():
 		return
 	_current["answers"] = int(_current["answers"]) + 1
 	if correct:
 		_current["correct"] = int(_current["correct"]) + 1
-	# Zeiten nur zählen, wo eine gemessen wurde: ein durchgelassenes Monster meldet 0 ms
-	# (Konvention aus PlayerProgress.record) und würde jeden Mittelwert nach unten ziehen.
+	# 0 ms heißt „nicht gemessen“ (durchgelassenes Monster) und zählt nicht.
 	if response_time_ms > 0:
 		_current["timed_answers"] = int(_current["timed_answers"]) + 1
 		_current["response_time_sum_ms"] = int(_current["response_time_sum_ms"]) + response_time_ms
@@ -120,9 +96,8 @@ func note_answer(correct: bool, response_time_ms: int = 0) -> void:
 	_touch()
 
 
-## Verbucht eine geräumte Welle und schreibt die Sitzung fort. Das Fortschreiben ist der
-## Grund, aus dem hier überhaupt gespeichert wird: bricht der Prozess mitten im Lauf ab,
-## ist die Sitzung bis zur letzten Welle erhalten (siehe load_sessions).
+## Verbucht eine geräumte Welle und speichert die laufende Sitzung mit, damit sie einen
+## Abbruch überlebt (load_sessions).
 func note_wave_cleared() -> void:
 	if _current.is_empty():
 		return
@@ -133,9 +108,8 @@ func note_wave_cleared() -> void:
 	_save()
 
 
-## Beendet die Sitzung und schreibt sie fest. `summary` trägt, was nur der WaveRunner
-## weiß: wave_reached, difficulty_last, last_wave_won. Ohne laufende Sitzung ein No-op,
-## damit ein doppeltes Laufende (Abbruch nach dem Statistik-Screen) nichts anrichtet.
+## Beendet die Sitzung und schreibt sie fest. `summary`: wave_reached, difficulty_last,
+## last_wave_won. Ohne laufende Sitzung ein No-op.
 func end(summary: Dictionary = {}) -> void:
 	if _current.is_empty():
 		return
@@ -146,16 +120,13 @@ func end(summary: Dictionary = {}) -> void:
 			int(_current["wave_reached"]), int(summary.get("wave_reached", 0)))
 	_current["difficulty_last"] = int(summary.get("difficulty_last", _current["difficulty_last"]))
 	_current["last_wave_won"] = bool(summary.get("last_wave_won", false))
-	# Die Lauf-Zähler gehören GameState; hier werden sie nur abgelesen und fortgeschrieben.
 	_current["monsters_defeated"] = GameState.monsters_defeated
 	_current["monsters_leaked"] = GameState.monsters_leaked
 	_current["best_no_leak_streak"] = GameState.best_no_leak_streak
 	_current["min_fortress_health"] = GameState.min_fortress_health
 	_current["newly_mastered"] = PlayerProgress.mastered_since(int(_current["started_at"])).size()
 
-	# Eine Sitzung ohne jede Antwort und ohne geräumte Welle wird nicht aufgeschrieben:
-	# sie hätte keine Aussage und würde die Tages-Serie mit einem Tag füllen, an dem
-	# nichts geübt wurde (Kampfszene betreten und sofort abgebrochen).
+	# Ohne Antwort und ohne geräumte Welle zählt die Sitzung nicht (auch nicht zur Serie).
 	if int(_current["answers"]) == 0 and int(_current["waves_cleared"]) == 0:
 		_current = {}
 		_save()
@@ -171,18 +142,15 @@ func _touch() -> void:
 
 # --- Abfragen -----------------------------------------------------------------
 
-## Abgeschlossene Sitzungen, älteste zuerst (Kopie).
 func sessions() -> Array:
 	return _sessions.duplicate(true)
 
 
-## Die laufende Sitzung (Kopie) oder ein leeres Dictionary.
 func current() -> Dictionary:
 	return _current.duplicate(true)
 
 
-## Sitzungen mit `started_at` im Zeitraum [from_unix, to_unix]. Die laufende Sitzung ist
-## dabei — sonst fehlt in jeder „heute"-Anzeige genau der Lauf, der gerade läuft.
+## Sitzungen mit `started_at` im Zeitraum [from_unix, to_unix], die laufende eingeschlossen.
 func sessions_between(from_unix: int, to_unix: int) -> Array:
 	var out: Array = []
 	for entry in _all_entries():
@@ -192,8 +160,7 @@ func sessions_between(from_unix: int, to_unix: int) -> Array:
 	return out
 
 
-## Lokale Tagesindizes (Tage seit Epoche) mit mindestens einer Sitzung im Zeitraum,
-## aufsteigend. Grundlage für die Tages-Leiste (siehe CoinStrip).
+## Lokale Tagesindizes (Tage seit Epoche) mit Sitzung im Zeitraum, aufsteigend.
 func played_days(from_unix: int, to_unix: int) -> Array:
 	var seen := {}
 	for entry in sessions_between(from_unix, to_unix):
@@ -203,13 +170,8 @@ func played_days(from_unix: int, to_unix: int) -> Array:
 	return days
 
 
-## Aufeinanderfolgende Tage mit mindestens einer Sitzung, rückwärts gezählt.
-##
-## Der heutige Tag ist keine Lücke, solange er läuft: gespielt wurde entweder heute (dann
-## zählt heute mit) oder zuletzt gestern (dann bleibt die Serie stehen und endet gestern).
-## Erst ein ganzer ausgelassener Tag bricht sie. Eine zurückgestellte Systemuhr kann die
-## Zählung nicht ins Absurde treiben — gezählt wird ab heute rückwärts, Sitzungen mit
-## einem Datum in der Zukunft bleiben unberücksichtigt.
+## Aufeinanderfolgende Tage mit mindestens einer Sitzung, ab heute rückwärts gezählt.
+## Ein heute noch nicht gespielter Tag bricht die Serie nicht; sie endet dann gestern.
 func current_streak() -> int:
 	var days := {}
 	for entry in _all_entries():
@@ -228,8 +190,6 @@ func current_streak() -> int:
 	return n
 
 
-## Wurde heute (lokal) schon geübt? Für die Nachfrage, ob die Serie heute noch wartet —
-## die Serie selbst bricht deshalb nicht (siehe current_streak).
 func played_today() -> bool:
 	var today := local_day(int(Time.get_unix_time_from_system()))
 	for entry in _all_entries():
@@ -238,8 +198,8 @@ func played_today() -> bool:
 	return false
 
 
-## Richtige Antworten heute (lokal), die laufende Sitzung eingeschlossen — die Treffer des
-## Tages der Plaketten. Eine Sitzung über Mitternacht zählt zu ihrem Anfangstag.
+## Richtige Antworten heute (lokal), die laufende Sitzung eingeschlossen. Eine Sitzung
+## über Mitternacht zählt zu ihrem Anfangstag.
 func correct_today() -> int:
 	var today := local_day(int(Time.get_unix_time_from_system()))
 	var n := 0
@@ -249,11 +209,6 @@ func correct_today() -> int:
 	return n
 
 
-## Zahl der Tage mit mindestens einer Sitzung — der Vorrat, aus dem die Münzen der
-## Tages-Leiste kommen (ein geübter Tag = eine Münze, mehrere Sitzungen am selben Tag
-## sind eines). Sollen die Stücke später eingesammelt und ausgegeben werden können,
-## braucht das einen EIGENEN Zähler für Ausgegebenes; Sitzungen zu löschen wäre der
-## falsche Weg — sie sind die Lernhistorie, nicht die Geldbörse.
 func played_day_count() -> int:
 	var days := {}
 	for entry in _all_entries():
@@ -261,13 +216,8 @@ func played_day_count() -> int:
 	return days.size()
 
 
-## Bestwerte über alle Sitzungen — die Grundlage der Kampf-Rekorde (Issue #11).
-##
-## Zwei Größen über DENSELBEN Wert, und sie sagen Verschiedenes: `min_fortress_health`
-## ist der tiefste Stand, den die Festung je hatte (über alle Läufe hinweg), während
-## `best_fortress_floor` der HÖCHSTE der lauf-eigenen Tiefstände ist — der schonendste
-## Lauf, also das, was als Auszeichnung taugt. Beide sind -1, solange keine Sitzung einen
-## Stand mitgebracht hat („unbekannt", nicht 0 HP).
+## Bestwerte über alle Sitzungen. `min_fortress_health` ist der tiefste HP-Stand je,
+## `best_fortress_floor` der höchste der lauf-eigenen Tiefstände; beide -1 = unbekannt.
 func records() -> Dictionary:
 	var out := {
 		"sessions": 0, "highest_wave_cleared": 0, "best_no_leak_streak": 0,
@@ -288,36 +238,20 @@ func records() -> Dictionary:
 	return out
 
 
-## Genauigkeit der jüngsten Sitzung und ihr Vergleichswert (Issue #13). Siehe
-## accuracy_trend() — hier nur mit dem echten Verlauf, laufende Sitzung eingeschlossen.
+## accuracy_trend() über den echten Verlauf, laufende Sitzung eingeschlossen.
 func session_accuracy() -> Dictionary:
 	return accuracy_trend(_all_entries())
 
 
-## Genauigkeit der jüngsten Sitzung mit Antworten und ein Vergleichswert dazu.
-##
-## Die Lebenszeit-Genauigkeit taugt nicht als Kopfzahl: sie sinkt, sobald schwere Wörter
-## geübt werden, und bewegt sich nach ein paar hundert Antworten kaum noch. Die Sitzung
-## dagegen sagt, wie es HEUTE lief, und der Vergleich, ob das besser war als zuletzt.
-##
-## Vergleichswert ist das Mittel der Sitzungen aus den `window_days` Tagen VOR der
-## jüngsten — gerechnet ab deren Beginn, nicht ab jetzt, damit eine Woche Pause den
-## Vergleich nicht leert. Gibt es dort keine, ist es die Sitzung direkt davor, wie alt sie
-## auch sei. Gemittelt wird über die Antworten (Summe richtig / Summe Antworten), nicht
-## über die Sitzungen: ein Lauf mit drei Antworten wöge sonst so viel wie einer mit achtzig.
-##
-## Unter `min_answers` Antworten ist ein Anteil Rauschen (zwei von drei = 67 %). Dann ist
-## `accuracy` -1, und ebenso `baseline`, wenn der Vergleich so dünn ist — „kein Wert" und
-## nicht 0 %, siehe die Anzeige. Felder: answers, correct, accuracy, baseline,
-## baseline_kind ("week" | "previous" | ""), live (die jüngste läuft noch).
-##
-## Statisch und über die Einträge statt über den Zustand: so ist die Regel mit erfundenen
-## Sitzungen prüfbar, ohne ein Log zu füllen (dieselbe Aufteilung wie StatsScreen.record_rows).
+## Genauigkeit der jüngsten Sitzung mit Antworten und ein Vergleichswert dazu: Summe richtig / Summe Antworten der Sitzungen aus den `window_days` Tagen
+## vor Beginn der jüngsten; gibt es dort keine, die Sitzung direkt davor. Unter
+## `min_answers` Antworten ist `accuracy` bzw. `baseline` -1 („kein Wert“).
+## Felder: answers, correct, accuracy, baseline, baseline_kind ("week" | "previous" | ""),
+## live (die jüngste läuft noch).
 static func accuracy_trend(entries: Array, min_answers := MIN_ACCURACY_ANSWERS,
 		window_days := ACCURACY_WINDOW_DAYS) -> Dictionary:
 	var out := {"answers": 0, "correct": 0, "accuracy": -1.0, "baseline": -1.0,
 			"baseline_kind": "", "live": false}
-	# Einträge ohne Antwort (nur geräumte Wellen) haben keine Genauigkeit.
 	var answered: Array = entries.filter(func(e): return int(e.get("answers", 0)) > 0)
 	if answered.is_empty():
 		return out
@@ -349,14 +283,12 @@ static func accuracy_trend(entries: Array, min_answers := MIN_ACCURACY_ANSWERS,
 	return out
 
 
-## Lokaler Tagesindex (Tage seit Epoche) eines Unix-Zeitstempels. Bewusst lokal und nicht
-## UTC: sonst wechselt der Tag abends mitten in der Sitzung und die Serie bricht grundlos.
+## Lokaler Tagesindex (Tage seit Epoche) eines Unix-Zeitstempels.
 func local_day(unix: int) -> int:
 	var bias := int(Time.get_time_zone_from_system().get("bias", 0))
 	return floori(float(unix + bias * 60) / 86400.0)
 
 
-## Abgeschlossene Sitzungen plus die laufende — alles, was zählt, auch mitten im Lauf.
 func _all_entries() -> Array:
 	var all := _sessions.duplicate()
 	if not _current.is_empty():
@@ -391,7 +323,6 @@ func save_payload() -> Dictionary:
 	return {"player_id": player_id, "sessions": _sessions, "current": _current}
 
 
-## Lädt das Log des Profils neu (Import).
 func reload() -> void:
 	load_sessions()
 
@@ -400,11 +331,8 @@ func _save() -> void:
 	SaveCoordinator.mark_dirty(self)
 
 
-## Lädt das Log und schließt dabei eine offen liegende Sitzung ab.
-##
-## Eine offene Sitzung in der Datei heißt: der Lauf wurde hart beendet (Absturz, Fenster
-## zu). Sie wird hier geschlossen (Ende = letzte Aktivität) und als `aborted` markiert,
-## statt als halber Eintrag stehen zu bleiben oder verloren zu gehen.
+## Lädt das Log. Eine offen liegende Sitzung (hart beendeter Lauf) wird mit Ende = letzte
+## Aktivität geschlossen und als `aborted` markiert.
 func load_sessions() -> void:
 	_sessions.clear()
 	_current = {}

@@ -1,18 +1,8 @@
 class_name Lexeme
 extends RefCounted
-## Sprache und fremdsprachige Seite eines Lexems (Issue #31).
-##
-## Deutsch ist immer die eine Seite. Die Fremdsprache steht in `lemma_<language>` und
-## `lemma_<language>_alt`, die Sprache im Feld `language`. Fehlt es, ist das Lexem englisch
-## — so ist der ganze Bestand vor Latein geschrieben, und Felder der Pack-Formate werden
-## nicht umbenannt. Wer die fremde Seite braucht, fragt hier und liest `lemma_en` nie direkt.
-##
-## Dieselbe Regel gilt für task_definitions: eine Definition ohne `language` ist englisch,
-## und der WaveGenerator paart sie nur mit Lexemen ihrer Sprache.
-##
-## Die Übersetzungsrichtungen tragen die Sprache im Namen (`de_to_la`, `la_to_de`). Aus
-## einer Richtung allein lässt sich die Sprache also zurückrechnen — die Meisterung zählt
-## über Record-Ids und kommt so ohne Katalog aus (PlayerProgress.mastered_lexemes_in).
+## Sprache und fremdsprachige Seite eines Lexems oder einer task_definition (ADR 0007).
+## Deutsch ist immer die eine Seite, die fremde steht in `lemma_<language>`; ohne Feld
+## `language` englisch. Die fremde Seite nur hier lesen, nie `lemma_en` direkt.
 
 const DEFAULT_LANGUAGE := "en"
 ## Anzeigenamen der Sprachen (UI-Sprache Deutsch).
@@ -36,7 +26,6 @@ static func foreign_alt(entry: Dictionary) -> Array:
 
 
 ## Das Thema des Wort-Bonus, in dem das Lexem steht (Feld `bonus`, ADR 0013), leer ohne.
-## Ein solches Wort gehört nicht zu den Wörtern seiner Unit, sondern zu ihrem Bonus.
 static func bonus(entry: Dictionary) -> String:
 	return str(entry.get("bonus", ""))
 
@@ -69,14 +58,10 @@ static func language_of_direction(direction: String) -> String:
 	return ""
 
 
-## Die Fremdsprache einer Aufgabe aus ihrer learnable_id (TaskResolver.learnable_id), leer
-## wenn sie sich nicht bestimmen lässt (Lexem fehlt im Katalog).
-##
-## Eine Übersetzung trägt die Sprache in der Richtung und braucht keinen Katalog; Formen und
-## Relationen („conjugation:<lexem>:<form>", „opposite:<lexem>:<ziel>") erben sie vom Buch
-## ihres Lexems — ein Buch hat genau eine Sprache. Gerechnet und nicht im Record
-## gespeichert. `lexemes` ist ContentRegistry.lexemes (Id -> Eintrag), `book_language`
-## ContentRegistry.book_language; ein Lexem ohne Buch fällt auf sein eigenes Feld zurück.
+## Die Fremdsprache einer Aufgabe aus ihrer learnable_id, leer wenn unbestimmbar. Eine
+## Übersetzung trägt sie in der Richtung; Formen und Relationen erben sie vom Buch ihres
+## Lexems, ohne Buch vom Lexem selbst. `lexemes`: Id -> Eintrag (ContentRegistry.lexemes),
+## `book_language`: ContentRegistry.book_language.
 static func language_of_learnable(id: String, lexemes: Dictionary, book_language: Callable) -> String:
 	var parts := id.split(":")
 	if parts.size() != 3:
