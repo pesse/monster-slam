@@ -11,6 +11,14 @@ extends Control
 const POINTER_SIZE := Vector2(24.0, 12.0)
 const POINTER_OVERLAP := 2.0
 const TEXT_LIGHTEN := 0.35
+## Gemeistert (Monster.mastered): Rand und Schrift ziehen zu diesem Grau und dunkeln nach —
+## das Schild bleibt deckend und lesbar, verliert aber den Kontrast. Davor steht ein Haken.
+const MASTERED_GRAY := Color(0.62, 0.64, 0.68)
+const MASTERED_RIM_GRAY := 0.6
+const MASTERED_RIM_DARKEN := 0.25
+const MASTERED_TEXT_GRAY := 0.7
+const MASTERED_TEXT_DARKEN := 0.1
+const MASTERED_MARK := "✓ "
 ## So leuchtet ein Schild auf, das der Zauber aufdeckt (die Farbe von SpellFx, überhellt).
 const REVEAL_GLOW := Color(1.6, 1.25, 2.0)
 
@@ -32,7 +40,7 @@ func setup(of: Monster, large: bool) -> void:
 		_frame.theme_type_variation = &"HudWordPlateLarge"
 		_text.theme_type_variation = &"HudPlateTextLarge"
 		_alt.theme_type_variation = &"HudPlateAltLarge"
-	_text.text = of.prompt()
+	_text.text = (MASTERED_MARK if of.mastered else "") + of.prompt()
 	_alt.text = alt_line(of.alts())
 	_alt.visible = of.alts_shown
 	of.alts_revealed.connect(_on_alts_revealed)
@@ -40,9 +48,14 @@ func setup(of: Monster, large: bool) -> void:
 	# voll an (word_plate.gdshader), die Schrift aufgehellt — auf der dunklen Fläche wäre
 	# etwa das Nomen-Blau sonst zu schwach.
 	var color := of.word_color()
-	_frame.self_modulate = color
-	_pointer.self_modulate = color
-	_text.self_modulate = color.lerp(Color.WHITE, TEXT_LIGHTEN)
+	var rim := color
+	var ink := color.lerp(Color.WHITE, TEXT_LIGHTEN)
+	if of.mastered:
+		rim = color.lerp(MASTERED_GRAY, MASTERED_RIM_GRAY).darkened(MASTERED_RIM_DARKEN)
+		ink = color.lerp(MASTERED_GRAY, MASTERED_TEXT_GRAY).darkened(MASTERED_TEXT_DARKEN)
+	_frame.self_modulate = rim
+	_pointer.self_modulate = rim
+	_text.self_modulate = ink
 	_alt.self_modulate = _text.self_modulate
 	_fit()
 

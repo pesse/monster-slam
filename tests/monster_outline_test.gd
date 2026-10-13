@@ -32,3 +32,22 @@ func test_unknown_type_uses_fallback_color() -> void:
 	var mat := placeholder.material_overlay as ShaderMaterial
 	var col: Color = mat.get_shader_parameter("outline_color")
 	assert_bool(col.is_equal_approx(WordTypePalette.FALLBACK)).is_true()
+
+
+## Gemeistert: kein leuchtender Rand, der Körper halb durchsichtig — auf einer Kopie, das
+## Material der Szene bleibt deckend.
+func test_mastered_monster_is_translucent_without_outline() -> void:
+	var monster := auto_free(MONSTER_SCENE.instantiate()) as Monster
+	monster.setup({}, {"prompt": "gehen", "lexeme_type": "verb"}, 0.0, 40.0)
+	monster.mastered = true
+	add_child(monster)
+
+	var placeholder := monster.get_node("Placeholder") as MeshInstance3D
+	assert_object(placeholder.material_overlay).is_null()
+	var mat := placeholder.get_active_material(0) as BaseMaterial3D
+	assert_int(mat.transparency).is_not_equal(BaseMaterial3D.TRANSPARENCY_DISABLED)
+	assert_float(mat.albedo_color.a).is_equal_approx(Monster.MASTERED_ALPHA, 0.001)
+	var fresh := MONSTER_SCENE.instantiate() as Monster
+	var scene_mat := (fresh.get_node("Placeholder") as MeshInstance3D).get_active_material(0) as BaseMaterial3D
+	assert_float(scene_mat.albedo_color.a).is_equal(1.0)
+	fresh.free()
