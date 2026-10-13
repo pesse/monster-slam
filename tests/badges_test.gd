@@ -92,6 +92,28 @@ func test_no_comeback_above_the_red_zone() -> void:
 	assert_array(ids).not_contains(["comeback"])
 
 
+## In letzter Sekunde: der leerende Treffer kam höchstens LAST_SECOND vor dem Einschlag.
+func test_last_second_once_a_day() -> void:
+	var badges := Badges.new(PROFILE)
+	assert_array(_ids(badges.wave_won(1.0, Badges.LAST_SECOND + 0.1))).not_contains(["last_second"])
+	assert_array(_ids(badges.wave_won(1.0))).not_contains(["last_second"])
+	assert_array(_ids(badges.wave_won(1.0, Badges.LAST_SECOND))).contains(["last_second"])
+	assert_array(_ids(badges.wave_won(1.0, 0.2))).not_contains(["last_second"])
+
+
+## Die Restzeit rechnet mit dem gebremsten Tempo und hängt das Eis an.
+func test_seconds_left_counts_pace_and_frost() -> void:
+	var monster := Monster.new()
+	# 40 Einheiten sind 2 m/s, 3 m vor dem Ziel.
+	monster.setup({}, {}, 5.0, 40.0)
+	monster.position.z = 2.0
+	assert_float(monster.seconds_left()).is_equal_approx(1.5, 0.001)
+	monster.pace = 0.5
+	monster._frozen_left = 0.5
+	assert_float(monster.seconds_left()).is_equal_approx(3.5, 0.001)
+	monster.free()
+
+
 ## Eine Plakette derselben Antwort kommt nach der Meister-Feier, und jede läuft.
 func test_celebration_plays_badges_after_mastery() -> void:
 	var c: MasteryCelebration = auto_free(SCENE.instantiate())

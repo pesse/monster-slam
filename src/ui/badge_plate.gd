@@ -17,6 +17,7 @@ const GLOW := {
 	&"better": Color(0.5, 0.92, 0.86),
 	&"revenge": Color(0.78, 0.6, 1.0),
 	&"catch_up": Color(0.62, 0.95, 0.5),
+	&"last_second": Color(1.0, 0.42, 0.42),
 }
 
 ## Palette = Dateiname der Medaille (Badges.make).

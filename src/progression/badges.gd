@@ -15,6 +15,9 @@ const KEPT_STEPS := [1, 5, 10, 25]
 const CATCH_UP_BELOW := 0.10
 ## Rote Zone des Lebensbalkens (Anteil), dieselbe wie im HUD.
 const COMEBACK_RATIO := preload("res://src/ui/hud.gd").HP_WARN
+## Höchstens so viel Spielzeit (s) hätte das letzte Monster der Welle noch bis zur Festung
+## gebraucht, als es getroffen wurde (Monster.seconds_left).
+const LAST_SECOND := 1.0
 
 const TIER_NAMES := ["Bronze", "Silber", "Gold", "Diamant"]
 const TIER_PALETTES := [&"bronze", &"silver", &"gold", &"diamond"]
@@ -23,7 +26,7 @@ const WORD_TITLES := ["Wortschnüffler", "Vokabeljäger", "Wörterdrache", "Spra
 const COMMON_PALETTES := [&"bronze", &"silver"]
 
 ## Plaketten, die es je Tag einmal gibt (Stufen zählen als eigene).
-const DAILY := ["comeback", "better"]
+const DAILY := ["comeback", "better", "last_second"]
 ## Plaketten, die es je Welle einmal gibt.
 const PER_WAVE := ["revenge", "catch_up"]
 
@@ -104,6 +107,9 @@ static func make(id: String, tier: int, detail_args: Dictionary = {}) -> Diction
 		"comeback":
 			badge["title"] = "Comeback des Tages!"
 			badge["detail"] = "Die Festung wackelte – und hält."
+		"last_second":
+			badge["title"] = "In letzter Sekunde!"
+			badge["detail"] = "Das letzte Monster stand schon vor der Mauer."
 		"better":
 			badge["title"] = "Besser als sonst!"
 			badge["detail"] = "Heute %d %% richtig, sonst %d %%" % [
@@ -118,7 +124,8 @@ static func samples() -> Array:
 			make("kept", 1, {"word": "house → Haus"}), make("kept", 2),
 			make("revenge", 0, {"word": "receive → erhalten"}),
 			make("catch_up", 0, {"word": "Haus → house"}),
-			make("comeback", 0), make("better", 0, {"accuracy": 0.92, "baseline": 0.81})]
+			make("comeback", 0), make("last_second", 0),
+			make("better", 0, {"accuracy": 0.92, "baseline": 0.81})]
 
 
 
@@ -132,7 +139,7 @@ static func catalog() -> Array:
 		all.append(make("kept", tier, {"word": "house → Haus"}))
 	all.append_array([make("revenge", 0, {"word": "receive → erhalten"}),
 			make("catch_up", 0, {"word": "Haus → house"}), make("comeback", 0),
-			make("better", 0, {"accuracy": 0.92, "baseline": 0.81})])
+			make("last_second", 0), make("better", 0, {"accuracy": 0.92, "baseline": 0.81})])
 	return all
 
 # --- Im Kampf -----------------------------------------------------------------
@@ -191,12 +198,15 @@ func after_hit(ctx: Dictionary) -> Array:
 
 
 ## Die Plaketten einer gewonnenen Welle. `low_ratio`: tiefster HP-Stand der Welle als
-## Anteil am Maximum.
-func wave_won(low_ratio: float) -> Array:
+## Anteil am Maximum. `last_left`: Monster.seconds_left des Treffers, der das Feld geleert
+## hat, INF ohne einen solchen.
+func wave_won(low_ratio: float, last_left := INF) -> Array:
 	_roll_day()
 	var out: Array = []
 	if low_ratio <= COMEBACK_RATIO and _earn("comeback"):
 		out.append(make("comeback", 0))
+	if last_left <= LAST_SECOND and _earn("last_second"):
+		out.append(make("last_second", 0))
 	var trend := SessionLog.session_accuracy()
 	if is_better(trend) and _earn("better"):
 		out.append(make("better", 0, trend))

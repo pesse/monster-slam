@@ -33,6 +33,7 @@ denselben Commit.
 | `sfx/badge_catch_up.wav` | ElevenLabs Sound Effects (`eleven_text_to_sound_v2`), generiert 2026-10-12 | ElevenLabs-Nutzungsbedingungen (Abo des Projekts) | ElevenLabs, Prompt s. u. |
 | `sfx/badge_comeback.wav` | ElevenLabs Sound Effects (`eleven_text_to_sound_v2`), generiert 2026-10-12 | ElevenLabs-Nutzungsbedingungen (Abo des Projekts) | ElevenLabs, Prompt s. u. |
 | `sfx/badge_better.wav` | ElevenLabs Sound Effects (`eleven_text_to_sound_v2`), generiert 2026-10-12 | ElevenLabs-Nutzungsbedingungen (Abo des Projekts) | ElevenLabs, Prompt s. u. |
+| `sfx/badge_last_second.wav` | ElevenLabs Sound Effects (`eleven_text_to_sound_v2`), generiert 2026-10-13 | ElevenLabs-Nutzungsbedingungen (Abo des Projekts) | ElevenLabs, Prompt s. u. |
 
 `sfx/wave_cleared.wav` ist die verlustfreie WAV-Fassung der dort angebotenen FLAC-Datei —
 Godot 4.7 lädt FLAC nicht („No loader found for resource"). Die Quelle ist innen bereits
@@ -73,3 +74,4 @@ Gehör gewählt). Bearbeitung: MP3 als 16-Bit-WAV, Pegel auf −16 dBFS im laute
 - `sfx/badge_catch_up.wav`: „A rising swoosh that speeds up and lands on a bright warm tone just in time, playful just-made-it feeling, fantasy game reward sound", 1,0 s, Variante 2; vorher „simple power up" von Tissman (https://freesound.org/people/Tissman/sounds/455857/).
 - `sfx/badge_comeback.wav`: „Short heroic comeback sting: a quick snare drum roll into a bold warm brass hit with a cymbal swell, triumphant and brief, fantasy game", 1,2 s, Variante 2; vorher „Fanfare - Rpg" von colorsCrimsonTears (https://freesound.org/people/colorsCrimsonTears/sounds/566203/).
 - `sfx/badge_better.wav`: „Two or three gentle friendly rising marimba notes, soft and warm, encouraging, casual fantasy game reward sound", 0,8 s, Variante 3; vorher „Correct Answer / That's Right!" von Beetlemuse (https://freesound.org/people/Beetlemuse/sounds/528957/).
+- `sfx/badge_last_second.wav`: „Close call sting: three quick tense clock ticks accelerating, then a bright relieved bell chime with a small sparkle, just made it in the last second, fantasy game reward sound", 0,9 s, Variante 3.

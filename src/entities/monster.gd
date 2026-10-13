@@ -134,6 +134,14 @@ func is_frozen() -> bool:
 	return _frozen_left > 0.0
 
 
+## Spielzeit (s) bis zum Einschlag bei gleichbleibendem Tempo, Eis eingerechnet; INF, wenn
+## es steht oder schon angekommen ist.
+func seconds_left() -> float:
+	if _done or _speed * pace <= 0.0:
+		return INF
+	return maxf(0.0, _target_z - position.z) / (_speed * pace) + _frozen_left
+
+
 func _update_animation() -> void:
 	if _anim != null:
 		_anim.speed_scale = 0.0 if is_frozen() else pace

@@ -32,6 +32,7 @@ const SOUNDS := {
 	&"badge_catch_up": {"file": "badge_catch_up.wav", "db": -1.0},
 	&"badge_comeback": {"file": "badge_comeback.wav", "db": -0.6},
 	&"badge_better": {"file": "badge_better.wav", "db": -0.7},
+	&"badge_last_second": {"file": "badge_last_second.wav", "db": -0.8},
 	# Zauber: um die Wellen-Fanfare.
 	&"spell_reveal": {"file": "spell_reveal.wav", "db": -2.1},
 	&"spell_slow": {"file": "spell_slow.wav", "db": -2.5},

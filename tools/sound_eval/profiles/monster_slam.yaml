@@ -176,6 +176,15 @@ effects:
     files: [badge_comeback*]
     generation_prompt: >
       Short heroic comeback sting: a quick snare drum roll into a bold warm brass hit with a cymbal swell, triumphant and brief, fantasy game
+  badge_last_second:
+    description: In letzter Sekunde – ein schnelles Ticken, das im letzten Moment in einen erleichterten hellen Treffer kippt.
+    prompts:
+      - fast clock ticking ending in a bright relieved chime
+      - close call last moment save sting
+    duration: [0.6, 1.2]
+    files: [badge_last_second*]
+    generation_prompt: >
+      Close call sting: three quick tense clock ticks accelerating, then a bright relieved bell chime with a small sparkle, just made it in the last second, fantasy game reward sound
   badge_better:
     description: Besser als sonst – zwei, drei freundliche Töne nach oben, sanft.
     prompts:

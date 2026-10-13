@@ -154,6 +154,8 @@ var _strike_index := 0
 var _badges := Badges.new()
 ## Tiefster HP-Stand der laufenden Welle — für das Comeback.
 var _wave_low_hp := 0
+## Monster.seconds_left des Treffers, der das Feld zuletzt geleert hat (Badges.wave_won).
+var _last_left := INF
 ## Sind die Plaketten der gewonnenen Welle schon gemeldet? _check_end kommt zweimal.
 var _wave_badges_done := false
 ## Ob der Ausgang schon gespeichert hat (Rückweg oder Abbruch) — sonst verwirft _exit_tree.
@@ -1156,6 +1158,7 @@ func _start_next_wave() -> void:
 	_celebration.release()
 	_badges.new_wave()
 	_wave_low_hp = GameState.fortress_health
+	_last_left = INF
 	_wave_badges_done = false
 	_fast_resolve_button.visible = true
 	_fast_resolve_button.disabled = false
@@ -1552,6 +1555,7 @@ func _score_hit(monster: Monster, text: String = "", verdict: Dictionary = {}) -
 		_spelling_due[monster.get_instance_id()] = [full_form,
 				AnswerEvaluator.spelling_marks(full_form, text),
 				AnswerEvaluator.missing_marks(full_form, text)]
+	_last_left = monster.seconds_left() if _spawned >= _total and _active.size() == 1 else INF
 	# Der Stand davor: record() überschreibt, woran Revanche und Co. hängen.
 	var badge_ctx := _badges.before_hit(task_id)
 	var newly_mastered := PlayerProgress.record(task_id, true, rt,
@@ -2004,7 +2008,7 @@ func _check_end() -> void:
 		if not _wave_badges_done:
 			_wave_badges_done = true
 			var low := float(_wave_low_hp) / float(maxi(1, GameState.fortress_max_health))
-			if _announce_badges(_badges.wave_won(low)):
+			if _announce_badges(_badges.wave_won(low, _last_left)):
 				return
 		EventBus.wave_cleared.emit(GameState.current_wave)
 		_finish_wave(true)

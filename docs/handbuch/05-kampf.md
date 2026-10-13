@@ -199,11 +199,13 @@ als die Feier beim Meistern und kommt nach ihr, wenn beides mit derselben Antwor
 - **Aufholjagd:** Du triffst ein Wort, das fast schon vergessen war.
 - **Comeback des Tages:** Die Festung stand im roten Bereich, und du hast die Welle trotzdem
   gewonnen.
+- **In letzter Sekunde:** Das letzte Monster der Welle stand schon fast an der Mauer, als du
+  es besiegt hast – keine Sekunde mehr bis zum Einschlag.
 - **Besser als sonst:** Am Ende einer gewonnenen Welle liegt deine Genauigkeit in dieser
   Sitzung über der der letzten Tage.
 
-Revanche und Aufholjagd gibt es höchstens einmal je Welle. Comeback und „Besser als sonst“
-gibt es einmal am Tag, die übrigen Tagesplaketten fangen um Mitternacht von vorn an.
+Revanche und Aufholjagd gibt es höchstens einmal je Welle. Comeback, „In letzter Sekunde“
+und „Besser als sonst“ gibt es einmal am Tag, die übrigen Tagesplaketten fangen um Mitternacht von vorn an.
 Plaketten bringen keine Erfahrung und kein Gold.
 
 ## Festung, Schaden und Rüstung
