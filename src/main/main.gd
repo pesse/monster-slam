@@ -1,6 +1,6 @@
 extends Node2D
-## Entry point. Boots the game and reports what content was discovered.
-## Replace the print block with the real game-loop / scene routing as systems land.
+## Script of scenes/main/main.tscn; prints what content was discovered. Not the main
+## scene (that is profile_menu.tscn).
 
 
 func _ready() -> void:
