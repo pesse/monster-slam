@@ -51,6 +51,10 @@ var _held_answers: Array[String] = []
 var _spelling_due: Dictionary = {}
 ## Gezeigte Grundwörter der Welle: Lexem-id → Spawn-Nummer (WaveGenerator.pick()).
 var _wave_shown: Dictionary = {}
+## Monster mit nicht gemeisterter Aufgabe seit `_open_from` (Spawn-Nummer: Wellenbeginn
+## oder Fortsetzung); WaveGenerator.open_due() sagt, ob pick() Offenes vorziehen muss.
+var _wave_open: int = 0
+var _open_from: int = 0
 ## Testliste (TestPlaylist): Grundwörter der vorigen Welle und Reihenfolge dieser.
 var _previous_shown: Dictionary = {}
 var _playlist_order: Array = []
@@ -1134,6 +1138,8 @@ func _start_next_wave() -> void:
 	_wave_leaked = 0
 	_previous_shown = _wave_shown.duplicate()
 	_wave_shown.clear()
+	_wave_open = 0
+	_open_from = 0
 	_wave_leaked_tasks.clear()
 	_wave_played_tasks.clear()
 	_score_at_start = GameState.score
@@ -1198,6 +1204,7 @@ func _continue_wave(open: Dictionary, spawns: Array) -> void:
 	var remaining := maxi(1, int(open.get("remaining", 1)))
 	_total = maxi(remaining, int(open.get("total", remaining)))
 	_spawned = _total - remaining
+	_open_from = _spawned
 	spawns[0]["count"] = remaining
 	_wave_correct = int(open.get("correct", 0))
 	_wave_leaked = int(open.get("leaked", 0))
@@ -1329,7 +1336,7 @@ func _spawn(entry: Dictionary) -> void:
 	for m in _active:
 		active_sources[str(m.task.get("source_id", ""))] = true
 	var plan: Dictionary = _generator.pick(entry.get("task_pool", {}), active_sources, _wave_shown,
-			_playlist_order)
+			_playlist_order, _open_due())
 	if plan.is_empty():
 		# Kein Plan heißt „nichts Spielbares im Pool“ (pick() lässt die active_sources-Sperre
 		# zuletzt fallen). Der Spawn fällt aus dem Soll, sonst wartete _check_end() ewig.
@@ -1357,9 +1364,17 @@ func _spawn(entry: Dictionary) -> void:
 	_wave_shown[str(plan["task"].get("source_id", ""))] = _spawned
 	_spawned += 1
 	EventBus.monster_spawned.emit(plan["monster_def"], plan["task"])
-	if _catapult and _fortress_tier >= FortressModel.CATAPULT_TIER \
-			and PlayerProgress.is_mastered(str(plan["task"].get("learnable_id", ""))):
+	var mastered := PlayerProgress.is_mastered(str(plan["task"].get("learnable_id", "")))
+	if not mastered:
+		_wave_open += 1
+	if _catapult and _fortress_tier >= FortressModel.CATAPULT_TIER and mastered:
 		_catapult_later(monster, _wave_gen)
+
+
+## Muss der nächste Spawn offen sein? Eine Testliste behält ihre Reihenfolge.
+func _open_due() -> bool:
+	return _playlist_order.is_empty() \
+			and WaveGenerator.open_due(_wave_open, _spawned - _open_from)
 
 
 func _on_answer_submitted(text: String) -> void:

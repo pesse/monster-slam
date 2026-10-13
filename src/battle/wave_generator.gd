@@ -40,6 +40,9 @@ const NEW_SHARE := 0.3
 const NEED_FLOOR := 0.05
 ## Obergrenze der Dringlichkeit (verstrichener Anteil des Intervalls).
 const URGENCY_CAP := 2.0
+## Mindestanteil nicht gemeisterter Monster einer Welle, laufend gezählt (open_due()), damit
+## das Wachkatapult nicht die ganze Welle abräumt.
+const OPEN_SHARE := 0.5
 
 ## Wellenfaktor auf Tempo und Punkte, nicht auf Erfahrung (1.0 = neutral, >1 schwerer).
 var speed_scale: float = 1.0
@@ -161,13 +164,14 @@ func has_playable(pool: Dictionary) -> bool:
 
 ## `exclude_sources` (Lexem-id -> true): Grundwörter auf dem Feld. `shown_sources` (Lexem-id
 ## -> Spawn-Nummer): in dieser Welle gezeigte, sie kommen nach dem Rest. `order`: Playlist
-## einer Testliste (TestPlaylist.wave_order). Der Grund der Wahl steht in `task["pick"]`.
+## einer Testliste (TestPlaylist.wave_order). `open_first`: eine nicht gemeisterte Aufgabe
+## vorziehen, wenn es eine gibt (open_due()). Der Grund der Wahl steht in `task["pick"]`.
 func pick(pool: Dictionary, exclude_sources: Dictionary = {}, shown_sources: Dictionary = {},
-		order: Array = []) -> Dictionary:
+		order: Array = [], open_first := false) -> Dictionary:
 	var candidates := listing(pool, shown_sources)
 	if not order.is_empty():
 		candidates = TestPlaylist.arrange(candidates, order)
-	var plan := pick_with(candidates, exclude_sources)
+	var plan := pick_with(candidates, exclude_sources, open_first)
 	if not order.is_empty() and not plan.is_empty():
 		plan["task"]["pick"]["playlist"] = true
 	return plan
@@ -186,19 +190,41 @@ func listing(pool: Dictionary, shown_sources: Dictionary, now := -1) -> Array:
 	return ordered(_candidates(pool), PlayerProgress.state_of, shown_sources, now)
 
 
+## Muss der nächste Spawn offen sein? `open` von `spawned` bisherigen Monstern waren es.
+## Bei 0,5: das erste, dann jedes zweite.
+static func open_due(open: int, spawned: int) -> bool:
+	return open < ceili(OPEN_SHARE * (spawned + 1))
+
+
 ## Wählt aus einer listing() den ersten spielbaren Kandidaten. Findet sich ohne die
-## Grundwörter auf dem Feld nichts, fällt die Sperre.
-func pick_with(ordered_candidates: Array, exclude_sources: Dictionary = {}) -> Dictionary:
+## Grundwörter auf dem Feld nichts, fällt die Sperre. `open_first` probiert vor jeder Stufe
+## erst die nicht gemeisterten Kandidaten (`mastered` aus ordered()), die in dieser Welle
+## noch nicht dran waren — der Anteil wiederholt kein Wort.
+func pick_with(ordered_candidates: Array, exclude_sources: Dictionary = {},
+		open_first := false) -> Dictionary:
+	var passes: Array = [true, false] if open_first else [false]
 	for respect_exclude in [true, false]:
-		for i in ordered_candidates.size():
-			var candidate: Dictionary = ordered_candidates[i]
-			if respect_exclude and exclude_sources.has(str(candidate["source"].get("id", ""))):
-				continue
-			var plan := _build_plan(candidate)
+		for open_only in passes:
+			var plan := _first_plan(ordered_candidates, exclude_sources, respect_exclude, open_only)
 			if not plan.is_empty():
-				plan["task"]["pick"] = pick_reason(ordered_candidates, i, not respect_exclude,
-						float(plan["net"]), int(candidate.get("due_at", 0)))
 				return plan
+	return {}
+
+
+func _first_plan(ordered_candidates: Array, exclude_sources: Dictionary, respect_exclude: bool,
+		open_only: bool) -> Dictionary:
+	for i in ordered_candidates.size():
+		var candidate: Dictionary = ordered_candidates[i]
+		if open_only and (bool(candidate.get("mastered", false))
+				or bool(candidate.get("repeat", false))):
+			continue
+		if respect_exclude and exclude_sources.has(str(candidate["source"].get("id", ""))):
+			continue
+		var plan := _build_plan(candidate)
+		if not plan.is_empty():
+			plan["task"]["pick"] = pick_reason(ordered_candidates, i, not respect_exclude,
+					float(plan["net"]), int(candidate.get("due_at", 0)))
+			return plan
 	return {}
 
 
@@ -285,7 +311,8 @@ static func span_text(seconds: int) -> String:
 
 ## Die Auswahlreihenfolge von pick() (ADR 0018). `state`: learnable_id -> {} oder
 ## PlayerProgress.state_of. `now`: Bezugszeit (unix). Setzt an jedem Kandidaten `group`,
-## `repeat`, `last_seen` (des Grundworts), `due_at` und `weight`.
+## `repeat`, `last_seen` (des Grundworts), `due_at`, `weight` und `mastered` (wie
+## PlayerProgress.is_mastered).
 static func ordered(candidates: Array, state: Callable, shown: Dictionary, now: int) -> Array:
 	# `last_seen` am Grundwort, über alle Richtungen und Aufgabenarten.
 	var states := {}
@@ -308,6 +335,8 @@ static func ordered(candidates: Array, state: Callable, shown: Dictionary, now: 
 		else:
 			c["group"] = GROUP_DUE if now >= int(c["due_at"]) else GROUP_REST
 		c["weight"] = selection_weight(st, int(c["last_seen"]), now)
+		c["mastered"] = not st.is_empty() \
+				and float(st.get("confidence", 0.0)) >= PlayerProgress.MASTERY_CONFIDENCE
 		c["repeat"] = shown.has(source_id)
 		if shown.has(source_id):
 			var key := int(shown[source_id])
