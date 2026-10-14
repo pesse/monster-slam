@@ -24,12 +24,16 @@ const TASK := {
 const STUDENT := "In the story The Silent Lighthouse by Zara Zed, a girl lived on an island."
 
 const RESULT := {
+	"intro": {"met": true, "quote": "The Silent Lighthouse by Zara Zed"},
 	"key_points": [
 		{"id": "kp1", "covered": true, "quote": "a girl lived on an island"},
 		{"id": "kp2", "covered": false, "quote": ""},
 	],
 	"present_tense": false,
 	"tense_quotes": ["lived"],
+	"direct_speech": [],
+	"copied": [],
+	"opinion": [],
 	"errors": [
 		{"quote": "lived", "category": "tense", "severity": "major",
 				"hint": "In einer Summary steht das Simple Present."},
@@ -199,6 +203,22 @@ func test_broken_entries_are_dropped_not_the_answer() -> void:
 	var odd: Dictionary = result["errors"][1]
 	assert_str(str(odd["category"])).is_equal("grammar")
 	assert_str(str(odd["severity"])).is_equal("minor")
+
+
+## Ein Antwortteil ohne Einleitung ist ein Vertragsbruch; leere Zitate fallen weg, und eine
+## nicht erfüllte Einleitung trägt kein Zitat.
+func test_intro_is_required_and_quote_lists_are_cleaned() -> void:
+	var raw := RESULT.duplicate(true)
+	raw.erase("intro")
+	assert_dict(CloudModelBackend.parse_result(raw)).is_empty()
+	raw = RESULT.duplicate(true)
+	raw["intro"] = {"met": false, "quote": "erfunden"}
+	raw["opinion"] = ["  ", "I liked it"]
+	raw.erase("copied")
+	var result := CloudModelBackend.parse_result(raw)
+	assert_str(str(result["intro"]["quote"])).is_empty()
+	assert_array(result["opinion"]).contains_exactly(["I liked it"])
+	assert_array(result["copied"]).is_empty()
 
 
 func test_an_uncovered_point_carries_no_quote() -> void:

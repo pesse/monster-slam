@@ -224,12 +224,14 @@ static func parse_envelope(env: Dictionary) -> Dictionary:
 
 
 ## Die Modellantwort in fester Form, oder {} wenn sie nicht zum Vertrag passt. Ohne
-## `key_points`, `present_tense` oder `errors` gibt es kein Urteil; einzelne kaputte
-## Einträge fallen weg, statt die ganze Antwort zu kippen.
+## `intro`, `key_points`, `present_tense` oder `errors` gibt es kein Urteil; einzelne
+## kaputte Einträge fallen weg, statt die ganze Antwort zu kippen.
 static func parse_result(raw: Dictionary) -> Dictionary:
-	if not (raw.get("key_points") is Array and raw.get("errors") is Array \
-			and raw.get("present_tense") is bool):
+	if not (raw.get("intro") is Dictionary and raw.get("key_points") is Array \
+			and raw.get("errors") is Array and raw.get("present_tense") is bool):
 		return {}
+	var intro: Dictionary = raw["intro"]
+	var intro_met: bool = intro.get("met") is bool and intro["met"]
 	var points: Array = []
 	for item in raw["key_points"]:
 		if not (item is Dictionary):
@@ -241,11 +243,6 @@ static func parse_result(raw: Dictionary) -> Dictionary:
 		var covered: bool = p.get("covered") is bool and p["covered"]
 		points.append({"id": id, "covered": covered,
 				"quote": str(p.get("quote", "")).strip_edges() if covered else ""})
-	var tense: Array = []
-	for quote in Array(raw.get("tense_quotes", [])):
-		var q := str(quote).strip_edges()
-		if not q.is_empty():
-			tense.append(q)
 	var errors: Array = []
 	for item in raw["errors"]:
 		if not (item is Dictionary):
@@ -265,11 +262,27 @@ static func parse_result(raw: Dictionary) -> Dictionary:
 			"hint": str(e.get("hint", "")).strip_edges(),
 		})
 	return {
+		"intro": {"met": intro_met,
+				"quote": str(intro.get("quote", "")).strip_edges() if intro_met else ""},
 		"key_points": points,
 		"present_tense": bool(raw["present_tense"]),
-		"tense_quotes": tense,
+		"tense_quotes": _quotes(raw.get("tense_quotes")),
+		"direct_speech": _quotes(raw.get("direct_speech")),
+		"copied": _quotes(raw.get("copied")),
+		"opinion": _quotes(raw.get("opinion")),
 		"errors": errors,
 	}
+
+
+## Eine Liste von Zitaten ohne leere Einträge; fehlt sie, ist sie leer.
+static func _quotes(value: Variant) -> Array:
+	var out: Array = []
+	if value is Array:
+		for quote in value:
+			var q := str(quote).strip_edges()
+			if not q.is_empty():
+				out.append(q)
+	return out
 
 
 ## Der Grund für einen HTTP-Fehler im Klartext, für Overlay und Einstellungen.

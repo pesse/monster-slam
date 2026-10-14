@@ -17,8 +17,8 @@ extends Control
 ## - **Begegnung:** der Boss vorn, er stellt die Aufgabe.
 ## - **Lesen:** die Vorlage groß und scrollbar, der Boss tritt zurück.
 ## - **Schreiben:** die Vorlage schmal links, das Schreibfeld breit, rechts die Randleiste
-##   mit Wortzahl und den Offline-Prüfungen (SummaryCard.check) — entprellt, damit nicht
-##   jeder Tastendruck den ganzen Text zerlegt.
+##   mit Wortzahl und Länge (SummaryCard.check) — entprellt, damit nicht jeder Tastendruck
+##   den ganzen Text zerlegt. Alles Inhaltliche urteilt erst das Modell beim Angriff.
 ## - **Angriff:** das Warten auf das Modell ist das Aufladen; danach Kriterium für
 ##   Kriterium: Stapel fällt (`drop_stack`) oder hält (`hold_stack`).
 ## - **Überarbeiten:** der eigene Text mit den markierten Stellen und ihren Hinweisen;
@@ -496,13 +496,13 @@ func _on_text_edited(edit: TextEdit) -> void:
 
 ## Die Zeilen der Randleiste — einmal aus der Vorlage, danach nur noch beschriftet.
 func _build_check_rows() -> void:
-	for id in ["length", "intro", "quotes", "opinion", "connectors"]:
+	for id in ["length"]:
 		var row: WritingCriterionRow = CRITERION_ROW.instantiate()
 		_checks.add_child(row)
 		_check_rows[id] = row
 
 
-## Die Offline-Prüfung, wie sie gerade steht. Läuft entprellt nach dem Tippen.
+## Wortzahl und Länge, wie sie gerade stehen. Läuft entprellt nach dem Tippen.
 func _refresh_checks() -> void:
 	if task.is_empty():
 		return
@@ -516,28 +516,11 @@ func _refresh_checks() -> void:
 	if not length_ok and target.size() == 2:
 		length_detail = "Noch zu kurz." if words < int(target[0]) else "Zu lang – fasse knapper zusammen."
 	_row(_check_rows["length"], length_ok, "Länge", length_detail)
-	_row(_check_rows["intro"], bool(_card.get("intro", false)), "Titel und Autor im ersten Satz",
-			"" if bool(_card.get("intro", false)) else "Nenne beide im ersten Satz.")
-	var quotes: Array = _card.get("quotes", [])
-	_row(_check_rows["quotes"], quotes.is_empty(), "Keine direkte Rede",
-			"" if quotes.is_empty() else "Mit eigenen Worten: „%s“" % _short(str(quotes[0])), true)
-	var opinion: Array = _card.get("opinion", [])
-	_row(_check_rows["opinion"], opinion.is_empty(), "Keine eigene Meinung",
-			"" if opinion.is_empty() else "„%s“ gehört nicht in eine Summary." % str(opinion[0]), true)
-	var connectors: Array = _card.get("connectors", [])
-	(_check_rows["connectors"] as WritingCriterionRow).show_row(
-			"🔗", "Konnektoren: %d" % connectors.size(),
-			", ".join(connectors.slice(0, 5)) if not connectors.is_empty() else "z. B. first, then, but, in the end")
 
 
-## Eine Prüfzeile: erfüllt ✔, offen ○ — oder ✖, wenn etwas gefunden wurde, das nicht
-## hineingehört (`found`).
-func _row(row: WritingCriterionRow, ok: bool, title: String, detail: String, found := false) -> void:
-	row.show_row("✔" if ok else ("✖" if found else "○"), title, detail)
-
-
-func _short(quote: String) -> String:
-	return quote if quote.length() <= 40 else quote.substr(0, 38) + "…"
+## Eine Prüfzeile: erfüllt ✔, offen ○.
+func _row(row: WritingCriterionRow, ok: bool, title: String, detail: String) -> void:
+	row.show_row("✔" if ok else "○", title, detail)
 
 
 # --- Angriff ----------------------------------------------------------------------------

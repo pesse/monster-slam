@@ -1,6 +1,6 @@
 extends GdUnitTestSuite
 ## Das Urteil über eine Summary (src/learning/writing_judge.gd,
-## docs/adr/0023-schreib-boss.md): Offline-Prüfung und Modellantwort je Kriterium.
+## docs/adr/0023-schreib-boss.md): Länge offline, alles andere aus der Modellantwort.
 ##
 ## Die Modellantwort ist hier von Hand gebaut — kein Test spricht mit einem Dienst.
 
@@ -17,6 +17,7 @@ func before() -> void:
 
 func _reply(overrides := {}) -> Dictionary:
 	var reply := {
+		"intro": {"met": true, "quote": "\"The Lighthouse Cat\" by Mara Linden"},
 		"key_points": [
 			{"id": "kp1", "covered": true, "quote": "an old man called Tom and his cat"},
 			{"id": "kp2", "covered": true, "quote": "the lamp breaks while a boat sails"},
@@ -27,6 +28,9 @@ func _reply(overrides := {}) -> Dictionary:
 		],
 		"present_tense": true,
 		"tense_quotes": [],
+		"direct_speech": [],
+		"copied": [],
+		"opinion": [],
 		"errors": [],
 	}
 	reply.merge(overrides, true)
@@ -54,35 +58,48 @@ func test_a_clean_reply_meets_content_genre_and_language() -> void:
 	for id in ["intro", "content", "genre", "language"]:
 		assert_bool(bool(result[id]["decided"])).override_failure_message(id).is_true()
 		assert_bool(bool(result[id]["met"])).override_failure_message(id).is_true()
-	assert_str(str(result["intro"]["source"])).is_equal("offline")
-	assert_str(str(result["content"]["source"])).is_equal("model")
-	assert_str(str(result["genre"]["source"])).is_equal("both")
+	for id in ["intro", "content", "genre", "language"]:
+		assert_str(str(result[id]["source"])).override_failure_message(id).is_equal("model")
+	assert_str(str(result["length"]["source"])).is_equal("offline")
 	# Zu kurz für den Zielbereich der Fixture (80–140).
 	assert_bool(bool(result["length"]["met"])).is_false()
 
 
-## Ohne Modellantwort entscheidet nur, was offline geht.
+## Ohne Modellantwort entscheidet nur die Länge.
 func test_without_a_reply_the_model_criteria_stay_open() -> void:
 	var result := _judge({})
-	assert_bool(bool(result["intro"]["decided"])).is_true()
 	assert_bool(bool(result["length"]["decided"])).is_true()
-	for id in ["content", "genre", "language"]:
+	for id in ["intro", "content", "genre", "language"]:
 		assert_bool(bool(result[id]["decided"])).override_failure_message(id).is_false()
 		assert_bool(bool(result[id]["met"])).override_failure_message(id).is_false()
 
 
-## Eine Meinung im Text entscheidet die Textsorte auch ohne Modell — nach unten.
-func test_an_opinion_fails_the_genre_offline() -> void:
-	var text := TEXT + " I think Tom is a hero."
-	var genre: Dictionary = _judge({}, text)["genre"]
-	assert_bool(bool(genre["decided"])).is_true()
+## Die Einleitung gilt nur mit einem Zitat, das im Text steht.
+func test_the_intro_needs_evidence() -> void:
+	var reply := _reply({"intro": {"met": true, "quote": "The Lighthouse Dog by Mara Linden"}})
+	assert_bool(bool(_judge(reply)["intro"]["met"])).is_false()
+	reply = _reply({"intro": {"met": false, "quote": ""}})
+	assert_bool(bool(_judge(reply)["intro"]["met"])).is_false()
+	assert_array(_judge(reply)["intro"]["marks"]).is_empty()
+
+
+## Direkte Rede, Abgeschriebenes und Meinung des Modells halten die Textsorte, jede Stelle
+## mit der Regel ihrer Kategorie; was nicht im Text steht, fällt weg.
+func test_speech_copies_and_opinion_hold_the_genre() -> void:
+	var text := TEXT + " Tom shouts: Help me! I think Tom is a hero."
+	var reply := _reply({"direct_speech": ["Help me!"], "copied": ["the waves were as high as houses"],
+			"opinion": ["I think Tom is a hero"]})
+	var genre: Dictionary = _judge(reply, text)["genre"]
 	assert_bool(bool(genre["met"])).is_false()
-	assert_str(str(genre["source"])).is_equal("offline")
-	var mark: Dictionary = genre["marks"][0]
-	assert_str(str(mark["category"])).is_equal("opinion")
-	assert_str(text.substr(int(mark["from"]), int(mark["to"]) - int(mark["from"])))\
-			.is_equal("I think")
-	assert_str(str(mark["hint"])).is_equal(WritingJudge.DEFAULT_HINTS["opinion"])
+	var found := {}
+	for mark: Dictionary in genre["marks"]:
+		found[text.substr(int(mark["from"]), int(mark["to"]) - int(mark["from"]))] = mark
+	assert_array(found.keys()).contains_exactly_in_any_order(["Help me", "I think Tom is a hero"])
+	assert_str(str(found["Help me"]["hint"])).is_equal(WritingJudge.DEFAULT_HINTS["quote"])
+	assert_str(str(found["I think Tom is a hero"]["hint"]))\
+			.is_equal(WritingJudge.DEFAULT_HINTS["opinion"])
+	var invented := _reply({"opinion": ["I loved this story"]})
+	assert_bool(bool(_judge(invented)["genre"]["met"])).is_true()
 
 
 ## Ein Kernpunkt gilt nur mit einem Zitat, das wirklich im Text steht.

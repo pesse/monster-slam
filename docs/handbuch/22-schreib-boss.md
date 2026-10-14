@@ -21,10 +21,9 @@ Satzmeister. Es gibt **keinen Zeitdruck**.
 2. **Lesen.** Die Geschichte steht groß in der Mitte. Lies sie in Ruhe; The Rambler
    murmelt währenddessen im Hintergrund.
 3. **Schreiben.** Links steht die Geschichte schmal zum Nachlesen, in der Mitte dein
-   Schreibfeld. Rechts zählt das Spiel beim Tippen mit: die Wörter, ob der erste Satz
-   Titel und Autor nennt, ob du direkte Rede oder ganze Stücke aus der Geschichte
-   abgeschrieben hast, ob deine eigene Meinung im Text steht, und welche Konnektoren
-   (first, then, but, in the end …) du benutzt. Mit „⚔ Abgeben“ oder Strg+Enter gibst du ab.
+   Schreibfeld. Rechts zählt das Spiel beim Tippen die Wörter mit und zeigt, ob du im
+   Zielbereich bist. Alles andere beurteilt The Rambler erst, wenn du abgibst. Mit
+   „⚔ Abgeben“ oder Strg+Enter gibst du ab.
 4. **Angriff.** Während dein Text bewertet wird, lädt der Angriff auf – das dauert ein paar
    Sekunden, manchmal eine halbe Minute. Danach kommt Kriterium für Kriterium: Ist es
    erfüllt, fällt einer seiner fünf Papierstapel ab, und er schrumpft. Sonst hält der
@@ -43,7 +42,7 @@ zurück**: Was einmal erfüllt war, bleibt erfüllt, auch wenn du danach weiters
 |---|---|
 | Einleitung | der erste Satz Titel und Autor nennt |
 | Inhalt | alle wichtigen Punkte der Geschichte vorkommen |
-| Textsorte | der Text im Present Tense steht, ohne direkte Rede und ohne deine Meinung |
+| Textsorte | der Text im Present Tense steht, ohne direkte Rede, ohne abgeschriebene Sätze und ohne deine Meinung |
 | Sprache | keine schweren Fehler mehr im Text stehen |
 | Länge | die Wortzahl im Zielbereich liegt |
 

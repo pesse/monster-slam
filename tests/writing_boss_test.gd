@@ -11,9 +11,12 @@ const KEY_FILE := "user://zz-writing-boss-keys.cfg"
 
 const BOSS := {"id": "boss.zz_rambler", "name": "Test-Rambler", "writing_rule": {"kind": "summary"}}
 
-## Eine Summary, die offline alles erfüllt: Titel und Autor im ersten Satz, im Zielbereich,
-## keine direkte Rede, keine Meinung, nichts abgeschrieben.
+## Eine Summary, die alles erfüllt: Titel und Autor im ersten Satz, im Zielbereich, keine
+## direkte Rede, keine Meinung, nichts abgeschrieben.
 const GOOD := "In the short story The Lighthouse Cat by Mara Linden, an old keeper called Tom looks after the lamp of a lighthouse on an island together with his cat Pepper. One stormy night the lamp stops working, and a small fishing boat is in danger of hitting the rocks. Tom is too slow for the wet stairs, so Pepper fetches a rope that is tied to an old lantern. Together they pull it up, and Tom holds the burning lantern in the window. The boat turns away and reaches the harbour safely. The next day the fishermen thank Tom, but he says that the cat deserves the thanks."
+
+## Beleg für die Einleitung — wörtlich aus GOOD.
+const INTRO := "The Lighthouse Cat by Mara Linden"
 
 ## Belege für die Kernpunkte — wörtlich aus GOOD.
 const QUOTES := {
@@ -124,12 +127,14 @@ func _write_and_submit(text: String) -> void:
 	_press("Writing", "SubmitButton")
 
 
-## Eine Modellantwort: alle Kernpunkte erfasst außer `missing`, Präsens, Fehler wie gegeben.
+## Eine Modellantwort: Einleitung erfüllt, alle Kernpunkte erfasst außer `missing`, Präsens,
+## keine Rede, keine Meinung, Fehler wie gegeben.
 func _result(missing: Array = [], errors: Array = []) -> Dictionary:
 	var points: Array = []
 	for id in QUOTES:
 		points.append({"id": id, "covered": not missing.has(id), "quote": QUOTES[id] if not missing.has(id) else ""})
-	return {"key_points": points, "present_tense": true, "tense_quotes": [], "errors": errors}
+	return {"intro": {"met": true, "quote": INTRO}, "key_points": points, "present_tense": true,
+			"tense_quotes": [], "direct_speech": [], "copied": [], "opinion": [], "errors": errors}
 
 
 func _reply(result: Dictionary, note := "", billed := true) -> void:
@@ -149,13 +154,10 @@ func _row_icons(panel: String, list: String) -> Array:
 	return out
 
 
-## Die Testsummary selbst ist offline sauber — sonst prüfte jeder Test unten etwas anderes.
-func test_the_good_summary_passes_offline() -> void:
-	var card := SummaryCard.check(_task, GOOD)
-	assert_bool(card["intro"]).is_true()
-	assert_bool(card["length_ok"]).is_true()
-	assert_array(card["quotes"]).is_empty()
-	assert_array(card["opinion"]).is_empty()
+## Die Testsummary selbst passt — sonst prüfte jeder Test unten etwas anderes.
+func test_the_good_summary_fits_the_task() -> void:
+	assert_bool(SummaryCard.check(_task, GOOD)["length_ok"]).is_true()
+	assert_bool(GOOD.contains(INTRO)).is_true()
 	for id in QUOTES:
 		assert_bool(GOOD.contains(QUOTES[id])).is_true()
 
@@ -187,8 +189,8 @@ func test_the_phases_follow_each_other_and_keep_the_text() -> void:
 	assert_str(_editor_text("Writing")).is_equal("In the story")
 
 
-## Die Randleiste rechnet die Offline-Prüfung mit (entprellt; hier direkt angestoßen).
-func test_the_sidebar_counts_words_and_checks() -> void:
+## Die Randleiste rechnet Wortzahl und Länge mit (entprellt; hier direkt angestoßen).
+func test_the_sidebar_counts_words_and_checks_the_length() -> void:
 	_build()
 	_press("Encounter", "ActionButton")
 	_press("Reading", "WriteButton")
@@ -196,10 +198,10 @@ func test_the_sidebar_counts_words_and_checks() -> void:
 	_fight._refresh_checks()
 	var words := SummaryCard.split_words(GOOD).size()
 	assert_str((_fight.get_node("%Writing").get_node("%Words") as Label).text).is_equal("%d Wörter" % words)
-	assert_array(_row_icons("Writing", "Checks").slice(0, 4)).is_equal(["✔", "✔", "✔", "✔"])
+	assert_array(_row_icons("Writing", "Checks")).is_equal(["✔"])
 	_type("Writing", "I think the story is great.")
 	_fight._refresh_checks()
-	assert_array(_row_icons("Writing", "Checks").slice(0, 4)).is_equal(["○", "○", "✔", "✖"])
+	assert_array(_row_icons("Writing", "Checks")).is_equal(["○"])
 
 
 ## Leer abgeben ist keine Abgabe: kein Aufruf, die Phase bleibt.

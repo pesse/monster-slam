@@ -266,7 +266,9 @@ static func fake_reply(answer: Answer, task: Dictionary, text: String) -> Dictio
 	for point in task.get("key_points", []):
 		var id := str(point.get("id", ""))
 		points.append({"id": id, "covered": id != missing, "quote": proof if id != missing else ""})
-	var result := {"key_points": points, "present_tense": true, "tense_quotes": [], "errors": []}
+	var result := {"intro": {"met": true, "quote": proof}, "key_points": points,
+			"present_tense": true, "tense_quotes": [], "direct_speech": [], "copied": [],
+			"opinion": [], "errors": []}
 	if answer == Answer.ERRORS and words.size() > 12:
 		result["errors"] = [{"quote": " ".join(words.slice(8, 11)), "category": "word_choice",
 				"severity": "major", "hint": "Use 'better words' instead."}]

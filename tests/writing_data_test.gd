@@ -7,6 +7,10 @@ extends GdUnitTestSuite
 const FIELDS := ["id", "kind", "book", "unit", "title", "author", "genre", "text",
 		"target_words", "key_points"]
 
+## Ab so vielen gemeinsamen Wörtern am Stück gilt ein Kernpunkt als aus der Vorlage
+## übernommen (Generierungsvorgabe, Regel 6).
+const COPIED_WORDS := 5
+
 var _tasks: Array = []
 var _units: Dictionary = {}
 
@@ -35,16 +39,6 @@ func test_every_task_has_the_schema(
 				.override_failure_message("'%s': target_words %s" % [id, target]).is_true()
 
 
-## Die Einleitung „<Titel> by <Autor>“ muss SummaryCard als Einleitung erkennen — sonst
-## fällt der erste Stapel nie.
-func test_title_and_author_are_recognised(
-		do_skip := LanguageData.missing(), skip_reason := LanguageData.REASON) -> void:
-	for task: Dictionary in _tasks:
-		var intro := "%s by %s is a %s." % [task.get("title"), task.get("author"), task.get("genre")]
-		assert_bool(SummaryCard.check(task, intro)["intro"]).override_failure_message(
-				"'%s': Einleitung nicht erkannt" % task.get("id")).is_true()
-
-
 ## Kernpunkte mit eindeutigen Ids, mindestens ein Pflichtpunkt, und keiner, der wörtlich
 ## aus der Vorlage stammt — wer ihn so hinschreibt, gälte als Abschreiber.
 func test_key_points_are_sound(
@@ -60,8 +54,28 @@ func test_key_points_are_sound(
 			seen[point_id] = true
 			if bool(point.get("required", true)):
 				required += 1
-			assert_array(SummaryCard.check(task, str(point.get("text", "")))["quotes"])\
+			assert_bool(_shares_words(str(point.get("text", "")), str(task.get("text", ""))))\
 					.override_failure_message("'%s' %s: aus der Vorlage übernommen"
-							% [id, point_id]).is_empty()
+							% [id, point_id]).is_false()
 		assert_int(required).override_failure_message("'%s': kein Pflichtpunkt" % id)\
 				.is_greater(0)
+
+
+## Teilt `phrase` COPIED_WORDS Wörter am Stück mit `source` (normalisiert wie SummaryCard)?
+func _shares_words(phrase: String, source: String) -> bool:
+	var grams := {}
+	var words := _tokens(source)
+	for i in range(words.size() - COPIED_WORDS + 1):
+		grams[" ".join(words.slice(i, i + COPIED_WORDS))] = true
+	words = _tokens(phrase)
+	for i in range(words.size() - COPIED_WORDS + 1):
+		if grams.has(" ".join(words.slice(i, i + COPIED_WORDS))):
+			return true
+	return false
+
+
+func _tokens(text: String) -> PackedStringArray:
+	var out := PackedStringArray()
+	for word: Dictionary in SummaryCard.split_words(text):
+		out.append(str(word["token"]))
+	return out

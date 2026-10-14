@@ -1,8 +1,8 @@
 class_name WritingJudge
 extends RefCounted
-## Das Urteil über eine Summary: die Offline-Prüfung (SummaryCard) und die Antwort des
-## Modells (CloudModelBackend) zusammen, je Kriterium ein Stapel an The Rambler
-## (docs/adr/0023-schreib-boss.md, Abschnitte 5 und 6).
+## Das Urteil über eine Summary, je Kriterium ein Stapel an The Rambler
+## (docs/adr/0023-schreib-boss.md, Abschnitte 5 und 6). Die Länge rechnet SummaryCard
+## offline, alles andere kommt aus der Antwort des Modells (CloudModelBackend).
 ##
 ## Drei Regeln aus dem ADR stehen hier und nirgends sonst:
 ##
@@ -21,10 +21,11 @@ extends RefCounted
 ## Reine Rechnung ohne Zustand und ohne Netz (tests/writing_judge_test.gd).
 ##
 ## Rückgabe von `criteria`, je Kriterium in CRITERIA-Reihenfolge:
-##   { "id", "decided", "met", "source": "offline" | "model" | "both",
+##   { "id", "decided", "met", "source": "offline" | "model",
 ##     "marks": [{ "quote", "from", "to", "category", "severity", "hint" }] }
 ## `decided` falsch heißt: ohne Modellantwort lässt sich das Kriterium nicht entscheiden,
-## der Stapel bleibt hängen, ohne dass es als Fehlschlag zählt.
+## der Stapel bleibt hängen, ohne dass es als Fehlschlag zählt. Das gilt für alle außer
+## der Länge.
 
 const CRITERIA := ["intro", "content", "genre", "language", "length"]
 
@@ -74,20 +75,29 @@ static func criteria(task: Dictionary, text: String, card: Dictionary,
 	var has_reply := not reply.is_empty()
 	var out: Array = []
 	for id in CRITERIA:
-		match id:
-			"intro":
-				out.append(_entry(id, true, bool(card.get("intro", false)), "offline", []))
-			"length":
-				out.append(_entry(id, true, bool(card.get("length_ok", false)), "offline", []))
-			"content":
-				out.append(_content(task, text, reply) if has_reply \
-						else _entry(id, false, false, "model", []))
-			"genre":
-				out.append(_genre(text, card, reply))
-			"language":
-				out.append(_language(text, reply) if has_reply \
-						else _entry(id, false, false, "model", []))
+		if id == "length":
+			out.append(_entry(id, true, bool(card.get("length_ok", false)), "offline", []))
+		elif not has_reply:
+			out.append(_entry(id, false, false, "model", []))
+		else:
+			match id:
+				"intro":
+					out.append(_intro(text, reply))
+				"content":
+					out.append(_content(task, text, reply))
+				"genre":
+					out.append(_genre(text, reply))
+				"language":
+					out.append(_language(text, reply))
 	return out
+
+
+## Titel und Autor im ersten Satz — erfüllt nur mit einem Zitat, das im Text steht.
+static func _intro(text: String, reply: Dictionary) -> Dictionary:
+	var intro: Dictionary = reply.get("intro", {})
+	var met := bool(intro.get("met", false)) \
+			and not SummaryCard.locate(text, str(intro.get("quote", ""))).is_empty()
+	return _entry("intro", true, met, "model", [])
 
 
 ## Alle Pflicht-Kernpunkte erfasst, jeder mit einem Zitat, das im Text steht. Ein Kernpunkt
@@ -107,30 +117,19 @@ static func _content(task: Dictionary, text: String, reply: Dictionary) -> Dicti
 	return _entry("content", true, met, "model", [])
 
 
-## Textsorte: offline keine direkte Rede/Übernahme und keine Meinung, dazu laut Modell
-## Präsens. Ohne Modellantwort entscheidet die Offline-Hälfte allein, aber nur nach unten:
-## steht schon eine Meinung im Text, hält der Stapel sicher.
-##
-## „Nicht im Präsens“ gilt nur mit Beleg: das Modell muss mindestens eine Stelle nennen,
-## die im Text steht. Ein Urteil ohne findbare Stelle könnte das Kind nicht überarbeiten,
-## und ein erfundenes soll keinen Stapel kosten.
-static func _genre(text: String, card: Dictionary, reply: Dictionary) -> Dictionary:
+## Textsorte: Präsens, keine direkte Rede, nichts abgeschrieben, keine eigene Meinung.
+## Jede Stelle zählt nur mit Beleg im Text: ein Urteil ohne findbare Stelle könnte das Kind
+## nicht überarbeiten, und ein erfundenes soll keinen Stapel kosten.
+static func _genre(text: String, reply: Dictionary) -> Dictionary:
 	var marks: Array = []
-	for quote in Array(card.get("quotes", [])):
-		_add_mark(marks, text, str(quote), "quote", "major", "")
-	for phrase in Array(card.get("opinion", [])):
-		_add_mark(marks, text, str(phrase), "opinion", "major", "")
-	var offline_ok := marks.is_empty()
-	if reply.is_empty():
-		if offline_ok:
-			return _entry("genre", false, false, "both", marks)
-		return _entry("genre", true, false, "offline", marks)
-	var tense_marks: Array = []
 	if not bool(reply.get("present_tense", true)):
 		for quote in Array(reply.get("tense_quotes", [])):
-			_add_mark(tense_marks, text, str(quote), "tense", "major", "")
-	marks.append_array(tense_marks)
-	return _entry("genre", true, offline_ok and tense_marks.is_empty(), "both", marks)
+			_add_mark(marks, text, str(quote), "tense", "major", "")
+	for quote in Array(reply.get("direct_speech", [])) + Array(reply.get("copied", [])):
+		_add_mark(marks, text, str(quote), "quote", "major", "")
+	for phrase in Array(reply.get("opinion", [])):
+		_add_mark(marks, text, str(phrase), "opinion", "major", "")
+	return _entry("genre", true, marks.is_empty(), "model", marks)
 
 
 ## Sprache: erfüllt, solange kein belegter schwerer Fehler bleibt. Leichte Fehler werden

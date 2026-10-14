@@ -28,7 +28,7 @@ entsteht beim Autor, nicht im Kampf):
 
 | Textart | Vorlage | Inhaltsschlüssel | offline prüfbar |
 |---|---|---|---|
-| **Summary** | englischer Text | Kernpunkte | Einleitung (Titel, Autor), keine direkte Rede, keine Meinung, Länge, Konnektoren |
+| **Summary** | englischer Text | Kernpunkte | Länge (alles andere das Modell, §5) |
 | Mediation | deutscher Text, Adressat | Kernpunkte | Länge, Konnektoren |
 | Bericht aus Faktenblatt | Stichpunkte | Fakten | wenig |
 | Comment / Erörterung | Fragestellung | nur Struktur | wenig |
@@ -105,7 +105,7 @@ auf Papier.
 |---|---|---|
 | Begegnung | Aufgabe, kurz | spricht, im Vordergrund |
 | Lesen | Vorlage groß, scrollbar | im Hintergrund, leise |
-| Schreiben | Vorlage schmal links, Schreibfeld breit, Randleiste mit Wortzahl und den Offline-Prüfungen | läuft im Hintergrund umher |
+| Schreiben | Vorlage schmal links, Schreibfeld breit, Randleiste mit Wortzahl und Länge | läuft im Hintergrund umher |
 | Angriff | Kriterium für Kriterium: Stapel fällt oder hält; die Vorlage ist weg | im Vordergrund, reagiert |
 | Überarbeiten | eigener Text mit markierten Stellen und Hinweisen | angeschlagen |
 
@@ -113,25 +113,28 @@ Die Wartezeit auf das Modell (Sekunden bis eine halbe Minute) ist das Aufladen d
 Angriffs. Statische UI als `.tscn`, Raum nur aus `ui_theme.tres`; Layout gegen 1152×648
 prüfen — zwei lange Texte nebeneinander sind dort der enge Fall.
 
-### 5. Bewertung: Offline rechnet, das Modell beurteilt
+### 5. Bewertung: Offline zählt, das Modell beurteilt
 
-**Offline (Stufe 0, deterministisch, live in der Randleiste):**
-
-| Prüfung | wie |
-|---|---|
-| Einleitung nennt Titel und Autor | Abgleich im ersten Satz gegen die Metadaten der Vorlage |
-| keine direkte Rede | Anführungszeichen; wörtliche Übernahme ab fünf Wörtern aus der Vorlage |
-| keine eigene Meinung | Signalphrasen |
-| Länge | Wortzahl gegen `target_words` |
-| Konnektoren | Abgleich gegen eine Lexem-Gruppe, die auch im Wellenkampf geübt wird |
-
-Normalisiert wird über `AnswerEvaluator.tokens()`, wie überall.
+**Offline (deterministisch, live in der Randleiste):** nur die Wortzahl gegen
+`target_words` (`SummaryCard`), normalisiert über `AnswerEvaluator.tokens()`.
 
 **Modell (ein Aufruf je Abgabe, strukturierte Ausgabe):**
 
+- ob der erste Satz Titel und Autor nennt, mit Zitat
 - welche Kernpunkte (`key_points[].id`) erfasst sind, je Punkt ja/nein mit Zitat als Beleg
-- ob der Text im Präsens steht
+- ob der Text im Präsens steht, mit den Stellen in der Vergangenheit
+- direkte Rede, wörtlich aus der Vorlage Abgeschriebenes und eigene Meinung, je als Zitate
 - Sprachfehler als Liste: wörtliches Zitat, Kategorie, Hinweis
+
+**Nachtrag 2026-10-14: Einleitung, Rede und Meinung ans Modell.** Zuerst prüfte das Spiel
+Einleitung, direkte Rede, Übernahmen (fünf Wörter am Stück), Meinung (Signalphrasen) und
+Konnektoren selbst. Die Regeln trafen zu oft daneben: Fünf gemeinsame Wörter markieren
+auch natürliche Sachangaben („his phone in his bag“), Signalphrasen trennen nicht zwischen
+der Meinung des Kindes und der einer Figur („in his opinion“), und ein Titel mit Tippfehler
+fiel durch. Das Thema ist für Regeln zu offen. Jetzt urteilt das Modell (Prompt
+`summary-v5`, in `prompt-eval` gegen v3 gemessen: in zwei Läufen über 34 Fälle keine falsche
+Einleitung, keine erfundene Rede oder Meinung, alle Soll-Stellen gefunden). Die Randleiste
+zeigt nur noch die Wortzahl; die Konnektoren sind entfallen (offene Frage 3).
 
 **Regeln dafür:**
 
@@ -150,9 +153,9 @@ Normalisiert wird über `AnswerEvaluator.tokens()`, wie überall.
 
 | Kriterium | erfüllt, wenn | Quelle |
 |---|---|---|
-| Einleitung | Titel und Autor im ersten Satz | offline |
+| Einleitung | Titel und Autor im ersten Satz | Modell |
 | Inhalt | alle Pflicht-Kernpunkte erfasst | Modell |
-| Textsorte | Präsens, keine direkte Rede, keine Meinung | offline + Modell |
+| Textsorte | Präsens, keine direkte Rede, nichts abgeschrieben, keine Meinung | Modell |
 | Sprache | keine schweren Fehler mehr | Modell |
 | Länge | im Zielbereich | offline |
 
@@ -258,7 +261,8 @@ der Ursprungswert.
    Satzmeister.
 2. **Schreibtagebuch:** Stufen je Kriterium über die Zeit speichern? Den Text selbst
    lokal aufheben?
-3. **Konnektoren als Lexem-Gruppe:** eigene Kategorie oder Tag an bestehenden Lexemen?
+3. ~~Konnektoren als Lexem-Gruppe?~~ Entfallen 2026-10-14: die Randleiste zählt keine
+   Konnektoren mehr (Nachtrag in §5).
 4. **Für welchen Band?** Die ersten Vorlagen gehören zu Access 4, Unit 1–2 (2026-10-14),
    etwas leichter als das Ziel B1+. Klasse 10 braucht eigene Vorlagen unabhängig vom Buch
    oder einen neuen Band.
