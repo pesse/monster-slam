@@ -1,7 +1,8 @@
 class_name WritingLog
 extends RefCounted
 ## Die Abgaben beim Schreib-Boss (docs/adr/0023-schreib-boss.md, §7): je Abgabe, was der
-## Anbieter verbraucht hat, und was dabei herauskam.
+## Anbieter verbraucht hat, und was dabei herauskam. Dazu die Cloud-Urteile im Satzmeister
+## (ADR 0025, `kind` "sentence"), damit die Kosten eines Schlüssels an einer Stelle stehen.
 ##
 ## Gespeichert wird der Ursprungswert — Modell, Token, Dauer, erfüllte Kriterien —, nie
 ## ein Betrag. Die Kosten rechnet `ModelPrices` beim Lesen; kein Zähler daneben. Dieselbe
@@ -21,9 +22,11 @@ const SAVE_DIR := "user://progress"
 ## Eingabe-, Ausgabe-, Cache-Lese-, Cache-Schreib-Token; s: Sekunden bis zur Antwort;
 ## met: Ids der erfüllten Kriterien (WritingJudge.CRITERIA); words: Wortzahl des Textes.
 ## `failed`: der Anbieter hat Token berechnet, aber kein brauchbares Urteil geliefert — die
-## Abgabe zählte im Kampf nicht, ihre Kosten zählen trotzdem.
+## Abgabe zählte im Kampf nicht, ihre Kosten zählen trotzdem. `kind`: "summary", oder
+## "sentence" für ein Satz-Urteil im Satzmeister (task = Satz-Id, ohne round/met/words);
+## Einträge ohne `kind` sind Summaries.
 const FIELDS := ["at", "boss", "task", "round", "model", "in", "out", "cr", "cw", "s", "met", "words",
-		"failed"]
+		"failed", "kind"]
 
 ## So weit zurück reicht die Kostenanzeige in den Einstellungen.
 const RECENT_DAYS := 30

@@ -31,6 +31,7 @@ signal closed()
 @onready var _key_save: Button = %KeySaveButton
 @onready var _cloud_hint: Label = %CloudHint
 @onready var _cloud_confirm: ConfirmDialog = %CloudConfirm
+@onready var _sentence_cloud: CheckBox = %SentenceCloudToggle
 @onready var _model_parts: VBoxContainer = %ModelParts
 
 ## Auswahl je Pack, damit sie einen Neuaufbau der Liste übersteht.
@@ -41,6 +42,9 @@ var _preselected := false
 var _cloud: CloudModelBackend
 ## Was die letzte Prüfung ergab — "" = noch nicht geprüft.
 var _cloud_status := ""
+## Wofür `_cloud_confirm` gerade fragt: "key" (Schlüssel eintragen) oder "sentence"
+## (Satzmeister in die Cloud).
+var _asking := ""
 
 
 func _ready() -> void:
@@ -57,8 +61,9 @@ func _ready() -> void:
 	add_child(_cloud)
 	_key_save.pressed.connect(_on_key_save)
 	_key_input.text_submitted.connect(func(_text): _on_key_save())
-	_cloud_confirm.confirmed.connect(_on_key_confirmed)
-	_cloud_confirm.cancelled.connect(func(): _key_input.grab_focus())
+	_cloud_confirm.confirmed.connect(_on_cloud_confirmed)
+	_cloud_confirm.cancelled.connect(_on_cloud_cancelled)
+	_sentence_cloud.toggled.connect(_on_sentence_cloud_toggled)
 	_cloud_remove.pressed.connect(_on_key_remove)
 	_cloud_check.pressed.connect(_on_key_check)
 	_render()
@@ -188,9 +193,10 @@ func _render_model() -> void:
 			"Bosskämpfe laufen weiter — nur ohne die zweite Meinung.")
 
 
-# --- Schreib-Boss (Cloud) -----------------------------------------------------
+# --- Cloud-Bewertung ---------------------------------------------------------
 
-## Der eigene API-Schlüssel für den Schreib-Boss (ADR 0023, §1). Anders als das lokale
+## Der eigene API-Schlüssel für den Schreib-Boss (ADR 0023, §1) und, wer will, den
+## Satzmeister (ADR 0025, eigene Zustimmung). Anders als das lokale
 ## Modell ist der Abschnitt immer da: ohne ihn gäbe es keinen Weg, einen Schlüssel
 ## einzutragen. Unsichtbar ist ohne Schlüssel der Boss, nicht dieser Kasten.
 ##
@@ -201,6 +207,8 @@ func _render_cloud() -> void:
 	_key_row.visible = not has_key
 	_cloud_remove.visible = has_key
 	_cloud_check.visible = has_key
+	_sentence_cloud.visible = has_key
+	_sentence_cloud.set_pressed_no_signal(has_key and UserSettings.sentence_cloud())
 	_cloud_check.disabled = _cloud.busy()
 	_key_save.disabled = _cloud.busy()
 
@@ -208,8 +216,9 @@ func _render_cloud() -> void:
 		var profile := UserSettings.active_profile()
 		var cost := WritingLog.recent_cost_usd(profile)
 		var lines := PackedStringArray()
-		lines.append("Eingetragen: %s. Geschriebene Texte gehen zur Bewertung an Anthropic." \
-				% ApiKeys.shown())
+		lines.append("Eingetragen: %s. Geschriebene Texte gehen zur Bewertung an Anthropic%s." \
+				% [ApiKeys.shown(), ", ebenso die Übersetzungen im Satzmeister" \
+				if UserSettings.sentence_cloud() else ""])
 		lines.append("Geschätzte Kosten der letzten %d Tage für dieses Profil: %s." \
 				% [WritingLog.RECENT_DAYS, _dollars(cost)])
 		if not _cloud_status.is_empty():
@@ -227,6 +236,10 @@ func _render_cloud() -> void:
 	Hints.attach(_cloud_remove, "Schlüssel entfernen",
 			"Löscht den Schlüssel von diesem Gerät. Der Schreib-Boss verschwindet, bis wieder "
 			+ "einer eingetragen ist.")
+	Hints.attach(_sentence_cloud, "Satzmeister in der Cloud",
+			"Statt des Sprachmodells auf diesem Rechner urteilt das Modell bei Anthropic "
+			+ "über Übersetzungen, die nicht als Lösung hinterlegt sind.",
+			"Genauer, aber jede solche Antwort kostet einen Bruchteil eines Cents.")
 	Hints.attach(_cloud_check, "Schlüssel prüfen",
 			"Fragt bei Anthropic nach, ob der Schlüssel gilt. Kostet nichts.")
 
@@ -244,6 +257,7 @@ func _on_key_save() -> void:
 		_cloud_status = "Bitte zuerst einen Schlüssel einfügen."
 		_render_cloud()
 		return
+	_asking = "key"
 	_cloud_confirm.ask("Texte gehen an Anthropic",
 			"Mit diesem Schlüssel schickt der Schreib-Boss jeden geschriebenen Text zur "
 			+ "Bewertung an Anthropic (Claude). Die Texte verlassen also diesen Rechner. "
@@ -251,6 +265,41 @@ func _on_key_save() -> void:
 			+ "Jede Abgabe kostet Geld auf diesem Schlüssel.\n\n"
 			+ "Der Schlüssel gilt für alle Profile auf diesem Gerät.",
 			"Einverstanden, eintragen", "Abbrechen")
+
+
+func _on_sentence_cloud_toggled(on: bool) -> void:
+	if not on:
+		UserSettings.set_sentence_cloud(false)
+		_render_cloud()
+		return
+	_asking = "sentence"
+	_cloud_confirm.ask("Sätze gehen an Anthropic",
+			"Im Satzmeister geht dann jede Übersetzung, die nicht als Lösung hinterlegt ist, "
+			+ "zusammen mit dem deutschen Satz und der Musterlösung zur Bewertung an "
+			+ "Anthropic (Claude). Die Sätze verlassen also diesen Rechner — kein Profilname.\n\n"
+			+ "Jede solche Antwort kostet einen Bruchteil eines Cents auf diesem Schlüssel.\n\n"
+			+ "Das gilt für alle Profile auf diesem Gerät.",
+			"Einverstanden", "Abbrechen")
+
+
+func _on_cloud_confirmed() -> void:
+	var what := _asking
+	_asking = ""
+	if what == "sentence":
+		UserSettings.set_sentence_cloud(true)
+		_render_cloud()
+		return
+	_on_key_confirmed()
+
+
+func _on_cloud_cancelled() -> void:
+	var what := _asking
+	_asking = ""
+	if what == "sentence":
+		_sentence_cloud.set_pressed_no_signal(false)
+		_sentence_cloud.grab_focus()
+		return
+	_key_input.grab_focus()
 
 
 func _on_key_confirmed() -> void:
@@ -267,6 +316,8 @@ func _on_key_confirmed() -> void:
 
 func _on_key_remove() -> void:
 	ApiKeys.clear()
+	# Ein neuer Schlüssel fragt wieder nach, bevor Sätze hinausgehen.
+	UserSettings.set_sentence_cloud(false)
 	_cloud_status = ""
 	_render_cloud()
 

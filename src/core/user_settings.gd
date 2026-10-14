@@ -139,6 +139,17 @@ func set_trace_enabled(value: bool) -> void:
 	_save()
 
 
+## Bewertet die Cloud statt des lokalen Modells die Sätze im Satzmeister (ADR 0025)?
+## Geräteweit wie der Schlüssel; gilt nur, solange einer eingetragen ist. Vorgabe aus.
+func sentence_cloud() -> bool:
+	return bool(_config.get_value("general", "sentence_cloud", false))
+
+
+func set_sentence_cloud(value: bool) -> void:
+	_config.set_value("general", "sentence_cloud", value)
+	_save()
+
+
 ## Lautstärke der Musik (0.0..1.0), geräteweit.
 func music_volume() -> float:
 	return clampf(float(_config.get_value("general", "music_volume", DEFAULT_VOLUME)), 0.0, 1.0)

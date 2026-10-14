@@ -204,7 +204,7 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"StatHeading"
-text = "Schreib-Boss (Cloud)"
+text = "Cloud-Bewertung (eigener Schlüssel)"
 
 [node name="CloudCheckButton" type="Button" parent="Window/Layout/Content/Body/Cloud/Head"]
 unique_name_in_owner = true
@@ -246,6 +246,12 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"Caption"
 autowrap_mode = 3
+
+[node name="SentenceCloudToggle" type="CheckBox" parent="Window/Layout/Content/Body/Cloud"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Auch den Satzmeister in der Cloud bewerten"
 
 [node name="CloudRule" type="HSeparator" parent="Window/Layout/Content/Body/Cloud"]
 layout_mode = 2

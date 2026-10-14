@@ -176,9 +176,10 @@ Einheit, einen Vertrag, eine Engine-Falle.
 **Satzbewertung und Boss** (ADR 0004, `docs/ARCHITECTURE.md` „Sätze bewerten"):
 - Ein Treffer in `accepted` schlägt jede Stolperstelle; ohne Schlüsseltreffer gibt die
   Prüfkarte **kein** Urteil, und die Nähe (`overlap`) ist nie eine Güte.
-- Stufe 1 darf nur heben, nie senken, und spricht nur mit `127.0.0.1`. Wo sie nicht hebt,
-  erklärt ein zweiter Aufruf ohne Schlüssel; findet er keinen Fehler, gibt es keine
-  Erklärung (ADR 0005). Die Begründung des Urteils wird nie gezeigt.
+- Stufe 1 darf nur heben, nie senken. Lokal spricht sie nur mit `127.0.0.1`, in die Cloud
+  geht sie nur mit eigenem Schlüssel und eigener Zustimmung (ADR 0025). Wo sie nicht hebt,
+  erklärt lokal ein zweiter Aufruf ohne Schlüssel, in der Cloud derselbe Aufruf; ohne
+  gefundenen Fehler gibt es keine Erklärung (ADR 0005). Die Begründung des Urteils wird nie gezeigt.
 - Prompts (`StageOnePrompts`) und Regelkatalog (`GrammarRules`) werden in einer eigenen
   Messumgebung geändert und gemessen und erst dann wörtlich übernommen (ADR 0005).
 - Ein Boss trägt keine Sätze, sondern eine `sentence_rule` — Sätze liegen im Submodule.

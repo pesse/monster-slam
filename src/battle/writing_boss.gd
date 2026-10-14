@@ -619,6 +619,7 @@ func _log(reply: Dictionary, failed := false) -> void:
 		"met": met,
 		"words": int(_card.get("words", 0)),
 		"failed": failed,
+		"kind": "summary",
 	}
 	if record:
 		WritingLog.record(entry, _profile())

@@ -52,22 +52,23 @@ Hausaufgabenmaschine.
 
 ## Wohin dein Text geht
 
-Einleitung, Länge und die Prüfungen beim Tippen rechnet das Spiel selbst, auf diesem
-Rechner. Ob die wichtigen Punkte drin sind, ob der Text im Present Tense steht und wo
-Sprachfehler stecken, beurteilt ein großes Sprachmodell von **Anthropic** im Internet.
+Nur die Wortzahl und die Länge rechnet das Spiel selbst, auf diesem Rechner. Alles andere
+– Titel und Autor im ersten Satz, die wichtigen Punkte, Present Tense, eigene Worte statt
+Rede und Abgeschriebenem, keine Meinung, Sprachfehler – beurteilt ein großes Sprachmodell
+von **Anthropic** im Internet.
 Dafür geht bei jeder Abgabe dein Text zusammen mit der Geschichte und der Aufgabe an
 Anthropic – **mit deinem eigenen API-Schlüssel**. Nicht mit: dein Profilname, deine
 Spielernummer oder irgendetwas aus der Spur.
 
-- Den Schlüssel trägt man unter „Inhalte“ im Abschnitt „Schreib-Boss (Cloud)“ ein
+- Den Schlüssel trägt man unter „Inhalte“ im Abschnitt „Cloud-Bewertung (eigener Schlüssel)“ ein
   ([Kapitel 15](15-vokabel-packs.md)). Dabei muss man bestätigen, dass die Texte den
   Rechner verlassen; ohne diese Bestätigung wird der Schlüssel nicht gespeichert.
 - Der Schlüssel wird verschlüsselt gespeichert. Lesen kann ihn nur dein Benutzerkonto auf
   diesem Rechner; eine kopierte Datei nützt niemandem.
 - Jede Abgabe kostet den Inhaber des Schlüssels ein wenig Geld. Das Spiel schreibt den
   Verbrauch je Abgabe mit, aber nie den Text und nie den Schlüssel.
-- Der Satzmeister ([Kapitel 20](20-bosskampf.md)) bleibt davon unberührt: Er läuft weiter
-  nur auf diesem Rechner.
+- Der Satzmeister ([Kapitel 20](20-bosskampf.md)) bleibt davon unberührt und läuft auf
+  diesem Rechner – außer man schickt ihn mit einem eigenen Kreuz ebenfalls in die Cloud.
 
 **Ohne Netz oder bei einem Fehler des Dienstes** gibt es kein Urteil. Dein Text bleibt
 stehen, der Grund steht dabei, und die Abgabe zählt nicht – du kannst einfach noch einmal

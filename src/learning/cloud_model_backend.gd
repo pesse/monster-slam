@@ -1,12 +1,14 @@
 class_name CloudModelBackend
 extends Node
-## Das Modell für den Schreib-Boss: Anthropic in der Cloud, mit dem EIGENEN Schlüssel des
-## Spielers (docs/adr/0023-schreib-boss.md, §1 und §2).
+## Das Modell in der Cloud: Anthropic, mit dem EIGENEN Schlüssel des Spielers — für den
+## Schreib-Boss (docs/adr/0023-schreib-boss.md, §1 und §2) und, wenn eingestellt, als
+## Stufe 1 des Satzmeisters (ADR 0025).
 ##
-## Das ist die eine Ausnahme von „Kindertexte gehen nicht ins Netz" (ADR 0004), und sie gilt
-## nur hier: ohne bestätigten Schlüssel (`ApiKeys.anthropic()`) wird nichts gesendet. Hinaus
-## gehen Aufgabe, Vorlage, Kernpunkte und der Schülertext (`WritingPrompts.summary_user`) —
-## kein Profil, keine Spieler-Id. Der Schlüssel steht nur im Kopf der Anfrage und nie in
+## Das ist die Ausnahme von „Kindertexte gehen nicht ins Netz" (ADR 0004), und sie gilt nur
+## hier: ohne bestätigten Schlüssel (`ApiKeys.anthropic()`) wird nichts gesendet. Hinaus
+## gehen Aufgabe, Vorlage, Kernpunkte und der Schülertext (`WritingPrompts.summary_user`)
+## bzw. Satz, Schlüssel und Übersetzung (`StageOnePrompts.cloud_user`) — kein Profil, keine
+## Spieler-Id. Der Schlüssel steht nur im Kopf der Anfrage und nie in
 ## `last_note`, in der Ausgabe oder in der Antwort an den Aufrufer.
 ##
 ## Derselbe Zuschnitt wie `LocalModelBackend`: Anfrage rein, Dictionary raus, Zeitlimit,
@@ -27,6 +29,9 @@ const URL := "https://api.anthropic.com/v1/messages"
 const MODELS_URL := "https://api.anthropic.com/v1/models/"
 ## Die Modell-Id steht an dieser EINEN Stelle (ADR 0023, §2).
 const MODEL := "claude-opus-5-5"
+## Das Modell für den Satzmeister: am Einzelsatz in der Werkstatt besser als Opus,
+## schneller und billiger (ADR 0025).
+const SENTENCE_MODEL := "claude-sonnet-5-5"
 const API_VERSION := "2023-06-01"
 ## Beta für die serverseitige Ersatzanfrage in der Form `fallbacks: "default"`.
 const FALLBACK_BETA := "server-side-fallback-2026-07-01"
@@ -44,6 +49,10 @@ const MAX_TOKENS := 16000
 ## Sekunden bis zum Abbruch. Gemessen ~4 s je Aufruf (ADR 0023, §9), mit Denken und einem
 ## langen Text eher eine halbe Minute; der Kampf hat keinen Zeitdruck.
 const HTTP_TIMEOUT := 120.0
+
+## Ein Satz hat eine Antwort bekommen oder ist gescheitert: `reply` wie bei `reply_from`,
+## mit `result` = { mistake, explanation } oder {}. Für die Kostenbuchung (WritingLog).
+signal sentence_answered(sentence_id: String, reply: Dictionary)
 
 const BUSY_NOTE := "Vorige Anfrage läuft noch — diese wurde nicht gestellt."
 const NO_KEY_NOTE := "Kein bestätigter API-Schlüssel eingetragen."
@@ -67,8 +76,10 @@ var last_code := 0
 
 var _http: HTTPRequest
 var _on_done: Callable
-## "judge" oder "check" — was die offene Anfrage ist.
+## "summary", "sentence" oder "check" — was die offene Anfrage ist.
 var _mode := ""
+## Die Erklärung aus dem letzten Satz-Urteil, für `explain`: { key, mistake, explanation }.
+var _explained: Dictionary = {}
 var _started_msec := 0
 
 
@@ -91,14 +102,55 @@ func judge_summary(task: Dictionary, text: String, on_done: Callable) -> void:
 		last_note = NO_KEY_NOTE
 		on_done.call(failed(NO_KEY_NOTE, model))
 		return
-	_begin(on_done, "judge")
-	last_request = request_body(task, text, model)
-	last_response = ""
-	last_code = 0
-	var error := _http.request(URL, request_headers(key), HTTPClient.METHOD_POST,
-			JSON.stringify(last_request))
-	if error != OK:
-		_fail("Anfrage an Anthropic nicht abgesetzt (Fehler %d)." % error)
+	_post(request_body(task, text, model), "summary", on_done, key)
+
+
+## Bewertet eine Übersetzung im Satzmeister: ein Aufruf, Urteil und Erklärung zusammen.
+## `on_done` bekommt { result, usage, note } mit `result` = { mistake, explanation } oder {}.
+func judge_sentence(sentence: Dictionary, answer: String, on_done: Callable) -> void:
+	var id := str(sentence.get("id", ""))
+	var done := func(reply: Dictionary) -> void:
+		sentence_answered.emit(id, reply)
+		on_done.call(reply)
+	if busy():
+		last_note = BUSY_NOTE
+		done.call(failed(BUSY_NOTE, model))
+		return
+	var key := _key()
+	if key.is_empty():
+		last_note = NO_KEY_NOTE
+		done.call(failed(NO_KEY_NOTE, model))
+		return
+	_post(sentence_body(sentence, answer, model), "sentence", done, key)
+
+
+## Stufe 1 in der Callable-Form von `SentenceJudge.model_backend`. `on_done` bekommt
+## { quality, verdict, feedback } oder {}; die Erklärung hält `explain` bereit.
+func judge(sentence: Dictionary, answer: String, on_done: Callable) -> void:
+	_explained = {}
+	judge_sentence(sentence, answer, func(reply: Dictionary) -> void:
+		var result: Dictionary = reply["result"]
+		if result.is_empty():
+			on_done.call({})
+			return
+		var mistake := bool(result["mistake"])
+		_explained = {"key": _answer_key(sentence, answer), "mistake": mistake,
+				"explanation": str(result["explanation"])}
+		on_done.call({
+			"quality": LocalModelBackend.INCORRECT_QUALITY if mistake \
+					else LocalModelBackend.CORRECT_QUALITY,
+			"verdict": "incorrect" if mistake else "correct",
+			"feedback": "",
+		}))
+
+
+## `SentenceJudge.explainer`: die Erklärung aus derselben Antwort wie das Urteil, ohne
+## zweiten Aufruf. Zu einer anderen Antwort gibt es keine ({}).
+func explain(sentence: Dictionary, answer: String, on_done: Callable) -> void:
+	if _explained.get("key", "") != _answer_key(sentence, answer):
+		on_done.call({})
+		return
+	on_done.call({"mistake": _explained["mistake"], "explanation": _explained["explanation"]})
 
 
 ## Prüft den Schlüssel, ohne etwas zu kosten: fragt nur nach dem Modell (`GET /v1/models`).
@@ -136,7 +188,7 @@ static func request_headers(key: String, with_fallback := true) -> PackedStringA
 	return headers
 
 
-## Der Rumpf der Anfrage. Kein `thinking`: Opus 5.5 denkt immer (adaptiv), und ein
+## Der Rumpf der Anfrage für eine Summary. Kein `thinking`: Opus 5.5 denkt immer (adaptiv), und ein
 ## ausgeschaltetes Denken lehnt es ab. Kein `temperature`: wird dort ebenfalls abgelehnt.
 static func request_body(task: Dictionary, text: String, model_name := MODEL) -> Dictionary:
 	return {
@@ -154,20 +206,39 @@ static func request_body(task: Dictionary, text: String, model_name := MODEL) ->
 	}
 
 
+## Der Rumpf der Anfrage für einen Satz im Satzmeister; sonst wie `request_body`.
+static func sentence_body(sentence: Dictionary, answer: String,
+		model_name := SENTENCE_MODEL) -> Dictionary:
+	return {
+		"model": model_name,
+		"max_tokens": MAX_TOKENS,
+		"system": StageOnePrompts.CLOUD_SYSTEM,
+		"messages": [
+			{"role": "user", "content": StageOnePrompts.cloud_user(sentence, answer)},
+		],
+		"output_config": {
+			"effort": EFFORT,
+			"format": {"type": "json_schema", "schema": StageOnePrompts.CLOUD_SCHEMA},
+		},
+		"fallbacks": "default",
+	}
+
+
 # --- Antwort (statisch) --------------------------------------------------------
 
 ## Die Antwort an den Aufrufer aus dem, was HTTPRequest geliefert hat:
 ## { "result": Modellantwort oder {}, "usage": {...}, "note": "" oder Grund }.
+## `shape` ist "summary" oder "sentence" — welche Antwortform erwartet wird.
 static func reply_from(http_result: int, code: int, text: String, seconds: float,
-		model_name := MODEL) -> Dictionary:
+		model_name := MODEL, shape := "summary") -> Dictionary:
 	if http_result != HTTPRequest.RESULT_SUCCESS:
 		return failed(_transport_note(http_result), model_name, seconds)
 	var envelope: Variant = _quiet_parse(text)
 	var env: Dictionary = envelope if envelope is Dictionary else {}
 	var usage := usage_of(env, model_name, seconds)
 	if code != 200:
-		return {"result": {}, "usage": usage, "note": error_note(code, env, text)}
-	var parsed := parse_envelope(env)
+		return {"result": {}, "usage": usage, "note": error_note(code, env, text, model_name)}
+	var parsed := parse_envelope(env, shape)
 	return {"result": parsed["result"], "usage": usage, "note": parsed["note"]}
 
 
@@ -195,7 +266,7 @@ static func usage_of(env: Dictionary, model_name: String, seconds: float) -> Dic
 
 ## Das Ergebnis aus einer erfolgreichen Hülle: { result, note }. Liest den Text-Block
 ## (strukturierte Ausgabe) oder, falls vorhanden, die Eingabe eines `tool_use`-Blocks.
-static func parse_envelope(env: Dictionary) -> Dictionary:
+static func parse_envelope(env: Dictionary, shape := "summary") -> Dictionary:
 	var stop := str(env.get("stop_reason", ""))
 	if stop == "refusal":
 		return {"result": {}, "note": "Das Modell hat die Bewertung abgelehnt."}
@@ -217,7 +288,7 @@ static func parse_envelope(env: Dictionary) -> Dictionary:
 		candidate = _quiet_parse("".join(texts).strip_edges())
 	if not (candidate is Dictionary):
 		return {"result": {}, "note": "Antwort ohne Bewertung (kein JSON gefunden)."}
-	var result := parse_result(candidate)
+	var result := parse_sentence(candidate) if shape == "sentence" else parse_result(candidate)
 	if result.is_empty():
 		return {"result": {}, "note": "Antwort ohne Bewertung (Form stimmt nicht)."}
 	return {"result": result, "note": ""}
@@ -274,6 +345,15 @@ static func parse_result(raw: Dictionary) -> Dictionary:
 	}
 
 
+## Das Satz-Urteil in fester Form, oder {} ohne `mistake`. Ohne Fehler keine Erklärung.
+static func parse_sentence(raw: Dictionary) -> Dictionary:
+	if not (raw.get("mistake") is bool):
+		return {}
+	var mistake: bool = raw["mistake"]
+	return {"mistake": mistake,
+			"explanation": str(raw.get("explanation", "")).strip_edges() if mistake else ""}
+
+
 ## Eine Liste von Zitaten ohne leere Einträge; fehlt sie, ist sie leer.
 static func _quotes(value: Variant) -> Array:
 	var out: Array = []
@@ -286,7 +366,7 @@ static func _quotes(value: Variant) -> Array:
 
 
 ## Der Grund für einen HTTP-Fehler im Klartext, für Overlay und Einstellungen.
-static func error_note(code: int, env: Dictionary, text := "") -> String:
+static func error_note(code: int, env: Dictionary, text := "", model_name := MODEL) -> String:
 	var message := ""
 	if env.get("error") is Dictionary:
 		message = str((env["error"] as Dictionary).get("message", "")).strip_edges()
@@ -298,7 +378,7 @@ static func error_note(code: int, env: Dictionary, text := "") -> String:
 		403:
 			return "Der API-Schlüssel darf dieses Modell nicht nutzen."
 		404:
-			return "Das Modell %s ist für diesen Schlüssel nicht verfügbar." % MODEL
+			return "Das Modell %s ist für diesen Schlüssel nicht verfügbar." % model_name
 		429:
 			return "Zu viele Anfragen oder Ausgabenlimit erreicht — später noch einmal."
 		500, 502, 503, 529:
@@ -333,6 +413,22 @@ func _key() -> String:
 	return api_key.strip_edges() if not api_key.strip_edges().is_empty() else ApiKeys.anthropic()
 
 
+func _post(body: Dictionary, mode: String, on_done: Callable, key: String) -> void:
+	_begin(on_done, mode)
+	last_request = body
+	last_response = ""
+	last_code = 0
+	var error := _http.request(URL, request_headers(key), HTTPClient.METHOD_POST,
+			JSON.stringify(body))
+	if error != OK:
+		_fail("Anfrage an Anthropic nicht abgesetzt (Fehler %d)." % error)
+
+
+## Woran `explain` erkennt, dass es um dieselbe Antwort geht wie das letzte Urteil.
+static func _answer_key(sentence: Dictionary, answer: String) -> String:
+	return "%s\n%s" % [str(sentence.get("id", "")), answer.strip_edges()]
+
+
 func _begin(on_done: Callable, mode: String) -> void:
 	_on_done = on_done
 	_mode = mode
@@ -357,13 +453,13 @@ func _on_completed(result: int, code: int, _headers: PackedStringArray, body: Pa
 			note = _transport_note(result)
 		elif code != 200:
 			var env: Variant = _quiet_parse(text)
-			note = error_note(code, env if env is Dictionary else {}, text)
+			note = error_note(code, env if env is Dictionary else {}, text, model)
 		last_note = note
 		_finish(note)
 		return
 	last_response = text
 	last_code = code
-	var reply := reply_from(result, code, text, last_seconds, model)
+	var reply := reply_from(result, code, text, last_seconds, model, _mode)
 	last_note = str(reply["note"])
 	if not last_note.is_empty():
 		# In die Ausgabe, wie bei LocalModelBackend: die Karte am Rand zeigt nur den
