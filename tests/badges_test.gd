@@ -25,7 +25,7 @@ func test_step_tier_hits_exactly_the_steps() -> void:
 	assert_int(Badges.step_tier(Badges.HIT_STEPS, 10)).is_equal(1)
 	assert_int(Badges.step_tier(Badges.HIT_STEPS, 11)).is_equal(0)
 	assert_int(Badges.step_tier(Badges.HIT_STEPS, 100)).is_equal(4)
-	assert_int(Badges.step_tier(Badges.WORD_STEPS, 250)).is_equal(4)
+	assert_int(Badges.step_tier(Badges.WORD_STEPS, 1000)).is_equal(4)
 
 
 func test_answer_kind_reads_the_state_before_the_hit() -> void:
@@ -56,7 +56,7 @@ func test_better_needs_both_values() -> void:
 func test_make_names_language_milestones() -> void:
 	var badge := Badges.make("words", 1, {"lang": "fr"})
 	assert_str(str(badge["title"])).is_equal("Französisch-Wortschnüffler")
-	assert_str(str(badge["mark"])).is_equal("20")
+	assert_str(str(badge["mark"])).is_equal("50")
 	assert_str(str(badge["palette"])).is_equal("bronze")
 	assert_str(str(Badges.make("revenge", 0, {"word": "x"})["palette"])).is_equal("revenge")
 

@@ -8,7 +8,7 @@ extends RefCounted
 const SAVE_DIR := "user://progress"
 
 const HIT_STEPS := [10, 25, 50, 100]
-const WORD_STEPS := [20, 50, 100, 250]
+const WORD_STEPS := [50, 100, 500, 1000]
 const KEPT_STEPS := [1, 5, 10, 25]
 ## Confidence vor dem Treffer, unter der es eine Aufholjagd ist. Neue Aufgaben starten bei
 ## PlayerProgress.DEFAULT_CONFIDENCE, darunter kommt man nur über Fehler.

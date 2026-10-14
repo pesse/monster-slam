@@ -52,6 +52,10 @@ func _apply() -> void:
 	var path := "%s%s.webp" % [ART_DIR, palette]
 	($Medal as TextureRect).texture = load(path) if ResourceLoader.exists(path) else null
 	($Mark as Label).text = mark
-	# Drei Ziffern (100, 250) passen nur kleiner auf die Scheibe.
-	($Mark as Label).theme_type_variation = &"CelebrateBadgeMarkLong" if mark.length() >= 3 \
-			else &"CelebrateBadgeMark"
+	# Drei und vier Ziffern passen nur kleiner auf die Scheibe (78 px hell).
+	var variation := &"CelebrateBadgeMark"
+	if mark.length() >= 4:
+		variation = &"CelebrateBadgeMarkWide"
+	elif mark.length() == 3:
+		variation = &"CelebrateBadgeMarkLong"
+	($Mark as Label).theme_type_variation = variation

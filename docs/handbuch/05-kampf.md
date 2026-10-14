@@ -190,7 +190,7 @@ als die Feier beim Meistern und kommt nach ihr, wenn beides mit derselben Antwor
 
 - **Treffer heute:** 10, 25, 50 und 100 richtig besiegte Monster an einem Tag bringen eine
   Plakette aus Bronze, Silber, Gold und Diamant.
-- **Wörter einer Sprache:** Hast du 20, 50, 100 oder 250 Wörter einer Sprache schon einmal
+- **Wörter einer Sprache:** Hast du 50, 100, 500 oder 1000 Wörter einer Sprache schon einmal
   richtig übersetzt, egal in welche Richtung, wirst du Wortschnüffler, Vokabeljäger,
   Wörterdrache und schließlich Sprachmonster. Diese Plaketten gibt es nur einmal.
 - **Von gestern behalten:** Du triffst ein Wort, das du an einem früheren Tag zuletzt
