@@ -80,4 +80,4 @@ bringt kein Gold und keine Erfahrung und ändert den Lernstand nicht.
 
 ---
 
-← [21. Spieldaten für die Entwicklung](21-spieldaten.md) · [Inhalt](README.md)
+← [21. Spieldaten für die Entwicklung](21-spieldaten.md) · [Inhalt](README.md) · [23. Spielstand und Sicherungen](23-spielstand-und-sicherungen.md) →

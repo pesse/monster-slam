@@ -1,6 +1,6 @@
 # ADR 0020 — Rasten und Fortsetzen eines Laufs
 
-Status: **angenommen** · Datum: 2026-10-06
+Status: **angenommen** · Datum: 2026-10-06 · Nachträge 2026-10-13 (Rasten mitten in der Welle; ein Platz je Unit)
 
 ## Kontext
 
@@ -27,7 +27,7 @@ nichts mehr übrig. Ein Abbruch mit Escape zählt die angefangene Welle schon he
    den Rückweg an. Das gilt nur für Läufe von der Karte. Expertenmodus, Testvorbereitung
    und Bosskampf bleiben, wie sie sind (siehe „Bewusst nicht“).
 
-2. **Ein Speicherplatz je Buch.** Ein Kind spielt Englisch und Latein nebeneinander. Mit
+2. **Ein Speicherplatz je Buch.** *Abgelöst durch den Nachtrag „Ein Platz je Unit“.* Ein Kind spielt Englisch und Latein nebeneinander. Mit
    nur einem Platz würde jeder Wechsel den begonnenen Lauf verwerfen. Alle Plätze eines
    Profils stehen in `user://progress/<profil>_runs.json` (Buch-Id → Speicherstand),
    geschrieben über eine temporäre Datei und Umbenennen. Je Buch und nicht je Unit: ein
@@ -157,3 +157,83 @@ nichts mehr übrig. Ein Abbruch mit Escape zählt die angefangene Welle schon he
   fort (auch erweitert, auch über Gesamt), wegnehmen oder tauschen fragt nach, der Boss
   setzt nie fort, und Expertenmodus und Testvorbereitung
   schreiben nie einen.
+
+## Nachtrag 2026-10-13: Rasten mitten in der Welle
+
+Testspieler kommen auf 40 und mehr Monster je Welle (`2 + Welle + …`). „Rasten nach dem
+Ende der Welle“ heißt dann eine Viertelstunde weiterspielen, wer jetzt aufhören muss. Punkt 1
+und 5 ändern sich deshalb:
+
+1. **Escape rastet, statt abzubrechen.** Wo Escape bisher nachfragte (Lauf von der Karte,
+   ab der zweiten Welle), fragt es jetzt „Rasten?“ mit **Rasten** und **Weiterspielen**
+   (Vorgabe). Einen Knopf „Lauf beenden“ gibt es dort nicht mehr; neu anfangen geht über
+   das „✕“ auf der Karte. In der ersten Welle eines frischen Laufs, im Expertenmodus und in
+   der Testvorbereitung bricht Escape weiter sofort ab. Läuft die Welle schon aus (alles
+   erschienen und erledigt, oder „Schnell auflösen“), tut Escape nichts: Stufe 2 kommt gleich
+   und rastet dort.
+
+2. **Rasten ist eine künstliche Wellengrenze.** Der Commit (ADR 0024) läuft wie am
+   Wellenende: Lernstand, Erfahrung, verbrauchte Zauber und Plaketten bleiben. Ein Absturz
+   mitten in der Welle kostet sie weiterhin.
+
+3. **Die Welle geht weiter, sie wird nicht geteilt.** `next_wave` ist die angefangene Welle,
+   und das Feld `wave` im Speicherstand trägt, was sie schon hinter sich hat
+   (`WaveRunner._open_wave_state`):
+
+   | Feld | wofür |
+   |---|---|
+   | `remaining`, `total` | nur die übrigen Monster kommen; der HUD-Balken steht bei `total − remaining` |
+   | `correct`, `leaked`, `score_gained` | Güte und Gold der Kiste über die ganze Welle |
+   | `xp`, `level_at_start` | Erfahrung und Aufstiege auf Stufe 1 |
+   | `low_hp` | Comeback-Plakette |
+   | `pace`, `alts` | Zauber, die für die ganze Welle wirken (`SpellCaster`), samt Dunst |
+   | `played` | die Auflösung zeigt alle Wörter der Welle; die Datei bleibt lokal |
+   | `fortress_tier` | die Stufe, mit der die Welle begann |
+
+   Als eigene kleine Welle wäre der Rest billiger zu bauen. Dann hätte jedes Teilstück
+   seine eigene Kiste (eigene Güte, eigenes Mindestgold) und eine leichtere Plakette, und ein
+   Zauber für die ganze Welle wäre verbraucht, ohne zu wirken.
+
+   Monster auf dem Feld zählen nicht als erledigt: sie kommen als neue wieder, mit neu
+   gewähltem Wort. Ihre Antworten stehen schon im Lernstand. `remaining` wird gespeichert
+   und nicht aus der Formel nachgerechnet, denn die Zahl einer Welle kann sinken (ausgefallener
+   Spawn) und die Formel sich ändern.
+
+4. **Die Festung beginnt mit ihrer alten Stufe.** Ist die Unit in der ersten Hälfte der Welle
+   gewachsen, rechnete das Fortsetzen das neue Maximum schon ein, und Ausbau, Cutscene und
+   HP-Zuwachs fielen weg. Deshalb startet die fortgesetzte Welle mit `fortress_tier` (höchstens
+   der heutigen Stufe), und der Ausbau kommt wie sonst an ihrem Ende.
+
+5. **Keine zweite Instandsetzung.** Der Wellenstart setzt die Rüstung instand
+   (`GameState._on_wave_started`). Für eine fortgesetzte Welle gab es das schon an ihrem
+   Anfang; `GameState.continue_wave` stellt die gespeicherte Rüstung wieder her. Sonst ließe
+   sich die Rüstung durch Rasten und Fortsetzen auffüllen.
+
+6. **Spur:** `run_suspend` bekommt `remaining` (nur mitten in der Welle), der EventBus
+   `run_suspended(next_wave, remaining)`. `TraceSanitizer` lässt das Feld durch: eine Zahl
+   ohne Text.
+
+`FORMAT` bleibt 1: ein Stand ohne `wave` ist einer von der Wellengrenze. Ältere Fassungen
+übersehen das Feld und spielen die angefangene Welle ganz.
+
+## Nachtrag 2026-10-13: Ein Platz je Unit
+
+Ein Kind hat Unit 1 fast gemeistert und will seinen langen Lauf dort behalten, aber schon
+für Unit 2 lernen. Mit einem Platz je Buch verwirft der erste Lauf in Unit 2 den in Unit 1.
+Punkt 2 und Punkt 6 ändern sich deshalb:
+
+1. **Ein Speicherplatz je Unit.** Der Schlüssel in `<profil>_runs.json` ist
+   `<book>/<unit>` (wie `RunRequest.unit_key()`). Ein neuer Lauf verwirft nur den Platz
+   **seiner** Unit. Ältere Dateien mit dem Buch als Schlüssel liest `RunSave.all` weiter: der
+   Stand kennt seine Unit selbst (`level.unit`), der Schlüssel wird beim Lesen umgestellt
+   und beim nächsten Schreiben so abgelegt. Der Stand selbst ändert sich nicht, `FORMAT`
+   bleibt.
+
+2. **Wiederfinden.** Die Sorge aus Punkt 2 waren halbe Läufe, die keiner wiederfindet.
+   Die Buchkarte zeigt deshalb an jeder Unit mit Lauf ein Lagerfeuer 🔥, und ihre
+   Hinweiskarte nennt die Welle. Der Knopf unten rechts bleibt einer und führt zum zuletzt
+   gerasteten Lauf (`saved_at`). Ein Knopf je Lauf passt bei 1152 Pixel Breite nicht.
+
+3. **Gebietskarte.** Sie kennt nur noch den Lauf ihrer Unit. Die Rückfrage „Neuer Lauf?“
+   kommt nur noch, wenn ein gespeicherter Ort in der Auswahl fehlt. Eine andere Unit hat
+   ihren eigenen Platz und fragt nichts.

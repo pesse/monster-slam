@@ -151,6 +151,57 @@ func test_without_a_manifest_nothing_is_downloaded() -> void:
 	assert_str(_service.error).is_not_empty()
 
 
+## Ein still verworfener Verbindungsaufbau wird zum Fehler (Issue #30): vor dem ersten
+## Byte nach CONNECT_TIMEOUT, danach erst nach STALL_TIMEOUT ohne neues Byte. Ein
+## Gesamt-Limit gibt es nicht — ein langsamer, aber laufender Download bricht nie ab.
+func test_a_silent_connection_becomes_an_error() -> void:
+	var limit: float = _service.CONNECT_TIMEOUT
+	assert_bool(_service.stalled(false, limit - 1.0)).is_false()
+	assert_bool(_service.stalled(false, limit + 1.0)).is_true()
+	assert_bool(_service.stalled(true, limit + 1.0)).is_false()
+	assert_bool(_service.stalled(true, _service.STALL_TIMEOUT + 1.0)).is_true()
+
+
+## Je Teil eine Zeile mit Stand; die Größe kommt aus dem Manifest.
+func test_each_part_has_its_own_line() -> void:
+	assert_str(_service.part_line(1)).is_equal("model.gguf (2/2): 1.1 GB")
+	_service._busy = true
+	_service.current_part = 1
+	_service.current_phase = _service.PHASE_TRANSFER
+	_service.current_bytes = 120 * 1024 * 1024
+	assert_str(_service.part_line(0)).is_equal("✓ llama-server.exe (1/2): fertig")
+	assert_str(_service.part_line(1)).is_equal("model.gguf (2/2): 120 MB von 1.1 GB")
+	_service._busy = false
+
+
+## Die Meldung nennt Datei, Phase, Host, Bytes, Ergebnis als Namen und was zu tun ist —
+## aber nie die URL: Weiterleitungsziele tragen signierte Parameter.
+func test_a_failure_says_what_where_and_what_to_do() -> void:
+	var text: String = _service.describe({
+		"file": "model.gguf", "part": 1, "parts": 2, "host": "huggingface.co",
+		"phase": _service.PHASE_CONNECT, "reason": "keine Antwort nach 30 s.",
+		"bytes": 0, "total": 1100 * 1024 * 1024, "result": HTTPRequest.RESULT_CANT_RESOLVE,
+	})
+	assert_str(text).contains("model.gguf (2/2)")
+	assert_str(text).contains("Verbindungsaufbau")
+	assert_str(text).contains("huggingface.co")
+	assert_str(text).contains("RESULT_CANT_RESOLVE")
+	assert_str(text).contains("Im Browser prüfen")
+	assert_str(_service.host_of("https://user@cdn.example.org:443/a/b?sig=geheim")) \
+			.is_equal("cdn.example.org")
+
+
+## Ein abgelehnter Download nennt den HTTP-Status.
+func test_a_refusal_names_the_status() -> void:
+	var text: String = _service.describe({
+		"file": "model.gguf", "part": 1, "parts": 2, "host": "huggingface.co",
+		"phase": _service.PHASE_TRANSFER, "reason": "Server lehnt ab.", "bytes": 512,
+		"total": 1024, "result": HTTPRequest.RESULT_SUCCESS, "status": 403,
+	})
+	assert_str(text).contains("HTTP 403")
+	assert_str(text).contains("lehnt die Datei ab")
+
+
 func _zip(path: String, files: Dictionary) -> void:
 	var packer := ZIPPacker.new()
 	assert_int(packer.open(path)).is_equal(OK)

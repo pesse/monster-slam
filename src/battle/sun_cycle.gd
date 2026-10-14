@@ -1,23 +1,10 @@
 class_name SunCycle
 extends Node
-## Die Sonne zieht nach der Uhr über den Himmel: morgens tief, mittags hoch, abends wieder
-## tief, und dazwischen wandert sie um SWEEP Grad weiter — im Bild von links nach rechts:
-## morgens fallen lange Schatten nach rechts, mittags kurze nach hinten (die Sonne steht
-## hinter der Kamera), abends lange nach links. Die Himmelsrichtung zählt nicht, nur der Blick.
-## Ein Tag im Spiel dauert eine echte Stunde (DAY_SPEED), es gibt keine Nacht: nach dem
-## Abend springt sie auf den Morgen.
-##
-## Ein SunCycle-Knoten im Baum stellt jedes Bild `sun` und den globalen Shader-Parameter
-## `sun_sin` (project.godot), nach dem der Bodenshader flachen Boden gleich hell hält, egal
-## wie hoch die Sonne steht. Die Modelle werden bei tiefer Sonne dunkler — gewollt.
-##
-## Tief steht sie golden: die Farbe der Sonne kippt mit sinkender Höhe von NOON_TINT nach
-## GOLDEN, auf `color` (der Farbe des Themas) gerechnet. Derselbe Ton geht als globaler
-## Shader-Parameter `sun_tint` an den Bodenshader, der die Sonnenfarbe sonst nicht sieht.
-##
-## Gezählt wird nach der Wanduhr, nicht nach dem skalierten delta: die Zeitlupe (SlowMotion)
-## hält die Sonne nicht an. Solange `hold` gesetzt ist (im Kampf: während einer Welle), geht
-## sie nur vorwärts — der Sprung auf den Morgen wartet, bis die Welle vorbei ist.
+## Die Sonne zieht nach der Wanduhr über den Himmel, relativ zum Blick der Kamera: morgens
+## tief von links, mittags hoch hinter der Kamera, abends tief von rechts. Ein Tag dauert
+## eine echte Stunde, nach dem Abend springt sie auf den Morgen. Stellt jedes Bild `sun` und
+## die globalen Shader-Parameter `sun_sin` (hält flachen Boden gleich hell) und `sun_tint`
+## (Farbe der tiefen Sonne für den Bodenshader).
 
 ## So viel schneller als der echte Tag läuft der im Spiel.
 const DAY_SPEED := 24.0
@@ -37,12 +24,11 @@ const DUSK_HOUR := 18.0
 var sun: DirectionalLight3D
 ## Richtung der Sonne mittags (rotation_degrees.y) — die Blickrichtung der Kamera.
 var noon_yaw := 0.0
-## Farbe der Sonne ohne Tageszeit: das Thema (BattleTheme.sun_color) oder der Editor.
-## `attach` nimmt sie vom Licht; wer sie danach ändert, setzt sie hier.
+## Farbe der Sonne ohne Tageszeit (BattleTheme.sun_color); spätere Änderungen hierher.
 var color := Color.WHITE
-## Aus: `phase` steht, bis jemand es setzt (Werkbank, Bilderläufe).
+## Aus: `phase` steht, bis jemand es setzt.
 var follow_clock := true
-## Die Grenzen, hier veränderbar, damit die Werkbank sie am Bild ausprobieren kann.
+## Die Grenzen, veränderbar für die Werkbank.
 var low := LOW
 var high := HIGH
 var sweep := SWEEP
@@ -50,8 +36,7 @@ var sweep := SWEEP
 var phase := 0.5
 ## Gesetzt: kein Sprung auf den Morgen, die Sonne bleibt am Abend stehen.
 var hold := false
-## Zu diesem Anteil (0..1) scheint die Sonne aus `rest` statt aus dem Tag — drinnen (die
-## Bibliothek im Hauptmenü) hängt das Licht nicht an der Uhrzeit.
+## Zu diesem Anteil (0..1) scheint die Sonne aus `rest` statt aus dem Tag (drinnen).
 var rest := Basis.IDENTITY
 var rest_weight := 0.0
 
@@ -67,8 +52,7 @@ static func attach(parent: Node, light: DirectionalLight3D, view: Node3D) -> Sun
 	return cycle
 
 
-## Der Tag nach der Uhr dieses Rechners: um Mitternacht beginnt einer, jede volle Stunde
-## der nächste.
+## Der Tag nach der Uhr dieses Rechners, jede volle Stunde ein neuer.
 static func clock_phase(unix_local: float) -> float:
 	return fposmod(unix_local * DAY_SPEED / 86400.0, 1.0)
 
@@ -77,8 +61,7 @@ static func local_unix() -> float:
 	return Time.get_unix_time_from_system() + Time.get_time_zone_from_system().get("bias", 0) * 60.0
 
 
-## Wohin `node` schaut (-z), als Drehung um die Hochachse — auch für einen Knoten, der
-## zusätzlich geneigt oder gerollt steht.
+## Wohin `node` schaut (-z), als Drehung um die Hochachse, auch geneigt oder gerollt.
 static func yaw_of(node: Node3D) -> float:
 	var forward := -node.global_transform.basis.z
 	return rad_to_deg(atan2(-forward.x, -forward.z))
@@ -96,8 +79,7 @@ func tint_at(e: float) -> Color:
 
 
 func yaw_at(p: float) -> float:
-	# Wachsender Winkel: von links hinter der Kamera nach rechts. Morgens scheint sie (Richtung
-	# noon_yaw − 90°) quer von links durchs Bild, abends (noon_yaw + 90°) von rechts.
+	# Morgens noon_yaw − 90° (von links), abends noon_yaw + 90° (von rechts).
 	return noon_yaw + (p - 0.5) * sweep
 
 
@@ -121,8 +103,7 @@ func _process(_delta: float) -> void:
 		advance(clock_phase(local_unix()))
 
 
-## Geht auf `p` weiter. Während `hold` nur vorwärts: nach dem Sprung auf den Morgen wäre `p`
-## kleiner — dann bleibt die Sonne am Abend stehen.
+## Geht auf `p` weiter, während `hold` nur vorwärts.
 func advance(p: float) -> void:
 	if hold and p < phase:
 		return

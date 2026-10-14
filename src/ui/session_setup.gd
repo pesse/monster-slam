@@ -1,32 +1,10 @@
 extends Control
-## Session-Setup: vor dem Kampf wählen, welche Vokabeln geübt werden.
-##
-## "Spielen" im Startmenü öffnet diesen Screen (statt direkt in den Kampf zu
-## springen). Drei Filter, alle pro Profil in UserSettings persistiert und vom
-## WaveRunner gelesen:
-##   • Aufgabentypen (task_type)  — Checkboxen, standardmäßig alle aktiv
-##   • Vokabel-Typen (Lexem-type) — Checkboxen, standardmäßig alle aktiv
-##   • Tags (Themen)              — Eingabefeld mit Auto-Vervollständigung, Badges
-##
-## Semantik: eine LEERE Auswahl bedeutet KEINE Einschränkung (= alle). Deshalb
-## starten Checkboxen ohne gespeicherte Auswahl komplett aktiv ("alle vorausgewählt")
-## und der Kampf läuft auch bei leerer Auswahl sauber. Der Screen ist bewusst
-## eigenständig, damit hier künftig weitere Session-Einstellungen Platz finden.
-##
-## Eine ENGE Auswahl kann dagegen leer ausgehen (die Filter kombinieren sich mit UND).
-## Dann sperrt "Kampf starten" — siehe _refresh_start_gate().
-##
-## **Von hier geht es in beide Kämpfe**: "▶ Kampf starten" in die Wellen,
-## "👹 Bosskampf starten" zum Satzmeister. Beide lesen dieselbe Auswahl; der Bosskampf
-## nimmt davon nur Bücher & Units und Tags (Sätze haben keinen Aufgaben- und keinen
-## Vokabel-Typ). Jeder Knopf sperrt für sich, wenn seine Auswahl nichts hergibt.
-##
-## Dazu kommt „📜 The Rambler“, der Schreib-Boss (docs/adr/0023-schreib-boss.md). Er ist
-## **unsichtbar statt gesperrt**, solange kein eigener API-Schlüssel eingetragen ist oder
-## die gewählten Units keine Schreibaufgabe haben (WritingBoss.can_start).
-##
-## Das statische Layout liegt in session_setup.tscn; hier nur die datengetriebenen
-## Inhalte (Muster wie profile_menu._refresh_words()).
+## Expertenmodus: Bücher & Units, Aufgabentypen, Vokabel-Typen und Tags frei wählen, je
+## Profil in UserSettings gespeichert. Eine leere Auswahl bedeutet keine Einschränkung.
+## Die Filter kombinieren sich mit UND; Wellen- und Bosskampf (nur Units und Tags) sperren
+## je für sich, wenn ihre Auswahl nichts hergibt.
+## Der Schreib-Boss (ADR 0023) ist unsichtbar statt gesperrt, solange `WritingBoss.can_start`
+## nicht gilt.
 
 const BATTLE_SCENE := "res://scenes/battle/battle.tscn"
 const BOSS_SCENE := "res://scenes/battle/boss_fight.tscn"
@@ -37,7 +15,7 @@ const NO_WORDS_TEXT := "Diese Auswahl trifft keine Vokabel — Filter lockern od
 const NO_SENTENCES_TEXT := "Für den Bosskampf passt kein Satz zu diesen Units und Tags — andere wählen."
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 
-## Hübschere deutsche Beschriftungen für Aufgabentypen (Wert bleibt der rohe Typ).
+## Deutsche Beschriftungen der Aufgabentypen.
 const TASK_TYPE_LABELS := {
 	"translate": "Übersetzen",
 	"opposite": "Gegenteil",
@@ -48,7 +26,7 @@ const TASK_TYPE_LABELS := {
 	"forms": "Formen",
 }
 
-## Wie viele Auto-Vervollständigungs-Vorschläge maximal angezeigt werden.
+## Höchstzahl der Vorschläge zur Tag-Eingabe.
 const MAX_SUGGESTIONS := 10
 
 @onready var _scope_list: VBoxContainer = %ScopeList
@@ -64,10 +42,9 @@ const MAX_SUGGESTIONS := 10
 
 var _all_tags: PackedStringArray = PackedStringArray()
 var _selected_tags: Array = []
-## Je Unit ein {"key", "check", "parts"} — die Auswahl wird daraus gelesen und nicht
-## aus dem Knotenbaum, weil die Teile in einer eigenen Zeile unter der Unit hängen.
+## Je Unit ein {"key", "check", "parts"}; die Teile hängen in einer eigenen Zeile.
 var _scope_rows: Array = []
-## Nur für die Verfügbarkeitsprüfung (has_playable) — der Kampf hat seinen eigenen.
+## Nur für die Verfügbarkeitsprüfung (has_playable).
 var _generator := WaveGenerator.new()
 
 
@@ -85,21 +62,15 @@ func _ready() -> void:
 	_build_task_types()
 	_build_lexeme_types()
 	_build_tags()
-	# Alle Filterbereiche als aufklappbare Panels, standardmäßig zugeklappt.
 	_setup_section(%ScopeHeader, _scope_list, "Bücher & Units")
 	_setup_section(%TaskTypeHeader, _task_type_list, "Aufgabentypen")
 	_setup_section(%LexemeTypeHeader, _lexeme_type_list, "Vokabel-Typen")
 	_refresh_start_gate()
 
 
-## Sperrt „Kampf starten", solange die Auswahl keine spielbare Aufgabe übrig lässt.
-## Die Filter kombinieren sich (UND) und können sich gegenseitig ausschließen — dann
-## fände der WaveRunner nichts zu spawnen, die Welle endete nie und das Schlachtfeld
-## wäre leer. Lieber hier sagen, dass die Auswahl zu eng ist, als dort.
-## Läuft nach jeder Änderung, weil jeder Filter das Ergebnis kippen kann.
-##
-## Der Bosskampf hat sein eigenes Tor: er braucht Sätze, und die fehlen einer Unit, für die
-## noch keine erzeugt sind, auch wenn ihre Vokabeln spielbar sind.
+## Sperrt „Kampf starten", solange die Auswahl keine spielbare Aufgabe übrig lässt (die
+## Welle endete sonst nie), und den Bosskampf, solange sie keinen Satz trifft. Läuft nach
+## jeder Änderung.
 func _refresh_start_gate() -> void:
 	var pool := WaveGenerator.pool_from_settings()
 	var playable := _generator.has_playable(pool)
@@ -133,8 +104,7 @@ func _setup_section(header: Button, content: Control, title: String) -> void:
 # --- Curriculum-Scope: Bücher ▸ Units ▸ Teile (hierarchisch) --------------------
 
 ## Baut pro Buch eine Überschrift und darunter je Unit eine aufklappbare Zeile. Anders als
-## die übrigen Filter starten die Checkboxen LEER: leere Scope-Auswahl = keine Einschränkung
-## (auch Lexeme ohne Buch/Unit bleiben spielbar).
+## die übrigen Filter starten die Checkboxen leer.
 func _build_scope() -> void:
 	var selected := UserSettings.selected_scope()
 	for book in ContentRegistry.all_books():
@@ -145,14 +115,9 @@ func _build_scope() -> void:
 			_add_unit_row(book, unit, selected)
 
 
-## Eine Unit-Zeile: Checkbox für die ganze Unit ("<book>/<unit>") und, dahinter aufklappbar,
-## die Teile ("<book>/<unit>/<teil>"). Die Teile sind positionsbasiert — Teil 1 sind die
-## ersten Vokabeln der Unit, also die ersten Seiten (ContentRegistry._index_parts).
-##
-## Die beiden Ebenen hängen zusammen: Unit an hakt alle Teile an, alle Teile an hakt die
-## Unit an. So bleibt die gespeicherte Auswahl immer die kürzeste, die dasselbe meint —
-## und ein abgehakter Teil ist sichtbar ein abgehakter Teil, keine stille Ausnahme unter
-## einer angehakten Unit.
+## Eine Unit-Zeile: Checkbox für die ganze Unit ("<book>/<unit>") und, aufklappbar, die
+## Teile ("<book>/<unit>/<teil>", ContentRegistry._index_parts). Unit an hakt alle Teile an,
+## alle Teile an hakt die Unit an.
 func _add_unit_row(book: String, unit: int, selected: PackedStringArray) -> void:
 	var unit_key := "%s/%d" % [book, unit]
 	# book-Schlüssel (ganzes Buch) im Scope hakt alle seine Units mit an.
@@ -166,14 +131,14 @@ func _add_unit_row(book: String, unit: int, selected: PackedStringArray) -> void
 	check.set_meta("value", unit_key)
 	row.add_child(check)
 
-	# Eine Unit mit nur einem Teil hat nichts aufzuklappen — ihr Teil IST die Unit.
+	# Eine Unit mit nur einem Teil hat nichts aufzuklappen.
 	var parts: Array[CheckBox] = []
 	var part_row: HBoxContainer = null
 	if ContentRegistry.parts_for(book, unit) > 1:
 		part_row = HBoxContainer.new()
 		part_row.visible = false
 		_scope_list.add_child(part_row)
-		# Einrückung: Abstand ist Knoten-Sache (das Theme kennt nur Container-Abstände).
+		# Einrückung (px); das Theme kennt nur Container-Abstände.
 		var indent := Control.new()
 		indent.custom_minimum_size.x = 24
 		part_row.add_child(indent)
@@ -229,9 +194,8 @@ func _save_scope() -> void:
 	_refresh_start_gate()
 
 
-## Sammelt die Auswahl aus den Unit-Zeilen — je Zeile den Unit-Schlüssel ODER die einzeln
-## angehakten Teile, nie beides: der Unit-Schlüssel deckt seine Teile schon ab
-## (ContentRegistry._scope_keys).
+## Sammelt die Auswahl: je Zeile den Unit-Schlüssel oder die einzeln angehakten Teile,
+## nie beides (ContentRegistry._scope_keys).
 func _collect_scope() -> PackedStringArray:
 	var result := PackedStringArray()
 	for row in _scope_rows:
@@ -261,9 +225,7 @@ func _build_lexeme_types() -> void:
 		_add_check(_lexeme_type_list, lexeme_type, label, on, _save_lexeme_types)
 
 
-## Erzeugt eine CheckBox für eine Option. `value` (roher Tag/Typ) wird als
-## Metadatum abgelegt, damit die Auswahl beim Speichern rekonstruierbar ist.
-## CheckBox (echtes Kästchen [ ]/[x] vor dem Label), nicht CheckButton (Toggle nach dem Label).
+## Erzeugt eine CheckBox für eine Option; `value` (roher Typ) liegt als Metadatum daran.
 func _add_check(container: Container, value: String, label: String, on: bool, save: Callable) -> void:
 	var check := CheckBox.new()
 	check.text = label

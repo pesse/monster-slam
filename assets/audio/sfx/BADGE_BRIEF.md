@@ -6,6 +6,12 @@ teilen sich `badge_earned` (die Datei von Eisenhaut, `spell_armor.wav`). Die bes
 wie ihre Palette, `badge_<palette>`. Probehören: `battle_theme_lab`, Reiter
 „Feiern".
 
+**Stand 2026-10-13:** `badge_last_second.wav` für „In letzter Sekunde“ ist dazugekommen (ElevenLabs, Prompt in `../CREDITS.md`).
+
+**Stand 2026-10-12:** alle sechs Töne und ein eigener für Bronze/Silber (`badge_earned.wav`,
+vorher `spell_armor.wav`) sind durch ElevenLabs-Generierungen ersetzt (`tools/sound_eval`,
+Prompts in `../CREDITS.md`). Der Rest dieses Dokuments ist die Vorgeschichte.
+
 **Stand 2026-10-08:** alle sechs Töne sind eingebaut (Credits in `../CREDITS.md`), je der
 Favorit unten; Revanche ist „Spacey 1up/Power up“ — „Brass Sting 2“ klang nach Fehler. Die
 übrigen Kandidaten sind die Reserve.
@@ -21,6 +27,7 @@ Favorit unten; Revanche ist „Spacey 1up/Power up“ — „Brass Sting 2“ kl
 | `badge_catch_up.wav` | Aufholjagd | 0,5–1 s | Aufsteigender Swoosh, der in einem hellen Ton landet — gerade noch geschafft. |
 | `badge_comeback.wav` | Comeback des Tages | 0,6–1,2 s | Heroisch und kurz: kleiner Wirbel mit Becken oder ein Bläser-Akzent. |
 | `badge_better.wav` | Besser als sonst | 0,4–0,8 s | Zwei, drei freundliche Töne nach oben, sanft. |
+| `badge_last_second.wav` | In letzter Sekunde | 0,6–1,2 s | Schnelles, gespanntes Ticken, das in einem hellen, erleichterten Glockenton landet. |
 
 Ein Tausch: Datei ersetzen, Zeile in `../CREDITS.md` anpassen, den Pegel in `Sfx.SOUNDS` am
 Gehör neben `badge_earned` und `task_mastered` einstellen.
@@ -52,5 +59,4 @@ MP3/FLAC beachten (FLAC nach WAV wandeln, Godot 4.7 lädt kein FLAC).
 | Besser | [Correct Answer / That's Right!](https://freesound.org/people/Beetlemuse/sounds/528957/) | Beetlemuse | 0,73 s | WAV |
 | Besser | [Cmaj Victory Scale](https://freesound.org/people/ConManVD/sounds/742190/) | ConManVD | 1,07 s | MP3 |
 
-`Fanfare - Rpg` stammt vom selben Autor wie `task_mastered.wav` und passt damit im Klang zur
-Meister-Feier.
+`Fanfare - Rpg` stammt vom selben Autor wie der frühere `task_mastered.wav` (bis 2026-10).

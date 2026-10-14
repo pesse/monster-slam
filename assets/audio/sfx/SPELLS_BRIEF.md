@@ -4,6 +4,9 @@ Die Zauber (ADR 0014) klingen bisher nach dem Bestand (`slow_mo_in`/`_out`, beim
 `fortress_hit` und `monster_kill`). Jede Wirkung soll ihren eigenen Ton bekommen, passend zum
 Bild in `SpellFx` (Werkbank: `battle_theme_lab`, Reiter „Zauber").
 
+**Stand 2026-10-12:** `spell_reveal` und `spell_freeze` sind durch ElevenLabs-Generierungen
+ersetzt (`tools/sound_eval`, Prompts in `../CREDITS.md`).
+
 **Stand 2026-10-05:** alle neun Töne sind eingebaut (Credits in `../CREDITS.md`). Gewählt
 wurde nach Gehör aus den Kandidaten unten: `spell_haze` = „So slimy!", `spell_thunder_windup`
 = „Laser Charge Up (Stronger)" (1,1 s — der Anlauf des Donnerschlags wurde darauf verlängert),
@@ -68,7 +71,7 @@ angemeldet ist. Je Ton die erste Wahl zuerst.
 | | [Metallic Sound Pack 4](https://freesound.org/people/soniktec/sounds/164265/) (soniktec) | 1,24 s | Klang, Schmiede |
 | | [unsheath_sword](https://freesound.org/people/Qat/sounds/107589/) (Qat) | 1,01 s | hell, metallisch |
 
-Bewusst nicht genommen: „Heal - Rpg" (colorsCrimsonTears) — ist schon `task_mastered.wav`;
+Bewusst nicht genommen: „Heal - Rpg" (colorsCrimsonTears) — war damals `task_mastered.wav`;
 Dateien von gelöschten Konten (kein Autor für die Credits); „thunder-crack 3"
 (Logicogonist) wegen anstößiger Tags in einem Kinderspiel; 8-Bit-Töne passen nicht zum Bild.
 Was gekürzt oder umgewandelt wird, steht so in `CREDITS.md` (wie bei `slow_mo_out.wav`).

@@ -1,16 +1,8 @@
 extends RefCounted
-## Werkbank: einen Knoten an einen anderen hängen (scenes/dev/skill_tree_lab.tscn).
-##
-## Die Vorstufe steht in den Daten (`requires`, `tier`, `branch`, `tree` in data/skills/),
-## nicht im Layout — Umhängen ist deshalb eine Änderung an den JSON-Dateien und keine
-## Übersteuerung wie das Verschieben (SkillLayout). Die Regeln stehen hier, ohne Szene,
-## damit sie sich prüfen lassen (tests/skill_rewire_test.gd); die Werkbank klickt nur.
-##
-## Was mitgeht: der Knoten und jeder, der über ihn hängt (auch über Zwischenstufen). Der
-## ganze Ast rückt um so viele Stufen, dass der Knoten eine Stufe hinter seiner neuen
-## Vorstufe steht, und wechselt mit ihr den Baum. So bleiben die Regeln aus
-## tests/skill_data_test.gd erfüllt: Vorstufe im selben Baum und auf einer niedrigeren
-## Stufe, kein Platz doppelt.
+## Regeln zum Umhängen eines Knotens für skill_tree_lab, ohne Szene prüfbar
+## (tests/skill_rewire_test.gd). Ändert die JSON-Dateien unter data/skills/ (`requires`,
+## `tier`, `branch`, `tree`). Der Knoten und sein ganzer Ast rücken eine Stufe hinter die
+## neue Vorstufe, in deren Baum; so gelten die Regeln aus tests/skill_data_test.gd weiter.
 
 const SKILLS_DIR := "res://data/skills/"
 
@@ -36,8 +28,7 @@ static func reparent(entries: Array, id: String, parent_id: String) -> Dictionar
 		return _fail("%s hängt schon an %s" % [id, parent_id])
 
 	var tree := str(parent.get("tree", ""))
-	# In einen anderen Baum geht ein Ast nur, wenn keiner seiner Knoten auch an etwas
-	# außerhalb hängt — sonst zöge die Vorstufe quer über zwei Bäume.
+	# In einen anderen Baum nur, wenn kein Knoten des Asts auch an etwas außerhalb hängt.
 	if tree != str(node.get("tree", "")):
 		for each_id in branch_ids:
 			if each_id == id:
@@ -57,7 +48,7 @@ static func reparent(entries: Array, id: String, parent_id: String) -> Dictionar
 		each["tier"] = int(each.get("tier", 1)) + shift
 		if before != [each["tree"], int(each["tier"]), int(each.get("branch", 0))]:
 			moved.append(str(each.get("id", "")))
-	# Ein Knoten des Asts, der auch an etwas außerhalb hängt, muss hinter BEIDEN stehen.
+	# Ein Knoten des Asts, der auch an etwas außerhalb hängt, muss hinter beiden stehen.
 	for each_id in branch_ids:
 		var each := SkillTree.node_by_id(entries, each_id)
 		var floor_tier := 1
@@ -124,8 +115,7 @@ static func _fail(error: String) -> Dictionary:
 
 # --- Dateien ----------------------------------------------------------------------
 
-## Die Skill-Dateien, wie sie im Repo liegen: Pfad -> Array der Einträge. Bewusst nicht die
-## Registry — die trägt, was an Packs installiert ist, und geschrieben wird ins Repo.
+## Die Skill-Dateien im Repo, nicht aus der Registry: Pfad -> Array der Einträge.
 static func load_files(dir: String = SKILLS_DIR) -> Dictionary:
 	var out := {}
 	var names := Array(DirAccess.get_files_at(dir))
@@ -171,8 +161,7 @@ static func save_files(files: Dictionary) -> Dictionary:
 	return {"written": written}
 
 
-## JSON kennt nur Zahlen; Godot liest jede als float. Ganze Zahlen werden wieder int,
-## sonst schriebe das Speichern „"cost": 1.0".
+## Godot liest jede JSON-Zahl als float; ganze Zahlen werden wieder int.
 static func _whole_numbers(value: Variant) -> Variant:
 	if value is float and is_equal_approx(value, roundf(value)) and absf(value) < 1e15:
 		return int(value)

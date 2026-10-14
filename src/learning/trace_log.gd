@@ -1,42 +1,21 @@
 extends Node
-## Ereignis-Protokoll für die Fehlersuche (Autoload `TraceLog`).
-##
-## Die vierte Ebene unter den drei vorhandenen: `PlayerProgress` hält den Lernstand JE
-## AUFGABE, `GameState` den Zustand DES LAUFENDEN LAUFS, `SessionLog` eine Zeile JE LAUF —
-## alles Summen. Hier stehen die Rohdaten: welches Lexem wann erschienen ist, was getippt
-## wurde und wie es beurteilt wurde. Daraus lässt sich jede Frage nachträglich beantworten,
-## ohne dass ein System dafür mitzählt.
-##
-## Drei Regeln, die beim nächsten Umbau zählen:
-##
-## 1. **Das Protokoll hängt NUR am EventBus und wirkt nie zurück.** Es liest, es schreibt,
-##    es entscheidet nichts. Ein Fehler hier darf kein Spiel kosten — deshalb auch kein
-##    push_error, sondern eine Warnung und Stille.
-## 2. **Felder kommen dazu, sie werden nicht umbenannt.** Eine Zeile von gestern muss
-##    lesbar bleiben; dieselbe Regel wie bei den Content-Packs und aus demselben Grund.
-## 3. **Das Protokoll bleibt auf diesem Rechner.** Es enthält getippte Kindertexte und
-##    Lemmata aus geschütztem Material. Der Melde-Rückkanal kennt Ids, dieses Protokoll
-##    kennt Wörter — die Grenze ist der Punkt, nicht ein Versehen. Hinaus geht nur die
-##    bereinigte Fassung (`TraceSanitizer`, ADR 0021): wer hier ein Ereignis oder Feld
-##    ergänzt, entscheidet dort, was davon mitgeht.
-##
-## Persistenz: JSON Lines unter user://logs/<player_id>_trace.jsonl, eine Zeile je
-## Ereignis, zwei Generationen (siehe max_bytes). Geschrieben wird sofort und mit flush():
-## ein Protokoll, das den Absturz nicht überlebt, erklärt den Absturz nicht.
+## Ereignis-Protokoll für die Fehlersuche (Autoload `TraceLog`): Rohdaten je Ereignis
+## (Lexem erschienen, Antwort getippt und beurteilt). Hängt nur am EventBus, wirkt nie
+## zurück; Felder kommen dazu, werden nie umbenannt; hinaus geht nur `TraceSanitizer`
+## (CONVENTIONS, ADR 0021). Ein Fehler hier warnt nur.
+## Persistenz: JSON Lines unter user://logs/<player_id>_trace.jsonl, sofort mit flush().
 
 const LOG_DIR := "user://logs"
 
-## Ab dieser Größe rückt die Datei auf <profil>_trace.1.jsonl und wird neu begonnen. Als
-## `var` und nicht als Konstante, damit ein Test das Rollen prüfen kann, ohne 2 MB zu
-## schreiben.
+## Ab dieser Größe (Bytes) rückt die Datei auf <profil>_trace.1.jsonl und wird neu
+## begonnen. Eine `var`, damit ein Test sie senken kann.
 var max_bytes: int = 2 * 1024 * 1024
 
 var player_id: String = "default"
 ## Aus, solange UserSettings es sagt. Ohne Autoload (Test, Werkbank) ist es an.
 var enabled: bool = true
 
-## Quelle der Confidence-Werte; im Autoload PlayerProgress, im Test nichts (siehe
-## _confidence). Wird vor dem Einhängen gesetzt.
+## Quelle der Confidence-Werte; im Autoload PlayerProgress, im Test null.
 var progress: Node = null
 
 var _file: FileAccess = null
@@ -69,6 +48,9 @@ func _ready() -> void:
 	EventBus.boss_ended.connect(note_boss_end)
 	EventBus.boss_won.connect(note_boss_won)
 	EventBus.writing_submitted.connect(note_writing_submit)
+	EventBus.save_refused.connect(note_save_refused)
+	EventBus.save_restored.connect(note_save_restored)
+	EventBus.save_damaged.connect(note_save_damaged)
 
 
 func _exit_tree() -> void:
@@ -77,8 +59,7 @@ func _exit_tree() -> void:
 
 # --- Erfassung ----------------------------------------------------------------
 #
-# Öffentliche Methoden, die die Signal-Handler oben nur weiterreichen: so ist das Protokoll
-# ohne EventBus und ohne Szene prüfbar (dasselbe Muster wie SessionLog).
+# Öffentlich, damit das Protokoll ohne EventBus prüfbar ist.
 
 func note_run_start() -> void:
 	_write({"e": "run_start", "profile": player_id})
@@ -94,8 +75,12 @@ func note_run_end(summary: Dictionary = {}) -> void:
 
 
 ## Gerastet (ADR 0020): mit dieser Welle kann der Lauf auf der Karte weitergehen.
-func note_run_suspended(next_wave: int) -> void:
-	_write({"e": "run_suspend", "next_wave": next_wave, "hp": GameState.fortress_health})
+## `remaining` (nur mitten in der Welle) sind die Monster, die von ihr noch kommen.
+func note_run_suspended(next_wave: int, remaining := 0) -> void:
+	var line := {"e": "run_suspend", "next_wave": next_wave, "hp": GameState.fortress_health}
+	if remaining > 0:
+		line["remaining"] = remaining
+	_write(line)
 
 
 ## Ein begonnener Lauf geht weiter; `since` ist der Beginn des ursprünglichen Laufs,
@@ -112,8 +97,7 @@ func note_boss_start(boss_id: String) -> void:
 	_write({"e": "boss_start", "boss": boss_id})
 
 
-## Eine Antwort im Bosskampf. `stage` sagt, wer geurteilt hat (card oder model) — genau
-## das, was man beim Nachsehen eines Modellurteils wissen will.
+## Eine Antwort im Bosskampf. `stage` sagt, wer geurteilt hat (card oder model).
 func note_boss_answer(sentence_id: String, text: String, result: Dictionary) -> void:
 	_write({
 		"e": "boss_answer", "id": sentence_id, "text": text,
@@ -157,8 +141,7 @@ func note_wave_clear(wave_id: String) -> void:
 	_write({"e": "wave_clear", "wave": wave_id, "hp": GameState.fortress_health})
 
 
-## Der Rest der Welle wird vorgespult. Die leak-Zeilen danach bleiben, wie sie sind —
-## vorgespult sind sie daran zu erkennen, dass sie hinter dieser Zeile stehen.
+## Der Rest der Welle wird vorgespult; die leak-Zeilen danach gehören dazu.
 func note_fast_resolve(unspawned: int, on_field: int) -> void:
 	_write({
 		"e": "fast_resolve", "wave": GameState.current_wave,
@@ -166,9 +149,7 @@ func note_fast_resolve(unspawned: int, on_field: int) -> void:
 	})
 
 
-## Ein Lexem erscheint. Die Confidence wird hier GELESEN und nicht durchgereicht: zum
-## Spawn-Zeitpunkt steht sie noch auf dem Wert vor der Antwort, in der answer-Zeile auf dem
-## danach. Zwei Zeilen ergeben das Vorher/Nachher — keine zweite Buchführung.
+## Ein Lexem erscheint. `conf` ist der Wert vor der Antwort, die answer-Zeile trägt den danach.
 func note_spawn(task: Dictionary) -> void:
 	var id := str(task.get("learnable_id", ""))
 	_write({
@@ -185,9 +166,8 @@ func note_spawn(task: Dictionary) -> void:
 	})
 
 
-## Eine abgeschickte Antwort samt Urteil — auch die, die auf kein Monster passte. Genau
-## dafür gibt es das Protokoll: `id` ist dann leer und `field` nennt, was auf dem Feld
-## stand, als die Antwort abgewiesen wurde.
+## Eine abgeschickte Antwort samt Urteil. Passte sie auf kein Monster, ist `id` leer und
+## `field` nennt, was auf dem Feld stand.
 func note_answer(text: String, verdict: Dictionary) -> void:
 	var id := str(verdict.get("learnable_id", ""))
 	var line := {
@@ -200,24 +180,20 @@ func note_answer(text: String, verdict: Dictionary) -> void:
 	}
 	if not id.is_empty():
 		line["conf"] = _confidence(id, -1.0)
-	# Nur nachsichtig getroffen (ADR 0008): die Schreibweise stimmte nicht. Nur dann, damit
-	# die übrigen Zeilen bleiben, wie sie waren.
+	# Nur nachsichtig getroffen (ADR 0008); das Feld steht nur dann.
 	if not bool(verdict.get("exact", true)):
 		line["exact"] = false
 	var canonical := str(verdict.get("canonical", ""))
 	if not canonical.is_empty():
 		line["canonical"] = canonical
-	# Ich-Sicht: was auf dem Feld stand, aber nicht im Bild war — und deshalb nicht zu
-	# treffen. Nur wenn es das gibt; die Iso-Sicht schreibt die Zeile wie bisher.
+	# Ich-Sicht: was auf dem Feld stand, aber nicht im Bild war.
 	var unseen: Array = verdict.get("unseen", [])
 	if not unseen.is_empty():
 		line["unseen"] = unseen
 	_write(line)
 
 
-## Ein Monster ist durchgekommen. Prompt und Lösungen stehen schon in der spawn-Zeile;
-## sie stehen hier trotzdem, weil diese Zeile allein gelesen wird, wenn jemand nach einem
-## Wort greppt.
+## Ein Monster ist durchgekommen. Prompt und Lösungen wiederholt, damit die Zeile allein lesbar ist.
 func note_leak(task: Dictionary, damage: int) -> void:
 	_write({
 		"e": "leak",
@@ -229,8 +205,7 @@ func note_leak(task: Dictionary, damage: int) -> void:
 	})
 
 
-## Das Wachkatapult hat ein Monster abgeschossen, dessen Aufgabe gemeistert war. Keine
-## Antwort, kein Lernstand — `conf` zeigt, warum es geschossen hat.
+## Das Wachkatapult hat ein Monster abgeschossen, dessen Aufgabe gemeistert war.
 func note_catapult(task: Dictionary) -> void:
 	var id := str(task.get("learnable_id", ""))
 	_write({
@@ -241,8 +216,7 @@ func note_catapult(task: Dictionary) -> void:
 	})
 
 
-## Der Donnerschlag (ADR 0014) hat ein Monster vom Feld genommen. Keine Antwort, kein
-## Lernstand — wie beim Katapult, aber nicht weil die Aufgabe gemeistert war.
+## Der Donnerschlag (ADR 0014) hat ein Monster vom Feld genommen.
 func note_struck(task: Dictionary) -> void:
 	_write({
 		"e": "struck", "id": str(task.get("learnable_id", "")),
@@ -251,37 +225,43 @@ func note_struck(task: Dictionary) -> void:
 	})
 
 
-## Ein Zauber aus dem Vorrat hat gewirkt (ADR 0014). Steht VOR den Folgen, die er hat
-## (struck-Zeilen des Donnerschlags).
+## Ein Zauber aus dem Vorrat hat gewirkt (ADR 0014). Steht vor seinen Folgen (struck-Zeilen).
 func note_spell(spell_id: String) -> void:
 	_write({"e": "spell", "spell": spell_id, "wave": GameState.current_wave})
 
 
-## Eine Aufgabe ist zum ersten Mal gemeistert (Issue #23). Steht direkt hinter der
-## answer-Zeile, die es geschafft hat — auch wenn die Feier dazu ausfiel.
+## Eine Aufgabe ist zum ersten Mal gemeistert; steht hinter der auslösenden answer-Zeile.
 func note_task_mastered(task_id: String) -> void:
 	_write({"e": "mastered", "id": task_id})
 
 
-## Ein Wort sitzt zum ersten Mal in allen Richtungen.
 func note_lexeme_mastered(lexeme_id: String) -> void:
 	_write({"e": "word_mastered", "lex": lexeme_id})
 
 
-## Eine Plakette ist verdient (Badges). Steht hinter der answer-Zeile, die sie gebracht hat,
-## oder hinter dem letzten Treffer einer gewonnenen Welle.
+## Eine Plakette ist verdient. Steht hinter der auslösenden answer-Zeile.
 func note_badge(id: String, tier: int) -> void:
 	_write({"e": "badge", "id": id, "tier": tier})
 
 
+## Spielstand (ADR 0024). `part` ist die Endung der Datei („_level“), ohne den Profilnamen
+## davor; `reason` nennt Feld und Werte („total_xp würde von 32500 auf 10 sinken“).
+func note_save_refused(file: String, reason: String) -> void:
+	_write({"e": "save_refused", "part": file.get_basename().trim_prefix(player_id), "reason": reason})
+
+
+func note_save_restored(parts: Array, backup_at: int) -> void:
+	_write({"e": "save_restored", "parts": parts, "backup_at": backup_at})
+
+
+func note_save_damaged(parts: Array) -> void:
+	_write({"e": "save_damaged", "parts": parts})
+
+
 # --- Schalter und Profil ------------------------------------------------------
 
-## Läuft gerade die Testsuite? Dann schweigt das Autoload. Andere Suiten feuern
-## EventBus-Signale (Wellenstart, durchgelassenes Monster) und schrieben damit erfundene
-## Zeilen in die ECHTE Spur des Spielers — user:// ist projektübergreifend dasselbe
-## Verzeichnis, und die Datei des aktiven Profils gehört ihm. Dieselbe Regel wie das
-## zz-Profil bei Wallet und PlayerLevel, nur dass hier das Autoload schreibt und nicht der
-## Test. Geprüft wird das Protokoll auf einer eigenen Instanz (tests/trace_log_test.gd).
+## Läuft gerade die Testsuite? Dann schweigt das Autoload, sonst schrieben Signale aus
+## anderen Tests in die Spur des aktiven Entwicklungsprofils.
 func _under_test() -> bool:
 	for arg in OS.get_cmdline_args():
 		if str(arg).contains("GdUnitCmdTool"):
@@ -289,8 +269,7 @@ func _under_test() -> bool:
 	return false
 
 
-## Schaltet das Protokoll um. Aus heißt: keine offene Datei und keine neue Zeile — eine
-## abgeschaltete Aufzeichnung, die die Datei weiter offen hält, ist keine.
+## Schaltet das Protokoll um. Aus heißt: keine offene Datei und keine neue Zeile.
 func set_enabled(value: bool) -> void:
 	if value == enabled:
 		return
@@ -309,8 +288,7 @@ func path() -> String:
 	return "%s/%s_trace.jsonl" % [LOG_DIR, player_id]
 
 
-## Die vorige Generation. Mehr als diese beiden gibt es nicht: ein Protokoll, das den
-## Rechner vollschreibt, schaltet man ab, und dann hilft es niemandem.
+## Die vorige Generation; mehr als zwei gibt es nicht.
 func previous_path() -> String:
 	return "%s/%s_trace.1.jsonl" % [LOG_DIR, player_id]
 
@@ -329,11 +307,8 @@ func size_bytes() -> int:
 	return total
 
 
-## Die letzten `limit` Zeilen dieses Profils, älteste zuerst — für die Ansicht im Reiter
-## „Protokoll". Gelesen wird nur das ENDE jeder Datei (`tail_bytes`), nicht die ganzen
-## 2 MB: wer nachsieht, will wissen, was eben passiert ist. Reicht die laufende Generation
-## nicht, kommt das Ende der vorigen davor. Eine Zeile, die sich nicht lesen lässt, fällt
-## still heraus — die Ansicht ist ein Leser, und ein Leser bricht an einer Zeile nicht ab.
+## Die letzten `limit` Zeilen dieses Profils, älteste zuerst. Gelesen werden nur die
+## letzten `tail_bytes` jeder Generation; unlesbare Zeilen fallen still heraus.
 func recent(limit: int = 200, tail_bytes: int = 96 * 1024) -> Array:
 	if _file != null:
 		_file.flush()
@@ -357,9 +332,8 @@ func _tail_lines(p: String, tail_bytes: int) -> Array:
 	f.seek(start)
 	var bytes := f.get_buffer(length - start)
 	f.close()
-	# Mitten in der Datei begonnen: die erste Zeile ist abgeschnitten und fällt weg — schon
-	# als BYTES, denn der Schnitt kann in einem Umlaut liegen, und ein halbes UTF-8-Zeichen
-	# meldet der Decoder als Fehler.
+	# Die erste, abgeschnittene Zeile schon als Bytes verwerfen (bis "\n" = 10): der Schnitt
+	# kann mitten in einem UTF-8-Zeichen liegen.
 	if start > 0:
 		var newline := bytes.find(10)
 		bytes = PackedByteArray() if newline < 0 else bytes.slice(newline + 1)
@@ -370,8 +344,7 @@ func _tail_lines(p: String, tail_bytes: int) -> Array:
 	return out
 
 
-## Löscht beide Generationen. Die offene Datei wird vorher geschlossen, sonst schriebe der
-## nächste Eintrag in eine Datei, die es nicht mehr gibt.
+## Löscht beide Generationen; schließt vorher die offene Datei.
 func clear() -> void:
 	_close()
 	DirAccess.remove_absolute(path())
@@ -380,9 +353,7 @@ func clear() -> void:
 
 # --- Persistenz ---------------------------------------------------------------
 
-## Confidence einer Aufgabe. `progress` ist nur gesetzt, wenn das Protokoll als Autoload
-## läuft — ein Test hängt hier nichts ein und bekommt den mitgelieferten Prior. Auf drei
-## Stellen gerundet: eine Spur soll lesbar sein, und 0.4375000000000001 ist sie nicht.
+## Confidence einer Aufgabe, auf drei Stellen gerundet; ohne `progress` der `fallback`.
 func _confidence(id: String, fallback: float) -> float:
 	if progress == null or id.is_empty():
 		return snappedf(fallback, 0.001)
@@ -394,17 +365,14 @@ func _write(line: Dictionary) -> void:
 		return
 	if not _open():
 		return
-	# Zeit und Art voran, dann der Rest in der Reihenfolge, in der die note_*-Methode ihn
-	# aufgeschrieben hat: `sort_keys` steht bei JSON.stringify auf true und machte aus
-	# jeder Zeile ein Alphabet, in dem "answers" vor "e" steht. Eine Spur wird gelesen.
+	# Zeit voran, dann die Felder in der Reihenfolge der note_*-Methode (sort_keys aus).
 	var out := {
 		"at": int(Time.get_unix_time_from_system()),
 		"ms": Time.get_ticks_msec(),
 	}
 	out.merge(line)
 	_file.store_line(JSON.stringify(out, "", false))
-	# Sofort auf die Platte: der Absturz, den das Protokoll erklären soll, kommt ohne
-	# Vorwarnung. Ein paar Zeilen je Sekunde kosten das nicht.
+	# Sofort auf die Platte, damit die Spur einen Absturz überlebt.
 	_file.flush()
 	if _file.get_length() >= max_bytes:
 		_roll()
@@ -415,7 +383,7 @@ func _open() -> bool:
 		return true
 	DirAccess.make_dir_recursive_absolute(LOG_DIR)
 	var p := path()
-	# READ_WRITE hängt an, WRITE legt an — FileAccess kennt kein "append or create".
+	# FileAccess kennt kein „append or create“: READ_WRITE hängt an, WRITE legt an.
 	_file = FileAccess.open(p, FileAccess.READ_WRITE) if FileAccess.file_exists(p) \
 			else FileAccess.open(p, FileAccess.WRITE)
 	if _file == null:

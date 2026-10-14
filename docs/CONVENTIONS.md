@@ -20,6 +20,10 @@ GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/battle_theme_lab.tscn -- --shoot 
 python3 tools/packs/build_packs.py --config data/language/packs.yaml \
   --source language=data/language --source game=data --dry-run
 
+# Soundeffekte gegen das Setting-Profil bewerten (lokal, LAION-CLAP; tools/sound_eval/README.md):
+tools/sound_eval/sound-eval batch assets/audio/sfx
+tools/sound_eval/sound-eval rank kandidaten/ --effect spell_freeze
+
 # PHP nur im Container:
 tools/report/php.sh server/melden/test_endpoint.php
 
@@ -90,6 +94,19 @@ am Tag liest ein Kind schnell zehn davon hintereinander. Deshalb kompakt: je Neu
 fetter Titel und ein, zwei Sätze aus Spielersicht, keine technischen Details, keine
 Aufzählung von Kleinkram; unter ~600 Zeichen je Release.
 
+## Kommentare
+
+Ein Kommentar sagt, was der Code nicht sagen kann: ein nicht offensichtliches Warum, eine
+Einheit, einen Vertrag, eine Engine-Falle.
+- Kein Hergang („war früher“, „hat schon einmal“), keine Abwägung gegen nicht gewählte
+  Alternativen, keine Spielgefühl-Prosa, keine Liste der Aufrufer — das gehört in die
+  Commit-Message, ein ADR, das Handbuch oder einen Testnamen.
+- Was hier oder in einem ADR steht, wird nicht wiederholt; ein Verweis („ADR 0004“) genügt.
+- Klassenkopf höchstens ~5 Zeilen, Konstanten: Bedeutung und Einheit.
+- Magische Zahlen im Funktionsrumpf werden benannt oder kommentiert.
+- Keine Großbuchstaben zur Betonung.
+- `##` ist Editor-Doku: Verträge an `class_name`, Funktionen, Signalen und Exporten bleiben `##`.
+
 ## Harte Regeln
 
 **Packs** (`docs/PACK_FORMAT.md`, ADR 0001) — die EXE enthält keine Sprachdaten:
@@ -108,6 +125,11 @@ Aufzählung von Kleinkram; unter ~600 Zeichen je Release.
 - `user://` ist der einzige beschreibbare Ort; `res://` ist im Export read-only.
 - Gespeichert wird nur der Ursprungswert, alles Abgeleitete wird gerechnet (`total_xp`
   statt Level, gelernte Knoten statt ausgegebener Punkte). Kein zweiter Zähler daneben.
+- **Spielstand** (ADR 0024): Profildateien und `settings.cfg` schreibt nur `SaveStore`,
+  wann, entscheidet `SaveCoordinator` (Wellengrenze, nie mitten in der Welle). Ein Speicher
+  ruft `mark_dirty`, nie selbst `FileAccess.WRITE`. Unlesbar ist nie „neu“ und wird nie
+  überschrieben. Eine neue Profildatei kommt in `PROFILE_SUFFIXES`, ein Wert, der nur
+  wächst, in `SaveGuard.MONOTONIC`. Der Statistik-Kanal liest nur Sicherungen.
 - Schwierigkeit hat **ein** Maß: `t - c` in `WaveGenerator._build_plan`. Tempo, Punkte und
   Erfahrung sind Projektionen davon; kein eigenes Maß daneben bauen.
 - `TraceLog` hängt nur am EventBus und wirkt nie zurück. Braucht die Spur ein neues
@@ -202,11 +224,17 @@ Aufzählung von Kleinkram; unter ~600 Zeichen je Release.
 - Nach einem Test, der Packs installiert, `user://content` aufräumen — ein
   liegengebliebener Pack überschreibt im Entwicklungslauf das Submodule.
 - Kein Test fährt eine ganze Welle.
+- Unter gdUnit4 speichert das Autoload `SaveCoordinator` nicht (`_under_test`). Wer
+  Speichern prüft, baut eine eigene Instanz mit eigenen Ordnern (`save_coordinator_test`).
 - Neue Fixtures nach `tests/fixtures/` (dort ist jede Zeilenenden-Umwandlung aus).
 - Größen je Achse prüfen: `assert_vector(...).is_less_equal(...)` vergleicht lexikografisch.
 
 ## Fallen
 
+- **Umbenennen ist unter Windows „Ziel löschen, dann verschieben“**, und fsync gibt es
+  nicht. Dazwischen kann ein Ziel fehlen und nur die `.tmp` stehen — `SaveCoordinator`
+  räumt das beim Öffnen auf (Journal). Nie eine `.tmp` von Hand löschen, solange das
+  Spiel läuft.
 - **Godot schreibt offene Dateien um.** Jeder Lauf, auch headless, lädt und speichert die
   im Skripteditor offenen Dateien und stellt ihre Einrückung auf Tabs um — auch Markdown,
   JSON und Dateien im Submodule. `tools/godot.sh` setzt reine Einrückungsänderungen danach

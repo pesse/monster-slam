@@ -158,7 +158,7 @@ func test_every_tab_section_resolves() -> void:
 	for path in SECTION_SOURCES:
 		var chapter: String = SECTION_SOURCES[path]
 		var hits := line.search_all(FileAccess.get_file_as_string(path))
-		assert_int(hits.size()).is_equal(3)
+		assert_int(hits.size()).is_greater_equal(3)
 		for m in hits:
 			assert_array(_anchors_of(chapter)).override_failure_message(
 					"%s: %s fehlt in %s" % [path, m.get_string(1), chapter]) \

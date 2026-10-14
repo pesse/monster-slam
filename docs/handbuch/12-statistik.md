@@ -1,7 +1,7 @@
 # 12. Die Statistik
 
 „Statistik“ im Hauptmenü öffnet ein Fenster über dem Menü. Oben rechts schließt „✕“ es
-wieder, oder du drückst **Esc**. Das Fenster hat drei Reiter. Kopf und Reiter bleiben
+wieder, oder du drückst **Esc**. Das Fenster hat vier Reiter. Kopf und Reiter bleiben
 stehen, der Inhalt darunter lässt sich scrollen.
 
 ## Sprache wählen
@@ -13,8 +13,8 @@ auch zwei von drei wählen. Eine Flagge bleibt immer an. Ausgeschaltete Flaggen 
 
 Ist nicht jede Sprache an, zählt alles, was an Wörtern hängt, nur noch für die gewählten:
 gemeisterte und fällige Aufgaben, die Lernkurve, „Frisch gemeistert“, „Comeback“, die
-Fahndungsliste, die Wortwerte unter „Insgesamt“ und die Reiter „Fortschritt“ und
-„Aufgaben“. Diese Überschriften tragen dann die Namen der Sprachen („Lernkurve · Latein“).
+Fahndungsliste, die Wortwerte unter „Insgesamt“, die Reiter „Fortschritt“ und
+„Aufgaben“ und die Meilensteine im Reiter „Plaketten“. Diese Überschriften tragen dann die Namen der Sprachen („Lernkurve · Latein“).
 
 Für alle Sprachen zusammen zählen weiter: Level, XP, Gold, Schatzkisten, Skillpunkte,
 Rekorde, die Tages-Serie, die Monatsreihe und die Genauigkeit der letzten Sitzung (dort
@@ -30,7 +30,12 @@ steht dann „alle Sprachen“). Die Wahl bleibt, bis du das Spiel schließt.
   geübt hast, liegt eine goldene Münze, und seine Zahl ist golden. Der heutige Tag hat
   einen leisen Ring, die Tage danach sind blasser. **Diese Münzen sind kein Gold**, sie
   zählen nur Tage, an denen du gespielt hast. Zeigt die Maus auf einen Tag (oder springst
-  du mit der Tastatur hin), siehst du Datum und Stand.
+  du mit der Tastatur hin), siehst du Datum und Stand. Eine kleine Medaille am Tag heißt:
+  An diesem Tag gab es Plaketten. Mit **‹** und **›** neben dem Monatsnamen blätterst du
+  zurück, bis zu dem Monat, in dem du angefangen hast.
+- **„Plaketten“** unter der Monatsreihe – die Plaketten eines Tages. Am Anfang ist es
+  heute, ein Klick auf einen anderen Tag (oder **Enter**) zeigt seine. Gibt es eine
+  Plakette mehrmals am Tag (Revanche, Aufholjagd), steht „×2“, „×3“ … darunter.
 - **„Dein Fortschritt“** – dein Level, der Balken bis zum nächsten Level und alle XP
   zusammen. Darunter Gold, geöffnete Schatzkisten und Skillpunkte, die du noch ausgeben
   kannst.
@@ -82,6 +87,21 @@ mehrfach.
 **Warum zwei Reiter?** Sie zählen Verschiedenes. „Gemeisterte Aufgaben“ im Überblick
 kann steigen, während ein Wort im Reiter „Fortschritt“ noch nicht zählt, weil erst eine
 Richtung sitzt.
+
+## Reiter „Plaketten“
+
+Deine Sammlung der Plaketten aus dem Kampf ([Kapitel 5](05-kampf.md)). Hier steht nur,
+was du schon geholt hast – was noch kommt, bleibt eine Überraschung. Zeigt die Maus auf
+eine Plakette, steht da, wofür es sie gab.
+
+- **„Meilensteine“** – je Sprache die Wort-Plaketten, die du erreicht hast. Sie folgen der
+  Sprachwahl.
+- **„Plaketten im Kampf“** – je Art, die du schon hattest, eine Zeile: an wie vielen Tagen
+  du sie geholt hast und wann zuletzt. Bei Treffern und „Von gestern behalten“ steht unter jeder Stufe, an wie
+  vielen Tagen du sie erreicht hast. Diese Zeilen zählen alle Sprachen zusammen.
+
+Plaketten für Treffer rechnet die Statistik aus deinen Antworten, auch für Tage, bevor es
+die Sammlung gab. Alle anderen Plaketten werden ab der Version mit diesem Reiter gezählt.
 
 ---
 

@@ -1,21 +1,9 @@
 class_name RunSave
 extends RefCounted
-## Begonnene Läufe von der Karte (docs/adr/0020-rasten-und-fortsetzen.md).
-##
-## Ein Platz je Buch: Englisch und Latein nebeneinander dürfen sich nicht gegenseitig den
-## Lauf verwerfen. Expertenmodus und Testvorbereitung rasten nicht (ADR 0020, „Bewusst
-## nicht"), sie kommen hier nie an.
-##
-## Ein Speicherstand trägt nur Ursprungswerte (`GameState.run_snapshot()` plus Wellennummer,
-## Schwierigkeit und die gewählten Orte). Das Maximum der Festung, Tempo, Schaden und die
-## Wörter hinter dem Scope werden beim Fortsetzen neu gerechnet. Fest sitzt der BEREICH
-## (`keys`), nicht der Inhalt: ein Pack-Update kommt beim Fortsetzen an. Erweitern darf
-## man ihn innerhalb der Unit (`continues`), verkleinern nicht.
-##
-## Ablage: user://progress/<profil>_runs.json als { "runs": { <book>: <stand> } },
-## geschrieben über eine temporäre Datei, damit ein Absturz beim Schreiben nicht die
-## Läufe der anderen Bücher mitnimmt. Statisch und mit Profil-Argument wie BossRecord,
-## damit Tests auf einem `zz-`-Profil laufen.
+## Begonnene Läufe von der Karte, ein Platz je Unit (ADR 0020 mit Nachträgen). Ein Stand
+## trägt nur Ursprungswerte; fest sitzt der Bereich (`keys`), nicht der Inhalt.
+## Ablage: user://progress/<profil>_runs.json als { "runs": { <book>/<unit>: <stand> } }.
+## Statisch mit Profil-Argument, damit Tests auf einem `zz-`-Profil laufen.
 
 const SAVE_DIR := "user://progress"
 ## Hebt sich, wenn ein Stand eines älteren Formats nicht mehr gelesen werden kann.
@@ -26,49 +14,81 @@ static func path(profile: String) -> String:
 	return "%s/%s_runs.json" % [SAVE_DIR, profile]
 
 
-## Alle begonnenen Läufe des Profils: Buch -> Stand.
+## Alle begonnenen Läufe des Profils: "<book>/<unit>" -> Stand.
 static func all(profile: String) -> Dictionary:
-	var text := FileAccess.get_file_as_string(path(profile))
-	if text.is_empty():
+	var read := SaveStore.read(path(profile))
+	if int(read["status"]) == SaveStore.Status.CORRUPT:
+		# Ein begonnener Lauf hat keine Sicherung; die kaputte Datei geht in die Quarantäne,
+		# damit wieder gerastet werden kann.
+		push_warning("RunSave: %s unlesbar, in die Quarantäne" % path(profile))
+		SaveStore.quarantine(path(profile), "user://quarantine/%s/runs-%d"
+				% [profile, int(Time.get_unix_time_from_system())], ".corrupt")
+	if int(read["status"]) != SaveStore.Status.OK:
 		return {}
-	var parsed: Variant = JSON.parse_string(text)
-	if not parsed is Dictionary:
+	var runs: Variant = (read["data"] as Dictionary).get("runs", {})
+	if not runs is Dictionary:
 		return {}
-	var runs: Variant = (parsed as Dictionary).get("runs", {})
-	return runs if runs is Dictionary else {}
+	var out := {}
+	for key in runs:
+		var state: Variant = runs[key]
+		if not state is Dictionary:
+			continue
+		# Ältere Dateien schlüsseln nach Buch; der Stand kennt seine Unit selbst.
+		var unit_key := str(key) if "/" in str(key) else key_of(state)
+		if not unit_key.is_empty():
+			out[unit_key] = state
+	return out
 
 
-## Der begonnene Lauf eines Buchs, oder {}.
-static func of_book(book: String, profile: String) -> Dictionary:
-	var state: Variant = all(profile).get(book, {})
-	return state if state is Dictionary else {}
-
-
-## Legt `state` auf den Platz seines Buchs (`state.level.book`) und ersetzt, was dort lag.
-static func store(state: Dictionary, profile: String) -> void:
-	var book := str((state.get("level", {}) as Dictionary).get("book", ""))
+## Der Platz eines Stands: "<book>/<unit>" wie RunRequest.unit_key(), oder "" ohne Buch.
+static func key_of(state: Dictionary) -> String:
+	var level: Dictionary = state.get("level", {})
+	var book := str(level.get("book", ""))
 	if book.is_empty():
+		return ""
+	return "%s/%d" % [book, int(level.get("unit", 0))]
+
+
+static func of_unit(book: String, unit: int, profile: String) -> Dictionary:
+	return all(profile).get("%s/%d" % [book, unit], {})
+
+
+## Die begonnenen Läufe eines Buchs, der zuletzt gerastete zuerst.
+static func of_book(book: String, profile: String) -> Array:
+	var out: Array = []
+	var runs := all(profile)
+	for key in runs:
+		if str(key).get_slice("/", 0) == book:
+			out.append(runs[key])
+	out.sort_custom(func(a, b): return int(a.get("saved_at", 0)) > int(b.get("saved_at", 0)))
+	return out
+
+
+## Legt `state` auf den Platz seiner Unit (`key_of`) und ersetzt, was dort lag.
+static func store(state: Dictionary, profile: String) -> void:
+	var key := key_of(state)
+	if key.is_empty():
 		return
 	var runs := all(profile)
-	runs[book] = state
+	runs[key] = state
 	_write(runs, profile)
 
 
-## Verwirft den Lauf eines Buchs. Ohne Lauf ein No-op.
-static func discard(book: String, profile: String) -> void:
+static func discard(book: String, unit: int, profile: String) -> void:
 	var runs := all(profile)
-	if not runs.has(book):
+	var key := "%s/%d" % [book, unit]
+	if not runs.has(key):
 		return
-	runs.erase(book)
+	runs.erase(key)
 	_write(runs, profile)
 
 
-## Baut den Stand am Wellenende. `level` ist RunRequest.level() (MapLevel.combine),
-## gespeichert werden davon nur Buch, Unit und Orte — der Scope wird beim Fortsetzen aus
-## den Orten neu gebaut. `next_wave` ist die Welle, mit der es weitergeht.
+## Baut den Stand. Von `level` (RunRequest.level()) bleiben nur Buch, Unit und Orte.
+## `next_wave` ist die Welle, mit der es weitergeht. Mitten in der Welle gerastet trägt
+## `wave` deren bisherigen Stand, an der Wellengrenze bleibt es leer.
 static func build(level: Dictionary, next_wave: int, difficulty: int, run: Dictionary,
-		run_started_at: int, now: int) -> Dictionary:
-	return {
+		run_started_at: int, now: int, wave := {}) -> Dictionary:
+	var state := {
 		"format": FORMAT,
 		"app_version": SemVer.app_version(),
 		"level": {
@@ -82,13 +102,23 @@ static func build(level: Dictionary, next_wave: int, difficulty: int, run: Dicti
 		"run_started_at": run_started_at,
 		"saved_at": now,
 	}
+	if not wave.is_empty():
+		state["wave"] = wave
+	return state
+
+
+## Die angefangene Welle eines Stands, oder {}, wenn er an einer Wellengrenze gerastet
+## wurde oder von der Welle nichts mehr übrig ist.
+static func open_wave(state: Dictionary) -> Dictionary:
+	var wave: Variant = state.get("wave", {})
+	if not wave is Dictionary or int((wave as Dictionary).get("remaining", 0)) <= 0:
+		return {}
+	return wave
 
 
 ## Ob die Auswahl `keys` in Unit `unit` den begonnenen Lauf fortsetzt: sie muss jeden
-## gespeicherten Ort enthalten und darf weitere dazunehmen (erweitern, ADR 0020 Punkt 6).
-## Fehlt einer, ist es ein neuer Lauf. Gesamt deckt alle Teile der Unit ab, ein Lauf über
-## Teil 1 und 2 geht also mit Gesamt weiter. Ein Boss setzt nie fort, er gehört zu keinem
-## Lauf. `levels` sind die heutigen Level der Unit (MapLevel.levels_for).
+## gespeicherten Ort enthalten und darf weitere dazunehmen. Gesamt deckt alle Teile ab.
+## Ein Boss setzt nie fort. `levels` sind die heutigen Level der Unit (MapLevel.levels_for).
 static func continues(state: Dictionary, unit: int, keys: Array, levels: Array) -> bool:
 	if state.is_empty() or int((state.get("level", {}) as Dictionary).get("unit", 0)) != unit:
 		return false
@@ -102,8 +132,8 @@ static func continues(state: Dictionary, unit: int, keys: Array, levels: Array) 
 	return true
 
 
-## Die Orte, die die Auswahl `keys` zum begonnenen Lauf dazunimmt, in Spielreihenfolge —
-## leer, wenn sie genau ihn spielt. Gesamt zählt hier als seine Teile.
+## Die Orte, die `keys` zum begonnenen Lauf dazunimmt, in Spielreihenfolge; Gesamt zählt
+## als seine Teile.
 static func added(state: Dictionary, keys: Array, levels: Array) -> Array:
 	var saved := _covered(_saved_keys(state), levels)
 	var chosen := _covered(keys, levels)
@@ -138,10 +168,8 @@ static func _covered(keys: Array, levels: Array) -> Dictionary:
 	return out
 
 
-## Das Level, mit dem der Lauf weitergeht, gebaut aus den HEUTIGEN Leveln der Unit
-## (`levels`, MapLevel.levels_for) — oder {}, wenn er sich nicht mehr spielen lässt: ein
-## anderes Format, eine neuere App als diese, ein Ort, den es nicht mehr gibt, oder eine
-## Auswahl, die keinen Wellenkampf mehr ergibt.
+## Das Level, mit dem der Lauf weitergeht, aus den heutigen `levels` der Unit. Leer bei
+## anderem Format, neuerer App, verschwundenem Ort oder einer Auswahl ohne Wellenkampf.
 static func resumable_level(state: Dictionary, levels: Array) -> Dictionary:
 	if int(state.get("format", 0)) != FORMAT:
 		return {}
@@ -169,12 +197,4 @@ static func _write(runs: Dictionary, profile: String) -> void:
 		if FileAccess.file_exists(target):
 			DirAccess.remove_absolute(target)
 		return
-	var temp := target + ".tmp"
-	var file := FileAccess.open(temp, FileAccess.WRITE)
-	if file == null:
-		push_warning("RunSave: %s nicht schreibbar" % temp)
-		return
-	file.store_string(JSON.stringify({"runs": runs}, "\t"))
-	file.close()
-	if DirAccess.rename_absolute(temp, target) != OK:
-		push_warning("RunSave: %s nicht ersetzt" % target)
+	SaveGuard.write(target, "_runs", {"runs": runs})

@@ -1,10 +1,8 @@
 @tool
 class_name BadgePlate
 extends Control
-## Die Plakette eines kleinen Erfolgs (Badges, Issue #63): eine Medaille am Band aus
-## `assets/ui/badges/` (Geometrie im README dort), darüber die Zahl der Stufe in der
-## Spielschrift — Zahlen stehen nie im Bild. Plaketten ohne Stufe tragen ihr Zeichen im Bild
-## und keine Zahl. Größe und Feld der Zahl stehen in badge_plate.tscn.
+## Plakette eines Erfolgs (Issue #63): Medaille aus `assets/ui/badges/` (Geometrie im
+## README dort), darüber die Zahl der Stufe. Plaketten ohne Stufe tragen ihr Zeichen im Bild.
 
 const ART_DIR := "res://assets/ui/badges/"
 ## Mitte der Scheibe als Anteil am Bild (128/256, 120/320, README in ART_DIR).
@@ -19,6 +17,7 @@ const GLOW := {
 	&"better": Color(0.5, 0.92, 0.86),
 	&"revenge": Color(0.78, 0.6, 1.0),
 	&"catch_up": Color(0.62, 0.95, 0.5),
+	&"last_second": Color(1.0, 0.42, 0.42),
 }
 
 ## Palette = Dateiname der Medaille (Badges.make).
@@ -53,6 +52,10 @@ func _apply() -> void:
 	var path := "%s%s.webp" % [ART_DIR, palette]
 	($Medal as TextureRect).texture = load(path) if ResourceLoader.exists(path) else null
 	($Mark as Label).text = mark
-	# Drei Ziffern (100, 250) passen nur kleiner auf die Scheibe.
-	($Mark as Label).theme_type_variation = &"CelebrateBadgeMarkLong" if mark.length() >= 3 \
-			else &"CelebrateBadgeMark"
+	# Drei und vier Ziffern passen nur kleiner auf die Scheibe (78 px hell).
+	var variation := &"CelebrateBadgeMark"
+	if mark.length() >= 4:
+		variation = &"CelebrateBadgeMarkWide"
+	elif mark.length() == 3:
+		variation = &"CelebrateBadgeMarkLong"
+	($Mark as Label).theme_type_variation = variation

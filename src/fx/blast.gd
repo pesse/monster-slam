@@ -1,35 +1,26 @@
 class_name Blast
 extends Node3D
-## Die Explosion des Explosionspfeils (Späher-Baum): größer und in Schichten, wo die
-## `Explosion` ein Ball aus Würfeln ist. Nacheinander: weißer Blitz, Feuerball
-## (fireball.gdshader), Druckwelle am Boden (shockwave.gdshader), Funken und Glut in der
-## Wortfarbe des Monsters (spark.gdshader) und Rauch, der aus dem Feuer aufsteigt
-## (smoke.gdshader). Weich und nicht Low-Poly wie die Modelle: kantige Effekte sahen neben
-## ihnen billig aus.
-## Baut sich selbst auf und gibt sich nach der Lebensdauer frei, wie die `Explosion`.
-##
-## Der Ursprung liegt am Boden unter dem Monster; der Feuerball sitzt auf Rumpfhöhe.
-## Alle Zeiten laufen nach `Engine.time_scale` — die Zeitlupe dehnt den Knall.
-##
-## `plasma` ist der Einschlag des Donnerschlags (ADR 0014): kein Feuerball, sondern ein
-## blauweißer Lichtball, blaue Funken und Druckwelle, und der Rauch glimmt blau statt orange.
+## Die Explosion des Explosionspfeils in Schichten: Blitz, Feuerball, Druckwelle, Funken,
+## Glut in der Wortfarbe des Monsters und Rauch. Baut sich selbst auf und gibt sich nach
+## `LIFETIME` frei. Ursprung am Boden unter dem Monster; Zeiten nach `Engine.time_scale`.
+## `plasma` ist der Einschlag des Donnerschlags (ADR 0014): Lichtball statt Feuerball, blau.
 
 const FIREBALL_SHADER := preload("res://assets/shaders/fireball.gdshader")
 const SMOKE_SHADER := preload("res://assets/shaders/smoke.gdshader")
 const SHOCKWAVE_SHADER := preload("res://assets/shaders/shockwave.gdshader")
 const SPARK_SHADER := preload("res://assets/shaders/spark.gdshader")
 
-## So hoch über dem Boden zündet der Feuerball.
+## So hoch über dem Boden zündet der Feuerball (m).
 const CORE_HEIGHT := 1.2
 const FIRE_COLOR := Color(1.0, 0.55, 0.15)
-## Der längste Teil: danach ist auch der letzte Rauch weg.
+## Lebensdauer (s): danach ist auch der letzte Rauch weg.
 const LIFETIME := 2.6
 
 var _debris_color: Color = Color(0.7, 1.0, 0.4)
 var _scale: float = 1.0
 var _plasma := false
 
-## Die Farben des Donnerschlags.
+## Die Farbe des Donnerschlags.
 const PLASMA_COLOR := Color(0.6, 0.78, 1.0)
 
 
@@ -48,9 +39,8 @@ func _ready() -> void:
 	_sparks()
 	_debris()
 	_smoke()
-	# process_always = false: in der Baum-Pause bleibt der Knall stehen (wie Explosion).
-	# Verbunden statt abgewartet: FxWarmup gibt den Knall vor dem Timer frei, und ein
-	# await liefe dann ins Leere.
+	# process_always = false: in der Pause bleibt der Knall stehen. Verbunden statt
+	# abgewartet, weil FxWarmup den Knall vor dem Timer freigibt.
 	get_tree().create_timer(LIFETIME, false).timeout.connect(queue_free)
 
 
@@ -74,7 +64,6 @@ func _flash() -> void:
 	core.position = Vector3(0.0, CORE_HEIGHT, 0.0)
 	core.scale = Vector3.ONE * 1.2 * _scale
 	add_child(core)
-	# Das Plasma steht länger und größer: es ersetzt den Feuerball.
 	var grow := 4.0 if _plasma else 2.6
 	var hold := 0.22 if _plasma else 0.12
 	var tw := create_tween().set_parallel(true)
@@ -99,7 +88,7 @@ func _fireball() -> void:
 	var sphere := SphereMesh.new()
 	sphere.radius = 1.0
 	sphere.height = 2.0
-	# Fein genug, dass die Beulen des Rauschens rund bleiben — ein Effekt, kein Modell.
+	# Fein genug, dass die Beulen des Rauschens rund bleiben.
 	sphere.radial_segments = 96
 	sphere.rings = 48
 	var mat := ShaderMaterial.new()
@@ -160,8 +149,7 @@ func _sparks() -> void:
 	add_child(p)
 
 
-## Glut in der Wortfarbe des Monsters: langsamer und größer als die Funken, steigt in einem
-## Bogen und fällt — was vom Monster übrig ist, in seiner Farbe.
+## Glut in der Wortfarbe des Monsters: langsamer und größer als die Funken, steigt im Bogen.
 func _debris() -> void:
 	var p := _streaks(28, 1.4, _debris_color, 2.5)
 	p.emission_sphere_radius = 0.5 * _scale
@@ -177,9 +165,8 @@ func _debris() -> void:
 	add_child(p)
 
 
-## Ein Schub gestreckter Leuchtstreifen: Partikel an ihrer Flugrichtung ausgerichtet, die
-## Größe (scale_amount) ist die Breite, `stretch` das Verhältnis zur Länge. Sie verblassen
-## über die Lebenszeit (color_ramp) und werden dabei kürzer.
+## Ein Schub gestreckter Leuchtstreifen entlang der Flugrichtung: `scale_amount` ist die
+## Breite, `stretch` das Verhältnis zur Länge. Sie verblassen und werden kürzer.
 func _streaks(amount: int, lifetime: float, tint: Color, stretch: float) -> CPUParticles3D:
 	var p := _burst_particles(amount, lifetime)
 	var quad := QuadMesh.new()
@@ -198,8 +185,8 @@ func _streaks(amount: int, lifetime: float, tint: Color, stretch: float) -> CPUP
 	return p
 
 
-## Puffs, die als Feuer beginnen (Glut im Shader) und als Rauch aufsteigen, wachsen und
-## vergehen. Zwei Schübe: ein dichter Kern und ein lockerer Kranz nach außen.
+## Puffs, die als Glut beginnen und als Rauch aufsteigen. Zwei Schübe: dichter Kern
+## (`ring` 0) und lockerer Kranz.
 func _smoke() -> void:
 	for ring in 2:
 		var p := _burst_particles(16 if ring == 0 else 12, 2.2 if ring == 0 else 1.7)

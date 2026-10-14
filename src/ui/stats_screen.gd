@@ -1,89 +1,49 @@
 extends Control
-## Statistik-Fenster: Zahlen zum Lernstand, Monatsreihe, Rekorde, Lernkurve, Listen,
-## Fortschritt, Wortliste.
-##
-## Öffnet als Fenster über dem Hauptmenü wie die Fähigkeiten (`profile_menu._open_stats`):
-## derselbe Rahmen, dasselbe Titelband, dasselbe Schließen-X, Escape schließt. Entwurf:
-## `assets/ui/statistics/concept/statistics-v3.webp`. Das Layout liegt in stats_screen.tscn,
-## die Zeilen-Vorlagen in stat_row.tscn, record_row.tscn und progress_row.tscn, die
-## Monatsreihe in coin_strip.tscn, der Zeichen-Control der Kurve in stats_chart.gd; hier
-## wird nur befüllt.
-##
-## Drei Reiter: „Überblick" trägt die Abschnitte, die zum Weiterspielen motivieren
-## (Tages-Serie #6, Sitzungs-Genauigkeit #13, Level und Gold #5, Kampf-Rekorde #11,
-## Lernkurve #7, frisch gemeistert und Comeback #9, Fahndungsliste #5, Lebenszeitwerte unter
-## „Insgesamt" #13), „Fortschritt" die Balken pro Unit (#8) — die
-## wachsen mit dem Katalog und schöben im Überblick alles andere aus dem Bild —, „Aufgaben" die
-## vollständige Liste der Learnables. Ein Balken lässt sich aufklappen und zeigt dann die
-## WÖRTER seiner Gruppe mit Prozentstand: „18 von 24" sagt nicht, welche sechs fehlen,
-## und im Reiter „Aufgaben" stehen sie als zwei bis sechs Zeilen zwischen allen anderen.
-##
-## Die beiden Maße auseinanderzuhalten ist der Sinn der Reiter-Namen: „Aufgaben" zählt
-## learnable_ids (Richtung, Form, Relation — das Maß von mastered_count), „Fortschritt"
-## zählt Wörter (beide Übersetzungsrichtungen, bei unregelmäßigen Verben auch die Formen —
-## das Maß von mastered_lexemes).
-##
-## Die Reiter sind eigene Knöpfe und kein `TabContainer`: dessen Reiter lassen sich nicht
-## mit den Bildern des Fensterpakets belegen, ohne das ganze Theme umzustellen. Alle drei
-## Seiten liegen übereinander in `Pages`, sichtbar ist eine — das Fenster behält seine Größe.
-##
-## Neben den Reitern steht die Sprachwahl (Issue #45, `LanguageBar`), eine Flagge je Sprache,
-## mehrere zugleich: was an Wörtern und Aufgaben hängt, gilt dann nur für die gewählten —
-## Gemeistert und Fällig, Lernkurve, die drei Wortlisten, die Wortwerte unter „Insgesamt",
-## „Fortschritt" und „Aufgaben". Die Sprache
-## kommt aus dem Buch (ContentRegistry.book_language), gespeichert wird sie nirgends.
-## Sprachübergreifend bleiben die Profilwerte (Level, Gold, Kisten, Punkte, Rekorde,
-## Tages-Serie) und die Genauigkeit der Sitzung: SessionLog kennt keine Sprache, und eine
-## Sitzung spielt meist ohnehin nur eine. Die gefilterten Überschriften tragen die
-## Sprachnamen, die übrigen Stellen sagen „alle Sprachen" — man soll ablesen können, was
-## die Wahl trifft.
+## Statistik-Fenster über dem Hauptmenü (geöffnet von `ProfileBadge`); das Layout liegt in
+## stats_screen.tscn, hier wird nur befüllt. Vier Reiter, siehe Handbuch Kapitel 12:
+## „Fortschritt“ zählt Wörter (mastered_lexemes), „Aufgaben“ learnable_ids (mastered_count).
+## Die Sprachwahl filtert alles, was an Wörtern hängt; Profilwerte und die Sitzung
+## (SessionLog kennt keine Sprache) zählen immer alle Sprachen.
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 const ROW_SCENE := preload("res://scenes/ui/stat_row.tscn")
 const RECORD_ROW_SCENE := preload("res://scenes/ui/record_row.tscn")
 const PROGRESS_ROW_SCENE := preload("res://scenes/ui/progress_row.tscn")
-## Für die Schwellen und Richtungen der Meisterung in den statischen Funktionen —
-## der Autoload PlayerProgress ist dasselbe Skript, aber nicht statisch erreichbar.
+const CHIP_SCENE := preload("res://scenes/ui/badge_chip.tscn")
+const BADGE_ROW_SCENE := preload("res://scenes/ui/badge_row.tscn")
+## Für Schwellen und Richtungen in den statischen Funktionen; der Autoload ist nicht statisch erreichbar.
 const PROGRESS := preload("res://src/learning/player_progress.gd")
 
-## So lange blendet das Fenster auf (s) — wie die Fähigkeiten.
+## Einblenden (s).
 const FADE_IN := 0.15
-## So viele Wörter stehen auf der Fahndungsliste. Kurz halten: eine lange Liste ist
-## keine Fahndung mehr, sondern die Wortliste im zweiten Reiter.
+## Länge der Fahndungsliste.
 const WANTED_COUNT := 5
-## So viele Einträge zeigen „Frisch gemeistert" und „Comeback" — aus demselben Grund
-## gekappt wie die Fahndungsliste.
+## Länge von „Frisch gemeistert“ und „Comeback“.
 const LIST_COUNT := 5
-## „Frisch" ist die letzte Woche.
+## Zeitraum für „frisch“ (Tage).
 const FRESH_DAYS := 7
 ## Ab so vielen Fehlversuchen ist eine wiedergewonnene Aufgabe ein Comeback.
 const COMEBACK_MISSES := 3
-## Ab diesem HP-Stand trägt der schonendste Lauf seine Auszeichnung. Ein fester Betrag
-## und kein Anteil des Maximums: wer sein Maximum über die Fähigkeiten angehoben hat, hat
-## sich das Polster verdient — und die Sitzungen schreiben ihr Maximum nicht mit.
+## Ab diesem HP-Stand trägt der schonendste Lauf das Schild. Ein fester Betrag, weil die
+## Sitzungen ihr Maximum nicht mitschreiben.
 const SPOTLESS_FORTRESS_HP := 90
-## Weicht die Sitzung um weniger Prozentpunkte vom Vergleich ab, steht der Pfeil waagrecht:
-## zwei Punkte sind bei dreißig Antworten eine einzige.
+## Unter diesem Abstand (Prozentpunkte) steht der Trendpfeil waagrecht.
 const TREND_STEADY_POINTS := 3
 
-## Reihenfolge der Wortlisten (Fortschritt aufgeklappt) und der Aufgabenliste, in der
-## Reihenfolge der Knöpfe in `SortBar`. Gilt für beide Reiter zugleich.
+## Reihenfolge der Wort- und Aufgabenlisten, in der Reihenfolge der Knöpfe in `SortBar`.
 enum SortMode { BEST_FIRST, WEAKEST_FIRST, ALPHABETICAL }
-## Die Wahl bleibt, solange das Spiel läuft — wer zweimal hineinschaut, will nicht zweimal
-## umstellen. Gespeichert wird sie nicht: sie ist eine Ansicht, kein Lernstand.
+## Gilt, solange das Spiel läuft; nicht gespeichert.
 static var _sort_mode := SortMode.BEST_FIRST
-## Die gewählten Sprachen (leer = noch nie gewählt, also alle), aus demselben Grund und
-## genauso flüchtig wie `_sort_mode` — eine Ansicht, kein zweiter Zustand neben dem Scope.
+## Die gewählten Sprachen (leer = alle), flüchtig wie `_sort_mode`.
 static var _languages: Array = []
 
-## Was die Sprachwahl trifft — am Mauszeiger über jedem Sprachknopf.
 const LANGUAGE_HINT := "Ein Klick schaltet die Sprache an oder aus, mehrere zugleich gehen. " \
 		+ "Gilt für alles, was an Wörtern hängt: gemeistert, fällig, Lernkurve, " \
-		+ "die Wortlisten, „Insgesamt“, „Fortschritt“ und „Aufgaben“. Level, Gold, Rekorde, " \
-		+ "Tages-Serie und die Genauigkeit der Sitzung zählen immer alle Sprachen."
+		+ "die Wortlisten, „Insgesamt“, „Fortschritt“, „Aufgaben“ und die Meilensteine. " \
+		+ "Level, Gold, Rekorde, Tages-Serie, Plaketten im Kampf und die Genauigkeit der " \
+		+ "Sitzung zählen immer alle Sprachen."
 
-## Das Fenster will zu. Wer es geöffnet hat, nimmt es weg; hängt niemand daran (der Screen
-## läuft allein, etwa aus dem Editor), geht es zurück ins Startmenü.
+## Das Fenster will zu. Ohne Verbindung geht `close` selbst ins Startmenü.
 signal closed()
 
 @onready var _streak_label: Label = %StreakLabel
@@ -99,8 +59,16 @@ signal closed()
 @onready var _fresh_list: VBoxContainer = %FreshList
 @onready var _comeback_list: VBoxContainer = %ComebackList
 @onready var _wanted_list: VBoxContainer = %WantedList
-## Fächert die Aufgaben eines Wortes auf (learnables_of) und benennt sie — dieser Screen
-## spawnt nichts, er liest nur dieselbe Auffächerung wie der Wave-Pool.
+@onready var _day_badge_title: Label = %DayBadgeTitle
+@onready var _day_badge_row: HBoxContainer = %DayBadgeRow
+@onready var _day_badge_empty: Label = %DayBadgeEmpty
+@onready var _milestone_list: VBoxContainer = %MilestoneList
+@onready var _daily_list: VBoxContainer = %DailyList
+## Nur gelesen; gespeichert wird im Kampf.
+var _badges := Badges.new()
+## SessionLog.correct_by_day(), je `_refresh` einmal.
+var _correct_by_day := {}
+## Fächert die Aufgaben eines Wortes auf (learnables_of); spawnt nichts.
 var _generator := WaveGenerator.new()
 var _resolver := TaskResolver.new()
 
@@ -111,26 +79,25 @@ var _resolver := TaskResolver.new()
 ## Überschrift -> Text ohne Sprache; diese Abschnitte folgen der Sprachwahl.
 @onready var _filtered_titles := {
 	%CurveTitle: "Lernkurve", %FreshTitle: "Frisch gemeistert", %ComebackTitle: "Comeback",
-	%WantedTitle: "Fahndungsliste", %TotalTitle: "Insgesamt",
+	%WantedTitle: "Fahndungsliste", %TotalTitle: "Insgesamt", %MilestoneTitle: "Meilensteine",
 }
-## Buch -> Sprache, einmal beim Öffnen (ContentRegistry.book_language läuft über den Katalog).
 var _book_languages := {}
-## Die Sprachen, auf die gerade gefiltert wird — leer, solange alle gewählt sind. Dann zählt
-## auch, was sich keiner Sprache zuordnen lässt, und keine Überschrift trägt einen Namen.
+## Gefilterte Sprachen; leer, solange alle gewählt sind. Dann zählt auch, was keiner
+## Sprache zugeordnet ist.
 var _filter: Array = []
-## Die Sprachen zur Wahl (language_choices), einmal beim Öffnen.
 var _language_choices: Array = []
-## Reiter → Abschnitt im Handbuch: das „?“ im Titelband führt zum offenen Reiter.
+## Reiter → Abschnitt im Handbuch für das „?“ im Titelband.
 @onready var _handbook_sections := {
 	%OverviewTab: "Reiter „Überblick“",
 	%ProgressTab: "Reiter „Fortschritt“: gezählt werden Wörter",
 	%TaskTab: "Reiter „Aufgaben“: gezählt werden Aufgaben",
+	%BadgeTab: "Reiter „Plaketten“",
 }
-## Reiter → Seite, in der Reihenfolge der Knöpfe.
 @onready var _pages := {
 	%OverviewTab: %OverviewPage,
 	%ProgressTab: %ProgressPage,
 	%TaskTab: %TaskPage,
+	%BadgeTab: %BadgePage,
 }
 
 
@@ -145,6 +112,7 @@ func _ready() -> void:
 		bar.set_mode(_sort_mode)
 		bar.changed.connect(_on_sort_changed)
 	_setup_languages()
+	_coin_strip.day_selected.connect(_show_day)
 	Hints.attach(%StreakCard as Control, "Tage in Folge",
 			"Jeder Tag mit mindestens einem Lauf zählt. Heute ist keine Lücke, solange der "
 			+ "Tag läuft — die Serie reißt erst, wenn ein ganzer Tag fehlt.")
@@ -156,8 +124,6 @@ func _ready() -> void:
 	(%OverviewTab as Control).grab_focus.call_deferred()
 
 
-## Schließt das Fenster: meldet es dem, der es geöffnet hat (das Menü nimmt es weg), oder
-## geht allein zurück ins Startmenü.
 func close() -> void:
 	if closed.get_connections().is_empty():
 		get_tree().change_scene_to_file(MENU_SCENE)
@@ -171,8 +137,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		close()
 
 
-## Beide Leisten zeigen dieselbe Wahl; die Wortlisten bauen sich neu auf, wenn sie schon
-## aufgeklappt waren (die übrigen erst beim Aufklappen, `ProgressRow`).
+## Beide Leisten zeigen dieselbe Wahl; aufgeklappte Wortlisten bauen sich neu auf.
 func _on_sort_changed(mode: int) -> void:
 	_sort_mode = mode as SortMode
 	for bar in _sort_bars:
@@ -183,9 +148,7 @@ func _on_sort_changed(mode: int) -> void:
 	_refresh_tasks()
 
 
-## Baut die Sprachwahl vor dem Anzeigen: je Sprache mit einem Buch im Katalog eine Flagge, in
-## der Reihenfolge des Bücherregals, mehrere zugleich wählbar. Mit einer einzigen Sprache gibt
-## es nichts zu wählen — die Leiste bleibt dann weg (entschieden, bevor das Fenster steht).
+## Baut die Sprachwahl vor dem Anzeigen. Mit nur einer Sprache bleibt die Leiste weg.
 func _setup_languages() -> void:
 	for book in ContentRegistry.all_books():
 		_book_languages[book] = ContentRegistry.book_language(book)
@@ -194,8 +157,7 @@ func _setup_languages() -> void:
 	if languages.size() < 2:
 		_language_bar.visible = false
 		return
-	# Was es nicht mehr gibt (ein Pack wurde entfernt), fällt aus der Wahl; bleibt nichts,
-	# gelten wieder alle.
+		# Was es nicht mehr gibt, fällt aus der Wahl; bleibt nichts, gelten alle.
 	var kept := _languages.filter(func(lang): return lang in languages)
 	_language_bar.setup(languages, LANGUAGE_HINT)
 	_language_bar.set_languages(kept if not kept.is_empty() else languages)
@@ -203,9 +165,7 @@ func _setup_languages() -> void:
 	_filter = language_filter(_language_bar.selected(), languages)
 
 
-## Die Sprachen zur Wahl, je eine pro Sprache mit mindestens einem Buch — in der Reihenfolge
-## von BookSelect.shelf_rows (Englisch zuerst). `book_language` ist
-## ContentRegistry.book_language.
+## Je Sprache mit mindestens einem Buch eine, in der Reihenfolge von BookSelect.shelf_rows.
 static func language_choices(books: Array, book_language: Callable) -> Array:
 	var out: Array = []
 	for row in BookSelect.shelf_rows(books, book_language):
@@ -221,12 +181,11 @@ func _on_languages_changed(languages: Array) -> void:
 	_refresh()
 
 
-## Der Filter zu einer Wahl: leer, wenn alle Sprachen gewählt sind — sonst die Wahl.
+## Leer, wenn alle Sprachen gewählt sind, sonst die Wahl.
 static func language_filter(selected: Array, choices: Array) -> Array:
 	return [] if choices.all(func(lang): return lang in selected) else selected.duplicate()
 
 
-## Zeigt die Seite zu `tab`. Der Knopf selbst steht schon gedrückt (ButtonGroup).
 func _show_page(tab: Button) -> void:
 	for each: Button in _pages:
 		(_pages[each] as Control).visible = each == tab
@@ -236,6 +195,7 @@ func _show_page(tab: Button) -> void:
 func _refresh() -> void:
 	for title: Label in _filtered_titles:
 		title.text = filtered_title(str(_filtered_titles[title]), _filter)
+	_correct_by_day = SessionLog.correct_by_day()
 	_refresh_streak()
 	_refresh_accuracy()
 	_refresh_numbers()
@@ -246,24 +206,22 @@ func _refresh() -> void:
 	_refresh_wanted()
 	_refresh_progress()
 	_refresh_tasks()
+	_refresh_badges()
 
 
-## „Lernkurve · Französisch, Latein": die Überschrift eines Abschnitts, der der Sprachwahl
-## folgt. Ohne Filter steht sie ohne Namen da.
+## „Lernkurve · Französisch, Latein“; ohne Filter ohne Namen.
 static func filtered_title(title: String, languages: Array) -> String:
 	if languages.is_empty():
 		return title
 	return "%s · %s" % [title, ", ".join(languages.map(Lexeme.language_name))]
 
 
-## Tages-Serie und Monatsreihe (Issue #6).
-##
-## Die Zeile unter der Zahl sagt bei offenem Tag, dass heute noch einer zu holen ist — der
-## laufende Tag ist keine Lücke (SessionLog.current_streak zählt ihn auch nicht als solche),
-## das soll man lesen können und nicht an der Zahl ablesen müssen.
+## Tages-Serie und Monatsreihe. Der laufende Tag ist keine Lücke (SessionLog.current_streak).
 func _refresh_streak() -> void:
 	var streak := SessionLog.current_streak()
+	_coin_strip.badge_days = badge_days(_badges.all_days(), _correct_by_day)
 	_coin_strip.refresh()
+	_show_day(_coin_strip.selected_day)
 	_streak_label.text = "%d Tag%s" % [streak, "" if streak == 1 else "e"]
 	if SessionLog.played_today():
 		_streak_note.text = "Heute ist dabei"
@@ -273,7 +231,124 @@ func _refresh_streak() -> void:
 		_streak_note.text = "Heute fehlt noch — ein Lauf hält die Serie"
 
 
-## Level, Gold, Kisten, offene Punkte und die beiden Aufgabenzahlen der Fußzeile.
+## Tage mit mindestens einer Plakette (Index -> true): gespeicherte und gerechnete Treffer.
+static func badge_days(stored: Dictionary, correct_by_day: Dictionary) -> Dictionary:
+	var out := {}
+	for day: int in stored:
+		if not (stored[day] as Array).is_empty():
+			out[day] = true
+	for day: int in correct_by_day:
+		if Badges.reached_tier(Badges.HIT_STEPS, int(correct_by_day[day])) > 0:
+			out[day] = true
+	return out
+
+
+## Das Band unter der Monatsreihe: die Plaketten des gewählten Tages. Die Höhe des Bandes
+## steht fest (stats_screen.tscn).
+func _show_day(day: int) -> void:
+	for child in _day_badge_row.get_children():
+		if child is BadgeChip:
+			_day_badge_row.remove_child(child)
+			child.queue_free()
+	var today := SessionLog.local_day(int(Time.get_unix_time_from_system()))
+	if day < 0:
+		_day_badge_title.text = "Plaketten"
+		_day_badge_empty.text = "Ein Klick auf einen Tag zeigt seine Plaketten."
+		_day_badge_empty.visible = true
+		return
+	_day_badge_title.text = "Plaketten · " + ("heute" if day == today else CoinStrip.date_label(day))
+	var summary := Badges.day_summary(_badges.day_list(day), int(_correct_by_day.get(day, 0)))
+	for entry: Dictionary in summary:
+		var id := str(entry["id"])
+		var count := int(entry["count"])
+		var text := Badges.describe(id, int(entry["tier"]))
+		_add_chip(_day_badge_row, Badges.make(id, int(entry["tier"])),
+				"×%d" % count if count > 1 else "", str(text["title"]), str(text["body"]),
+				"%d-mal an diesem Tag" % count if count > 1 else "")
+	_day_badge_empty.visible = summary.is_empty()
+	_day_badge_empty.text = day_empty_text(day == today, _correct_by_day.has(day))
+
+
+## Was das Band ohne Plakette sagt.
+static func day_empty_text(today: bool, played: bool) -> String:
+	if today:
+		return "Heute noch keine Plakette – im Kampf gibt es welche."
+	return "An diesem Tag gab es keine Plakette." if played else "An diesem Tag nicht geübt."
+
+
+func _add_chip(box: Container, badge: Dictionary, caption: String, title: String,
+		body: String, note := "") -> BadgeChip:
+	var chip := CHIP_SCENE.instantiate() as BadgeChip
+	box.add_child(chip)
+	chip.setup(badge, caption, title, body, note)
+	return chip
+
+
+## Reiter „Plaketten“: Meilensteine je Sprache (folgen der Sprachwahl) und wie oft es jede
+## Plakette im Kampf schon gab.
+func _refresh_badges() -> void:
+	_clear(_milestone_list)
+	var languages: Array = _filter if not _filter.is_empty() else _language_choices
+	for lang: String in languages:
+		var count := PlayerProgress.lexemes_answered(lang)
+		var reached := Badges.reached_tier(Badges.WORD_STEPS, count)
+		if reached == 0:
+			continue
+		var row := _add_badge_row(_milestone_list, Lexeme.language_name(lang),
+				"%d %s richtig übersetzt" % [count, "Wort" if count == 1 else "Wörter"])
+		for tier in range(1, reached + 1):
+			var text := Badges.describe("words", tier, lang)
+			row.add_chip().setup(Badges.make("words", tier, {"lang": lang}), "",
+					str(text["title"]), str(text["body"]))
+	if _milestone_list.get_child_count() == 0:
+		_add_line(_milestone_list, "Noch kein Meilenstein.")
+
+	_clear(_daily_list)
+	var tally := Badges.tally(_badges.all_days(), _correct_by_day)
+	for id: String in Badges.DAY_ORDER:
+		var t: Dictionary = tally[id]
+		if int(t["days"]) == 0:
+			continue
+		var tiered := id in ["hits", "kept"]
+		var row := _add_badge_row(_daily_list, tally_title(id), tally_line(id, t))
+		for tier in (range(1, Badges.TIER_NAMES.size() + 1) if tiered else [0]):
+			var n := int((t["tiers"] as Array)[tier - 1]) if tiered else int(t["count"])
+			if n == 0:
+				continue
+			var text := Badges.describe(id, tier)
+			row.add_chip().setup(Badges.make(id, tier), "%d×" % n, str(text["title"]),
+					str(text["body"]), ("an %d Tag%s" % [n, "" if n == 1 else "en"]) if tiered else "")
+	if _daily_list.get_child_count() == 0:
+		_add_line(_daily_list, "Noch keine Plakette – im Kampf gibt es welche.")
+
+
+func _add_badge_row(box: VBoxContainer, title: String, detail: String) -> BadgeRow:
+	var row := BADGE_ROW_SCENE.instantiate() as BadgeRow
+	box.add_child(row)
+	row.setup(title, detail)
+	return row
+
+
+## Name einer Art in der Sammlung.
+static func tally_title(id: String) -> String:
+	match id:
+		"hits":
+			return "Treffer an einem Tag"
+		"kept":
+			return "Von gestern behalten"
+	return str(Badges.describe(id, 0)["title"])
+
+
+## Stand einer Art in der Sammlung, `t` aus Badges.tally (mindestens ein Tag).
+static func tally_line(id: String, t: Dictionary) -> String:
+	var days := int(t["days"])
+	var line := "An %d Tag%s" % [days, "" if days == 1 else "en"]
+	if id in Badges.PER_WAVE:
+		line = "%d-mal, an %d Tag%s" % [int(t["count"]), days, "" if days == 1 else "en"]
+	return "%s, zuletzt %s" % [line, short_date(int(t["last"]) * CoinStrip.DAY_SECONDS
+			+ CoinStrip.NOON_SECONDS)]
+
+
 func _refresh_numbers() -> void:
 	var progress := PlayerLevel.progress()
 	var in_level := int(progress["xp_in_level"])
@@ -282,41 +357,29 @@ func _refresh_numbers() -> void:
 	(%XpBar as ProgressBar).value = float(in_level) / float(maxi(for_level, 1))
 	(%XpLabel as Label).text = "%d / %d XP" % [in_level, for_level]
 	(%XpTotal as Label).text = "Insgesamt " + PlayerLevel.label()
-	# Der Goldstand zuerst: er ist das einzige, was man ausgeben kann, und die Kisten
-	# sagen, wie oft es dafür schon einen Grund gab.
 	(%GoldValue as Label).text = Wallet.digits()
 	(%GoldText as Label).text = "Gold (Debug)" if Wallet.unlimited_gold else "Gold"
 	(%ChestsValue as Label).text = str(Wallet.chests_opened)
 	(%ChestsText as Label).text = "Schatzkiste%s geöffnet" % ("" if Wallet.chests_opened == 1 else "n")
-	# Der OFFENE Stand (verdient minus ausgegeben), nicht das Level: das steht schon darüber.
+		# Der offene Stand (verdient minus ausgegeben).
 	var points := SkillBook.available()
 	(%PointsValue as Label).text = str(points)
 	(%PointsText as Label).text = "Skillpunkt%s offen" % ("" if points == 1 else "e")
-	# Keine Festungsstufe daneben: sie hängt an der Unit, nicht am Profil, und steht im
-	# Reiter „Fortschritt" an jeder Unit-Zeile und auf der Landkarte.
 	(%MasteredValue as Label).text = str(PlayerProgress.mastered_count(
 			PROGRESS.MASTERY_CONFIDENCE, _filter))
 	(%DueValue as Label).text = str(PlayerProgress.due_count(_filter))
 
 
-## Genauigkeit der letzten Sitzung mit Trendpfeil (Issue #13) — die Kopfzahl.
 func _refresh_accuracy() -> void:
 	var lines := accuracy_lines(SessionLog.session_accuracy())
 	_accuracy_label.text = str(lines["title"])
-	# Die Sitzung kennt keine Sprache (SessionLog) — gefiltert wird sie nicht, und das steht da.
 	_accuracy_which.text = str(lines["which"]) + ("" if _filter.is_empty() else " · alle Sprachen")
 	_accuracy_trend.text = str(lines["detail"])
 
 
-## Die Lebenszeitwerte, unten im Block „Insgesamt" (Issue #13).
-##
-## Die Gesamt-Genauigkeit stand früher als zweite Kennzahl oben. Als Kopfzahl bestraft sie
-## genau das Erwünschte: wer schwere Wörter übt, drückt sie, und nach einigen hundert
-## Antworten bewegt sie sich ohnehin kaum noch. Sie bleibt — als Bilanz, nicht als Urteil.
 func _refresh_totals() -> void:
 	_clear(_total_lines)
 	var days := SessionLog.played_day_count()
-	# Die Tage zählt SessionLog, ohne Sprache — die übrigen Zeilen folgen der Sprachwahl.
 	_add_line(_total_lines, "Geübt an %d Tag%s%s" % [days, "" if days == 1 else "en",
 			"" if _filter.is_empty() else " (alle Sprachen)"])
 	_add_line(_total_lines, "Gesamt-Genauigkeit: %d %%" % int(round(
@@ -324,9 +387,6 @@ func _refresh_totals() -> void:
 	_add_line(_total_lines, "Gesehene Wörter: %d    Versuche: %d" % [
 		PlayerProgress.seen_count(_filter), PlayerProgress.total_attempts(_filter)])
 	var streak := _add_line(_total_lines, "Längste Wort-Serie: %d" % PlayerProgress.best_streak_overall(_filter))
-	# „Wort-Serie", weil es drei Serien gibt: die Tages-Serie oben, die „Längste Serie
-	# ohne Durchlass" bei den Rekorden — und diese hier, die an EINER Aufgabe hängt
-	# (PlayerProgress.best_streak_overall), über Sitzungen und Tage hinweg.
 	_attach_hint(streak, "Längste Wort-Serie",
 			"So oft hast du eine einzelne Aufgabe hintereinander richtig beantwortet — "
 			+ "am besten Wort gemessen, über alle Sitzungen und Tage hinweg. Ein Fehler "
@@ -335,12 +395,8 @@ func _refresh_totals() -> void:
 
 
 ## Kopfzahl, Unterzeile und Trendzeile aus SessionLog.accuracy_trend():
-## { title, which, detail }.
-##
-## Der Pfeil steht nur, wo es zwei Werte gibt. Ohne Vorsitzung fehlt er, statt einen
-## Vergleich gegen „0 %" zu behaupten; unter der Mindestzahl an Antworten steht die Sitzung
-## als „3 von 4 richtig" da — ein Prozentwert aus vier Antworten täte genauer, als er ist.
-## Statisch und über das Dictionary, dieselbe Aufteilung wie record_rows().
+## { title, which, detail }. Ohne Vorsitzung kein Pfeil; unter der Mindestzahl an
+## Antworten „3 von 4 richtig“ statt Prozent.
 static func accuracy_lines(summary: Dictionary) -> Dictionary:
 	var answers := int(summary.get("answers", 0))
 	if answers == 0:
@@ -365,7 +421,7 @@ static func accuracy_lines(summary: Dictionary) -> Dictionary:
 	var against := "den %d Tagen davor" % SessionLog.ACCURACY_WINDOW_DAYS \
 			if str(summary.get("baseline_kind", "")) == "week" else "der Sitzung davor"
 	var base_text := "%d %%" % int(round(baseline * 100.0))
-	# Auf die ANGEZEIGTEN Prozente gerechnet, damit „84 % gegen 80 %" nicht „3 Punkte" heißt.
+		# Auf die angezeigten Prozente gerechnet, damit „84 % gegen 80 %“ nicht „3 Punkte“ heißt.
 	var delta := int(round(accuracy * 100.0)) - int(round(baseline * 100.0))
 	if absi(delta) < TREND_STEADY_POINTS:
 		return {"title": title + "  →", "which": which,
@@ -377,10 +433,6 @@ static func accuracy_lines(summary: Dictionary) -> Dictionary:
 			"detail": "%d Punkte unter %s (%s) — schwere Wörter drücken die Quote, das ist kein Rückschritt." % [-delta, against, base_text]}
 
 
-## Kampf-Rekorde über alle Sitzungen (Issue #11).
-##
-## Der Angeber-Anteil: Bestwerte, die kein Lernziel sind. Sie stehen bei den Kennzahlen
-## und nicht zwischen den Wortlisten — dort geht es um Wörter, hier um Zahlen.
 func _refresh_records() -> void:
 	_clear(_record_list)
 	var rows := record_rows(SessionLog.records())
@@ -398,15 +450,8 @@ func _refresh_records() -> void:
 		record.setup(str(row["label"]), str(row["value"]), str(row["mark"]), str(row["hint"]))
 
 
-## Die Kampf-Rekorde als fertige Zeilen (Bezeichnung, Wert, Zeichen, Hinweis) aus den
-## Bestwerten von SessionLog.records().
-##
-## Statisch und über das Dictionary statt über das Autoload — dieselbe Aufteilung wie bei
-## wanted_rows(): so ist die Auswahl mit erfundenen Bestwerten prüfbar, ohne den echten
-## Verlauf des Spielers anzufassen.
-##
-## Ohne Sitzung gibt es keine Zeilen: „0 Monster besiegt, nie unter 0 HP" wäre kein
-## leerer Block, sondern ein falscher.
+## Die Kampf-Rekorde als Zeilen { label, value, mark, hint } aus SessionLog.records().
+## Ohne Sitzung leer.
 static func record_rows(records: Dictionary) -> Array:
 	if int(records.get("sessions", 0)) == 0:
 		return []
@@ -430,9 +475,8 @@ static func record_rows(records: Dictionary) -> Array:
 			"hint": "über alle Läufe zusammen",
 		},
 	]
-	# Der schonendste Lauf ist der HÖCHSTE der lauf-eigenen Tiefstände, nicht der tiefste
-	# Stand überhaupt. Fehlt er (abgebrochene Läufe schreiben ihn nicht mit), bleibt die
-	# Zeile weg, statt einen erfundenen Stand zu behaupten.
+	# Der höchste der lauf-eigenen Tiefstände. Abgebrochene Läufe schreiben ihn nicht mit,
+	# dann fehlt die Zeile.
 	var floor_hp := int(records.get("best_fortress_floor", -1))
 	if floor_hp >= 0:
 		rows.append({
@@ -444,17 +488,13 @@ static func record_rows(records: Dictionary) -> Array:
 	return rows
 
 
-## Lernkurve „gemeisterte Aufgaben" (Issue #7).
-##
-## Gezeichnet wird die kumulierte Zahl je Wochenende (PlayerProgress.mastery_curve) —
-## eine Linie, die nicht zurückgeht. Die Bilanzzeile darunter sagt, was im Zeitraum
-## dazugekommen ist: eine Kurve ohne Zahl liest sich, aber man nimmt nichts mit.
+## Lernkurve: kumulierte gemeisterte Aufgaben je Wochenende (PlayerProgress.mastery_curve).
 func _refresh_curve() -> void:
 	var curve := PlayerProgress.mastery_curve(PROGRESS.CURVE_WEEKS, -1, _filter)
 	var values: Array = []
 	for point in curve:
 		values.append(int(point["count"]))
-	# Anfang der Zeitachse ist der BEGINN der ersten Woche, nicht ihr Ende.
+	# Die Achse beginnt am Anfang der ersten Woche, nicht an ihrem Ende.
 	var start := int(curve[0]["end"]) - 7 * 86400
 	_curve.show_series(values, short_date(start), "heute")
 
@@ -475,12 +515,9 @@ static func short_date(unix: int) -> String:
 	return "%d.%d." % [int(d["day"]), int(d["month"])]
 
 
-## „Frisch gemeistert": Aufgaben, deren erste Meisterung im Zeitraum ab `since` (unix)
-## liegt — jüngste zuerst, gekappt auf `limit`.
-##
-## Records ohne Zeitstempel (mastered_at = 0, Altbestand von vor der Zeitmessung) bleiben
-## außen vor: ihre Meisterung liegt vor dem Messbeginn und wäre hier ein Eintrag vom
-## 01.01.1970. Dieselbe Regel wie in PlayerProgress.mastered_since.
+## „Frisch gemeistert“: Aufgaben mit erster Meisterung ab `since` (unix), jüngste zuerst,
+## gekappt auf `limit`. Records ohne Zeitstempel (mastered_at = 0) bleiben außen vor, wie
+## in PlayerProgress.mastered_since.
 static func fresh_rows(rows: Array, since: int, limit := LIST_COUNT) -> Array:
 	var fresh: Array = []
 	for row in rows:
@@ -491,13 +528,8 @@ static func fresh_rows(rows: Array, since: int, limit := LIST_COUNT) -> Array:
 	return fresh.slice(0, limit)
 
 
-## „Comeback": Aufgaben, die mindestens `min_misses` Mal entwischt sind und jetzt trotzdem
-## sitzen — die mit den meisten Fehlversuchen zuerst, bei gleichem Stand die jüngste
-## Meisterung. Gekappt auf `limit`.
-##
-## Ohne Zeitfenster, anders als bei „frisch gemeistert": ein zurückgeholtes Wort bleibt
-## eine Auszeichnung, auch wenn es vier Wochen her ist. Der Altbestand ohne Zeitstempel
-## darf hier deshalb mitkommen — die Sortierung nimmt ihn nur nach hinten.
+## „Comeback“: mindestens `min_misses` Mal entwischt und jetzt gemeistert; meiste
+## Fehlversuche zuerst, dann jüngste Meisterung. Ohne Zeitfenster.
 static func comeback_rows(rows: Array, limit := LIST_COUNT, min_misses := COMEBACK_MISSES) -> Array:
 	var comeback: Array = []
 	for row in rows:
@@ -510,11 +542,6 @@ static func comeback_rows(rows: Array, limit := LIST_COUNT, min_misses := COMEBA
 	return comeback.slice(0, limit)
 
 
-## Die beiden Listen, die genau das belohnen, was belohnt werden soll (Issue #9).
-##
-## Mit Wortlaut und nicht als Zahl — der Wiedererkennungswert ist der Punkt, „71 %
-## Genauigkeit" sagt darüber nichts. Beide Listen haben einen freundlichen Leertext statt
-## einer leeren Fläche; beim Comeback ist leer der Normalfall.
 func _refresh_lists() -> void:
 	var rows := PlayerProgress.records_for_display(_filter)
 	var since := int(Time.get_unix_time_from_system()) - FRESH_DAYS * 86400
@@ -534,9 +561,8 @@ func _refresh_lists() -> void:
 		_add_row(_comeback_list, str(row["label"]), "%d× entwischt" % misses(row), "✓")
 
 
-## „heute" / „gestern" / „vor 3 Tagen" für einen Meisterungs-Zeitpunkt. Lokale Tage wie
-## in der Tages-Serie (SessionLog.local_day), damit nicht zwei Tagesgrenzen im Screen
-## gelten. Bei „frisch gemeistert" liegt der Zeitpunkt höchstens eine Woche zurück.
+## „heute“ / „gestern“ / „vor 3 Tagen“, nach lokalen Tagen wie die Tages-Serie
+## (SessionLog.local_day).
 func _when(unix: int) -> String:
 	var days := SessionLog.local_day(int(Time.get_unix_time_from_system())) - SessionLog.local_day(unix)
 	if days <= 0:
@@ -546,17 +572,8 @@ func _when(unix: int) -> String:
 	return "vor %d Tagen" % days
 
 
-## Wählt die Fahndungsfälle aus den Zeilen von PlayerProgress.records_for_display():
-## schwächste Confidence zuerst, bei gleicher Confidence die mit den meisten
-## Fehlversuchen, gekappt auf `limit`.
-##
-## Bewusst nur Wörter mit mindestens einem Fehlversuch. Ein neues Wort hat von Haus aus
-## eine niedrige Confidence (der CEFR/Frequenz-Prior, siehe WaveGenerator) und stünde
-## sonst ganz oben, ohne je falsch beantwortet worden zu sein — ein Fahndungsfall ist es
-## erst, wenn es einmal entwischt ist.
-##
-## Statisch und ohne Zugriff auf Autoloads oder Szene, damit die Regel für sich prüfbar
-## bleibt (siehe tests/stats_screen_test.gd).
+## Die Fahndungsfälle: nur Aufgaben mit Fehlversuch (ein neues Wort hat schon vom Prior eine
+## niedrige Confidence), schwächste Confidence zuerst, dann die meisten Fehlversuche.
 static func wanted_rows(rows: Array, limit := WANTED_COUNT) -> Array:
 	var wanted: Array = []
 	for row in rows:
@@ -580,24 +597,16 @@ func _refresh_wanted() -> void:
 				"%d× entwischt" % misses(row), _percent(row))
 
 
-## Fortschrittsbalken pro Unit (Issue #8). Balken je Thema (Lexem-Tag) gibt es hier
-## nicht mehr: gezählt wird nach Buch und Unit.
-##
-## Der Bezugsrahmen ist der Curriculum-Scope aus dem Session-Setup: angezeigt werden nur
-## Units, die darin überhaupt vorkommen. Ohne Auswahl ist es der ganze
-## Katalog. Die Themen-Auswahl (die zweite Achse) bleibt hier bewusst außen vor — sonst
-## stünde bei „Unit 6: 8 von 12" nur der ausgewählte Teil der Unit, und die Zahl wäre
-## nicht die, nach der ein Elternteil oder eine Lehrkraft fragt.
-##
-## Die Sprachwahl lässt nur die Bücher ihrer Sprache stehen.
+## Fortschrittsbalken je Unit im Curriculum-Scope aus dem Session-Setup (ohne Auswahl der
+## ganze Katalog). Die Themen-Auswahl zählt nicht mit (Handbuch Kapitel 12); die Sprachwahl
+## lässt nur die Bücher ihrer Sprache stehen.
 func _refresh_progress() -> void:
 	var pool := ContentRegistry.lexemes_scoped(UserSettings.selected_scope(), []) \
 			.filter(PROGRESS.masterable) \
 			.filter(func(e): return _filter.is_empty() \
 					or _book_languages.get(str(e.get("book", "")), "") in _filter)
 	var mastered := PlayerProgress.mastered_lexemes()
-	# Die Festungsstufe wertet die GANZE Unit, auch wenn der Bereich nur ein Viertel davon
-	# zeigt (FortressTier.run_tier) — deshalb über den Katalog und nicht über `pool`.
+	# Die Festungsstufe wertet die ganze Unit (FortressTier.run_tier), daher der Katalog.
 	var tiers := FortressTier.unit_tiers(ContentRegistry.lexemes.values(), mastered,
 			FortressTier.drop_of(SkillBook.bonuses()))
 	var units := unit_rows(pool, mastered, ContentRegistry.book_label)
@@ -610,16 +619,11 @@ func _refresh_progress() -> void:
 
 
 ## Fortschrittszeilen je Unit: { key, label, done, total, lexemes }, nach Buch und Unit
-## sortiert. Lexeme ohne Buch/Unit (Grundwortschatz) haben keine Unit und bleiben außen
-## vor. `book_label` benennt das Buch für die Anzeige (ContentRegistry.book_label).
-##
-## Gezählt wird in FortressTier.unit_tiers — dieselbe Zählung, aus der die Festungsstufe
-## kommt. Statisch und ohne Autoload, damit sie für sich prüfbar bleibt
-## (siehe tests/mastered_lexemes_test.gd).
+## sortiert, gezählt in FortressTier.unit_tiers. `book_label` ist ContentRegistry.book_label.
 static func unit_rows(lexemes: Array, mastered: Dictionary, book_label: Callable) -> Array:
 	var groups := FortressTier.unit_tiers(lexemes, mastered)
 	var keys: Array = groups.keys()
-	# Numerisch nach Unit, nicht als Text — sonst stünde Unit 10 vor Unit 2.
+	# Numerisch, sonst stünde Unit 10 vor Unit 2.
 	keys.sort_custom(func(a, b):
 		var ga: Dictionary = groups[a]
 		var gb: Dictionary = groups[b]
@@ -639,10 +643,8 @@ static func unit_rows(lexemes: Array, mastered: Dictionary, book_label: Callable
 	return rows
 
 
-## Setzt unter jede Unit-Zeile je Bonus der Unit eine eigene Zeile (ADR 0012): { key,
-## label, done, total, bonus } — gezählt in Aufgaben (BonusLevel.counts), getrennt von den
-## Wörtern der Unit, die davon unberührt bleiben. `bonuses_of(book, unit)` ist
-## ContentRegistry.bonuses_of, `layout(book)` MapLayout.data (für den Titel).
+## Je Bonus der Unit eine Zeile darunter (ADR 0012): { key, label, done, total, bonus },
+## gezählt in Aufgaben (BonusLevel.counts). Callables: ContentRegistry.bonuses_of, MapLayout.data.
 static func with_bonus_rows(units: Array, bonuses_of: Callable, is_mastered: Callable,
 		layout: Callable) -> Array:
 	var out: Array = []
@@ -660,8 +662,7 @@ static func with_bonus_rows(units: Array, bonuses_of: Callable, is_mastered: Cal
 	return out
 
 
-## Die Aufgaben eines Bonus mit ihrem Prozentstand, die sichersten zuerst — was hinter
-## seiner Zeile steht. `conf` und `describe` wie bei word_lines.
+## Die Aufgaben eines Bonus mit Prozentstand, die sichersten zuerst.
 static func bonus_lines(bonus: Dictionary, conf: Callable, describe: Callable) -> Array:
 	var rows: Array = []
 	for id in bonus.get("task_ids", []):
@@ -674,29 +675,12 @@ static func bonus_lines(bonus: Dictionary, conf: Callable, describe: Callable) -
 	})
 
 
-## Die Wörter einer Gruppe mit ihrem Prozentstand — was hinter „18 von 24" steht.
-##
-## Der Prozentstand ist die SCHWÄCHERE der beiden Übersetzungsrichtungen, also dieselbe
-## Rechnung, aus der die Meisterung kommt (PlayerProgress.mastered_lexemes: beide
-## Richtungen ab MASTERY_CONFIDENCE). Der Durchschnitt wäre freundlicher und läge bei
-## einer sitzenden und einer offenen Richtung bei 60 % — der Haken stünde dann an einer
-## anderen Zahl als der angezeigten, und die Liste erklärte den Balken nicht mehr.
-##
-## Bei einem unregelmäßigen Verb zählen auch seine Formen in den Prozentstand, aus demselben
-## Grund wie in der Meisterung (`requirements`, ContentRegistry.form_requirements).
-##
-## Die ÜBRIGEN Aufgaben zum Wort (Formen, Gegenteile, Synonyme, Verwechslungen) zählen
-## bewusst NICHT in die Meisterung — sie hängen an Zusatzdaten, die nur ein Teil der
-## Wörter hat, und eine nachgetragene Relation nähme dem Spieler sonst rückwirkend ein
-## gemeistertes Wort weg. Sie fahren als `extras` mit und stehen in der Zeile als
-## Sternchen: ein Wort kann sitzen UND noch etwas zu holen haben.
-##
-## Sortiert nach `sort` (`sort_rows`), von Haus aus das Sicherste zuerst.
-##
-## `conf` liefert die Confidence einer Aufgabe und -1 für „kein Record" (im Spiel
-## PlayerProgress.confidence mit -1 als Vorgabe), `learnables` alle learnable_ids zu einem
-## Lexem (WaveGenerator.learnables_of). Als Callables übergeben — wie book_label bei
-## unit_rows —, damit die Regeln ohne Autoload prüfbar bleiben.
+## Die Wörter einer Gruppe mit ihrem Prozentstand, sortiert nach `sort` (`sort_rows`).
+## Der Prozentstand ist die schwächere Übersetzungsrichtung, bei unregelmäßigen Verben
+## auch die Formen (`requirements`) — dieselbe Rechnung wie PlayerProgress.mastered_lexemes.
+## Die übrigen Aufgaben zählen nicht in die Meisterung; sie fahren als `extras` mit.
+## `conf` liefert die Confidence einer Aufgabe, -1 für „kein Record“; `learnables` alle
+## learnable_ids eines Lexems (WaveGenerator.learnables_of).
 static func word_rows(lexemes: Array, conf: Callable, learnables := Callable(),
 		requirements: Dictionary = {}, sort := SortMode.BEST_FIRST) -> Array:
 	var rows: Array = []
@@ -709,8 +693,7 @@ static func word_rows(lexemes: Array, conf: Callable, learnables := Callable(),
 			var value := float(conf.call("translate:%s:%s" % [direction, id]))
 			directions.append({"direction": direction, "confidence": value})
 			if value < 0.0:
-				# Keine Aufgabe, kein Stand: die Richtung zieht den Wert auf 0, aber sie
-				# macht das Wort noch nicht zu einem geübten.
+				# Ohne Record zieht die Richtung auf 0, macht das Wort aber nicht zum geübten.
 				value = 0.0
 			else:
 				seen = true
@@ -727,14 +710,8 @@ static func word_rows(lexemes: Array, conf: Callable, learnables := Callable(),
 	return sort_rows(rows, sort)
 
 
-## Ordnet Zeilen mit `label` und `confidence` (-1 heißt „noch nie geübt") nach `mode` —
-## die eine Regel für Wort- und Aufgabenliste.
-##
-## Nach Stand sortiert stehen die nie geübten in BEIDEN Richtungen alphabetisch am Ende:
-## sie sind kein Lernstand, sondern das, was noch aussteht — als „schwächste" oben
-## verdrängten sie genau die Wörter, an denen gerade etwas zu holen ist, und unter 0 %
-## gehören sie auch nicht, denn 0 % ist gemessen. Gleiche Stände stehen alphabetisch,
-## damit die Liste beim Umschalten nicht springt.
+## Ordnet Zeilen mit `label` und `confidence` (-1 = nie geübt) nach `mode`. Nach Stand
+## stehen nie geübte alphabetisch am Ende, gleiche Stände alphabetisch.
 static func sort_rows(rows: Array, mode := SortMode.BEST_FIRST) -> Array:
 	rows.sort_custom(func(a, b):
 		var la := str(a["label"])
@@ -751,9 +728,8 @@ static func sort_rows(rows: Array, mode := SortMode.BEST_FIRST) -> Array:
 	return rows
 
 
-## Die Aufgaben eines Wortes NEBEN den beiden Übersetzungsrichtungen, gemeisterte zuerst:
-## { id, confidence, mastered }. Die Richtungen fallen hier raus, weil sie schon der
-## Prozentstand der Zeile sind — doppelt gezählt wäre jedes Wort mindestens zweisternig.
+## Die Aufgaben eines Wortes außer den Übersetzungsrichtungen, gemeisterte zuerst:
+## { id, confidence, mastered }.
 static func extra_rows(entry: Dictionary, conf: Callable, learnables: Callable) -> Array:
 	if not learnables.is_valid():
 		return []
@@ -770,13 +746,8 @@ static func extra_rows(entry: Dictionary, conf: Callable, learnables: Callable) 
 	return out
 
 
-## Dieselben Zeilen, fertig für StatRow: { label, value, mark, hint_list }.
-##
-## In der Markierung steht der Haken für das Wort und je ein Sternchen für jede weitere
-## Aufgabe dazu — ausgefüllt, wenn sie sitzt. Was die Zeichen im Einzelnen heißen, steht
-## im Mouseover (`hint_list`): die Zeile bleibt schmal genug für eine lange Liste, und wer es
-## genau wissen will, hält drauf. `describe` benennt eine Aufgabe (TaskResolver
-## .describe_learnable); ohne sie steht die rohe learnable_id da.
+## Dieselben Zeilen für StatRow: { label, value, mark, hint_list }; je Zusatzaufgabe ★ (sitzt)
+## oder ☆. `describe` ist TaskResolver.describe_learnable.
 static func word_lines(lexemes: Array, conf: Callable, learnables := Callable(),
 		describe := Callable(), requirements: Dictionary = {},
 		sort := SortMode.BEST_FIRST) -> Array:
@@ -790,8 +761,7 @@ static func word_lines(lexemes: Array, conf: Callable, learnables := Callable(),
 			mark += "★" if bool(extra["mastered"]) else "☆"
 		lines.append({
 			"label": str(row["label"]),
-			# Ein nie geübtes Wort steht nicht mit „0 %" da: 0 % ist ein gemessener Stand,
-			# und gemessen wurde hier nichts.
+			# Nie geübt ist nicht „0 %“.
 			"value": "noch nicht geübt" if value < 0.0 else "%d %%" % int(round(value * 100.0)),
 			"mark": mark,
 			"hint_list": word_hint(row, describe),
@@ -799,13 +769,8 @@ static func word_lines(lexemes: Array, conf: Callable, learnables := Callable(),
 	return lines
 
 
-## Die Liste der Karte am Zeiger für eine Wortzeile: je Richtung eine Zeile und darunter
-## je Sternchen eine. Sie sagt genau das, was die Zeichen verschweigen — welche Aufgabe das
-## Sternchen meint und wie weit sie ist. Zeilen `[zeichen, bezeichnung, wert]`, damit die
-## Karte sie als Tabelle setzt und die Prozente untereinander stehen (`HintCard`).
-##
-## Das WORT steht nicht darin: es ist die Überschrift der Karte (`StatRow.setup`), und
-## zweimal dasselbe zu lesen ist keine Auskunft.
+## Zeilen der Hinweiskarte für eine Wortzeile: `[zeichen, bezeichnung, wert]`, je Richtung
+## und je Zusatzaufgabe eine. Das Wort selbst ist die Überschrift (`StatRow.setup`).
 static func word_hint(row: Dictionary, describe := Callable()) -> Array:
 	var lines: Array = []
 	for direction in row.get("directions", []):
@@ -829,8 +794,7 @@ static func percent_label(confidence: float) -> String:
 	return "%d %%" % int(round(confidence * 100.0))
 
 
-## Ein Wort in beiden Sprachen, „house — Haus". Beide, weil die Liste unter einer Unit
-## zum Nachschlagen da ist und die Meisterung ohnehin beide Richtungen verlangt.
+## Ein Wort in beiden Sprachen, „house — Haus“.
 static func word_label(entry: Dictionary) -> String:
 	var foreign := Lexeme.foreign(entry)
 	var de := str(entry.get("lemma_de", ""))
@@ -854,20 +818,14 @@ func _fill_progress(box: VBoxContainer, rows: Array, empty_text: String) -> void
 							_resolver.describe_learnable), true)
 			continue
 		var lexemes: Array = row.get("lexemes", [])
-		# Erst beim Aufklappen gerufen: siehe ProgressRow.
+		# Erst beim Aufklappen gerufen (ProgressRow).
 		bar.setup(str(row["label"]), int(row["done"]), int(row["total"]),
 				func(): return word_lines(lexemes, PlayerProgress.confidence.bind(-1.0),
 						_generator.learnables_of, _resolver.describe_learnable,
 						ContentRegistry.form_requirements(), _sort_mode))
 
 
-## Alle geübten AUFGABEN in der gewählten Reihenfolge (`sort_rows`). Der Haken markiert
-## die gemeisterten.
-##
-## Eine Zeile je learnable_id, nicht je Wort: ein Wort hat beide Übersetzungsrichtungen
-## und dazu seine Formen und Relationen. Deshalb heißt der Reiter „Aufgaben" — als
-## „Wörter" stand dieselbe Vokabel mehrfach mit verschiedenen Ständen darin, und der
-## Haken behauptete etwas anderes als der Haken im Fortschritt (dort: das WORT sitzt).
+## Alle geübten Aufgaben, eine Zeile je learnable_id, sortiert nach `sort_rows`.
 func _refresh_tasks() -> void:
 	_clear(_task_list)
 	var rows := sort_rows(PlayerProgress.records_for_display(_filter), _sort_mode)
@@ -879,7 +837,6 @@ func _refresh_tasks() -> void:
 				"✓" if bool(row["mastered"]) else "")
 
 
-## Fehlversuche einer Aufgabe: Versuche minus korrekte Antworten.
 static func misses(row: Dictionary) -> int:
 	return int(row["attempts"]) - int(row["correct"])
 
@@ -893,8 +850,7 @@ func _clear(box: VBoxContainer) -> void:
 		child.queue_free()
 
 
-## Umbrechend, weil die Listen im Überblick nebeneinander stehen: ein Leertext, der nicht
-## umbricht, drückt sonst das ganze Fenster breiter als das Bild.
+## Umbrechend, sonst drückt ein langer Leertext das Fenster breiter als das Bild.
 func _add_line(box: VBoxContainer, text: String) -> Label:
 	var label := Label.new()
 	label.text = text
@@ -903,8 +859,7 @@ func _add_line(box: VBoxContainer, text: String) -> Label:
 	return label
 
 
-## Karte am Zeiger für eine schlichte Zeile. Ein Label ignoriert die Maus von Haus aus —
-## dann läge nicht die Zeile unter dem Zeiger, sondern ihre Liste, und die Karte käme nie.
+## Hinweiskarte für eine schlichte Zeile. Ein Label ignoriert die Maus von Haus aus, daher PASS.
 func _attach_hint(label: Label, title: String, body: String, note := "") -> void:
 	label.mouse_filter = Control.MOUSE_FILTER_PASS
 	Hints.attach(label, title, body, note)

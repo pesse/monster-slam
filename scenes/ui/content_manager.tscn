@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://src/ui/content_manager.gd" id="1_content"]
 [ext_resource type="Texture2D" path="res://assets/ui/windows/window_surface.webp" id="2_surface"]
@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/content_pack_row.tscn" id="9_row"]
 [ext_resource type="PackedScene" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
 [ext_resource type="PackedScene" path="res://scenes/ui/confirm_dialog.tscn" id="10_confirm"]
+[ext_resource type="PackedScene" path="res://scenes/ui/model_part_row.tscn" id="10_part"]
 
 [node name="ContentManager" type="Control"]
 layout_mode = 3
@@ -21,6 +22,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_content")
 row_template = ExtResource("9_row")
+part_template = ExtResource("10_part")
 
 [node name="Dim" type="ColorRect" parent="."]
 layout_mode = 1
@@ -170,6 +172,12 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"Caption"
 autowrap_mode = 3
+
+[node name="ModelParts" type="VBoxContainer" parent="Window/Layout/Content/Body/Model"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"Tight"
 
 [node name="ModelProgress" type="ProgressBar" parent="Window/Layout/Content/Body/Model"]
 unique_name_in_owner = true

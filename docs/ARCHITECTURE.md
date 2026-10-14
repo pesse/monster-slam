@@ -416,8 +416,8 @@ Erspielte.
   das Widget (`STAGE_PAD`) — die Kiste selbst bleibt in ihrem Platz im Layout, geprüft
   gegen das Widget-Rechteck. Verblasst wird keine Münze: `GeometryInstance3D.transparency`
   gibt es im `gl_compatibility`-Renderer nicht, deshalb fallen sie unter die Bildkante.
-  Die Einzelheiten zu Atlas, Mesh-Kopie, Kamera und Polster stehen im Kopf von
-  `treasure_chest.gd`.
+  Die Einzelheiten zu Atlas, Mesh-Kopie, Kamera und Polster stehen in `treasure_chest.gd`
+  an `ATLAS_CELLS`, `_mesh_with_metal_cell`, `CAM_SIZE` und `STAGE_PAD`.
 - **Die Größe des Abschluss-Screens steht fest**, solange er sichtbar ist: er hängt in
   der Bildmitte, und eine Größenänderung beim Weiterblättern verschiebt die Knöpfe unter
   dem Zeiger. Dafür der `PageStack` plus die Regel, innerhalb einer Seite nur zu sperren
@@ -520,8 +520,8 @@ der umgekehrten Absicht: Gold ist Beute, Erfahrung ist Lernfortschritt.
   daneben könnte abweichen, und dann wäre nicht zu sagen, welcher stimmt — ein von Hand
   hochgesetztes Level in der Datei wird beim Laden verworfen.
 - **Verbucht wird im `WaveRunner`, nicht im Screen** (`_defeat` → `PlayerLevel.gain`),
-  genau wie beim Gold — und SOFORT: Erfahrung fällt mitten in der Welle an, und ein
-  Absturz auf dem Weg zum Wellenende darf sie nicht kosten. Der Abschluss-Screen bekommt
+  genau wie beim Gold. Auf die Platte kommt sie erst am Wellenende (`SaveCoordinator`,
+  ADR 0024): bricht die Welle ab, zählt ihre Erfahrung nicht. Der Abschluss-Screen bekommt
   nur den Zuwachs der Welle und liest den Stand bei `PlayerLevel`.
 - **`PlayerLevel.skill_points()` ist der VERDIENTE Stand**, die offenen Punkte rechnet
   `SkillBook.available()` aus den gelernten Knoten — auch dort kein zweiter Zähler.
@@ -540,7 +540,7 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
 | `RunRequest` | `src/core/run_request.gd` | statisch: was der nächste Lauf spielt — ein Level der Karte oder die Auswahl des Expertenmodus; Scope, Tags, Aufgabenpool, Unit, Rücksprung |
 | `MapLevel` | `src/progression/map_level.gd` | die Level einer Unit (T1…T4, Gesamt, Boss) aus `ContentRegistry.parts_for`; Stufe und Zählung je Level |
 | `BossRecord` | `src/progression/boss_record.gd` | Boss-Siege je Unit (Ursprungswert), Medaille bei 1/3/5 Siegen |
-| `RunSave` | `src/progression/run_save.gd` | begonnene Läufe von der Karte, ein Platz je Buch (ADR 0020) |
+| `RunSave` | `src/progression/run_save.gd` | begonnene Läufe von der Karte, ein Platz je Unit (ADR 0020 mit Nachtrag) |
 | `MapSelection` | `src/ui/map_selection.gd` | welches Buch, welche Unit gerade offen ist (überdauert den Szenenwechsel) |
 | `MapLayout` | `src/ui/map_layout.gd` | Bild und Punkte unter `assets/maps/<book>/` (`book.png`, `unit<n>.png`, `map.json`) |
 | `BookNaming` | `src/core/book_naming.gd` | Wie das Buch sich und seine Ebenen nennt („Dossier 2 · Partie A", „Abschnitt 2 · Lektion 10"); unter `naming` in `map.json`, ohne Eintrag „Unit"/„Teil" |
@@ -604,13 +604,17 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
   lässt: der Boss-Sieg. Nur ein Sieg mit `RunRequest.unit_key()` zählt; er geht über
   `EventBus.boss_won` auch in die Spur.
 - **Rasten** (ADR 0020): ein Lauf von der Karte, dessen Festung steht, wird auf Stufe 2
-  gerastet (`RunSave`, ein Platz je Buch). Gespeichert sind die Orte (`keys`), Welle,
+  gerastet (`RunSave`, ein Platz je Unit). Gespeichert sind die Orte (`keys`), Welle,
   Schwierigkeit und `GameState.run_snapshot()`; Scope und Maxima werden beim Fortsetzen
   neu gerechnet (`RunSave.resumable_level`, `GameState.restore_run`). Die Gebietskarte
   markiert die Orte; eine Auswahl, die sie alle enthält, setzt fort und darf weitere Orte
   der Unit dazunehmen (`RunSave.continues`, Gesamt zählt als alle Teile, der Boss nie).
   „Fortsetzen" trägt den Stand über `RunRequest.start_level(level,
-  resume)` in den Kampf, der ihn einmal nimmt und den Platz verwirft.
+  resume)` in den Kampf, der ihn einmal nimmt und den Platz verwirft. Escape mitten in der
+  Welle rastet ebenfalls (ADR 0020 Nachtrag): das Feld `wave` trägt die übrigen Monster und
+  die Zähler der angefangenen Welle (`RunSave.open_wave`), und `WaveRunner._continue_wave`
+  setzt sie fort, statt eine neue zu beginnen. Die Buchkarte zeigt jeden begonnenen Lauf
+  als 🔥 an seiner Unit (`BookMap.add_runs`), ihr Knopf führt zum zuletzt gerasteten.
 - **Bilder liegen in der EXE**, nicht im Pack (`export_presets.cfg` nimmt
   `assets/maps/*.json` mit). Punkte stehen in Anteilen des Bildes (0..1). Fehlt Bild oder
   ein Punkt, zeichnet `MapCanvas` eine schlichte Fläche und legt ALLE Orte selbst aus
@@ -710,7 +714,10 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
   „Schön" zeigt alles, „Mittel" lässt Glow weg und halbiert MSAA, „Schnell" lässt dazu MSAA,
   Wolken, Teilchen, Bodenflecken und die Farbkorrektur weg. Die Büschel des Bewuchses
   halbiert „Mittel", „Schnell" lässt sie weg; die Sträucher bleiben. Schatten, Wind und der Weg
-  bleiben überall. Die Kosten misst `battle_theme_lab -- --fps`. Das alte `graphics_simple`
+  bleiben überall: Schatten geben die Tiefe, Wind kostet fast nichts, der Weg trägt den
+  Bildaufbau. Die Kosten misst `battle_theme_lab -- --fps`; gemessen waren MSAA 11–29 % der
+  Bildzeit, Glow 11–15 %, Schatten 7–15 %, Weg und Bodenflecken um 14 %, Wolken, Teilchen,
+  Wind und Farbkorrektur je 0–8 %. Das alte `graphics_simple`
   wird als „Schnell" gelesen, solange keine Stufe gespeichert ist.
 
 ## Fähigkeitsbäume: wofür die Punkte da sind
@@ -1001,7 +1008,7 @@ Ein Zauber ist ein Verbrauchsgegenstand: `price` in Gold, `effect` aus
 - **Bild** (`SpellFx`, `src/fx/spell_fx.gd`, im Kampf und in der Werkbank dasselbe):
   Schleier über dem ganzen Bild (`SpellVeil`), Banner mit Bild und Name
   (`SpellBanner`), dazu je Wirkung ein Effekt im Feld — Lichtvorhang, nach dem die
-  Schilder der Reihe nach aufspringen (`SpellCaster.reveal_delay`), Schlamm-Spritzer,
+  Schilder der Reihe nach aufspringen (`SpellFx.reveal_delay`), Schlamm-Spritzer,
   Dunst für die ganze Welle, Eisring und Schnee, verdunkeltes Bild mit gestaffelten
   Blitzen (`LightningBolt`, Plasma-`Blast`, Brandfleck), Lichtsäule an der Festung. Am
   Monster hängen `FrostShell` (wächst, reißt in den letzten Sekunden, zerspringt) und
@@ -1020,6 +1027,27 @@ Ein Zauber ist ein Verbrauchsgegenstand: `price` in Gold, `effect` aus
 
 ## Datenpersistenz
 
+Entscheidung und Begründung: `docs/adr/0024-spielstand-sicher-speichern.md`.
+
+| | Spielstand |
+|---|---|
+| Schreiben | nur `SaveStore` (`src/core/save_store.gd`): `.tmp`, zurücklesen, umbenennen; Prüfsumme in der Hülle `{"_save":{…},…}` |
+| Wann | `SaveCoordinator` (Autoload): Commit an der Wellengrenze, nach Kiste und Boss, in Menüs am Frame-Ende; im Kampf `hold()` |
+| Sperre | `SaveGuard.MONOTONIC`: was nur wachsen darf, sinkt nie ohne `allow_drop` |
+| Sicherung | `Backups`: Generation des ganzen Profils unter `user://backups/<id>/<stempel>/`, Manifest zuletzt; 3 + 7 Tage + 8 Wochen |
+| Schaden | beim Öffnen: Quarantäne `user://quarantine/<id>/…` + neueste Generation zurück, sonst gesperrt |
+| Datei | `SaveArchive`: „Sichern…“/„Laden…“ in den Einstellungen, Zip mit Prüfsummen |
+
+- **Ein Speicher meldet nur „geändert“** (`SaveCoordinator.mark_dirty(self)`) und liefert
+  `save_path`, `save_suffix`, `save_payload`, `reload`. Wann geschrieben wird, entscheidet
+  der Coordinator; ein Abbruch lädt mit `discard_uncommitted` den letzten Stand zurück.
+- **Unlesbar ist nie „neu“.** Ein Loader, der eine beschädigte Datei findet, setzt nicht
+  auf 0, und über die Datei wird nicht geschrieben.
+- **Statische Speicher** (`BossRecord`, `TestLists`, `RunSave`) schreiben über
+  `SaveGuard.write` sofort, aber genauso sicher.
+- **Testläufe speichern nie ins aktive Profil**: unter gdUnit4 ist der Coordinator still
+  (`_under_test`), Tests bauen eigene Instanzen mit eigenen Ordnern.
+
 - **Content** (Aufgaben, Monster, Wellen, …): JSON unter `data/` — versioniert, agent-editierbar.
 - **Sprachdaten** (Lexeme, Formen, Relationen, Sätze): JSON unter `data/language/`
   — eigenes privates Repo (Submodule), Änderungen werden dort committet.
@@ -1033,17 +1061,16 @@ Ein Zauber ist ein Verbrauchsgegenstand: `price` in Gold, `effect` aus
   geht beim nächsten Start mit.
 - **Gold** (`Wallet`, `src/economy/wallet.gd`): JSON unter
   `user://progress/<player>_wallet.json` — Stand, Lebensleistung und Zahl geöffneter
-  Kisten. Gesichert wird **sofort** bei jeder Änderung und nicht erst am Laufende:
-  verdientes Gold darf ein Absturz nicht kosten.
+  Kisten. Gespeichert wird nach der geöffneten Kiste.
 - **Erfahrung und Level** (`PlayerLevel`, `src/progression/player_level.gd`): JSON unter
   `user://progress/<player>_level.json`. Gelesen wird daraus nur `total_xp` — Level und
-  Skillpunkte stehen zum Mitlesen in der Datei, kommen aber aus der Rechnung. Gesichert
-  wird **sofort** bei jeder Änderung, also mitten in der Welle.
+  Skillpunkte stehen zum Mitlesen in der Datei, kommen aber aus der Rechnung. Gespeichert
+  wird am Wellenende, nie mitten in der Welle (ADR 0024).
 - **Boss-Siege** (`BossRecord`, `src/progression/boss_record.gd`): JSON unter
   `user://progress/<player>_bosses.json`, je Sieg ein Eintrag `{unit, won_at}`. Zahl und
   Medaille werden beim Lesen gezählt (ADR 0006).
 - **Begonnene Läufe** (`RunSave`, `src/progression/run_save.gd`): JSON unter
-  `user://progress/<player>_runs.json`, `{runs: {<book>: <stand>}}`, über eine temporäre
+  `user://progress/<player>_runs.json`, `{runs: {<book>/<unit>: <stand>}}`, über eine temporäre
   Datei geschrieben (ADR 0020).
 - **Ereignis-Protokoll** (`TraceLog`, `src/learning/trace_log.gd`): JSON Lines unter
   `user://logs/<player>_trace.jsonl`, eine Zeile je Ereignis. Siehe „Die Spur eines Laufs"
@@ -1213,7 +1240,7 @@ Entscheidung und Begründung: `docs/adr/0021-statistik-rueckkanal.md`.
 
 | | Statistik-Kanal |
 |---|---|
-| Was | je Profil ein Snapshot aus `user://progress/` und die bereinigte Spur, gzip-gepackt |
+| Was | je Profil ein Snapshot aus der neuesten Sicherung (ADR 0024) und die bereinigte Spur, gzip-gepackt |
 | Autoload | `StatsUploader` (`src/stats/`), Bereinigung `TraceSanitizer` |
 | Ziel | `server/statistik/statistik.php` neben dem Melde-Endpunkt; Ablage `ms-stats/<stats_id>/` **über** dem Docroot |
 | Berechtigung | App-Schlüssel `app-<n>.<mac>` (Format wie Melde-Token), beim Export als `stats_key.cfg` eingesetzt |
@@ -1221,7 +1248,7 @@ Entscheidung und Begründung: `docs/adr/0021-statistik-rueckkanal.md`.
 | Auswertung | lokal: `tools/stats/fetch.sh` (SFTP) → `tools/stats/report.py` → `stats-data/report.html` |
 
 - **Was hinausgeht, steht an genau zwei Stellen**: `StatsUploader.SNAPSHOT_FILES` (je Datei
-  unter `user://progress/` die erlaubten Schlüssel) und `TraceSanitizer.KEEP` (je
+  einer Sicherung die erlaubten Schlüssel) und `TraceSanitizer.KEEP` (je
   Spurereignis die erlaubten Felder). Beides sind Allowlists; was neu dazukommt, bleibt
   daheim, bis es dort steht.
 - **Getipptes wird zu Zahlen.** Eine `answer`-Zeile verliert `text` und `canonical` und
@@ -1230,8 +1257,11 @@ Entscheidung und Begründung: `docs/adr/0021-statistik-rueckkanal.md`.
   `near`, die Aufgabe dieser Lösung. Deshalb liest die Bereinigung die Spur immer von vorn.
 - **Der Cursor gehört dem Server**: die App schickt `from`/`to` als `[at, ms]`, der Server
   antwortet `have`. Ein Stück endet nie mitten in einer Gruppe gleicher Marken.
-- **Wann**: `run_ended`, `boss_ended` (aktives Profil) und beim Start jedes Profil mit
-  Änderungen seit dem letzten Snapshot. Nur nach dem Hinweis im Startmenü
+- **Nie aus den Live-Dateien**: gelesen wird die neueste gültige Generation
+  (`Backups.latest`, Prüfsummen geprüft). Ohne sie gibt es keinen Snapshot, die Spur geht
+  trotzdem. Speichern wartet nie auf den Versand.
+- **Wann**: `run_ended`, `boss_ended` (aktives Profil) und beim Start jedes Profil, das
+  seit dem letzten Snapshot neu gesichert wurde. Nur nach dem Hinweis im Startmenü
   (`UserSettings.stats_notice_seen`), nie in Debug-Läufen, nie für `zz-`-Profile.
 - **Ohne `stats_key.cfg` ist der Kanal aus** — dort stehen URL und Schlüssel. Für einen
   Versuch gegen einen lokalen Endpunkt in einem Debug-Lauf: `MONSTER_SLAM_STATS_URL` und

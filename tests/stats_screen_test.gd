@@ -374,3 +374,57 @@ func test_the_language_flags_toggle_without_resizing() -> void:
 		flag.button_pressed = true
 	assert_str((screen.get_node("%CurveTitle") as Label).text).is_equal("Lernkurve")
 	remove_child(screen)
+
+
+## Ein Tag trägt die kleine Plakette, wenn welche gespeichert sind oder die Treffer reichen.
+func test_badge_days_join_stored_and_counted() -> void:
+	var days: Dictionary = STATS_SCREEN.badge_days({5: [["revenge", 0]], 6: []},
+			{6: Badges.HIT_STEPS[0] - 1, 7: Badges.HIT_STEPS[0]})
+	assert_array(days.keys()).contains_exactly_in_any_order([5, 7])
+
+
+func test_tally_line_names_count_and_last_day() -> void:
+	var t := {"days": 2, "count": 5, "last": 20000}
+	assert_str(STATS_SCREEN.tally_line("revenge", t)).starts_with("5-mal, an 2 Tagen, zuletzt ")
+	assert_str(STATS_SCREEN.tally_line("better", t)).starts_with("An 2 Tagen, zuletzt ")
+
+
+## Das Band unter der Monatsreihe wechselt mit dem Tag, ohne seine Höhe zu ändern.
+func test_the_day_band_keeps_its_height() -> void:
+	var screen: Control = auto_free(STATS_SCENE.instantiate())
+	add_child(screen)
+	var band := screen.get_node("%DayBadgeRow") as Control
+	var strip := screen.get_node("%CoinStrip") as CoinStrip
+	assert_str((screen.get_node("%DayBadgeTitle") as Label).text).is_equal("Plaketten · heute")
+	var before := band.get_combined_minimum_size().y
+	strip.select(strip.selected_day - 1)
+	assert_str((screen.get_node("%DayBadgeTitle") as Label).text).is_not_equal("Plaketten · heute")
+	assert_float(band.get_combined_minimum_size().y).is_equal(before)
+	strip.select(-1)
+	assert_bool((screen.get_node("%DayBadgeEmpty") as Label).visible).is_true()
+	assert_float(band.get_combined_minimum_size().y).is_equal(before)
+	remove_child(screen)
+
+
+## Der Reiter „Plaketten“ zeigt nur Verdientes: je Zeile mindestens eine Plakette, keine
+## Zeile ohne. Ohne jede Plakette steht dort ein Satz.
+func test_the_badge_tab_shows_only_what_was_earned() -> void:
+	var screen: Control = auto_free(STATS_SCENE.instantiate())
+	add_child(screen)
+	(screen.get_node("%BadgeTab") as Button).button_pressed = true
+	assert_bool((screen.get_node("%BadgePage") as Control).visible).is_true()
+	for list in ["%DailyList", "%MilestoneList"]:
+		var rows := screen.get_node(list).get_children()
+		assert_int(rows.size()).override_failure_message(list).is_greater(0)
+		for row in rows:
+			if row is BadgeRow:
+				assert_int(row.get_node("%Chips").get_child_count()).is_greater(0)
+			else:
+				assert_int(rows.size()).is_equal(1)
+	remove_child(screen)
+
+
+func test_an_empty_day_says_why() -> void:
+	assert_str(STATS_SCREEN.day_empty_text(true, true)).contains("Heute")
+	assert_str(STATS_SCREEN.day_empty_text(false, true)).contains("keine Plakette")
+	assert_str(STATS_SCREEN.day_empty_text(false, false)).contains("nicht geübt")

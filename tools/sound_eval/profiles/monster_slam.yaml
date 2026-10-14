@@ -1,0 +1,271 @@
+# Setting-Profil: Monster Slam
+# Prompts (CLAP und ElevenLabs) auf Englisch – darauf ist CLAP trainiert. Beschreibungen für
+# Menschen auf Deutsch. Pfade relativ zu dieser Datei. Aufbau: tools/sound_eval/README.md.
+
+name: Monster Slam
+model: laion/larger_clap_general
+
+game: >
+  Offline-Lernspiel für Kinder und Jugendliche in einer isometrischen Fantasy-Welt. Der Spieler
+  verteidigt seine Festung gegen Monsterhorden, indem er Vokabeln und Sätze übersetzt. Zauber
+  (Frost, Sumpf, Donner, Heilung …) und Plaketten belohnen gutes Spielen.
+atmosphere: >
+  Freundlich-magisch, motivierend, eher verspielt als düster. Spannung ja, Angst nein –
+  ein Kinderspiel. Feiern sind warm und kurz, Fehler werden nicht bestraft.
+
+style:
+  description: >
+    Fantasy-Spielsounds mit klarer Kontur: magisch, hell, leicht cartoonhaft, aber nicht
+    albern. Echte Instrumente und Foley (Glocken, Harfe, Eis, Metall) vor Synth-Flächen.
+    Keine 8-Bit-Töne, keine Gewalt, keine Sprache.
+  prompts:
+    - magical fantasy video game sound effect
+    - bright playful cartoon fantasy sound
+    - short clean game sound effect
+  avoid:
+    - retro 8-bit chiptune video game sound
+    - realistic violent gore sound
+    - human speech talking
+    - noisy field recording with background noise
+    - dark horror atmosphere
+
+# Akzeptierte Töne: Maßstab für den Stil-Abgleich (Referenzen).
+references:
+  - ../../../assets/audio/sfx
+# Dateien im Bestand, die nicht als Vorbild gelten sollen (Dateimuster), z. B. ein Ton, den
+# Spieler nervig finden, solange er noch nicht ersetzt ist.
+exclude_references: []
+
+weights:
+  semantic: 0.40
+  style: 0.20
+  reference: 0.25
+  technical: 0.15
+
+technical:
+  sample_rates: [44100, 48000]
+  max_true_peak_dbfs: -0.5
+  loudness_lufs: [-26, -10]     # gemischt wird in Sfx.SOUNDS; die Datei soll nur sauber ausgesteuert sein
+  max_leading_silence_ms: 30    # „ohne Stille am Anfang – der Ton fällt auf den Tastendruck"
+  max_trailing_silence_ms: 500
+
+# Gewünschte Effekte – aus SPELLS_BRIEF.md und BADGE_BRIEF.md (assets/audio/sfx/).
+effects:
+  spell_reveal:
+    description: Drittes Auge/Orakelblick – heller, gläserner Schimmer, der aufsteigt.
+    prompts:
+      - bright glassy magical shimmer rising upward, glockenspiel chimes
+      - sparkling magic reveal sweep
+    duration: [0.8, 1.2]
+    files: [spell_reveal*]
+    generation_prompt: >
+      Magic reveal spell: a soft shimmering sweep rising upward like a curtain of light passing over, airy glassy chimes and warm sparkle, mystical and calm, fantasy game sound
+    references: [../../../assets/audio/sfx/spell_reveal.wav]
+  spell_slow:
+    description: Sumpf – schmatzender Schlamm, ein, zwei Blasen; eher komisch als eklig.
+    prompts:
+      - squelching cartoon mud splat with bubbles
+      - funny slimy swamp sound
+    duration: [0.5, 0.9]
+    files: [spell_slow*]
+  spell_haze:
+    description: Schwere Luft – dumpfes, tiefes Ausatmen, ein Windstoß, der sich legt.
+    prompts:
+      - deep low exhale, heavy gust of wind settling down
+      - low dull magical whoosh
+    duration: [1.0, 1.5]
+    files: [spell_haze*]
+  spell_freeze:
+    description: Frost – Eis, das schlagartig zufriert; Knistern, das in hellem Klirren endet.
+    prompts:
+      - ice freezing suddenly, crackling ending in a bright crystal clink
+      - magical ice spell
+    duration: [0.6, 1.0]
+    files: [spell_freeze*]
+    generation_prompt: >
+      Magic frost spell: a quick icy whoosh as water freezes solid with crisp crackling ice, ending in one clear glassy crystal clink, fantasy game spell sound
+  spell_shatter:
+    description: Frost (Auftauen) – Eis zerspringt, kleine Splitter; leise, kommt sechsmal zugleich.
+    prompts:
+      - small ice shattering into tiny shards
+      - breaking thin ice
+    duration: [0.3, 0.6]
+    files: [spell_shatter*]
+  spell_thunder_windup:
+    description: Donnerschlag-Anlauf – kurzes Aufladen, Knistern in der Luft.
+    prompts:
+      - short electric charge up with crackling energy
+      - rising magical power charge
+    duration: [0.3, 1.2]
+    files: [spell_thunder_windup*]
+  spell_thunder:
+    description: Donnerschlag – krachender Einschlag mit Grollen.
+    prompts:
+      - loud thunder strike crack followed by rumble
+      - lightning bolt impact
+    duration: [0.8, 1.5]
+    files: [spell_thunder.*]
+  spell_heal:
+    description: Lebensquell – warmer, aufsteigender Akkord, eine Spur Harfe.
+    prompts:
+      - warm rising chord with a touch of harp, healing magic
+      - gentle soothing healing spell
+    duration: [0.8, 1.2]
+    files: [spell_heal*]
+  spell_armor:
+    description: Eisenhaut – metallisch, ein Schild, das einrastet, mit hellem Nachklang.
+    prompts:
+      - metallic shield locking into place with a bright ringing tail
+      - steel armor clank
+    duration: [0.6, 1.0]
+    files: [spell_armor*]
+  badge_earned:
+    description: >
+      Bronze-/Silber-Plakette – kommt oft, daher klein und unaufdringlich, deutlich unter Gold.
+      Bis 2026-10 teilte sie sich die Datei mit Eisenhaut (spell_armor.wav).
+    prompts:
+      - small soft reward whoosh landing on a gentle warm ting
+      - subtle pleasant achievement sound
+    avoid:
+      - annoying high pitched beeps
+    duration: [0.5, 1.0]
+    files: [badge_earned*]
+    generation_prompt: >
+      Small reward sound: a short soft whoosh landing on a gentle, warm metallic ting,
+      subtle and pleasant, low-mid tones, fantasy game achievement
+  badge_gold:
+    description: Gold-Plakette – warmer Medaillen-Glanz, Glöckchen oder Münzen, festlich.
+    prompts:
+      - warm shiny reward chime with bells and coins
+      - treasure loot found jingle
+    duration: [0.5, 1.0]
+    files: [badge_gold*]
+    generation_prompt: >
+      Gold medal reward: a warm shiny chime with a few soft bells and a light jingle of gold coins, festive but gentle, low-mid tones, fantasy game reward sound
+  badge_diamond:
+    description: Diamant-Plakette – kristallin, gläsern, kleiner aufsteigender Glitzer.
+    prompts:
+      - crystalline glassy rising sparkle
+      - magic twinkle glitter
+    duration: [0.6, 1.2]
+    files: [badge_diamond*]
+    generation_prompt: >
+      Diamond reward: a soft magical whoosh rising into a crystalline glassy sparkle that settles on a clear warm shimmer, precious and special, fantasy game reward sound
+  badge_revenge:
+    description: Revanche – keck und triumphierend, frecher Akzent mit „Ding".
+    prompts:
+      - cheeky triumphant power up sting with a ding
+    duration: [0.4, 0.8]
+    files: [badge_revenge*]
+    generation_prompt: >
+      Cheeky triumphant sting: a quick punchy swoosh into one confident bright ding, playful and sassy, cartoon fantasy game reward
+  badge_catch_up:
+    description: Aufholjagd – aufsteigender Swoosh, der in einem hellen Ton landet.
+    prompts:
+      - rising swoosh landing on a bright tone
+    duration: [0.5, 1.0]
+    files: [badge_catch_up*]
+    generation_prompt: >
+      A rising swoosh that speeds up and lands on a bright warm tone just in time, playful just-made-it feeling, fantasy game reward sound
+  badge_comeback:
+    description: Comeback des Tages – heroisch und kurz, kleiner Wirbel mit Becken oder Bläser-Akzent.
+    prompts:
+      - short heroic fanfare with drum roll and cymbal
+      - brass victory sting
+    duration: [0.6, 1.2]
+    files: [badge_comeback*]
+    generation_prompt: >
+      Short heroic comeback sting: a quick snare drum roll into a bold warm brass hit with a cymbal swell, triumphant and brief, fantasy game
+  badge_last_second:
+    description: In letzter Sekunde – ein schnelles Ticken, das im letzten Moment in einen erleichterten hellen Treffer kippt.
+    prompts:
+      - fast clock ticking ending in a bright relieved chime
+      - close call last moment save sting
+    duration: [0.6, 1.2]
+    files: [badge_last_second*]
+    generation_prompt: >
+      Close call sting: three quick tense clock ticks accelerating, then a bright relieved bell chime with a small sparkle, just made it in the last second, fantasy game reward sound
+  badge_better:
+    description: Besser als sonst – zwei, drei freundliche Töne nach oben, sanft.
+    prompts:
+      - two or three gentle friendly rising notes
+    duration: [0.4, 0.8]
+    files: [badge_better*]
+    generation_prompt: >
+      Two or three gentle friendly rising marimba notes, soft and warm, encouraging, casual fantasy game reward sound
+  monster_kill:
+    description: Monster besiegt – kurzer, befriedigender Treffer; kommt sehr oft.
+    prompts:
+      - short punchy cartoon monster defeated pop
+      - satisfying hit impact
+    duration: [0.2, 1.0]
+    files: [monster_kill*]
+  fortress_hit:
+    description: Festung getroffen – dumpfer Einschlag in Stein/Holz.
+    prompts:
+      - heavy impact hitting a stone wall
+      - wooden castle gate being hit
+    duration: [0.3, 1.5]
+    files: [fortress_hit*]
+  fortress_destroyed:
+    description: Festung zerstört – Einsturz, Trümmer, Niederlage, aber nicht verstörend.
+    prompts:
+      - stone castle collapsing with crumbling debris
+    duration: [1.5, 5.0]
+    files: [fortress_destroyed*]
+  wave_cleared:
+    description: Welle geschafft – kurze, fröhliche Sieges-Fanfare.
+    prompts:
+      - short cheerful victory fanfare
+      - level complete jingle
+    duration: [1.0, 3.5]
+    files: [wave_cleared*]
+  task_mastered:
+    description: >
+      Aufgabe gemeistert – kommt öfter als das Wort, daher die kleinere Schwester von
+      word_mastered: kürzer und weicher, warm statt hell. Der frühere Ton (helle
+      Glöckchen/Marimba) wurde als nervig empfunden; seit 2026-10 ElevenLabs (CREDITS.md).
+    prompts:
+      - short soft magic spell whoosh landing on a warm shimmer
+      - small friendly magical success sound
+    avoid:
+      - annoying high pitched beeps
+    duration: [0.8, 1.4]
+    files: [task_mastered*]
+    references: [../../../assets/audio/sfx/word_mastered.wav]
+    generation_prompt: >
+      Short soft magic spell: a quick airy whoosh that lands on a warm, mellow magical
+      shimmer, gentle and friendly, low-mid tones, fantasy game success sound
+  word_mastered:
+    description: >
+      Wort gemeistert – größter guter Moment im Kampf. Der aktuelle Ton („Magic Spell",
+      qubodup) kommt bei Spielern sehr gut an: schneller, kraftvoller Zauber-Whoosh mit Wucht.
+    prompts:
+      - fast powerful magic spell whoosh burst
+      - epic magical impact with a big swell
+    duration: [1.0, 3.0]
+    generation_prompt: >
+      Epic powerful magic spell: a fast rushing whoosh that bursts into a huge bright magical
+      impact, layered with a heroic orchestral brass hit and a choir swell, shimmering tail,
+      fantasy game reward sound
+    files: [word_mastered*]
+  wrong_answer:
+    description: Falsche Antwort – leises, sanftes „nein", nicht strafend.
+    prompts:
+      - soft gentle negative error blip
+    duration: [0.2, 0.8]
+    files: [wrong_answer*]
+  slow_mo:
+    description: Zeitlupe beim Tippen – kurzer Sweep nach unten bzw. oben.
+    prompts:
+      - short time slowing down whoosh sweep
+    duration: [0.2, 1.0]
+    files: [slow_mo_*]
+
+# Optional: Generierung über ElevenLabs (sound-eval generate). Credit-Sätze sind Schätzungen.
+elevenlabs:
+  credits_per_second: 10     # gemessen 2026-10-12: 3 × 1,1 s = 33 Credits
+  credits_auto_duration: 100
+  max_credits_per_run: 300
+  max_credits_total: 3000
+  prompt_influence: 0.5

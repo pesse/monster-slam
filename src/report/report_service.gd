@@ -1,20 +1,7 @@
 extends Node
-## Autoload `ReportService`: der Melde-Kanal — der Weg zurück zum Content-Autor.
-##
-## Dritter Kanal neben `UpdateService` (App) und `ContentService` (Inhalte), und der
-## einzige, der nach oben geht: eine Meldung („dieses Wort ist falsch") wird zu einer
-## Korrektur im privaten Content-Repo und kommt über den Content-Kanal als Pack-Update
-## zurück. Entscheidung und Format: docs/adr/0002-melde-rueckkanal.md.
-##
-## Wie im App-Kanal ist jeder Netzfehler ein Zustand, kein Abbruch: eine nicht
-## zustellbare Meldung bleibt in `user://lexeme_flags.json` offen und geht beim nächsten
-## Start mit. Gemeldet wird immer erst lokal, gesendet danach.
-##
-## Gemeldet wird mit dem App-Schlüssel, den auch der Statistik-Kanal trägt: jeder Spieler
-## einer Fassung mit Rückkanal darf melden, ein Token je Person gibt es nicht mehr
-## (docs/adr/0022-melden-ohne-token.md). Ohne eingetragenen Endpunkt und Schlüssel ist der
-## Kanal aus, und die Oberfläche zeigt „Melden" gar nicht — eine Meldung, die nirgends
-## ankommt, ist ärgerlicher als ein fehlender Knopf.
+## Autoload `ReportService`: der Melde-Kanal zurück zum Content-Autor (ADR 0002, 0022).
+## Gemeldet wird erst lokal (LexemeFlags), gesendet danach; eine nicht zustellbare Meldung
+## bleibt offen. Ohne Endpunkt und App-Schlüssel ist der Kanal aus und „Melden“ unsichtbar.
 
 ## Zustand hat sich geändert. Empfänger lesen `state` und `error`.
 signal changed
@@ -25,22 +12,17 @@ enum State {
 	ERROR,       ## Benannter Fehlschlag; `error` trägt den Text
 }
 
-## Vom Export geschrieben wie beim Statistik-Kanal (`tools/stats/write_key.sh`), nicht im
-## Repo. Der Schlüssel ist derselbe, die URL steht in einer eigenen Sektion:
-##   [report]
-##   url="https://…/melden/melden.php"
-## Fehlt die Sektion oder der Schlüssel, ist der Rückkanal aus. Die URL ist kein
-## Geheimnis — genau deshalb setzt der Endpunkt selbst die Grenzen (Größe, Rate).
+## Vom Export geschrieben (`tools/stats/write_key.sh`), nicht im Repo: der App-Schlüssel
+## des Statistik-Kanals und `[report] url=…`. Die URL ist kein Geheimnis; Größe und Rate
+## begrenzt der Endpunkt.
 const KEY_PATH := "res://stats_key.cfg"
 
-## Antworten sind ein paar Bytes JSON. Die Schranke fängt eine falsch geroutete Antwort
-## (Fehlerseite, HTML) ab, bevor sie als Antwort durchläuft.
+## Größenschranke einer Antwort in Bytes, gegen falsch geroutete Antworten.
 const MAX_RESPONSE_BYTES := 8 * 1024
 
 const TIMEOUT_SECONDS := 15.0
 
-## Nur `lexemes` ist heute meldbar; `sentences` sind in ContentRegistry vorgesehen. Der
-## Payload trägt den Typ von Anfang an mit, damit das später kein Formatbruch ist.
+## Zieltyp einer Lexem-Meldung; der Payload trägt den Typ, damit später Sätze dazupassen.
 const TARGET_TYPE_LEXEME := "lexeme"
 
 ## Die Gründe, die der Endpunkt benennt, in der Sprache der Oberfläche.
@@ -64,8 +46,7 @@ var key := ""
 var key_version := 1
 
 var _http: HTTPRequest
-## HTTPRequest kann einen Vorgang; das verhindert, dass Startversand und Klick sich
-## in die Quere kommen.
+## HTTPRequest kann nur einen Vorgang zugleich.
 var _busy := false
 
 
@@ -77,14 +58,13 @@ func _ready() -> void:
 	add_child(_http)
 	_load_key()
 	if OS.is_debug_build():
-		# Editor- und Testläufe melden nie von selbst — sie spielen im Entwicklungsprofil.
-		# Für einen Versuch gegen einen lokalen Endpunkt: beide Variablen setzen.
+		# Debug-Läufe melden nur mit beiden Umgebungsvariablen (lokaler Endpunkt).
 		endpoint = OS.get_environment("MONSTER_SLAM_REPORT_URL")
 		key = OS.get_environment("MONSTER_SLAM_REPORT_KEY")
 		if not endpoint.is_empty():
 			print("ReportService: Endpunkt überschrieben -> %s" % endpoint)
 	if can_report():
-		# Stiller Nachversand beim Start — ohne await, das Spiel wartet auf niemanden.
+		# Stiller Nachversand beim Start, ohne await.
 		_send_silently.call_deferred()
 
 
@@ -98,12 +78,8 @@ func pending_count() -> int:
 	return LexemeFlags.pending().size()
 
 
-## Schickt alle offenen Meldungen, eine nach der anderen. Gibt true zurück, wenn danach
-## keine mehr offen ist.
-##
-## `loud` unterscheidet den Klick vom Startversand: still bleibt still. Ein Fehlschlag
-## lässt die Meldung offen — sie geht beim nächsten Mal mit, und der Endpunkt erkennt
-## eine doppelt gesendete.
+## Schickt alle offenen Meldungen nacheinander; true, wenn danach keine mehr offen ist.
+## `loud` = Klick. Ein Fehlschlag lässt die Meldung offen.
 func send_pending(loud: bool) -> bool:
 	if not can_report() or _busy:
 		return false
@@ -120,8 +96,7 @@ func send_pending(loud: bool) -> bool:
 		if not answer["error"].is_empty():
 			all_sent = false
 			last_error = answer["error"]
-			# Der erste Fehlschlag beendet den Lauf: was den einen Versand hindert
-			# (kein Netz, gesperrter Schlüssel), hindert auch die anderen.
+			# Der erste Fehlschlag beendet den Lauf (kein Netz, gesperrter Schlüssel).
 			break
 		ContentRegistry.mark_flag_sent(String(item.get("lexeme_id", "")))
 	_busy = false
@@ -136,10 +111,8 @@ func send_pending(loud: bool) -> bool:
 	return all_sent
 
 
-## Der Payload einer Meldung. `target_type`/`target_id` statt `lexeme_id`, damit gemeldete
-## Sätze später dazupassen; Herkunft (App-Fassung, Pack) mit, weil eine Meldung sonst zu
-## einem Wort im Raum steht, das inzwischen längst korrigiert wurde. Die Profilnummer
-## (`stats_id`) geht mit, wenn die Meldung sie trägt — ältere Einträge haben keine.
+## Der Payload einer Meldung mit Herkunft (App-Fassung, Pack), damit eine Meldung zu einem
+## inzwischen korrigierten Wort erkennbar bleibt; `stats_id`, wenn vorhanden.
 func _payload(item: Dictionary) -> Dictionary:
 	var lexeme_id := String(item.get("lexeme_id", ""))
 	var payload := {

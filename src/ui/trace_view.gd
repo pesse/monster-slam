@@ -1,25 +1,15 @@
 class_name TraceView
 extends RefCounted
-## Liest Zeilen des Ereignis-Protokolls (TraceLog) als Einträge für den Reiter „Protokoll".
-##
-## Reine Regeln, statisch und ohne Autoload — dieselbe Aufteilung wie `StatsScreen.unit_rows`:
-## der Screen instanziert Zeilen, was darin steht, entscheidet und prüft sich hier.
-##
-## Die Ansicht ist ein LESER der Datei, keine zweite Buchführung: sie rechnet nichts
-## zusammen, sie übersetzt Zeile für Zeile. Das Einzige, was sie über Zeilen hinweg
-## verknüpft, ist der Prompt zu einer learnable_id — die answer-Zeile kennt nur die Id, und
-## „✔ coral" ohne das Wort, zu dem es gehört, sagt nichts. Nachgeschlagen wird in den
-## spawn-Zeilen desselben Ausschnitts; fehlt die (weiter oben abgeschnitten), steht die Id.
-##
-## Unbekannte Ereignisarten erscheinen mit ihrem Namen statt zu verschwinden: Felder und
-## Arten kommen im Protokoll dazu (TraceLog, Regel 2), und eine Ansicht, die Neues still
-## verschluckt, lügt über das, was in der Datei steht.
+## Liest Zeilen des Ereignis-Protokolls (TraceLog) als Einträge für den Reiter „Protokoll“.
+## Statisch und ohne Autoload. Übersetzt Zeile für Zeile, ohne zu summieren; über Zeilen
+## hinweg wird nur der Prompt zu einer learnable_id aus den spawn-Zeilen desselben
+## Ausschnitts nachgeschlagen (fehlt sie, steht die Id). Unbekannte Ereignisarten erscheinen
+## mit ihrem Namen.
 
 
-## Einträge, NEUESTE zuerst, mit einer Tageszeile vor jedem Tag. `lines` wie von
+## Einträge, neueste zuerst, mit einer Tageszeile vor jedem Tag. `lines` wie von
 ## `TraceLog.recent()` (älteste zuerst). `bias_minutes` ist der Abstand der Ortszeit zu UTC
-## (`Time.get_time_zone_from_system().bias`) — als Parameter, damit der Test nicht an der
-## Zeitzone des Rechners hängt.
+## (`Time.get_time_zone_from_system().bias`).
 ##
 ## Jeder Eintrag: `kind` ("day" | "event"), `time`, `text`, `style` (Type-Variation oder
 ## leer) und `hint` (`title`, `body`, `note`, `list` für `Hints.attach`).
@@ -55,6 +45,10 @@ static func describe(line: Dictionary, tasks: Dictionary = {}) -> Dictionary:
 					{"title": "Lauf beendet",
 					"body": "Schwierigkeit der letzten Welle: %d" % int(line.get("difficulty", 0))})
 		"run_suspend":
+			if int(line.get("remaining", 0)) > 0:
+				return _entry("‖ Gerastet in Welle %d · noch %d Monster · ❤ %d" % [
+						int(line.get("next_wave", 0)), int(line.get("remaining", 0)),
+						int(line.get("hp", 0))])
 			return _entry("‖ Gerastet · weiter mit Welle %d · ❤ %d" % [
 					int(line.get("next_wave", 0)), int(line.get("hp", 0))])
 		"run_resume":
@@ -137,8 +131,7 @@ static func describe(line: Dictionary, tasks: Dictionary = {}) -> Dictionary:
 static func _answer(line: Dictionary, tasks: Dictionary) -> Dictionary:
 	var typed := "„%s“" % str(line.get("text", ""))
 	if not bool(line.get("hit", false)):
-		# Auf kein Monster gepasst: der Grund, aus dem es das Protokoll gibt. Die Karte zeigt,
-		# was stattdessen auf dem Feld stand — daran liest man ab, warum sie nicht zählte.
+		# Auf kein Monster gepasst: die Karte zeigt, was stattdessen auf dem Feld stand.
 		var field: Array = []
 		for id in line.get("field", []):
 			var task: Dictionary = tasks.get(str(id), {})

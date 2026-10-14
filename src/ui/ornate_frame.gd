@@ -1,13 +1,13 @@
 class_name OrnateFrame
 extends Control
-## Ein verschnörkelter Goldrahmen um das Bild auf dem Buchcover (Book3D): doppelte Linie,
-## Schnecken in den Ecken, ein Zierstück in der Mitte jeder Kante. Das Bild liegt als Kind
-## darin, `INSET` vom Rand.
+## Ein verschnörkelter Goldrahmen um das Bild auf dem Buchcover (Book3D). Das Bild liegt als
+## Kind darin, `INSET` vom Rand.
 
 const GOLD := Color(0.88, 0.7, 0.34)
 const GOLD_DARK := Color(0.52, 0.36, 0.14)
-## So weit liegt das Bild innen; die Schnecken greifen darüber hinaus nach außen.
+## Abstand des Bilds vom Rand (px).
 const INSET := 10.0
+## Größe der Eckschnecken (px).
 const CURL := 13.0
 
 

@@ -1,9 +1,7 @@
 class_name WordTypePalette
 extends RefCounted
-## Ordnet jeder Wortart (Lexem-Feld "type") eine gut unterscheidbare Outline-Farbe zu.
-## Die Farbe kodiert die Wortart eines Monsters (siehe monster_outline.gdshader), damit
-## z. B. Nomen/Verben/Adjektive auch bei mehrdeutigen Vokabeln optisch trennbar sind.
-## Bewusst isolierte Klasse: testbar und später für eine UI-Legende wiederverwendbar.
+## Outline-Farbe je Wortart (Lexem-Feld "type"), damit Wortarten auch bei mehrdeutigen
+## Vokabeln am Monster unterscheidbar sind (monster_outline.gdshader).
 
 const COLORS := {
 	"noun":       Color(0.23, 0.51, 0.96),  # Blau

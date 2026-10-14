@@ -21,6 +21,8 @@
   über „Beenden“ im Startmenü. Gilt für diesen Rechner, nicht nur für das Profil.
 - **„Fortschritt zurücksetzen“**: löscht nach einer Rückfrage den Lernstand der Wörter
   dieses Profils. Gold, Erfahrung und gelernte Fähigkeiten sind davon nicht betroffen.
+- **„Spielstand“**: „Sichern…“ legt den Spielstand dieses Profils als Datei ab, „Laden…“
+  spielt so eine Datei ein ([Kapitel 23](23-spielstand-und-sicherungen.md)).
 
 ## Reiter „Melden“
 

@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const sharp = require(process.env.BADGES_SHARP || 'C:/Users/SamuelNitsche/AppData/Local/OpenAI/Codex/runtimes/cua_node/98614bf36dff477b/bin/node_modules/sharp');
 const root = path.resolve(__dirname, '..');
-const names = ['bronze','silver','gold','diamond','comeback','better','revenge','catch_up'];
+const names = ['bronze','silver','gold','diamond','comeback','better','revenge','catch_up','last_second'];
 async function main() {
   const reports = [];
   const previews = [];
@@ -37,8 +37,8 @@ async function main() {
     reports.push({name,sourceSize:[w,h],sourceDiscBounds:[left,top,right,bottom],sourceBottom:last,outputSize:[256,320],discCenter:[128,120],discRadius:104,ribbonBottom:310,transparentPixels:transparent,opaquePixels:opaque,lossless:true});
     previews.push({input:await sharp(file).png().toBuffer(),left:index*256,top:0});
   }
-  await sharp({create:{width:2048,height:320,channels:4,background:'#202733'}}).composite(previews).png().toFile(path.join(root,'preview','all_badges.png'));
-  await sharp({create:{width:2048,height:320,channels:4,background:'#00000000'}}).composite(previews).png().toFile(path.join(root,'preview','all_badges_transparent.png'));
+  await sharp({create:{width:names.length*256,height:320,channels:4,background:'#202733'}}).composite(previews).png().toFile(path.join(root,'preview','all_badges.png'));
+  await sharp({create:{width:names.length*256,height:320,channels:4,background:'#00000000'}}).composite(previews).png().toFile(path.join(root,'preview','all_badges_transparent.png'));
   fs.writeFileSync(path.join(__dirname,'validation.json'),JSON.stringify(reports,null,2)+'\n');
   console.log(JSON.stringify(reports,null,2));
 }

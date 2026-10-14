@@ -1,20 +1,10 @@
 class_name TestPlaylist
 extends RefCounted
-## Der Beutel einer Testliste: jedes Wort einmal, dann erst wieder — wie eine Zufalls-Playlist.
-##
-## Eine **Runde** ist ein Durchgang durch die ganze Liste, über beliebig viele Wellen und
-## Sitzungen; die Welle ist nur die Einheit, in der gespawnt wird. Gespielt ist ein Wort in
-## der Runde, wenn seine jüngste Antwort (über alle seine Aufgaben) seit Rundenbeginn richtig
-## war — ein Fehler legt es damit von selbst zurück in den Beutel. Gespeichert wird nur der
-## Rundenbeginn (TestLists, `round_started_at`), der Rest kommt aus dem Lernstand.
-##
-## Zu Beginn jeder Welle wird der noch nicht gespielte Teil neu gemischt; die Wörter der
-## vorigen Welle stehen dabei hinten, damit an der Wellengrenze keins direkt wiederkommt.
-## Reicht der Beutel nicht für die Welle, füllen die schon gespielten Wörter auf, ebenso
-## gemischt. Ist er zu Wellenbeginn leer, beginnt eine neue Runde.
-##
-## Die Aufgabe eines Wortes wählt weiter WaveGenerator.ordered (fällig → neu → Rest); die
-## Playlist bestimmt nur, WELCHES Wort dran ist. Reine Rechnung (tests/test_playlist_test.gd).
+## Der Beutel einer Testliste: jedes Wort einmal, dann erst wieder. Eine Runde läuft über
+## beliebig viele Wellen; ein Wort ist gespielt, wenn seine jüngste Antwort seit
+## Rundenbeginn richtig war. Gespeichert wird nur der Rundenbeginn (TestLists,
+## `round_started_at`). Welche Aufgabe eines Wortes drankommt, wählt WaveGenerator.ordered;
+## die Playlist bestimmt nur das Wort.
 
 
 ## Die Wörter, die in der Runde noch dran sind. `words`: Grundwort-Id -> learnable_ids.

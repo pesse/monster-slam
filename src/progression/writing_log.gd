@@ -33,7 +33,7 @@ static func path(profile: String) -> String:
 	return "%s/%s_writing.json" % [SAVE_DIR, profile]
 
 
-## Bucht eine Abgabe. Fehlt `at`, gilt jetzt.
+## Bucht eine Abgabe, nie über eine unlesbare Datei (SaveGuard). Fehlt `at`, gilt jetzt.
 static func record(entry: Dictionary, profile: String) -> void:
 	var clean := {}
 	for field in FIELDS:
@@ -43,24 +43,15 @@ static func record(entry: Dictionary, profile: String) -> void:
 		clean["at"] = int(Time.get_unix_time_from_system())
 	var all := entries(profile)
 	all.append(clean)
-	DirAccess.make_dir_recursive_absolute(SAVE_DIR)
-	var file := FileAccess.open(path(profile), FileAccess.WRITE)
-	if file == null:
-		push_warning("WritingLog: %s nicht schreibbar" % path(profile))
-		return
-	file.store_string(JSON.stringify({"submissions": all}, "\t"))
-	file.close()
+	SaveGuard.write(path(profile), "_writing", {"submissions": all})
 
 
 ## Alle Abgaben des Profils, älteste zuerst.
 static func entries(profile: String) -> Array:
-	var text := FileAccess.get_file_as_string(path(profile))
-	if text.is_empty():
+	var read := SaveStore.read(path(profile))
+	if int(read["status"]) != SaveStore.Status.OK:
 		return []
-	var parsed: Variant = JSON.parse_string(text)
-	if not parsed is Dictionary:
-		return []
-	var list: Variant = (parsed as Dictionary).get("submissions", [])
+	var list: Variant = (read["data"] as Dictionary).get("submissions", [])
 	return list if list is Array else []
 
 

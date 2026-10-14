@@ -295,3 +295,7 @@ unique_name_in_owner = true
 [node name="StatsNotice" parent="." instance=ExtResource("19_confirm")]
 unique_name_in_owner = true
 visible = false
+
+[node name="SaveNotice" parent="." instance=ExtResource("19_confirm")]
+unique_name_in_owner = true
+visible = false

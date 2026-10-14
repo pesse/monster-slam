@@ -1,21 +1,9 @@
 class_name AreaMap
 extends Control
 ## Gebietskarte: die Level einer Unit — T1 … T4, Gesamt, Boni, Boss (ADR 0006, MapLevel).
-##
-## Jeder Ort zeigt die Stufe 0..4 seines Levels aus der Meisterung (FortressTier), der Boss
-## seine Medaille aus den gezählten Siegen (BossRecord). Alle Level sind frei wählbar; nur
-## ein Boss ohne Sätze ist gesperrt und sagt warum. Ein Klick markiert einen Ort
-## (MapLevel.toggle): mehrere Teile und Boni zusammen, Gesamt und Boss allein. „Spielen" unten
-## rechts setzt die Auswahl als ein Level in RunRequest (MapLevel.combine) und startet den
-## Kampf — der kommt über RunRequest.return_scene hierher zurück.
-##
-## Ein begonnener Lauf des Buchs (RunSave, ADR 0020): liegt er in dieser Unit, sind seine
-## Orte beim Öffnen markiert, und „Spielen" heißt „Fortsetzen", solange sie alle markiert
-## sind — weitere Orte der Unit dürfen dazukommen, der Lauf wird erweitert
-## (RunSave.continues). Fehlt einer, oder liegt die Auswahl in einer anderen Unit des Buchs,
-## startet ein neuer Lauf und fragt vorher, denn der begonnene geht dabei verloren. Das „✕"
-## daneben verwirft ihn, damit sich dieselbe Auswahl auch frisch spielen lässt. Ein Boss
-## gehört zu keinem Lauf: er startet ohne Rückfrage, und der begonnene bleibt liegen.
+## Ein Klick markiert Orte (MapLevel.toggle), „Spielen“ startet die Auswahl als ein Level
+## (MapLevel.combine, RunRequest). Der begonnene Lauf der Unit (RunSave) ist beim Öffnen
+## markiert; Fortsetzen, Erweitern und Verwerfen regelt ADR 0020, Nachtrag „Ein Platz je Unit“.
 
 const BATTLE_SCENE := "res://scenes/battle/battle.tscn"
 const BOSS_SCENE := "res://scenes/battle/boss_fight.tscn"
@@ -24,13 +12,9 @@ const BossFight := preload("res://src/battle/boss_fight.gd")
 @onready var _canvas: MapCanvas = %Canvas
 @onready var _title: Label = %Title
 @onready var _book: Label = %Book
-## Ein Schild unten in der Mitte (Vorlage `assets/ui/fortress/`): links der Ort (Buch,
-## Unit), dann der Weg zur nächsten Stufe, rechts das Medaillon mit der Festung, wie sie im
-## Kampf steht (Bilder aus `src/dev/fortress_icons.gd`), und ihrer Stufe. Der Ort steht mit
-## dem Bild da; Festung, Medaillon und unten rechts Ich-Sicht und „Spielen" blenden erst
-## nach der Rechnung ein — ausgeblendet, nicht versteckt, damit das Schild seine Größe
-## behält. Der Balken ist breiter als jede Zeile darunter, deshalb ändert auch der Text
-## die Breite nicht.
+## Schild unten in der Mitte: Ort, Weg zur nächsten Stufe, Medaillon mit der Festung (Bilder
+## aus `src/dev/fortress_icons.gd`). Festung, Medaillon und Aktionen blenden erst nach der
+## Rechnung ein; ausgeblendet statt versteckt, damit das Schild seine Größe behält.
 @onready var _fortress: Control = %Fortress
 @onready var _medal: Control = %Medal
 @onready var _actions: Control = %BottomRight
@@ -67,16 +51,13 @@ func _ready() -> void:
 			_on_confirmed.call())
 	Hints.attach(_discard_run, "Begonnenen Lauf verwerfen",
 			"Danach beginnt „Spielen“ auch mit denselben Orten einen neuen Lauf.")
-	# Die Level sitzen klein auf den Plätzen des Bildes und wachsen unter dem Zeiger; das
-	# Bild zeigt seinen Weg selbst, die Hinweiskarte sagt, was ein Ort ist.
+	# Kleine Orte, die unter dem Zeiger wachsen; den Weg zeigt das Bild selbst.
 	_canvas.node_radius = MapCanvas.AREA_NODE_RADIUS
 	_canvas.hover_radius = MapCanvas.NODE_RADIUS
 	_canvas.path_over_image = false
 	_canvas.show_captions = false
 	_canvas.cover = true
-	# Aus dem Kampf zurück: dort steht, welche Unit gespielt wurde. Nur dann — das Level
-	# bleibt nach dem Kampf in RunRequest stehen, und der Zoom aus der Buchkarte hat seine
-	# Unit schon in MapSelection gesetzt.
+	# Nur aus dem Kampf zurück: das Level bleibt danach in RunRequest stehen.
 	if MapSelection.zoom_out and RunRequest.is_level():
 		MapSelection.book = str(RunRequest.level().get("book", MapSelection.book))
 		MapSelection.unit = int(RunRequest.level().get("unit", MapSelection.unit))
@@ -84,8 +65,6 @@ func _ready() -> void:
 	_setup_first_person_toggle()
 	# Nicht abgewartet: der Zoom soll nicht auf den Kopf warten.
 	_place_header()
-	# Erst der Zoom, dann die Rechnung: während das Bild heranfährt, rechnet nichts, und
-	# erst danach springen die Orte auf und die Festung blendet ein.
 	if MapSelection.zoom_in:
 		MapSelection.zoom_in = false
 		_canvas.zoom_from()
@@ -104,11 +83,8 @@ func _ready() -> void:
 		create_tween().tween_property(part, "modulate:a", 1.0, MapCanvas.APPEAR_TIME)
 
 
-## Der Schalter für die Ich-Sicht (nur das Auge, links an der Festungsanzeige und so hoch
-## wie sie) steht nur da, wenn der Späherblick gelernt ist (im Debug-Build immer,
-## RunRequest.first_person_selectable) — vor dem ersten Bild entschieden, damit die Ecke
-## nicht nachträglich wächst. Er gilt für die
-## Wellenkämpfe; ist der Boss markiert, ist er gesperrt (RunRequest.first_person).
+## Der Schalter für die Ich-Sicht steht nur da, wenn der Späherblick gelernt ist
+## (RunRequest.first_person_selectable); vor dem ersten Bild entschieden.
 func _setup_first_person_toggle() -> void:
 	var toggle := %FirstPersonToggle as Button
 	toggle.visible = RunRequest.first_person_selectable()
@@ -117,8 +93,7 @@ func _setup_first_person_toggle() -> void:
 	_lock_first_person(false)
 
 
-## Sperrt den Schalter, solange der Boss markiert ist — der Bosskampf hat keine Ich-Sicht.
-## Gesperrt, nicht versteckt: die Ecke behält ihre Größe.
+## Sperrt den Schalter, solange der Boss markiert ist: der Bosskampf hat keine Ich-Sicht.
 func _lock_first_person(locked: bool) -> void:
 	var toggle := %FirstPersonToggle as Button
 	toggle.disabled = locked
@@ -129,8 +104,7 @@ func _lock_first_person(locked: bool) -> void:
 				"Du stehst selbst auf dem Feld: WASD zum Laufen, die Maus zum Umsehen, Enter öffnet die Eingabe.")
 
 
-## Der Kopf weicht den Orten aus, bevor er zu sehen ist — die Größen stehen erst nach
-## einem Frame Layout fest.
+## Der Kopf weicht den Orten aus, bevor er zu sehen ist (erst nach einem Frame Layout).
 func _place_header() -> void:
 	var header: Control = %Header
 	header.modulate.a = 0.0
@@ -141,8 +115,7 @@ func _place_header() -> void:
 	header.modulate.a = 1.0
 
 
-## Was vor dem Zoom dasteht: Bild und Überschrift, ohne Orte und Festung. Nichts davon
-## rechnet.
+## Was vor dem Zoom dasteht: Bild und Überschrift, ohne Orte und Festung.
 func _show_image() -> void:
 	_book.text = ContentRegistry.book_label(MapSelection.book)
 	_title.text = BookNaming.unit_label(MapSelection.book, MapSelection.unit)
@@ -179,8 +152,8 @@ func _fill() -> void:
 	_select(_initial_selection(nodes))
 
 
-## Was markiert ist, wenn die Karte aufgeht: die Auswahl des letzten Laufs, wenn er in
-## dieser Unit war — so spielt „Spielen" nach dem Kampf dasselbe noch einmal. Sonst nichts.
+## Was beim Öffnen markiert ist: der begonnene Lauf, sonst die Auswahl des letzten Laufs
+## in dieser Unit, sonst nichts.
 func _initial_selection(nodes: Array) -> Array:
 	var saved := _saved_keys()
 	if not saved.is_empty():
@@ -224,8 +197,8 @@ static func bonus_counts(bonuses: Array) -> Dictionary:
 	return out
 
 
-## Wie viele Teil-Level die Unit zeigt: so viele, wie der Inhalt hat, oder — wenn die Karte
-## mehr Stationen hat — so viele wie die Karte. Die leeren stehen dann gesperrt da.
+## Wie viele Teil-Level die Unit zeigt: das Maximum aus Inhalt und Kartenstationen. Leere
+## stehen gesperrt da.
 static func part_count(book: String, unit: int, layout: Dictionary) -> int:
 	var parts := ContentRegistry.parts_for(book, unit)
 	if parts <= 0:
@@ -233,8 +206,7 @@ static func part_count(book: String, unit: int, layout: Dictionary) -> int:
 	return maxi(parts, MapLayout.area_parts(layout, unit))
 
 
-## Die Orte der Gebietskarte, einer je Level. Ein Teil ohne Wörter ist gesperrt.
-## `bonuses` ist der Stand je Bonus (bonus_counts).
+## Die Orte der Gebietskarte, einer je Level; ein Teil ohne Wörter ist gesperrt.
 static func nodes_for(levels: Array, units: Dictionary, parts: Dictionary, wins: int,
 		boss_ready: bool, points: Dictionary, bonuses: Dictionary = {}) -> Array:
 	var out: Array = []
@@ -271,11 +243,8 @@ static func nodes_for(levels: Array, units: Dictionary, parts: Dictionary, wins:
 	return out
 
 
-## Die Festung im Schild: sie gilt für die ganze Unit, in jedem ihrer Level dieselbe —
-## deshalb steht sie dort und nicht an den Orten. `share` ist der Weg von der erreichten
-## zur nächsten Stufe (0..1), auf der höchsten Stufe voll. Die Zeile unter dem Balken in
-## drei Stücken, damit die Zahl golden stehen kann: „Noch" · `count` · „Wörter bis Stufe 2".
-## `drop` wie bei FortressTier.unit_tiers, mit dem auch `group` gezählt ist.
+## Die Festung der ganzen Unit im Schild. `share` ist der Weg zur nächsten Stufe (0..1), auf
+## der höchsten voll. `drop` und `group` wie bei FortressTier.unit_tiers.
 static func fortress_state(group: Dictionary, drop: int = 0) -> Dictionary:
 	var done := int(group.get("done", 0))
 	var total := int(group.get("total", 0))
@@ -298,13 +267,11 @@ static func fortress_state(group: Dictionary, drop: int = 0) -> Dictionary:
 	}
 
 
-## Das Bild der Festung einer Stufe (72 px, so groß wie im Medaillon); über der höchsten die
-## höchste.
+## Das Bild der Festung einer Stufe (72 px); über der höchsten die höchste.
 static func fortress_image(tier: int) -> Texture2D:
 	return load("res://assets/ui/fortress/tiers/tier_%d.webp" % clampi(tier, 0, FortressTier.THRESHOLDS_PERCENT.size())) as Texture2D
 
 
-## Die Karte am Zeiger für ein Level.
 static func hint_lines(node: Dictionary) -> Dictionary:
 	var unit_label := str(node.get("unit_label", ""))
 	var title := "%s · %s" % [unit_label, str(node.get("caption", ""))]
@@ -377,8 +344,8 @@ func _on_level_clicked(key: String) -> void:
 	_select(MapLevel.toggle(_levels, _selected, key))
 
 
-## Markiert `keys` auf der Karte und stellt „Spielen" danach: gesperrt ohne Auswahl, die
-## Karte am Knopf sagt, was gespielt wird. Der Knopf bleibt dabei stehen, wie er ist.
+## Markiert `keys` auf der Karte und stellt „Spielen“ danach: gesperrt ohne Auswahl, der
+## Hinweis sagt, was gespielt wird.
 func _select(keys: Array) -> void:
 	_selected = keys
 	_canvas.set_selected(keys)
@@ -407,8 +374,7 @@ func _select(keys: Array) -> void:
 				note)
 
 
-## Setzt „Spielen" mit dieser Auswahl den begonnenen Lauf fort — mit denselben Orten oder
-## erweitert um weitere?
+## Setzt diese Auswahl den begonnenen Lauf fort, auch erweitert?
 func _resumes(keys: Array) -> bool:
 	return RunSave.continues(_saved, MapSelection.unit, keys, _levels)
 
@@ -420,9 +386,8 @@ func _added_labels(keys: Array) -> Array:
 			.map(func(l): return str(l["label"]))
 
 
-## Die gespeicherten Orte, wenn der begonnene Lauf in dieser Unit liegt.
 func _saved_keys() -> Array:
-	if _saved.is_empty() or int((_saved["level"] as Dictionary).get("unit", 0)) != MapSelection.unit:
+	if _saved.is_empty():
 		return []
 	return Array((_saved["level"] as Dictionary).get("keys", []))
 
@@ -434,20 +399,18 @@ static func saved_label(state: Dictionary) -> String:
 			int(level.get("unit", 0))), int(state.get("next_wave", 1))]
 
 
-## Liest den begonnenen Lauf des Buchs, bevor die Orte markiert werden. Liegt er in dieser
-## Unit und lässt sich nicht mehr spielen (ein Ort ist weg, die App zu alt), wird er
-## verworfen, und die Karte sagt es — still verschwinden darf er nicht.
+## Liest den begonnenen Lauf dieser Unit. Lässt er sich nicht mehr spielen (ein Ort ist weg,
+## die App zu alt), wird er verworfen, und die Karte sagt es (`_check_saved`).
 func _load_saved() -> void:
-	_saved = RunSave.of_book(MapSelection.book, UserSettings.active_profile())
+	_saved = RunSave.of_unit(MapSelection.book, MapSelection.unit, UserSettings.active_profile())
 	if _saved_keys().is_empty() or not RunSave.resumable_level(_saved, _levels).is_empty():
 		return
-	RunSave.discard(MapSelection.book, UserSettings.active_profile())
+	RunSave.discard(MapSelection.book, MapSelection.unit, UserSettings.active_profile())
 	_saved = {}
 	_pending_notice = true
 
 
-## Sagt, dass ein begonnener Lauf verworfen wurde (`_load_saved`) — erst, wenn die Karte
-## steht.
+## Sagt, dass ein begonnener Lauf verworfen wurde, sobald die Karte steht.
 func _check_saved() -> void:
 	if not _pending_notice:
 		return
@@ -462,7 +425,7 @@ func _ask_discard() -> void:
 	if _saved.is_empty():
 		return
 	_on_confirmed = func() -> void:
-		RunSave.discard(MapSelection.book, UserSettings.active_profile())
+		RunSave.discard(MapSelection.book, MapSelection.unit, UserSettings.active_profile())
 		_saved = {}
 		_select(_selected)
 	_confirm.ask("Lauf verwerfen?",
@@ -482,7 +445,7 @@ func _start() -> void:
 		_launch(level, resume)
 	elif not _saved.is_empty():
 		_on_confirmed = func() -> void:
-			RunSave.discard(MapSelection.book, UserSettings.active_profile())
+			RunSave.discard(MapSelection.book, MapSelection.unit, UserSettings.active_profile())
 			_saved = {}
 			_launch(level)
 		_confirm.ask("Neuer Lauf?",
@@ -497,7 +460,6 @@ func _launch(level: Dictionary, resume: Dictionary = {}) -> void:
 	if level.is_empty():
 		return
 	RunRequest.start_level(level, resume)
-	# Hinein ins Level, wie von der Buch- in die Gebietskarte; der Kampf setzt fort.
 	_play.disabled = true
 	_canvas.zoom_into_all(level["keys"])
 	_fade_out_hud()
@@ -507,9 +469,8 @@ func _launch(level: Dictionary, resume: Dictionary = {}) -> void:
 	get_tree().change_scene_to_file(BOSS_SCENE if boss else BATTLE_SCENE)
 
 
-## Kopfleiste und Schatten gehen mit der Karte ins Dunkel: der Kampf lädt und wärmt danach
-## vor (FxWarmup), und so lange steht das letzte gezeichnete Bild — das muss ganz dunkel
-## sein, nicht eine halb ausgeblendete Karte mit Kopfleiste.
+## Kopfleiste und Schatten gehen mit ins Dunkel: während der Kampf lädt und vorwärmt
+## (FxWarmup), steht das letzte gezeichnete Bild.
 func _fade_out_hud() -> void:
 	var tw := create_tween().set_parallel(true)
 	for node: CanvasItem in [$Hud, $Shade]:
@@ -517,8 +478,7 @@ func _fade_out_hud() -> void:
 				.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
 
 
-## Wartet, bis das dunkle Bild wirklich gezeichnet ist. `change_scene_to_file` lädt sofort,
-## noch im selben Frame — ohne das stünde während des Ladens das vorletzte Bild des Zooms.
+## Wartet, bis das dunkle Bild gezeichnet ist; `change_scene_to_file` lädt im selben Frame.
 func _present_dark() -> void:
 	for node: CanvasItem in [$Hud, $Shade]:
 		node.modulate.a = 0.0

@@ -1,31 +1,22 @@
 extends Node
-## Autoload `ContentService`: der Content-Kanal — Verzeichnis holen, Packs installieren,
-## Zugangscodes einlösen.
-##
-## Getrennt vom App-Kanal (`UpdateService`), siehe docs/adr/0001-app-und-content-update.md.
-## Das Verzeichnis `index.json` ist unverschlüsselt: der Update-Check funktioniert damit
-## ohne jeden Zugangscode, und ein geschützter Pack ist sichtbar, bevor er lesbar ist.
-##
-## Offline ist der Normalfall — jeder Netzfehler ist ein Zustand, kein Abbruch.
+## Autoload `ContentService`: der Content-Kanal (ADR 0001) — Verzeichnis holen, Packs
+## installieren, Zugangscodes einlösen. Offline ist der Normalfall: jeder Netzfehler ist ein
+## Zustand, kein Abbruch.
 
 ## Zustand oder Pack-Liste hat sich geändert.
 signal changed
 
 enum State { IDLE, LOADING, WORKING, READY, ERROR }
 
-## Release mit festem Tag im öffentlichen Transport-Repo — der stabile Download-Ort. Die
-## Packs selbst entstehen im privaten Content-Repo (siehe dessen packs.yaml).
+## Release mit festem Tag im öffentlichen Transport-Repo.
 const DEFAULT_RELEASE_BASE := "https://github.com/pesse/monster-slam-packs/releases/download/packs"
 
-## Nur im Debug-Build aus MONSTER_SLAM_PACKS_BASE übernehmbar — so lässt sich die ganze
-## Kette gegen ein lokales Verzeichnis durchspielen. Im Release ist die Quelle fest: eine
-## umlenkbare Bezugsquelle wäre eine Angriffsfläche, die kein Nutzen aufwiegt.
+## Nur im Debug-Build aus MONSTER_SLAM_PACKS_BASE übernehmbar; im Release ist die Quelle fest.
 var release_base := DEFAULT_RELEASE_BASE
 
 const TMP_DIR := "user://tmp"
 
-## Ein Verzeichnis ist wenige KB. Die Schranke fängt eine falsch geroutete Antwort ab,
-## bevor sie als Verzeichnis durchläuft.
+## Höchstgröße des Verzeichnisses (Bytes); fängt eine falsch geroutete Antwort ab.
 const MAX_INDEX_BYTES := 512 * 1024
 
 var state: State = State.IDLE
@@ -35,14 +26,14 @@ var error := ""
 var activity := ""
 ## Ergebnis des letzten Vorgangs, für die Anzeige.
 var message := ""
-## Packs, deren Installation auf bereits vorhandene Fremddateien gestoßen ist. Kein Fehler,
-## sondern eine Rückfrage: die UI kann `install_many(needs_adopt, true)` anbieten.
+## Packs, deren Installation auf vorhandene Fremddateien stieß; die UI kann
+## `install_many(needs_adopt, true)` anbieten.
 var needs_adopt: Array[String] = []
 
 var _http: HTTPRequest
 var _busy := false
-## Roh-Einträge aus dem Verzeichnis, id -> Dictionary. Getrennt von `packs` gehalten, weil
-## die Installation die Originalfelder braucht (file, sha256, minVersion).
+## Roh-Einträge aus dem Verzeichnis, id -> Dictionary; die Installation braucht die
+## Originalfelder.
 var _entries: Dictionary = {}
 
 
@@ -58,21 +49,15 @@ func _ready() -> void:
 	_clear_tmp()
 
 
-## Die App-Version, an der die Schranke gemessen wird — "" heißt: keine Schranke.
-##
-## Im Debug-Build gilt keine: committet steht in project.godot immer die Version des
-## LETZTEN Releases, eine Pack-Deklaration auf die kommende Fassung sperrte die Entwicklung
-## sonst an den eigenen Inhalten aus.
+## Die App-Version, an der die Schranke gemessen wird; "" heißt keine. Im Debug-Build gilt
+## keine, weil project.godot die Version des letzten Releases trägt und Packs für die
+## kommende Fassung sonst gesperrt wären.
 func gate_version() -> String:
 	return "" if OS.is_debug_build() else SemVer.app_version()
 
 
-## Holt das Verzeichnis und verschneidet es mit dem lokalen Stand.
-##
-## Still (`loud` false, die Prüfung beim Laden des Startmenüs) endet ein Netzfehler in
-## IDLE und nur in der Konsole — wie UpdateService.check: offline soll niemand bei jedem
-## Menübesuch eine Warnung bekommen. Laut (Knopf im Content-Manager) wird er ein ERROR
-## mit Text.
+## Holt das Verzeichnis und verschneidet es mit dem lokalen Stand. Ohne `loud` endet ein
+## Netzfehler still in IDLE, mit `loud` in ERROR mit Text.
 func refresh(loud := false) -> void:
 	if _busy:
 		return
@@ -104,12 +89,8 @@ func refresh(loud := false) -> void:
 	_set_state(State.READY)
 
 
-## Deinstalliert Packs, die das Verzeichnis nicht mehr führt.
-##
-## `rebuild()` kennt nur Packs aus dem Verzeichnis — ein zurückgezogener Pack (so der
-## frühere Grundwortschatz, ADR 0006) bliebe sonst unsichtbar liegen und würde weiter
-## geladen. Ein leeres Verzeichnis räumt nichts ab: das ist eher ein kaputter Abruf als
-## ein Rückzug von allem.
+## Deinstalliert Packs, die das Verzeichnis nicht mehr führt; `rebuild()` sähe sie nicht,
+## geladen würden sie aber weiter.
 func _retire_missing() -> void:
 	var gone := PackInstaller.retired(PackInstaller.installed(), _entries.keys())
 	if gone.is_empty():
@@ -136,10 +117,7 @@ func rebuild() -> void:
 	changed.emit()
 
 
-## Anzahl Packs, die sich jetzt aktualisieren lassen — trägt den Hinweis im Startmenü.
-## Ein Update hinter Schloss oder abgelaufenem Code zählt nicht: der Hinweis verspräche
-## etwas, das der Knopf nicht hält. „Programm zu alt" zählt auch nicht (wants_attention) —
-## dagegen hilft das App-Update.
+## Anzahl Packs, die sich jetzt aktualisieren lassen. Gesperrte zählen nicht.
 func update_count() -> int:
 	var count := 0
 	for pack in packs:
@@ -155,10 +133,8 @@ func find(pack_id: String) -> PackStatus:
 	return null
 
 
-## Installiert oder aktualisiert mehrere Packs, einen nach dem anderen.
-##
-## Ein Fehlschlag beendet den Lauf, statt die Reihe fortzusetzen: wer nicht weiß, warum der
-## erste Pack scheiterte, soll nicht drei weitere Meldungen dazu bekommen.
+## Installiert oder aktualisiert mehrere Packs nacheinander; der erste Fehlschlag beendet den
+## Lauf.
 func install_many(ids: Array, adopt := false) -> void:
 	if _busy or ids.is_empty():
 		return
@@ -209,8 +185,7 @@ func install_many(ids: Array, adopt := false) -> void:
 func _install_one(pack: PackStatus, adopt: bool) -> PackInstaller.Summary:
 	var summary := PackInstaller.Summary.new()
 
-	# Zweite Sicherung neben dem Zustand APP_OUTDATED: hier endet der Weg auch dann, wenn
-	# die Oberfläche die Sperre nicht beachtet.
+	# Zweite Sicherung neben APP_OUTDATED, falls die Oberfläche die Sperre übergeht.
 	if SemVer.too_old_for(gate_version(), pack.min_version):
 		summary.error = "setzt Monster Slam %s oder neuer voraus (installiert: %s)." % [
 			pack.min_version, SemVer.app_version()
@@ -258,12 +233,8 @@ func _install_one(pack: PackStatus, adopt: bool) -> PackInstaller.Summary:
 	return PackInstaller.install_zip(pack.id, zip_path, _entries.get(pack.id, {}), adopt)
 
 
-## Probiert einen Zugangscode gegen alle geschützten Packs und gibt die Namen zurück, die er
-## entsperrt hat.
-##
-## Der Nutzer bekommt einen Code und weiß in der Regel nicht, wozu er gehört — deshalb
-## ordnet das Spiel ihn selbst zu, statt eine Auswahl zu verlangen. Geprüft wird nur am
-## Kopf: die ersten 108 Bytes je Pack, nicht der ganze Download.
+## Probiert einen Zugangscode gegen alle geschützten Packs, nur am Kopf jedes Packs, und gibt
+## die Namen zurück, die er entsperrt hat.
 func redeem(code: String) -> PackedStringArray:
 	var unlocked := PackedStringArray()
 	var trimmed := code.strip_edges()
@@ -280,10 +251,8 @@ func redeem(code: String) -> PackedStringArray:
 		var headers := PackedStringArray(["Range: bytes=0-%d" % (PackCrypto.HEADER_LEN - 1)])
 		var response := await _fetch("%s/%s" % [release_base, pack.file], headers)
 		if not response["error"].is_empty():
-			# Ein nicht ladbarer Pack darf die Prüfung der anderen nicht abbrechen.
 			continue
-		# Server ohne Range-Unterstützung liefern die ganze Datei; der Kopf steht trotzdem
-		# vorn, read_header nimmt sich nur die ersten Bytes.
+		# Ohne Range-Unterstützung kommt die ganze Datei; read_header nimmt nur den Kopf.
 		var header := PackCrypto.read_header(response["body"])
 		if PackCrypto.code_matches(header, trimmed):
 			AccessCodes.store(pack.id, trimmed, pack.key_version)
@@ -320,7 +289,7 @@ func _fetch(url: String, headers := PackedStringArray(), download_to := "") -> D
 	return {"error": "", "body": result[3] as PackedByteArray}
 
 
-## Räumt Arbeitsdateien weg. Ein abgebrochener Download ist eine halbe Datei und wertlos.
+## Räumt Arbeitsdateien weg.
 func _clear_tmp() -> void:
 	var dir := DirAccess.open(TMP_DIR)
 	if dir == null:

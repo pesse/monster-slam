@@ -1,35 +1,18 @@
 extends Node
-## Werkbank: die Karten zwischen den Wellen als Bild — Wellenabschluss, Auflösung,
-## Rückfrage — über dem Schlachtfeld, mit erfundenen Werten.
-##
-## Ein echter Kampf spielt im Entwicklungsprofil und schreibt Lernstand und Spur (docs/CONVENTIONS.md);
-## hier wird nichts verbucht. Die Kiste meldet ihr Gold nur per Signal, und daran hängt hier
-## niemand. Statt Vokabeln stehen Füllwörter auf den Karten.
-##
-##     GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/wave_card_lab.tscn -- --snap
-##         speichert reports/wave_cards/<karte>_<breite>x<höhe>.png und beendet sich.
-##     … -- --snap --card=result       Ergebnis mit Kiste (Voreinstellung)
-##     … -- --snap --card=opened       … Kiste geöffnet
-##     … -- --snap --card=levelup      … mit Aufstieg und Meisterung in der Sitzung
-##     … -- --snap --card=consolation  Trostwort statt Kiste
-##     … -- --snap --card=next         Stufe 2 nach einem Sieg, mit Sitzungsbilanz
-##     … -- --snap --card=defeat       Stufe 2 nach einer Niederlage
-##     … -- --snap --card=reveal       die Auflösung der Vokabeln
-##     … -- --snap --card=confirm      die Rückfrage (wie „Welle auflösen")
-##     … -- --snap --size=1920x1080    anderes Fenster (Bezugsgröße nach Menügröße, UiScale)
-##
-## Ohne `--snap` bleibt das Fenster offen: unten links schalten ◀/▶ (oder Bild↑/Bild↓)
-## durch alle Karten. Die Karten sind echt — die Kiste lässt sich öffnen, Knöpfe blättern.
-##
-## Headless gibt es keinen Renderer — deshalb GODOT_WINDOW=1. `--snap` statt `--shoot`:
-## das Schlachtfeld kommt aus `battle_theme_lab`, und das reagiert selbst auf `--shoot`.
+## Werkbank: die Karten zwischen den Wellen über dem Schlachtfeld, mit erfundenen Werten und
+## Füllwörtern. Verbucht nichts; das Gold der Kiste geht nur per Signal hinaus.
+##     GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/wave_card_lab.tscn [-- <Argumente>]
+## Ohne --snap: ◀/▶ (Bild↑/Bild↓) schaltet durch die Karten, die bedienbar sind.
+## --snap: Bild nach reports/wave_cards/<karte>_<breite>x<höhe>.png, dazu --size=1920x1080 und
+##     --card=result (Vorgabe) | opened | levelup | consolation | next | defeat | reveal | confirm
+## --snap statt --shoot, weil der eingebettete battle_theme_lab auf --shoot hört.
 
 const FIELD_SCENE := "res://scenes/dev/battle_theme_lab.tscn"
 const STATS_SCENE := "res://scenes/ui/wave_stats.tscn"
 const REVEAL_SCENE := "res://scenes/ui/leak_reveal.tscn"
 const CONFIRM_SCENE := "res://scenes/ui/confirm_dialog.tscn"
 const SHOT_DIR := "res://reports/wave_cards"
-## So lange steht das Bild, bevor es gespeichert wird: Kiste, Einblenden, Karussell.
+## Wartezeit vor dem Bild, in s.
 const SETTLE := 2.5
 ## Alle Karten in der Reihenfolge des Umschalters.
 const CARDS: Array[String] = ["result", "opened", "levelup", "consolation", "next", "defeat",

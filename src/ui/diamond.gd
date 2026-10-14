@@ -1,8 +1,8 @@
 @tool
 class_name Diamond
 extends Control
-## Eine Farbraute, z. B. für die Wortart-Legende. Gezeichnet statt ein gedrehtes ColorRect:
-## ein Container setzt die Drehung seiner Kinder beim Layout zurück.
+## Eine Farbraute, z. B. für die Wortart-Legende. Gezeichnet, weil ein Container die
+## Drehung seiner Kinder beim Layout zurücksetzt.
 
 @export var color := Color.WHITE:
 	set(value):

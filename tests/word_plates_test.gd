@@ -128,3 +128,19 @@ func test_a_plate_moves_off_the_hud() -> void:
 	assert_int(placed.size()).is_equal(1)
 	assert_bool(placed[0].intersects(input[0])).is_false()
 	assert_float(placed[0].end.y).is_less_equal(input[0].position.y)
+
+
+## Gemeistert: Haken vor dem Wort, Rand und Schrift ohne Kontrast — aber deckend.
+func test_a_mastered_monster_gets_a_dull_plate_with_a_mark() -> void:
+	var monster := auto_free(MONSTER_SCENE.instantiate()) as Monster
+	monster.setup({}, {"prompt": "house", "lexeme_type": "verb"}, 1000.0, 0.0)
+	monster.mastered = true
+	var plate := auto_free((load("res://scenes/ui/word_plate.tscn") as PackedScene).instantiate()) as WordPlate
+	add_child(plate)
+	plate.setup(monster, false)
+	assert_str((plate.get_node("%Text") as Label).text).is_equal(WordPlate.MASTERED_MARK + "house")
+	var rim := (plate.get_node("Frame") as Control).self_modulate
+	var color := WordTypePalette.color_for("verb")
+	assert_float(rim.s).is_less(color.s)
+	assert_float(rim.v).is_less(color.v)
+	assert_float(plate.modulate.a).is_equal(1.0)

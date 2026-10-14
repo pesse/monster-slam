@@ -1,9 +1,6 @@
 extends PanelContainer
-## Wortart-Legende unter dem Antwortfeld, im Legendenstreifen. Das statische Layout liegt in
-## word_type_legend.tscn (Rahmen, Ausrichtung, Abstand) und der Eintrags-Vorlage legend_entry.tscn.
-## Hier wird nur der datengetriebene Teil erledigt: je Wortart einen Eintrag instanziieren
-## und aus WordTypePalette befüllen (einzige Quelle für Farben & Namen), damit Legende und
-## Monster-Outline immer denselben Farbcode zeigen.
+## Wortart-Legende unter dem Antwortfeld: je Wortart ein Eintrag, Farben und Namen aus
+## `WordTypePalette` wie die Monster-Outline.
 
 const ENTRY_SCENE := preload("res://scenes/ui/legend_entry.tscn")
 

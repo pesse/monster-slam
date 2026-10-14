@@ -1,8 +1,6 @@
 @tool
 extends Control
-## Das Enter-Zeichen (↵) auf der Taste im Antwortfeld. Gezeichnet statt aus der Schrift:
-## Fira Sans hat den Pfeil nicht, und ein Ersatz aus der Systemschrift sähe auf jedem
-## Rechner anders aus.
+## Das Enter-Zeichen (↵) im Antwortfeld. Gezeichnet, weil Fira Sans den Pfeil nicht hat.
 
 @export var color := Color(0.92, 0.94, 0.98):
 	set(value):

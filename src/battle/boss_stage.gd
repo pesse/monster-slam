@@ -1,20 +1,12 @@
 class_name BossStage
 extends Node3D
-## Die Bühne des Bosskampfs (scenes/battle/boss_stage.tscn): ein Gewölbe, ein Skelett darin
-## und eine Kamera auf Augenhöhe des Spielers.
-##
-## Die Bühne spielt nur vor. Sie weiß nichts von Sätzen, Urteilen und HP — der Bosskampf
-## sagt ihr, was geschehen ist (`hurt`, `gloat`, `fall` …), und sie zeigt es. Zwischen den
-## Ereignissen lebt sie von selbst: das Skelett geht vor dem Spieler auf und ab und bleibt
-## zwischendurch stehen und schaut ihn an, die Fackeln flackern, die Kamera atmet.
-##
-## Wo der Kopf des Skeletts gerade im Bild ist, sagt `mouth_on_screen()` — daran hängen die
-## Spitzen der Sprechblasen.
+## Die Bühne des Bosskampfs (scenes/battle/boss_stage.tscn): ein Gewölbe mit einem Skelett.
+## Sie spielt nur vor und weiß nichts von Sätzen, Urteilen und HP; der Bosskampf sagt ihr,
+## was geschehen ist (`hurt`, `gloat`, `fall` …). Dazwischen geht das Skelett auf und ab.
 
-## Hier steht das Skelett, wenn es gerade nicht geht. Links der Mitte, weil rechts im Bild
-## die Blase mit der Erklärung steht.
+## Ruheplatz des Skeletts, links der Mitte: rechts steht die Blase mit der Erklärung.
 const HOME := Vector3(-1.0, 0.0, -3.7)
-## So weit geht es nach jeder Seite.
+## So weit (m) geht es nach jeder Seite, so schnell (m/s).
 const PACE := 1.1
 const WALK_SPEED := 0.8
 ## Wie schnell es sich umdreht (rad/s, weich über lerp_angle).
@@ -22,11 +14,11 @@ const TURN_RATE := 6.0
 ## Wie lange es stehen bleibt, bevor es weitergeht (s).
 const REST_MIN := 1.5
 const REST_MAX := 3.5
-## Wie stark die Kamera dem Kopf folgt: 0 starr, 1 ganz. Ein wenig, damit sie lebt, aber
-## nicht so viel, dass das Bild mitläuft.
+## Wie stark die Kamera dem Kopf folgt: 0 starr, 1 ganz.
 const LOOK_FOLLOW := 0.3
 ## Wo der Mund über dem Kopf-Knochen liegt (Weltmeter).
 const MOUTH_OFFSET := Vector3(0.0, 0.1, 0.0)
+## Hinter diesem z verschwindet das gehende Skelett im Tor.
 const GATE_Z := -11.0
 
 const IDLE := &"general/Idle_A"
@@ -74,8 +66,7 @@ func _ready() -> void:
 		"general": RigAnimations.general(),
 		"move": RigAnimations.movement(),
 	})
-	# Die Libraries sind geteilt (RigAnimations): Schleifen nur an dem, was ohnehin
-	# schleift — Idle und Gehen, nie an einem Treffer oder am Sterben.
+	# Die Libraries sind geteilt (RigAnimations): Schleife nur an Idle und Gehen setzen.
 	for loop in [IDLE, LISTEN, WALK, LEAVE_WALK]:
 		if _anim.has_animation(loop):
 			_anim.get_animation(loop).loop_mode = Animation.LOOP_LINEAR
@@ -92,8 +83,7 @@ func _ready() -> void:
 	_rest(REST_MIN)
 
 
-## Vorwärmen hinter dem Schleier (FxWarmup): Explosion samt Licht und roter Blitz auf dem
-## Skelett einmal zeigen, damit ihre Shader nicht erst beim ersten Treffer entstehen.
+## Vorwärmen hinter dem Schleier (FxWarmup): Explosion und roten Blitz einmal zeigen.
 func warm_up() -> void:
 	var fx := Explosion.new()
 	fx.setup(Color.WHITE, 1.0)
@@ -103,7 +93,7 @@ func warm_up() -> void:
 	for mi in _model.find_children("*", "MeshInstance3D", true, false):
 		(mi as MeshInstance3D).material_overlay = _flash
 	await FxWarmup.frames()
-	# Wie in FxWarmup.run: die Explosion räumt sich selbst weg.
+	# Die Explosion räumt sich selbst weg.
 	if is_instance_valid(fx):
 		fx.visible = false
 	for mi in _model.find_children("*", "MeshInstance3D", true, false):
@@ -240,6 +230,7 @@ func _pick_goal() -> void:
 	var goal := HOME.x
 	for i in 4:
 		goal = HOME.x + _rng.randf_range(-PACE, PACE)
+		# Mindestens 0.6 m vom Standort, sonst noch einmal würfeln.
 		if absf(goal - _boss.position.x) > 0.6:
 			break
 	_goal_x = goal
@@ -270,7 +261,7 @@ func _on_animation_finished(anim_name: StringName) -> void:
 func _head_point() -> Vector3:
 	if _head != null:
 		return _head.global_position
-	return _boss.global_position + Vector3(0.0, 2.6, 0.0)
+	return _boss.global_position + Vector3(0.0, 2.6, 0.0)  # Kopfhöhe des Modells (m)
 
 
 func _aim_camera(delta: float) -> void:

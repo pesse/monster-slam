@@ -1,15 +1,11 @@
 extends Node
-## Persistente Spieler-Einstellungen (Autoload `UserSettings`).
-##
-## Hält, welches Profil aktiv ist, welche Profile es gibt und die Standard-Schwierigkeit
-## PRO Profil (individueller Könnensstand). Persistenz: ConfigFile unter user://settings.cfg.
-## Der Lernfortschritt selbst liegt weiterhin in PlayerProgress (user://progress/<id>.json);
-## hier landen NUR die Meta-Einstellungen.
-##
-## Wird VOR PlayerProgress geladen (siehe [autoload] in project.godot), damit PlayerProgress
-## in _ready() bereits das aktive Profil übernehmen kann.
+## Einstellungen in user://settings.cfg (Autoload): Profile, ihre Filter und geräteweite
+## Werte unter [general]. Lädt vor PlayerProgress, das in `_ready()` das aktive Profil liest.
 
 const PATH := "user://settings.cfg"
+const PROGRESS_DIR := "user://progress"
+const BACKUP_DIR := "user://backups"
+const QUARANTINE_DIR := "user://quarantine"
 const DEFAULT_PROFILE := "default"
 const DEFAULT_DIFFICULTY := 3
 const DEFAULT_BASE_SPEED := 1.0
@@ -18,32 +14,32 @@ const MAX_BASE_SPEED := 1.5
 const DEFAULT_VOLUME := 1.0
 const DEFAULT_TRACE_ENABLED := true
 
-## Das aktive Profil hat gewechselt (id = neuer player_id). Erlaubt Live-Refresh im UI.
+## Das aktive Profil hat gewechselt (`id` = neue player_id).
 signal active_profile_changed(id: String)
 
 var _config := ConfigFile.new()
 
 
+## Pfade; Tests setzen eigene.
+var config_path := PATH
+var progress_dir := PROGRESS_DIR
+var backup_dir := BACKUP_DIR
+var quarantine_dir := QUARANTINE_DIR
+## Was beim Laden repariert wurde, für das Startmenü (SaveCoordinator.take_notices).
+var _recovery_notice := {}
+
+
 func _ready() -> void:
-	var err := _config.load(PATH)
-	if err != OK:
-		# Erststart (oder unlesbar): Default-Profil anlegen und sichern.
-		_config.set_value("general", "active_profile", DEFAULT_PROFILE)
-		_config.set_value("profiles", "roster", PackedStringArray([DEFAULT_PROFILE]))
-		_save()
-	# Sicherstellen, dass das Default-Profil einen Anzeigenamen hat (auch für Altbestände
-	# ohne [names]-Sektion).
+	load_config()
+	# Das Default-Profil braucht einen Anzeigenamen.
 	if str(_config.get_value("names", DEFAULT_PROFILE, "")).is_empty():
 		_config.set_value("names", DEFAULT_PROFILE, "Spieler")
 		_save()
 	GraphicsQuality.apply_window(get_tree().root, graphics_quality())
-	# Die Bezugsgröße der Oberfläche folgt dem Fenster (UiScale): beim Start und nach
-	# jeder Größenänderung, auch beim Maximieren und im Vollbild.
 	var root := get_tree().root
 	UiScale.apply(root, ui_size())
 	root.size_changed.connect(func() -> void: UiScale.apply(root, ui_size()))
-	# Das Vollbild beim Start nur in der EXE: Editor-Läufe und Werkbänke bleiben im freien
-	# Fenster, damit ihre Bilder nicht vom Bildschirm abhängen (ADR 0017).
+	# Vollbild beim Start nur in der EXE (ADR 0017).
 	if OS.has_feature("template") and fullscreen():
 		_apply_fullscreen(true)
 
@@ -64,15 +60,11 @@ func set_active_profile(id: String) -> void:
 	active_profile_changed.emit(id)
 
 
-## Liste der bekannten Profile (player_ids).
 func profiles() -> PackedStringArray:
 	return PackedStringArray(_config.get_value("profiles", "roster", PackedStringArray([DEFAULT_PROFILE])))
 
 
-## Legt aus einem Anzeigenamen ein neues Profil an (idempotent) und gibt dessen player_id
-## zurück. Der sanitisierte Name dient als sicherer Dateiname/Schlüssel, der eingegebene
-## Klartext-Name wird als Anzeigename gespeichert. Bei leerer Eingabe wird kein Profil
-## angelegt und "" zurückgegeben.
+## Legt aus einem Anzeigenamen ein Profil an (idempotent); gibt die player_id oder "" zurück.
 func create_profile(name: String) -> String:
 	var id := _sanitize(name)
 	if id.is_empty():
@@ -81,22 +73,19 @@ func create_profile(name: String) -> String:
 	if id not in roster:
 		roster.append(id)
 		_config.set_value("profiles", "roster", roster)
-	# Anzeigename setzen/aktualisieren (Klartext, wie eingegeben).
 	_config.set_value("names", id, name.strip_edges())
 	_save()
 	return id
 
 
-## Klartext-Anzeigename eines Profils. Leeres `profile` -> aktives Profil. Fällt auf die
-## player_id zurück, falls kein Anzeigename hinterlegt ist.
+## Anzeigename eines Profils, sonst die player_id. Leeres `profile` -> aktives Profil.
 func display_name(profile := "") -> String:
 	var id := profile if not profile.is_empty() else active_profile()
 	var name := str(_config.get_value("names", id, ""))
 	return name if not name.is_empty() else id
 
 
-## Benennt ein Profil um: ändert nur den Klartext-Anzeigenamen, die player_id (Dateischlüssel)
-## bleibt stabil. Leere Eingabe wird ignoriert. Leeres `profile` -> aktives Profil.
+## Ändert nur den Anzeigenamen, die player_id bleibt. Leere Eingabe wird ignoriert.
 func set_display_name(name: String, profile := "") -> void:
 	var trimmed := name.strip_edges()
 	if trimmed.is_empty():
@@ -118,9 +107,7 @@ func set_default_difficulty(value: int, profile := "") -> void:
 	_save()
 
 
-## Grund-Geschwindigkeit eines Profils als Multiplikator (0.5..1.5, Default 1.0). Wirkt als
-## globaler Tempo-Faktor ZUSÄTZLICH zur Schwierigkeit (siehe WaveRunner) und verschiebt so das
-## Grundtempo, ohne die Schwierigkeitsskala selbst zu verändern. Leeres `profile` -> aktives Profil.
+## Grund-Geschwindigkeit eines Profils als Faktor (0.5..1.5) zusätzlich zur Schwierigkeit.
 func base_speed(profile := "") -> float:
 	var id := profile if not profile.is_empty() else active_profile()
 	return clampf(float(_config.get_value("base_speed", id, DEFAULT_BASE_SPEED)), MIN_BASE_SPEED, MAX_BASE_SPEED)
@@ -132,9 +119,7 @@ func set_base_speed(value: float, profile := "") -> void:
 	_save()
 
 
-## Lautstärke der Effekte (0.0..1.0, Default 1.0). Bewusst in [general] und damit
-## geräteweit statt pro Profil: wie laut es hier sein darf, hängt an Boxen und Uhrzeit,
-## nicht daran, wer gerade spielt.
+## Lautstärke der Effekte (0.0..1.0), geräteweit.
 func sfx_volume() -> float:
 	return clampf(float(_config.get_value("general", "sfx_volume", DEFAULT_VOLUME)), 0.0, 1.0)
 
@@ -144,10 +129,7 @@ func set_sfx_volume(value: float) -> void:
 	_save()
 
 
-## Schreibt das Ereignis-Protokoll mit (TraceLog)? Bewusst in [general] und damit
-## geräteweit statt pro Profil: ob protokolliert wird, ist eine Frage an den Rechner und
-## nicht an das Kind, das gerade spielt. Vorgabe an — ein Protokoll, das man erst
-## einschalten muss, ist beim Fehler von gestern leer.
+## Schreibt das Ereignis-Protokoll mit (TraceLog)? Geräteweit, Vorgabe an.
 func trace_enabled() -> bool:
 	return bool(_config.get_value("general", "trace_log", DEFAULT_TRACE_ENABLED))
 
@@ -157,7 +139,7 @@ func set_trace_enabled(value: bool) -> void:
 	_save()
 
 
-## Lautstärke der Musik (0.0..1.0, Default 1.0). Ebenfalls geräteweit, siehe sfx_volume().
+## Lautstärke der Musik (0.0..1.0), geräteweit.
 func music_volume() -> float:
 	return clampf(float(_config.get_value("general", "music_volume", DEFAULT_VOLUME)), 0.0, 1.0)
 
@@ -167,10 +149,8 @@ func set_music_volume(value: float) -> void:
 	_save()
 
 
-## Grafikstufe (GraphicsQuality.Level)? Geräteweit wie die Lautstärke: ob der Rechner
-## mitkommt, hängt nicht daran, wer spielt. Vorgabe „Schön". Früher gab es nur
-## `graphics_simple` (an = „Einfach"); wer das gesetzt hat, bekommt „Schnell" — das ist
-## dieselbe Wahl, und sie bleibt gelesen, solange keine neue Stufe gespeichert ist.
+## Grafikstufe, geräteweit, Vorgabe „Schön“. Ohne gespeicherte Stufe gilt der alte
+## Schlüssel `graphics_simple` als „Schnell“.
 func graphics_quality() -> GraphicsQuality.Level:
 	if _config.has_section_key("general", "graphics_quality"):
 		return clampi(int(_config.get_value("general", "graphics_quality")),
@@ -186,9 +166,7 @@ func set_graphics_quality(value: GraphicsQuality.Level) -> void:
 	GraphicsQuality.apply_window(get_tree().root, value)
 
 
-## Menügröße (UiScale.Size)? Geräteweit wie die Grafikstufe: wie groß die Menüs stehen
-## sollen, hängt am Bildschirm, nicht daran, wer spielt. Gespeichert wird nur die Stufe;
-## was „Mittel" in Pixeln heißt, rechnet UiScale aus der Systemskalierung.
+## Menügröße, geräteweit; gespeichert wird nur die Stufe (ADR 0017).
 func ui_size() -> UiScale.Size:
 	return clampi(int(_config.get_value("general", "ui_size", UiScale.Size.MEDIUM)),
 			UiScale.Size.SMALL, UiScale.Size.LARGE) as UiScale.Size
@@ -200,10 +178,7 @@ func set_ui_size(value: UiScale.Size) -> void:
 	UiScale.apply(get_tree().root, value)
 
 
-## Vollbild? Geräteweit wie die Menügröße. Gespeichert wird der Wunsch, was das Fenster
-## gerade ist, sagt `window_is_fullscreen()` — verlassen lässt es sich auch über das
-## Betriebssystem (macOS: grüner Knopf). Randlos statt exklusiv: Alt+Tab und was das Spiel
-## selbst öffnet (Spur-Ordner, Update, Links) kommen nach vorn, ohne dass es minimiert.
+## Gewünschtes Vollbild, geräteweit; den tatsächlichen Zustand sagt `window_is_fullscreen()`.
 func fullscreen() -> bool:
 	return bool(_config.get_value("general", "fullscreen", false))
 
@@ -223,8 +198,7 @@ static func can_fullscreen() -> bool:
 	return not Engine.is_embedded_in_editor()
 
 
-## Zurück geht es dorthin, wo das Fenster ohne Vollbild startet: die EXE maximiert, alles
-## andere frei (`window/size/mode.template`).
+## Ohne Vollbild: die EXE maximiert, alles andere frei (`window/size/mode.template`).
 func _apply_fullscreen(on: bool) -> void:
 	if not can_fullscreen() or on == window_is_fullscreen():
 		return
@@ -233,8 +207,7 @@ func _apply_fullscreen(on: bool) -> void:
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if on else back)
 
 
-## F11 und Alt+Enter schalten überall um, auch während getippt wird — `_input` kommt vor
-## der Oberfläche, ein Eingabefeld sieht das Enter dann nicht.
+## F11 und Alt+Enter schalten überall um; `_input` kommt vor jedem Eingabefeld.
 func _input(event: InputEvent) -> void:
 	var key := event as InputEventKey
 	if key == null or not key.pressed or key.echo:
@@ -248,8 +221,7 @@ func _input(event: InputEvent) -> void:
 		set_fullscreen(not window_is_fullscreen())
 
 
-## Ausgewählte Lexem-Tags eines Profils (Session-Filter). Leer -> keine Einschränkung
-## (alle Tags). Leeres `profile` -> aktives Profil.
+## Ausgewählte Lexem-Tags eines Profils (Session-Filter). Leer -> keine Einschränkung.
 func selected_tags(profile := "") -> PackedStringArray:
 	var id := profile if not profile.is_empty() else active_profile()
 	return PackedStringArray(_config.get_value("tags", id, PackedStringArray([])))
@@ -261,9 +233,7 @@ func set_selected_tags(tags: PackedStringArray, profile := "") -> void:
 	_save()
 
 
-## Ausgewählter Curriculum-Scope eines Profils (Session-Filter): Schlüssel wie "access2"
-## (ganzes Buch) oder "access2/6" (eine Unit). Leer -> keine Einschränkung (alle Lexeme,
-## auch die ohne Buch/Unit). Leeres `profile` -> aktives Profil.
+## Ausgewählter Curriculum-Scope ("access2", "access2/6"). Leer -> keine Einschränkung.
 func selected_scope(profile := "") -> PackedStringArray:
 	var id := profile if not profile.is_empty() else active_profile()
 	return PackedStringArray(_config.get_value("scope", id, PackedStringArray([])))
@@ -275,8 +245,7 @@ func set_selected_scope(scope: PackedStringArray, profile := "") -> void:
 	_save()
 
 
-## Ausgewählte Aufgabentypen eines Profils (Session-Filter). Leer -> keine Einschränkung
-## (alle Typen). Leeres `profile` -> aktives Profil.
+## Ausgewählte Aufgabentypen (Session-Filter). Leer -> keine Einschränkung.
 func selected_task_types(profile := "") -> PackedStringArray:
 	var id := profile if not profile.is_empty() else active_profile()
 	return PackedStringArray(_config.get_value("task_types", id, PackedStringArray([])))
@@ -288,8 +257,7 @@ func set_selected_task_types(types: PackedStringArray, profile := "") -> void:
 	_save()
 
 
-## Ausgewählte Vokabel-Typen (Lexem-`type`, z.B. noun/verb) eines Profils. Leer ->
-## keine Einschränkung (alle Typen). Leeres `profile` -> aktives Profil.
+## Ausgewählte Lexem-`type`s (noun, verb, …). Leer -> keine Einschränkung.
 func selected_lexeme_types(profile := "") -> PackedStringArray:
 	var id := profile if not profile.is_empty() else active_profile()
 	return PackedStringArray(_config.get_value("lexeme_types", id, PackedStringArray([])))
@@ -301,10 +269,7 @@ func set_selected_lexeme_types(types: PackedStringArray, profile := "") -> void:
 	_save()
 
 
-## Zufällige Kennung eines Profils für die Statistik (ADR 0021), 32 Hex-Zeichen. Wird beim
-## ersten Bedarf erzeugt und bleibt beim Umbenennen stehen: der Server soll Verläufe
-## zusammenhalten, ohne den Namen zu kennen. Die player_id taugt dafür nicht — sie ist der
-## Name. Leeres `profile` -> aktives Profil.
+## Zufällige Statistik-Kennung eines Profils (ADR 0021), 32 Hex; nie die player_id (= Name).
 func stats_id(profile := "") -> String:
 	var id := profile if not profile.is_empty() else active_profile()
 	var value := str(_config.get_value("stats_id", id, ""))
@@ -315,8 +280,7 @@ func stats_id(profile := "") -> String:
 	return value
 
 
-## Hat dieser Rechner den Hinweis zur Statistik gesehen? Geräteweit: er gilt dem Rechner,
-## nicht dem Kind. Vorher wird nichts gesendet.
+## Hat dieser Rechner den Hinweis zur Statistik gesehen? Vorher wird nichts gesendet.
 func stats_notice_seen() -> bool:
 	return bool(_config.get_value("general", "stats_notice_seen", false))
 
@@ -362,7 +326,81 @@ func _sanitize(name: String) -> String:
 	return out
 
 
+## Lädt die Einstellungen; Reparatur nach ADR 0024 (Punkt 7).
+func load_config() -> void:
+	var read := SaveStore.read_cfg(config_path)
+	match int(read["status"]):
+		SaveStore.Status.OK:
+			_config.parse(str(read["text"]))
+			if bool(read["legacy"]):
+				_save()
+			return
+		SaveStore.Status.MISSING:
+			if not _has_player_data():
+				_config.set_value("general", "active_profile", DEFAULT_PROFILE)
+				_config.set_value("profiles", "roster", PackedStringArray([DEFAULT_PROFILE]))
+				_save()
+				return
+		_:
+			var stamp := Backups.stamp_name(int(Time.get_unix_time_from_system() * 1000.0))
+			SaveStore.quarantine(config_path, "%s/_settings/%s" % [quarantine_dir, stamp], ".corrupt")
+	var copy := SaveStore.decode_cfg(Backups.newest_settings(backup_dir))
+	if int(copy["status"]) == SaveStore.Status.OK:
+		_config.parse(str(copy["text"]))
+		_save()
+		push_warning("UserSettings: aus der Sicherung zurückgeholt")
+		_recovery_notice = {"kind": "settings_restored"}
+		return
+	_config.clear()
+	var roster := found_profiles()
+	if roster.is_empty():
+		roster.append(DEFAULT_PROFILE)
+	_config.set_value("general", "active_profile", roster[0])
+	_config.set_value("profiles", "roster", roster)
+	_save()
+	push_warning("UserSettings: Profilliste aus den Spielständen gebaut: %s" % ", ".join(roster))
+	_recovery_notice = {"kind": "settings_rebuilt"}
+
+
+## Was beim Laden repariert wurde ({} = nichts), einmal.
+func take_recovery_notice() -> Dictionary:
+	var out := _recovery_notice
+	_recovery_notice = {}
+	return out
+
+
+## Profile mit Spielstand auf der Platte (`<id>.json` oder Sicherung), ohne `zz-`-Profile.
+func found_profiles() -> PackedStringArray:
+	var out := PackedStringArray()
+	if DirAccess.dir_exists_absolute(progress_dir):
+		for name in DirAccess.get_files_at(progress_dir):
+			if not name.ends_with(".json") or name.ends_with(SaveCoordinator.JOURNAL_SUFFIX):
+				continue
+			var id := name.get_basename()
+			if _is_profile_file(id) and not id.begins_with("zz-") and id not in out:
+				out.append(id)
+	if DirAccess.dir_exists_absolute(backup_dir):
+		for id in DirAccess.get_directories_at(backup_dir):
+			if not id.begins_with("zz-") and id not in out:
+				out.append(id)
+	out.sort()
+	return out
+
+
+## Der Lernstand heißt `<id>.json`; alles andere trägt eine Endung (`_level`, …).
+func _is_profile_file(base: String) -> bool:
+	for suffix: String in SaveCoordinator.PROFILE_SUFFIXES + ["_runs"]:
+		if not suffix.is_empty() and base.ends_with(suffix):
+			return false
+	return true
+
+
+func _has_player_data() -> bool:
+	return (DirAccess.dir_exists_absolute(progress_dir) and not DirAccess.get_files_at(progress_dir).is_empty()) \
+			or DirAccess.dir_exists_absolute(backup_dir)
+
+
 func _save() -> void:
-	var err := _config.save(PATH)
+	var err := SaveStore.write_cfg(config_path, _config.encode_to_text())
 	if err != OK:
-		push_warning("UserSettings: konnte '%s' nicht schreiben (Fehler %d)" % [PATH, err])
+		push_warning("UserSettings: konnte '%s' nicht schreiben (Fehler %d)" % [config_path, err])

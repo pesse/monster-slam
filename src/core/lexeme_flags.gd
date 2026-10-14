@@ -1,18 +1,12 @@
 class_name LexemeFlags
 extends RefCounted
-## Nutzer-Meldungen ("das Wort ist falsch") — gespeichert in `user://`, nicht im Content.
-##
-## Früher schrieb `ContentRegistry.flag_lexeme()` das Feld `flag` in die Quell-JSON zurück.
-## Das funktioniert nur im Editor: in einer exportierten EXE ist `res://` read-only, und ein
-## Eintrag aus einem installierten Pack würde beim nächsten Pack-Update entweder überschrieben
-## oder — weil der Installer lokal geänderte Dateien überspringt — das Update blockieren.
-## Meldungen sind Spielerdaten, gehören also neben den Fortschritt nach `user://`.
+## Nutzer-Meldungen („das Wort ist falsch“), geräteweit in `user://`, nicht im Content.
 
 const PATH := "user://lexeme_flags.json"
 
 
-## lexeme_id -> {comment, learnable_id, at, sent, stats_id?}. Leer, wenn es noch keine Meldungen gibt
-## oder die Datei unlesbar ist (eine kaputte Meldungsliste darf das Spiel nicht aufhalten).
+## lexeme_id -> {comment, learnable_id, at, sent, stats_id?}. Leer ohne Meldungen oder bei
+## unlesbarer Datei.
 static func load_all() -> Dictionary:
 	if not FileAccess.file_exists(PATH):
 		return {}
@@ -38,9 +32,8 @@ static func save_all(flags: Dictionary) -> bool:
 	return true
 
 
-## `stats_id` ist die Profilnummer zum Zeitpunkt der Meldung (ADR 0022). Sie steht im
-## Eintrag, weil die Datei geräteweit ist und eine offene Meldung erst später rausgeht —
-## dann spielt womöglich schon ein anderes Profil.
+## `stats_id` ist die Profilnummer zum Zeitpunkt der Meldung (ADR 0022); beim späteren
+## Senden spielt womöglich ein anderes Profil.
 static func entry(comment: String, learnable_id: String, stats_id := "") -> Dictionary:
 	var item := {
 		"comment": comment,
@@ -53,11 +46,8 @@ static func entry(comment: String, learnable_id: String, stats_id := "") -> Dict
 	return item
 
 
-## Meldungen, die noch nicht beim Content-Autor angekommen sind — die Warteschlange des
-## Rückkanals (siehe docs/adr/0002-melde-rueckkanal.md). Je Eintrag zusätzlich `lexeme_id`.
-##
-## Ein Eintrag ohne Feld `sent` gilt als offen: Meldungen aus einer Fassung vor dem
-## Rückkanal sollen mitgehen, nicht stillschweigend verfallen.
+## Offene Meldungen, die Warteschlange des Rückkanals (ADR 0002), je Eintrag mit
+## `lexeme_id`. Ohne Feld `sent` gilt ein Eintrag als offen.
 static func pending() -> Array:
 	var result: Array = []
 	var flags := load_all()
@@ -70,9 +60,8 @@ static func pending() -> Array:
 	return result
 
 
-## Hakt eine gesendete Meldung ab. false, wenn es sie nicht (mehr) gibt oder die Datei
-## nicht schreibbar ist — dann bleibt sie offen und geht beim nächsten Versuch mit.
-## Ein doppelter Versand ist der harmlosere Fehler: der Endpunkt erkennt ihn.
+## Hakt eine gesendete Meldung ab. False, wenn es sie nicht gibt oder die Datei nicht
+## schreibbar ist; dann bleibt sie offen (den doppelten Versand erkennt der Endpunkt).
 static func mark_sent(lexeme_id: String) -> bool:
 	var flags := load_all()
 	if not flags.has(lexeme_id):

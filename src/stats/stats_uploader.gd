@@ -1,47 +1,28 @@
 extends Node
 ## Autoload `StatsUploader`: der Statistik-Rückkanal (ADR 0021).
-##
-## Schickt je Profil einen Snapshot des Spielstands und die bereinigte Spur an den
-## Statistik-Endpunkt (server/statistik/statistik.php). Zugeordnet wird über die zufällige
-## `UserSettings.stats_id`, nie über Profilnamen oder player_id.
-##
-## Was hinausgeht, steht an zwei Stellen und nur dort: `snapshot()` (Allowlist je Datei
-## unter user://progress) und `TraceSanitizer` (Allowlist je Spurereignis). Die Rohspur,
-## gemeldete Kommentare, Testlisten und Profilnamen gehen nie mit.
-##
-## Wie die anderen Kanäle ist jeder Netzfehler ein Zustand, kein Abbruch: es bleibt still,
-## und der nächste Anlass versucht es neu. Eine Warteschlange gibt es nicht — der Snapshot
-## entsteht jedes Mal frisch aus den Dateien, und die Spur geht ab dem Stand, den der Server
-## bestätigt hat.
-##
-## Gesendet wird nur, wenn alles zusammenkommt: Endpunkt und App-Schlüssel (beim Export
-## eingesetzt, `KEY_PATH`), der gesehene Hinweis beim ersten Start, und keine
-## Debug-Fassung (außer mit `MONSTER_SLAM_STATS_URL`). `zz-`-Profile sendet er nie.
+## Schickt je Profil einen Snapshot und die bereinigte Spur an den Statistik-Endpunkt,
+## zugeordnet über `UserSettings.stats_id`. Was hinausgeht, steht nur in `SNAPSHOT_FILES` und
+## `TraceSanitizer`; Rohspur, Kommentare, Testlisten, Profilname und player_id gehen nie mit
+## (docs/CONVENTIONS.md). Der Snapshot liest nur Sicherungen (ADR 0024). Netzfehler bleiben
+## still, der nächste Anlass versucht es neu. `zz-`-Profile sendet er nie.
 
-## Vom Export geschrieben (build.sh, release.yml), nicht im Repo. Fehlt die Datei, ist der
-## Kanal aus. Die URL steht mit darin, damit eine Fassung ohne Schlüssel auch keinen
-## Endpunkt kennt — und ein Umzug des Servers keine Codeänderung ist.
+## Vom Export geschrieben (build.sh, release.yml), nicht im Repo; fehlt sie, ist der Kanal aus.
 ##   [stats]
 ##   url="https://…/statistik/statistik.php"
 ##   key="app-1.XXXX-XXXX-XXXX-XXXX"
 ##   key_version=1
-## Derselbe Schlüssel gilt auch fürs Melden; dessen URL steht in `[report]`
-## (ReportService, ADR 0022).
+## Der Abschnitt `[report]` gehört dem Melde-Kanal (ADR 0022).
 const KEY_PATH := "res://stats_key.cfg"
 
 const FORMAT := 1
 const TIMEOUT_SECONDS := 20.0
 const MAX_RESPONSE_BYTES := 8 * 1024
-## Spurzeilen je Sendung. Bereinigt sind das gut 100 Byte je Zeile, gepackt ein Zehntel —
-## weit unter der Grenze des Endpunkts.
+## Spurzeilen je Sendung (bereinigt gut 100 Byte je Zeile).
 const TRACE_CHUNK := 3000
-## Nach so vielen Stücken je Anlass ist Schluss; der Rest geht beim nächsten Mal.
+## Höchstzahl Stücke je Anlass; der Rest geht beim nächsten Mal.
 const MAX_CHUNKS := 20
 
-const SAVE_DIR := "user://progress"
-
-## Je Datei unter user://progress, was davon hinausgeht. `player_id` steht in jeder dieser
-## Dateien und ist der Name — es fehlt deshalb überall.
+## Je Datei einer Sicherung, was davon hinausgeht. `player_id` fehlt überall.
 const SNAPSHOT_FILES := {
 	"": {"progress": "records"},
 	"_sessions": {"sessions": "sessions"},
@@ -71,8 +52,8 @@ func _ready() -> void:
 	add_child(_http)
 	_load_key()
 	if OS.is_debug_build():
-		# Editor- und Testläufe senden nie von selbst — sie spielen im Entwicklungsprofil.
-		# Für einen Versuch gegen einen lokalen Endpunkt: beide Variablen setzen.
+		# Editor- und Testläufe senden nur mit beiden Umgebungsvariablen, etwa gegen einen lokalen
+		# Endpunkt.
 		endpoint = OS.get_environment("MONSTER_SLAM_STATS_URL")
 		_key = OS.get_environment("MONSTER_SLAM_STATS_KEY")
 		if not endpoint.is_empty():
@@ -106,21 +87,33 @@ static func sendable(profile: String) -> bool:
 
 # --- Was hinausgeht -----------------------------------------------------------
 
-## Der Snapshot eines Profils aus seinen Dateien. Statisch und ohne Autoload, damit ein
-## Test ihn gegen eigene Dateien prüfen kann; `settings` und `meta` reicht der Aufrufer.
+## Der Snapshot eines Profils aus der neuesten gültigen Sicherung unter `backup_dir`, oder {}.
+## Läuft auf dem Arbeitsthread.
+static func generation_snapshot(profile: String, settings: Dictionary, meta: Dictionary,
+		backup_dir: String) -> Dictionary:
+	var generation := Backups.latest(backup_dir, profile)
+	if generation.is_empty():
+		return {}
+	return snapshot(profile, settings, meta, str(generation["dir"]))
+
+
+## Der Snapshot eines Profils aus den Dateien in `dir`. Ist eine Datei unlesbar, gibt es
+## keinen Snapshot ({}).
 static func snapshot(profile: String, settings: Dictionary, meta: Dictionary,
-		dir: String = SAVE_DIR) -> Dictionary:
+		dir: String) -> Dictionary:
 	var out := {"format": FORMAT}
 	out.merge(meta)
 	out["settings"] = settings
 	for suffix in SNAPSHOT_FILES:
-		var path := "%s/%s%s.json" % [dir, profile, suffix]
-		if not FileAccess.file_exists(path):
-			continue
-		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
-		if not (parsed is Dictionary):
-			continue
-		var data: Dictionary = parsed
+		var read := SaveStore.read("%s/%s%s.json" % [dir, profile, suffix])
+		match int(read["status"]):
+			SaveStore.Status.MISSING:
+				continue
+			SaveStore.Status.OK:
+				pass
+			_:
+				return {}
+		var data: Dictionary = read["data"]
 		var rule: Dictionary = SNAPSHOT_FILES[suffix]
 		for key in rule:
 			var pick: Variant = rule[key]
@@ -135,8 +128,8 @@ static func snapshot(profile: String, settings: Dictionary, meta: Dictionary,
 	return out
 
 
-## Die Einstellungen eines Profils, die zur Auswertung gehören. Auf dem Hauptthread
-## gelesen: UserSettings ist ein Autoload.
+## Die Einstellungen eines Profils für die Auswertung; liest das Autoload UserSettings, also
+## nur auf dem Hauptthread.
 func _settings_of(profile: String) -> Dictionary:
 	return {
 		"difficulty": UserSettings.default_difficulty(profile),
@@ -163,8 +156,8 @@ func _meta(profile: String) -> Dictionary:
 	}
 
 
-## Die bereinigte Spur eines Profils nach `after`, älteste zuerst. Liest beide Generationen
-## von vorn — die Lösungen für den Editierabstand stehen in früheren spawn-Zeilen.
+## Die bereinigte Spur eines Profils nach `after`, älteste zuerst. Liest beide Generationen,
+## weil die Lösungen für den Editierabstand in früheren spawn-Zeilen stehen.
 static func trace_after(profile: String, after: Array, log_dir: String = TraceLog.LOG_DIR) -> Array:
 	var lines := TraceSanitizer.read_lines("%s/%s_trace.1.jsonl" % [log_dir, profile])
 	lines.append_array(TraceSanitizer.read_lines("%s/%s_trace.jsonl" % [log_dir, profile]))
@@ -177,7 +170,7 @@ func _send_active() -> void:
 	await send_profile(UserSettings.active_profile())
 
 
-## Beim Start: jedes Profil, dessen Dateien sich seit dem letzten Snapshot geändert haben.
+## Beim Start: jedes Profil, das seit dem letzten Snapshot neu gesichert wurde.
 func _send_all() -> void:
 	for profile in UserSettings.profiles():
 		if _changed_since_sent(profile):
@@ -185,12 +178,18 @@ func _send_all() -> void:
 
 
 func _changed_since_sent(profile: String) -> bool:
-	var sent := UserSettings.stats_sent_at(profile)
-	for suffix in SNAPSHOT_FILES:
-		var path := "%s/%s%s.json" % [SAVE_DIR, profile, suffix]
-		if FileAccess.file_exists(path) and int(FileAccess.get_modified_time(path)) > sent:
-			return true
-	return false
+	return saved_at(SaveCoordinator.backup_dir, profile) > UserSettings.stats_sent_at(profile)
+
+
+## Wann die neueste Sicherung eines Profils entstand (Unix-Sekunden), 0 ohne Sicherung.
+## Liest nur die Manifeste, ohne Prüfsummen.
+static func saved_at(backup_dir: String, profile: String) -> int:
+	var dirs := Backups.generation_dirs(backup_dir, profile)
+	for i in range(dirs.size() - 1, -1, -1):
+		var manifest := Backups.manifest_of(dirs[i])
+		if not manifest.is_empty():
+			return int(manifest.get("created_at", 0))
+	return 0
 
 
 ## Snapshot und Spur eines Profils. Gibt true zurück, wenn beides angekommen ist.
@@ -214,8 +213,12 @@ func send_profile(profile: String) -> bool:
 func _send_snapshot(profile: String) -> bool:
 	var settings := _settings_of(profile)
 	var meta := _meta(profile)
+	var backup_dir := SaveCoordinator.backup_dir
 	var body: Dictionary = await _off_thread(func() -> Dictionary:
-			return snapshot(profile, settings, meta))
+			return generation_snapshot(profile, settings, meta, backup_dir))
+	if body.is_empty():
+		# Ohne heile Sicherung kein Snapshot, kein Fehler; die Spur geht trotzdem.
+		return true
 	body["action"] = "snapshot"
 	body["key_version"] = _key_version
 	var answer := await _post(body)
@@ -248,8 +251,7 @@ func _send_trace(profile: String) -> bool:
 		cursor = [int(have[0]), int(have[1])] if have is Array and (have as Array).size() == 2 else to
 		UserSettings.set_stats_trace_cursor(profile, cursor)
 		if not bool(answer["data"].get("stored", true)):
-			# Der Server hatte schon mehr (verlorene Antwort, zurückgesetzter Cursor):
-			# ab seinem Stand weiter.
+			# Der Server hatte schon mehr: ab seinem Stand weiter.
 			while start < events.size() and not TraceSanitizer.is_after(
 					TraceSanitizer.mark_of(events[start]), cursor):
 				start += 1
@@ -258,10 +260,9 @@ func _send_trace(profile: String) -> bool:
 	return start >= events.size()
 
 
-## Ende (exklusiv) des Stücks ab `start`. [at, ms] ist nicht eindeutig — mehrere Zeilen
-## entstehen in derselben Millisekunde —, und der Cursor sagt „alles bis einschließlich
-## dieser Marke“. Ein Stück endet deshalb nie mitten in einer Gruppe gleicher Marken, sonst
-## gälte der Rest der Gruppe als gesendet.
+## Ende (exklusiv) des Stücks ab `start`. Mehrere Zeilen können dieselbe Marke [at, ms]
+## tragen, und der Cursor gilt einschließlich; ein Stück endet deshalb nie mitten in einer
+## Gruppe gleicher Marken.
 static func chunk_end(events: Array, start: int, size: int) -> int:
 	var end := mini(start + size, events.size())
 	var last := TraceSanitizer.mark_of(events[end - 1])
@@ -270,8 +271,7 @@ static func chunk_end(events: Array, start: int, size: int) -> int:
 	return end
 
 
-## Rechnet `work` auf einem Arbeitsthread: Dateien lesen, Spur bereinigen und packen soll
-## das Bild am Laufende nicht anhalten.
+## Rechnet `work` auf einem Arbeitsthread, damit das Bild nicht anhält.
 func _off_thread(work: Callable) -> Variant:
 	var result := [null]
 	var task := WorkerThreadPool.add_task(func() -> void: result[0] = work.call())

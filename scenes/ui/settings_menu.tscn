@@ -451,6 +451,44 @@ theme_type_variation = &"Caption"
 text = "Löscht nach einer Rückfrage den Lernstand der Wörter dieses Profils. Gold, Erfahrung und Fähigkeiten bleiben."
 autowrap_mode = 3
 
+[node name="ResetRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+layout_mode = 2
+theme_type_variation = &"StatRule"
+
+[node name="SaveLabel" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+layout_mode = 2
+theme_type_variation = &"StatHeading"
+text = "Spielstand"
+
+[node name="SaveRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+layout_mode = 2
+
+[node name="SaveExport" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/SaveRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 44)
+layout_mode = 2
+theme_type_variation = &"WindowButton"
+text = "Sichern…"
+
+[node name="SaveImport" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/SaveRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 44)
+layout_mode = 2
+theme_type_variation = &"WindowButton"
+text = "Laden…"
+
+[node name="SaveNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+layout_mode = 2
+theme_type_variation = &"Caption"
+text = "Das Spiel sichert nach jeder Welle von selbst. „Sichern…“ legt den Spielstand dieses Profils zusätzlich als Datei ab — etwa auf einem USB-Stick oder für einen neuen Rechner. „Laden…“ spielt so eine Datei in dieses Profil ein; der bisherige Stand bleibt in den Sicherungen."
+autowrap_mode = 3
+
+[node name="SaveStatus" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatSubline"
+autowrap_mode = 3
+
 [node name="ReportPage" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages"]
 unique_name_in_owner = true
 visible = false
@@ -612,5 +650,9 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="ResetDialog" parent="." instance=ExtResource("9_confirm")]
+unique_name_in_owner = true
+visible = false
+
+[node name="ImportDialog" parent="." instance=ExtResource("9_confirm")]
 unique_name_in_owner = true
 visible = false

@@ -1,34 +1,23 @@
 extends Control
-## Werkbank für die Orte der Landkarten (scenes/dev/map_ring_lab.tscn): goldener
-## Fortschrittsring, Leuchten bei 100 %, Bonus-Sterne unter einer Unit, Bonus-Level auf der
-## Gebietskarte und der Pfeil über einem markierten Ort.
-##
-## Gezeigt werden die echten Bilder und Punkte eines Buches mit ausgedachten Ständen
-## (`PresetSelect`); der Regler füllt den ersten Ort, damit man den Sprung auf 100 % sieht.
-## Ein Klick auf der Buchkarte geht ins Gebiet wie im Spiel; dort wählt ein Klick aus wie
-## im Spiel (MapLevel.toggle): Teile und Boni mehrfach, Gesamt und Boss allein.
-## Die Bonus-Level sind die echten der Unit (ContentRegistry.bonuses_of) an ihren Punkten aus
-## map.json; nur ihr Stand ist ausgedacht. Eine Unit ohne Boni zeigt keine.
-##
-##     GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/map_ring_lab.tscn -- --shoot
-##         speichert reports/map_rings/book.png und beendet sich.
-##     … -- --shoot --area        die Gebietskarte der ersten Unit (area.png)
-##     … -- --shoot --area --unit=2   die Gebietskarte von Unit 2 (area2.png)
-##     … -- --shoot --big         große Orte mit Beschriftung (…_big.png)
-##     … -- --shoot --select      mit markiertem ersten Ort und erstem Bonus (nur --area)
-##     … -- --shoot --crop        nur die ersten beiden Orte, doppelt groß
-##
-## Liest nur Katalog und Karte, schreibt nichts — kein Profil wird berührt.
+## Werkbank für die Orte der Landkarten: Fortschrittsring, Bonus-Sterne und -Level,
+## Lagerfeuer eines begonnenen Laufs, Pfeil über markierten Orten. Echte Bilder, Punkte und
+## Boni eines Buchs, ausgedachte Stände (`PresetSelect`); der Regler füllt den ersten Ort.
+## Liest nur Katalog und Karte, schreibt nichts.
+##     GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/map_ring_lab.tscn [-- --shoot]
+##     --shoot  Bild nach reports/map_rings/book.png, dazu --area [--unit=N] (Gebietskarte),
+##              --big (große Orte), --select (markiert, nur --area), --crop (erste zwei Orte)
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 const SHOT_DIR := "res://reports/map_rings"
-## So lange läuft das Bild, bevor es gespeichert wird: Aufspringen vorbei, Funken unterwegs.
+## Wartezeit vor dem Bild, in s.
 const SETTLE := 1.5
 ## Anteile in Prozent für „Gemischt", der Reihe nach über die Orte.
 const MIXED := [60, 100, 35, 82, 0, 100, 15, 55]
 ## Bonus-Anteile je Unit für „Gemischt", der Reihe nach: einer gemeistert, zwei davon einer,
 ## keiner, einer offen.
 const MIXED_BONUS := [[1.0], [1.0, 0.4], [], [0.0]]
+## Begonnene Läufe: die Welle, mit der sie weitergehen, an der ersten und dritten Unit.
+const RUNS := [23, 4]
 ## Anteil der Bonus-Level einer Gebietskarte für „Gemischt", der Reihe nach: einer
 ## gemeistert, einer offen.
 const BONUS_SHARES := [1.0, 0.4]
@@ -105,8 +94,7 @@ func _pick_map() -> void:
 	_canvas.appear()
 
 
-## Der Anteil in Prozent für den Ort `index`: der erste vom Regler, die übrigen aus der
-## Vorgabe.
+## Der Anteil in Prozent für den Ort `index`: der erste vom Regler, sonst aus der Vorgabe.
 func _percent(index: int) -> int:
 	if index == 0:
 		return int(_progress.value)
@@ -161,6 +149,11 @@ func _book_nodes() -> Array:
 	for i in nodes.size():
 		if not bool(nodes[i].get("missing", false)):
 			nodes[i]["bonus"] = _bonus(i)
+	# Begonnene Läufe an der ersten und dritten Unit (RUNS), wie BookMap sie markiert.
+	var runs: Array = []
+	for i in range(0, mini(units.size(), RUNS.size() * 2), 2):
+		runs.append({"level": {"unit": int(units[i]["unit"])}, "next_wave": RUNS[i / 2]})
+	BookMap.add_runs(nodes, runs)
 	return nodes
 
 
@@ -246,7 +239,7 @@ func _shoot() -> void:
 	get_tree().quit()
 
 
-## Der Ausschnitt um die ersten beiden Orte, doppelt groß — die Sterne sind klein.
+## Der Ausschnitt um die ersten beiden Orte, doppelt groß.
 func _crop(image: Image) -> Image:
 	var scale := Vector2(image.get_size()) / get_viewport_rect().size
 	var a := _canvas.global_position + _canvas.node_position(0)

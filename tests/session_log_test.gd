@@ -402,3 +402,14 @@ func test_switch_to_closes_the_session_in_the_old_profile() -> void:
 	_log.switch_to(TEST_PROFILE)
 	assert_int(_log.sessions().size()).is_equal(1)
 	DirAccess.remove_absolute("user://progress/zz-session-test-other_sessions.json")
+
+
+## Richtige Antworten je Tag, eine Sitzung zählt zu ihrem Anfangstag.
+func test_correct_by_day_sums_each_day() -> void:
+	_log._sessions = [_fake_session(-2, {"correct": 4}), _fake_session(-2, {"correct": 3}),
+			_fake_session(0, {"correct": 5})]
+	var today: int = _log.local_day(int(Time.get_unix_time_from_system()))
+	var by_day: Dictionary = _log.correct_by_day()
+	assert_int(int(by_day[today - 2])).is_equal(7)
+	assert_int(int(by_day[today])).is_equal(5)
+	assert_bool(by_day.has(today - 1)).is_false()

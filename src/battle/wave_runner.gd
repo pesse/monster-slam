@@ -1,22 +1,19 @@
 extends Node3D
-## Fährt eine einzelne Welle in 3D: spawnt Monster aus der Wave-Definition, gleicht
-## Spielerantworten gegen aktive Monster ab und erkennt das Wellenende.
-## Nutzt ausschließlich bestehende Autoloads + AnswerEvaluator — rein additiv.
+## Der Wellenkampf in 3D: spawnt Monster, gleicht Spielerantworten gegen aktive Monster ab
+## und erkennt das Wellenende.
 
 const MONSTER_SCENE := preload("res://scenes/entities/monster.tscn")
 const FIRST_PERSON_SCENE := preload("res://scenes/battle/first_person_view.tscn")
 const GOAL_Z := 16.5          # Festungsfront (Monster-Ziel)
 const SPAWN_Z := -24.0        # Spawn am hinteren Ende der Bahn (längerer Anmarsch)
 const LANE_HALF_WIDTH := 8.0
-## Bildmitte auf der Bahn (z). Der Boden richtet sich danach, nicht umgekehrt. Festung,
-## Bahn und Bild sind in battle_theme_lab zusammen eingestellt (Regler); dort ändern.
+## Bildmitte auf der Bahn (z); der Boden richtet sich danach. Eingestellt in battle_theme_lab.
 const VIEW_CENTER_Z := -3.5
 
 const SHAKE_DURATION := 0.35
 const SHAKE_MAGNITUDE := 0.35 # in 3D-Einheiten
-## Standbild der Schreibweise (SpellingFreeze): so weit fährt die Kamera an die Stelle des
-## Treffers heran. Ich-Sicht: Bildwinkel als Faktor und Anteil der Drehung zum Ziel;
-## Iso-Sicht: Bildgröße als Faktor und Anteil des Wegs vom Bildmittelpunkt zum Ziel.
+## Heranfahrt im Standbild (SpellingFreeze): Bildwinkel bzw. Bildgröße als Faktor und
+## Anteil der Drehung bzw. des Wegs zum Ziel.
 const SPELLING_FOV := 0.6
 const SPELLING_TURN := 0.6
 const SPELLING_ISO_SIZE := 0.6
@@ -30,39 +27,35 @@ var _active: Array[Monster] = []
 var _total: int = 0
 var _spawned: int = 0
 var _finished: bool = false
-## Kein Spawn möglich (keine Inhalte / Auswahl trifft nichts): es läuft keine Welle,
-## der Hinweis steht, und Escape ist der einzige (aber vorhandene) Weg zurück.
+## Kein Spawn möglich: keine Welle, der Hinweis steht, Escape führt zurück.
 var _no_content: bool = false
 
-# Prozedurale Wellen (nicht mehr aus Content-Dateien): Schwierigkeit + Wellennummer
-# steuern Erzeugung und Tempo. Der Spieler wählt die Schwierigkeit auf dem Statistik-Screen.
 var _difficulty: int = 3           # 1..5, vom Spieler gewählt
 var _wave_number: int = 1          # laufende Nummer (Anzeige + Skalierung)
 var _wave_correct: int = 0         # richtig besiegte Monster dieser Welle
 var _wave_leaked: int = 0          # an der Festung durchgelassene Monster dieser Welle
 var _wave_leaked_tasks: Array[Dictionary] = []  # deren Aufgaben (prompt + accepted_answers), für die Auflösung
-var _wave_played_tasks: Array[Dictionary] = []  # ALLE gespielten Aufgaben (richtig + falsch), fürs freie Durchblättern im Reveal
+var _wave_played_tasks: Array[Dictionary] = []  # alle gespielten Aufgaben der Welle, richtig und falsch
 var _score_at_start: int = 0       # Punktestand zu Wellenbeginn (für "+X" im Screen)
 var _wave_xp: int = 0              # in dieser Welle verdiente Erfahrung (für den Screen)
 var _level_at_start: int = 1       # Spielerlevel zu Wellenbeginn (für "Aufgestiegen!")
 var _last_won: bool = true         # Ausgang der zuletzt beendeten Welle
-# Generation-Zähler: bricht Spawn-Coroutinen einer alten Welle ab, sobald eine neue
-# startet (der _finished-Check allein reicht nicht, da die neue Welle _finished=false setzt).
+# Bricht Spawn-Coroutinen einer alten Welle ab; _finished allein setzt die neue zurück.
 var _wave_gen: int = 0
 ## Läuft der Rest der Welle gerade im Zeitraffer (siehe _fast_resolve_wave)?
 var _fast_resolving: bool = false
-## Während der Meister-Feier abgeschickte Antworten: sie werden nach der Feier in dieser
-## Reihenfolge ausgewertet, damit keine verloren geht (siehe _on_answer_submitted).
+## Während einer Feier abgeschickte Antworten, danach der Reihe nach ausgewertet.
 var _held_answers: Array[String] = []
 ## Monster, nach deren Zerplatzen das Standbild der Schreibweise kommt: Instanz-Id ->
 ## [richtige Form, markierte Stellen]. Mit Pfeil oder Sturmangriff platzt es erst später.
 var _spelling_due: Dictionary = {}
-## In dieser Welle schon gezeigte Grundwörter: Lexem-id -> Spawn-Nummer der letzten
-## Zeigung. WaveGenerator.pick() nimmt sie erst, wenn der Pool erschöpft ist (Issue #24).
-## Gilt nur für die laufende Welle und wird nicht gespeichert.
+## Gezeigte Grundwörter der Welle: Lexem-id → Spawn-Nummer (WaveGenerator.pick()).
 var _wave_shown: Dictionary = {}
-## Testliste (RunRequest.is_test): die Grundwörter der vorigen Welle und die Reihenfolge
-## der Wörter in dieser (TestPlaylist). Leer außerhalb eines Testlaufs.
+## Monster mit nicht gemeisterter Aufgabe seit `_open_from` (Spawn-Nummer: Wellenbeginn
+## oder Fortsetzung); WaveGenerator.open_due() sagt, ob pick() Offenes vorziehen muss.
+var _wave_open: int = 0
+var _open_from: int = 0
+## Testliste (TestPlaylist): Grundwörter der vorigen Welle und Reihenfolge dieser.
 var _previous_shown: Dictionary = {}
 var _playlist_order: Array = []
 
@@ -72,55 +65,43 @@ var _shake_mag: float = SHAKE_MAGNITUDE
 var _rng := RandomNumberGenerator.new()
 
 var _fortress: Node3D = null
-## Festungsstufe DES LAUFS: die schwächste Unit im gespielten Bereich (FortressTier.run_tier).
-## Das Debug-Panel baut nur das Bild um und fasst diesen Wert nicht an.
+## Festungsstufe des Laufs: die schwächste Unit im gespielten Bereich (FortressTier.run_tier).
 var _fortress_tier: int = -1
 var _cutscene: bool = false   # läuft gerade die Ausbau-Cutscene? (unterdrückt Kamera-Wackeln)
-## Die Ich-Sicht (Späher-Baum, RunRequest.first_person), oder null für die Iso-Kamera.
-## Im Kampf umschaltbar (`_toggle_view`), deshalb die einzige Auskunft über die Sicht.
+## Die Ich-Sicht, oder null für die Iso-Kamera; die einzige Auskunft über die Sicht.
 var _fp: FirstPersonView = null
-## Lässt sich die Sicht in diesem Kampf wechseln (RunRequest.first_person_selectable)?
-## Einmal am Anfang gefragt, damit der Knopf nicht mitten im Kampf auftaucht.
+## Lässt sich die Sicht in diesem Kampf wechseln? Einmal am Anfang gefragt.
 var _view_selectable := false
-## Die gelernten Boni des Laufs — die Ich-Sicht kann auch nach dem Start noch entstehen.
+## Die gelernten Boni des Laufs, für eine später entstehende Ich-Sicht.
 var _skill_bonuses: Dictionary = {}
-## Das Environment der Iso-Sicht: die Ich-Sicht legt Nebel auf eine Kopie, zurück geht es
-## auf dieses.
+## Das Environment der Iso-Sicht; die Ich-Sicht nebelt eine Kopie.
 var _iso_env: Environment = null
 ## Die Grasbüschel der Streudeko: aus Augenhöhe stehen sie kleiner (GRASS_SCALE_FIRST_PERSON).
 var _grass: Array[Node3D] = []
 ## Laufende Sturmangriffe, fliegende Pfeile und Steine: so lange wartet das Wellenende.
 var _underway := 0
-## Explosionen, die noch zu sehen sind: auch darauf wartet das Wellenende (`_settle`), damit
-## die Abrechnung den letzten Treffer nicht verdeckt.
+## Explosionen, die noch zu sehen sind: auch darauf wartet das Wellenende (`_settle`).
 var _settling := 0
-## Wachkatapult gelernt (Bollwerk, `auto_catapult`): Monster mit gemeisterter Aufgabe
-## werden abgeschossen.
+## Wachkatapult gelernt (Bollwerk, `auto_catapult`).
 var _catapult := false
-## Zeitwandler, ruhiger Ast (SkillTree.monster_pace / spawn_gap_scale): Faktor auf das
-## Lauftempo jedes Monsters und auf den Abstand zwischen zwei Spawns. Punkte bleiben unberührt.
+## Zeitwandler (SkillTree.monster_pace / spawn_gap_scale): Faktor auf Lauftempo und
+## Spawn-Abstand. Punkte bleiben unberührt.
 var _monster_pace := 1.0
 var _spawn_gap_scale := 1.0
-## Die Katapulte der Festung (FortressModel.catapults) — erst ab FortressModel.CATAPULT_TIER
-## gibt es welche, und nur dann wirft das Wachkatapult.
+## Die Katapulte der Festung (FortressModel.catapults), erst ab FortressModel.CATAPULT_TIER.
 var _catapults: Array[Node3D] = []
-## Woran ein Fehlschuss vorbeizielt: die Körpermitte, wie beim Blick (_in_view). Ein
-## Treffer geht in den Kopf (Monster.head_height).
+## Höhe (m), an der ein Fehlschuss vorbeizielt: die Körpermitte.
 const ARROW_AIM_Y := 1.2
-## Explosionspfeil: so groß der Knall (Blast), und bis hierhin zucken die Nachbarn.
+## Explosionspfeil: Größe des Knalls (Blast) und Radius (m), in dem die Nachbarn zucken.
 const BLAST_SCALE := 1.0
 const BLAST_FLINCH_RADIUS := 5.0
-## So lange ist eine Explosion zu sehen, bevor das Wellenende sie verdecken darf (s): die
-## Wolke der Explosion (ihre Partikel leben 0,9 s), beim Blast Feuerball und Druckwelle —
-## der Rauch danach zählt nicht.
+## So lange (s) ist eine Explosion zu sehen, bevor das Wellenende sie verdecken darf.
 const EXPLOSION_SETTLE := 0.9
 const BLAST_SETTLE := 1.2
-## Wachkatapult (Bollwerk): so lange nach dem Spawn wirft es, zufällig dazwischen — bis
-## dahin kann der Spieler das Monster auch selbst treffen.
+## Wachkatapult: Wurf zufällig so lange (s) nach dem Spawn.
 const CATAPULT_DELAY_MIN := 1.0
 const CATAPULT_DELAY_MAX := 3.0
-## Flugzeit des Steins je Meter, mit Unter- und Obergrenze, und wie hoch er steigt (Anteil
-## der Strecke).
+## Flugzeit des Steins je Meter (s) mit Grenzen; Scheitelhöhe als Anteil der Strecke.
 const CATAPULT_TIME_PER_M := 0.035
 const CATAPULT_TIME_MIN := 0.8
 const CATAPULT_TIME_MAX := 1.5
@@ -133,8 +114,7 @@ const CATAPULT_AIM := Vector3(0.0, 1.0, 0.0)
 @onready var _scene_zoom: SceneZoom = $SceneZoom
 ## Der Zoom hinaus läuft: ein zweites Escape wechselt nicht noch einmal.
 var _leaving := false
-## Hinter dem Schleier wird noch vorgewärmt — solange bricht Escape nicht ab, sonst liefe
-## das Einblenden danach über das Ausblenden.
+## Hinter dem Schleier wird noch vorgewärmt; solange bricht Escape nicht ab.
 var _warming := false
 @onready var _end_label: Label = $UI/EndLabel
 @onready var _flash: ColorRect = $UI/Flash
@@ -150,8 +130,7 @@ var _warming := false
 @onready var _pause_button: Button = $UI/PauseButton
 @onready var _view_button: Button = $UI/ViewButton
 @onready var _word_plates: WordPlates = $UI/WordPlates
-## Seit wann der Spieler pausiert hat (Echtzeit, ms); -1 = keine Pause des Spielers. Die
-## Baum-Pause der Feiern ist eine andere und läuft nicht über diese Variable.
+## Seit wann der Spieler pausiert hat (Echtzeit, ms); -1 ohne Spielerpause.
 var _paused_since_ms := -1
 @onready var _celebration: MasteryCelebration = $UI/MasteryCelebration
 @onready var _spelling: SpellingFreeze = $UI/SpellingFreeze
@@ -162,22 +141,25 @@ var _paused_since_ms := -1
 var _spells := SpellCaster.new()
 ## Setzt dieser Kampf einen begonnenen Lauf fort (RunSave, ADR 0020)?
 var _resumed := false
+## Die gerastete Welle (RunSave.open_wave), bis `_start_next_wave` sie nimmt.
+var _open_wave: Dictionary = {}
 ## Beginn des Laufs (SessionLog `started_at`), bei einem fortgesetzten der des ersten Teils.
-## Geht in den Speicherstand, damit die Sitzungen eines Laufs zusammenfinden.
 var _run_started_at := 0
-## Hat die Abbruch-Rückfrage selbst pausiert? Dann hebt „Weiterspielen" die Pause auf; kam
-## sie aus der Pause, bleibt es dort.
+## Hat die Abbruch-Rückfrage selbst pausiert? Dann hebt „Weiterspielen“ die Pause auf.
 var _abort_paused_here := false
 var _spell_fx := SpellFx.new()
 ## Der wievielte Blitz des laufenden Donnerschlags als nächster fällt (`_strike`).
 var _strike_index := 0
-## Kleine Erfolge (Issue #63); gezeigt werden sie von der Meister-Feier.
+## Kleine Erfolge; gezeigt von der Meister-Feier.
 var _badges := Badges.new()
 ## Tiefster HP-Stand der laufenden Welle — für das Comeback.
 var _wave_low_hp := 0
-## Sind die Plaketten der gewonnenen Welle schon gemeldet? _check_end kommt nach ihrer Feier
-## ein zweites Mal vorbei.
+## Monster.seconds_left des Treffers, der das Feld zuletzt geleert hat (Badges.wave_won).
+var _last_left := INF
+## Sind die Plaketten der gewonnenen Welle schon gemeldet? _check_end kommt zweimal.
 var _wave_badges_done := false
+## Ob der Ausgang schon gespeichert hat (Rückweg oder Abbruch) — sonst verwirft _exit_tree.
+var _saved_on_exit := false
 ## Die nächste Beispiel-Plakette des Debug-Panels.
 var _debug_badge := 0
 
@@ -186,15 +168,11 @@ func _ready() -> void:
 	_rng.randomize()
 	_view_selectable = RunRequest.first_person_selectable()
 	_setup_view()
-	# Der Kampf kommt aus der Ferne heran (SceneZoom, wie die Karten): das Gelände wird für
-	# den weitesten Blick gebaut, sonst sähe man beim Heranzoomen seinen Rand.
+	# Gelände für den weitesten Blick (SceneZoom), Teilchen nur für den Kampfblick.
 	var view_size := _camera.size
-	# Die Teilchen in der Luft füllen, was im Kampf zu sehen ist — nicht den weiten Blick
-	# des Heranzoomens, sonst stünden sie dort dünner.
 	var air_area := visible_ground_area(_camera)
 	_camera.size = view_size / SceneZoom.FROM
-	# Das Thema VOR Boden und Ich-Sicht: der Boden nimmt seine Farben, der Nebel der
-	# Ich-Sicht die Hintergrundfarbe des schon gefärbten Environments.
+	# Das Thema vor Boden und Ich-Sicht: beide nehmen seine Farben.
 	_theme = BattleTheme.for_level(RunRequest.theme_level())
 	_theme.apply($WorldEnvironment as WorldEnvironment, $Sun as DirectionalLight3D)
 	GraphicsQuality.apply_environment($WorldEnvironment as WorldEnvironment)
@@ -215,14 +193,12 @@ func _ready() -> void:
 		weeds.on_screen = func(x: float, z: float) -> bool:
 			return _fp != null or tile_on_screen(_camera, x, z)
 		add_child(weeds)
-	_build_fortress()
+	# Den Speicherstand schon hier: eine gerastete Welle steht mit ihrer alten Festung da.
+	var resume := RunRequest.take_resume()
+	_build_fortress(int(RunSave.open_wave(resume).get("fortress_tier", -1)))
 	_cam_base = _camera.position
 	GameState.reset()
-	# Gelernte Skills UNMITTELBAR nach dem reset(): der Reset stellt die Grundwerte her,
-	# erst danach dürfen die Boni darauf. Ein Dictionary für beide Empfänger, damit es
-	# EINE Quelle der Boni gibt und nicht zwei, die auseinanderlaufen können.
-	# Die Festungsstufe kommt in DASSELBE Dictionary: auch sie hebt nur das Maximum, und
-	# eine additive Summe aus einer Quelle kann nicht auseinanderlaufen.
+	# Skills direkt nach reset(); ein Dictionary für alle, mit dem HP-Bonus der Festungsstufe.
 	var skill_bonuses := SkillBook.bonuses().duplicate()
 	skill_bonuses["max_health"] = int(skill_bonuses.get("max_health", 0)) \
 			+ FortressTier.health_bonus(_fortress_tier)
@@ -234,12 +210,12 @@ func _ready() -> void:
 	_skill_bonuses = skill_bonuses
 	if RunRequest.first_person():
 		_setup_first_person()
-	# Der Lauf beginnt hier, nicht mit der ersten Welle: alles, was über die Wellen hinweg
-	# zählt (Sitzungs-Log, GameState-Zähler), hängt an diesem Punkt.
+	# Gespeichert wird ab hier nur an der Wellengrenze (ADR 0024).
+	SaveCoordinator.hold()
+	SaveCoordinator.register(_badges)
+	# Der Lauf beginnt hier, nicht mit der ersten Welle.
 	EventBus.run_started.emit()
 	EventBus.answer_submitted.connect(_on_answer_submitted)
-	# Die Festung wächst mit dem Lernfortschritt, aber erst NACH einer gewonnenen Welle
-	# (siehe _finish_wave) – nicht mitten im Kampf.
 	var debug_panel := $UI/DebugPanel
 	if debug_panel.has_signal("fortress_tier_selected"):
 		debug_panel.fortress_tier_selected.connect(_on_debug_tier_selected)
@@ -258,12 +234,14 @@ func _ready() -> void:
 	if _stats.has_signal("reward_collected"):
 		_stats.reward_collected.connect(_on_reward_collected)
 	if _stats.has_signal("consolation_collected"):
-		_stats.consolation_collected.connect(func(gold: int) -> void: Wallet.earn(gold))
+		_stats.consolation_collected.connect(func(gold: int) -> void:
+				Wallet.earn(gold)
+				SaveCoordinator.commit("chest"))
 	_fast_resolve_button.pressed.connect(_on_fast_resolve_pressed)
 	_fast_resolve_confirm.confirmed.connect(_fast_resolve_wave)
 	_fast_resolve_confirm.cancelled.connect(_on_fast_resolve_cancelled)
 	_pause_overlay.toggle_requested.connect(_on_pause_key)
-	# Esc in der Pause beendet den Kampf wie sonst auch, mit derselben Rückfrage.
+	# Esc in der Pause beendet den Kampf mit derselben Rückfrage.
 	_pause_overlay.leave_requested.connect(_request_abort)
 	_abort_confirm.confirmed.connect(_on_abort_confirmed)
 	_abort_confirm.cancelled.connect(_on_abort_cancelled)
@@ -272,6 +250,9 @@ func _ready() -> void:
 	_view_button.set_pressed_no_signal(_fp != null)
 	_celebration.started.connect(_on_celebration_started)
 	_celebration.finished.connect(_on_celebration_finished)
+	_celebration.cut_short.connect(func(remaining_ms: int) -> void:
+		for monster in _active:
+			monster.spawned_at_ms -= remaining_ms)
 	_spelling.started.connect(_on_spelling_started)
 	_spelling.finished.connect(_on_spelling_finished)
 	_spells.strike = _strike
@@ -284,13 +265,10 @@ func _ready() -> void:
 	_spell_fx.half_width = LANE_HALF_WIDTH
 	_spell_fx.fortress = Vector3(0.0, 0.0, GOAL_Z + 2.0 * FORTRESS_GROW)
 	add_child(_spell_fx)
-	# Startschwierigkeit aus den persistenten Einstellungen des aktiven Profils.
 	_difficulty = UserSettings.default_difficulty()
-	_resume_run(RunRequest.take_resume())
+	_resume_run(resume)
 	_start_next_wave()
-	# Hinter dem geschlossenen Schleier einmal alles zeigen, was sonst beim ersten Treffer
-	# oder der ersten Meisterung Shader übersetzt und das Bild anhält (FxWarmup). Das erste
-	# Monster kommt frühestens nach einem Spawn-Intervall, dann ist das längst vorbei.
+	# Hinter dem Schleier vorwärmen (FxWarmup).
 	_scene_zoom.hold()
 	_warming = true
 	await _warm_up()
@@ -299,8 +277,7 @@ func _ready() -> void:
 		_camera.size = view_size / lerpf(SceneZoom.FROM, 1.0, k))
 
 
-## Vorwärmen (FxWarmup) mit den Schildern und der Feier des Kampfs, in der Ich-Sicht auch
-## in deren fester Bildgröße — das ist eine eigene Shader-Variante.
+## Vorwärmen (FxWarmup); die feste Bildgröße der Ich-Sicht ist eine eigene Shader-Variante.
 func _warm_up() -> void:
 	var xp := xp_label(FxWarmup.GLYPHS)
 	_screen_size_in_first_person(xp, POPUP_SCREEN_SCALE)
@@ -310,9 +287,7 @@ func _warm_up() -> void:
 	_spelling.warm_up()
 	_level_flare.warm_up()
 	var extras: Array[Node3D] = [xp]
-	# Der Pfeil fliegt erst nach der ersten Antwort; der Bogen hängt schon an der Kamera.
-	# Auch von oben, wenn die Sicht umschaltbar ist: sonst hielte der erste Pfeil nach dem
-	# Wechsel das Bild an — und dazu ein Schild in der Bildgröße der Ich-Sicht.
+	# Pfeil und Schild der Ich-Sicht auch von oben, wenn die Sicht umschaltbar ist.
 	var explosive := FirstPersonView.explodes_for(_skill_bonuses)
 	if _fp != null or _view_selectable:
 		var arrow := Arrow.new()
@@ -334,7 +309,7 @@ func _warm_up() -> void:
 		extras.append(CatapultStone.new())
 	if not ((_fp != null or _view_selectable) and explosive):
 		extras.append(Blast.new())
-	# Die Zauber (ADR 0014) können in jedem Kampf kommen.
+	# Zauber (ADR 0014) gibt es in jedem Kampf.
 	extras.append_array(SpellFx.specimens(at))
 	await FxWarmup.run(self, at, FxWarmup.monster_defs(), extras, _fp != null)
 	_celebration.cool_down()
@@ -342,8 +317,7 @@ func _warm_up() -> void:
 	_level_flare.cool_down()
 
 
-## Zurück auf die Karte (oder ins Menü), als Zoom hinaus — die Umkehrung des Wegs herein.
-## Die Karte setzt ihn fort (MapSelection.zoom_out).
+## Zurück auf die Karte oder ins Menü, als Zoom hinaus (MapSelection.zoom_out).
 func _leave_battle() -> void:
 	if _leaving:
 		return
@@ -357,39 +331,22 @@ func _leave_battle() -> void:
 	get_tree().change_scene_to_file(RunRequest.return_scene())
 
 
-## Prozedurales Terrain: flaches Innenfeld (Spielfläche/Props/Festung), sanfte Hügel am
-## Rand, weiche Farbflecken (Farben aus dem BattleTheme der Unit). Glatt schattiert über
-## Normalen aus der Höhenfunktion — den Low-Poly-Stil tragen Burg, Monster und Deko.
-##
-## Der Boden reicht bis an den BILDRAND und nicht nur bis an das Spielfeld: eine grüne
-## Insel vor der Hintergrundfarbe sieht aus, als schwebte sie. Wie weit das ist, wird
-## aus der Kamera gerechnet (`visible_ground_area`) und steht nicht als zweite
-## Konstante daneben — sonst hinkt das Terrain jeder Änderung an Zoom oder Blickwinkel
-## hinterher. Gespielt wird davon nichts: die Bahn bleibt SPAWN_Z..GOAL_Z bei
-## ±LANE_HALF_WIDTH, und das Innenfeld bleibt flach (siehe terrain_height).
-## Rasterweite. Der Boden ist GLATT schattiert (Normalen und Farben je Ecke, nicht je
-## Dreieck) — den Low-Poly-Stil tragen die Modelle; ein facettierter Boden sah daneben
-## nach Scherben aus, am deutlichsten beim Schnee der Tundra. 1.5 hält die Hügel rund.
+# Terrain: flaches Innenfeld, Hügel am Rand, bis an den Bildrand (`visible_ground_area`).
+
+## Rasterweite (m).
 const TERRAIN_STEP := 1.5
-## Abstand vom Innenfeld, ab dem die Hügel nicht weiter wachsen, und ihr Höhenfaktor.
-## Bis zu einem `edge` von 4 ist das die alte Kurve am Spielfeldrand; darüber liegt nur
-## noch Kulisse, die kräftiger rollen darf, weil dort nichts steht und nichts läuft.
+## Abstand vom Innenfeld (m), ab dem die Hügel nicht weiter wachsen, und ihr Höhenfaktor.
 const TERRAIN_EDGE_MAX := 8.0
 const TERRAIN_HEIGHT_SCALE := 0.6
 const TERRAIN_HEIGHT_MAX := TERRAIN_EDGE_MAX * TERRAIN_HEIGHT_SCALE
-## Breitestes Seitenverhältnis, für das der Boden reicht. Die Orthogonal-Kamera hält
-## ihre HÖHE (`keep_aspect`), die Breite wächst mit dem Fenster — ein 21:9-Schirm sieht
-## am weitesten nach außen, das Vollbild auf 16:9 am wenigsten (siehe docs/CONVENTIONS.md).
+## Breitestes Seitenverhältnis, für das der Boden reicht (`keep_aspect` hält die Höhe).
 const VIEW_MAX_ASPECT := 2.4
-## Zugabe in Bildeinheiten beim Aussortieren unsichtbarer Kacheln — gerechnet, nicht
-## geschätzt: aussortiert wird auf der Ebene y=0, ein Hügel HEBT die Kachel im Bild
-## (die Höhe geht voll in die Bildhöhe ein, in die Bildbreite gar nicht), und das
-## Kamera-Wackeln schiebt den Ausschnitt um bis zu SHAKE_MAGNITUDE. Zu knapp bemessen
-## heißt: am unteren Bildrand fehlt genau die Kachel, deren Hügel hereinragt.
+## Zugabe in Bildeinheiten beim Aussortieren unsichtbarer Kacheln, für Hügelhöhe und
+## Wackeln (SHAKE_MAGNITUDE).
 const VIEW_MARGIN := TERRAIN_HEIGHT_MAX + SHAKE_MAGNITUDE
 
 var _terrain_noise: FastNoiseLite
-## Farben von Boden und Licht für die Unit des Laufs (BattleTheme, aus map.json).
+## Farben von Boden und Licht für die Unit des Laufs.
 var _theme: BattleTheme
 ## Stellt die Sonne nach der Uhr; hält während einer Welle den Sprung auf den Morgen an.
 var _sun_cycle: SunCycle
@@ -397,7 +354,7 @@ var _sun_cycle: SunCycle
 var _path: BattlePath
 ## Fußpunkte der gestreuten Bäume, für die Sträucher darum (GroundCover).
 var _tree_feet: Array[Vector3] = []
-## Wie viele Feuer der Deko noch ein Licht bekommen (Fire, GraphicsQuality.fire_lights).
+## Wie viele Feuer der Deko noch ein Licht bekommen.
 var _fire_lights := GraphicsQuality.fire_lights()
 ## Kronen der Laubbäume darunter, aus denen das Laub fällt (AmbientParticles).
 var _leaf_crowns: Array[AABB] = []
@@ -411,11 +368,7 @@ func _setup_ground() -> void:
 	dress_ground(ground, _theme, _path)
 
 
-## Material und Schatten des Bodens — statisch, damit die Werkbank ihn genauso anzieht.
-## Wolkenschatten und Bodenflecken nur, wenn die Grafikstufe sie zeigt (GraphicsQuality).
-## Der Boden wirft selbst keinen Schatten: die Hügel schattiert der Bodenshader über ihre
-## Neigung, und ohne Selbstschatten reicht ein kleiner Bias (setup_view), ohne dass der
-## Boden Streifen bekommt.
+## Material und Schatten des Bodens. Er wirft keinen Schatten, so reicht ein kleiner Bias.
 static func dress_ground(ground: MeshInstance3D, theme: BattleTheme, path: BattlePath = null,
 		quality := GraphicsQuality.level()) -> void:
 	ground.material_override = theme.ground_material(path)
@@ -426,8 +379,7 @@ static func dress_ground(ground: MeshInstance3D, theme: BattleTheme, path: Battl
 	ground.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
-## Das Rauschen des Terrains — EINE Stelle, damit Boden und Streudeko dieselben Hügel
-## sehen und ein Test dieselben bauen kann wie das Spiel.
+## Das Rauschen des Terrains, für Boden, Streudeko und Tests dasselbe.
 static func terrain_noise(seed_value: int) -> FastNoiseLite:
 	var noise := FastNoiseLite.new()
 	noise.seed = seed_value
@@ -435,9 +387,7 @@ static func terrain_noise(seed_value: int) -> FastNoiseLite:
 	return noise
 
 
-## Baut den sichtbaren Boden für DIESE Kamera. Statisch und ohne Szene, damit
-## `tests/battle_ground_test.gd` genau das Mesh prüfen kann, das im Spiel steht.
-## Ohne Thema gilt die Vorgabe von BattleTheme.
+## Baut den sichtbaren Boden für diese Kamera. Ohne Thema gilt die Vorgabe von BattleTheme.
 static func build_terrain(camera: Camera3D, noise: FastNoiseLite, theme: BattleTheme = null) -> ArrayMesh:
 	if theme == null:
 		theme = BattleTheme.new()
@@ -448,16 +398,13 @@ static func build_terrain(camera: Camera3D, noise: FastNoiseLite, theme: BattleT
 	while x < area.end.x - 0.001:
 		var z := area.position.y
 		while z < area.end.y - 0.001:
-			# Das Sichtfeld ist eine Raute im x/z-Raster (45° Gierwinkel): über die Hälfte
-			# des umschließenden Rechtecks liegt außerhalb und wird gar nicht erst gebaut.
+			# Das Sichtfeld ist eine Raute im x/z-Raster (45° Gierwinkel).
 			if tile_on_screen(camera, x, z):
 				var a := _terrain_point(x, z, noise)
 				var b := _terrain_point(x, z + TERRAIN_STEP, noise)
 				var c := _terrain_point(x + TERRAIN_STEP, z + TERRAIN_STEP, noise)
 				var d := _terrain_point(x + TERRAIN_STEP, z, noise)
-				# Im Uhrzeigersinn von oben gesehen — das ist in Godot die Vorderseite. Andersherum
-				# dreht die Materialeinstellung cull_disabled die Normale nach unten: der Boden
-				# bekommt dann kein Sonnenlicht und zeigt keine Schatten.
+				# Im Uhrzeigersinn von oben, Godots Vorderseite; sonst zeigte die Normale nach unten.
 				_add_terrain_tri(st, noise, theme, a, c, b)
 				_add_terrain_tri(st, noise, theme, a, d, c)
 			z += TERRAIN_STEP
@@ -465,9 +412,8 @@ static func build_terrain(camera: Camera3D, noise: FastNoiseLite, theme: BattleT
 	return st.commit()
 
 
-## x/z-Bereich, in dem der Boden überhaupt im Bild liegen kann: die vier Ecken des
-## Bildrechtecks als Strahlen auf die Ebene y=0 geschnitten, nach außen auf das
-## Kachelraster gerundet. Setzt eine eingerichtete Kamera voraus (`setup_view`).
+## x/z-Bereich, in dem der Boden im Bild liegen kann: Bildecken auf y=0 geschnitten, aufs
+## Kachelraster gerundet. Braucht eine eingerichtete Kamera (`setup_view`).
 static func visible_ground_area(camera: Camera3D) -> Rect2:
 	var basis := camera.global_transform.basis
 	var origin := camera.global_position
@@ -488,9 +434,8 @@ static func visible_ground_area(camera: Camera3D) -> Rect2:
 	return Rect2(lo, hi - lo)
 
 
-## Liegt die Kachel mit der Ecke (x,z) im Bild? Gerechnet in Bildkoordinaten der
-## Kamera (u nach rechts, v nach oben) statt über `unproject_position`, das die
-## Fenstergröße einrechnet — der Boden soll für JEDES Fenster reichen.
+## Liegt die Kachel mit der Ecke (x,z) im Bild? Nicht über `unproject_position`, das rechnet
+## die Fenstergröße ein.
 static func tile_on_screen(camera: Camera3D, x: float, z: float) -> bool:
 	var basis := camera.global_transform.basis
 	var origin := camera.global_position
@@ -510,21 +455,19 @@ static func _terrain_point(x: float, z: float, noise: FastNoiseLite) -> Vector3:
 	return Vector3(x, terrain_height(x, z, noise), z)
 
 
-## Halbe Breite des flachen Bodens.
+## Halbe Breite des flachen Bodens (m).
 const FLAT_HALF_X := 9.0 * FORTRESS_GROW
 
 
-## Um so viel weicht der Hügelfuß höchstens nach außen zurück (TERRAIN_FOOT_WAVE Meter je
-## Bogen) — sonst stünde das flache Feld als Rechteck in der Landschaft.
+## Rückweichen des Hügelfußes (m, höchstens) und Frequenz seiner Bögen (1/m).
 const TERRAIN_FOOT_SHIFT := 6.0
 const TERRAIN_FOOT_WAVE := 0.045
 
 
 static func terrain_height(x: float, z: float, noise: FastNoiseLite) -> float:
-	# Innenfeld flach halten (bis knapp hinter den Spawn); nur außerhalb sanfte Hügel. So
-	# breit wie die Festung, sonst stünden ihre Ecktürme am Hang. Der Hügelfuß weicht in
-	# Bögen nach außen zurück, nie nach innen — das Feld bleibt mindestens so groß. Die
-	# Ecke hinter dem Spawn ist rund: außerhalb des Rechtecks zählt der Abstand zur Ecke.
+	# Innenfeld flach (so breit wie die Festung, bis hinter den Spawn), außen Hügel. Der Fuß
+	# weicht nur nach außen zurück; hinter dem Spawn zählt der Abstand zur Ecke (rund).
+	# Die Versätze 200/400 entkoppeln die Rauschproben der Kanten.
 	var ex := absf(x) - FLAT_HALF_X - _foot_shift(z * signf(x) + 200.0, noise)
 	var ez := -z + SPAWN_Z - _foot_shift(x + 400.0, noise)
 	var edge := Vector2(maxf(ex, 0.0), maxf(ez, 0.0)).length() if ex > 0.0 and ez > 0.0 \
@@ -535,16 +478,14 @@ static func terrain_height(x: float, z: float, noise: FastNoiseLite) -> float:
 	return clampf(edge, 0.0, TERRAIN_EDGE_MAX) * (0.3 + 0.7 * n) * TERRAIN_HEIGHT_SCALE
 
 
-## Wie weit der Hügelfuß an der Stelle `t` (längs seiner Kante) zurückweicht, 0 bis
-## TERRAIN_FOOT_SHIFT.
+## Rückweichen des Hügelfußes an der Stelle `t` längs seiner Kante, 0 bis TERRAIN_FOOT_SHIFT.
 static func _foot_shift(t: float, noise: FastNoiseLite) -> float:
 	var n := noise.get_noise_2d(t * TERRAIN_FOOT_WAVE / noise.frequency, 777.0) * 0.5 + 0.5
 	return TERRAIN_FOOT_SHIFT * smoothstep(0.2, 0.8, n)
 
 
 static func _add_terrain_tri(st: SurfaceTool, noise: FastNoiseLite, theme: BattleTheme, a: Vector3, b: Vector3, c: Vector3) -> void:
-	# Farbe und Normale je ECKE, aus Rauschen und Höhenfunktion an genau diesem Punkt:
-	# Nachbardreiecke teilen sie, dazwischen wird weich gemischt — keine Kanten im Boden.
+	# Farbe und Normale je Ecke aus der Funktion, damit Nachbardreiecke sie teilen.
 	for v: Vector3 in [a, b, c]:
 		st.set_color(_terrain_color(v, noise, theme))
 		st.set_normal(terrain_normal(v.x, v.z, noise))
@@ -555,9 +496,7 @@ static func _terrain_color(p: Vector3, noise: FastNoiseLite, theme: BattleTheme)
 	return theme.ground_color(BattleTheme.ground_t(noise, p.x, p.z), p.y)
 
 
-## Normale der Höhenfunktion bei (x,z), über zentrale Differenzen. Aus der Funktion und
-## nicht aus den Dreiecken: so ist sie an jeder Ecke dieselbe, egal zu welchem Dreieck sie
-## gehört, und der Knick am Rand des flachen Innenfelds wird über TERRAIN_STEP verrundet.
+## Normale der Höhenfunktion bei (x,z), über zentrale Differenzen.
 static func terrain_normal(x: float, z: float, noise: FastNoiseLite) -> Vector3:
 	var e := TERRAIN_STEP * 0.5
 	var dx := terrain_height(x + e, z, noise) - terrain_height(x - e, z, noise)
@@ -565,16 +504,15 @@ static func terrain_normal(x: float, z: float, noise: FastNoiseLite) -> Vector3:
 	return Vector3(-dx, 2.0 * e, -dz).normalized()
 
 
-## Bodenhöhe des Terrains an (x,z) — damit Streudeko auf den Hügeln aufsitzt.
+## Bodenhöhe des Terrains an (x,z).
 func _ground_y(x: float, z: float) -> float:
 	return terrain_height(x, z, _terrain_noise) if _terrain_noise != null else 0.0
 
 
-## Platziert eines der Modelle eines Deko-Platzes (`BattleTheme.trees` …, Pfade unter
-## assets/models/) auf Terrain-Höhe mit zufälliger Drehung; ein leerer Platz stellt nichts
-## hin, und auf dem Weg (BattlePath) steht nichts. Position/Skalierung kommen vom Aufrufer.
-## Bäume merken sich ihren Fuß (`_tree_feet`): um sie wachsen Sträucher (GroundCover).
+## Platziert eines der Modelle eines Deko-Platzes (`BattleTheme.trees` …) auf Terrain-Höhe
+## mit zufälliger Drehung; nicht auf dem Weg. Bäume merken sich ihren Fuß (`_tree_feet`).
 func _scatter(parent: Node3D, slot: Array[String], x: float, z: float, scale: float) -> Node3D:
+	# 0.4 m Radius je Einheit der Skalierung hält den Weg frei.
 	if slot.is_empty() or (_path != null and _path.blocks(x, z, 0.4 * scale)):
 		return null
 	var model := slot[_rng.randi() % slot.size()]
@@ -594,47 +532,38 @@ func _scatter(parent: Node3D, slot: Array[String], x: float, z: float, scale: fl
 
 const GRASS_SCALE_FIRST_PERSON := 0.4
 
-## Randomisierte Streudekoration (jeder Start anders): Bäume an den Seitenstreifen
-## (halten den Lauf-Korridor frei), Steine/Grasbüschel übers Feld, ein paar
-## Requisiten und Fackelsäulen. Alles hinter der Festung (z < 5). Fortress bleibt fix.
-## WELCHE Modelle, sagt das Thema (BattleTheme); wo und wie groß, steht hier.
+## Zufällige Streudeko vor der Festung. Welche Modelle, sagt das Thema; wo und wie groß (m),
+## steht hier.
 func _decorate() -> void:
 	var d := Node3D.new()
 	d.name = "Decor"
 	add_child(d)
 
 	var z_back := SPAWN_Z - 2.0    # bis knapp hinter den Spawn
-	# Bis kurz vor die Festung. Ihre Ecktürme ragen weiter vor als die Mauer, und mehr, je
-	# größer sie steht — ein Baum am Seitenstreifen stünde sonst im Turm.
+	# Bis kurz vor die Festung; ihre Ecktürme ragen mit ihrer Größe weiter vor.
 	var z_front := GOAL_Z - 3.0 * FORTRESS_GROW
 
-	# Bäume nur an den Seitenstreifen (|x| groß), damit die Bahn frei bleibt
 	for i in _rng.randi_range(8, 14):
 		var sx := (1.0 if _rng.randf() < 0.5 else -1.0) * _rng.randf_range(9.5, 12.5)
 		_scatter(d, _theme.trees, sx, _rng.randf_range(z_back, z_front), _rng.randf_range(0.85, 1.2))
 
-	# Steine über das Feld verteilt
 	for i in _rng.randi_range(5, 10):
 		_scatter(d, _theme.rocks, _rng.randf_range(-10.0, 10.0), _rng.randf_range(z_back, z_front), _rng.randf_range(1.6, 2.6))
 
-	# Grasbüschel. Für die Draufsicht bemessen — aus Augenhöhe stünden sie als Hecke
-	# zwischen Spieler und Monstern, deshalb macht die Ich-Sicht sie kleiner (_scale_grass).
+	# Grasbüschel, für die Draufsicht bemessen; die Ich-Sicht macht sie kleiner (_scale_grass).
 	for i in _rng.randi_range(22, 34):
 		var tuft := _scatter(d, _theme.grass, _rng.randf_range(-11.0, 11.0), _rng.randf_range(z_back, z_front + 0.5), _rng.randf_range(1.2, 2.0))
 		if tuft != null:
 			_grass.append(tuft)
 
-	# Fässer/Kisten an den Rändern
 	for i in _rng.randi_range(3, 6):
 		var bx := (1.0 if _rng.randf() < 0.5 else -1.0) * _rng.randf_range(8.5, 10.5)
 		_scatter(d, _theme.props, bx, _rng.randf_range(SPAWN_Z + 4.0, GOAL_Z - 3.0), 1.0)
 
-	# Wahrzeichen (Ruinen, Felsnadeln): ein, zwei an den Seitenstreifen, wo man sie sieht
 	for i in _rng.randi_range(1, 2):
 		var lx := (1.0 if _rng.randf() < 0.5 else -1.0) * _rng.randf_range(10.0, 12.5)
 		_scatter(d, _theme.landmarks, lx, _rng.randf_range(z_back, z_front), _rng.randf_range(0.8, 1.0))
 
-	# Zwei Fackelsäulen am hinteren Rand (Spawn-Seite)
 	for side: float in [-1.0, 1.0]:
 		var px := side * _rng.randf_range(9.5, 11.5)
 		var pz := _rng.randf_range(SPAWN_Z + 1.0, SPAWN_Z + 5.0)
@@ -659,34 +588,23 @@ func _cover_site() -> GroundCover.Site:
 	return site
 
 
-## Das Innenfeld: Bahn plus Festung im Vollausbau (Kirche und Nebengebäude liegen am
-## weitesten hinten). Hier steht keine Streudeko — es ist die Fläche, auf der gespielt
-## wird, und der Boden darunter ist flach (siehe terrain_height).
-## Breite und Tiefe wachsen mit der Festung (FortressModel.grow), damit die Streudeko auch
-## um eine größere Burg herum Platz lässt.
+## Das Innenfeld ohne Streudeko: Bahn plus Festung im Vollausbau (m).
 const FORTRESS_GROW := FortressModel.SCALE / FortressModel.LAYOUT_SCALE
 const FIELD_HALF_X := 11.0 * FORTRESS_GROW
 const FIELD_Z_BACK := SPAWN_Z - 3.0
 const FIELD_Z_FRONT := GOAL_Z + 11.0 * FORTRESS_GROW
-## Zugabe in Bildeinheiten um den Bildstreifen des Innenfelds: die Modelle sind breiter
-## und höher als der Punkt, an dem sie stehen.
+## Zugabe in Bildeinheiten um den Bildstreifen des Innenfelds, für die Breite der Modelle.
 const FIELD_CLEARANCE := 4.0
 
 
-## Radius eines Hains im Umland.
+## Radius eines Hains im Umland (m).
 const GROVE_RADIUS := 5.0
 
 
-## Das Umland: Bäume und Felsen über den Teil des Bodens, der seit der Erweiterung bis
-## an den Bildrand reicht. Ohne sie wäre die zusätzliche Fläche eine grüne Leere — mit
-## ihnen liest sie sich als Landschaft, in der das Spielfeld liegt. Gras kommt hier
-## nicht vor: ein Büschel ist auf die Entfernung ein Pixel und kostet trotzdem einen
-## Knoten.
+## Das Umland bis zum Bildrand, ohne Gras (ein Büschel wäre dort ein Knoten für ein Pixel).
 func _decorate_outskirts(d: Node3D) -> void:
 	var area := visible_ground_area(_camera)
 	var field := _field_span()
-	# Bäume stehen meist in Hainen, ein paar einzeln dazwischen: gleichmäßig verstreut
-	# läse sich das Umland als Baumschule.
 	for i in _rng.randi_range(10, 15):
 		var centre := _outskirts_point(area, field)
 		if centre == Vector2.INF:
@@ -709,9 +627,7 @@ func _decorate_outskirts(d: Node3D) -> void:
 			_scatter(d, _theme.landmarks, p.x, p.y, _rng.randf_range(0.8, 1.2))
 
 
-## Zufälliger Punkt im Umland, oder Vector2.INF wenn keiner gefunden wurde. Verworfen
-## wird statt gerechnet: das Umland ist ein Rechteck mit einem Loch, und ein paar
-## Fehlversuche sind billiger als eine Formel, die bei jeder Änderung am Loch nachzieht.
+## Zufälliger Punkt im Umland (Verwerfungsverfahren, 16 Versuche), oder Vector2.INF.
 func _outskirts_point(area: Rect2, field: Dictionary) -> Vector2:
 	for attempt in 16:
 		var x := _rng.randf_range(area.position.x, area.end.x)
@@ -722,9 +638,7 @@ func _outskirts_point(area: Rect2, field: Dictionary) -> Vector2:
 	return Vector2.INF
 
 
-## Bildstreifen (`u_min`/`u_max`) und kleinste Tiefe (`depth`) des Innenfelds. Beides
-## aus den vier Ecken gerechnet — bei 45° Gierwinkel liegt das Feld im Bild schräg, ein
-## x/z-Rechteck sagt darüber nichts.
+## Bildstreifen (`u_min`/`u_max`) und kleinste Tiefe (`depth`) des Innenfelds.
 func _field_span() -> Dictionary:
 	var u_min := INF
 	var u_max := -INF
@@ -737,8 +651,7 @@ func _field_span() -> Dictionary:
 	return {"u_min": u_min, "u_max": u_max, "depth": depth}
 
 
-## Waagerechte Bildkoordinate eines Bodenpunkts. Die Höhe geht nicht ein: die
-## Bildachse `basis.x` der Iso-Kamera liegt waagerecht in der Welt.
+## Waagerechte Bildkoordinate eines Bodenpunkts; `basis.x` liegt waagerecht.
 func _screen_u(x: float, z: float) -> float:
 	return (Vector3(x, 0.0, z) - _camera.global_position).dot(_camera.global_transform.basis.x)
 
@@ -748,11 +661,7 @@ func _view_depth(x: float, z: float) -> float:
 	return (Vector3(x, 0.0, z) - _camera.global_position).dot(-_camera.global_transform.basis.z)
 
 
-## Würde etwas bei (x,z) das Innenfeld verstellen? Drei Fälle, und nur der mittlere ist
-## nicht offensichtlich: auf dem Feld selbst geht nichts; seitlich neben dem Bildstreifen
-## des Feldes geht alles, auch ganz vorn; und im Streifen geht nur, was HINTER dem Feld
-## liegt. Ein Baum davor verdeckt sonst genau die Festung, die er einrahmen soll — und
-## das fällt erst im Vollausbau auf, wenn die Burg hoch genug dafür ist.
+## Würde etwas bei (x,z) das Innenfeld verstellen? Auf ihm oder im Bild davor.
 func _blocks_field(x: float, z: float, field: Dictionary) -> bool:
 	if absf(x) <= FIELD_HALF_X and z >= FIELD_Z_BACK and z <= FIELD_Z_FRONT:
 		return true
@@ -762,22 +671,21 @@ func _blocks_field(x: float, z: float, field: Dictionary) -> bool:
 	return _view_depth(x, z) < field["depth"] + FIELD_CLEARANCE
 
 
-## Festung = modular aus dem KayKit Medieval Hexagon Pack (CC0, Kay Lousberg)
-## zusammengesetzt und stufenweise mit dem Lernfortschritt gewachsen. Modelle unter
-## assets/models/hexagon/ (blaue Farbvariante, passend zu den Sample-Renders).
+## Festung aus dem KayKit Medieval Hexagon Pack (CC0, Kay Lousberg), siehe FortressModel.
 const FORTRESS_SCALE := FortressModel.SCALE
 const WALL_YAW := FortressModel.WALL_YAW   # für battle_theme_lab
 
-func _build_fortress() -> void:
+## `cap` (ab 0): die Stufe, mit der eine gerastete Welle begonnen hat. Ein Wachstum seitdem
+## kommt wie sonst am Ende der Welle (`_finish_wave`).
+func _build_fortress(cap := -1) -> void:
 	_fortress_tier = _current_fortress_tier()
+	if cap >= 0:
+		_fortress_tier = mini(_fortress_tier, cap)
 	_spawn_fortress(_fortress_tier)
 
 
-## Die Festungsstufe für den gewählten Bereich: die Units kommen aus Scope und Themen des
-## Laufs (RunRequest, dieselben Achsen wie der Aufgaben-Pool), gewertet wird jede Unit als
-## Ganzes über den ganzen Katalog (siehe FortressTier.run_tier). Ein Bonus steht mit
-## der Festung seiner Unit da — auch wenn ein Wort-Bonus Wörter anderer Units mitspielt
-## (`also_bonus`, ADR 0013), deshalb zählen Bonus-Schlüssel hier nur über bonus_units.
+## Die Festungsstufe für Scope und Tags des Laufs (FortressTier.run_tier). Ein Bonus zählt
+## nur über bonus_units (ADR 0013).
 func _current_fortress_tier() -> int:
 	var scope := RunRequest.scope()
 	var plain := scope.filter(func(key): return not str(key).begins_with(ContentRegistry.BONUS_PREFIX))
@@ -788,8 +696,7 @@ func _current_fortress_tier() -> int:
 	return FortressTier.run_tier(scoped, units, ContentRegistry.bonus_units(RunRequest.scope()))
 
 
-## Baut die Festung passend zur Stufe (0..4) neu auf; die Anordnung steht in
-## FortressModel, die Mauerfront ist die Ziel-Linie der Monster.
+## Baut die Festung zur Stufe (0..4) neu auf; die Mauerfront ist die Ziel-Linie der Monster.
 func _spawn_fortress(tier: int) -> void:
 	var fort := Node3D.new()
 	fort.name = "Fortress"
@@ -800,8 +707,7 @@ func _spawn_fortress(tier: int) -> void:
 	_catapults = FortressModel.catapults(fort)
 
 
-## Baut die Festung neu auf, mit kurzem Bau-Effekt als Feedback. Nur das Bild — die
-## Stufe des Laufs setzt _finish_wave.
+## Baut die Festung mit kurzem Bau-Effekt neu auf. Nur das Bild.
 func _rebuild_fortress(tier: int) -> void:
 	if is_instance_valid(_fortress):
 		_fortress.queue_free()
@@ -809,9 +715,7 @@ func _rebuild_fortress(tier: int) -> void:
 	_spawn_explosion(Vector3(0.0, 1.5, GOAL_Z + 2.0 * FORTRESS_GROW), Color(1.0, 0.9, 0.4), 2.0)
 
 
-## „Cutscene" beim Festungsausbau (nach gewonnener Welle, vor der Statistik): die
-## Kamera zoomt kräftig auf die neu gebaute Festung, ein festlicher Blitz + Banner
-## feiern die neue Stufe, danach fährt die Kamera zurück. Unterdrückt das Kamera-Wackeln.
+## Cutscene beim Festungsausbau: Zoom, Blitz, Banner, zurück. Ohne Kamera-Wackeln.
 func _play_upgrade_cutscene(tier: int, bonus: int) -> void:
 	_rebuild_fortress(tier)
 	# Überlappende Cutscenes vermeiden: nur die erste inszeniert, weitere bauen still um.
@@ -820,8 +724,7 @@ func _play_upgrade_cutscene(tier: int, bonus: int) -> void:
 	_cutscene = true
 	_shake_left = 0.0                 # laufendes Wackeln stoppen, sonst kämpft es mit der Fahrt
 	if _fp != null:
-		# Aus der Ich-Sicht fährt keine Kamera: Blitz und Banner stehen, solange die Fahrt
-		# der Iso-Kamera dauern würde.
+		# Ich-Sicht: keine Fahrt, Blitz und Banner stehen so lange wie die Fahrt der Iso-Kamera.
 		_fp.shake(Vector2.ZERO)
 		_spawn_explosion(Vector3(0.0, 2.0, GOAL_Z + 2.0 * FORTRESS_GROW), Color(1.0, 0.85, 0.3), 3.0)
 		_show_upgrade_banner(tier, bonus)
@@ -835,11 +738,9 @@ func _play_upgrade_cutscene(tier: int, bonus: int) -> void:
 	# Ziel: Festungsmitte im Bild, deutlich herangezoomt (kleinere ortho-Größe = näher).
 	var focus := Vector3(0.0, pivot_base.y, GOAL_Z + 3.0 * FORTRESS_GROW)
 
-	# Festlicher goldener Blitz an der Festung + Banner.
 	_spawn_explosion(Vector3(0.0, 2.0, GOAL_Z + 2.0 * FORTRESS_GROW), Color(1.0, 0.85, 0.3), 3.0)
 	_show_upgrade_banner(tier, bonus)
 
-	# Heranfahren + kräftig hineinzoomen.
 	var tw_in := create_tween()
 	tw_in.set_parallel(true)
 	tw_in.tween_property(pivot, "position", focus, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
@@ -847,7 +748,6 @@ func _play_upgrade_cutscene(tier: int, bonus: int) -> void:
 	await tw_in.finished
 	await get_tree().create_timer(1.1).timeout
 
-	# Zurückfahren.
 	var tw_out := create_tween()
 	tw_out.set_parallel(true)
 	tw_out.tween_property(pivot, "position", pivot_base, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
@@ -885,8 +785,7 @@ func _show_upgrade_banner(tier: int, bonus: int) -> void:
 	tw.chain().tween_callback(panel.queue_free)
 
 
-## Debug-Panel (nur im Debug-Build vorhanden): erlaubt das direkte Setzen der
-## Festungsstufe, um jede Ausbaustufe ohne Lernfortschritt begutachten zu können.
+## Debug-Panel: zeigt eine Ausbaustufe, ohne die Stufe des Laufs zu ändern.
 func _on_debug_tier_selected(tier: int) -> void:
 	_rebuild_fortress(tier)
 
@@ -907,15 +806,11 @@ func _place_model(parent: Node3D, filename: String, pos: Vector3, yaw_deg: float
 	return inst
 
 
-## Abstand der Iso-Kamera vom Drehpunkt. Das Bild ändert er nicht (orthografisch), nur was
-## vor der Nahebene liegt: bei 32 ragten die Hügel am unteren Bildrand vor die Kamera und
-## wurden abgeschnitten — darunter stand ein Streifen Hintergrund, der erst mit den hellen
-## Hintergründen der BattleThemes auffiel. `tests/battle_ground_test.gd` hält das.
+## Abstand der Iso-Kamera vom Drehpunkt (m). Ändert das Bild nicht (orthografisch), muss
+## aber groß genug sein, dass kein Hügel vor die Nahebene ragt (`tests/battle_ground_test.gd`).
 const CAMERA_DISTANCE := 64.0
-## Tiefe der Schattenkarte ab Kamera, zugleich deren `far`. Muss hinter den Boden reichen
-## (Kamera CAMERA_DISTANCE vor dem Drehpunkt, der Boden bis etwa 110 m tief). Darüber hinaus
-## macht sie die Schatten weich: 140 ist scharf, 400 gewählt am Bild der Werkbank, ab 1000
-## bleibt von einer Palme nur ein Fleck.
+## Tiefe der Schattenkarte ab Kamera (m), zugleich `far`. Muss hinter den Boden reichen
+## (etwa 110 m); größer heißt weichere Schatten.
 const SHADOW_DISTANCE := 400.0
 
 
@@ -923,29 +818,24 @@ func _setup_view() -> void:
 	setup_view($CameraPivot as Node3D, _camera, $Sun as DirectionalLight3D)
 
 
-## Orthografische Iso-Kamera + Sonne. Per Code, damit die .tscn keine
-## Transform-Basis-Mathematik enthalten muss — und statisch, damit ein Test dieselbe
-## Kamera aufbauen kann, gegen die der Boden gerechnet wird.
+## Orthografische Iso-Kamera und Sonne; statisch, damit ein Test dieselbe Kamera aufbaut.
 static func setup_view(pivot: Node3D, camera: Camera3D, sun: DirectionalLight3D) -> void:
 	pivot.rotation_degrees = Vector3(-30.0, 45.0, 0.0)
-	# Auf die Bahn zentrieren, damit der längere Anmarsch komplett im Bild bleibt; die
-	# Festung steht am Rand, ihre Nebengebäude laufen links unten aus dem Bild.
+	# Auf die Bahn zentriert; die Festung steht am Rand.
 	pivot.position = Vector3(0.0, 0.0, VIEW_CENTER_Z)
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
 	camera.size = 34.0
 	camera.position = Vector3(0.0, 0.0, CAMERA_DISTANCE)
-	# Mittags, hinter der Kamera; von da an stellt sie SunCycle nach der Uhr (WaveRunner._ready).
+	# Mittags, hinter der Kamera; danach stellt sie SunCycle.
 	sun.rotation_degrees = Vector3(-SunCycle.HIGH, pivot.rotation_degrees.y, 0.0)
-	# Schatten mit EINER Schattenkarte statt gestaffelter (PSSM): die Staffelung rechnet mit
-	# einer Kamera, die in die Tiefe schaut, und liefert mit dieser Orthogonal-Kamera auf
-	# CAMERA_DISTANCE gar keinen Schatten.
+	# Eine Schattenkarte statt PSSM: die Staffelung liefert mit dieser Orthogonal-Kamera gar
+	# keinen Schatten.
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
 	sun.directional_shadow_max_distance = SHADOW_DISTANCE
-	# Die eine Karte spannt sich bei einer Orthogonal-Kamera über deren ganze Tiefe bis
-	# `far` — beim Standard (4000 m) war sie so grob, dass kein Schatten übrig blieb.
+	# Die Karte spannt sich über die ganze Tiefe bis `far`; beim Standard (4000 m) ist sie
+	# zu grob für Schatten.
 	camera.far = SHADOW_DISTANCE
-	# Klein, weil der Boden keinen Schatten wirft (dress_ground); der Standard-Normalbias
-	# (2.0) ließ von einem Baum nur einen Fleck am Fuß.
+	# Klein, weil der Boden keinen Schatten wirft (dress_ground).
 	sun.shadow_bias = 0.1
 	sun.shadow_normal_bias = 1.0
 
@@ -966,11 +856,9 @@ func _process(delta: float) -> void:
 		_camera.position = _cam_base + Vector3(offset.x, offset.y, 0.0)
 
 
-## Escape bricht den laufenden Kampf ab — das erste im offenen Feld hat AnswerInput schon
-## verschluckt, es schließt nur die Eingabe. Bewusst `_input` und nicht `_unhandled_input`:
-## eine LineEdit verbraucht Escape für das Ende ihres Editier-Zustands — dasselbe Muster
-## wie im UpdateDialog. Eine Ziffer zaubert nur bei geschlossener Eingabe; offen ist sie
-## ein Zeichen und geht an die LineEdit weiter.
+## Escape bricht den Kampf ab (bei offener Eingabe schließt AnswerInput erst diese). In
+## `_input`, weil eine LineEdit Escape sonst verbraucht. Ziffern zaubern nur bei
+## geschlossener Eingabe.
 func _input(event: InputEvent) -> void:
 	var slot := spell_key(event)
 	if slot >= 0 and not _answer_input.is_typing():
@@ -988,20 +876,17 @@ func _input(event: InputEvent) -> void:
 		return
 	if not event.is_action_pressed("ui_cancel"):
 		return
-	# Nach dem Wellenende führen Auflösung und Statistik-Screen selbst zurück; nur der
-	# Hinweis ohne Inhalte braucht den Ausgang auch im beendeten Zustand.
+	# Nach dem Wellenende führen Auflösung und Statistik zurück, nur der Hinweis braucht das.
 	if _finished and not _no_content:
 		return
 	if _warming:
 		return
-	# set_input_as_handled() statt accept_event(): das gibt es nur an Control/Viewport,
-	# der WaveRunner ist ein Node3D.
+	# accept_event() gibt es nur an Control, der WaveRunner ist ein Node3D.
 	get_viewport().set_input_as_handled()
 	_request_abort()
 
 
-## Welcher Platz des Zaubervorrats zu `event` gehört: die Ziffern 1–9 (auch am Ziffernblock)
-## als 0–8, sonst -1. Gilt nur bei geschlossener Eingabe (`_input`).
+## Platz des Zaubervorrats zu `event`: Ziffern 1–9 als 0–8, sonst -1.
 static func spell_key(event: InputEvent) -> int:
 	var key := event as InputEventKey
 	if key == null or not key.pressed or key.echo:
@@ -1013,9 +898,8 @@ static func spell_key(event: InputEvent) -> int:
 	return -1
 
 
-## Setzt den Zauber auf Platz `index` ein (ADR 0014). Hätte er nichts bewirkt (leerer
-## Platz, kein Monster auf dem Feld, Festung heil), bleibt er im Vorrat und der Platz
-## zittert. Nur, solange gekämpft wird: nicht im Zeitraffer, nicht nach dem Wellenende.
+## Setzt den Zauber auf Platz `index` ein (ADR 0014), nur solange gekämpft wird. Hätte er
+## nichts bewirkt, bleibt er im Vorrat und der Platz zittert.
 func _use_spell(index: int) -> void:
 	if index >= Inventory.slot_count():
 		return
@@ -1029,7 +913,7 @@ func _use_spell(index: int) -> void:
 		_spell_slots.refuse(index)
 		return
 	Inventory.take(index)
-	# VOR der Wirkung: die Spur führt den Zauber vor den Monstern, die er trifft.
+	# Vor der Wirkung, damit die Spur den Zauber vor seinen Folgen führt.
 	EventBus.spell_activated.emit(id)
 	_spell_slots.pulse(index)
 	_spell_banner.play(spell)
@@ -1038,9 +922,8 @@ func _use_spell(index: int) -> void:
 	_spells.cast(spell, _active, to_come)
 
 
-## Donnerschlag: das Monster ist erledigt, nicht beantwortet — wie beim Katapult. Vom Feld
-## ist es sofort (keine Antwort trifft es mehr, es erreicht die Festung nicht); das Bild
-## folgt mit seinem Blitz (SpellFx.bolt), und erst danach wird abgerechnet (`_underway`).
+## Donnerschlag: das Monster ist erledigt, nicht beantwortet, wie beim Katapult. Vom Feld
+## ist es sofort; das Wellenende wartet auf den Blitz (`_underway`).
 func _strike(monster: Monster) -> void:
 	if not _active.has(monster):
 		return
@@ -1059,10 +942,7 @@ func _strike(monster: Monster) -> void:
 	_strike_index += 1
 
 
-## Nimmt ein Monster vom Feld, ohne dass es beantwortet ist (Katapult): kein Lernstand,
-## keine Erfahrung, keine Punkte, kein Eintrag in der Auflösung. Was es zählt, meldet der
-## Aufrufer (monster_catapulted); hier nur Feld und Bild. Der Donnerschlag geht denselben
-## Weg mit eigenem Bild (`_strike`).
+## Nimmt ein Monster unbeantwortet vom Feld (Katapult): ohne Lernstand, Erfahrung, Punkte.
 func _dismiss(monster: Monster) -> void:
 	_active.erase(monster)
 	monster.halt()
@@ -1070,27 +950,18 @@ func _dismiss(monster: Monster) -> void:
 	monster.queue_free()
 
 
-## Zurück ins Menü, ohne die Welle zu beenden.
-##
-## Bewusst NICHT über _finish_wave(): ein Abbruch ist keine Niederlage — keine Statistik,
-## kein wave_cleared, kein Festungsausbau. Der Lernfortschritt dieser Welle wird nicht
-## gespeichert; PlayerProgress schreibt erst bei wave_cleared bzw. beim Verlassen über den
-## Statistik-Screen (_on_back_to_menu). Was schon beantwortet wurde, verfällt damit — das
-## ist der Preis des Abbruchs und besser, als eine halbe Welle als Lernstand zu buchen.
-##
-## Auch keine Sitzungsbilanz (Issue #12): Escape heißt „sofort raus", und eine Bilanz
-## dazwischen wäre ein Screen, der den Ausgang verzögert. Die Bilanz steht auf Stufe 2
-## des Wellenabschlusses — wer sie sehen will, sieht sie dort nach jeder Welle.
-## Escape mitten in der Welle (ADR 0020): ein Lauf von der Karte, der schon eine Welle
-## geräumt hat, endet erst nach einer Rückfrage — er ließe sich nach der Welle rasten und
-## ist nach dem Abbruch verloren. Die Rückfrage pausiert; die Vorgabe ist Weiterspielen
-## (Enter und ein zweites Escape). Sonst, und im Expertenmodus und in der
-## Testvorbereitung, endet der Kampf sofort wie bisher.
+## Escape mitten in der Welle (ADR 0020): ein Lauf von der Karte ab Welle 2 rastet nach
+## einer Rückfrage (`_rest_in_wave`), sonst endet der Kampf sofort, ohne _finish_wave. Was
+## die angefangene Welle verdient hat, verfällt dann (ADR 0024).
 func _request_abort() -> void:
 	if _leaving or _abort_confirm.visible:
 		return
 	var from_pause := _paused_since_ms >= 0
-	if not abort_needs_confirm(RunRequest.is_level(), _wave_number):
+	var rests := escape_rests(RunRequest.is_level(), _wave_number)
+	# Läuft die Welle schon aus, rastet gleich ihr Abschluss.
+	if rests and (_fast_resolving or (_spawned >= _total and _active.is_empty())):
+		return
+	if not rests:
 		# Der Zoom hinaus braucht den laufenden Baum, also erst die Pause aufheben.
 		if from_pause:
 			_toggle_pause()
@@ -1099,23 +970,36 @@ func _request_abort() -> void:
 	_abort_paused_here = not from_pause and _toggle_pause()
 	_answer_input.visible = false
 	_set_view_active(false)
-	_abort_confirm.ask("Lauf abbrechen?",
-			("Abbrechen beendet deinen Lauf (Welle %d). Die angefangene Welle zählt nicht, "
-			+ "und der Lauf lässt sich nicht fortsetzen. Rasten kannst du nach dem Ende der "
-			+ "Welle.") % _wave_number,
-			"Lauf beenden", "Weiterspielen")
+	var remaining := maxi(0, _total - _spawned) + _active.size()
+	_abort_confirm.ask("Rasten?",
+			("Dein Lauf wird gespeichert (Welle %d). Setzt du ihn auf der Karte fort, geht "
+			+ "die Welle mit den übrigen %d Monstern weiter.") % [_wave_number, remaining],
+			"Rasten", "Weiterspielen")
 
 
-## Braucht der Abbruch eine Rückfrage? Nur ein Lauf von der Karte rastet, und erst ab der
-## zweiten Welle gibt es etwas zu verlieren (ein fortgesetzter Lauf steht immer dort).
-static func abort_needs_confirm(is_level: bool, wave_number: int) -> bool:
+## Rastet Escape mitten in der Welle? Nur ein Lauf von der Karte, ab der zweiten Welle.
+static func escape_rests(is_level: bool, wave_number: int) -> bool:
 	return is_level and wave_number > 1
 
 
 func _on_abort_confirmed() -> void:
 	if _paused_since_ms >= 0:
 		_toggle_pause()
-	_abort_battle()
+	_rest_in_wave()
+
+
+## Rasten mitten in der Welle (ADR 0020): eine künstliche Wellengrenze. Gespeichert wird wie
+## an ihrem Ende, dazu, was sie schon hinter sich hat (`_open_wave_state`).
+func _rest_in_wave() -> void:
+	var wave := _open_wave_state()
+	_finished = true
+	_wave_gen += 1   # bindet laufende Spawn-Coroutinen ab (siehe _run_spawn_batch)
+	_rest(_wave_number, wave)
+	_report_run_ended()
+	SaveCoordinator.commit("wave_rest")
+	_saved_on_exit = true
+	_slow_motion.stop()
+	_leave_battle()
 
 
 func _on_abort_cancelled() -> void:
@@ -1129,29 +1013,32 @@ func _on_abort_cancelled() -> void:
 
 func _abort_battle() -> void:
 	_finished = true
+	SaveCoordinator.discard_uncommitted()
 	_report_run_ended()
+	SaveCoordinator.commit("run_abort")
+	_saved_on_exit = true
 	_wave_gen += 1   # bindet laufende Spawn-Coroutinen ab (siehe _run_spawn_batch)
 	_slow_motion.stop()
 	_leave_battle()
 
 
-## Die Pause gehört zum Kampf: ein Szenenwechsel mitten in einer Feier darf sie nicht
-## ins Menü mitnehmen.
-## Die Ich-Sicht fängt die Maus nur, solange gekämpft wird. Ohne Ich-Sicht nichts.
+## Die Ich-Sicht fängt die Maus nur, solange gekämpft wird.
 func _set_view_active(on: bool) -> void:
 	if _fp != null:
 		_fp.set_active(on)
 
 
 func _exit_tree() -> void:
+	# Die Pause einer Feier darf nicht in die nächste Szene mit.
 	get_tree().paused = false
+	# Auch an Rückweg und Abbruch vorbei kommt keine halbe Welle auf die Platte.
+	if not _saved_on_exit:
+		SaveCoordinator.discard_uncommitted()
+	SaveCoordinator.unregister(_badges)
+	SaveCoordinator.release()
 
 
-## „Schnell auflösen" fragt erst nach. Solange die Frage steht, ist die Eingabe weg: sie
-## holt sich sonst jeden Frame den Fokus zurück, und Enter ginge an sie statt an „Abbrechen".
-## Das Spiel läuft dabei weiter — ein Pausieren hielten die Spawn-Timer ohnehin nicht an.
-## Strg+P immer, das nackte P nur, solange nicht getippt wird — in der offenen Eingabe
-## ist das „p" ein Buchstabe.
+## Strg+P immer, das nackte P nur, solange nicht getippt wird.
 func _on_pause_key(bare: bool) -> void:
 	if bare and _answer_input.is_typing():
 		return
@@ -1161,9 +1048,8 @@ func _on_pause_key(bare: bool) -> void:
 		_pause_overlay.consume()
 
 
-## Pausiert oder setzt fort; false, wenn gerade keine Pause möglich ist. Hält den Baum an
-## wie eine Feier (Monster, Spawn-Timer, Tweens) und nimmt die Eingabe weg, sonst ließe
-## sich in Ruhe antworten. Die Pausenzeit zählt nicht als Bedenkzeit der Monster.
+## Pausiert oder setzt fort; false, wenn gerade keine Pause möglich ist. Die Pausenzeit
+## zählt nicht als Bedenkzeit der Monster.
 func _toggle_pause() -> bool:
 	if _paused_since_ms >= 0:
 		var duration := Time.get_ticks_msec() - _paused_since_ms
@@ -1177,8 +1063,7 @@ func _toggle_pause() -> bool:
 		_view_button.disabled = false
 		_set_view_active(true)
 		return true
-	# Keine Pause über eine Feier, das Standbild, die Rückfrage oder das Wellenende hinweg:
-	# die geben den Baum selbst wieder frei und nähmen die Pause dabei mit.
+	# Feier, Standbild, Rückfrage und Wellenende geben den Baum selbst wieder frei.
 	if _finished or _warming or _leaving or _fast_resolving or get_tree().paused \
 			or _fast_resolve_confirm.visible:
 		return false
@@ -1192,6 +1077,8 @@ func _toggle_pause() -> bool:
 	return true
 
 
+## „Schnell auflösen“ fragt erst nach. Solange die Frage steht, ist die Eingabe weg, sonst
+## holte sie sich den Fokus und Enter. Das Spiel läuft dabei weiter.
 func _on_fast_resolve_pressed() -> void:
 	if _finished or _fast_resolving:
 		return
@@ -1203,8 +1090,7 @@ func _on_fast_resolve_pressed() -> void:
 			"Auflösen")
 
 
-## Ob `event` „Schnell auflösen" fragt: 2 für Strg+F (gilt immer), 1 für das nackte F
-## (nur bei geschlossener Eingabe, offen ist es ein Buchstabe), sonst 0 — wie bei der Pause.
+## Ob `event` „Schnell auflösen“ fragt: 2 für Strg+F, 1 für das nackte F, sonst 0.
 static func fast_resolve_key(event: InputEvent) -> int:
 	var key := event as InputEventKey
 	if key == null or not key.pressed or key.echo or key.keycode != KEY_F \
@@ -1213,8 +1099,7 @@ static func fast_resolve_key(event: InputEvent) -> int:
 	return 2 if key.ctrl_pressed else 1
 
 
-## Die Taste geht denselben Weg wie der Knopf, aber nur, wenn der Knopf gerade drückbar
-## wäre (nicht in Pause, Zeitraffer, Feier oder Standbild) und nicht schon gefragt wird.
+## Die Taste wirkt nur, wenn der Knopf gerade drückbar wäre und nicht schon gefragt wird.
 func _on_fast_resolve_key() -> void:
 	if not _fast_resolve_button.visible or _fast_resolve_button.disabled \
 			or _fast_resolve_confirm.visible or _warming or _leaving or _cutscene \
@@ -1229,11 +1114,8 @@ func _on_fast_resolve_cancelled() -> void:
 		_set_view_active(true)
 
 
-## Spult den Rest der Welle vor — und tut sonst NICHTS. Jedes Monster kommt über den
-## gewohnten Weg an (_on_monster_reached_goal: Lernstand, Schaden, Auflösung), die Welle
-## endet über _check_end bzw. an der gefallenen Festung. Voller Schaden mit Absicht: das
-## Ergebnis ist das, was ohne Vorspulen auch passiert wäre, kein Ausweg aus einer
-## verlorenen Welle. Zurückgesetzt wird das Tempo von _finish_wave (_slow_motion.stop()).
+## Spult den Rest der Welle vor und tut sonst nichts: jedes Monster kommt über den
+## gewohnten Weg an, mit vollem Schaden. Das Tempo setzt _finish_wave zurück.
 func _fast_resolve_wave() -> void:
 	if _finished or _fast_resolving:
 		return
@@ -1242,20 +1124,16 @@ func _fast_resolve_wave() -> void:
 	_fast_resolve_button.disabled = true
 	_pause_button.disabled = true
 	_view_button.disabled = true
-	# Ich-Sicht: zurück zum Laufen — die Frage hat die Maus freigegeben, und eine Eingabe
-	# gibt es im Zeitraffer nicht mehr.
+	# Ich-Sicht: die Frage hat die Maus freigegeben, zurück zum Laufen.
 	_set_view_active(true)
 	EventBus.wave_fast_resolved.emit(maxi(0, _total - _spawned), _active.size())
 	_slow_motion.fast_forward()
 
 
-## Startet die nächste (prozedural erzeugte) Welle mit der aktuell gewählten Schwierigkeit.
-## Ersetzt das frühere content-basierte start_wave(): Wellen sind nicht mehr vordefiniert,
-## sondern werden aus Schwierigkeit + Wellennummer generiert.
+## Startet die nächste prozedural erzeugte Welle mit der gewählten Schwierigkeit.
 func _start_next_wave() -> void:
 	_wave_gen += 1
 	var gen := _wave_gen
-	# Wellen-Zustand zurücksetzen (auch bei Wiederholung nach Niederlage).
 	_clear_active_monsters()
 	_total = 0
 	_spawned = 0
@@ -1265,11 +1143,12 @@ func _start_next_wave() -> void:
 	_wave_leaked = 0
 	_previous_shown = _wave_shown.duplicate()
 	_wave_shown.clear()
+	_wave_open = 0
+	_open_from = 0
 	_wave_leaked_tasks.clear()
 	_wave_played_tasks.clear()
 	_score_at_start = GameState.score
-	# Erfahrung und Level sind Profilstände (PlayerLevel) — hier wird nur festgehalten,
-	# wo die Welle angefangen hat, damit der Abschluss ihren Zuwachs zeigen kann.
+	# Nur der Stand zu Wellenbeginn, für den Zuwachs im Abschluss.
 	_wave_xp = 0
 	_level_at_start = PlayerLevel.level
 	_end_label.visible = false
@@ -1277,12 +1156,12 @@ func _start_next_wave() -> void:
 	_answer_input.visible = true
 	_fast_resolving = false
 	_held_answers.clear()
-	# Endete die letzte Welle, während ein Pfeil zu einem Monster mit Standbild flog, hielt
-	# die Feier noch an.
+	# Ein Pfeil zu einem Monster mit Standbild kann die Feier über das Wellenende gehalten haben.
 	_spelling_due.clear()
 	_celebration.release()
 	_badges.new_wave()
 	_wave_low_hp = GameState.fortress_health
+	_last_left = INF
 	_wave_badges_done = false
 	_fast_resolve_button.visible = true
 	_fast_resolve_button.disabled = false
@@ -1301,30 +1180,79 @@ func _start_next_wave() -> void:
 	_generator.speed_scale = _difficulty_to_speed(_difficulty) * UserSettings.base_speed()
 	_generator.damage_scale = WaveGenerator.wave_damage_scale(_wave_number)
 	var spawns := _generate_wave(_difficulty, _wave_number)
-	# Gar nicht erst anfangen, wenn der Pool nichts hergibt: ein Spawn ohne Plan zählt
-	# nicht mit (_spawned), _check_end() wird nie wahr und das leere Schlachtfeld hätte
-	# keinen Ausgang. Der Knopf im Menü sperrt schon — das hier ist die letzte Instanz.
+	# Ohne Spielbares gar nicht anfangen: ein Spawn ohne Plan zählt nicht, die Welle endete nie.
 	if _nothing_playable(spawns):
 		_show_no_content()
 		return
 	_plan_playlist(spawns)
 	for entry in spawns:
 		_total += int(entry.get("count", 0))
-	# Löst den Wellenstart in GameState + HUD-Refresh aus. Die Festungs-HP bleiben dabei
-	# unangetastet — der Stand wird über die Wellen hinweg mitgenommen (siehe GameState).
+	var open := _open_wave
+	_open_wave = {}
+	var armor := GameState.fortress_armor
+	if not open.is_empty():
+		_continue_wave(open, spawns)
+	# Die Festungs-HP bleiben dabei, sie gelten über die Wellen hinweg.
 	EventBus.wave_started.emit(GameState.current_wave)
+	if not open.is_empty():
+		GameState.continue_wave(_spawned, armor)
 	# Kein Sprung auf den Morgen, solange Monster laufen (_finish_wave gibt ihn frei).
 	if _sun_cycle != null:
 		_sun_cycle.hold = true
-	# Gesamtzahl der Welle bekanntgeben -> GameState füllt wave_total/wave_resolved (HUD-Balken).
 	EventBus.wave_totals.emit(_total)
 	for entry in spawns:
 		_run_spawn_batch(entry, gen)
 
 
-## Testliste: die Reihenfolge der Wörter in dieser Welle (TestPlaylist). Ist der Beutel
-## leer — oder die Liste noch nie gespielt —, beginnt hier eine neue Runde; eine Runde
-## wechselt also nur an einer Wellengrenze, dauert aber beliebig viele Wellen.
+## Setzt eine gerastete Welle fort (ADR 0020): es kommen nur ihre übrigen Monster, ihr
+## Abschluss zählt weiter, wo er stand. Die erledigten gelten als erschienen (`_spawned`).
+func _continue_wave(open: Dictionary, spawns: Array) -> void:
+	var remaining := maxi(1, int(open.get("remaining", 1)))
+	_total = maxi(remaining, int(open.get("total", remaining)))
+	_spawned = _total - remaining
+	_open_from = _spawned
+	spawns[0]["count"] = remaining
+	_wave_correct = int(open.get("correct", 0))
+	_wave_leaked = int(open.get("leaked", 0))
+	_score_at_start = GameState.score - int(open.get("score_gained", 0))
+	_wave_xp = int(open.get("xp", 0))
+	_level_at_start = int(open.get("level_at_start", _level_at_start))
+	_wave_low_hp = mini(_wave_low_hp, int(open.get("low_hp", _wave_low_hp)))
+	_spells.wave_pace = clampf(float(open.get("pace", 1.0)), 0.0, 1.0)
+	_spells.wave_alts = bool(open.get("alts", false))
+	if _spells.wave_pace < 1.0:
+		_spell_fx.haze(true)
+	for task in open.get("played", []):
+		if task is Dictionary:
+			_wave_played_tasks.append(task)
+			if bool(task.get("leaked", false)):
+				_wave_leaked_tasks.append(task)
+
+
+## Stand der angefangenen Welle fürs Rasten (RunSave.build, Feld `wave`). Monster auf dem
+## Feld zählen nicht als erledigt, sie kommen mit neuem Wort wieder.
+func _open_wave_state() -> Dictionary:
+	var played: Array = []
+	for task in _wave_played_tasks:
+		played.append(task)
+	return {
+		"remaining": maxi(0, _total - _spawned) + _active.size(),
+		"total": _total,
+		"correct": _wave_correct,
+		"leaked": _wave_leaked,
+		"score_gained": GameState.score - _score_at_start,
+		"xp": _wave_xp,
+		"level_at_start": _level_at_start,
+		"low_hp": _wave_low_hp,
+		"fortress_tier": _fortress_tier,
+		"pace": _spells.wave_pace,
+		"alts": _spells.wave_alts,
+		"played": played,
+	}
+
+
+## Testliste: die Reihenfolge der Wörter in dieser Welle (TestPlaylist). Eine neue Runde
+## beginnt nur an einer Wellengrenze, wenn der Beutel leer ist.
 func _plan_playlist(spawns: Array) -> void:
 	_playlist_order = []
 	if not RunRequest.is_test() or spawns.is_empty():
@@ -1346,31 +1274,26 @@ func _plan_playlist(spawns: Array) -> void:
 	_playlist_order = TestPlaylist.wave_order(open, words.keys(), _previous_shown)
 
 
-## Schwierigkeit (1..5) -> Tempo-Multiplikator auf die Basis-Geschwindigkeit
-## (Stufe 1..5 ⇒ 0.6 .. 1.4, also -40 % … +40 %).
+## Schwierigkeit 1..5 → Tempo-Faktor 0.6 .. 1.4 auf die Basis-Geschwindigkeit.
 func _difficulty_to_speed(difficulty: int) -> float:
 	return 0.6 + 0.2 * float(clampi(difficulty, 1, 5) - 1)
 
 
-## Erzeugt die Spawn-Batches einer Welle prozedural. Rückgabe: Array von Dicts der Form
-## {count, interval, task_pool} — dasselbe Format, das _run_spawn_batch/_spawn erwarten.
+## Die Spawn-Batches einer Welle: Array von {count, interval (s), task_pool}.
 func _generate_wave(difficulty: int, wave_number: int) -> Array:
-	# Monsteranzahl wächst pro Welle UND mit der Schwierigkeit (Stufe 3 = neutral,
-	# je Stufe darüber/darunter +/- 2 Monster). Mindestens 2 Monster pro Welle.
+	# Je Welle ein Monster mehr, je Stufe über/unter 3 zwei mehr/weniger, mindestens 2.
 	var count := maxi(2, 2 + wave_number + (difficulty - 3) * 2)
 	var interval := maxf(1.5, 4.0 - 0.3 * difficulty)  # härter ⇒ schnellere Folge
 	interval *= _spawn_gap_scale
 	return [{
 		"count": count,
 		"interval": interval,
-		# Aufgabentypen, Wortarten, Scope und Tags kommen aus der Profil-Auswahl
-		# (Session-Setup); leere Auswahl heißt dort "alle". Dieselbe Funktion fragen die
-		# Menüs für ihre Verfügbarkeitsprüfung — Pool und Sperre dürfen nicht auseinanderlaufen.
+		# Dieselbe Funktion fragen die Menüs, damit Pool und Sperre nicht auseinanderlaufen.
 		"task_pool": RunRequest.task_pool(),
 	}]
 
 
-## True, wenn KEIN Batch der Welle eine spielbare Aufgabe hergibt.
+## True, wenn kein Batch der Welle eine spielbare Aufgabe hergibt.
 func _nothing_playable(spawns: Array) -> bool:
 	for entry in spawns:
 		if _generator.has_playable(entry.get("task_pool", {})):
@@ -1378,8 +1301,7 @@ func _nothing_playable(spawns: Array) -> bool:
 	return true
 
 
-## Nichts zu spielen: Hinweis statt Kampf, mit dem Weg zu den Inhalten und dem Rückweg
-## ins Menü. Kein _finish_wave() — es gibt keine Welle, die zu verbuchen wäre.
+## Nichts zu spielen: Hinweis statt Kampf, ohne _finish_wave (keine Welle zu verbuchen).
 func _show_no_content() -> void:
 	_no_content = true
 	_finished = true
@@ -1394,7 +1316,7 @@ func _show_no_content() -> void:
 	push_warning("WaveRunner: keine spielbare Aufgabe im Pool — Welle nicht gestartet")
 
 
-## Entfernt noch aktive Monster (z. B. Reste einer verlorenen Welle) vom Feld.
+## Entfernt noch aktive Monster vom Feld.
 func _clear_active_monsters() -> void:
 	for monster in _active:
 		if is_instance_valid(monster):
@@ -1402,14 +1324,12 @@ func _clear_active_monsters() -> void:
 	_active.clear()
 
 
-## Läuft als Coroutine — mehrere Batches spawnen dadurch nebenläufig im Takt.
-## `gen` bindet die Coroutine an ihre Welle: startet inzwischen eine neue Welle, bricht sie ab.
+## Coroutine; `gen` bindet sie an ihre Welle, eine neue Welle bricht sie ab.
 func _run_spawn_batch(entry: Dictionary, gen: int) -> void:
 	var count := int(entry.get("count", 0))
 	var interval := float(entry.get("interval", 2.0))
 	for i in count:
-		# process_always = false: in der Baum-Pause (Meister-Feier) läuft der Timer nicht
-		# weiter, sonst erschienen danach mehrere Monster auf einmal.
+		# process_always = false: in der Baum-Pause läuft der Timer nicht weiter.
 		await get_tree().create_timer(interval, false).timeout
 		if _finished or not is_inside_tree() or gen != _wave_gen:
 			return
@@ -1417,20 +1337,15 @@ func _run_spawn_batch(entry: Dictionary, gen: int) -> void:
 
 
 func _spawn(entry: Dictionary) -> void:
-	# Der WaveGenerator wählt anhand des Spieler-Fortschritts eine Aufgabe aus dem
-	# Pool, löst sie auf und bestimmt Darstellung (monster_task_rules) + Basiswerte.
-	# Bereits sichtbare Grundwörter ausschließen, damit dieselbe Vokabel nie
-	# gleichzeitig zweimal auf dem Feld steht.
+	# Sichtbare Grundwörter ausschließen: dieselbe Vokabel nie zweimal auf dem Feld.
 	var active_sources := {}
 	for m in _active:
 		active_sources[str(m.task.get("source_id", ""))] = true
 	var plan: Dictionary = _generator.pick(entry.get("task_pool", {}), active_sources, _wave_shown,
-			_playlist_order)
+			_playlist_order, _open_due())
 	if plan.is_empty():
-		# Kein Plan heißt „im Pool ist nichts Spielbares" und NICHT „steht gerade alles
-		# auf dem Feld": WaveGenerator.pick() lässt im zweiten Durchlauf die
-		# active_sources-Sperre fallen. Der Spawn fällt also endgültig aus — dann muss er
-		# aus dem Soll verschwinden, sonst wartet _check_end() für immer auf ihn.
+		# Kein Plan heißt „nichts Spielbares im Pool“ (pick() lässt die active_sources-Sperre
+		# zuletzt fallen). Der Spawn fällt aus dem Soll, sonst wartete _check_end() ewig.
 		push_warning("WaveRunner: keine spielbare Aufgabe für Pool %s" % str(entry.get("task_pool", {})))
 		_total = maxi(0, _total - 1)
 		EventBus.wave_totals.emit(_total)
@@ -1441,6 +1356,7 @@ func _spawn(entry: Dictionary) -> void:
 	# Der Zeitwandler-Skill bremst erst hier, hinter der Formel: `plan["reward"]` und
 	# `plan["xp"]` bleiben, was `t - c` sagt.
 	monster.setup(plan["monster_def"], plan["task"], GOAL_Z, plan["speed"] * _monster_pace)
+	monster.mastered = bool(plan.get("mastered", false))
 	monster.damage = plan["damage"]
 	monster.reward = plan["reward"]
 	monster.xp = plan["xp"]
@@ -1454,16 +1370,23 @@ func _spawn(entry: Dictionary) -> void:
 	_wave_shown[str(plan["task"].get("source_id", ""))] = _spawned
 	_spawned += 1
 	EventBus.monster_spawned.emit(plan["monster_def"], plan["task"])
-	if _catapult and _fortress_tier >= FortressModel.CATAPULT_TIER \
-			and PlayerProgress.is_mastered(str(plan["task"].get("learnable_id", ""))):
+	var mastered := PlayerProgress.is_mastered(str(plan["task"].get("learnable_id", "")))
+	if not mastered:
+		_wave_open += 1
+	if _catapult and _fortress_tier >= FortressModel.CATAPULT_TIER and mastered:
 		_catapult_later(monster, _wave_gen)
+
+
+## Muss der nächste Spawn offen sein? Eine Testliste behält ihre Reihenfolge.
+func _open_due() -> bool:
+	return _playlist_order.is_empty() \
+			and WaveGenerator.open_due(_wave_open, _spawned - _open_from)
 
 
 func _on_answer_submitted(text: String) -> void:
 	if _finished:
 		return
-	# Während der Feier steht das Spiel; eine Antwort jetzt auszuwerten hieße, ein Monster
-	# in der Pause zu besiegen und die nächste Feier anzustoßen. Aufheben statt verwerfen.
+	# In der Feier steht das Spiel: die Antwort aufheben, nicht in der Pause auswerten.
 	if _celebration.is_playing() or _spelling.is_busy():
 		_held_answers.append(text)
 		return
@@ -1473,17 +1396,10 @@ func _on_answer_submitted(text: String) -> void:
 		answers.append(monster.task.get("accepted_answers", []))
 	var hit := best_hit(_evaluator, answers, text)
 	if int(hit["index"]) >= 0:
-		# Ist die Antwort nur im Kern richtig oder anders geschrieben, blendet _score_hit
-		# die richtige Form ein.
 		_score_hit(targets[int(hit["index"])], text, hit["verdict"])
 		return
-	# Kein Treffer -> Falscheingabe: rotes Flash + Kamera-Wackeln.
-	# Bewusst KEIN Fortschritts-Eintrag: eine Falscheingabe lässt sich keiner
-	# konkreten Aufgabe zuordnen (mehrere Monster gleichzeitig). Ein echtes
-	# Scheitern wird beim Erreichen der Festung verbucht (_on_monster_reached_goal).
-	# PROTOKOLLIERT wird sie trotzdem, mit leerer learnable_id und den Aufgaben, die
-	# gerade auf dem Feld standen: genau daran liest man später ab, warum eine Antwort
-	# nicht genommen wurde (TraceLog).
+	# Falscheingabe: kein Lernstand-Eintrag, sie gehört zu keiner Aufgabe (gescheitert wird
+	# an der Festung). Die Spur bekommt sie mit den Aufgaben auf dem Feld.
 	EventBus.answer_judged.emit(text, {
 		"matched": false, "complete": false, "learnable_id": "", "source_id": "",
 		"response_time_ms": 0, "canonical": "", "candidates": _active_learnable_ids(),
@@ -1496,12 +1412,8 @@ func _on_answer_submitted(text: String) -> void:
 
 
 ## Welches Monster eine Antwort trifft: `answers` hält je Monster seine accepted_answers.
-## Rückgabe {index, verdict}, index -1 ohne Treffer. Die Auswertung kennt Toleranz
-## (AnswerEvaluator): ein exakt und vollständig passendes Monster muss gewinnen, sonst
-## schnappt sich bei mehreren Monstern auf dem Feld ein nur im Kern passendes den Treffer
-## weg ("take" gegen "take (on sth.)"), oder eines, das sich nur im Akzent unterscheidet
-## ("ou" gegen "où", ADR 0008). Rang: vollständig vor unvollständig, darin exakt vor
-## nachsichtig; bei Gleichstand das erste.
+## Rückgabe {index, verdict}, index -1 ohne Treffer. Rang: vollständig vor unvollständig,
+## darin exakt vor nachsichtig (ADR 0008), bei Gleichstand das erste.
 static func best_hit(evaluator: AnswerEvaluator, answers: Array, text: String) -> Dictionary:
 	var best := {"index": -1, "verdict": {}}
 	var best_rank := -1
@@ -1518,9 +1430,7 @@ static func best_hit(evaluator: AnswerEvaluator, answers: Array, text: String) -
 	return best
 
 
-## Die learnable_ids der Aufgaben, die gerade auf dem Feld stehen — der Zusammenhang, in
-## dem eine Eingabe beurteilt wurde. Nur fürs Protokoll; die Auswertung selbst läuft über
-## die Monster-Liste.
+## Die learnable_ids der Aufgaben auf dem Feld, nur für die Spur.
 func _active_learnable_ids() -> Array:
 	var ids: Array = []
 	for monster in _active:
@@ -1528,8 +1438,7 @@ func _active_learnable_ids() -> Array:
 	return ids
 
 
-## Die Monster, die eine Antwort treffen kann: alle — außer in der Ich-Sicht, dort nur
-## die im Bild. Die einzige Regel, die die Ich-Sicht zum Kampf dazubringt.
+## Die Monster, die eine Antwort treffen kann: alle, in der Ich-Sicht nur die im Bild.
 func _hittable() -> Array[Monster]:
 	if _fp == null:
 		return _active
@@ -1544,9 +1453,7 @@ func _in_view(monster: Monster) -> bool:
 	return monster.in_view(_fp.camera)
 
 
-## Für die Spur: welche Aufgaben standen auf dem Feld, aber außerhalb des Bildes? Daran
-## liest man ab, dass eine richtige Antwort am Blick und nicht am Wort gescheitert ist.
-## Leer außerhalb der Ich-Sicht.
+## Für die Spur: die Aufgaben auf dem Feld, aber außerhalb des Bildes. Leer ohne Ich-Sicht.
 func _unseen_learnable_ids() -> Array:
 	var ids: Array = []
 	if _fp == null:
@@ -1557,10 +1464,8 @@ func _unseen_learnable_ids() -> Array:
 	return ids
 
 
-## Baut die Ich-Sicht auf: Spieler vor dem Festungstor, Blick die Bahn hinunter, Nebel
-## statt Weltrand. Die Iso-Kamera bleibt in der Szene — Boden und Deko sind für ihren
-## (weitesten) Blick gebaut, und SceneZoom darf sie weiter bewegen, sie ist nur nicht
-## mehr die aktive.
+## Baut die Ich-Sicht auf (ARCHITECTURE „Ich-Sicht (Späher-Baum)“). Die Iso-Kamera
+## bleibt in der Szene, Boden und Deko sind für ihren Blick gebaut.
 func _setup_first_person() -> void:
 	_fp = FIRST_PERSON_SCENE.instantiate() as FirstPersonView
 	_fp.speed = FirstPersonView.speed_for(_skill_bonuses)
@@ -1573,8 +1478,7 @@ func _setup_first_person() -> void:
 	add_child(_fp)
 	(_fp.get_node("Overlay/Markers") as OffscreenMarkers).track(_fp.camera,
 			func() -> Array[Monster]: return _active)
-	# Kopie: das Environment ist eine Ressource der Szene und käme beim nächsten Kampf in
-	# der Iso-Sicht mit Nebel wieder (geladene Ressourcen sind geteilt).
+	# Kopie: geladene Ressourcen sind geteilt, der Nebel käme sonst in die nächste Iso-Sicht.
 	var world := $WorldEnvironment as WorldEnvironment
 	_iso_env = world.environment
 	var env := _iso_env.duplicate() as Environment
@@ -1589,8 +1493,7 @@ func _setup_first_person() -> void:
 	_scale_grass(GRASS_SCALE_FIRST_PERSON)
 
 
-## Zurück auf die Iso-Kamera: das Gegenstück zu `_setup_first_person`. Die Maus gibt die
-## Ich-Sicht beim Verlassen des Baums selbst frei.
+## Zurück auf die Iso-Kamera; die Maus gibt die Ich-Sicht beim Verlassen selbst frei.
 func _teardown_first_person() -> void:
 	_camera.make_current()
 	_fp.set_active(false)
@@ -1608,12 +1511,9 @@ func _scale_grass(factor: float) -> void:
 			tuft.scale *= factor
 
 
-## V oder das Auge neben der Pause: von oben aufs Feld oder zurück. Nur mit gelerntem
-## Späherblick und nur, solange gekämpft wird — nicht in der Pause, einer Feier, dem
-## Standbild, der Rückfrage, dem Zeitraffer, der Ausbau-Fahrt, und nicht, solange ein
-## Pfeil, Anlauf oder Stein unterwegs ist: der hängt an der Sicht, in der er losging.
-## Der Wechsel ist auch der Wunsch für den nächsten Kampf (RunRequest). False, wenn
-## gerade nicht gewechselt werden darf.
+## Wechselt zwischen Iso- und Ich-Sicht; false, wenn gerade nicht gewechselt werden darf.
+## Nicht, solange ein Pfeil, Anlauf oder Stein unterwegs ist: der hängt an seiner Sicht.
+## Der Wechsel gilt auch für den nächsten Kampf (RunRequest).
 func _toggle_view() -> bool:
 	if not _view_selectable or _finished or _warming or _leaving or _fast_resolving \
 			or _cutscene or _underway > 0 or _paused_since_ms >= 0 or get_tree().paused \
@@ -1636,8 +1536,7 @@ func _toggle_view() -> bool:
 	return true
 
 
-## Ob `event` die Sicht wechselt: V ohne Strg und Alt. Gilt nur bei geschlossener
-## Eingabe (`_input`) — offen ist es ein Buchstabe.
+## Ob `event` die Sicht wechselt: V ohne Strg und Alt, nur bei geschlossener Eingabe.
 static func view_key(event: InputEvent) -> bool:
 	var key := event as InputEventKey
 	return key != null and key.pressed and not key.echo and key.keycode == KEY_V \
@@ -1645,12 +1544,8 @@ static func view_key(event: InputEvent) -> bool:
 
 
 ## Treffer verbuchen. `verdict` ist das Urteil des AnswerEvaluator, leer für einen Treffer
-## ohne Abzug. War die Antwort richtig, ließ aber einen optionalen Bestandteil weg
-## ("criticize" statt "criticize sb. (for)") oder stimmte die Schreibweise nicht ("ecole"
-## statt "l'école"), kostet das nichts — die richtige Form wird nur zusätzlich gezeigt,
-## damit sie trotzdem einmal zu sehen war: nach dem Zerplatzen steht das Bild, und die
-## Form steht groß da, Schreibfehler rot, fehlende Teile blau (SpellingFreeze, ADR 0010) —
-## erst danach die Feier einer Meisterung.
+## ohne Abzug. Ein nachsichtiges Urteil kostet nichts, zeigt aber nach dem Zerplatzen die
+## richtige Form im Standbild (SpellingFreeze, ADR 0010), erst danach eine Meister-Feier.
 func _score_hit(monster: Monster, text: String = "", verdict: Dictionary = {}) -> void:
 	var complete := bool(verdict.get("complete", true))
 	var exact := bool(verdict.get("exact", true))
@@ -1658,18 +1553,18 @@ func _score_hit(monster: Monster, text: String = "", verdict: Dictionary = {}) -
 	var rt := Time.get_ticks_msec() - monster.spawned_at_ms
 	var task_id := str(monster.task.get("learnable_id", ""))
 	if not full_form.is_empty():
-		# Vor record(): eine Meisterung durch DIESE Antwort feiert erst nach dem Standbild.
+		# Vor record(): eine Meisterung durch diese Antwort feiert erst nach dem Standbild.
 		_celebration.hold()
 		_spelling_due[monster.get_instance_id()] = [full_form,
 				AnswerEvaluator.spelling_marks(full_form, text),
 				AnswerEvaluator.missing_marks(full_form, text)]
+	_last_left = monster.seconds_left() if _spawned >= _total and _active.size() == 1 else INF
 	# Der Stand davor: record() überschreibt, woran Revanche und Co. hängen.
 	var badge_ctx := _badges.before_hit(task_id)
 	var newly_mastered := PlayerProgress.record(task_id, true, rt,
 			float(monster.task.get("initial_confidence", -1.0)))
 	EventBus.item_reviewed.emit(task_id, true, rt)
-	# Nach record(), damit ein Mithörer die Confidence DANACH liest — die davor steht in
-	# der Spawn-Zeile des Protokolls.
+	# Nach record(): Mithörer lesen die neue Confidence, die alte steht in der Spawn-Zeile.
 	EventBus.answer_judged.emit(text, {
 		"matched": true, "complete": complete, "exact": exact, "learnable_id": task_id,
 		"source_id": str(monster.task.get("source_id", "")), "response_time_ms": rt,
@@ -1693,12 +1588,9 @@ func _score_hit(monster: Monster, text: String = "", verdict: Dictionary = {}) -
 	_flash_feedback(FLASH_CORRECT)
 
 
-## Eine Meister-Feier beginnt: der Kampf pausiert (Baum-Pause). Monster, Animationen,
-## Tweens und Spawn-Timer stehen; weiter laufen nur Knoten mit process_mode ALWAYS — die
-## Feier selbst, die Antwort-Eingabe und Sfx. Engine.time_scale bleibt SlowMotion.
-## Die Antwortzeit misst Echtzeit ab dem Erscheinen; ohne Ausgleich zählte die Feier bei
-## jedem Monster auf dem Feld als Bedenkzeit mit. Stehen mehrere Feiern an, kommt
-## `started` je Feier und `finished` nach der letzten.
+## Eine Meister-Feier pausiert den Baum; nur process_mode ALWAYS läuft weiter (Feier,
+## Eingabe, Sfx). Die Feier zählt nicht als Bedenkzeit der Monster (Antwortzeit ist
+## Echtzeit). Bei mehreren Feiern kommt `started` je Feier, `finished` nach der letzten.
 func _on_celebration_started(duration_ms: int) -> void:
 	get_tree().paused = true
 	for monster in _active:
@@ -1714,9 +1606,8 @@ func _on_celebration_finished() -> void:
 	_check_end()
 
 
-## Das Standbild der Schreibweise für ein eben zerplatztes Monster, falls _score_hit eines
-## vorgemerkt hat (`key` ist seine Instanz-Id, `at` seine Stelle — beides vor dem Zerplatzen
-## genommen, danach kann es freigegeben sein).
+## Das Standbild, falls _score_hit eines vorgemerkt hat. `key` und `at` stammen von vor dem
+## Zerplatzen.
 func _spell_out(key: int, at: Vector3) -> void:
 	if not _spelling_due.has(key):
 		return
@@ -1727,11 +1618,9 @@ func _spell_out(key: int, at: Vector3) -> void:
 			spelling_zoom(_fp.camera if _fp != null else _camera, target), due[2])
 
 
-## Die Kamerafahrt des Standbilds auf `camera`: k = 0 ist das Spielbild, k = 1 ganz
-## herangefahren — die Ich-Sicht dreht sich zum Ziel und verengt den Bildwinkel, die
-## Iso-Sicht schwenkt hin und verkleinert den Ausschnitt. Den Ausgangsstand nimmt sie beim
-## ersten Aufruf (da steht das Bild schon, kein Wackeln und kein Rückstoß verschiebt ihn
-## mehr), und k = 0 stellt ihn genau wieder her. Statisch für die Werkbank (`--spelling`).
+## Die Kamerafahrt des Standbilds: k = 0 Spielbild, k = 1 ganz herangefahren. Den
+## Ausgangsstand nimmt sie beim ersten Aufruf, k = 0 stellt ihn genau wieder her.
+## Statisch für die Werkbank (`--spelling`).
 static func spelling_zoom(camera: Camera3D, target: Vector3) -> Callable:
 	var start := {}
 	if camera.projection != Camera3D.PROJECTION_ORTHOGONAL:
@@ -1756,17 +1645,14 @@ static func spelling_zoom(camera: Camera3D, target: Vector3) -> Callable:
 		camera.global_position = (start["pos"] as Vector3) + (start["pan"] as Vector3) * k
 
 
-## Das Standbild beginnt: es hält den Kampf an wie eine Feier. Ist die Welle in seinem
-## Vorlauf zu Ende gegangen (die Festung fiel), bleibt der Baum laufen.
+## Das Standbild hält den Kampf an wie eine Feier, außer die Festung fiel in seinem Vorlauf.
 func _on_spelling_started(duration_ms: int) -> void:
 	if _finished:
 		return
 	_on_celebration_started(duration_ms)
 
 
-## Das Standbild ist vorbei: der Kampf läuft weiter, und steht eine Feier derselben Antwort
-## an, kommt sie jetzt (sie hält den Kampf dann selbst wieder an und wertet danach die
-## aufgehobenen Antworten aus).
+## Das Standbild ist vorbei: weiter mit dem Kampf oder der anstehenden Feier derselben Antwort.
 func _on_spelling_finished() -> void:
 	get_tree().paused = false
 	# Fliegt noch ein Pfeil zu einem Monster mit Standbild, wartet dessen Feier mit.
@@ -1781,10 +1667,8 @@ func _on_spelling_finished() -> void:
 	_check_end()
 
 
-## Debug-Panel: feiert mit dem Wort des ersten Monsters auf dem Feld (sonst ohne Wort),
-## aber an der Meisterung vorbei — Lernstand und Spur bleiben unberührt.
-## Nicht in der Pause: das Debug-Panel ist dort bedienbar, aber die Feier gäbe am Ende den
-## Baum frei und nähme die Pause mit.
+## Debug-Panel: feiert mit dem Wort des ersten Monsters, an Lernstand und Spur vorbei.
+## Nicht in der Pause: die Feier gäbe am Ende den Baum frei.
 func _on_debug_celebration(word: bool) -> void:
 	if _paused_since_ms >= 0:
 		return
@@ -1803,8 +1687,7 @@ func _announce_badges(badges: Array) -> bool:
 	return not badges.is_empty()
 
 
-## Debug-Panel: zeigt reihum je eine Plakette jeder Art, ohne sie zu verdienen (keine Spur,
-## keine Datei). Nicht in der Pause, aus demselben Grund wie die Meister-Feier.
+## Debug-Panel: zeigt reihum je eine Plakette jeder Art, ohne Spur und Datei.
 func _on_debug_badge() -> void:
 	if _paused_since_ms >= 0:
 		return
@@ -1826,9 +1709,8 @@ func _flash_feedback(color: Color) -> void:
 	create_tween().tween_property(_flash, "modulate:a", 0.0, 0.4)
 
 
-## Momentaufnahme der Aufgabe eines Monsters für die Nach-Wellen-Auflösung.
-## `leaked` = wurde durchgelassen (falsch); source_id/learnable_id werden fürs
-## Flaggen der Vokabel im Reveal benötigt.
+## Momentaufnahme der Aufgabe eines Monsters für die Auflösung nach der Welle.
+## `leaked`: durchgelassen; source_id/learnable_id zum Flaggen im Reveal.
 func _task_snapshot(monster: Monster, leaked: bool) -> Dictionary:
 	return {
 		"prompt": String(monster.task.get("prompt", "")),
@@ -1851,11 +1733,8 @@ func _defeat(monster: Monster) -> void:
 	_check_end()
 
 
-## Sturmangriff (Späher-Baum): gebucht wird SOFORT wie bei jedem Treffer — Lernstand,
-## Erfahrung, Punkte, Spur —, nur das Bild wartet, bis der Spieler in das Monster gekracht
-## ist. Das Monster bleibt stehen und ist nicht mehr auf dem Feld (_active): es kann die
-## Festung nicht mehr erreichen und keine zweite Antwort fangen. Das Wellenende wartet den
-## Aufprall ab, sonst stünde die Statistik vor dem Knall.
+## Sturmangriff (Späher-Baum): gebucht wird sofort, nur das Bild wartet auf den Aufprall.
+## Das Monster bleibt stehen und ist aus _active heraus. Das Wellenende wartet den Aufprall ab.
 func _defeat_by_charge(monster: Monster) -> void:
 	_book_defeat(monster)
 	monster.halt()
@@ -1871,13 +1750,12 @@ func _defeat_by_charge(monster: Monster) -> void:
 	_check_end()
 
 
-## Bogen (Späher-Baum): wie der Sturmangriff — gebucht wird sofort, das Monster bleibt
-## stehen und platzt, wenn der Pfeil ankommt.
+## Bogen (Späher-Baum): wie der Sturmangriff, das Monster platzt, wenn der Pfeil ankommt.
 func _defeat_by_arrow(monster: Monster) -> void:
 	_book_defeat(monster)
 	monster.halt()
 	_underway += 1
-	# In den Kopf: das Ziel, das man sieht, ist das Schild darüber — und dort trifft es.
+	# In den Kopf: man zielt auf das Schild darüber.
 	var key := monster.get_instance_id()
 	var at := monster.global_position
 	await _fp.shoot_at(at + Vector3(0.0, monster.head_height(), 0.0))
@@ -1893,8 +1771,7 @@ func _defeat_by_arrow(monster: Monster) -> void:
 	_check_end()
 
 
-## Ein Fehlschuss mit dem Bogen: auf das Monster, das der Bildmitte am nächsten steht, und
-## daran vorbei. Die Rückmeldung (rot, Wackeln, Klang) kommt, wenn der Pfeil steckt.
+## Ein Fehlschuss: knapp am Monster nahe der Bildmitte vorbei, die Rückmeldung beim Einstecken.
 func _miss_with_arrow() -> void:
 	var points: Array[Vector3] = []
 	for monster in _hittable():
@@ -1917,16 +1794,14 @@ func _burst(monster: Monster, size: float = 1.5) -> void:
 	_leave(monster)
 
 
-## Das Bild zum Treffer mit dem Explosionspfeil: Feuerball, Rauch und Trümmer in der
-## Wortfarbe, und wer daneben steht, zuckt zusammen — nur das Bild, besiegt ist allein
+## Das Bild zum Treffer mit dem Explosionspfeil. Die Nachbarn zucken nur, besiegt ist allein
 ## das getroffene Monster.
 func _blast(monster: Monster) -> void:
 	_blast_at(monster)
 	_leave(monster)
 
 
-## Nur der Knall: Blast in der Wortfarbe, und die Nachbarn zucken. Explosionspfeil und
-## Wachkatapult teilen ihn.
+## Nur der Knall in der Wortfarbe, für Explosionspfeil und Wachkatapult.
 func _blast_at(monster: Monster) -> void:
 	var fx := Blast.new()
 	fx.setup(monster.word_color(), BLAST_SCALE)
@@ -1938,12 +1813,10 @@ func _blast_at(monster: Monster) -> void:
 			other.flinch(monster.global_position)
 
 
-## Wachkatapult (Bollwerk): ein Monster mit gemeisterter Aufgabe wird nach einer kurzen,
-## zufälligen Weile abgeschossen. Es läuft dabei weiter, das Katapult hält auf den Ort vor,
-## an dem es beim Einschlag sein wird (catapult_lead). Trifft der Spieler es vorher selbst,
-## zählt sein Treffer, und der Stein schlägt ins Leere. Erledigt ist es danach, aber nicht
-## beantwortet: kein Lernstand, keine Erfahrung, keine Punkte (monster_catapulted statt
-## monster_defeated), und in der Auflösung nach der Welle steht es nicht.
+## Wachkatapult (Bollwerk): ein Monster mit gemeisterter Aufgabe wird nach einer zufälligen
+## Weile abgeschossen. Trifft der Spieler vorher, zählt sein Treffer. Ein Katapulttreffer
+## ist nicht beantwortet: kein Lernstand, keine Erfahrung, keine Punkte, keine Auflösung
+## (monster_catapulted statt monster_defeated).
 func _catapult_later(monster: Monster, gen: int) -> void:
 	# process_always = false: in der Meister-Feier wartet auch das Katapult.
 	await get_tree().create_timer(randf_range(CATAPULT_DELAY_MIN, CATAPULT_DELAY_MAX), false).timeout
@@ -1988,9 +1861,8 @@ static func catapult_flight_time(from: Vector3, to: Vector3) -> float:
 	return clampf(from.distance_to(to) * CATAPULT_TIME_PER_M, CATAPULT_TIME_MIN, CATAPULT_TIME_MAX)
 
 
-## Wohin das Katapult zielt, damit der Stein das Monster trifft: dorthin, wo es nach
-## Drehen, Ausschlagen und Flug steht. Monster laufen geradeaus mit festem Tempo, also ist
-## das eine Gerade; die Flugzeit hängt selbst am Ziel, zweimal nachrechnen reicht.
+## Wohin das Katapult zielt: wo das Monster nach Drehen, Ausschlagen und Flug steht. Die
+## Flugzeit hängt am Ziel, zweimal nachrechnen reicht.
 static func catapult_lead(from: Vector3, at: Vector3, velocity: Vector3) -> Vector3:
 	var windup := FortressModel.CATAPULT_TURN_TIME + FortressModel.CATAPULT_SWING_TIME
 	var target := at
@@ -1999,9 +1871,7 @@ static func catapult_lead(from: Vector3, at: Vector3, velocity: Vector3) -> Vect
 	return target
 
 
-## Das Katapult, das dem Ziel am nächsten steht, oder null, wenn keins mehr steht. Es dreht
-## sich zum Ziel und schlägt aus, der Stein fliegt im Scheitel des Wurfs los
-## (FortressModel.fire).
+## Das Katapult, das dem Ziel am nächsten steht, oder null. Es wirft über FortressModel.fire.
 func _nearest_catapult(target: Vector3) -> Node3D:
 	var best: Node3D = null
 	for turret in _catapults:
@@ -2014,12 +1884,9 @@ func _nearest_catapult(target: Vector3) -> Node3D:
 
 ## Was jeder Treffer nach seinem Knall tut: Klang, „+XP" und das Monster geht.
 func _leave(monster: Monster) -> void:
-	# Hier und nicht in _spawn_explosion(): denselben Effekt nutzen auch der Festungsausbau
-	# und der Aufschlag eines durchgelassenen Monsters — die klingen nicht gleich.
+	# Nicht in _spawn_explosion(): Festungsausbau und Aufschlag klingen anders.
 	Sfx.play(&"monster_kill")
-	# Aufsteigende „+XP"-Animation an der Stelle des Monsters. Erfahrung und nicht die
-	# Punkte: sie ist der Lernfortschritt, und sie steht im HUD als Balken beim Namen —
-	# die Zahl fliegt dorthin, wo sie sich sichtbar auswirkt. Gleiche Farbe wie der Balken.
+	# Erfahrung statt Punkte, in der Farbe ihres Rings im HUD.
 	_spawn_xp_popup(monster.position + Vector3(0.0, 2.0, 0.0), monster.xp)
 	monster.queue_free()
 
@@ -2029,19 +1896,16 @@ func _book_defeat(monster: Monster) -> void:
 	_active.erase(monster)
 	_wave_correct += 1
 	_wave_played_tasks.append(_task_snapshot(monster, false))
-	# Erfahrung SOFORT verbuchen, wie das Gold in der Geldbörse: sie gehört zum Profil
-	# (PlayerLevel), nicht zum Lauf, und ein Absturz mitten in der Welle darf sie nicht
-	# kosten. Der Zähler daneben ist nur für den Wellenabschluss.
+	# Erfahrung gehört zum Profil (PlayerLevel), gespeichert wird an der Wellengrenze.
+	# Der Zähler daneben ist nur für den Wellenabschluss.
 	PlayerLevel.gain(monster.xp)
 	_wave_xp += monster.xp
-	# Reward aus der monster_task_rule an GameState durchreichen (Score).
 	var info := monster.monster_def.duplicate()
 	info["reward"] = monster.reward
 	EventBus.monster_defeated.emit(info, true)
 
 
-## Deutlich sichtbarer 3D-Text (+XP), der an der Trefferstelle aufpoppt, aufsteigt
-## und ausblendet. Als Label3D (Billboard) im Stil der vorhandenen Monster-Beschriftungen.
+## „+XP“ an der Trefferstelle: poppt auf, steigt und blendet aus.
 func _spawn_xp_popup(pos: Vector3, amount: int) -> void:
 	var label := xp_label("+%d XP" % amount)
 	_screen_size_in_first_person(label, POPUP_SCREEN_SCALE)
@@ -2050,17 +1914,13 @@ func _spawn_xp_popup(pos: Vector3, amount: int) -> void:
 	add_child(label)
 	var tw := create_tween()
 	tw.set_parallel(true)
-	# Kräftiger Pop beim Erscheinen.
 	tw.tween_property(label, "scale", Vector3.ONE * 1.15, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	# Deutlich höher aufsteigen, über die volle Dauer.
 	tw.tween_property(label, "position:y", pos.y + 4.0, 1.2).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	# Erst gegen Ende ausblenden, damit die Zahl gut lesbar bleibt.
 	tw.tween_property(label, "modulate:a", 0.0, 0.5).set_delay(0.7)
 	tw.chain().tween_callback(label.queue_free)
 
 
-## Das Schild des „+XP"-Popups, ohne Bewegung. Eigene Funktion, damit das Vorwärmen
-## (FxWarmup) dieselbe Schrift in derselben Größe zeichnet.
+## Das Schild des „+XP“-Popups, ohne Bewegung; FxWarmup zeichnet damit vor.
 static func xp_label(text: String) -> Label3D:
 	var label := Label3D.new()
 	label.text = text
@@ -2077,13 +1937,11 @@ static func xp_label(text: String) -> Label3D:
 ## Wie groß „+XP" in der Ich-Sicht steht (gegenüber FP_TEXT_PIXEL_SIZE).
 const POPUP_SCREEN_SCALE := 2.0
 
-## Bildgröße eines Textes der Größe 64 in der Ich-Sicht (Label3D.fixed_size rechnet damit
-## je Bildhöhe) — so groß stand dort früher das Prompt-Schild.
+## Bildgröße eines Textes der Größe 64 in der Ich-Sicht (Label3D.fixed_size, je Bildhöhe).
 const FP_TEXT_PIXEL_SIZE := 0.0009
 
-## In der Ich-Sicht bekommt ein aufsteigender Text eine feste Bildgröße: in Weltgröße
-## füllte er nach einem Sturmangriff aus der Nähe das ganze Bild. `scale` ist die Größe
-## gegenüber FP_TEXT_PIXEL_SIZE.
+## In der Ich-Sicht feste Bildgröße, sonst füllte der Text aus der Nähe das Bild. `scale`
+## ist die Größe gegenüber FP_TEXT_PIXEL_SIZE.
 func _screen_size_in_first_person(label: Label3D, scale: float) -> void:
 	if _fp != null:
 		_size_for_first_person(label, scale)
@@ -2094,7 +1952,6 @@ func _size_for_first_person(label: Label3D, scale: float) -> void:
 	label.pixel_size = FP_TEXT_PIXEL_SIZE * scale * 64.0 / float(label.font_size)
 
 
-## Instanziiert einen kurzlebigen Explosionseffekt an der Weltposition.
 func _spawn_explosion(pos: Vector3, color: Color, scale: float) -> void:
 	var fx := Explosion.new()
 	fx.setup(color, scale)
@@ -2111,24 +1968,20 @@ func _settle(seconds: float) -> void:
 	_check_end()
 
 
-## Monster hat sich beim Erreichen der Festung selbst freigegeben.
+## Das Monster hat die Festung erreicht und sich selbst freigegeben.
 func _on_monster_reached_goal(monster: Monster) -> void:
 	if not _active.has(monster):
 		return
 	_active.erase(monster)
 	_wave_leaked += 1
-	# Durchgelassene Aufgabe für die Auflösung nach der Welle merken (vor dem
-	# Niederlage-Check, damit auch das die Festung fällende Monster dabei ist).
+	# Vor dem Niederlage-Check, damit auch das letzte Monster in der Auflösung steht.
 	var snapshot := _task_snapshot(monster, true)
 	_wave_leaked_tasks.append(snapshot)
 	_wave_played_tasks.append(snapshot)
 	_spawn_explosion(monster.position + Vector3(0.0, 1.0, 0.0), Color(1.0, 0.45, 0.12), 2.6)
 	_shake(0.9)
-	# Tiefer als der Kill-Sound (600 statt 809 Hz Schwerpunkt): gleiche Ereignisklasse,
-	# gegenteilige Bedeutung — das muss man auch dann auseinanderhalten, wenn beides
-	# kurz hintereinander kommt.
+	# Tiefer als der Kill-Sound (600 statt 809 Hz Schwerpunkt), damit beide unterscheidbar sind.
 	Sfx.play(&"fortress_hit")
-	# Monster durchgelassen = Aufgabe nicht rechtzeitig abgerufen -> als Fehler verbuchen.
 	var task_id := str(monster.task.get("learnable_id", ""))
 	PlayerProgress.record(task_id, false, 0, float(monster.task.get("initial_confidence", -1.0)))
 	# 0 ms: ein durchgelassenes Monster hat keine gemessene Antwortzeit.
@@ -2147,21 +2000,18 @@ func _check_end() -> void:
 	# Ein Sturmangriff oder Pfeil ist noch unterwegs: sein Aufprall ruft hierher zurück.
 	if _underway > 0:
 		return
-	# Meistert das letzte Monster etwas, wird erst gefeiert und dann abgerechnet —
-	# _on_celebration_finished ruft hierher zurück.
+	# Erst feiern, dann abrechnen: _on_celebration_finished ruft hierher zurück.
 	if _celebration.is_busy() or _spelling.is_busy():
 		return
-	# Ein Zauber oder eine Explosion ist noch zu sehen: SpellFx.settled bzw. _settle ruft
-	# hierher zurück.
+	# Ein Zauber oder eine Explosion läuft noch: SpellFx.settled bzw. _settle ruft zurück.
 	if _spell_fx.is_busy() or _settling > 0:
 		return
 	if _spawned >= _total and _active.is_empty():
-		# Die Plaketten der gewonnenen Welle kommen noch im Kampf; nach ihrer Feier ruft
-		# _on_celebration_finished hierher zurück.
+		# Die Plaketten der gewonnenen Welle feiern noch im Kampf, danach zurück hierher.
 		if not _wave_badges_done:
 			_wave_badges_done = true
 			var low := float(_wave_low_hp) / float(maxi(1, GameState.fortress_max_health))
-			if _announce_badges(_badges.wave_won(low)):
+			if _announce_badges(_badges.wave_won(low, _last_left)):
 				return
 		EventBus.wave_cleared.emit(GameState.current_wave)
 		_finish_wave(true)
@@ -2173,6 +2023,8 @@ func _finish_wave(won: bool) -> void:
 		return
 	_finished = true
 	_last_won = won
+	# Die Wellengrenze (ADR 0024). Nach wave_cleared, damit das Sitzungs-Log die Welle zählt.
+	SaveCoordinator.commit("wave_end")
 	if _sun_cycle != null:
 		_sun_cycle.hold = false
 	_set_view_active(false)
@@ -2183,21 +2035,16 @@ func _finish_wave(won: bool) -> void:
 	_spell_fx.haze(false)
 	_pause_button.visible = false
 	_view_button.visible = false
-	# Endet die Welle, während die Rückfrage offen ist, gibt es nichts mehr aufzulösen —
-	# und nichts mehr abzubrechen: nach dem Wellenende führt Stufe 2 weiter.
+	# Eine offene Rückfrage erledigt sich: nach dem Wellenende führt Stufe 2 weiter.
 	_fast_resolve_confirm.hide()
 	_abort_confirm.hide()
 	_abort_paused_here = false
 	# Cutscene, Auflösung und Statistik immer in Normaltempo.
 	_slow_motion.stop()
-	# VOR der Cutscene: der Festungsausbau bringt seinen eigenen goldenen Blitz mit, die
-	# Fanfare soll ihn ankündigen statt mit ihm zu kollidieren. Bei Niederlage legt sich
-	# der Sting über die Festungsexplosion desselben Monsters — die trägt die Wucht,
-	# dieser hier die Stimmung.
+	# Vor der Cutscene: die Fanfare kündigt den Festungsausbau an, statt mit ihm zu kollidieren.
 	Sfx.play(&"wave_cleared" if won else &"fortress_destroyed")
-	# Festungsausbau erst jetzt (nach gewonnener Welle), als Cutscene VOR der Statistik.
-	# Die HP wachsen VOR der Cutscene mit: das Banner nennt sie, und die Statistik danach
-	# soll den neuen Stand zeigen. Der HUD-Balken zieht mit dem nächsten Wellenstart nach.
+	# Festungsausbau nach gewonnener Welle, vor der Statistik. Die HP wachsen vor der
+	# Cutscene, das Banner nennt sie schon.
 	if won:
 		var new_tier := _current_fortress_tier()
 		if new_tier > _fortress_tier:
@@ -2205,17 +2052,13 @@ func _finish_wave(won: bool) -> void:
 			_fortress_tier = new_tier
 			GameState.grow_fortress(bonus)
 			await _play_upgrade_cutscene(new_tier, bonus)
-	# Vokabeln mit korrekter Übersetzung auflösen (Sieg wie Niederlage), als
-	# Zwischenschritt VOR der Statistik. Übergeben wird die volle Liste; das Reveal
-	# animiert die durchgelassenen zuerst und lässt danach alle durchblättern.
+	# Auflösung vor der Statistik, bei Sieg wie Niederlage, mit der vollen Liste.
 	if not _wave_played_tasks.is_empty():
 		await _leak_reveal.play(_wave_played_tasks)
 	var total := _wave_correct + _wave_leaked
 	var accuracy := 100.0 * float(_wave_correct) / float(max(1, total))
-	# Belohnung der Welle: die Punkte tragen die Schwierigkeit der besiegten Monster
-	# schon in sich (siehe ChestReward), die Güte der Kiste kommt aus der Genauigkeit.
-	# Gerechnet wird hier und nicht im Screen: was eine Welle wert ist, gehört zum Lauf,
-	# nicht zu seiner Anzeige.
+	# Belohnung (ChestReward): die Punkte tragen die Schwierigkeit, die Güte der Kiste kommt
+	# aus der Genauigkeit. Gerechnet wird hier, nicht im Screen.
 	var score_gained := GameState.score - _score_at_start
 	_stats.show_stats({
 		"won": won,
@@ -2230,23 +2073,18 @@ func _finish_wave(won: bool) -> void:
 		"mastered": PlayerProgress.mastered_count(),
 		"fortress_tier": _fortress_tier,
 		"chest": ChestReward.for_wave(score_gained, _wave_correct, _wave_leaked),
-		# Erfahrung: der Zuwachs DIESER Welle und die Zahl der Aufstiege darin. Den
-		# Gesamtstand liest der Screen bei PlayerLevel — verbucht ist er längst (siehe
-		# _defeat), hier steht nur, was die Welle daran geändert hat.
+		# Nur der Zuwachs dieser Welle; den Gesamtstand liest der Screen bei PlayerLevel.
 		"review": not _wave_played_tasks.is_empty(),
 		"xp_gained": _wave_xp,
 		"levels_gained": PlayerLevel.level - _level_at_start,
-		# Sitzungsbilanz für Stufe 2 (Issue #12). Gebaut JETZT und nicht beim Rückweg ins
-		# Menü: SessionLog.end() leert die laufende Sitzung, und die Bilanz soll schon
-		# dastehen, bevor jemand auf den Menü-Knopf drückt.
+		# Sitzungsbilanz für Stufe 2: jetzt, denn SessionLog.end() leert die Sitzung.
 		"session": RunBalance.build(SessionLog.current(),
 				PlayerProgress.records_for_display(), _wave_number),
 	})
 
 
-## „◂ Zurück" auf dem Ergebnis: die Antworten der Welle noch einmal, ohne Durchlauf
-## (Issue #52). Der Screen wird nur ausgeblendet, nicht neu befüllt — Kiste und Wahl
-## bleiben, wie sie waren.
+## „◂ Zurück“ auf dem Ergebnis: die Antworten der Welle noch einmal, ohne Durchlauf. Der
+## Screen wird nur ausgeblendet, Kiste und Wahl bleiben.
 func _on_review_requested() -> void:
 	if _wave_played_tasks.is_empty():
 		return
@@ -2255,21 +2093,16 @@ func _on_review_requested() -> void:
 	_stats.resume()
 
 
-## Der Spieler hat die Schatzkiste aufgedrückt: das Gold gehört ihm. Verbucht wird hier
-## und nicht im Screen — das Gold hängt am Profil (Wallet), und der Screen soll nichts
-## schreiben, was er nur anzeigt. Die Geldbörse sichert sofort: ein Absturz auf dem Weg
-## in die nächste Welle darf die Kiste nicht rückgängig machen.
+## Die Schatzkiste ist offen: Gold ins Wallet, sofort gespeichert, damit ein Absturz die
+## Kiste nicht rückgängig macht.
 func _on_reward_collected(gold: int) -> void:
 	Wallet.earn(gold, true)
+	SaveCoordinator.commit("chest")
 
 
-## Spieler hat auf dem Statistik-Screen die nächste Welle gerufen. Die Wahl ist RELATIV:
-## `delta` (-2..+2) verschiebt die aktuelle Schwierigkeit, begrenzt auf 1..5.
+## Die nächste Welle: `delta` (-2..+2) verschiebt die Schwierigkeit relativ, begrenzt auf 1..5.
 func _on_next_wave_requested(delta: int) -> void:
-	# Eine gefallene Festung beendet den Lauf: der Statistik-Screen blendet die
-	# Schwierigkeitswahl und den Startknopf dann aus (wave_stats.gd). Der Riegel steht
-	# hier nochmal, damit die Regel nicht allein an der Sichtbarkeit eines Knopfes hängt
-	# — mit 0 HP wäre die Folgewelle ohnehin beim ersten Treffer wieder verloren.
+	# Eine gefallene Festung beendet den Lauf, auch wenn der Knopf schon fehlt.
 	if not _last_won:
 		return
 	_difficulty = clampi(_difficulty + delta, 1, 5)
@@ -2277,13 +2110,13 @@ func _on_next_wave_requested(delta: int) -> void:
 	_start_next_wave()
 
 
-## Spieler kehrt vom Statistik-Screen ins Menü zurück. Fortschritt explizit sichern
-## (der Niederlage-Pfad emittiert kein wave_cleared) und die Menü-Szene laden.
+## Vom Statistik-Screen ins Menü: rasten, Lauf beenden, Sitzungs-Log speichern.
 func _on_back_to_menu() -> void:
-	PlayerProgress.save_progress()
 	if can_rest(RunRequest.is_level(), _last_won):
-		_rest()
+		_rest(_wave_number + 1)
 	_report_run_ended()
+	SaveCoordinator.commit("run_end")
+	_saved_on_exit = true
 	_leave_battle()
 
 
@@ -2293,22 +2126,17 @@ static func can_rest(is_level: bool, last_won: bool) -> bool:
 	return is_level and last_won
 
 
-## Legt den Lauf auf den Platz seines Buchs. Weiter geht es mit der nächsten Welle und
-## der zuletzt gespielten Schwierigkeit — die Wahl auf Stufe 2 galt der Welle, die jetzt
-## nicht mehr kommt.
-func _rest() -> void:
-	var next_wave := _wave_number + 1
+## Legt den Lauf auf den Platz seines Buchs: an der Wellengrenze mit der nächsten Welle und
+## der zuletzt gespielten Schwierigkeit, mitten in der Welle mit der angefangenen.
+func _rest(next_wave: int, wave := {}) -> void:
 	RunSave.store(RunSave.build(RunRequest.level(), next_wave, _difficulty,
-			GameState.run_snapshot(), _run_started_at, int(Time.get_unix_time_from_system())),
-			UserSettings.active_profile())
-	EventBus.run_suspended.emit(next_wave)
+			GameState.run_snapshot(), _run_started_at, int(Time.get_unix_time_from_system()),
+			wave), UserSettings.active_profile())
+	EventBus.run_suspended.emit(next_wave, int(wave.get("remaining", 0)))
 
 
-## Setzt einen begonnenen Lauf fort (`state` aus RunRequest.take_resume) oder merkt sich
-## den Beginn eines neuen. Läuft nach `apply_skills` und `run_started`: das Maximum der
-## Festung ist mit den heutigen Skills gerechnet, die Stände kommen darauf. Der
-## Speicherstand ist damit verbraucht — eine schlecht laufende Welle lässt sich nicht
-## durch Neuladen ungeschehen machen.
+## Setzt einen Lauf fort (`state` aus RunRequest.take_resume) oder merkt sich einen neuen.
+## Nach `apply_skills` und `run_started`, der Speicherstand ist danach verbraucht.
 func _resume_run(state: Dictionary) -> void:
 	_run_started_at = int(SessionLog.current().get("started_at", 0))
 	if state.is_empty():
@@ -2317,16 +2145,15 @@ func _resume_run(state: Dictionary) -> void:
 	_wave_number = maxi(1, int(state.get("next_wave", 1)))
 	_difficulty = clampi(int(state.get("difficulty", _difficulty)), 1, 5)
 	_resumed = true
+	_open_wave = RunSave.open_wave(state)
 	_run_started_at = int(state.get("run_started_at", _run_started_at))
-	RunSave.discard(str((state.get("level", {}) as Dictionary).get("book", "")),
+	var saved_level: Dictionary = state.get("level", {})
+	RunSave.discard(str(saved_level.get("book", "")), int(saved_level.get("unit", 0)),
 			UserSettings.active_profile())
 	EventBus.run_resumed.emit(_wave_number, _run_started_at, Array(state.get("added", [])))
 
 
-## Meldet das Ende des Laufs mit dem, was nur hier bekannt ist. Beide Ausgänge gehen
-## darüber — der Rückweg über den Statistik-Screen und der Abbruch mitten in der Welle.
-## Ein freiwilliger Ausstieg ist genauso ein Sitzungsende wie eine gefallene Festung;
-## SessionLog.end() ist gegen doppelte Meldung abgesichert.
+## Meldet das Ende des Laufs, bei Rückweg wie Abbruch; doppelt schadet nicht.
 func _report_run_ended() -> void:
 	EventBus.run_ended.emit({
 		"wave_reached": _wave_number,

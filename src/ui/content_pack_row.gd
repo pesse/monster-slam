@@ -1,6 +1,5 @@
 extends VBoxContainer
-## Eine Zeile in der Inhalte-Verwaltung. Vorlage für den Content-Manager, der sie je Pack
-## instanziiert (siehe content_manager.gd).
+## Eine Zeile je Pack in der Inhalte-Verwaltung.
 
 signal selection_changed
 signal redeem_requested(code: String)

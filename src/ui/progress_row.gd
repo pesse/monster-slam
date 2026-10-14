@@ -1,23 +1,14 @@
 class_name ProgressRow
 extends VBoxContainer
-## Eine Fortschrittszeile der Statistik: Bezeichnung links, Balken in der Mitte, Zählung
-## rechts — „Access 2, Unit 6 | ████████░░ | 18 von 24" (Issue #8). Ein Klick auf die
-## Bezeichnung klappt die Wörter der Gruppe darunter auf, jedes mit seinem Prozentstand.
-##
-## Das Layout liegt in progress_row.tscn (im Editor gestaltbar), die Listen befüllen es
-## über setup() — dieselbe Aufteilung wie bei StatRow. Der Balken macht aus der Summe ein
-## Ziel: „18 von 24" liest man anders als „18 gemeistert"; die aufgeklappte Liste sagt
-## dann, WELCHE 6 noch fehlen — die Zahl allein beantwortet das nicht.
-##
-## Die Wortzeilen kommen erst beim ersten Aufklappen (`words` ist ein Callable, kein
-## Array): der Fortschritts-Reiter hat eine Zeile je Unit und Bonus, und alle Listen
-## im Voraus zu bauen hieße, den halben Katalog als Knoten in den Baum zu hängen.
+## Fortschrittszeile der Statistik: Bezeichnung, Balken, „18 von 24". Ein Klick auf die
+## Bezeichnung klappt die Wörter der Gruppe mit ihrem Stand auf. Die Wortzeilen entstehen
+## erst beim ersten Aufklappen (`words` ist ein Callable), damit nicht der halbe Katalog als
+## Knoten im Baum hängt.
 
 const ROW_SCENE := preload("res://scenes/ui/stat_row.tscn")
 
-## Breite der Markierungsspalte in der Wortliste: „✓" plus ein Sternchen je weiterer
-## Aufgabe zum Wort. Sechs Zeichen sind das Maximum, das der Katalog hergibt (ein
-## Adjektiv mit Gegenteil, zwei Synonymen und einer Verwechslung).
+## Breite der Markierungsspalte in der Wortliste (px): „✓" plus ein Sternchen je weiterer
+## Aufgabe, höchstens sechs Zeichen.
 const MARK_WIDTH := 78
 
 ## Liefert beim Aufklappen die Zeilen dieser Gruppe als { label, value, mark }.
@@ -28,8 +19,6 @@ var _filled := false
 
 func _ready() -> void:
 	var header := $Row/Header as Button
-	# Kein Fokusrahmen: die Zeile ist ein Aufklapper in einer langen Liste, kein Knopf,
-	# den man ertasten soll.
 	header.focus_mode = Control.FOCUS_NONE
 	header.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	header.pressed.connect(toggle)
@@ -46,10 +35,7 @@ func setup(name_text: String, done: int, total: int, words := Callable(), tasks 
 	bar.value = done
 	($Row/Count as Label).text = "%d von %d" % [done, total]
 	_update_header()
-	# EIN Hinweis, an der Zeile. Vorher stand er zweimal da — einmal hier und einmal am
-	# Kopf-Knopf —, weil Godots Tooltip-Suche am ersten Kind mit `MOUSE_FILTER_STOP`
-	# abbricht und deshalb nie bei der Zeile ankam. `Hints` sucht ohne diesen Abbruch nach
-	# oben weiter, und damit spricht die Zeile auch für ihren Knopf und ihren Balken.
+	# Ein Hinweis an der Zeile gilt auch für Knopf und Balken (`Hints` sucht nach oben).
 	Hints.attach(self, name_text, "%d von %d %s gemeistert" % [done, total,
 			"Aufgaben" if tasks else "Wörtern"],
 			("Klick zeigt die %s." % ("Aufgaben" if tasks else "Wörter")) if _words.is_valid() else "")
@@ -59,8 +45,7 @@ func is_expanded() -> bool:
 	return ($Words as Control).visible
 
 
-## Klappt die Wortliste auf oder zu. Öffentlich, damit der Test nicht den Knopf drücken
-## muss, um die Liste zu sehen.
+## Klappt die Wortliste auf oder zu.
 func toggle() -> void:
 	if not _words.is_valid():
 		return
@@ -71,8 +56,7 @@ func toggle() -> void:
 	_update_header()
 
 
-## Baut eine schon aufgeklappte Liste neu (die Sortierung hat gewechselt); eine
-## zugeklappte holt ihre Zeilen ohnehin erst beim nächsten Aufklappen.
+## Baut eine schon gefüllte Liste nach einem Sortierwechsel neu.
 func refill() -> void:
 	if not _filled:
 		return
@@ -97,8 +81,6 @@ func _fill() -> void:
 	for row in rows:
 		var entry := ROW_SCENE.instantiate() as StatRow
 		list.add_child(entry)
-		# Haken plus bis zu vier Sternchen passen nicht in die Markierungsspalte einer
-		# gewöhnlichen Zeile (siehe MARK_WIDTH).
 		entry.set_mark_width(MARK_WIDTH)
 		entry.setup(str(row["label"]), str(row["value"]), str(row.get("mark", "")),
 				str(row.get("hint", "")), row.get("hint_list", []))

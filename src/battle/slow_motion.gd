@@ -1,26 +1,19 @@
 class_name SlowMotion
 extends Node
-## Nimmt langsam Tippenden den Zeitdruck: solange die Eingabe offen ist (EventBus.typing_started
-## bis typing_stopped), läuft die Zeit langsamer. Über Engine.time_scale, damit Bewegung,
-## Animationen, Spawn-Timer und Tweens gleichmäßig mitgehen. Die Rampe rechnet in Echtzeit —
-## mit `delta` würde sie sich selbst mitverlangsamen.
+## Solange die Eingabe offen ist (EventBus.typing_started bis typing_stopped), läuft die Zeit
+## über Engine.time_scale langsamer. Die Rampe rechnet in Echtzeit, mit `delta` würde sie
+## sich selbst mitverlangsamen.
 
-## Grundwerte OHNE Skills. Wie in GameState stehen die Konstanten für den Stand ohne
-## Bäume; gerechnet wird mit den Feldern darunter, die `apply_skills()` anhebt.
+## time_scale beim Tippen, ohne Skills; gerechnet wird mit `factor`.
 const BASE_FACTOR := 0.15
 const RAMP_PER_SEC := 6.0   ## Faktoränderung pro Echtzeit-Sekunde
-## Tempo beim „Schnell auflösen" (WaveRunner). Lebt HIER, weil time_scale diesem Knoten
-## gehört: jede fremde Änderung zöge _process wieder auf 1 zurück. Höher als 8 ruckelt —
-## die Physik holt höchstens 8 Schritte je Frame nach, darüber wird nur jeder Schritt länger.
-## Das Ziel wird trotzdem angesteuert (Monster.gd prüft das Ziel mit >=, kein Schritt springt
-## darüber), nur eben mit gröberen Schritten.
+## time_scale beim „Schnell auflösen". Über 8 holt die Physik nicht mehr jeden Schritt
+## nach, die Schritte werden nur gröber; Monster prüfen ihr Ziel mit >=.
 const FAST_FORWARD_FACTOR := 16.0
-## Eigene, flachere Rampe: das Feld soll sichtbar Fahrt aufnehmen (gut 3 s bis 16×), statt
-## schlagartig loszurasen — beim Tippen dagegen muss die Zeitlupe sofort greifen.
+## Faktoränderung pro Echtzeit-Sekunde beim Vorspulen.
 const FAST_FORWARD_RAMP_PER_SEC := 5.0
 
-## Der effektive Wert des laufenden Laufs: Grundwert plus Boni des Zeitwandler-Baums.
-## Alles, was rechnet, liest DIESEN — nie die Konstante.
+## Der effektive Faktor des laufenden Laufs: Grundwert plus Boni des Zeitwandler-Baums.
 var factor: float = BASE_FACTOR
 
 var _last_tick_ms: int = 0
@@ -59,20 +52,15 @@ func _publish_intensity(value: float) -> void:
 	EventBus.slow_motion_changed.emit(clamped)
 
 
-## Legt die Boni der gelernten Skills auf den Grundwert: der Zeitwandler vertieft den
-## Faktor. Gehört zum Laufbeginn (siehe WaveRunner._ready) und nimmt dasselbe Dictionary wie
-## GameState.apply_skills, damit es EINE Quelle der Boni gibt.
-##
-## Der Faktor wird nach unten geklemmt (SkillTree.MIN_SLOW_FACTOR): time_scale 0 wäre ein
-## eingefrorenes Spiel.
+## Legt die Skill-Boni (wie GameState.apply_skills) auf den Grundwert, zu Laufbeginn.
+## Nach unten geklemmt auf SkillTree.MIN_SLOW_FACTOR: time_scale 0 friert das Spiel ein.
 func apply_skills(bonuses: Dictionary) -> void:
 	factor = clampf(BASE_FACTOR + float(bonuses.get("slow_factor", 0.0)),
 			SkillTree.MIN_SLOW_FACTOR, 1.0)
 
 
-## Spult bis zum nächsten stop() vor — den ruft _finish_wave ohnehin, danach laufen
-## Auflösung und Statistik wieder in Normaltempo. Die Rampe bleibt: ein Sprung auf 16×
-## sähe aus wie ein Ruckler. Die Vignette bleibt aus, weil _publish_intensity auf 0..1 klemmt.
+## Spult mit Rampe bis zum nächsten stop() vor. Die Vignette bleibt aus, weil
+## _publish_intensity auf 0..1 klemmt.
 func fast_forward() -> void:
 	_held_open = false
 	_fast_forward = true

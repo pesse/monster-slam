@@ -13,6 +13,9 @@ name: Melde-Endpunkt
 # Dazu der Pruefstand des Statistik-Endpunkts (ADR 0021): App-Schluessel statt
 # Personen-Token, Snapshot je Tag, Spur in Stuecken, gzip-Grenzen, Kontingente.
 #
+# Dazu der Selbsttest von tools/stats/rebuild_save.py: es baut die Pruefsummen-Huelle des
+# Spielstands (ADR 0024) in Python nach; weicht sie ab, laedt „Laden…“ die Datei nicht.
+#
 # Dazu der Selbsttest von tools/report/to_issues.py: das Skript erkennt an Markern im
 # Issue-Text, welche Meldung schon eingetragen ist. Faellt das Erkennen aus, schreibt es
 # jede Meldung erneut — und zwar in ein echtes Repo. Die reinen Funktionen (Marker lesen,
@@ -61,6 +64,9 @@ jobs:
 
       - name: Statistik-Auswertung
         run: python3 tools/stats/report.py --self-test
+
+      - name: Spielstand aus Snapshots
+        run: python3 tools/stats/rebuild_save.py --self-test
 
       - name: Buendelung zu Issues
         run: python3 tools/report/to_issues.py --self-test

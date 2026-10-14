@@ -1,10 +1,6 @@
 extends Control
 ## Overlay des App-Kanals: zeigt an, was UpdateService gerade weiß, und löst die zwei
-## Schritte aus (laden, installieren).
-##
-## Das Layout liegt in update_dialog.tscn; hier wird nur bedient und angezeigt. Geöffnet
-## wird über `open()` (Klick auf das Abzeichen im Startmenü) — die Startprüfung selbst
-## drängt sich nicht auf.
+## Schritte aus (laden, installieren). Öffnet nur über `open()`, nie von selbst.
 
 ## Bezeichnung des Aktionsknopfes je Zustand. Zustände ohne Eintrag haben keine Aktion.
 const ACTION_LABEL := {
@@ -17,7 +13,6 @@ const ACTION_LABEL_BROWSER := {
 	UpdateService.State.AVAILABLE: "Im Browser laden",
 }
 
-## Wo im Browser geladen wird, sagt der Dialog vorher, was danach zu tun ist.
 const BROWSER_HINT := "Lädt die neue Fassung im Browser. Danach das Spiel beenden und die alte App durch die neue ersetzen — der Spielstand bleibt erhalten."
 
 const STATUS_TEXT := {
@@ -104,7 +99,7 @@ func _render() -> void:
 
 	var loading := state == UpdateService.State.DOWNLOADING
 	_progress.visible = loading
-	# -1 heißt „Gesamtgröße unbekannt": dann zeigt der Balken nichts vor, was er nicht weiß.
+	# -1 heißt „Gesamtgröße unbekannt“.
 	_progress.indeterminate = loading and UpdateService.progress < 0.0
 	_progress.value = maxf(UpdateService.progress, 0.0)
 

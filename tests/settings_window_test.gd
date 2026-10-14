@@ -92,6 +92,27 @@ func test_the_reset_asks_inside_the_window() -> void:
 	remove_child(screen)
 
 
+## „Laden…" zeigt vor dem Einspielen, was in der Datei steht (ADR 0024). Bestätigt wird
+## nicht: das Autoload speichert im Test ohnehin nicht.
+func test_loading_a_save_asks_with_a_preview() -> void:
+	var screen := _window()
+	var dialog := screen.get_node("%ImportDialog") as ConfirmDialog
+	screen.call("_check_import", "res://tests/fixtures/rebuilt_save.zip")
+	assert_bool(dialog.visible).is_true()
+	assert_str((dialog.get_node("%Body") as Label).text).contains("Änne").contains("Erfahrung")
+	(dialog.get_node("%CancelButton") as Button).pressed.emit()
+	assert_dict(screen.get("_import_pending")).is_empty()
+	remove_child(screen)
+
+
+func test_a_broken_file_only_says_so() -> void:
+	var screen := _window()
+	screen.call("_check_import", "res://tests/fixtures/does-not-exist.zip")
+	assert_bool((screen.get_node("%ImportDialog") as Control).visible).is_false()
+	assert_str((screen.get_node("%SaveStatus") as Label).text).is_not_empty()
+	remove_child(screen)
+
+
 ## Das Fenster passt in die Bezugsgröße: Kopf und Reiter stehen, der Rest scrollt.
 func test_the_window_fits_the_reference_size() -> void:
 	var screen := _window()

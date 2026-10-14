@@ -1,16 +1,9 @@
 class_name HandbookLink
 extends Button
-## Der Absprung ins Handbuch: ein kleines „?“ neben dem, was es erklärt (ADR 0019).
-##
-## Zeigt auf ein Kapitel und, wenn gesetzt, auf eine Überschrift darin — deren Text, wie er
-## im Kapitel steht. Ein Screen mit Reitern setzt `section` beim Umschalten neu, dann führt
-## das „?“ zum Reiter, der gerade offen ist. `handbook_test.gd` prüft, dass jedes Ziel in
-## einer Szene existiert.
-##
-## F1 öffnet das Handbuch am obersten sichtbaren Absprung: Fenster hängen später im Baum
-## als das Menü darunter und bekommen die Taste zuerst. Ein Absprung mitten im Inhalt (neben
-## einer einzelnen Zahl) hört nicht auf F1 — sonst gewönne er gegen den des Fensters, der
-## im Baum vor ihm steht.
+## Der Absprung ins Handbuch: ein „?“ neben dem, was es erklärt (ADR 0019). Zeigt auf ein
+## Kapitel und optional eine Überschrift (ihr Text); `handbook_test.gd` prüft die Ziele.
+## F1 öffnet am obersten sichtbaren Absprung, weil später im Baum hängende Fenster die Taste
+## zuerst bekommen.
 
 const GROUP := &"handbook_link"
 
@@ -22,6 +15,7 @@ const GROUP := &"handbook_link"
 	set(value):
 		section = value
 		_describe()
+## Aus für Absprünge mitten im Inhalt, die sonst dem Fenster-Absprung F1 wegnähmen.
 @export var answers_f1 := true
 
 

@@ -1,18 +1,9 @@
 class_name ConfirmDialog
 extends Control
-## Ein Overlay, das eine Frage stellt und zwei Antworten anbietet.
-##
-## Dasselbe Muster wie `update_dialog`: ein Control über dem ganzen Bild, darunter ein
-## abdunkelnder `Dim`, in der Mitte die Tafel — und KEIN `Window`. Ein Godot-Popup ist ein
-## eigenes Fenster und skaliert nicht mit `canvas_items`; bei 1152×648 stünde es in echten
-## Bildschirmpixeln neben dem Spiel statt darin.
-##
-## Der Dialog weiß nichts von dem, was er fragt: er bekommt Text und Beschriftung über
-## `ask()` und meldet `confirmed`. Was daraufhin geschieht, entscheidet der Aufrufer — so
-## trägt derselbe Dialog das Lernen und das Umlernen, ohne beides zu kennen.
+## Ein Overlay, das eine Frage stellt und zwei Antworten anbietet; kein Godot-`Window`
+## (siehe CONVENTIONS „Oberfläche“). Was nach `confirmed` geschieht, entscheidet der Aufrufer.
 
-## Der Spieler hat bestätigt. `cancelled` meldet den anderen Ausgang — ein Aufrufer, der
-## nur auf `confirmed` hört, muss den Abbruch nicht behandeln.
+## Der Spieler hat bestätigt; `cancelled` meldet den anderen Ausgang.
 signal confirmed()
 signal cancelled()
 
@@ -32,9 +23,7 @@ func _ready() -> void:
 			cancelled.emit())
 
 
-## Escape bricht ab — dieselbe Taste, mit der man überall im Spiel zurückgeht. Der Dialog
-## fängt sie nur, solange er sichtbar ist; sonst käme der Screen dahinter nicht mehr
-## zurück ins Startmenü.
+## Escape bricht ab, nur solange der Dialog sichtbar ist.
 func _input(event: InputEvent) -> void:
 	if not visible:
 		return
@@ -44,10 +33,8 @@ func _input(event: InputEvent) -> void:
 		accept_event()
 
 
-## Stellt die Frage. `action` ist die Beschriftung des bestätigenden Knopfes und benennt
-## die TAT („Lernen", „Umlernen") statt „OK" zu sagen: was ein Klick tut, soll auf dem
-## Knopf stehen und nicht nur in der Frage darüber. Dasselbe gilt für `keep`, den anderen
-## Ausgang („Weiterspielen" statt „Abbrechen", wo Abbrechen das Gefragte wäre).
+## Stellt die Frage. `action` und `keep` beschriften die Knöpfe; sie benennen die Tat
+## („Lernen“, „Weiterspielen“), nicht „OK“.
 func ask(title: String, body: String, action := "Ja", keep := "Abbrechen") -> void:
 	_title.text = title
 	_body.text = body
@@ -55,13 +42,11 @@ func ask(title: String, body: String, action := "Ja", keep := "Abbrechen") -> vo
 	_cancel.text = keep
 	_cancel.visible = true
 	show()
-	# Der Fokus liegt auf dem ABBRECHEN: mit der Eingabetaste soll man nicht versehentlich
-	# Punkte ausgeben, die man gerade erst bekommen hat.
+	# Der Fokus liegt auf dem Abbrechen, damit Enter nichts versehentlich bestätigt.
 	_cancel.grab_focus()
 
 
-## Teilt etwas mit, ohne zu fragen: nur ein Knopf, der `confirmed` meldet (Escape meldet
-## wie immer `cancelled`).
+## Teilt etwas mit: nur ein Knopf, der `confirmed` meldet.
 func inform(title: String, body: String, action := "OK") -> void:
 	_title.text = title
 	_body.text = body

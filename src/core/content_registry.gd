@@ -1,38 +1,22 @@
 extends Node
-## Central, data-driven content registry (autoload).
-##
-## Scans <root>/<category>/ at startup and loads EVERY .json file it finds
-## (recursively, so subfolders per language or unit work). Es gibt DREI Roots, in
-## Vorrangfolge: Spielkonfiguration unter res://data, Sprachdaten unter res://data/language
-## (privates Submodule, siehe LANGUAGE_ROOT) und installierte Content-Packs unter
-## user://content/<pack-id>/ (siehe USER_CONTENT_ROOT).
-##
-## To add new content — a monster, a spell, a vocab pack, a boss, a wave —
-## drop a JSON file into the matching folder. No code changes required.
-## Each JSON file may contain a single object OR an array of objects.
-## Every object MUST have a unique string "id".
+## Central, data-driven content registry (autoload). Loads every .json under
+## <root>/<category>/ (recursively) from three roots in order of precedence: DATA_ROOT,
+## LANGUAGE_ROOT, then installed packs. Each file holds one object or an array of objects,
+## each with a unique string "id". See docs/ADDING_CONTENT.md.
 
 const DATA_ROOT := "res://data"
 
-## Sprachdaten (Lexeme, Formen, Relationen, Sätze) liegen in einem separaten,
-## PRIVATEN Repo — sie sind aus urheberrechtlich geschütztem Lehrbuchmaterial
-## abgeleitet und dürfen nicht ins öffentliche Hauptrepo. Eingehängt als
-## Submodule unter res://data/language (`git submodule update --init`).
-## Ohne ausgecheckten Submodule startet das Spiel, hat aber keine Vokabeln.
+## Sprachdaten aus dem privaten Submodule; fehlt es, startet das Spiel ohne Vokabeln.
 const LANGUAGE_ROOT := "res://data/language"
 
-## Die Kategorien, die aus LANGUAGE_ROOT statt aus DATA_ROOT gelesen werden.
-## Installierte Content-Packs. Jeder Pack liegt in seinem eigenen Unterverzeichnis
-## (user://content/<pack-id>/<kategorie>/…) und wird NACH den res://-Roots gelesen: bei
-## gleicher `id` gewinnt der Pack. Das ist der Weg, auf dem die ausgelieferte EXE zu
-## Vokabeln kommt — sie enthält keine (siehe docs/adr/0001-app-und-content-update.md).
+## Installierte Content-Packs (user://content/<pack-id>/<kategorie>/…), gelesen nach den
+## res://-Roots: bei gleicher `id` gewinnt der Pack (ADR 0001).
 const USER_CONTENT_ROOT := "user://content"
 
-## In so viele Teile zerfällt eine Unit für die Auswahl. Vier, weil eine Unit ungefähr
-## einen Monat Unterricht trägt und ein Teil damit etwa eine Woche — klein genug, um vor
-## einer Arbeit gezielt zu üben, groß genug, dass die Liste nicht zerfasert.
+## In so viele Teile zerfällt eine Unit (etwa eine Woche Unterricht je Teil).
 const PART_COUNT := 4
 
+## Die Kategorien, die aus LANGUAGE_ROOT statt aus DATA_ROOT gelesen werden.
 const LANGUAGE_CATEGORIES: Array[String] = [
 	"lexemes",
 	"lexeme_forms",
@@ -42,13 +26,8 @@ const LANGUAGE_CATEGORIES: Array[String] = [
 	"writing",
 ]
 
-## Per-category catalogs (id -> entry Dictionary). Filled by reload().
-##
-## Sprachdaten und Aufgaben sind normalisiert (ERM, siehe docs/ARCHITECTURE.md):
-## lexemes/forms/relations beschreiben die Sprache, task_definitions die Aufgaben-Regeln
-## (die konkrete Aufgabe wird zur Laufzeit aus Definition × Lexeme erzeugt),
-## monster_task_rules nur die Darstellung. sentences/sentence_lexemes tragen den
-## Satzmeister (ADR 0005), writing die Vorlagen des Schreib-Bosses (ADR 0023).
+## Per-category catalogs (id -> entry), filled by reload(); model in docs/ARCHITECTURE.md,
+## writing in ADR 0023.
 var lexemes: Dictionary = {}
 var lexeme_forms: Dictionary = {}
 var lexeme_relations: Dictionary = {}
@@ -61,45 +40,35 @@ var task_definitions: Dictionary = {}
 var monster_task_rules: Dictionary = {}
 var monsters: Dictionary = {}
 var bosses: Dictionary = {}
-## Zauber: Verbrauchsgegenstände, gekauft mit Gold (data/spells/, docs/adr/0014-zauber-zum-verbrauchen.md).
+## Zauber: Verbrauchsgegenstände, gekauft mit Gold (ADR 0014).
 var spells: Dictionary = {}
-## Skills: die Knoten der Fähigkeitsbäume, gekauft mit Skillpunkten (data/skills/).
-## Zwei Kategorien, weil es zwei Dinge sind — siehe docs/adr/0003-skills-und-spells.md.
+## Skills: Knoten der Fähigkeitsbäume, gekauft mit Skillpunkten (ADR 0003).
 var skills: Dictionary = {}
 var waves: Dictionary = {}
 
-## category name -> the Dictionary above (Dictionaries are references in GDScript,
-## so clearing/filling these in place also updates the member vars).
+## category name -> the Dictionary above (same reference, filled in place).
 var _by_category: Dictionary = {}
 
-## "<category>|<id>" -> Quelldatei-Pfad. Wird beim Laden gefüllt, damit
-## Bearbeitungen (z.B. flag_lexeme) in die richtige Quell-JSON zurückschreiben.
 var _source_files: Dictionary = {}
 
-## "<category>|<id>" -> Root, aus dem der Eintrag stammt. Trennt die zwei Fälle, die sonst
-## gleich aussehen: zwei Dateien DESSELBEN Roots mit gleicher id sind ein Fehler, ein Pack,
-## der einen eingebauten Eintrag überschreibt, ist der Zweck der Übung.
+## "<category>|<id>" -> Root, aus dem der Eintrag stammt. Eine doppelte id ist nur
+## innerhalb desselben Roots ein Fehler.
 var _origins: Dictionary = {}
 
-## Lexem-Id -> Teil (1…PART_COUNT) innerhalb seiner Unit. Aus der Position berechnet,
-## siehe _index_parts(); Lexeme ohne Buch/Unit stehen nicht drin.
+## Lexem-Id -> Teil (1…PART_COUNT oder Feld `part`) innerhalb seiner Unit.
 var _parts: Dictionary = {}
 
-## Lexem-Id -> alle learnable_ids, die für seine Meisterung sitzen müssen (beide
-## Übersetzungsrichtungen und die Formaufgaben) — nur für Lexeme mit `irregular: true`.
-## Siehe _index_form_requirements() und PlayerProgress.mastered_lexemes_in.
+## Lexem-Id -> learnable_ids, die für seine Meisterung sitzen müssen; nur `irregular: true`.
 var _form_requirements: Dictionary = {}
 
-## Die Bonus-Level (ADR 0012, 0013): Scope-Schlüssel (BONUS_PREFIX…) -> { key, book, unit,
-## part, topic, form_type, lexeme_ids, task_ids }. Siehe _index_bonuses().
+## Die Bonus-Level (ADR 0012, 0013): Scope-Schlüssel -> { key, book, unit, part, topic,
+## form_type, lexeme_ids, task_ids }.
 var _bonuses: Dictionary = {}
 ## Form-Id -> Schlüssel ihres Bonus, nur für Formen, die in einem Bonus stehen.
 var _bonus_of_form: Dictionary = {}
 
-## Ein Scope-Schlüssel mit diesem Präfix meint einen Bonus, nicht ein Stück Buch:
-## „bonus:<book>/<unit>/<part>/<topic>" (Thema: die Formart, bei einem Wort-Bonus das Feld
-## `bonus` der Lexeme, Teil 0). Das Präfix hält ihn aus jedem Vergleich mit
-## Buch, Unit und Lektion heraus (lexemes_scoped, form_in_scope).
+## Präfix eines Bonus-Scope-Schlüssels „bonus:<book>/<unit>/<part>/<topic>“ (Thema: die
+## Formart, beim Wort-Bonus das Feld `bonus`, Teil 0). Hält ihn aus Buch-/Unit-Vergleichen.
 const BONUS_PREFIX := "bonus:"
 
 
@@ -122,8 +91,7 @@ func _ready() -> void:
 	reload()
 
 
-## Rescans the whole data tree. Safe to call at runtime (e.g. after adding files) —
-## ContentService ruft es nach jeder Pack-Installation.
+## Rescans the whole data tree; safe at runtime (e.g. after a pack installation).
 func reload() -> void:
 	_source_files.clear()
 	_origins.clear()
@@ -152,21 +120,8 @@ func reload() -> void:
 	_apply_flags()
 
 
-## Teilt jede Unit in PART_COUNT gleich große Viertel und merkt sich je Lexem, in welches
-## es fällt. Maßgeblich ist die POSITION im Bestand, nicht ein Feld an den Daten: die
-## Reihenfolge der Lexeme in den JSON-Dateien ist die Reihenfolge im Buch, und ein
-## Dictionary hält seine Einfügereihenfolge. Damit gilt die Teilung rückwirkend für jedes
-## Buch, auch für schon installierte Packs — ein zusätzliches Feld hätte jeden Pack neu
-## gebaut und wäre in Bestandsinstallationen leer geblieben.
-##
-## Der Rest einer nicht glatt teilbaren Unit geht nach vorn (134 -> 34/34/33/33): die
-## vorderen Teile sind die, mit denen man anfängt, und ein Wort mehr fällt dort weniger auf
-## als eine ungleiche Lücke am Ende.
-##
-## Ausnahme: ein Buch, das selbst in kleine Lektionen zerfällt (Latein: 36 Lektionen, je
-## sechs sind eine Unit), trägt den Teil als Feld `part` am Lexem — dort IST der Teil die
-## Lektion und nicht ein Viertel. Trägt ein Lexem einer Unit `part`, gilt für die ganze
-## Unit das Feld; ein Lexem ohne Feld hat dann keinen Teil und steht nur in der Unit.
+## Teilt jede Unit nach Bestandsreihenfolge in PART_COUNT Teile, Rest nach vorn; mit Feld
+## `part` gilt das Feld (docs/ARCHITECTURE.md).
 func _index_parts() -> void:
 	_parts.clear()
 	var by_unit: Dictionary = {}   # "<book>/<unit>" -> Array[id], in Bestandsreihenfolge
@@ -201,19 +156,8 @@ func _index_parts() -> void:
 				index += 1
 
 
-## Sammelt je unregelmäßigem Verb (`irregular: true` am Lexem) die learnable_ids seiner
-## Formaufgaben — Definitionen mit `requires_form`, zu denen das Lexem die Form hat, also
-## genau die, die WaveGenerator._instances auch spawnen würde. Ein unregelmäßiges Verb gilt
-## erst als gemeistert, wenn auch diese sitzen (PlayerProgress.mastered_lexemes_in): seine
-## Formen lassen sich nicht ableiten, sie SIND Teil des Wortes. Bei regelmäßigen ergibt sich
-## die Form aus der Regel, dort bleibt es bei den beiden Übersetzungsrichtungen.
-##
-## Eine Form aus einem Bonus (später gelehrt als ihr Wort, _index_bonuses) zählt nicht
-## mit, auch innerhalb derselben Unit: sonst ließe sich Unit 1 nur in Unit 2 meistern, und
-## die Festung hinge an Aufgaben, die gar nicht zu den Wörtern der Unit gehören (ADR 0012).
-##
-## Als Index und nicht bei jeder Abfrage, weil forms_for den ganzen Formbestand durchläuft
-## und die Karte die Meisterung beim Öffnen für alle Units braucht.
+## Sammelt je unregelmäßigem Verb die learnable_ids, die für seine Meisterung sitzen
+## müssen: beide Richtungen und seine Formaufgaben (ADR 0009), ohne Bonus-Formen (ADR 0012).
 func _index_form_requirements() -> void:
 	_form_requirements.clear()
 	var form_types: Dictionary = {}   # lexeme_id -> {form_type: true}, nur unregelmäßige
@@ -240,9 +184,8 @@ func _index_form_requirements() -> void:
 		_form_requirements[lexeme_id] = ids
 
 
-## Die learnable_ids der Formaufgaben zu `lexeme` für die Formarten in `form_types`
-## (form_type -> true): Definitionen mit `requires_form`, in der Sprache des Lexems, für
-## seine Wortart und nicht ausgeschlossen — dieselben, die WaveGenerator._instances spawnt.
+## Die learnable_ids der Formaufgaben zu `lexeme` für `form_types` (form_type -> true).
+## Muss dieselbe Auswahl treffen wie WaveGenerator._instances.
 func _form_task_ids(resolver: TaskResolver, lexeme: Dictionary, form_types: Dictionary) -> Array:
 	var ids: Array = []
 	var lexeme_id := str(lexeme.get("id", ""))
@@ -262,15 +205,8 @@ func _form_task_ids(resolver: TaskResolver, lexeme: Dictionary, form_types: Dict
 	return ids
 
 
-## Sammelt die Bonus-Level (ADR 0012). Eine Form steht in einem Bonus, wenn das Buch sie
-## später lehrt als ihr Wort: ihre Lektion (`unit`/`part` an der Form, ADR 0011) liegt
-## hinter der ihres Lexems. Das Perfekt der Verben aus Lektion 1–10 ist so der Bonus der
-## Lektion 11, die 1. Person der Verben aus Lektion 1–2 der von Lektion 3.
-##
-## Ein Bonus je Lernthema: lehrende Lektion und Formart. Er gehört zu der Unit, in der die
-## Form gelehrt wird, zählt aber nicht zu ihrer Festung — seine Aufgaben haben eine eigene
-## Zählung (BonusLevel.counts). Abgeleitet, nicht gespeichert: was ein Bonus ist, folgt
-## allein aus den Daten. Eine Form ohne eigene Lektion steht nie in einem Bonus.
+## Sammelt die Bonus-Level (ADR 0012): eine Form, deren Lektion (`unit`/`part` an der Form,
+## ADR 0011) hinter der ihres Lexems liegt, steht im Bonus ihrer Lektion und Formart.
 func _index_bonuses() -> void:
 	_bonuses.clear()
 	_bonus_of_form.clear()
@@ -307,12 +243,8 @@ func _index_bonuses() -> void:
 	_index_word_bonuses(resolver)
 
 
-## Sammelt die Wort-Boni (ADR 0013): Lexeme mit dem Feld `bonus` sind zusätzlicher Stoff zu
-## ihrer Unit, etwa eine Seite aus einem anderen Band. Ein Bonus je Unit und Thema, ohne
-## Teil (0). Ein Wort, das schon anderswo im Buch steht, wird nicht doppelt angelegt: es
-## nennt den Bonus unter `also_bonus` und bleibt ein Wort seiner Unit. Seine Aufgaben sind die, an denen die Meisterung eines Wortes hängt: beide
-## Übersetzungsrichtungen, bei einem unregelmäßigen Verb dazu seine Formaufgaben — dieselbe
-## Regel wie _index_form_requirements, damit der Stern golden wird, wenn die Wörter sitzen.
+## Sammelt die Wort-Boni (ADR 0013): je Unit und Thema, Teil 0. Ihre Aufgaben sind die der
+## Meisterung, dieselbe Regel wie _index_form_requirements.
 func _index_word_bonuses(resolver: TaskResolver) -> void:
 	for lexeme_id in lexemes:
 		var lexeme: Dictionary = lexemes[lexeme_id]
@@ -339,8 +271,7 @@ func _index_word_bonuses(resolver: TaskResolver) -> void:
 			(bonus["task_ids"] as Array).append_array(task_ids)
 
 
-## Der Scope-Schlüssel eines Bonus (BONUS_PREFIX). `topic` ist die Formart, bei einem
-## Wort-Bonus sein Thema.
+## Der Scope-Schlüssel eines Bonus; `topic` ist die Formart oder das Thema des Wort-Bonus.
 static func bonus_key(book: String, unit: int, part: int, topic: String) -> String:
 	return "%s%s/%d/%d/%s" % [BONUS_PREFIX, book, unit, part, topic]
 
@@ -354,7 +285,7 @@ static func word_bonus_key(lexeme: Dictionary) -> String:
 
 
 ## Die Wort-Boni, in denen das Lexem mitspielt: sein eigener (`bonus`) und die unter
-## `also_bonus` ([{ unit, bonus }], derselbe Band) — ein Wort, das schon anderswo steht.
+## `also_bonus` ([{ unit, bonus }], derselbe Band).
 static func word_bonus_keys(lexeme: Dictionary) -> Array:
 	var book := str(lexeme.get("book", ""))
 	if book.is_empty() or not lexeme.has("unit"):
@@ -372,8 +303,7 @@ static func word_bonus_keys(lexeme: Dictionary) -> Array:
 	return out
 
 
-## Spielt das Lexem in `scope` über einen Wort-Bonus mit (ADR 0013)? Dann kommt es mit
-## allen seinen Aufgaben, nicht nur mit Bonus-Formen (WaveGenerator._candidates).
+## Spielt das Lexem in `scope` über einen Wort-Bonus mit (ADR 0013)?
 func in_word_bonus(lexeme: Dictionary, scope: Array) -> bool:
 	return word_bonus_keys(lexeme).any(func(key): return bonus_in_scope(str(key), scope))
 
@@ -390,7 +320,6 @@ func bonuses_of(book: String, unit: int) -> Array:
 	return out
 
 
-## Alle Boni: Schlüssel -> Bonus (wie bei bonuses_of).
 func bonuses() -> Dictionary:
 	return _bonuses
 
@@ -401,8 +330,7 @@ func bonus_of_form(form: Dictionary) -> String:
 
 
 ## Spielt `scope` den Bonus `key` mit? Wenn er selbst gewählt ist oder der Scope seine
-## ganze Unit oder sein ganzes Buch umfasst (Gesamt, ADR 0012). Ein einzelner Teil bringt
-## keinen Bonus mit.
+## ganze Unit oder sein Buch umfasst (ADR 0012); ein Teil bringt keinen Bonus mit.
 func bonus_in_scope(key: String, scope: Array) -> bool:
 	if key in scope:
 		return true
@@ -412,9 +340,8 @@ func bonus_in_scope(key: String, scope: Array) -> bool:
 	return str(bonus["book"]) in scope or "%s/%d" % [bonus["book"], int(bonus["unit"])] in scope
 
 
-## Kommt die Form in `scope` als Aufgabe dran? Eine Form aus einem Bonus nur, wo ihr Bonus
-## mitspielt (bonus_in_scope): das Perfekt eines Verbs aus Lektion 1 im Bonus und in
-## „Gesamt", nicht in einem Lauf über Lektion 1 und 12. Jede andere Form wie form_in_scope.
+## Kommt die Form in `scope` als Aufgabe dran? Wie form_in_scope, eine Bonus-Form aber nur,
+## wo ihr Bonus mitspielt.
 func form_task_in_scope(form: Dictionary, scope: Array) -> bool:
 	if not form_in_scope(form, scope):
 		return false
@@ -422,8 +349,7 @@ func form_task_in_scope(form: Dictionary, scope: Array) -> bool:
 	return bonus.is_empty() or scope.is_empty() or bonus_in_scope(bonus, scope)
 
 
-## Die Units („<book>/<unit>") der Boni, die `scope` ausdrücklich nennt — ihre Festung gilt
-## im Bonus-Lauf (FortressTier.run_tier), obwohl die Wörter aus früheren Units stammen.
+## Die Units („<book>/<unit>“) der Boni, die `scope` ausdrücklich nennt.
 func bonus_units(scope: Array) -> Array:
 	var out: Array = []
 	for key in scope:
@@ -436,8 +362,7 @@ func bonus_units(scope: Array) -> Array:
 	return out
 
 
-## Lexem-Id -> learnable_ids, die ein unregelmäßiges Verb für seine Meisterung braucht
-## (beide Richtungen und die Formen). Lexeme, für die nur die Übersetzung zählt, fehlen.
+## Lexem-Id -> learnable_ids, die ein unregelmäßiges Verb für seine Meisterung braucht.
 func form_requirements() -> Dictionary:
 	return _form_requirements
 
@@ -452,7 +377,6 @@ func _roots() -> Array:
 	var roots: Array = [
 		{"path": DATA_ROOT, "categories": game_categories, "required": true},
 	]
-	# Der Submodule-Checkout ist der Weg der Entwicklung; im Export fehlt er absichtlich.
 	if DirAccess.dir_exists_absolute(LANGUAGE_ROOT):
 		roots.append({"path": LANGUAGE_ROOT, "categories": LANGUAGE_CATEGORIES, "required": false})
 	for pack_path in _pack_roots():
@@ -460,9 +384,7 @@ func _roots() -> Array:
 	return roots
 
 
-## Verzeichnisse installierter Packs, alphabetisch — damit die Vorrangfolge unter Packs
-## nicht von der Reihenfolge des Dateisystems abhängt. Punkt-Verzeichnisse (der
-## Installationszustand) bleiben außen vor.
+## Verzeichnisse installierter Packs, alphabetisch, ohne Punkt-Verzeichnisse.
 func _pack_roots() -> Array:
 	var dir := DirAccess.open(USER_CONTENT_ROOT)
 	if dir == null:
@@ -478,14 +400,12 @@ func _pack_roots() -> Array:
 	return out
 
 
-## Returns all entries of a category as an Array of Dictionaries.
-## Alle bekannten Kategorien. Muss mit `CATEGORIES` in src/content/pack_installer.gd und
-## in tools/packs/build_packs.py übereinstimmen — sonst liefert ein Pack Dateien aus, die
-## der Installer verwirft (oder umgekehrt).
+## Alle bekannten Kategorien; stehen an vier Stellen (CONVENTIONS „Packs“).
 func categories() -> Array:
 	return _by_category.keys()
 
 
+## Returns all entries of a category as an Array of Dictionaries.
 func all(category: String) -> Array:
 	return _by_category.get(category, {}).values()
 
@@ -495,8 +415,7 @@ func get_entry(category: String, id: String) -> Dictionary:
 	return _by_category.get(category, {}).get(id, {})
 
 
-## Returns lexeme entries whose "tags" intersect the requested tags.
-## Leere `tags` -> alle Lexeme (kein Filter).
+## Returns lexeme entries whose "tags" intersect `tags`; empty `tags` -> all lexemes.
 func lexemes_by_tags(tags: Array) -> Array:
 	if tags.is_empty():
 		return lexemes.values()
@@ -509,9 +428,7 @@ func lexemes_by_tags(tags: Array) -> Array:
 	return result
 
 
-## Alle distinkten Bücher (Lexem-Feld "book") über den Katalog, alphabetisch sortiert.
-## Für den Curriculum-Scope-Picker im Session-Setup. Lexeme ohne "book" (z.B. Grundwortschatz)
-## erscheinen hier nicht — sie sind bewusst keinem Buch/Unit zugeordnet.
+## Alle distinkten Bücher (Lexem-Feld "book"), alphabetisch sortiert.
 func all_books() -> PackedStringArray:
 	var seen := {}
 	for entry in lexemes.values():
@@ -523,12 +440,7 @@ func all_books() -> PackedStringArray:
 	return result
 
 
-## „access2" -> „Access 2": nachgestellte Ziffern mit Leerzeichen abtrennen, Rest als
-## Titel. Die Buch-Ids sind klein und ohne Trennzeichen, für die Anzeige taugen sie nicht.
-## Steht hier und nicht in einem Screen, weil inzwischen mehrere Screens Bücher benennen
-## (Session-Setup, Statistik) und zwei Regeln irgendwann auseinanderlaufen.
-##
-## Nennt die Karte des Buchs einen Titel (BookNaming, „À plus!"), gilt der.
+## Anzeigename eines Buchs: der Titel aus BookNaming, sonst „access2“ -> „Access 2“.
 func book_label(book: String) -> String:
 	var titled := BookNaming.title(book)
 	if not titled.is_empty():
@@ -541,8 +453,7 @@ func book_label(book: String) -> String:
 	return name if num.is_empty() else "%s %s" % [name, num]
 
 
-## Die Sprache eines Buchs (Lexeme.language seiner Lexeme), "" für ein unbekanntes Buch.
-## Ein Buch hat genau eine Sprache — es genügt das erste Lexem.
+## Die Sprache eines Buchs (die seines ersten Lexems), "" für ein unbekanntes Buch.
 func book_language(book: String) -> String:
 	for entry in lexemes.values():
 		if str(entry.get("book", "")) == book:
@@ -550,7 +461,6 @@ func book_language(book: String) -> String:
 	return ""
 
 
-## Alle distinkten Units eines Buchs (Lexem-Feld "unit"), numerisch aufsteigend sortiert.
 func units_for(book: String) -> Array:
 	var seen := {}
 	for entry in lexemes.values():
@@ -575,23 +485,17 @@ func writing_tasks(book: String, unit: int, kind := "summary") -> Array:
 
 
 ## Curriculum-Scope-Schlüssel eines Lexems: ["<book>", "<book>/<unit>", "<book>/<unit>/<teil>"]
-## — alle drei, damit „ganzes Buch", „einzelne Unit" und „Viertel einer Unit" im selben
-## Scope matchen. Ein angehakter Unit-Schlüssel zieht seine Viertel also mit, ohne dass die
-## Auswahl sie einzeln aufzählen müsste. Leer, wenn kein "book".
+## plus seine Wort-Boni. Leer, wenn kein "book".
 func _scope_keys(entry: Dictionary) -> Array:
 	var book := str(entry.get("book", ""))
 	if book.is_empty():
 		return []
 	if not entry.has("unit"):
 		return [book]
-	# Ein Wort aus einem Wort-Bonus steht nur in seinem Bonus (ADR 0013). In die Unit und
-	# das Buch holt es lexemes_for_run, wo der Bonus mitspielt; Festung, Teile, Statistik
-	# und Sätze sehen es nicht. Steht es zugleich in einem zweiten Bonus (`also_bonus`),
-	# gehört es auch dorthin.
+	# Ein Wort eines Wort-Bonus steht nur in seinen Boni (ADR 0013).
 	if not word_bonus_key(entry).is_empty():
 		return word_bonus_keys(entry)
 	var keys := [book, "%s/%d" % [book, int(entry["unit"])]]
-	# Ein Wort seiner Unit, das zusätzlich in einem Wort-Bonus steht (`also_bonus`).
 	keys.append_array(word_bonus_keys(entry))
 	var part: int = _parts.get(str(entry.get("id", "")), 0)
 	if part > 0:
@@ -599,8 +503,7 @@ func _scope_keys(entry: Dictionary) -> Array:
 	return keys
 
 
-## Der engste Scope-Schlüssel eines Lexems: sein Wort-Bonus, sein Teil oder seine Unit (für
-## Testlisten, TestLists.run_scope). Ein Teil bringt keinen Form-Bonus mit.
+## Der engste Scope-Schlüssel eines Lexems: sein Wort-Bonus, sein Teil oder seine Unit.
 func narrowest_scope(entry: Dictionary) -> String:
 	var bonus := word_bonus_key(entry)
 	if not bonus.is_empty():
@@ -614,15 +517,13 @@ func narrowest_scope(entry: Dictionary) -> String:
 	return str(keys[1]) if keys.size() > 1 else str(keys[0])
 
 
-## Der Teil eines Lexems innerhalb seiner Unit (1…PART_COUNT, oder sein Feld `part`),
-## 0 ohne Teil.
+## Der Teil eines Lexems innerhalb seiner Unit, 0 ohne Teil.
 func part_of(lexeme_id: String) -> int:
 	return int(_parts.get(lexeme_id, 0))
 
 
-## Die höchste Teilnummer einer Unit — PART_COUNT, außer die Unit hat weniger Lexeme als
-## das; bei einem Buch mit Feld `part` die höchste vergebene Lektion. Davor darf ein Teil
-## leer sein (Latein, Unit 2 beginnt mit Teil 4) — ob er Wörter hat, sagt part_has_words.
+## Die höchste Teilnummer einer Unit: PART_COUNT oder weniger bei wenigen Lexemen, bei
+## Feld `part` die höchste Lektion. Davor darf ein Teil leer sein (part_has_words).
 func parts_for(book: String, unit: int) -> int:
 	var count := 0
 	var highest := 0
@@ -636,8 +537,7 @@ func parts_for(book: String, unit: int) -> int:
 	return highest if highest > 0 else mini(PART_COUNT, count)
 
 
-## Hat Teil `part` der Unit mindestens ein Lexem? Für Auswahl und Karte, damit sie einen
-## leeren Teil nicht zum Spielen anbieten.
+## Hat Teil `part` der Unit mindestens ein Lexem?
 func part_has_words(book: String, unit: int, part: int) -> bool:
 	for id in _parts:
 		if int(_parts[id]) != part:
@@ -648,12 +548,8 @@ func part_has_words(book: String, unit: int, part: int) -> bool:
 	return false
 
 
-## Lexeme gefiltert nach Curriculum-Scope UND Themen-Tags (die beiden Achsen aus dem
-## Session-Setup). `scope`: Schlüssel wie "access2" (ganzes Buch) oder "access2/6" (eine Unit)
-## — leer = keine Scope-Einschränkung (auch Lexeme ohne Buch/Unit bleiben drin). `tags` wird
-## wie in lexemes_by_tags() als ODER innerhalb der Themen behandelt (leer = alle Themen).
-## Ein Lexem muss BEIDE Achsen erfüllen (Schnitt): so ergibt z.B. scope=["access2/6"] +
-## tags=["body"] genau die Körperteile aus Unit 6.
+## Lexeme im Schnitt von Curriculum-Scope und Themen-Tags (Tags untereinander ODER);
+## leer heißt jeweils keine Einschränkung.
 func lexemes_scoped(scope: Array, tags: Array) -> Array:
 	var base := lexemes_by_tags(tags)
 	if scope.is_empty():
@@ -667,14 +563,8 @@ func lexemes_scoped(scope: Array, tags: Array) -> Array:
 	return result
 
 
-## Die Lexeme, die ein Kampf über `scope` abfragt: die des Scopes und dazu die der Boni,
-## die der Scope mitspielt (bonus_in_scope) — von denen fragt der Kampf nur die
-## Bonus-Formen ab, nicht die Übersetzungen (WaveGenerator._candidates); die Wörter eines
-## Wort-Bonus (ADR 0013) spielen dagegen mit allen ihren Aufgaben. Die lehrende
-## Lektion holt keine Wiederholung mehr (ADR 0012, ersetzt ADR 0011 Punkt 3).
-##
-## Nur für den Aufgabenpool. Festungsstufe, Statistik und Sätze zählen weiter über
-## lexemes_scoped: ein Wort gehört zur Unit, in der es steht.
+## Die Lexeme für den Aufgabenpool eines Kampfs: die des Scopes plus die der mitspielenden
+## Boni (ADR 0012, 0013). Festungsstufe, Statistik und Sätze zählen über lexemes_scoped.
 func lexemes_for_run(scope: Array, tags: Array) -> Array:
 	var result := lexemes_scoped(scope, tags)
 	if scope.is_empty():
@@ -696,16 +586,9 @@ func lexemes_for_run(scope: Array, tags: Array) -> Array:
 	return result
 
 
-## Gilt die Form in `scope` als eingeführt? Ab der Lektion, die sie lehrt, gilt sie in
-## jeder späteren mit (das Buch führt Stammformen ab dort bei jeder Vokabel); vorher kommt
-## sie weder als Aufgabe noch im Reveal: in Lektion 1 gibt es noch kein Perfekt.
-## Verglichen wird mit der Lektion eines Scope-Schlüssels, eine Unit zählt bis zu ihrem
-## Ende, das ganze Buch und ein leerer Scope zählen alles. Ein Bonus zählt wie seine
-## Lektion: im Bonus der Lektion 11 ist die 1. Person aus Lektion 3 eingeführt.
-##
-## Ob eine Form aus einem Bonus auch als AUFGABE kommt, entscheidet nicht diese Regel,
-## sondern form_task_in_scope — eingeführt ist das Perfekt in Lektion 12 auch, geübt
-## wird es für die alten Verben nur im Bonus.
+## Gilt die Form in `scope` als eingeführt (ADR 0011)? Ab ihrer Lektion in jeder späteren;
+## eine Unit zählt bis zu ihrem Ende, Buch und leerer Scope zählen alles, ein Bonus wie
+## seine Lektion. Ob sie als Aufgabe kommt, entscheidet form_task_in_scope.
 func form_in_scope(form: Dictionary, scope: Array) -> bool:
 	if scope.is_empty():
 		return true
@@ -744,8 +627,6 @@ func _form_lesson(form: Dictionary) -> Dictionary:
 	return {"book": book, "unit": int(lexeme["unit"]), "part": part_of(lexeme_id)}
 
 
-## Alle distinkten Lexem-Tags über den gesamten Katalog, alphabetisch sortiert.
-## Für datengetriebene Auswahl-UIs (Session-Setup).
 func all_lexeme_tags() -> PackedStringArray:
 	var seen := {}
 	for entry in lexemes.values():
@@ -756,8 +637,6 @@ func all_lexeme_tags() -> PackedStringArray:
 	return result
 
 
-## Alle distinkten Vokabel-Typen (Lexem-Feld "type") über den gesamten Katalog,
-## alphabetisch sortiert. Für die Vokabel-Typ-Auswahl im Session-Setup.
 func all_lexeme_types() -> PackedStringArray:
 	var seen := {}
 	for entry in lexemes.values():
@@ -769,7 +648,6 @@ func all_lexeme_types() -> PackedStringArray:
 	return result
 
 
-## Alle distinkten task_type-Werte aus den task_definitions, alphabetisch sortiert.
 func all_task_types() -> PackedStringArray:
 	var seen := {}
 	for definition in task_definitions.values():
@@ -796,8 +674,7 @@ func forms_for(lexeme_id: String, form_type: String = "", scope: Array = []) -> 
 	return result
 
 
-## Relationen, die von `lexeme_id` ausgehen und den gewünschten Typ haben
-## (opposite | synonym | confused_with | related).
+## Relationen ab `lexeme_id` vom Typ opposite | synonym | confused_with | related.
 func relations_of(lexeme_id: String, relation_type: String) -> Array:
 	var result: Array = []
 	for entry in lexeme_relations.values():
@@ -821,15 +698,12 @@ func source_file(category: String, id: String) -> String:
 	return _source_files.get("%s|%s" % [category, id], "")
 
 
-## Root, aus dem der Eintrag stammt (DATA_ROOT, LANGUAGE_ROOT oder
-## USER_CONTENT_ROOT/<pack-id>), oder "" wenn unbekannt.
+## Root, aus dem der Eintrag stammt, oder "" wenn unbekannt.
 func origin(category: String, id: String) -> String:
 	return str(_origins.get("%s|%s" % [category, id], ""))
 
 
 ## Pack-Id, aus deren Installation der Eintrag stammt, oder "" wenn er aus `res://` kommt.
-## Trägt im Rückkanal die Herkunft mit: eine Meldung zu einem Wort, das inzwischen
-## korrigiert wurde, ist sonst nicht von einer aktuellen zu unterscheiden.
 func pack_of(category: String, id: String) -> String:
 	var from := origin(category, id)
 	if not from.begins_with(USER_CONTENT_ROOT + "/"):
@@ -837,7 +711,7 @@ func pack_of(category: String, id: String) -> String:
 	return from.trim_prefix(USER_CONTENT_ROOT + "/").split("/")[0]
 
 
-## Lexeme, die eine Nutzer-Meldung tragen (Feld "flag"), für die Menü-Anzeige.
+## Lexeme, die eine Nutzer-Meldung tragen (Feld "flag").
 func flagged_lexemes() -> Array:
 	var result: Array = []
 	for entry in lexemes.values():
@@ -846,11 +720,8 @@ func flagged_lexemes() -> Array:
 	return result
 
 
-## Speichert eine Meldung ("flag") zum Lexem in `user://` und aktualisiert die
-## In-Memory-Kopie, damit `flagged_lexemes()` ohne `reload()` stimmt.
-## Gibt false zurück, wenn das Lexem unbekannt oder die Datei nicht schreibbar ist.
-## Bewusst NICHT in die Quell-JSON: `res://` ist im Export read-only, und eine geänderte
-## Pack-Datei würde beim nächsten Pack-Update übersprungen (siehe LexemeFlags).
+## Speichert eine Meldung ("flag") zum Lexem über LexemeFlags und in der In-Memory-Kopie.
+## False, wenn das Lexem unbekannt oder die Datei nicht schreibbar ist.
 func flag_lexeme(lexeme_id: String, comment: String, learnable_id: String,
 		stats_id := "") -> bool:
 	if not lexemes.has(lexeme_id):
@@ -876,9 +747,7 @@ func unflag_lexeme(lexeme_id: String) -> bool:
 	return true
 
 
-## Hakt eine Meldung als gesendet ab (Rückkanal, siehe
-## docs/adr/0002-melde-rueckkanal.md) — in der Datei UND in der In-Memory-Kopie, damit die
-## Anzeige ohne `reload()` stimmt. Wie `flag_lexeme`, nur in die andere Richtung.
+## Hakt eine Meldung als gesendet ab (ADR 0002), in der Datei und in der In-Memory-Kopie.
 func mark_flag_sent(lexeme_id: String) -> bool:
 	if not LexemeFlags.mark_sent(lexeme_id):
 		return false
@@ -887,9 +756,8 @@ func mark_flag_sent(lexeme_id: String) -> bool:
 	return true
 
 
-## Meldungen liegen getrennt vom Content, müssen also nach jedem Laden wieder über die
-## Lexeme gelegt werden. Meldungen zu Lexemen, die es nicht mehr gibt (Pack deinstalliert),
-## bleiben in der Datei stehen und tauchen wieder auf, wenn der Pack zurückkommt.
+## Legt die getrennt gespeicherten Meldungen nach jedem Laden über die Lexeme. Meldungen
+## zu fehlenden Lexemen bleiben in der Datei.
 func _apply_flags() -> void:
 	var flags := LexemeFlags.load_all()
 	for lexeme_id in flags:
@@ -940,8 +808,7 @@ func _register(
 		return
 	var id: String = str(entry["id"])
 	var key := "%s|%s" % [category, id]
-	# Nur innerhalb EINES Roots ist eine doppelte id ein Fehler; über Roots hinweg ist das
-	# Überschreiben die Vorrangregel.
+	# Über Roots hinweg ist Überschreiben die Vorrangregel.
 	if target.has(id) and str(_origins.get(key, "")) == origin:
 		push_warning("ContentRegistry: duplicate %s id '%s' (from %s)" % [category, id, file_path])
 	target[id] = entry

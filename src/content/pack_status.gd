@@ -1,18 +1,9 @@
 class_name PackStatus
 extends RefCounted
-## Zustand eines Content-Packs aus Sicht des Spiels: Index-Eintrag, lokaler Stand und die
-## daraus folgende Entscheidung, was angeboten wird.
-##
-## Zwei getrennte Achsen, absichtlich:
-##
-## * `install` — ist der Pack da, und ist er aktuell? (available / update / installed)
-## * `block`   — steht etwas dagegen, ihn zu holen? (Zugangscode, App zu alt)
-##
+## Zustand eines Content-Packs aus Index-Eintrag und lokalem Stand, auf drei Achsen:
+## `install` (da und aktuell?), `block` (steht etwas gegen das Holen?) und
+## `content_outdated` (installiert unter einer älteren `minVersion` als der Index; ADR 0001).
 ## Ein Sperrgrund verdrängt in der Anzeige den Installationsstand, hebt ihn aber nicht auf.
-## Dazu kommt `content_outdated` als dritte, eigene Achse: der installierte Stand ist zwar
-## „installiert", verlangt aber eine ältere App-Version als der Index heute ausweist — die
-## Inhalte sind also eine Generation zurück und Mechanik fehlt still. Kein Sperrgrund;
-## Aktualisieren ist der Fix.
 
 enum Install { AVAILABLE, UPDATE, INSTALLED }
 enum Block { NONE, LOCKED, STALE_CODE, APP_OUTDATED }
@@ -36,11 +27,8 @@ var content_outdated := false
 var installed_version := ""
 
 
-## Baut den Zustand aus einem Index-Eintrag.
-##
-## `installed` ist der lokale Zustand ({} wenn nicht installiert), `app_version` die
-## laufende Fassung ("" = keine Schranke, siehe SemVer.too_old_for), `stored_code` das
-## Ergebnis von AccessCodes.get_code().
+## Baut den Zustand aus einem Index-Eintrag. `installed`: lokaler Zustand ({} wenn nicht
+## installiert); `app_version` "" heißt keine Schranke; `stored_code` aus AccessCodes.get_code().
 static func evaluate(
 	entry: Dictionary, installed: Dictionary, app_version: String, stored_code: Dictionary
 ) -> PackStatus:
@@ -59,8 +47,7 @@ static func evaluate(
 	status.key_version = int(entry.get("keyVersion", 1))
 	status.installed_version = str(installed.get("version", ""))
 
-	# Inhalt zu alt für die App: die minVersion, unter der installiert wurde, gegen die des
-	# Index. Bestandsinstallationen ohne die Angabe erzeugen keine Schranke.
+	# Installationen ohne `minVersion` erzeugen keine Schranke.
 	status.content_outdated = SemVer.too_old_for(
 		str(installed.get("minVersion", "")), status.min_version
 	)
@@ -72,9 +59,7 @@ static func evaluate(
 	else:
 		status.install = Install.UPDATE
 
-	# Die Versionsschranke geht allen anderen Gründen vor: sie ist die einzige, die auch ein
-	# hinterlegter Zugangscode nicht aufhebt. Ein vorhandenes Update bleibt damit sichtbar,
-	# aber unangeboten.
+	# Die Versionsschranke geht vor: sie hebt auch ein hinterlegter Zugangscode nicht auf.
 	if SemVer.too_old_for(app_version, status.min_version):
 		status.block = Block.APP_OUTDATED
 	elif status.protected:

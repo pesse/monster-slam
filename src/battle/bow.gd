@@ -1,26 +1,21 @@
 class_name Bow
 extends Node3D
-## Der Bogen in der Hand (Ich-Sicht, Späher-Baum): hängt an der Kamera, unten links wie in
-## der linken Hand. Zwischen zwei Antworten ist er gesenkt, bei offener Eingabe gehoben, und
-## jeder Buchstabe zieht die Sehne ein Stück weiter (`pull`). Beim Abschicken schnellt sie
-## vor (`release`), und ein neuer Pfeil liegt gleich wieder auf.
-##
-## Wie weit gespannt ist, hängt NUR an den getippten Buchstaben, nie an der erwarteten
-## Antwort — sonst verriete der Bogen, wie lang das Wort ist.
-##
-## Alles nach der Wanduhr: getippt wird in der Zeitlupe.
+## Der Bogen in der Hand (Ich-Sicht, Späher-Baum), an der Kamera. Bei offener Eingabe
+## gehoben, jeder Buchstabe spannt weiter (`pull`), beim Abschicken schnellt die Sehne vor
+## (`release`). Die Spannung hängt nur an den getippten Buchstaben, nie an der erwarteten
+## Antwort, sonst verriete sie die Wortlänge. Alles nach der Wanduhr.
 
-## Von Spitze zu Spitze, und so weit steht der Griff vor der Sehne.
+## Von Spitze zu Spitze (m), und so weit (m) steht der Griff vor der Sehne.
 const HEIGHT := 1.0
 const BRACE := 0.16
-## So weit zieht die volle Spannung die Sehne zurück.
+## So weit (m) zieht die volle Spannung die Sehne zurück.
 const DRAW_LENGTH := 0.34
-## Das öffnende Enter legt an, jeder Buchstabe zieht weiter, bis zum Anschlag.
+## Spannung (Anteil) beim Heben und je Buchstabe.
 const DRAW_ON_RAISE := 0.25
 const DRAW_PER_KEY := 0.1
+## Sekunden, bis nach dem Schuss ein neuer Pfeil aufliegt.
 const RELOAD_TIME := 0.3
-## Vor einem Treffer schwenkt der Bogen so schnell aufs Ziel und bleibt so lange darauf,
-## bevor er in seine Lage zurückgeht.
+## Schwenk aufs Ziel vor einem Treffer: Dauer und Verweilen (s).
 const SWING_TIME := 0.06
 const SWING_HOLD := 0.14
 const SEGMENTS := 10
@@ -45,7 +40,7 @@ var _raised := false
 ## Läuft ein Schwenk, gehört ihm die Lage: set_raised merkt sich nur, wohin es danach geht.
 var _swinging := false
 ## Wohin die Sehne gerade gezogen wird. Eigener Wert, weil schnelles Tippen den laufenden
-## Tween abbricht: vom halb gezogenen `draw` aus gerechnet ginge jeder Buchstabe verloren.
+## Tween abbricht; vom halb gezogenen `draw` aus ginge ein Buchstabe verloren.
 var _goal := 0.0
 var _upper_string: MeshInstance3D
 var _lower_string: MeshInstance3D
@@ -98,20 +93,17 @@ func set_raised(on: bool) -> void:
 	if on == _raised:
 		return
 	_raised = on
-	# Gesenkt wird nicht sofort: nach dem Abschicken soll man den Schuss noch aus dem Bogen
-	# gehen sehen.
+	# Gesenkt wird 0.2 s verzögert, damit der Schuss noch sichtbar abgeht.
 	if not _swinging:
 		_to_pose(0.0 if on else 0.2)
-	# Eben abgeschossen (release) ist schon entspannt; ein zweites Entspannen legte den
-	# nächsten Pfeil auf, bevor der erste weg ist. Im Schwenk bleibt die Sehne gespannt —
-	# losgelassen wird erst am Ziel.
+	# Nach `release` schon entspannt: ein zweites Entspannen legte den nächsten Pfeil zu früh
+	# auf. Im Schwenk bleibt die Sehne gespannt bis zum Ziel.
 	if on or (_goal > 0.0 and not _swinging):
 		_tween_draw(DRAW_ON_RAISE if on else 0.0, 0.2)
 
 
-## Schwenkt kurz auf `target` (Weltlage), damit der Pfeil sichtbar dorthin abgeht, und
-## kehrt danach in die Lage zurück, die dann gilt (gehoben oder gesenkt). Der Aufrufer
-## wartet SWING_TIME, bevor er loslässt.
+## Schwenkt kurz auf `target` (Weltlage) und kehrt danach in die dann geltende Lage zurück.
+## Der Aufrufer wartet SWING_TIME, bevor er loslässt.
 func swing_to(target: Vector3) -> void:
 	var parent := get_parent() as Node3D
 	var dir := target - global_position

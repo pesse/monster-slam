@@ -1,22 +1,15 @@
 class_name PackInstaller
 extends RefCounted
-## Auspacken eines Content-Packs nach user://content/<pack-id>/ und der Zustand darüber.
-##
-## Ohne Netz und ohne SceneTree benutzbar, damit die Regeln prüfbar sind, die hier
-## eigentlich zählen (siehe tests/pack_installer_test.gd):
-##
-## 1. Ein Pack schreibt AUSSCHLIESSLICH unter user://content/<pack-id>/ und dort nur in die
-##    Kategorieverzeichnisse. user://progress und user://settings.cfg sind unerreichbar.
-## 2. Eine lokal veränderte Datei wird nicht überschrieben, sondern übersprungen.
-## 3. Eine Datei, die der neue Stand nicht mehr enthält, wird entfernt — aber nur, wenn wir
-##    sie installiert haben und sie seither unverändert ist.
+## Auspacken eines Content-Packs nach user://content/<pack-id>/ und der Zustand darüber, ohne
+## Netz und SceneTree (tests/pack_installer_test.gd). Ein Pack schreibt nur in die
+## Kategorieverzeichnisse seines Ordners; lokal veränderte Dateien werden übersprungen;
+## entfernt wird nur, was wir installiert haben und was seither unverändert ist.
 
 const CONTENT_ROOT := "user://content"
 ## Der Punkt-Präfix hält das Verzeichnis aus dem Katalog-Scan der ContentRegistry heraus.
 const STATE_DIR := "user://content/.state"
 
-## Verzeichnisse, in die ein Pack schreiben darf. Muss mit `_by_category` in
-## src/core/content_registry.gd und CATEGORIES in tools/packs/build_packs.py übereinstimmen.
+## Verzeichnisse, in die ein Pack schreiben darf (vier Stellen, CONVENTIONS „Packs“).
 const CATEGORIES: Array[String] = [
 	"lexemes",
 	"lexeme_forms",
@@ -41,8 +34,7 @@ class Summary:
 	var skipped_modified := 0
 	## Entfernt, weil im neuen Stand nicht mehr enthalten.
 	var removed := 0
-	## Vorhanden, aber nicht von uns installiert. Ist dieser Wert > 0 und wurde nicht
-	## `adopt` übergeben, wurde nichts geschrieben.
+	## Vorhanden, aber nicht von uns installiert. > 0 ohne `adopt`: nichts geschrieben.
 	var needs_adopt := 0
 	var error := ""
 
@@ -90,10 +82,8 @@ static func installed() -> Dictionary:
 	return out
 
 
-## True, wenn ein Pfad aus dem Pack geschrieben werden darf.
-##
-## Zweite Sicherung neben dem Pack-Build: erlaubt sind nur die Kategorieverzeichnisse, und
-## kein Segment darf aus dem Zielverzeichnis herausführen (Zip-Slip).
+## True, wenn ein Pfad aus dem Pack geschrieben werden darf: nur in Kategorieverzeichnisse,
+## kein Segment führt heraus (Zip-Slip).
 static func is_allowed_entry(name: String) -> bool:
 	if name.is_empty() or name.begins_with("/") or name.contains("\\") or name.contains(":"):
 		return false
@@ -108,10 +98,8 @@ static func is_allowed_entry(name: String) -> bool:
 	return not segments[segments.size() - 1].is_empty()
 
 
-## Packt ein ZIP aus und schreibt den Zustand fort.
-##
-## `entry` ist der Index-Eintrag (für Version und minVersion im Zustand), `adopt` erlaubt
-## das Übernehmen bereits vorhandener, nicht von uns installierter Dateien.
+## Packt ein ZIP aus und schreibt den Zustand fort. `entry`: der Index-Eintrag; `adopt`
+## erlaubt, vorhandene, nicht von uns installierte Dateien zu übernehmen.
 static func install_zip(pack_id: String, zip_path: String, entry: Dictionary, adopt: bool) -> Summary:
 	var summary := Summary.new()
 	var reader := ZIPReader.new()
@@ -133,8 +121,7 @@ static func install_zip(pack_id: String, zip_path: String, entry: Dictionary, ad
 		if rel.ends_with("/"):
 			continue
 		if not is_allowed_entry(rel):
-			# Ein Pack, der außerhalb der Kategorieverzeichnisse schreiben will, ist
-			# fehlerhaft gebaut oder manipuliert. Nichts davon wird teilweise eingespielt.
+			# Fehlerhaft gebaut oder manipuliert: nichts davon wird eingespielt.
 			reader.close()
 			summary.error = "Pack enthält einen unzulässigen Pfad (%s) — abgebrochen." % rel
 			return summary
@@ -208,8 +195,7 @@ static func _write_state(pack_id: String, entry: Dictionary, files: Array) -> vo
 	var state := {
 		"version": str(entry.get("version", "")),
 		"keyVersion": int(entry.get("keyVersion", 1)),
-		# Die Inhalts-Generation: gegen die minVersion des Index misst sich später, ob der
-		# installierte Stand eine App-Fassung zurückliegt.
+		# Gegen die minVersion des Index misst PackStatus `content_outdated`.
 		"minVersion": str(entry.get("minVersion", "")),
 		"installedAt": int(Time.get_unix_time_from_system()),
 		"files": files,
@@ -222,8 +208,8 @@ static func _write_state(pack_id: String, entry: Dictionary, files: Array) -> vo
 	file.close()
 
 
-## Installierte Packs, die das Verzeichnis nicht mehr nennt — sie sind zurückgezogen.
-## Ein leeres Verzeichnis nennt keinen: das ist eher ein kaputter Abruf als ein Rückzug.
+## Installierte Packs, die das Verzeichnis nicht mehr nennt. Ein leeres Verzeichnis gilt als
+## kaputter Abruf, nicht als Rückzug.
 static func retired(installed_packs: Dictionary, index_ids: Array) -> Array[String]:
 	var out: Array[String] = []
 	if index_ids.is_empty():
@@ -235,8 +221,8 @@ static func retired(installed_packs: Dictionary, index_ids: Array) -> Array[Stri
 	return out
 
 
-## Entfernt einen Pack vollständig: alle von uns installierten, unveränderten Dateien und
-## den Zustand. Lokal Verändertes bleibt liegen — es wäre sonst unwiederbringlich weg.
+## Entfernt einen Pack: alle von uns installierten, unveränderten Dateien und den Zustand.
+## Lokal Verändertes bleibt liegen.
 static func uninstall(pack_id: String) -> Summary:
 	var summary := Summary.new()
 	var previous := read_state(pack_id)
@@ -250,9 +236,8 @@ static func uninstall(pack_id: String) -> Summary:
 	return summary
 
 
-## Räumt leere Verzeichnisse eines entfernten Packs weg. Ein Verzeichnis, in dem noch etwas
-## liegt (lokal Verändertes), bleibt stehen — `remove_absolute` scheitert dann stillschweigend,
-## und genau das ist gewollt.
+## Räumt leere Verzeichnisse eines entfernten Packs weg; `remove_absolute` scheitert an nicht
+## leeren still, und das ist gewollt.
 static func _prune_empty_dirs(pack_path: String) -> void:
 	for category in CATEGORIES:
 		DirAccess.remove_absolute("%s/%s" % [pack_path, category])

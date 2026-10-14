@@ -1,24 +1,18 @@
 extends Control
 ## Inhalte-Verwaltung: zeigt die verfügbaren Content-Packs, ihren Zustand und holt sie.
-##
-## Öffnet als Fenster über dem Hauptmenü wie Statistik und Fähigkeiten
-## (`profile_menu._open_window`): derselbe Rahmen, dasselbe Titelband, dasselbe
-## Schließen-X, Escape schließt.
-##
-## Das Layout liegt in content_manager.tscn, eine Zeile in content_pack_row.tscn; hier wird
-## nur bedient und angezeigt. Die Zeilen entstehen zur Laufzeit aus der Vorlage, weil ihre
-## Anzahl aus dem Verzeichnis kommt.
+## Öffnet als Fenster über dem Hauptmenü; eine Zeile je Pack aus content_pack_row.tscn.
 
 const PROFILE_SCENE := "res://scenes/ui/profile_menu.tscn"
-## So lange blendet das Fenster auf (s) — wie Statistik und Fähigkeiten.
+## Einblenden des Fensters (s).
 const FADE_IN := 0.15
 
-## Das Fenster will zu. Wer es geöffnet hat, nimmt es weg; hängt niemand daran (der Screen
-## läuft allein, etwa aus dem Editor), geht es zurück ins Startmenü.
+## Das Fenster will zu; der Öffnende nimmt es weg. Ohne Verbindung geht es ins Startmenü.
 signal closed()
 
-## Vorlage einer Pack-Zeile, im Editor gesetzt (siehe content_manager.tscn).
+## Vorlage einer Pack-Zeile.
 @export var row_template: PackedScene
+## Vorlage einer Zeile je Teil des Sprachmodells.
+@export var part_template: PackedScene
 
 @onready var _packs: VBoxContainer = %Packs
 @onready var _status: Label = %Status
@@ -37,6 +31,7 @@ signal closed()
 @onready var _key_save: Button = %KeySaveButton
 @onready var _cloud_hint: Label = %CloudHint
 @onready var _cloud_confirm: ConfirmDialog = %CloudConfirm
+@onready var _model_parts: VBoxContainer = %ModelParts
 
 ## Auswahl je Pack, damit sie einen Neuaufbau der Liste übersteht.
 var _selected: Dictionary = {}
@@ -78,8 +73,6 @@ func _ready() -> void:
 	_refresh.grab_focus.call_deferred()
 
 
-## Schließt das Fenster: meldet es dem, der es geöffnet hat (das Menü nimmt es weg), oder
-## geht allein zurück ins Startmenü.
 func close() -> void:
 	if closed.get_connections().is_empty():
 		get_tree().change_scene_to_file(PROFILE_SCENE)
@@ -102,8 +95,7 @@ func _on_install() -> void:
 		ContentService.install_many(ids)
 
 
-## Baut die Liste neu. Zeilen werden verworfen und neu erzeugt, statt einzeln nachgeführt:
-## die Liste ist kurz, und ein Zustandswechsel betrifft ohnehin fast jede Zeile.
+## Baut die Liste neu, Zeile für Zeile aus der Vorlage.
 func _render() -> void:
 	var busy := ContentService.state in [ContentService.State.LOADING, ContentService.State.WORKING]
 	_status.text = _status_text()
@@ -115,9 +107,7 @@ func _render() -> void:
 	if not _preselected and not ContentService.packs.is_empty():
 		_preselected = true
 		for pack in ContentService.packs:
-			# Was Aufmerksamkeit verlangt, ist vorgewählt — auch „Inhalt veraltet", obwohl
-			# es als installiert gilt: sonst müsste der Nutzer erst verstehen, dass
-			# Neuziehen die fehlende Mechanik nachliefert.
+			# Was Aufmerksamkeit verlangt, ist vorgewählt, auch „Inhalt veraltet“.
 			_selected[pack.id] = pack.wants_attention() \
 				or pack.install == PackStatus.Install.AVAILABLE
 
@@ -150,25 +140,20 @@ func _status_text() -> String:
 		ContentService.State.WORKING:
 			return ContentService.activity
 		ContentService.State.ERROR:
-			# Offline ist der Normalfall, nicht der Ausnahmefall — deshalb erklärt die
-			# Meldung, was trotzdem funktioniert.
+			# Offline ist der Normalfall; die Meldung sagt, was trotzdem geht.
 			return "%s Installierte Inhalte bleiben nutzbar." % ContentService.error
 		_:
 			return ContentService.message
 
 
-## Der Zusatz für Bosskämpfe. Er steht bewusst ÜBER der Pack-Liste und nicht darin: die
-## Packs sind Inhalte, das hier ist ein Programm — und es ist das Einzige auf diesem
-## Bildschirm, bei dem ein Klick ein Gigabyte kostet. Das gehört vor den Klick, nicht
-## dahinter (siehe ADR 0004, Nachtrag „Stufe 1 auf eigenen Beinen").
+## Der Zusatz für Bosskämpfe, ein Programm statt eines Packs (ADR 0004, Nachtrag „Stufe 1
+## auf eigenen Beinen“).
 func _render_model() -> void:
 	var busy := ModelService.busy()
 	var installed := ModelService.installed()
 	var size := ModelService.humanized(ModelService.total_bytes())
 
-	# Gibt es nichts anzubieten und liegt nichts da, ist der ganze Abschnitt weg. Ein Kasten
-	# mit einem gesperrten Knopf ist keine Auskunft, sondern eine Frage, die niemand
-	# gestellt hat — und „noch kein Zusatz veröffentlicht" geht den Spieler nichts an.
+	# Gibt es nichts anzubieten und liegt nichts da, ist der ganze Abschnitt weg.
 	_model_panel.visible = busy or installed or ModelService.available() \
 			or not ModelService.error.is_empty()
 	if not _model_panel.visible:
@@ -176,6 +161,7 @@ func _render_model() -> void:
 
 	_model_progress.visible = busy
 	_model_progress.value = ModelService.progress
+	_render_parts(busy or (not installed and ModelService.available()))
 	_model_button.visible = not installed
 	_model_button.disabled = busy or not ModelService.available()
 	_model_remove.visible = installed and not busy
@@ -292,3 +278,17 @@ func _on_key_check() -> void:
 		if is_inside_tree():
 			_render_cloud())
 	_render_cloud()
+
+
+## Eine Zeile je Teil, angelegt, sobald das Manifest da ist, danach nur umbeschriftet.
+func _render_parts(show: bool) -> void:
+	var count := ModelService.parts().size()
+	if _model_parts.get_child_count() != count:
+		for child in _model_parts.get_children():
+			_model_parts.remove_child(child)
+			child.queue_free()
+		for i in count:
+			_model_parts.add_child(part_template.instantiate())
+	for i in count:
+		(_model_parts.get_child(i) as Label).text = ModelService.part_line(i)
+	_model_parts.visible = show and count > 0

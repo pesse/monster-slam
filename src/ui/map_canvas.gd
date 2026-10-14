@@ -1,19 +1,8 @@
 class_name MapCanvas
 extends Control
-## Eine Landkarte: ein Bild in seinem Seitenverhältnis, darauf ein Weg und Orte (ADR 0006).
-##
-## Buchkarte und Gebietskarte sind dasselbe Control mit anderen Orten. Gezeichnet statt
-## gebaut, wie SkillGraph: ein Ort hat Stufe, Fortschritt, Medaille und
-## Sperre — als Controls wären das Theme-Variationen für Zustände einer Zeichnung.
-##
-## Das Bild steht im Seitenverhältnis des Bildes da (ohne Bild 16:9): ganz, mit Rand
-## (die Werkbank), oder mit `cover` randlos über die ganze Fläche, dann an den Seiten
-## beschnitten (die Screens). Die Orte liegen in Anteilen des Bildes (0..1) und wandern
-## mit, wenn sich die Größe ändert. Fehlt das Bild, steht eine
-## schlichte Fläche da; fehlt einem Ort sein Punkt, legt `default_positions` ALLE Orte aus
-## — halb von Hand, halb automatisch gäbe einen Weg, der kreuz und quer läuft.
-##
-## Dieses Control entscheidet nichts: was ein Klick bedeutet, sagt der Screen.
+## Buch- und Gebietskarte (ADR 0006). Das Bild steht in seinem Seitenverhältnis da, mit `cover` randlos
+## und beschnitten; Orte liegen in Anteilen des Bildes (0..1). Fehlt einem Ort sein Punkt,
+## legt `default_positions` alle Orte aus. Was ein Klick bedeutet, entscheidet der Screen.
 
 ## Ein Ort wurde angeklickt — `key` wie in `setup` übergeben.
 signal node_selected(key: String)
@@ -21,27 +10,25 @@ signal node_selected(key: String)
 signal zoom_finished
 
 const ASPECT := 16.0 / 9.0
+## Radien der Orte (px): Buchkarte, Gebietskarte.
 const NODE_RADIUS := 30.0
-## Kleinere Orte für die Gebietskarte: dort sitzen sie auf den Plätzen des Bildes.
 const AREA_NODE_RADIUS := 11.0
-## So lange wächst ein Ort unter dem Zeiger auf `hover_radius` und schrumpft wieder.
+## Wachsen eines Ortes unter dem Zeiger (s).
 const HOVER_TIME := 0.12
-## Kleinster Trefferradius — ein kleiner Ort soll trotzdem gut zu treffen sein.
+## Kleinster Trefferradius (px).
 const MIN_HIT_RADIUS := 16.0
-## Zoom beim Wechsel von der Buch- in die Gebietskarte: so weit hinein, so lange.
+## Zoom in die nächste Karte: Faktor und Dauer (s).
 const ZOOM_IN := 4.0
 const ZOOM_IN_TIME := 0.35
-## Die Gebietskarte kommt aus dieser Größe auf volle Größe.
+## Die Gebietskarte kommt aus dieser Größe (Faktor) auf volle Größe (s).
 const ZOOM_FROM := 0.6
 const ZOOM_FROM_TIME := 0.3
-## Längster Schritt, den ein Zoom in einem Frame macht. Der Frame, in dem die nächste
-## Karte aufgebaut wird, dauert länger als die anderen; ohne Deckel spränge der Zoom um
-## genau diese Zeit weiter — das war der Ruckler beim Hineinzoomen.
+## Längster Zeitschritt eines Zooms je Frame (s), gegen Sprünge beim Szenenaufbau.
 const MAX_ZOOM_STEP := 1.0 / 30.0
-## Die Orte springen nach dem Zoom einer nach dem anderen auf (`appear`): so lange je Ort,
-## und so viel später als sein Vorgänger.
+## Aufspringen der Orte nach dem Zoom (`appear`): Dauer je Ort und Versatz zum Vorgänger (s).
 const APPEAR_TIME := 0.25
 const APPEAR_STAGGER := 0.06
+## Linienbreiten und Strichlänge des Wegs (px).
 const RING_WIDTH := 5.0
 const PATH_WIDTH := 6.0
 const DASH := 14.0
@@ -51,9 +38,7 @@ const SMOOTH_STEPS := 12
 const PER_ROW := 6
 
 ## Füllung nach dem Anteil gemeisterter Wörter (bzw. Aufgaben eines Bonus): dunkel, ab
-## FILL_PERCENT[n] Bronze, Silber, Gold. Bewusst NICHT die Festungsstufe — die gibt es für
-## einen Teil oder einen Bonus gar nicht. Farben aus dem Code und nicht aus dem Theme, aus
-## demselben Grund wie in SkillGraph: es sind Zustände einer Zeichnung, keine Typografie.
+## FILL_PERCENT[n] Bronze, Silber, Gold. Nicht die Festungsstufe.
 const FILL_PERCENT := [25, 60, 100]
 const FILL_COLORS := [
 	Color(0.18, 0.2, 0.26),
@@ -64,18 +49,15 @@ const FILL_COLORS := [
 const BOSS_COLOR := Color(0.45, 0.12, 0.14)
 ## Ringfarbe je Medaille 1..3: Bronze, Silber, Gold.
 const MEDAL_COLORS := [Color(0.72, 0.45, 0.2), Color(0.8, 0.83, 0.88), Color(1.0, 0.8, 0.2)]
-## Der Fortschrittsring füllt sich in Gold mit dem Anteil gemeisterter Wörter. Er ist der
-## Meisterungsstand und NICHT die Festungsstufe (ADR 0009): die ist bei 75 % voll, der Ring
-## erst bei 100 % — das letzte Viertel bleibt sichtbar etwas wert.
+## Der Fortschrittsring: Anteil gemeisterter Wörter, nicht die Festungsstufe.
 const RING_GOLD := Color(1.0, 0.8, 0.2)
 ## Heller Ton, zu dem ein gemeisterter Ring pulsiert.
 const RING_SHINE := Color(1.0, 0.95, 0.68)
-## Ein gemeisterter Ort pulsiert in diesem Takt (Hz) und sprüht Funken: so viele zugleich,
-## jeder so lange (s) unterwegs.
+## Puls eines gemeisterten Orts (Hz), Funken: Anzahl und Lebensdauer (s).
 const PULSE_HZ := 0.45
 const SPARKLES := 10
 const SPARKLE_LIFE := 1.6
-## Dazu ziehen so viele Funken in den Ort hinein, jeder so lange (s).
+## Funken, die in den Ort hineinziehen: Anzahl und Lebensdauer (s).
 const MOTES := 8
 const MOTE_LIFE := 1.3
 ## Strahlen hinter einem gemeisterten Ort, und wie schnell sie kreisen (Umdrehungen/s).
@@ -88,7 +70,7 @@ const STAR_SPARKLES := 4
 const STAR_MOTES := 3
 ## Die Markierung (`set_selected`) wippt in diesem Takt (Hz) über dem Ort.
 const BOB_HZ := 1.2
-## Füllung eines gesperrten Ortes — grau statt in der Farbe seiner Stufe.
+## Füllung eines gesperrten Ortes.
 const DISABLED_COLOR := Color(0.34, 0.35, 0.38)
 const BLANK_COLOR := Color(0.16, 0.21, 0.18)
 const BLANK_EDGE := Color(0.55, 0.62, 0.5, 0.35)
@@ -96,17 +78,14 @@ const PATH_COLOR := Color(0.98, 0.92, 0.75, 0.85)
 const SHADOW := Color(0, 0, 0, 0.45)
 const PLATE := Color(0.05, 0.06, 0.08, 0.72)
 
-## Pfeil über einem markierten Ort (`set_selected`). Weiß und nicht Gold: Gold ist der
-## Fortschritt, die Markierung soll damit nicht verwechselt werden.
+## Pfeil über einem markierten Ort (`set_selected`); weiß, weil Gold der Fortschritt ist.
 const SELECTED_COLOR := Color(1.0, 1.0, 1.0)
-## So weit wächst ein markierter Ort zur Hover-Größe (0..1): sichtbar größer, ohne dass
-## mehrere markierte Nachbarn ineinanderlaufen.
+## So weit wächst ein markierter Ort zur Hover-Größe (0..1).
 const SELECTED_GROW := 0.5
 
 ## Größe der Orte; alles am Ort (Ring, Punkte, Schrift) wächst und schrumpft mit.
 var node_radius := NODE_RADIUS
-## Den gestrichelten Weg auch über ein Bild zeichnen? Die Gebietskarten zeigen ihren Weg
-## selbst, dort stünde er doppelt.
+## Den gestrichelten Weg auch über ein Bild zeichnen?
 var path_over_image := true
 ## Beschriftung unter den Orten.
 var show_captions := true
@@ -117,8 +96,8 @@ var cover := false
 
 var _texture: Texture2D
 ## Die Orte: { key, pos (Vector2 in 0..1 oder INF), glyph, caption, done, total, medal,
-## boss, disabled, bonus }. `bonus` ist je Bonus der Unit sein Anteil 0..1 — ein Stern unter
-## dem Ort, der erst bei 1 leuchtet.
+## boss, disabled, bonus, resting }. `bonus`: je Bonus der Anteil 0..1, ein Stern unter dem
+## Ort. `resting` > 0: ein begonnener Lauf, ein Lagerfeuer am Ring.
 var _nodes: Array = []
 ## Wegpunkte in 0..1; leer = die Orte der Reihe nach verbinden.
 var _path: Array = []
@@ -138,19 +117,15 @@ var _zoom_run := {}
 var _appear_t := -1.0
 ## Uhr für Pulsieren, Funken und den wippenden Pfeil.
 var _time := 0.0
-## Bewegt sich etwas auch ohne Zeiger (gemeisterter Ort, leuchtender Stern, Markierung)?
-## Dann läuft `_process` weiter; sonst ruht die Karte.
+## Bewegt sich etwas auch ohne Zeiger? Dann läuft `_process` weiter.
 var _alive := false
-## Weicher, runder Fleck für Schein und Funken — ein Verlauf statt harter Kreise.
+## Weicher, runder Fleck für Schein und Funken.
 var _glow: Texture2D
-## Dunkle Leiste hinter den Bonus-Sternen — vor dem bunten Bild sähe man sie sonst nicht.
-## Ebene über den Orten, additiv gemischt wie die Meisterungs-Feier: Funken, Glanzlicht und
-## Schein des Rings addieren Licht, statt das Bild zu übermalen. Zeichnet `_draw_fx`.
+## Additive Ebene über den Orten für Funken, Glanzlicht und Schein (`_draw_fx`).
 var _fx: Control
 ## Die Zoom-Transformation des letzten `_draw` — die Effektebene zeichnet darin mit.
 var _base := Transform2D()
-## Das Bild liegt in einer eigenen Ebene hinter der Zeichnung der Karte, damit das, was sich
-## darauf bewegt (`_ambience`), zwischen Bild und Orten liegen kann.
+## Das Bild in einer eigenen Ebene, damit `_ambience` zwischen Bild und Orten liegt.
 var _image: Control
 var _ambience: MapAmbience
 
@@ -180,8 +155,7 @@ func _ready() -> void:
 	set_process(false)
 
 
-## Fährt in den Ort `key` hinein und blendet aus; danach kommt `zoom_finished`. Für den
-## Wechsel in die nächste Karte — die Karte selbst bleibt dabei stehen, wie sie ist.
+## Fährt in den Ort `key` hinein und blendet aus; danach kommt `zoom_finished`.
 func zoom_into(key: String) -> void:
 	zoom_into_all([key])
 
@@ -194,28 +168,25 @@ func zoom_into_all(keys: Array) -> void:
 	_start_zoom(1.0, ZOOM_IN, 1.0, 0.0, ZOOM_IN_TIME, Tween.EASE_IN)
 
 
-## Kommt aus der Mitte auf volle Größe und blendet ein — die Fortsetzung von `zoom_into`.
+## Kommt aus der Mitte auf volle Größe und blendet ein, die Fortsetzung von `zoom_into`.
 func zoom_from() -> void:
 	_focus = Vector2(0.5, 0.5)
 	_start_zoom(ZOOM_FROM, 1.0, 0.0, 1.0, ZOOM_FROM_TIME, Tween.EASE_OUT)
 
 
-## Zieht sich zur Mitte zusammen und blendet aus — zurück zur Karte darüber.
+## Zieht sich zur Mitte zusammen und blendet aus.
 func zoom_out() -> void:
 	_focus = Vector2(0.5, 0.5)
 	_start_zoom(1.0, ZOOM_FROM, 1.0, 0.0, ZOOM_FROM_TIME, Tween.EASE_IN)
 
 
-## Kommt aus dem Punkt `at` (Anteil des Bildes) heraus auf volle Größe und blendet ein —
-## die Fortsetzung von `zoom_out`, die Umkehrung von `zoom_into`. Ein Punkt und kein Ort:
-## die Orte kommen erst nach dem Zoom (`appear`).
+## Kommt aus dem Punkt `at` (Anteil des Bildes) auf volle Größe und blendet ein, die
+## Umkehrung von `zoom_into`. Ein Punkt, weil die Orte erst nach dem Zoom kommen.
 func zoom_back_to(at: Vector2) -> void:
 	_focus = at if at.is_finite() else Vector2(0.5, 0.5)
 	_start_zoom(ZOOM_IN, 1.0, 0.0, 1.0, ZOOM_IN_TIME, Tween.EASE_OUT)
 
 
-## Lässt die Orte aus `setup` aufspringen, der Reihe nach. Die Screens rufen es nach dem
-## Zoom: erst steht das Bild, dann wird gerechnet, dann kommen die Orte.
 func appear() -> void:
 	_appear_t = 0.0
 	set_process(true)
@@ -229,7 +200,7 @@ func appear_scale(i: int) -> float:
 	var x := clampf((_appear_t - float(i) * APPEAR_STAGGER) / APPEAR_TIME, 0.0, 1.0)
 	if x <= 0.0 or x >= 1.0:
 		return x
-	# Ease-out-back: kurz über das Ziel hinaus und zurück — ein Aufspringen, kein Einblenden.
+	# Ease-out-back mit der üblichen Überschwing-Konstante.
 	var c := 1.70158
 	return 1.0 + (c + 1.0) * pow(x - 1.0, 3.0) + c * pow(x - 1.0, 2.0)
 
@@ -270,7 +241,6 @@ static func shines(node: Dictionary) -> bool:
 	return (node.get("bonus", []) as Array).any(func(share): return float(share) >= 1.0)
 
 
-## Ist der Ring voll — alles gemeistert?
 static func is_mastered(node: Dictionary) -> bool:
 	var total := int(node.get("total", 0))
 	return total > 0 and int(node.get("done", 0)) >= total
@@ -291,8 +261,7 @@ func _pos_of(key: String, fallback: Vector2) -> Vector2:
 	return fallback
 
 
-## Gerechnet in `_process` statt als Tween, damit ein langer Frame den Zoom nicht
-## überspringt (MAX_ZOOM_STEP).
+## Gerechnet in `_process` statt als Tween, wegen MAX_ZOOM_STEP.
 func _start_zoom(from: float, to: float, alpha_from: float, alpha_to: float, time: float,
 		easing: Tween.EaseType) -> void:
 	_zooming = true
@@ -318,11 +287,10 @@ func _step_zoom(delta: float) -> void:
 		zoom_finished.emit()
 
 
-## Setzt Bild, Orte und Weg und meldet die Auskunft am Zeiger an. `hint` liefert für einen
-## Ort die Karte (Title/Body/Note, siehe Hints.attach).
+## Setzt Bild, Orte und Weg und meldet die Auskunft am Zeiger an. `hint(node) -> Dictionary`
+## liefert die Karte (siehe Hints.attach_live).
 func setup(texture: Texture2D, nodes: Array, path: Array, hint: Callable) -> void:
-	# Was sich bewegt, gehört zum alten Bild; wer es will, setzt es danach (`set_ambience`).
-	# Dasselbe Bild mit neuen Orten behält es — AreaMap setzt die Orte erst nach dem Zoom.
+	# Ein neues Bild verwirft die Bewegung des alten; dasselbe Bild behält sie.
 	if _ambience != null and texture != _texture:
 		_ambience.setup([], texture)
 	_texture = texture
@@ -355,9 +323,8 @@ static func map_rect(area: Vector2, ratio := ASPECT, fill := false) -> Rect2:
 	return Rect2((area - Vector2(width, height)) * 0.5, Vector2(width, height))
 
 
-## Punkte in 0..1 für `count` Orte ohne eigene Position: Reihen zu höchstens PER_ROW, jede
-## zweite zurück (Serpentine), in einer Reihe leicht auf und ab, damit es nach Weg aussieht
-## und nicht nach Tabelle.
+## Punkte in 0..1 für `count` Orte ohne eigene Position: Serpentine in Reihen zu höchstens
+## PER_ROW, innerhalb der Reihe leicht auf und ab. Ränder in Anteilen des Bildes.
 static func default_positions(count: int) -> Array:
 	var out: Array = []
 	if count <= 0:
@@ -377,7 +344,6 @@ static func default_positions(count: int) -> Array:
 	return out
 
 
-## Das Seitenverhältnis der Karte: das des Bildes, ohne Bild ASPECT.
 func aspect() -> float:
 	if _texture == null or _texture.get_height() <= 0:
 		return ASPECT
@@ -390,8 +356,7 @@ func to_local_point(at: Vector2) -> Vector2:
 	return rect.position + at * rect.size
 
 
-## Liegt einer der Punkte `points` (Anteile des Bildes) unter `rect` (global)? Mit dem
-## Rand eines gewachsenen Ortes: auch unter dem Zeiger soll kein Ort darunter verschwinden.
+## Liegt einer der Punkte `points` (Anteile des Bildes) samt Ortsrand unter `rect` (global)?
 func covers(rect: Rect2, points: Array) -> bool:
 	var local := Rect2(rect.position - global_position, rect.size).grow(maxf(hover_radius, node_radius))
 	for at in points:
@@ -400,11 +365,8 @@ func covers(rect: Rect2, points: Array) -> bool:
 	return false
 
 
-## Stellt den Kopf eines Screens (`header`, oben links in seinem Eltern-Control) in die
-## Ecke, in der kein Ort darunter liegt. `prefer_bottom` sagt, welche Ecke er nimmt, wenn
-## beide frei oder beide belegt sind: sonst oben links, mit `prefer_bottom` unten links —
-## die andere Ecke nur, wenn die bevorzugte belegt ist und sie nicht. Vor dem Einblenden
-## aufrufen, nach einem Frame Layout: danach bleibt der Kopf, wo er ist.
+## Stellt den Kopf eines Screens (`header`, oben links) in die Ecke links, unter der kein Ort
+## liegt; bevorzugt oben, mit `prefer_bottom` unten. Nach einem Frame Layout aufrufen.
 func place_header(header: Control, points: Array, prefer_bottom := false) -> void:
 	var top := header.get_global_rect()
 	var parent := header.get_parent() as Control
@@ -417,7 +379,7 @@ func place_header(header: Control, points: Array, prefer_bottom := false) -> voi
 		header.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_MINSIZE)
 
 
-## Der Anteil des Bildes unter `local` — die Umkehrung, für die Werkbank.
+## Der Anteil des Bildes unter `local`, die Umkehrung von `to_local_point`.
 func to_map_point(local: Vector2) -> Vector2:
 	var rect := map_rect(size, aspect(), cover)
 	if rect.size.x <= 0.0:
@@ -436,7 +398,6 @@ func _relayout() -> void:
 	queue_redraw()
 
 
-## Wie groß der Ort `i` gerade ist — zwischen node_radius und hover_radius.
 func radius_of(i: int) -> float:
 	if hover_radius <= node_radius or i < 0 or i >= _grow.size():
 		return node_radius
@@ -444,7 +405,6 @@ func radius_of(i: int) -> float:
 	return lerpf(node_radius, hover_radius, t * t * (3.0 - 2.0 * t))
 
 
-## Der Index des Ortes unter `point`, sonst -1.
 func index_at(point: Vector2) -> int:
 	for i in _centers.size():
 		if (_centers[i] as Vector2).distance_to(point) <= maxf(radius_of(i), MIN_HIT_RADIUS):
@@ -481,8 +441,7 @@ func _set_hovered(index: int) -> void:
 	queue_redraw()
 
 
-## Lässt die Orte zu ihrer Größe wachsen oder schrumpfen; ruht, sobald alle angekommen sind
-## und nichts leuchtet.
+## Ruht, sobald alle Orte ihre Größe haben und nichts leuchtet.
 func _process(delta: float) -> void:
 	_time += delta
 	if not _zoom_run.is_empty():
@@ -526,12 +485,12 @@ func _draw() -> void:
 	for i in _centers.size():
 		if i != _hovered:
 			_draw_appearing(i, base)
-	# Der Ort unter dem Zeiger zuletzt: groß geworden, liegt er über seinen Nachbarn.
+	# Der Ort unter dem Zeiger zuletzt, damit er über seinen Nachbarn liegt.
 	if _hovered >= 0 and _hovered < _centers.size():
 		_draw_appearing(_hovered, base)
 
 
-## Ein Ort, beim Aufspringen um seine Mitte skaliert — alles an ihm wächst mit.
+## Ein Ort, beim Aufspringen um seine Mitte skaliert.
 func _draw_appearing(i: int, base: Transform2D) -> void:
 	var grow := appear_scale(i)
 	if grow <= 0.01:
@@ -560,8 +519,7 @@ func _draw_path() -> void:
 		draw_line(dash[0], dash[1], PATH_COLOR, PATH_WIDTH, true)
 
 
-## Der Weg als weiche Kurve durch alle Punkte (Catmull-Rom): aus wenigen Wegpunkten wird
-## ein gewundener Pfad statt eines Zickzacks.
+## Der Weg als weiche Kurve durch alle Punkte (Catmull-Rom).
 static func smooth_path(points: Array) -> PackedVector2Array:
 	var out := PackedVector2Array()
 	if points.size() < 3:
@@ -582,8 +540,7 @@ static func smooth_path(points: Array) -> PackedVector2Array:
 	return out
 
 
-## Striche der Länge `dash` mit gleich großen Lücken, über die ganze Linie durchgezählt —
-## je Abschnitt neu angefangen, zerfiele das Muster einer Kurve in Krümel.
+## Striche der Länge `dash` mit gleich großen Lücken, über die ganze Linie durchgezählt.
 static func dashes(line: PackedVector2Array, dash: float) -> Array:
 	var out: Array = []
 	var walked := 0.0
@@ -611,16 +568,16 @@ func _draw_node(i: int) -> void:
 	var total := int(node.get("total", 0))
 	var done := int(node.get("done", 0))
 	var mastered := not boss and not disabled and is_mastered(node)
+	# Deckkraft der Schrift eines gesperrten Ortes.
 	var dim := 0.45 if disabled else 1.0
 	var r := radius_of(i)
+	# Maßstab gegen NODE_RADIUS; die Pixelmaße unten gelten für k = 1.
 	var k := r / NODE_RADIUS
 	var ring := _ring_width(r, mastered)
 	var ring_r := _ring_radius(r, mastered)
 	var pulse := _pulse(i)
 
 	var shares: Array = [] if boss or disabled else node.get("bonus", [])
-	# Ein weicher Schatten um den Ort und unter seinen Sternen: hebt sie vom unruhigen Bild ab
-	# und gibt Tiefe. Zuerst gezeichnet — Schein, Ring und Sterne liegen darüber.
 	var outside := ring_r + ring * 0.5
 	_draw_soft_spot(i, at + Vector2(0, 3.0 * k), Vector2(outside * 1.75, outside * 1.75), 0.45)
 	_draw_star_shadow(at, ring_r + ring * 0.5, k, shares, i)
@@ -635,7 +592,6 @@ func _draw_node(i: int) -> void:
 		fill = BOSS_COLOR if medal == 0 else (MEDAL_COLORS[medal - 1] as Color).darkened(0.35)
 	if disabled:
 		fill = DISABLED_COLOR
-	# Gesperrt heißt grau, nicht durchsichtig: der Weg läuft sonst sichtbar durch den Ort.
 	draw_circle(at, r, fill)
 	var track := Color(0.07, 0.08, 0.11)
 	draw_arc(at, ring_r - 0.5, 0.0, TAU, 48, track, ring + 3.0, true)
@@ -643,8 +599,7 @@ func _draw_node(i: int) -> void:
 		if medal > 0:
 			draw_arc(at, ring_r, 0.0, TAU, 48, MEDAL_COLORS[medal - 1], ring, true)
 	elif mastered:
-		# Alles gemeistert: ein breiter, massiver Ring — dunkle Außenkante, Gold, helle
-		# Innenkante wie ein gegossener Reif — der zum hellen Gold pulsiert.
+		# Gemeistert: breiter Ring mit dunkler Außen- und heller Innenkante, pulsierend.
 		draw_arc(at, ring_r, 0.0, TAU, 64, RING_GOLD.lerp(RING_SHINE, pulse * 0.6), ring, true)
 		draw_arc(at, ring_r + ring * 0.32, 0.0, TAU, 64, Color(0.62, 0.42, 0.06), ring * 0.28, true)
 		draw_arc(at, ring_r - ring * 0.3, 0.0, TAU, 64, Color(1.0, 0.98, 0.85), ring * 0.22, true)
@@ -664,6 +619,15 @@ func _draw_node(i: int) -> void:
 		draw_string(font, at + Vector2(-r, -r - 4.0 * k), "👑",
 				HORIZONTAL_ALIGNMENT_CENTER, r * 2.0, glyph_size)
 		top -= glyph_size
+	if int(node.get("resting", 0)) > 0 and not disabled:
+		# Lagerfeuer auf dunkler Plakette unten rechts am Ring.
+		var fire_size := maxi(roundi(glyph_size * 0.8), 15)
+		var corner := at + Vector2(ring_r, ring_r) * 0.78
+		draw_circle(corner + Vector2(0, 2.0), fire_size * 0.78, SHADOW)
+		draw_circle(corner, fire_size * 0.72, Color(0.07, 0.08, 0.11))
+		draw_arc(corner, fire_size * 0.72, 0.0, TAU, 32, RING_GOLD, 1.5, true)
+		draw_string(font, corner + Vector2(-fire_size, fire_size * 0.36), "🔥",
+				HORIZONTAL_ALIGNMENT_CENTER, fire_size * 2.0, fire_size)
 	if _selected.has(str(node["key"])) and not disabled:
 		_draw_pointer(Vector2(at.x, top), k)
 	var below := ring_r + ring * 0.5
@@ -674,7 +638,6 @@ func _draw_node(i: int) -> void:
 		_draw_caption(at, below + 4.0 * k, str(node.get("caption", "")), dim)
 
 
-## Ein flacher, weicher Fleck unter der Sternreihe, wie ein Schatten am Boden.
 func _draw_star_shadow(at: Vector2, below: float, k: float, shares: Array, seed: int) -> void:
 	if shares.is_empty():
 		return
@@ -717,9 +680,8 @@ static func fill_level(done: int, total: int) -> int:
 	return level
 
 
-## Breite und Radius des Rings um einen Ort vom Radius `r`. Er liegt außen um die Füllung,
-## durch eine dunkle Fuge getrennt — eine goldene Füllung soll ihn nicht verschlucken —
-## und wird gemeistert breiter.
+## Breite und Radius des Rings um einen Ort vom Radius `r`: außen um die Füllung, durch
+## eine Fuge getrennt, gemeistert breiter.
 func _ring_width(r: float, mastered: bool) -> float:
 	var ring := maxf(RING_WIDTH * r / NODE_RADIUS, 3.5)
 	return ring * 1.6 if mastered else ring
@@ -729,8 +691,7 @@ func _ring_radius(r: float, mastered: bool) -> float:
 	return r + 1.0 + _ring_width(r, mastered) * 0.5
 
 
-## 0..1, langsam auf und ab — derselbe Takt für Schein und Ring eines Ortes, versetzt
-## gegen die Nachbarn, damit die Karte nicht im Gleichschritt atmet.
+## 0..1 im Takt PULSE_HZ, je `seed` phasenversetzt.
 func _pulse(seed: int) -> float:
 	return 0.5 + 0.5 * sin(TAU * PULSE_HZ * _time + float(seed) * 1.7)
 
@@ -762,8 +723,7 @@ func _draw_rays(at: Vector2, inner: float, length: float, seed: float) -> void:
 				Color(RING_SHINE, 0.55)]))
 
 
-## Ein weicher Schein um `at`, Durchmesser `diameter`, auf `item` (die Karte oder die
-## Effektebene).
+## Ein weicher Schein um `at` auf `item` (Karte oder Effektebene).
 func _draw_halo(at: Vector2, diameter: float, color: Color, item: CanvasItem = self) -> void:
 	item.draw_texture_rect(_glow_texture(),
 			Rect2(at - Vector2(diameter, diameter) * 0.5, Vector2(diameter, diameter)), false, color)
@@ -771,8 +731,6 @@ func _draw_halo(at: Vector2, diameter: float, color: Color, item: CanvasItem = s
 
 func _glow_texture() -> Texture2D:
 	if _glow == null:
-		# Von Hand gerechnet: weiß, nach außen weich auslaufend (quadratisch, damit die Mitte
-		# hell bleibt und der Rand ohne Kante verschwindet).
 		var side := 64
 		var image := Image.create(side, side, false, Image.FORMAT_RGBA8)
 		var half := float(side) * 0.5
@@ -797,7 +755,6 @@ func _draw_soft_spot(i: int, center: Vector2, size: Vector2, strength: float) ->
 	draw_set_transform_matrix(around)
 
 
-## Das Bild, in der Zoom-Transformation der Karte.
 func _draw_image() -> void:
 	var rect := map_rect(size, aspect(), cover)
 	if rect.size.x <= 0.0:
@@ -806,13 +763,11 @@ func _draw_image() -> void:
 	if _texture != null:
 		_image.draw_texture_rect(_texture, rect, false)
 	else:
-		# Ohne Bild eine schlichte Fläche mit Rand — die Karte soll als Karte lesbar bleiben,
-		# bis ihr Bild da ist.
 		_image.draw_rect(rect, BLANK_COLOR)
 		_image.draw_rect(rect.grow(-8.0), BLANK_EDGE, false, 2.0)
 
 
-## Die Zoom-Transformation, in der die Karte gerade steht — die Ebenen zeichnen darin mit.
+## Die Zoom-Transformation, in der die Karte gerade steht; die Ebenen zeichnen darin mit.
 func view_transform() -> Transform2D:
 	return _base
 
@@ -823,7 +778,6 @@ func set_ambience(entries: Array, masks: Dictionary = {}) -> void:
 	_ambience.setup(entries, _texture, masks)
 
 
-## Die Ebene mit dem, was sich bewegt — für Werkbank und Tests.
 func ambience_layer() -> MapAmbience:
 	return _ambience
 
@@ -857,7 +811,6 @@ func _draw_fx() -> void:
 		for s in shares.size():
 			if float(shares[s]) < 1.0:
 				continue
-			# Dieselben Funken wie am Ring, im Maß des Sterns: hinein und hinaus.
 			var center := _star_center(at, below, k, s, shares.size())
 			var outer := _star_size(k)
 			_draw_motes(center, outer * 0.6, outer * 3.2, i * 7 + s, STAR_MOTES, k * 0.6)
@@ -865,7 +818,7 @@ func _draw_fx() -> void:
 	_fx.draw_set_transform_matrix(Transform2D())
 
 
-## Schein in Ringform: breite, schwache Bögen über dem vollen Ring — er strahlt.
+## Schein in Ringform: breite, schwache Bögen über dem vollen Ring ([Breite, Alpha]).
 func _draw_ring_bloom(at: Vector2, ring_r: float, ring: float, pulse: float) -> void:
 	var strength := 0.6 + 0.4 * pulse
 	for layer in [[2.0, 0.22], [3.6, 0.12], [5.5, 0.06]]:
@@ -884,9 +837,8 @@ func _draw_glint(at: Vector2, ring_r: float, ring: float, seed: float) -> void:
 	_draw_halo(at + Vector2.from_angle(head) * ring_r, ring * 3.0, Color(1.0, 0.97, 0.85, 0.8), _fx)
 
 
-## Funken, die vom Rand (`from` Pixel um die Mitte) nach außen schießen, mit Schweif, und
-## verglühen. Ohne Zustand: Lage und Richtung folgen aus Uhr, Ort und Nummer, jeder
-## Durchgang würfelt neu.
+## Funken, die vom Rand (`from` Pixel um die Mitte) nach außen schießen und verglühen.
+## Zustandslos aus Uhr, Ort und Nummer gerechnet.
 func _draw_sparks(at: Vector2, from: float, travel: float, seed: int, count: int, k: float) -> void:
 	for j in count:
 		var phase := _time / SPARKLE_LIFE + float(j) / float(count) + float(seed) * 0.37
@@ -916,7 +868,6 @@ func _draw_motes(at: Vector2, into: float, reach: float, seed: int, count: int, 
 		_draw_halo(pos, size, Color(RING_SHINE, clampf(alpha, 0.0, 1.0) * 0.9), _fx)
 
 
-## Eine feste Zufallszahl 0..1 für `n` — dieselbe in jedem Frame.
 static func _noise(n: int) -> float:
 	return fposmod(sin(float(n) * 12.9898) * 43758.5453, 1.0)
 
@@ -936,7 +887,6 @@ func _draw_pointer(top: Vector2, k: float) -> void:
 	draw_polyline(arrow, Color(0.1, 0.1, 0.12), 1.5, true)
 
 
-## Die Ecken eines fünfzackigen Sterns um `center`, Spitze oben.
 static func star_points(center: Vector2, outer: float, inner: float) -> PackedVector2Array:
 	var out := PackedVector2Array()
 	for n in 10:
@@ -945,8 +895,7 @@ static func star_points(center: Vector2, outer: float, inner: float) -> PackedVe
 	return out
 
 
-## Die Beschriftung `below` Pixel unter der Mitte des Ortes, auf einer dunklen Platte — das
-## Bild darunter ist bunt.
+## Die Beschriftung `below` Pixel unter der Mitte des Ortes, auf einer dunklen Platte.
 func _draw_caption(at: Vector2, below: float, text: String, dim: float) -> void:
 	if text.is_empty():
 		return

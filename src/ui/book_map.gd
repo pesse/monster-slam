@@ -1,17 +1,9 @@
 class_name BookMap
 extends Control
 ## Buchkarte: die Units eines Buchs als Gebiete auf seiner Landkarte (ADR 0006).
-##
-## Jeder Ort zeigt die Stufe der Unit (Füllung), den Weg zur nächsten (Ring) und die
-## Medaille ihres Bosses. Ein Klick öffnet die Gebietskarte der Unit. Nichts ist
-## gesperrt — die Reihenfolge legt nur der Weg auf der Karte nahe.
-##
-## Hat das Buch einen begonnenen Lauf (RunSave, ADR 0020), führt „Lauf fortsetzen" unten
-## rechts (wo auf der Gebietskarte „Spielen" steht) in seine Unit; dort sind seine Orte markiert, und „Spielen" setzt ihn fort.
-##
-## Das Layout liegt in book_map.tscn, das Bild und die Punkte unter assets/maps/<book>/
-## (MapLayout); gezeichnet wird in MapCanvas. Die Zahlen kommen aus FortressTier.unit_tiers
-## — derselben Zählung wie Kampf und Statistik.
+## Jeder Ort zeigt Stufe (Füllung), Weg zur nächsten (Ring) und Boss-Medaille; ein Klick
+## öffnet die Gebietskarte. „Lauf fortsetzen“ führt in die Unit des begonnenen Laufs (ADR 0020).
+## Zahlen aus FortressTier.unit_tiers, Bild und Punkte über MapLayout.
 
 @onready var _canvas: MapCanvas = %Canvas
 @onready var _title: Label = %Title
@@ -27,8 +19,7 @@ func _ready() -> void:
 	(%ProfileBadge as ProfileBadge).switch_pressed.connect(MapSelection.to_profile_pick.bind(self))
 	_canvas.node_selected.connect(_on_unit_selected)
 	_canvas.cover = true
-	# Wie auf der Gebietskarte: kleine Orte, die unter dem Zeiger wachsen; was eine Unit
-	# ist, sagt die Hinweiskarte.
+	# Kleine Orte, die unter dem Zeiger wachsen.
 	_canvas.node_radius = MapCanvas.AREA_NODE_RADIUS
 	_canvas.hover_radius = MapCanvas.NODE_RADIUS
 	_canvas.show_captions = false
@@ -40,8 +31,7 @@ func _ready() -> void:
 	_canvas.setup(MapLayout.book_texture(MapSelection.book), [], [], func(_n): return {})
 	# Nicht abgewartet: der Zoom soll nicht auf den Kopf warten.
 	_place_header()
-	# Aus einer Gebietskarte zurück: die Buchkarte kommt aus dieser Unit heraus — erst der
-	# Zoom über das Bild, dann die Rechnung und die Orte, wie auf dem Weg hinein.
+	# Aus einer Gebietskarte zurück: erst der Zoom aus dieser Unit, dann die Rechnung.
 	if MapSelection.zoom_out:
 		MapSelection.zoom_out = false
 		var at: Vector2 = MapLayout.unit_points(MapLayout.data(MapSelection.book)) \
@@ -52,18 +42,20 @@ func _ready() -> void:
 	_canvas.appear()
 
 
-## Der Knopf steht vor dem ersten Bild fest. Unten rechts und nicht im Kopf: der ist mit
-## Buchtitel und „Für eine Arbeit üben" bei 1152 Pixel Breite schon fast voll.
+## Der Knopf steht vor dem ersten Bild fest.
 func _setup_resume() -> void:
 	var button := %ResumeButton as Button
-	var saved := RunSave.of_book(MapSelection.book, UserSettings.active_profile())
-	button.visible = not saved.is_empty()
-	if saved.is_empty():
+	var runs := RunSave.of_book(MapSelection.book, UserSettings.active_profile())
+	button.visible = not runs.is_empty()
+	if runs.is_empty():
 		return
+	# Je Unit ein Lauf: der Knopf führt zum zuletzt gerasteten, die anderen zeigt `add_runs`.
+	var saved: Dictionary = runs[0]
 	var level: Dictionary = saved["level"]
 	button.text = "Lauf fortsetzen · %s" % AreaMap.saved_label(saved)
 	Hints.attach(button, "Lauf fortsetzen",
-			"Öffnet die Unit mit den Orten des begonnenen Laufs; „Fortsetzen“ startet ihn.")
+			"Öffnet die Unit des zuletzt gerasteten Laufs mit seinen Orten; „Fortsetzen“ startet ihn.",
+			"Weitere begonnene Läufe tragen auf der Karte ein 🔥 an ihrer Unit.")
 	button.pressed.connect(func() -> void:
 		_on_unit_selected("%s/%d" % [MapSelection.book, int(level.get("unit", 0))]))
 
@@ -101,8 +93,8 @@ func _fill() -> void:
 	var nodes := nodes_for(book, units, MapLayout.unit_points(layout),
 			BossRecord.wins(UserSettings.active_profile()))
 	add_bonuses(nodes, book, layout, PlayerProgress.is_mastered)
-	# Die Gebietskarten schon jetzt im Hintergrund laden, auch die gesperrter Units: die
-	# Hinweiskarte zeigt sie als Vorschau, und der Zoom hinein soll nicht auf das Bild warten.
+	add_runs(nodes, RunSave.of_book(book, UserSettings.active_profile()))
+	# Gebietskarten im Hintergrund vorladen, auch gesperrte: die Hinweiskarte zeigt sie.
 	MapLayout.preload_unit_textures(book, nodes.map(func(n): return int(n["unit"])))
 	_canvas.setup(MapLayout.book_texture(book), nodes, MapLayout.book_path(layout),
 			hint_lines.bind(book_name))
@@ -127,9 +119,8 @@ static func book_units(tiers: Dictionary) -> Dictionary:
 	return out
 
 
-## Die Orte der Buchkarte: je Unit einer, mit Punkt aus map.json (oder INF) und der
-## Medaille ihres Bosses. Eine Unit, die die Karte schon hat, der Inhalt aber noch nicht,
-## steht grau und gesperrt da: man sieht, dass das Buch weitergeht.
+## Die Orte der Buchkarte: je Unit einer, mit Punkt aus map.json (oder INF) und Boss-Medaille.
+## Eine Unit, die die Karte schon hat, der Inhalt aber nicht, steht gesperrt da (`missing`).
 static func nodes_for(book: String, units: Array, points: Dictionary, wins: Dictionary) -> Array:
 	var out: Array = []
 	var present := {}
@@ -176,20 +167,31 @@ static func add_bonuses(nodes: Array, book: String, layout: Dictionary, is_maste
 			node["bonus_lines"] = lines
 
 
-## Die Karte am Zeiger für eine Unit: ihr Stand, wie oft ihr Boss besiegt ist, und ein
-## Blick auf ihre Gebietskarte. Die Festungsstufe steht erst im Kopf der Gebietskarte.
+## Markiert jede Unit mit begonnenem Lauf (RunSave.of_book): `resting` ist die Welle, mit
+## der er weitergeht. MapCanvas zeichnet dafür ein Lagerfeuer an den Ort.
+static func add_runs(nodes: Array, runs: Array) -> void:
+	var waves := {}
+	for state in runs:
+		waves[int((state.get("level", {}) as Dictionary).get("unit", 0))] = int(state.get("next_wave", 1))
+	for node in nodes:
+		if waves.has(int(node["unit"])) and not bool(node.get("missing", false)):
+			node["resting"] = waves[int(node["unit"])]
+
+
+## Die Karte am Zeiger für eine Unit: Stand, Bonus, Boss-Siege, Lauf und ihre Gebietskarte.
 static func hint_lines(unit: Dictionary, book_name: String) -> Dictionary:
 	var book := str(unit.get("key", "")).get_slice("/", 0)
 	var unit_label := BookNaming.unit_label(book, int(unit["unit"]))
 	var body := "%d von %d Wörtern gemeistert" % [int(unit["done"]), int(unit["total"])]
 	if bool(unit.get("missing", false)):
-		# Gesperrt, aber zu sehen: das Gebiet zeigt schon, wohin das Buch führt.
 		body = "Für %s gibt es noch keine Wörter." % unit_label
 	for line in unit.get("bonus_lines", []):
 		body += "\n" + str(line)
 	var wins := int(unit.get("wins", 0))
 	if wins > 0:
 		body += "\n👑 Boss %d× besiegt" % wins
+	if int(unit.get("resting", 0)) > 0:
+		body += "\n🔥 Begonnener Lauf: Welle %d" % int(unit["resting"])
 	return {
 		"title": "%s, %s" % [book_name, unit_label],
 		"image": MapLayout.unit_texture(book, int(unit["unit"])) if not book.is_empty() else null,
@@ -202,7 +204,6 @@ func _on_unit_selected(key: String) -> void:
 		return
 	MapSelection.book = key.get_slice("/", 0)
 	MapSelection.unit = int(key.get_slice("/", 1))
-	# Hinein ins Gebiet: die Buchkarte fährt auf die Unit zu, die Gebietskarte setzt fort.
 	_canvas.zoom_into(key)
 	await _canvas.zoom_finished
 	MapSelection.zoom_in = true

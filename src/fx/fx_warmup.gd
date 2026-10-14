@@ -1,28 +1,20 @@
 class_name FxWarmup
 extends RefCounted
-## Zeigt beim Kampfstart hinter dem Schleier (SceneZoom) einmal alles, was sonst erst mitten
-## im Kampf zum ersten Mal auf den Schirm käme: Explosion samt Lichtblitz, je ein Monster
-## jeder Art, die aufsteigenden Texte.
-##
-## Warum: Der Renderer (gl_compatibility) übersetzt einen Shader erst, wenn er zum ersten
-## Mal gezeichnet wird, und das Bild steht so lange. Ein Punktlicht zwingt dabei auch Boden,
-## Burg und Monster in eine zweite Variante; eine Schriftgröße rastert ihre Zeichen erst beim
-## ersten Zeichnen. Hinter dem Schleier kostet das nur ein paar Bilder Dunkel.
-##
-## Gezeichnet wird nur, was im Bild steht — deshalb liegt alles vor der Kamera und nicht
-## irgendwo abseits, wo es nur weggeschnitten würde.
+## Zeigt beim Kampfstart hinter dem Schleier einmal alles, was sonst mitten im Kampf zum
+## ersten Mal Shader übersetzen oder Zeichen rastern würde (CONVENTIONS „Fallen“). Ein
+## Punktlicht zwingt auch Boden, Burg und Monster in eine zweite Variante. Übersetzt wird nur,
+## was im Bild steht, deshalb liegt alles vor der Kamera.
 
 ## So viele Bilder bleibt alles stehen: eins für Shader und Schrift, eins für die ersten
-## Partikel (sie erscheinen erst im Bild nach dem Ausstoß), der Rest ist Luft.
+## Partikel (sie erscheinen erst im Bild nach dem Ausstoß), der Rest ist Reserve.
 const FRAMES := 4
 
 const MONSTER_SCENE := preload("res://scenes/entities/monster.tscn")
 
 ## Die Zeichen, die ein Schild oder aufsteigender Text zeigen kann.
-const GLYPHS := "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ abcdefghijklmnopqrstuvwxyzäöüß 0123456789 +-.,:;!?'’…()/"
+const GLYPHS := "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ abcdefghijklmnopqrstuvwxyzäöüß 0123456789 +-.,:;!?'’…()/✓"
 
-## Größe der Explosion: die größte im Kampf (Festungsausbau), damit ihr Licht das Feld
-## erreicht — die Lichtvariante braucht jedes Material, das es trifft.
+## Größe der Explosion: die größte im Kampf, damit ihr Licht jedes Material im Feld trifft.
 const EXPLOSION_SCALE := 3.0
 
 
@@ -37,14 +29,15 @@ static func run(parent: Node3D, at: Vector3, monster_defs: Array, extras: Array[
 	fx.position = at
 	parent.add_child(fx)
 	for def in monster_defs:
-		shown.append(_monster(parent, def, at, screen_sized))
+		shown.append(_monster(parent, def, at, screen_sized, false))
+		# Gemeistert: durchsichtige Materialien, eigene Shader-Variante.
+		shown.append(_monster(parent, def, at, screen_sized, true))
 	for node in extras:
 		node.position = at
 		parent.add_child(node)
 		shown.append(node)
 	await frames()
-	# Die Explosion räumt sich selbst weg (sie wartet auf ihren Timer); vorher freigegeben
-	# liefe ihr await ins Leere. Unsichtbar zeichnet sie nichts mehr.
+	# Die Explosion gibt sich selbst frei (sie wartet auf ihren Timer); nur ausblenden.
 	if is_instance_valid(fx):
 		fx.visible = false
 	for node in shown:
@@ -66,12 +59,14 @@ static func monster_defs() -> Array:
 			func(def: Dictionary) -> bool: return not str(def.get("model", "")).is_empty())
 
 
-## Ein stehendes Monster mit Modell, Outline, Laufanimation und Schild — dieselbe Szene wie
-## im Kampf, nur ohne Tempo und ohne Verbindung zum WaveRunner. Das Schild zeigt auch die
-## Zeile der Alternativen (Zauber, ADR 0014): eigene Schriftgröße.
-static func _monster(parent: Node3D, def: Dictionary, at: Vector3, screen_sized: bool) -> Node3D:
+## Ein stehendes Monster aus derselben Szene wie im Kampf, ohne Tempo. Das Schild zeigt auch
+## die Zeile der Alternativen (eigene Schriftgröße).
+static func _monster(parent: Node3D, def: Dictionary, at: Vector3, screen_sized: bool,
+		mastered: bool) -> Node3D:
 	var monster := MONSTER_SCENE.instantiate() as Monster
+	# Ziel weit hinter dem Monster, Tempo 0: es steht.
 	monster.setup(def, {"prompt": GLYPHS, "prompt_alt": [GLYPHS]}, at.z + 1000.0, 0.0)
+	monster.mastered = mastered
 	monster.screen_sized_label = screen_sized
 	monster.position = at
 	parent.add_child(monster)
@@ -79,8 +74,8 @@ static func _monster(parent: Node3D, def: Dictionary, at: Vector3, screen_sized:
 	return monster
 
 
-## Ein Punkt im Bild der Kamera: `preferred`, wenn die Kamera ihn sieht, sonst ein Stück
-## vor ihr (Ich-Sicht).
+## Ein Punkt im Bild der Kamera: `preferred`, wenn die Kamera ihn sieht, sonst 8 m vor ihr
+## (Ich-Sicht).
 static func point_in_view(camera: Camera3D, preferred: Vector3) -> Vector3:
 	if camera == null or camera.is_position_in_frustum(preferred):
 		return preferred

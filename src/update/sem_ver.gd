@@ -1,15 +1,8 @@
 class_name SemVer
 extends RefCounted
-## Versionsvergleich für die beiden Update-Kanäle (App und Content-Packs).
-##
-## Verglichen wird das Zahlentripel; ein Suffix (`-rc1`, `+build`, vierte Stelle) fällt
-## weg, damit ein Release Candidate der verlangten Version die Schranke ERFÜLLT statt an
-## ihr zu scheitern.
-##
-## Ein leerer String heißt „keine Angabe" und wird nirgends geraten: er ergibt keine
-## Schranke (`too_old_for`) und kein Update (`is_newer`). Eine *unlesbare* Angabe ist der
-## umgekehrte Fall — dort greift die Schranke, denn wer die Zahl nicht versteht, darf nicht
-## annehmen, dass er sie erfüllt.
+## Versionsvergleich für App und Content-Packs über das Zahlentripel; Suffixe (`-rc1`,
+## `+build`) fallen weg. Leer heißt „keine Angabe“: keine Schranke, kein Update. Unlesbar
+## heißt: die Schranke greift.
 
 
 ## Zahlentripel einer Version, oder [] wenn unlesbar.
@@ -39,8 +32,8 @@ static func compare(a: String, b: String) -> int:
 	return 0
 
 
-## True, wenn `current` die verlangte Mindestversion erreicht. Unlesbares gilt als NICHT
-## erfüllt — geraten wird nicht.
+## True, wenn `current` die verlangte Mindestversion erreicht; Unlesbares gilt als nicht
+## erfüllt.
 static func satisfies_min(current: String, minimum: String) -> bool:
 	var tc := triple(current)
 	var tm := triple(minimum)
@@ -52,28 +45,22 @@ static func satisfies_min(current: String, minimum: String) -> bool:
 	return true
 
 
-## True, wenn `current` die verlangte Mindestversion nicht erreicht.
-##
-## Zwei Richtungen, eine Schranke: mit der App-Version gegen die `min_app_version` eines
-## Packs heißt es „App zu alt für diesen Inhalt"; mit der `min_app_version` des INSTALLIERTEN
-## Packs gegen die des Index heißt es „Inhalt zu alt für diese App" — der Fall, in dem
-## Mechanik still fehlt.
-##
-## Beide Richtungen wirken nur nach vorn: fehlt eine der beiden Angaben, gilt keine Schranke.
+## True, wenn `current` die verlangte Mindestversion nicht erreicht. Dient für „App zu alt
+## für den Pack“ und „installierter Pack zu alt für die App“. Fehlt eine Angabe, gilt keine
+## Schranke.
 static func too_old_for(current: String, minimum: String) -> bool:
 	if current.is_empty() or minimum.is_empty():
 		return false
 	return not satisfies_min(current, minimum)
 
 
-## True, wenn `candidate` echt neuer ist als `current`.
+## True, wenn `candidate` echt neuer ist als `current`; nie ein Downgrade.
 static func is_newer(candidate: String, current: String) -> bool:
 	if candidate.is_empty() or current.is_empty():
 		return false
 	return compare(candidate, current) > 0
 
 
-## Die laufende Programmfassung — einzige Quelle ist `config/version` in project.godot,
-## das der Release-Workflow aus dem Tag speist.
+## Die laufende Programmfassung aus `config/version` in project.godot.
 static func app_version() -> String:
 	return str(ProjectSettings.get_setting("application/config/version", ""))

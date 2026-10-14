@@ -20,6 +20,9 @@
   Schrift auf dem Schild hat diese Farbe. Die Legende am unteren Bildrand sagt, welche
   Farbe was bedeutet (zum Beispiel Nomen, Verb, Adjektiv). Das hilft, wenn ein Wort
   mehrere Bedeutungen hat.
+- **Halb durchsichtige Monster** tragen eine Aufgabe, die du schon gemeistert hast. Sie
+  haben keinen leuchtenden Rand, ihr Schild ist matt und zeigt einen Haken vor dem Wort.
+  Sie bringen kaum noch etwas, kümmere dich zuerst um die anderen.
 - **Die Wortschilder** stehen über den Köpfen. Drängen sich mehrere Monster, rücken die
   Schilder zur Seite, eine dünne Linie zeigt dann auf das Monster.
 - **Die Kopfleiste** oben links:
@@ -181,13 +184,16 @@ mit dem letzten Monster einer Welle – die Welle endet erst danach.
 ## Plaketten
 
 Bis ein Wort gemeistert ist, vergehen ein paar Tage. Unterwegs gibt es **Plaketten** für
-kleine Erfolge. Auch sie halten das Spiel kurz an, gut eine Sekunde: Eine Medaille springt
+kleine Erfolge. Auch sie halten das Spiel kurz an, gut zwei Sekunden: Eine Medaille springt
 in die Mitte, dazu ein Ton, ein Ring und ein paar Funken in ihrer Farbe. Sie ist kleiner
 als die Feier beim Meistern und kommt nach ihr, wenn beides mit derselben Antwort gelingt.
+Hast du sie gelesen, drückt die **Leertaste** sie weg. **Enter** tut das auch und öffnet
+gleich die Eingabe für die nächste Antwort. Schickst du eine Antwort ab, während eine
+Plakette steht, geht es ebenfalls weiter.
 
 - **Treffer heute:** 10, 25, 50 und 100 richtig besiegte Monster an einem Tag bringen eine
   Plakette aus Bronze, Silber, Gold und Diamant.
-- **Wörter einer Sprache:** Hast du 20, 50, 100 oder 250 Wörter einer Sprache schon einmal
+- **Wörter einer Sprache:** Hast du 50, 100, 500 oder 1000 Wörter einer Sprache schon einmal
   richtig übersetzt, egal in welche Richtung, wirst du Wortschnüffler, Vokabeljäger,
   Wörterdrache und schließlich Sprachmonster. Diese Plaketten gibt es nur einmal.
 - **Von gestern behalten:** Du triffst ein Wort, das du an einem früheren Tag zuletzt
@@ -196,11 +202,13 @@ als die Feier beim Meistern und kommt nach ihr, wenn beides mit derselben Antwor
 - **Aufholjagd:** Du triffst ein Wort, das fast schon vergessen war.
 - **Comeback des Tages:** Die Festung stand im roten Bereich, und du hast die Welle trotzdem
   gewonnen.
+- **In letzter Sekunde:** Das letzte Monster der Welle stand schon fast an der Mauer, als du
+  es besiegt hast – keine Sekunde mehr bis zum Einschlag.
 - **Besser als sonst:** Am Ende einer gewonnenen Welle liegt deine Genauigkeit in dieser
   Sitzung über der der letzten Tage.
 
-Revanche und Aufholjagd gibt es höchstens einmal je Welle. Comeback und „Besser als sonst“
-gibt es einmal am Tag, die übrigen Tagesplaketten fangen um Mitternacht von vorn an.
+Revanche und Aufholjagd gibt es höchstens einmal je Welle. Comeback, „In letzter Sekunde“
+und „Besser als sonst“ gibt es einmal am Tag, die übrigen Tagesplaketten fangen um Mitternacht von vorn an.
 Plaketten bringen keine Erfahrung und kein Gold.
 
 ## Festung, Schaden und Rüstung

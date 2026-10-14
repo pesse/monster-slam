@@ -5,20 +5,24 @@ Eingabefeld gerade offen, schließt das erste Escape nur das Feld, erst das zwei
 
 - Die angefangene Welle zählt nicht: es gibt keine Auflösung, keine Statistik und keine
   Schatzkiste.
-- Erfahrung, die du in der Welle schon bekommen hast, bleibt dir.
+- Auch die Erfahrung und das Gold aus der angefangenen Welle zählen nicht. Gespeichert
+  wird erst am Ende einer Welle ([Kapitel 23](23-spielstand-und-sicherungen.md)).
 - Nach dem Ende einer Welle ist Escape ohne Wirkung; dort führen die Knöpfe weiter
   (oder Enter).
 
-**Rückfrage auf der Karte.** Spielst du ein Level von der Landkarte und hast schon eine
-Welle geräumt, fragt das Spiel erst nach: „Lauf abbrechen?“ Der Kampf hält dabei an. Ein
-Abbruch beendet den ganzen Lauf, er lässt sich danach nicht fortsetzen. Willst du
-aufhören, ohne den Lauf zu verlieren, spiel die Welle zu Ende und wähle dann
-**„Rasten“** ([Kapitel 8](08-wellenabschluss.md)).
+**Rasten auf der Karte.** Spielst du ein Level von der Landkarte und hast schon eine
+Welle geräumt, bricht Escape nicht ab. Das Spiel fragt: „Rasten?“ Der Kampf hält dabei an.
 
+- **„Rasten“** speichert deinen Lauf mitten in der Welle. Alles, was du in der Welle
+  schon geschafft hast, bleibt: Lernstand, Erfahrung, Punkte und verbrauchte Zauber. Setzt
+  du den Lauf auf der Karte fort ([Kapitel 10](10-festung.md#rasten-und-weiterspielen)),
+  geht dieselbe Welle mit den übrigen Monstern weiter. Monster, die gerade auf dem Feld
+  standen, kommen dann neu.
 - **Enter** oder ein zweites **Escape** heißt „Weiterspielen“, der Kampf läuft weiter.
-- Nur der Knopf **„Lauf beenden“** bricht ab.
+- Ist das letzte Monster schon erledigt oder läuft „Schnell auflösen“, tut Escape nichts:
+  der Wellenabschluss kommt gleich, und dort kannst du rasten.
 - In der ersten Welle, im Expertenmodus und beim Üben für einen Test gibt es keine
-  Rückfrage: dort bricht Escape sofort ab.
+  Rückfrage: dort bricht Escape sofort ab wie oben beschrieben.
 - Auch Escape in der Pause stellt diese Frage.
 
 ---

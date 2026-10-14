@@ -1,20 +1,10 @@
 extends Node
 ## Vorrat an Zaubern des Profils (Autoload `Inventory`, docs/adr/0014-zauber-zum-verbrauchen.md).
-##
-## Zauber kauft man im Laden mit Gold, und sie verbrauchen sich im Kampf. Der Vorrat gehört
-## wie das Gold zum PROFIL und nicht zum Lauf: eine gefallene Festung kostet nur, was
-## eingesetzt wurde.
-##
-## Gespeichert werden nur die Plätze in ihrer Reihenfolge, je Platz `{id, count}` oder `{}`.
-## Gleiche Zauber stapeln sich ohne Obergrenze; ein neuer Zauber braucht einen freien Platz.
-## Ein leer gewordener Platz rückt nicht nach — die Taste eines Zaubers (1 bis n) bleibt
-## dieselbe, solange er da ist. Wie viele Plätze es gibt, wird gerechnet
-## (`slot_count()`: BASE_SLOTS plus `item_slots` aus SkillBook.bonuses()) und steht nicht
-## in der Datei. Liegt etwas auf einem Platz jenseits der Zahl (Skills zurückgesetzt),
-## bleibt es gespeichert und kommt mit dem Platz zurück.
-##
-## Persistenz: JSON unter user://progress/<player_id>_inventory.json, gesichert bei jeder
-## Änderung wie die Geldbörse — ein gekaufter Zauber darf einen Absturz überstehen.
+## Zauber werden im Laden mit Gold gekauft und verbrauchen sich im Kampf; der Vorrat gehört
+## zum Profil. Gespeichert werden nur die Plätze, je `{id, count}` oder `{}`. Ein leer
+## gewordener Platz rückt nicht nach, damit die Taste eines Zaubers gleich bleibt. Die Zahl
+## der Plätze wird gerechnet (`slot_count()`); Inhalt jenseits davon bleibt gespeichert.
+## Datei: user://progress/<player_id>_inventory.json, über den SaveCoordinator (ADR 0024).
 
 const SAVE_DIR := "user://progress"
 const BASE_SLOTS := 4
@@ -25,9 +15,9 @@ signal changed()
 var player_id: String = "default"
 ## Die Plätze; jeder ist `{"id": String, "count": int}` oder `{}`.
 var slots: Array[Dictionary] = []
-## Wer bezahlt — das Autoload `Wallet`, im Test eine eigene Instanz.
+## Wer bezahlt: das Autoload `Wallet`, im Test eine eigene Instanz.
 var wallet: Node
-## Zusätzliche Plätze; ohne Wert gilt SkillBook.bonuses(). Für Tests.
+## Zusätzliche Plätze für Tests; -1 heißt: aus SkillBook.bonuses().
 var extra_slots := -1
 
 
@@ -35,6 +25,7 @@ func _ready() -> void:
 	wallet = Wallet
 	player_id = UserSettings.active_profile()
 	load_inventory()
+	SaveCoordinator.register(self)
 	UserSettings.active_profile_changed.connect(switch_to)
 
 
@@ -80,15 +71,15 @@ func can_buy(spell: Dictionary) -> bool:
 			and wallet.can_afford(maxi(0, int(spell.get("price", 0))))
 
 
-## Kauft einen `spell` (Eintrag aus ContentRegistry.spells). False, wenn kein Platz frei
-## ist oder das Gold nicht reicht — dann bleibt alles, wie es war.
+## Kauft einen `spell` (Eintrag aus ContentRegistry.spells). False ohne freien Platz oder
+## Gold; dann bleibt alles, wie es war.
 func buy(spell: Dictionary) -> bool:
 	var id := str(spell.get("id", ""))
 	var at := slot_for(id)
 	if id == "" or at < 0:
 		return false
 	var price := maxi(0, int(spell.get("price", 0)))
-	# `Wallet.spend(0)` lehnt ab — ein Zauber für 0 Gold ist trotzdem zu haben.
+	# `Wallet.spend(0)` lehnt ab, ein Zauber für 0 Gold ist trotzdem zu haben.
 	if price > 0 and not wallet.spend(price):
 		return false
 	while slots.size() <= at:
@@ -100,7 +91,6 @@ func buy(spell: Dictionary) -> bool:
 
 
 ## Nimmt einen Zauber von Platz `index` und gibt seine Id zurück ("" bei leerem Platz).
-## Der Platz bleibt stehen, wenn er leer wird (siehe Kopf).
 func take(index: int) -> String:
 	var entry := slot(index)
 	if entry.is_empty():
@@ -112,11 +102,13 @@ func take(index: int) -> String:
 	return str(entry["id"])
 
 
-## Speichert den Vorrat und wechselt zum Profil `id` (lädt dessen Vorrat).
 func switch_to(id: String) -> void:
-	_save()
 	player_id = id
-	slots.clear()
+	reload()
+
+
+## Lädt den Vorrat des Profils neu und meldet ihn (Profilwechsel, verworfene Welle).
+func reload() -> void:
 	load_inventory()
 	changed.emit()
 
@@ -127,24 +119,31 @@ func _save_path() -> String:
 	return "%s/%s_inventory.json" % [SAVE_DIR, player_id]
 
 
+func save_path() -> String:
+	return _save_path()
+
+
+func save_suffix() -> String:
+	return "_inventory"
+
+
+func save_payload() -> Dictionary:
+	return {"player_id": player_id, "slots": slots.duplicate(true)}
+
+
 func _save() -> void:
-	DirAccess.make_dir_recursive_absolute(SAVE_DIR)
-	var file := FileAccess.open(_save_path(), FileAccess.WRITE)
-	if file == null:
-		push_warning("Inventory: konnte '%s' nicht schreiben" % _save_path())
-		return
-	file.store_string(JSON.stringify({"player_id": player_id, "slots": slots}, "\t"))
-	file.close()
+	SaveCoordinator.mark_dirty(self)
 
 
-## Lädt den Vorrat des aktuellen Profils. Keine Datei heißt „neues Profil": leerer Vorrat.
-## Ein Platz mit unbrauchbarem Inhalt wird leer, statt den Rest zu verwerfen.
+## Lädt den Vorrat des aktuellen Profils; ohne Datei leer. Ein unbrauchbarer Platz wird leer,
+## der Rest bleibt.
 func load_inventory() -> void:
 	slots.clear()
-	if not FileAccess.file_exists(_save_path()):
+	var read := SaveStore.read(_save_path())
+	if int(read["status"]) == SaveStore.Status.MISSING:
 		return
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(_save_path()))
-	if not (parsed is Dictionary) or not ((parsed as Dictionary).get("slots") is Array):
+	var parsed: Variant = read["data"]
+	if int(read["status"]) != SaveStore.Status.OK or not ((parsed as Dictionary).get("slots") is Array):
 		push_warning("Inventory: ungültiger Vorrat '%s'" % _save_path())
 		return
 	for raw: Variant in (parsed as Dictionary)["slots"]:

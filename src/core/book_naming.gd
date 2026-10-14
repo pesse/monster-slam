@@ -1,21 +1,9 @@
 class_name BookNaming
 extends RefCounted
-## Wie ein Buch sich und seine beiden Ebenen nennt: Access „Unit 2 · Teil 1", À plus!
-## „Dossier 2 · Partie A", das Lateinbuch „Abschnitt 2 · Lektion 10".
-##
-## Steht unter `naming` in assets/maps/<book>/map.json (ADR 0008) und gehört damit zur EXE
-## wie Karte und Punkte, nicht in einen Pack:
-##
-##     "naming": { "title": "À plus!", "unit": "Dossier", "part": "Partie",
-##                 "part_glyph": "letter", "parts_per_unit": 6 }
-##
-## Jedes Feld ist optional. `part_glyph` "letter" zählt die Teile A, B, C statt 1, 2, 3.
-## `parts_per_unit` > 0 zählt die Teile über das ganze Buch durch (Latein: Unit 2, Teil 4
-## ist Lektion 10). Intern bleiben Unit und Teil Zahlen — Scope, Karte und Stufen ändern
-## sich nicht, nur was dasteht.
-##
-## Die Regeln stehen als reine Funktionen über dem `naming`-Dictionary (ohne Datei
-## prüfbar); die Fassungen mit `book` lesen die Karte.
+## Wie ein Buch sich und seine Ebenen nennt („Dossier 2 · Partie A“), aus `naming` in
+## assets/maps/<book>/map.json (ADR 0008). Alle Felder optional: `title`, `unit`, `part`,
+## `part_glyph` ("letter" zählt A, B, C), `parts_per_unit` (> 0 zählt die Teile über das
+## Buch durch). Nur die Anzeige; intern bleiben Unit und Teil Zahlen.
 
 const UNIT_WORD := "Unit"
 const PART_WORD := "Teil"
@@ -71,6 +59,6 @@ static func parts_label_in(naming: Dictionary, unit: int, parts: Array) -> Strin
 
 static func part_glyph_in(naming: Dictionary, unit: int, part: int) -> String:
 	if str(naming.get("part_glyph", "")) == "letter" and part >= 1 and part <= 26:
-		return String.chr(64 + part)
+		return String.chr(64 + part)   # 1 -> "A"
 	var per_unit := int(naming.get("parts_per_unit", 0))
 	return str(part + (unit - 1) * per_unit if per_unit > 0 else part)

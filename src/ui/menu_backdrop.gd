@@ -1,37 +1,24 @@
 class_name MenuBackdrop
 extends Node3D
-## Die Kulisse hinter dem Hauptmenü (scenes/ui/menu_backdrop.tscn): ein Lager am Waldrand,
-## davor ein Skelett mit roter Kapuze, das steht und atmet und ab und zu zum Marktstand
-## hinübergeht.
-##
-## „Wer spielt?", das Hauptmenü und die Bibliothek stehen in derselben Kulisse: schiebt
-## profile_menu die Seite weiter, fährt die Kamera mit (`page`) — vom Waldrand links hinüber
-## zum Skelett und weiter nach rechts durch die Mauer in den Turm mit der Bibliothek
-## (`%Library`, library_room.tscn). Dort steht sie, wo der Raum sie haben will (`%Eye`).
-##
-## Die Kulisse spielt nur vor und weiß nichts vom Menü. Aufgebaut ist sie im Editor; hier
-## kommt nur dazu, was die gekauften Modelle nicht mitbringen: die Idle-Schleife, das
-## Schwert in der Hand und die Farbe der Kapuze. Ab und zu schaut es sich um (Idle_B), seltener
-## geht es hinüber zum Marktstand und kommt wieder zurück (`_stroll`) — immer an seinen
-## Platz und mit dem Blick nach vorn, so bleibt das Bild des Menüs, wie es gebaut ist.
+## Die Kulisse hinter „Wer spielt?“, Hauptmenü und Bibliothek: die Kamera folgt `page` bis in
+## den Turm (`%Library`, `%Eye`). Hier kommt nur dazu, was die Modelle nicht mitbringen:
+## Idle-Schleife, Umschauen, ein Gang zum Marktstand (`_stroll`), Schwert und Farben.
 
 const IDLE := &"general/Idle_A"
 const LOOK_AROUND := &"general/Idle_B"
 const SWORD := preload("res://assets/models/forge/sword.glb")
-## Die Klinge zeigt im Modell nach +y; so gedreht steht sie in der Hand schräg nach oben
-## (eingestellt in scenes/dev/sword_lab.tscn).
+## Drehung des Schwerts in der Hand (eingestellt in scenes/dev/sword_lab.tscn).
 const SWORD_TURN := Vector3(deg_to_rad(-30.0), deg_to_rad(-21.5), deg_to_rad(22.5))
-## Beim Gehen schwingt Walking_A die Schwerthand vor die Brust, und die Klinge stäche in den
-## Hals. Dann senkt es den Oberarm und dreht das Handgelenk — die Klinge bleibt oben, zeigt
-## aber nach vorn vom Kopf weg. Eingestellt in scenes/dev/sword_lab.tscn.
+## Beim Gehen schwingt Walking_A die Schwerthand vor den Hals; diese Beugung hält die Klinge
+## vom Kopf weg (eingestellt in scenes/dev/sword_lab.tscn).
 const WALK_ARM := {"upperarm.r": Vector3(deg_to_rad(-30.0), 0.0, 0.0),
 		"wrist.r": Vector3(deg_to_rad(5.5), deg_to_rad(-24.5), deg_to_rad(-28.0))}
 ## Wie schnell es die Hand dahin nimmt und zurück (1/s).
 const WALK_ARM_BLEND := 5.0
-## Kapuze und Umhang des Rogue — ihre Textur ist grau-violett, der Entwurf will Rot.
+## Kapuze und Umhang des Rogue, rot getönt.
 const CLOTH_MESHES := ["Skeleton_Rogue_Hood", "Skeleton_Rogue_Cape"]
 const CLOTH_TINT := Color(1.0, 0.22, 0.2)
-## Die Augen glühen im Entwurf rot statt gelb.
+## Die Augen glühen rot.
 const EYES_MESH := "Skeleton_Rogue_Eyes"
 const EYES_GLOW := Color(1.0, 0.18, 0.08)
 ## Pause zwischen zwei Umschauen (s).
@@ -41,40 +28,38 @@ const WALK := &"move/Walking_A"
 ## Pause zwischen zwei Spaziergängen (s).
 const STROLL_MIN := 14.0
 const STROLL_MAX := 26.0
-## Der erste Gang kommt bald nach dem Start: dann steht „Wer spielt?" im Bild, und das
-## Skelett soll eine Chance haben, dort hineinzulaufen.
+## Pause bis zum ersten Gang (s), kurz, damit es bei „Wer spielt?“ ins Bild laufen kann.
 const FIRST_STROLL_MIN := 3.0
 const FIRST_STROLL_MAX := 6.0
-## Der Weg zum Marktstand, in Koordinaten der Kulisse: an den Felsen vorbei vor die
-## Theke. Der letzte Punkt liegt schon im Bild von „Wer spielt?" (Kamera um `intro_offset`
-## versetzt) — das Skelett geht dorthin hinüber, wo die Profilwahl steht. Zurück denselben
-## Weg. Wer Felsen oder Stand verschiebt, prüft den Weg (menu_lab).
+## Der Weg zum Marktstand in Koordinaten der Kulisse; zurück denselben Weg. Wer Felsen oder
+## Stand verschiebt, prüft ihn (menu_lab).
 const STALL_ROUTE: Array[Vector3] = [Vector3(0.2, 0.0, -0.9), Vector3(-1.4, 0.0, -2.4)]
 ## Wie schnell es geht (m/s) und sich dreht (rad/s).
 const STROLL_SPEED := 0.8
 const TURN_SPEED := 4.0
+## Ankunft am Wegpunkt (m) und Restwinkel, ab dem es losgeht (rad).
+const ARRIVE_DIST := 0.03
+const WALK_FACING := 0.35
+## Überblendzeit der Animationen (s): allgemein, in den Gang.
+const ANIM_BLEND := 0.3
+const WALK_BLEND := 0.25
 ## Wie weit die Kamera schwebt (m) und wie langsam (s je Schwingung).
 const SWAY := Vector3(0.12, 0.05, 0.0)
 const SWAY_PERIOD := 11.0
 
-## Drinnen im Turm: kein Dunst, warmes Licht statt Himmelsblau. Die Kulisse blendet dahin
-## über, während die Kamera hineinfährt (`_light_for`).
+## Licht drinnen im Turm; `_light_for` blendet beim Hineinfahren dahin über.
 const INDOOR_AMBIENT := Color(0.62, 0.48, 0.38)
 const INDOOR_SKY_CONTRIBUTION := 0.25
 const INDOOR_AMBIENT_ENERGY := 1.0
 const INDOOR_SUN := 0.8
-## Draußen wird die Sonne nie heller, als die Szene flachen Boden beleuchtet (ihre Höhe im
-## Editor): steht sie höher, nimmt ihre Energie ab — aber nie unter diesen Anteil.
+## Steht die Sonne höher als im Editor, nimmt ihre Energie ab, aber nie unter diesen Anteil.
 const SUN_DIM_FLOOR := 0.8
 
-## Wo die Kamera für „Wer spielt?" steht, gemessen an ihrem Platz fürs Hauptmenü: so weit
-## links, dass das Skelett außerhalb des Bildes bleibt — die Profilwahl hat keine Figur,
-## außer es ist gerade zum Marktstand hinübergegangen (`STALL_ROUTE`).
+## Versatz der Kamera für „Wer spielt?“ gegenüber dem Hauptmenü (m).
 @export var intro_offset := Vector3(-4.5, 0.0, 0.0)
-## 0 = „Wer spielt?", 1 = Hauptmenü, 2 = Bibliothek, dazwischen die Fahrt.
+## 0 = „Wer spielt?“, 1 = Hauptmenü, 2 = Bibliothek, dazwischen die Fahrt.
 var page := 1.0
-## Solange gesetzt, rührt die Kulisse die Kamera nicht an — die Bibliothek fliegt sie dann
-## selbst in ein Buch hinein.
+## Solange gesetzt, rührt die Kulisse die Kamera nicht an.
 var hold_camera := false
 
 @onready var _model: Node3D = %Model
@@ -88,11 +73,10 @@ var _camera_home: Transform3D
 var _time := 0.0
 var _look_left := LOOK_MIN
 var _rng := RandomNumberGenerator.new()
-## Das Licht draußen, wie es in der Szene steht.
 var _outdoor := {}
 ## Die Sonne zieht nach der Uhr (SunCycle); ihre Richtung aus dem Editor gilt drinnen.
 var _sun_cycle: SunCycle
-## sin(Höhe) der Sonne, wie sie im Editor steht — daran misst sich ihre Helligkeit.
+## sin(Höhe) der Sonne, wie sie im Editor steht; daran misst sich ihre Helligkeit.
 var _design_sun_sin := 1.0
 ## Der Platz des Skeletts, wie er in der Szene steht, und sein Blick dort.
 var _home := Vector3.ZERO
@@ -104,14 +88,14 @@ var _route: Array[Vector3] = []
 var _looking := false
 ## Hält beim Gehen die Schwerthand vom Hals weg (`WALK_ARM`); null ohne Skelett.
 var _walk_arm: BoneBend
-## Das Schwert in der Hand; null ohne handslot. Die Werkbank (sword_lab) dreht daran.
+## Das Schwert in der Hand; null ohne handslot.
 var _sword: Node3D
 
 
 func _ready() -> void:
 	_rng.randomize()
 	_camera_home = _camera.transform
-	# Eigene Kopie: die geladene Umgebung bliebe sonst über den Szenenwechsel hinweg verstellt.
+	# Eigene Kopie: geladene Ressourcen sind geteilt.
 	_env = _env.duplicate()
 	($WorldEnvironment as WorldEnvironment).environment = _env
 	# Auf „Schnell" ohne Farbkorrektur, wie im Kampf; apply_environment kopiert dann selbst.
@@ -120,9 +104,8 @@ func _ready() -> void:
 	_outdoor = {"fog": _env.fog_density, "ambient": _env.ambient_light_color,
 			"sky": _env.ambient_light_sky_contribution,
 			"ambient_energy": _env.ambient_light_energy, "sun": _sun.light_energy}
-	# Die Sonne zieht wie im Kampf nach der Uhr durchs Bild, von links nach rechts.
-	# Vor attach gelesen — das dreht sie sofort in den Tag. Sie scheint entlang -z, also
-	# ist z.y der Sinus ihrer Höhe.
+	# Vor attach lesen, das dreht die Sonne sofort. Sie scheint entlang -z, also ist z.y der
+	# Sinus ihrer Höhe (mindestens 0.05).
 	var design := _sun.basis
 	_design_sun_sin = maxf(_sun.global_transform.basis.z.y, 0.05)
 	_sun_cycle = SunCycle.attach(self, _sun, _camera)
@@ -131,12 +114,11 @@ func _ready() -> void:
 			"move": RigAnimations.movement()})
 	if _anim.has_animation(WALK):
 		_anim.get_animation(WALK).loop_mode = Animation.LOOP_LINEAR
-	# Die Library ist geteilt (RigAnimations): Idle schleift ohnehin, Idle_B hier nicht —
-	# es läuft einmal und kehrt dann ins Idle zurück.
+	# Idle_B läuft einmal und kehrt dann ins Idle zurück.
 	if _anim.has_animation(IDLE):
 		_anim.get_animation(IDLE).loop_mode = Animation.LOOP_LINEAR
 		_anim.play(IDLE)
-	_anim.animation_finished.connect(func(_name: StringName) -> void: _anim.play(IDLE, 0.3))
+	_anim.animation_finished.connect(func(_name: StringName) -> void: _anim.play(IDLE, ANIM_BLEND))
 	_tint_cloth()
 	_arm()
 	_look_left = _rng.randf_range(LOOK_MIN, LOOK_MAX)
@@ -163,12 +145,11 @@ func _process(delta: float) -> void:
 	if _look_left <= 0.0:
 		_look_left = _rng.randf_range(LOOK_MIN, LOOK_MAX)
 		if _anim.has_animation(LOOK_AROUND) and _anim.current_animation == IDLE:
-			_anim.play(LOOK_AROUND, 0.3)
+			_anim.play(LOOK_AROUND, ANIM_BLEND)
 
 
-## Ab und zu ein Gang: zum Marktstand, dort einmal umschauen, und zurück. Es dreht sich
-## zuerst in die Richtung und geht erst los, wenn es ungefähr dorthin schaut; zurück am
-## Platz dreht es sich wieder nach vorn.
+## Ab und zu ein Gang zum Marktstand, dort einmal umschauen, und zurück. Erst drehen, dann
+## gehen; zurück am Platz wieder nach vorn.
 func _stroll(delta: float) -> void:
 	if _route.is_empty():
 		if _anim.current_animation != IDLE and _anim.current_animation != LOOK_AROUND:
@@ -188,19 +169,19 @@ func _stroll(delta: float) -> void:
 		return
 	var to := _route[0] - _monster.position
 	to.y = 0.0
-	if to.length() < 0.03:
+	if to.length() < ARRIVE_DIST:
 		_monster.position = Vector3(_route[0].x, _monster.position.y, _route[0].z)
 		var reached: Vector3 = _route.pop_front()
 		if _route.is_empty():
-			_anim.play(IDLE, 0.3)
+			_anim.play(IDLE, ANIM_BLEND)
 		elif reached == STALL_ROUTE.back() and _anim.has_animation(LOOK_AROUND):
-			_anim.play(LOOK_AROUND, 0.3)
+			_anim.play(LOOK_AROUND, ANIM_BLEND)
 			_looking = true
 		return
 	var facing := _turn_to(atan2(to.x, to.z), delta)
-	if facing < 0.35:
+	if facing < WALK_FACING:
 		if _anim.current_animation != WALK:
-			_anim.play(WALK, 0.25)
+			_anim.play(WALK, WALK_BLEND)
 		_monster.position += to.normalized() * minf(to.length(), STROLL_SPEED * delta)
 
 
@@ -220,7 +201,8 @@ func view_at(at: float) -> Transform3D:
 	return _camera_home.interpolate_with(library, clampf(at - 1.0, 0.0, 1.0))
 
 
-## Draußen (bis zum Menü) das Licht der Szene, zur Bibliothek hin das von drinnen.
+## Draußen (bis zum Menü) das Licht der Szene, zur Bibliothek hin das von drinnen; der
+## Übergang liegt zwischen `page` 1.3 und 1.9.
 func _light_for(at: float) -> void:
 	var t := smoothstep(1.3, 1.9, at)
 	_env.fog_density = lerpf(float(_outdoor["fog"]), 0.0, t)
@@ -237,12 +219,11 @@ func camera() -> Camera3D:
 	return _camera
 
 
-## Hier stellt die Bibliothek ihre Bücher auf.
 func library_books() -> Node3D:
 	return %Library.get_node("%Books") as Node3D
 
 
-## Eigene Kopie des Materials — das geladene teilen alle Rogues im Kampf.
+## Eigene Kopien der Materialien: das geladene teilen alle Rogues im Kampf.
 func _tint_cloth() -> void:
 	for mesh_name in CLOTH_MESHES:
 		var mi := _model.find_child(mesh_name, true, false) as MeshInstance3D

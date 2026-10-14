@@ -1,43 +1,21 @@
 extends Control
-## Einstellungs-Fenster (Profilname, Standard-Schwierigkeit, Grund-Geschwindigkeit, Grafik,
-## Menügröße, Reset, Melden, Protokoll).
-##
-## Öffnet als Fenster über dem Hauptmenü wie Statistik und Fähigkeiten
-## (`profile_menu._open_window`): derselbe Rahmen, dasselbe Titelband, dasselbe
-## Schließen-X, Escape schließt. Die Reiter sind Knöpfe über gestapelten Seiten wie in der
-## Statistik (dort steht, warum kein `TabContainer`) — das Fenster behält seine Größe.
-##
-## Statistik und Wortliste sind hier ausgezogen und liegen im eigenen Statistik-Screen
-## (stats_screen, Issue #5) — sie hingen zwischen Profilauswahl, Reset und Melden.
-##
-## Der Reiter „Protokoll" ist der Zugang zum Ereignis-Protokoll (TraceLog): an, aus, Pfad,
-## Ordner öffnen, leeren — und darunter die letzten Einträge zum Lesen, neueste oben (was
-## darin steht, rechnet TraceView). Der Screen SCHREIBT nichts davon — er stellt den Schalter in
-## UserSettings und liest den Stand beim Autoload, so wie der Wellenabschluss den Gold-Stand
-## bei Wallet liest.
-##
-## Der Reiter „Melden" zeigt den Stand des Rückkanals und die eigenen Meldungen (siehe
-## ReportService, docs/adr/0022-melden-ohne-token.md). Er bleibt immer sichtbar; die Liste
-## der Meldungen erscheint nur in einer Fassung mit Rückkanal — ohne ihn gibt es auch
-## nichts zu melden.
-##
-## Welches Profil spielt, entscheidet „Wer spielt?" (profile_pick) — hier wird das aktive
-## Profil nur umbenannt.
-##
-## Ausgelagert aus dem Start-Screen (profile_menu). Das Layout liegt in settings_menu.tscn
-## (im Editor sichtbar); hier wird nur bedient und angezeigt. Einstellungen liegen in
-## UserSettings, der Fortschritt (Reset) in PlayerProgress.
+## Einstellungs-Fenster mit den Reitern „Profil" (Name, Schwierigkeit, Tempo, Grafik,
+## Menügröße, Spielstand, Reset), „Melden" (Rückkanal, ADR 0022) und „Protokoll"
+## (TraceLog). Öffnet über `ProfileBadge.open_window`; die Reiter sind Knöpfe über
+## gestapelten Seiten, damit das Fenster seine Größe behält. Hier wird nur bedient und
+## angezeigt; das aktive Profil wird nur umbenannt, nicht gewechselt.
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
-## So lange blendet das Fenster auf (s) — wie Statistik und Fähigkeiten.
+## Aufblenden des Fensters (s).
 const FADE_IN := 0.15
 const TRACE_ROW_SCENE := preload("res://scenes/ui/trace_row.tscn")
-## So viele Ereignisse zeigt der Reiter. Mehr liest niemand am Bildschirm; wer mehr will,
-## öffnet die Datei.
+## Höchstzahl der im Reiter „Protokoll" gezeigten Ereignisse.
 const TRACE_SHOWN := 200
 
-## Das Fenster will zu. Wer es geöffnet hat, nimmt es weg; hängt niemand daran (der Screen
-## läuft allein, etwa aus dem Editor), geht es zurück ins Startmenü.
+## Ein gelesenes Archiv, das auf die Rückfrage „Laden?" wartet.
+var _import_pending := {}
+
+## Das Fenster will zu. Hängt niemand daran, geht `close` selbst ins Startmenü.
 signal closed()
 
 @onready var _rename_input: LineEdit = %RenameInput
@@ -45,6 +23,8 @@ signal closed()
 @onready var _speed_slider: HSlider = %SpeedSlider
 @onready var _speed_label: Label = %SpeedLabel
 @onready var _reset_confirm: ConfirmDialog = %ResetDialog
+@onready var _import_confirm: ConfirmDialog = %ImportDialog
+@onready var _save_status: Label = %SaveStatus
 @onready var _flag_list: VBoxContainer = %FlagList
 @onready var _flag_scroll: ScrollContainer = %FlagScroll
 @onready var _report_status: Label = %ReportStatus
@@ -77,7 +57,7 @@ func _ready() -> void:
 				_show_page(tab))
 	_rename_input.text_submitted.connect(func(_t): _on_rename_profile())
 	(%RenameButton as Button).pressed.connect(_on_rename_profile)
-	# Standard-Schwierigkeits-Buttons 1..5 (Reihenfolge in DiffRow = Stufe i+1).
+	# Knopf i in DiffRow ist Stufe i + 1.
 	for i in _diff_buttons.size():
 		(_diff_buttons[i] as Button).pressed.connect(_on_difficulty_pressed.bind(i + 1))
 	_speed_slider.value_changed.connect(_on_speed_changed)
@@ -101,7 +81,14 @@ func _ready() -> void:
 			"Der Lernstand aller Wörter dieses Profils geht verloren. Gold, Erfahrung und "
 			+ "Fähigkeiten bleiben.", "Zurücksetzen"))
 	_reset_confirm.confirmed.connect(_on_reset_confirmed)
-	# Der Dienst meldet jeden Zustandswechsel; die Anzeige hängt daran statt zu pollen.
+	(%SaveExport as Button).pressed.connect(_on_save_export)
+	(%SaveImport as Button).pressed.connect(_on_save_import)
+	_import_confirm.confirmed.connect(_on_import_confirmed)
+	_import_confirm.cancelled.connect(func() -> void: _import_pending = {})
+	Hints.attach(%SaveExport as Control, "Spielstand sichern",
+			"Legt den Spielstand dieses Profils als Datei ab.", "die Sicherungen nach jeder Welle gibt es trotzdem")
+	Hints.attach(%SaveImport as Control, "Spielstand laden",
+			"Spielt eine gesicherte Datei in dieses Profil ein. Vorher zeigt das Spiel, was darin steht.")
 	ReportService.changed.connect(_refresh_report)
 	_trace_toggle.toggled.connect(_on_trace_toggled)
 	_trace_open.pressed.connect(_on_trace_open)
@@ -118,8 +105,7 @@ func _ready() -> void:
 	(%ProfileTab as Control).grab_focus.call_deferred()
 
 
-## Schließt das Fenster: meldet es dem, der es geöffnet hat (das Menü nimmt es weg), oder
-## geht allein zurück ins Startmenü.
+## Meldet `closed` oder geht, wenn niemand daran hängt, ins Startmenü.
 func close() -> void:
 	if closed.get_connections().is_empty():
 		get_tree().change_scene_to_file(MENU_SCENE)
@@ -140,7 +126,6 @@ func _show_page(tab: Button) -> void:
 	(%HandbookLink as HandbookLink).section = _handbook_sections[tab]
 
 
-## Baut Profilname, Schwierigkeits-Hervorhebung, Tempo und Melde-Reiter neu auf.
 func _refresh() -> void:
 	_refresh_name()
 	_refresh_difficulty()
@@ -152,7 +137,6 @@ func _refresh() -> void:
 	_refresh_trace()
 
 
-## Umbenennen-Feld mit dem aktuellen Anzeigenamen vorbelegen.
 func _refresh_name() -> void:
 	_rename_input.text = UserSettings.display_name()
 
@@ -160,19 +144,16 @@ func _refresh_name() -> void:
 func _refresh_difficulty() -> void:
 	var current := UserSettings.default_difficulty()
 	for i in _diff_buttons.size():
-		# Die Knöpfe sind eine Gruppe: die gewählte Stufe steht gedrückt.
 		(_diff_buttons[i] as Button).set_pressed_no_signal(i + 1 == current)
 
 
-## Slider auf die Grund-Geschwindigkeit des aktiven Profils setzen (ohne value_changed
-## auszulösen, sonst würde _refresh beim Profilwechsel ein überflüssiges Speichern triggern).
+## Ohne `value_changed`, sonst speicherte jedes _refresh die Einstellung erneut.
 func _refresh_speed() -> void:
 	var value := UserSettings.base_speed()
 	_speed_slider.set_value_no_signal(value)
 	_update_speed_label(value)
 
 
-## Die Grafikstufe ist eine Gruppe wie die Schwierigkeit: die gewählte steht gedrückt.
 func _refresh_graphics() -> void:
 	var level := UserSettings.graphics_quality()
 	(%GraphicsFine as Button).set_pressed_no_signal(level == GraphicsQuality.Level.FINE)
@@ -180,7 +161,6 @@ func _refresh_graphics() -> void:
 	(%GraphicsFast as Button).set_pressed_no_signal(level == GraphicsQuality.Level.FAST)
 
 
-## Die Menügröße ebenso.
 func _refresh_ui_size() -> void:
 	var chosen := UserSettings.ui_size()
 	(%UiSizeSmall as Button).set_pressed_no_signal(chosen == UiScale.Size.SMALL)
@@ -216,8 +196,7 @@ func _refresh_report_status() -> void:
 		_report_status.text = "✔ Melden ist eingeschaltet."
 
 
-## Zeigt die im Reveal gemeldeten Lexeme mit Kommentar und Versandstand. Ohne Rückkanal
-## bleibt die Liste aus: dann gibt es keinen Weg, auf dem eine Meldung ankäme.
+## Zeigt die gemeldeten Lexeme mit Kommentar und Versandstand; ohne Rückkanal keine Liste.
 func _refresh_flags() -> void:
 	for child in _flag_list.get_children():
 		child.queue_free()
@@ -250,7 +229,7 @@ func _refresh_flags() -> void:
 		var flag: Dictionary = entry.get("flag", {})
 		var comment := Label.new()
 		comment.theme_type_variation = &"Caption"
-		# Der Haken sagt, was beim Content-Autor angekommen ist — offen heißt: geht noch raus.
+		# ✔ versandt, ⚑ noch offen.
 		var mark := "✔" if bool(flag.get("sent", false)) else "⚑"
 		comment.text = "%s %s" % [mark, str(flag.get("comment", ""))]
 		comment.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -282,30 +261,129 @@ func _on_speed_changed(value: float) -> void:
 
 func _on_reset_confirmed() -> void:
 	PlayerProgress.reset()
-	PlayerProgress.save_progress()
+	# Die einzige Stelle, an der der Lernstand schrumpfen darf (SaveGuard).
+	SaveCoordinator.commit("progress_reset", [""])
 	_refresh()
+
+
+# --- Spielstand sichern und laden (ADR 0024) ---------------------------------
+
+## Speichert und schreibt die neueste Sicherung als Datei; ein gesperrtes Profil speichert
+## nicht, dann geht die letzte gute hinaus.
+func _on_save_export() -> void:
+	SaveCoordinator.commit("export")
+	var generation := SaveCoordinator.latest_generation(UserSettings.active_profile())
+	if generation.is_empty():
+		_save_status.text = "Noch nichts zu sichern – erst eine Welle spielen."
+		return
+	var name := SaveArchive.suggested_name(UserSettings.display_name(), int(Time.get_unix_time_from_system()))
+	if _native_file_dialog():
+		DisplayServer.file_dialog_show("Spielstand sichern", _documents(), name, false,
+				DisplayServer.FILE_DIALOG_MODE_SAVE_FILE, PackedStringArray(["*.zip ; Spielstand"]),
+				func(ok: bool, paths: PackedStringArray, _filter: int) -> void:
+					if ok and not paths.is_empty():
+						_export_to.call_deferred(paths[0], generation))
+		return
+	_export_to(_fallback_dir().path_join(name), generation)
+	OS.shell_open(_fallback_dir())
+
+
+func _export_to(path: String, generation: Dictionary) -> void:
+	if not path.get_extension().to_lower() == "zip":
+		path += ".zip"
+	var err := SaveArchive.write(path, generation, UserSettings.display_name())
+	_save_status.text = ("Gesichert: %s" % path) if err == OK \
+			else "Sichern hat nicht geklappt (Fehler %d)." % err
+
+
+func _on_save_import() -> void:
+	if _native_file_dialog():
+		DisplayServer.file_dialog_show("Spielstand laden", _documents(), "", false,
+				DisplayServer.FILE_DIALOG_MODE_OPEN_FILE, PackedStringArray(["*.zip ; Spielstand"]),
+				func(ok: bool, paths: PackedStringArray, _filter: int) -> void:
+					if ok and not paths.is_empty():
+						_check_import.call_deferred(paths[0]))
+		return
+	# Ohne Dateidialog: die neueste Datei im Ordner „Monster Slam“ unter Dokumente.
+	var newest := ""
+	var dir := _fallback_dir()
+	for name in DirAccess.get_files_at(dir):
+		var path := dir.path_join(name)
+		if name.get_extension().to_lower() == "zip" and (newest.is_empty()
+				or FileAccess.get_modified_time(path) > FileAccess.get_modified_time(newest)):
+			newest = path
+	if newest.is_empty():
+		_save_status.text = "Leg die Datei in den Ordner %s und klick noch einmal auf „Laden…“." % dir
+		OS.shell_open(dir)
+		return
+	_check_import(newest)
+
+
+## Liest das Archiv und fragt mit dem, was darin steht.
+func _check_import(path: String) -> void:
+	var archive := SaveArchive.read(path)
+	if not str(archive["error"]).is_empty():
+		_save_status.text = str(archive["error"])
+		return
+	_import_pending = archive
+	var seen := SaveArchive.preview(archive)
+	var facts: Array = [str(seen["name"]) if not str(seen["name"]).is_empty() else "ohne Namen"]
+	if seen.has("level"):
+		facts.append("Level %d" % int(seen["level"]))
+	if seen.has("gold"):
+		facts.append("%d Gold" % int(seen["gold"]))
+	facts.append("gesichert am %s" % SaveNotices.date(int(seen["saved_at"])))
+	var rest := "" if (seen["parts"] as Array).size() >= SaveCoordinator.PROFILE_SUFFIXES.size() \
+			else " Alles andere bleibt, wie es ist."
+	_import_confirm.ask("Spielstand laden?",
+			"In der Datei: %s.\n" % ", ".join(facts)
+			+ "Sie enthält: %s.\n\n" % SaveNotices.part_names(seen["parts"])
+			+ "Diese Teile des Spielstands von %s werden dadurch ersetzt.%s Der bisherige " \
+					% [UserSettings.display_name(), rest]
+			+ "Stand bleibt in den Sicherungen.",
+			"Laden", "Abbrechen")
+
+
+func _on_import_confirmed() -> void:
+	if _import_pending.is_empty():
+		return
+	var files := SaveArchive.files_for(_import_pending["data"], UserSettings.active_profile())
+	_import_pending = {}
+	_save_status.text = "Spielstand geladen." if SaveCoordinator.import_files(files) \
+			else "Laden hat nicht geklappt – der bisherige Stand liegt in den Sicherungen."
+	_refresh()
+
+
+func _native_file_dialog() -> bool:
+	return DisplayServer.has_feature(DisplayServer.FEATURE_NATIVE_DIALOG_FILE)
+
+
+func _documents() -> String:
+	return OS.get_system_dir(OS.SYSTEM_DIR_DOCUMENTS)
+
+
+func _fallback_dir() -> String:
+	var dir := _documents().path_join("Monster Slam")
+	DirAccess.make_dir_recursive_absolute(dir)
+	return dir
 
 
 # --- Reiter „Protokoll" -------------------------------------------------------
 
 func _refresh_trace() -> void:
-	# Ohne Signal: _refresh_trace() läuft auch AUS dem toggled-Handler heraus, und ein
-	# Setzer, der dort erneut feuert, schriebe die Einstellung ein zweites Mal.
+	# Ohne Signal: _refresh_trace() läuft auch aus dem toggled-Handler.
 	_trace_toggle.set_pressed_no_signal(UserSettings.trace_enabled())
 	_trace_path.text = ProjectSettings.globalize_path(TraceLog.path())
 	var bytes := TraceLog.size_bytes()
 	_trace_clear.disabled = bytes == 0
 	_refresh_trace_list()
 	if bytes == 0:
-		# Kein „0 KB": leer heißt entweder „noch nichts gespielt" oder „gerade geleert",
-		# und beides ist dieselbe Auskunft — es ist nichts da.
 		_trace_status.text = "noch nichts aufgezeichnet"
 		return
 	_trace_status.text = "aufgezeichnet: %s" % String.humanize_size(bytes)
 
 
-## Die letzten Einträge, neueste oben. Neu gelesen bei jedem _refresh_trace(): im
-## Einstellungs-Screen läuft kein Spiel, die Datei ändert sich also nur durch „leeren".
+## Die letzten Einträge, neueste oben.
 func _refresh_trace_list() -> void:
 	for child in _trace_list.get_children():
 		child.queue_free()
@@ -323,8 +401,7 @@ func _on_trace_toggled(pressed: bool) -> void:
 
 
 func _on_trace_open() -> void:
-	# Der Ordner und nicht die Datei: eine .jsonl öffnet je nach Rechner irgendetwas oder
-	# nichts, der Ordner immer den Dateimanager.
+	# Der Ordner, nicht die Datei: für .jsonl gibt es nicht überall ein Programm.
 	OS.shell_open(ProjectSettings.globalize_path(TraceLog.LOG_DIR))
 
 

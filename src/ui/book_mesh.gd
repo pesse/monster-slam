@@ -1,13 +1,10 @@
 class_name BookMesh
 extends RefCounted
 ## Die Meshes eines gebundenen Buchs (Book3D): Profile im Schnitt (x, z) und ihre Extrusion
-## entlang der Höhe (y).
-##
-## Ein gebundenes Buch ist nicht eckig: der Rücken ist gerundet, und gleich hinter ihm liegt
-## im Deckel der Falz, eine kleine Rinne, an der der Deckel aufgeht. Die Profile tragen je
-## Punkt, ob die Fläche dort glatt verläuft (Rundung, Rinne) oder eine Kante hat.
+## entlang der Höhe (y). Die Profile tragen je Punkt, ob die Fläche dort glatt verläuft
+## (`smooth`) oder eine Kante hat.
 
-## Punkte je Rundung: genug für eine glatte Kontur, wenig genug für viele Bücher auf dem Pult.
+## Punkte je Rundung bzw. Falzrinne.
 const ARC_STEPS := 10
 const GROOVE_STEPS := 6
 

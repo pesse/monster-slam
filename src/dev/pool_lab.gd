@@ -1,22 +1,10 @@
 extends Control
-## Werkbank für die Auswahl der Wellenaufgaben (scenes/dev/pool_lab.tscn): welche
-## Kandidaten ein Pool hergibt, in welcher Reihenfolge WaveGenerator.pick() sie probiert,
-## und welche Wörter eine Welle damit bringen würde.
-##
-## Wozu: Die Auswahl hängt am Lernstand und an der Uhr (fällig nach 10 Minuten, nach
-## Tagen …). Ob ein Wort zu oft oder zu selten kommt, sieht man im Kampf erst nach vielen
-## Wellen — hier auf einen Blick, und mit „+10 min" / „+1 Tag" auch für später.
-##
-## Gelesen wird der Lernstand des aktiven Profils, aber nichts geschrieben: die Fälligkeit
-## wird aus ihm gerechnet (ADR 0018), die Uhr verstellt nur die Bezugszeit, und die
-## Simulation beantwortet keine Aufgabe. Die Reihenfolge würfelt wie im Spiel (gewichtet,
-## WaveGenerator.selection_weight) — jedes Neuzeichnen würfelt neu.
-##
-## Starten: `tools/godot.sh res://scenes/dev/pool_lab.tscn` (zum Ansehen mit
-## GODOT_WINDOW=1). `-- --shoot [--scope=<buch/unit>] [--days=<n>]` speichert ein Bild nach
-## reports/ und beendet.
-##
-## Die Werkbank zeigt Wörter aus dem Submodule — Bilder davon bleiben lokal (reports/).
+## Werkbank für die Auswahl der Wellenaufgaben: welche Kandidaten ein Pool hergibt, in
+## welcher Reihenfolge WaveGenerator.pick() sie probiert (gewichtet, jedes Neuzeichnen würfelt
+## neu) und welche Wörter eine Welle bringen würde. Liest den Lernstand des aktiven Profils,
+## schreibt nichts; „+10 min“/„+1 Tag“ verstellen nur die Bezugszeit (ADR 0018).
+##     GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/pool_lab.tscn
+##         [-- --shoot [--scope=<buch/unit>] [--days=<n>]]   Bild nach reports/ (bleibt lokal)
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 const ROW_SCENE := preload("res://scenes/dev/pool_row.tscn")
@@ -152,8 +140,8 @@ func _group_label(c: Dictionary) -> String:
 	return ("↻ " + label) if bool(c.get("repeat", false)) else label
 
 
-## Der Prompt, wie das Monster ihn zeigen würde — ohne die Aufgabe aufzulösen, die Liste
-## wäre sonst bei großen Pools zäh: die Quelle reicht zum Wiedererkennen.
+## Der Prompt, wie das Monster ihn zeigen würde, ohne die Aufgabe aufzulösen (zu langsam bei
+## großen Pools).
 func _prompt(c: Dictionary) -> String:
 	var source: Dictionary = c["source"]
 	var task_type := str(c["definition"].get("task_type", ""))

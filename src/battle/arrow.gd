@@ -1,15 +1,12 @@
 class_name Arrow
 extends Node3D
-## Ein Pfeil des Bogens (Ich-Sicht): Schaft, Spitze und Federn, Low-Poly wie die Modelle des
-## Kampfs. Der Ursprung liegt an der Nocke, die Spitze zeigt nach -z — so liegt er auf der
-## Sehne, ohne verschoben zu werden, und `look_at` richtet ihn im Flug aus.
-##
-## Geflogen wird nach der Wanduhr wie der Anlauf des Sturmangriffs: `Engine.time_scale`
-## gehört SlowMotion, und deren Rampe nach dem Abschicken soll den Schuss nicht dämpfen. In
-## der Pause der Meister-Feier steht er mit allem anderen (der Tween hängt an ihm).
+## Ein Pfeil des Bogens (Ich-Sicht). Der Ursprung liegt an der Nocke, die Spitze zeigt nach
+## -z, so passt er ohne Versatz auf die Sehne und `look_at` richtet ihn aus. Fliegt nach der
+## Wanduhr, damit die Rampe der Zeitlupe nach dem Abschicken den Schuss nicht dämpft.
 
+## Länge in m.
 const LENGTH := 0.8
-## So lange steckt ein Fehlschuss im Boden, bevor er verschwindet.
+## So lange (s) steckt ein Fehlschuss im Boden, bevor er verschwindet.
 const STICK_TIME := 1.6
 
 const SHAFT_COLOR := Color(0.72, 0.55, 0.34)
@@ -20,10 +17,9 @@ const TRAIL_LENGTH := 1.6
 ## Explosionspfeil: die Spitze glüht, die Spur brennt orange.
 const EMBER_COLOR := Color(1.0, 0.5, 0.12)
 
-## Ein fliegender Pfeil zieht eine helle Spur hinter sich her — aus der Ich-Sicht wäre er
-## über das Feld sonst nur ein Strich, den man verpasst. Der aufgelegte hat keine.
+## Helle Spur hinter dem fliegenden Pfeil; der aufgelegte hat keine.
 var trail := false
-## Explosionspfeil (Späher-Baum): man soll ihm im Flug ansehen, dass er gleich knallt.
+## Explosionspfeil (Späher-Baum): Spitze und Spur glühen.
 var glowing := false
 
 var _trail: MeshInstance3D
@@ -63,8 +59,7 @@ func _ready() -> void:
 		mi.position = Vector3(0.0, 0.024, -0.1)
 		pivot.add_child(mi)
 	if trail:
-		# Dieselbe Machart wie der Kern der Explosion (unbeleuchtet, halbdurchsichtig,
-		# leuchtend) — deren Shader ist dann schon übersetzt.
+		# Dieselbe Machart wie der Kern der Explosion, deren Shader ist dann schon übersetzt.
 		var streak := BoxMesh.new()
 		streak.size = Vector3(0.018, 0.018, TRAIL_LENGTH)
 		var colour := EMBER_COLOR if glowing else TRAIL_COLOR

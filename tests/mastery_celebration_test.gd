@@ -173,3 +173,65 @@ func test_warm_up_is_no_celebration() -> void:
 	EventBus.task_mastered.emit(TASK)
 	await _frame()
 	assert_array(_started).is_equal([MasteryCelebration.TASK_MS])
+
+
+func _space() -> InputEventKey:
+	var key := InputEventKey.new()
+	key.keycode = KEY_SPACE
+	key.pressed = true
+	return key
+
+
+## Die Leertaste drückt eine Plakette weg: sie meldet die gesparte Zeit, die nächste kommt.
+func test_space_skips_a_badge() -> void:
+	var cut: Array[int] = []
+	_c.cut_short.connect(func(ms: int) -> void: cut.append(ms))
+	_c.announce(Badges.make("revenge", 0, {"word": "x"}))
+	_c.announce(Badges.make("hits", 1))
+	await _pump(100)
+	_c._input(_space())
+	await _pump(300)
+	assert_int(cut.size()).is_equal(1)
+	assert_int(cut[0]).is_greater(MasteryCelebration.BADGE_MS - 600)
+	assert_array(_started).is_equal([MasteryCelebration.BADGE_MS, MasteryCelebration.BADGE_MS])
+	assert_str(_c.get_node("%BadgeTitle").text).is_equal("10 Treffer heute!")
+
+
+## Beim Tippen gehört die Leertaste dem Wort; Abschicken drückt die Plakette dann weg.
+func test_while_typing_space_stays_with_the_word() -> void:
+	var cut: Array[int] = []
+	_c.cut_short.connect(func(ms: int) -> void: cut.append(ms))
+	EventBus.typing_started.emit()
+	_c.announce(Badges.make("comeback", 0))
+	await _pump(100)
+	_c._input(_space())
+	await _frame()
+	assert_array(cut).is_empty()
+	EventBus.typing_stopped.emit()
+	EventBus.answer_submitted.emit("haus")
+	await _frame()
+	assert_int(cut.size()).is_equal(1)
+
+
+## Enter öffnet die Eingabe; das drückt die Plakette weg.
+func test_opening_the_input_skips_a_badge() -> void:
+	var cut: Array[int] = []
+	_c.cut_short.connect(func(ms: int) -> void: cut.append(ms))
+	_c.announce(Badges.make("better", 0, {"accuracy": 0.9, "baseline": 0.8}))
+	await _pump(100)
+	EventBus.typing_started.emit()
+	await _frame()
+	assert_int(cut.size()).is_equal(1)
+	EventBus.typing_stopped.emit()
+
+
+## Eine Meister-Feier lässt sich nicht wegdrücken.
+func test_space_leaves_a_mastery_alone() -> void:
+	var cut: Array[int] = []
+	_c.cut_short.connect(func(ms: int) -> void: cut.append(ms))
+	EventBus.task_mastered.emit(TASK)
+	await _pump(100)
+	_c._input(_space())
+	await _frame()
+	assert_array(cut).is_empty()
+	assert_bool(_c.is_busy()).is_true()

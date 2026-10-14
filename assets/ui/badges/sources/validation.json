@@ -214,5 +214,32 @@
     "transparentPixels": 36813,
     "opaquePixels": 845,
     "lossless": true
+  },
+  {
+    "name": "last_second",
+    "sourceSize": [
+      1122,
+      1402
+    ],
+    "sourceDiscBounds": [
+      62,
+      88,
+      1054,
+      1067
+    ],
+    "sourceBottom": 1309,
+    "outputSize": [
+      256,
+      320
+    ],
+    "discCenter": [
+      128,
+      120
+    ],
+    "discRadius": 104,
+    "ribbonBottom": 310,
+    "transparentPixels": 36964,
+    "opaquePixels": 833,
+    "lossless": true
   }
 ]

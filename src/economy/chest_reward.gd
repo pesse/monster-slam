@@ -1,54 +1,30 @@
 class_name ChestReward
 extends RefCounted
 ## Die Schatzkiste am Ende einer Welle: welche Güte sie hat und wie viel Gold darin liegt.
-##
-## Reine Rechnung ohne Zustand, Szene und Autoload — deshalb statisch und für sich prüfbar
-## (siehe tests/chest_reward_test.gd). Wer die Kiste zeigt, ist TreasureChest; wer das
-## Gold verbucht, ist Wallet; WER SIE VERDIENT, entscheidet der Aufrufer. Die Kiste soll
-## später an mehreren Stellen zu holen sein (Tagesziel, Boss, Meisterung), und jede
-## dieser Stellen bringt ihre eigene Güte mit.
-##
-## Die Menge Gold kommt aus den PUNKTEN der Welle und nicht aus der Zahl der Monster:
-## die Punkte je Monster tragen die Schwierigkeit schon in sich (WaveGenerator.reward
-## steigt mit der Grundschwierigkeit der Aufgabe, fällt mit der Confidence des Spielers
-## und wächst mit dem Wellentempo). Ein zweites Schwierigkeitsmaß daneben würde davon
-## abweichen, sobald eines von beiden justiert wird.
-##
-## Die Güte kommt aus der Genauigkeit und nicht aus den Punkten: sie ist das, was der
-## Spieler in DIESER Welle besser machen konnte, und sie ist unabhängig davon, wie lang
-## die Welle war.
+## Reine Rechnung ohne Zustand. Die Menge kommt aus den Punkten der Welle (sie tragen die
+## Schwierigkeit `t - c` schon in sich), die Güte aus der Genauigkeit.
 
-## Güte der Kiste. Reihenfolge = Wertigkeit; als Index in TIER_NAMES/TIER_FACTOR
-## benutzt, also nicht umsortieren.
+## Güte der Kiste, aufsteigend. Index in TIER_NAMES/TIER_FACTOR, also nicht umsortieren.
 enum Tier { WOOD, BRONZE, SILVER, GOLD }
 
 const TIER_NAMES := ["Holzkiste", "Bronzekiste", "Silberkiste", "Goldkiste"]
 
-## Gold je Punkt der Welle. 0.1 heißt: eine erste Welle (drei Monster, ~36 Punkte) bringt
-## eine Handvoll, eine späte (sieben Monster, ~85 Punkte) das Doppelte. Die Größenordnung
-## soll zählbar bleiben — verdiente Münzen fliegen aus der Kiste, und dreistellige
-## Beträge kann man nicht mehr aufpicken.
+## Gold je Punkt der Welle. Eine erste Welle (~36 Punkte) bringt eine Handvoll Münzen.
 const GOLD_PER_SCORE := 0.1
-## Zuschlag der Güte auf die Grundmenge. Die bessere Kiste ist auch die vollere; ohne das
-## wäre die Güte nur Lack.
+## Faktor der Güte auf die Grundmenge, je Tier.
 const TIER_FACTOR := [0.8, 1.0, 1.2, 1.5]
-## Wer ein Monster besiegt hat, geht nie mit leeren Händen — eine Kiste mit 0 Gold wäre
-## ein Versprechen, das der Deckel nicht hält.
+## Mindestgold einer Kiste, sobald ein Monster besiegt ist.
 const MIN_GOLD := 1
-## Wer KEIN Monster besiegt hat, bekommt keine Kiste, aber ein Goldstück zum Trost — eine
-## Welle, aus der man mit gar nichts geht, frustriert, gerade wenn man sie schnell
-## aufgelöst hat, weil die Wörter noch neu sind. Bewusst keine Holzkiste: die Kiste ist
-## der Fund, und ein Fund für eine verpasste Welle wäre eine Belohnung fürs Nichtwissen.
+## Trostgold ohne besiegtes Monster. Dann gibt es keine Kiste, auch keine Holzkiste.
 const CONSOLATION_GOLD := 1
 
-## Genauigkeits-Schwellen der Güte (0..1). Ohne Durchgelassenes ist die Welle perfekt und
-## die Kiste golden — das ist die Bedingung, die man beim Spielen im Kopf haben kann.
+## Genauigkeits-Schwellen der Güte (Anteil). Ohne Durchgelassenes ist die Kiste golden.
 const SILVER_ACCURACY := 0.8
 const BRONZE_ACCURACY := 0.5
 
 
 ## Güte der Kiste aus dem Ausgang der Welle: perfekt = Gold, sonst nach Genauigkeit.
-## Eine Welle ohne jedes erledigte Monster (Abbruch) ist eine Holzkiste, keine goldene.
+## Ohne jedes erledigte Monster eine Holzkiste.
 static func tier_for(correct: int, leaked: int) -> Tier:
 	var total := correct + leaked
 	if total <= 0:
@@ -61,9 +37,7 @@ static func tier_for(correct: int, leaked: int) -> Tier:
 	return Tier.BRONZE if accuracy >= BRONZE_ACCURACY else Tier.WOOD
 
 
-## Goldmenge aus den in der Welle erspielten Punkten und der Güte der Kiste.
-## Ohne Punkte (kein einziges besiegtes Monster) ist die Kiste leer und es gibt sie nicht
-## — den Fall entscheidet `for_wave`, hier kommt konsequent 0 zurück.
+## Goldmenge aus den Punkten der Welle und der Güte. Ohne Punkte 0 (keine Kiste).
 static func gold_for(score_gained: int, tier: Tier) -> int:
 	if score_gained <= 0:
 		return 0
@@ -73,8 +47,7 @@ static func gold_for(score_gained: int, tier: Tier) -> int:
 
 ## Die vollständige Belohnung einer Welle:
 ## { "tier": Tier, "gold": int, "name": String, "consolation": int }.
-## `gold` 0 heißt „keine Kiste" — dann steht in `consolation` das Trostgold, das der
-## Screen statt der Kiste zeigt (siehe WaveStats.show_stats). Mit Kiste ist es 0.
+## `gold` 0 heißt „keine Kiste“, dann steht in `consolation` das Trostgold, sonst 0.
 static func for_wave(score_gained: int, correct: int, leaked: int) -> Dictionary:
 	var tier := tier_for(correct, leaked)
 	return {

@@ -1,12 +1,7 @@
 extends SceneTree
-## Rendert die Festung jeder Stufe (FortressModel, dieselbe wie im Kampf) als Bild für die
-## Festungsanzeige der Karte: freigestellt, von der Feindseite, auf die Größe gebracht, in
-## der das Medaillon sie zeigt. Einmal vorab statt 3D in der Karte.
-##
+## Rendert die Festung jeder Stufe (FortressModel) freigestellt als Bild für die
+## Festungsanzeige der Karte, nach assets/ui/fortress/tiers/tier_<n>.webp; danach importieren.
 ##     GODOT_WINDOW=1 tools/godot.sh -s res://src/dev/fortress_icons.gd [-- --size=72]
-##
-## Kopflos gibt es kein Bild. Ausgabe: assets/ui/fortress/tiers/tier_<n>.webp (verlustfrei);
-## danach `tools/godot.sh --import`.
 
 const OUT_DIR := "res://assets/ui/fortress/tiers"
 ## Vielfaches der Zielgröße, in dem gerendert wird — Lanczos beim Verkleinern ersetzt MSAA.

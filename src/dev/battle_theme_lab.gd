@@ -1,113 +1,48 @@
 extends Node3D
-## Werkbank: das Schlachtfeld in jedem BattleTheme, ohne einen Kampf zu starten.
+## Werkbank: das Schlachtfeld in jedem BattleTheme, ohne Kampf, Lernstand und Spur.
+## Kamera und Boden kommen aus denselben statischen Funktionen wie im WaveRunner.
+## Headless gibt es keinen Renderer, deshalb immer GODOT_WINDOW=1:
+##     GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/battle_theme_lab.tscn [-- <Argumente>]
 ##
-## Ein echter Kampf spielt im Entwicklungsprofil und schreibt Lernstand und Spur (siehe
-## docs/CONVENTIONS.md). Hier steht nur, was man SIEHT: Kamera und Boden aus denselben statischen
-## Funktionen wie im WaveRunner, dazu Streudeko und die Burg zum Vergleich der Farben.
+## Tasten (jede auch als Knopf):
+##     ←/→ Thema (Iso-Sicht), 0–4 Festungsstufe, V Iso-/Ich-Sicht (WASD/Pfeile, Maus; Alt gibt
+##     sie frei), M Monster zur Mauer, K Wachkatapult (Stufe 4), T Steppenläufer,
+##     G Grafikstufe (nur hier), R Regler.
+## Regler-Reiter: Ansicht, Bahn, Licht, HUD, Bewuchs, Schreibweise (ADR 0010), Zauber
+## (ADR 0014), Feiern. Alles wirkt nur im Speicher. „Werte kopieren“ legt die Regler als
+## Konstanten in die Zwischenablage. Der flache Boden wächst nicht mit der Festungsgröße
+## (FLAT_HALF_X ist eine Konstante des WaveRunners).
 ##
-##     GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/battle_theme_lab.tscn
-##         ←/→ wechselt das Thema (in der Iso-Sicht), 0–4 die Festungsstufe, V schaltet
-##         zwischen Iso- und Ich-Sicht. In der Ich-Sicht läuft man mit WASD/Pfeilen über
-##         das ganze Gelände und schaut mit der Maus; Alt gibt die Maus frei.
-##         M (oder der Knopf) schickt ein Monster im Grundtempo vom Spawn zur Mauer; dort
-##         explodiert es wie im Kampf, ohne der Festung etwas zu melden (keine Spur).
-##         K (oder der Knopf) wirft mit dem Wachkatapult (nur Stufe 4) auf das jüngste Monster, ohne eins
-##         auf eine Stelle der Bahn — nur das Bild.
-##         T (oder der Knopf) lässt sofort einen Steppenläufer rollen, wenn das Thema welche hat.
-##         G (oder „Grafik" im Reiter Ansicht) schaltet die Grafikstufe durch (Schön, Mittel,
-##         Schnell) — nur hier, die Einstellung des Geräts bleibt; --quality=fine|medium|fast
-##         wählt den Anfang, auch für die Bildläufe. Ohne gilt die des Geräts.
-##         „Regler ▸" (oder R) klappt die Regler auf, halb durchsichtig, in fünf Reitern:
-##         Ansicht (Thema, Stufe, Sicht, Bildmitte, Ausschnitt, Neigung), Bahn (Festungsgröße,
-##         Festungsfront, Spawn, Bahnbreite, Monstertempo), Licht (Schattentiefe, Bias,
-##         Normal-Bias, Weichheit; Tageszeit, Uhr, Zeitraffer und die Grenzen des SunCycle)
-##         HUD (das Kampf-HUD zeigen; „Aufsteigen" lässt das Level-Badge aufleuchten,
-##         die Felder darunter setzen HP, Rüstung, XP-Ring, Zählerzeile und Wellenfortschritt
-##         — nur GameState im Speicher und die Anzeige, nichts im Profil) und Bewuchs
-##         (Dichte, Klumpen, Helligkeit, Größe der Büschel, Sträucher; die oberen drei
-##         gelten dem Thema und stehen nach dem Wechsel auf dessen Werten) —
-##         Namen wie die Konstanten im Spiel. „Werte kopieren" legt sie als Konstanten in die
-##         Zwischenablage und schreibt sie in die Konsole. Der flache Boden wächst nicht mit
-##         der Festungsgröße (FLAT_HALF_X ist eine Konstante des WaveRunners).
-##         --tier=<0..4>, --view=first, --hour=<6..18> (Tageszeit) und --size=<m> (Ausschnitt)
-##         wählen den Anfang.
-##     GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/battle_theme_lab.tscn -- --shoot
-##         speichert jedes Thema als reports/battle_themes/<name>.png und beendet sich.
-##         --theme=<name>[,<name>…] beschränkt auf diese Themen, --hour=<6..18> stellt die Tageszeit.
-##     … -- --specimens
-##         Nahaufnahme der Deko jedes Themas neben den gekauften Vergleichsstücken, in der
-##         Größe ihres Platzes, als reports/battle_themes/specimens_<name>.png.
-##     … -- --bow
-##         Die Ich-Sicht mit dem Bogen: gesenkt, gespannt, ein Treffer und ein Fehlschuss im
-##         Flug, als reports/battle_themes/bow_<schritt>.png.
-##     … -- --blast
-##         Der Explosionspfeil (Blast) aus der Ich-Sicht auf ein Monster mit zwei Nachbarn,
-##         in Schritten nach dem Aufprall, als reports/battle_themes/blast_<ms>.png. Jeder
-##         Schritt ist ein eigener Knall — das Speichern eines Bilds dauert länger als der.
-##     … -- --catapult
-##         Das Wachkatapult auf Stufe 4: Kranz dreht sich, Arm schlägt aus, der Stein fliegt
-##         auf ein Monster und platzt, in Schritten nach dem Abschuss, als
-##         reports/battle_themes/catapult_<ms>.png. Jeder Schritt ist ein eigener Wurf.
-##         Reiter Schreibweise: richtige Form und getippte Antwort (oder ein Beispiel) —
-##         darunter steht, wie der Kampf sie wertet. „Abspielen" (oder Enter im Feld
-##         „Getippt") lässt bei einem nachsichtigen oder unvollständigen Treffer ein Monster
-##         platzen und zeigt das Standbild wie im Kampf (ADR 0010), in der gerade
-##         eingestellten Sicht.
-##     … -- --spelling
-##         Das Standbild der Schreibweise (SpellingFreeze) nach einer Explosion, in beiden
-##         Sichten ganz herangefahren, als reports/battle_themes/spelling_<sicht>.png, dazu
-##         eine unvollständige Antwort als spelling_missing.png.
-##     … -- --hitches [--warm]
-##         Misst den längsten Frame beim ERSTEN Auftritt jedes Kampfeffekts (Explosion,
-##         „+XP", Monster, Meister-Feier) und gibt ihn in ms aus; --warm wärmt vorher vor
-##         wie der Kampf (FxWarmup). Ein Lauf je Messung — ein zweiter Effekt im selben Lauf
-##         wäre schon warm.
-##     … -- --monsters [--tier=<0..4>]
-##         Stellt Monster vor die Mauer — Größenvergleich mit der Festung (Vorgabe Vollausbau).
-##     … -- --fortress
-##         Jede Festungsstufe in beiden Sichten (Ich-Sicht vor der Mauer, zur Festung
-##         gedreht) als reports/battle_themes/fortress_<stufe>_<sicht>.png.
-##     … -- --hud [--theme=<name>]
-##         Das Kampf-HUD (Kopfleiste, Antwortfeld, Legende, Auflösen-Knopf, Zaubervorrat) über dem ersten
-##         Thema mit Beispielwerten: voll (Rüstung, Meisterungen) und schmal (ohne beides,
-##         langer Name, geschlossene Eingabe der Ich-Sicht), als
-##         reports/battle_themes/hud_<fall>.png. Werte stehen nur im Speicher.
-##     … -- --levelup
-##         Das Aufleuchten des Level-Badges in Schritten nach dem Aufstieg, als
-##         reports/battle_themes/levelup_<ms>.png. Jeder Schritt ist ein eigener Aufstieg.
-##     … -- --plates
-##         Sieben Monster dicht beieinander auf der Bahn, in beiden Sichten — die Wortschilder
-##         dürfen sich nicht überdecken, jedes dritte zeigt Alternativen (Zauber, ADR 0014) —
-##         als reports/battle_themes/plates_<sicht>.png.
-##     … -- --spells [--spell=<name>] [--view=first]
-##         Jeder Zauber (Reiter Zauber, SpellFx) auf ein Feld mit sechs Monstern, in Schritten
-##         nach dem Wirken, als reports/battle_themes/spell_<name>_<ms>.png; Frost dazu mit
-##         Rissen und beim Auftauen (auf 3 s verkürzt). Jeder Schritt ist ein eigener Zauber.
-##         Im Fenster: Reiter Zauber — „Feld füllen" stellt sechs Monster auf die Bahn,
-##         „Zaubern" wirkt den gewählten Zauber auf alle, die laufen (ohne Vorrat, ohne Spur;
-##         Lebensquell und Eisenhaut nehmen der Festung vorher etwas, nur im Speicher), „Feld
-##         leeren" räumt auf und beendet, was für die ganze Welle gilt (Nebel und Bremse von
-##         Schwere Luft, Alternativen des Orakelblicks) — bis dahin bekommt es auch jedes neue
-##         Monster, wie im Kampf.
-##         Reiter Feiern: „Aufgabe gemeistert" und „Wort gemeistert" spielen die Meister-Feier
-##         mit einem beliebigen Wort; darunter jede Plakette in jeder Stufe (Badges.catalog),
-##         „Alle nacheinander" reiht sie auf, „Meisterung + Plakette" zeigt die Reihenfolge
-##         wie nach einem Treffer, der beides bringt. Der Baum hält an wie im Kampf; Lernstand,
-##         Plaketten-Stand und Spur bleiben unberührt.
-##     … -- --fps [--theme=<name>] [--windowed]
-##         Misst im Vollbild und ohne VSync die mittlere Bildzeit mit allem an, jeweils ohne
-##         eine Zutat (MSAA, Wolken, Teilchen, Wind, Schatten, Glow, Farbgebung, Weg+Flecken)
-##         und ohne alles — die Grundlage für die Stufen in GraphicsQuality. Ein Thema je
-##         Lauf (das erste).
-##
-## Headless gibt es keinen Renderer — deshalb GODOT_WINDOW=1.
+## Anfang: --tier=<0..4>, --view=first, --hour=<6..18>, --size=<m>,
+## --quality=fine|medium|fast, --theme=<name>[,<name>…]; --monsters stellt dazu Monster vor
+## die Mauer (Größenvergleich).
+## Bilder nach reports/battle_themes/ (Programm endet danach):
+##     --shoot        jedes Thema
+##     --specimens    Deko je Thema neben den gekauften Vergleichsstücken
+##     --bow          Bogen der Ich-Sicht: gesenkt, gespannt, Treffer, Fehlschuss
+##     --blast        Explosionspfeil, in Schritten nach dem Aufprall
+##     --catapult     Wachkatapult, in Schritten nach dem Abschuss
+##     --spelling     Standbild der Schreibweise in beiden Sichten
+##     --pitch        ein Bild für den Pitch
+##     --fortress     jede Festungsstufe in beiden Sichten
+##     --hud          Kampf-HUD voll und schmal
+##     --levelup      Aufleuchten des Level-Badges
+##     --plates       sieben Monster dicht: Wortschilder dürfen sich nicht überdecken
+##     --mastered     gemeisterte Monster in beiden Sichten
+##     --spells [--spell=<name>]  jeder Zauber in Schritten nach dem Wirken
+## Messen (Ausgabe in der Konsole):
+##     --hitches [--warm]  längster Frame beim ersten Auftritt jedes Kampfeffekts, in ms;
+##                         --warm wärmt vor wie FxWarmup. Ein Lauf je Messung.
+##     --fps [--windowed]  mittlere Bildzeit mit allem, ohne je eine Zutat und ohne alles
+##                         (Grundlage für GraphicsQuality), erstes Thema.
+## Schrittbilder (--blast, --catapult, --levelup, --spells) lösen je Schritt einen eigenen
+## Effekt aus, weil das Speichern eines Bilds länger dauert als der Effekt.
 
 const WaveRunnerScript := preload("res://src/battle/wave_runner.gd")
 const BATTLE_SCENE := "res://scenes/battle/battle.tscn"
 const CELEBRATION_SCENE := preload("res://scenes/ui/mastery_celebration.tscn")
 const SHOT_DIR := "res://reports/battle_themes"
-## Fester Samen: dieselben Hügel und dieselbe Deko in jedem Thema, damit Bilder vergleichbar
-## sind.
+## Fester Samen: dieselben Hügel und dieselbe Deko in jedem Thema.
 const SEED := 4711
 ## Die Grafikstufen in der Reihenfolge von G, mit Namen wie in den Einstellungen.
 const QUALITY_ORDER: Array[GraphicsQuality.Level] = [GraphicsQuality.Level.FINE,
@@ -123,8 +58,8 @@ const SLOT_SCALE := {"trees": [0.8, 1.4], "rocks": [1.6, 3.2], "grass": [1.2, 2.
 ## Die gekauften Vergleichsstücke vor jeder Nahaufnahme, mit ihrem Platz.
 const REFERENCE := [["props/tree.glb", "trees"], ["props/rock.glb", "rocks"],
 		["props/pillar.gltf", "landmarks"]]
-## Reiter Schreibweise: [richtig, getippt] — jede Art Nachsicht einmal, zwei unvollständige
-## Antworten, dazu ein exakter und ein falscher Treffer, die kein Standbild auslösen. Einzelne Wörter, keine Wortliste.
+## Reiter Schreibweise: [richtig, getippt], jede Art Nachsicht einmal, dazu unvollständig,
+## exakt und falsch. Einzelne Wörter, keine Wortliste.
 const SPELLING_EXAMPLES := [
 	["l'élève", "l eleve"], ["l'école", "ecole"], ["été", "ete"], ["la forêt", "la foret"],
 	["Noël", "noel"], ["ils reçoivent", "ils recoivent"], ["le cœur", "le coeur"],
@@ -167,23 +102,22 @@ var _quality := GraphicsQuality.level()
 var _tier := 4
 ## Die Ich-Sicht, oder null für die Iso-Kamera.
 var _fp: FirstPersonView
-## Die Maße, die die Werkbank verschieben lässt — in Weltkoordinaten des Kampfs.
+## Verschiebbare Maße, in Weltkoordinaten des Kampfs.
 var _goal_z: float = WaveRunnerScript.GOAL_Z
 var _spawn_z: float = WaveRunnerScript.SPAWN_Z
 var _view_z: float = WaveRunnerScript.VIEW_CENTER_Z
 var _lane_half: float = WaveRunnerScript.LANE_HALF_WIDTH
 var _fortress_scale: float = FortressModel.SCALE
 var _monster_speed: float = WaveGenerator.REFERENCE_SPEED
-## Ausschnitt und Neigung der Iso-Kamera, wie WaveRunner.setup_view sie setzt (in _ready gelesen).
+## Ausschnitt (m) und Neigung (Grad) der Iso-Kamera, wie WaveRunner.setup_view.
 var _cam_size := 32.0
 var _pitch := 30.0
-## Schattenkarte, wie WaveRunner.setup_view sie setzt (in _ready gelesen). Wirkt ohne Umbau.
+## Schattenkarte, wie WaveRunner.setup_view.
 var _shadow_distance: float = WaveRunnerScript.SHADOW_DISTANCE
 var _shadow_bias := 0.1
 var _normal_bias := 1.0
 var _shadow_blur := 1.0
-## Die Sonne wie im Kampf, aber steht mittags, bis die Uhr oder der Zeitraffer sie zieht —
-## die Bilderläufe bleiben so vergleichbar.
+## Steht mittags, bis Uhr oder Zeitraffer sie ziehen.
 var _sun_cycle: SunCycle
 ## Stunden im Spiel je Sekunde; 0 = steht.
 var _sun_speed := 0.0
@@ -194,7 +128,7 @@ var _spell_fx: SpellFx
 var _caster := SpellCaster.new()
 var _strike_index := 0
 var _spell_list: Array = []
-## Das Kampf-HUD für den Aufstieg (L), oder null, solange es nicht gebraucht wurde.
+## Das Kampf-HUD, oder null, solange es nicht gebraucht wurde.
 var _hud: Control
 ## Das Level, das das HUD zeigt — nur hier, PlayerLevel bleibt unberührt.
 var _shown_level := 1
@@ -257,6 +191,8 @@ func _ready() -> void:
 		_shoot_level_up.call_deferred()
 	elif _has_arg("plates"):
 		_shoot_plates.call_deferred()
+	elif _has_arg("mastered"):
+		_shoot_mastered.call_deferred()
 	elif _has_arg("pitch"):
 		_shoot_pitch.call_deferred()
 	elif _has_arg("fps"):
@@ -308,7 +244,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_show((_index - 1 + _names.size()) % _names.size())
 
 
-## Die Regler, zugeklappt hinter „Regler ▸"; in den Bildläufen stünden sie nur im Bild.
+## Die Regler, zugeklappt hinter „Regler ▸"; in den Bildläufen verborgen.
 func _fill_controls() -> void:
 	for n in _names:
 		_theme_select.add_item(n)
@@ -335,7 +271,7 @@ func _fill_controls() -> void:
 	%SpeedSpin.value = _monster_speed
 	%SizeSpin.value = _cam_size
 	%PitchSpin.value = _pitch
-	# Das Tempo wirkt erst auf das nächste Monster, ein Umbau braucht es nicht.
+	# Das Tempo wirkt erst auf das nächste Monster.
 	%SpeedSpin.value_changed.connect(func(v: float) -> void: _monster_speed = v)
 	for spin: SpinBox in [%GoalSpin, %SpawnSpin, %ViewSpin, %LaneSpin, %ScaleSpin, %SizeSpin, %PitchSpin]:
 		spin.value_changed.connect(_on_layout_changed)
@@ -344,8 +280,7 @@ func _fill_controls() -> void:
 	%NormalBiasSpin.value = _normal_bias
 	%ShadowBlurSpin.value = _shadow_blur
 	%SunTimeSpin.value = SunCycle.hour_of(_sun_cycle.phase)
-	# Die echte Uhrzeit steht auf jetzt; wer sie verstellt, sieht die Sonne des Spiels zu
-	# dieser Stunde (und die Tageszeit im Spiel springt mit).
+	# Steht auf jetzt; verstellt zeigt sie die Sonne des Spiels zu dieser Stunde.
 	%RealTimeSpin.set_value_no_signal(_real_hour_now())
 	%RealTimeSpin.value_changed.connect(func(hour: float) -> void:
 		_sun_cycle.phase = SunCycle.clock_phase(hour * 3600.0)
@@ -384,8 +319,8 @@ func _fill_controls() -> void:
 	%MenuToggle.visible = not batch
 
 
-## Reiter Licht, Thema: Dunst und Farbkorrektur. Wirkt sofort aufs Bild, ohne die Deko neu
-## zu bauen. Ein Thema mit `light_from` zeigt die Werte seiner Quelle — dort gehören sie hin.
+## Reiter Licht, Thema: Dunst und Farbkorrektur, ohne Umbau der Deko. Ein Thema mit
+## `light_from` zeigt die Werte seiner Quelle.
 func _fill_grading_controls() -> void:
 	var knobs := {
 		%HazeSpin: func(v: float) -> void: _theme.haze = v,
@@ -494,9 +429,8 @@ func _judge_spelling() -> void:
 	%SpellVerdict.text = text
 
 
-## Ein Monster platzt vor der Festung, dann das Standbild wie im Kampf: der Baum hält an,
-## solange es steht (WaveRunner._on_spelling_started). Nur bei einem nachsichtigen oder
-## unvollständigen Treffer.
+## Ein Monster platzt, dann das Standbild wie in WaveRunner._on_spelling_started. Nur bei
+## einem nachsichtigen oder unvollständigen Treffer.
 func _play_spelling() -> void:
 	_judge_spelling()
 	var verdict := _spelling_verdict()
@@ -554,9 +488,8 @@ func _set_quality(level: GraphicsQuality.Level) -> void:
 	_show(_index)
 
 
-## Ein Monster wie im Kampf (WaveRunner._spawn_next) im Grundtempo des WaveGenerators. Sein
-## Ziel liegt weit hinter der Mauer: erreicht es die Festung, meldet es das dem EventBus, und
-## die Spur schriebe mit — deshalb nimmt es `_process` kurz davor vom Feld.
+## Ein Monster wie WaveRunner._spawn im Grundtempo. Erreicht es die Festung, meldet es das
+## dem EventBus und die Spur schriebe mit; deshalb nimmt `_process` es kurz davor vom Feld.
 func _spawn_monster() -> void:
 	var defs := FxWarmup.monster_defs()
 	if defs.is_empty():
@@ -592,7 +525,7 @@ func _process(delta: float) -> void:
 
 
 ## Zeitraffer: `_sun_speed` Stunden je Sekunde, nach dem Abend wieder der Morgen. Mit der
-## Uhr zieht SunCycle selbst; die Anzeige der Tageszeit läuft in beiden Fällen mit.
+## Uhr zieht SunCycle selbst.
 func _run_sun(delta: float) -> void:
 	if not _sun_cycle.follow_clock and _sun_speed > 0.0:
 		var day := SunCycle.DUSK_HOUR - SunCycle.DAWN_HOUR
@@ -609,9 +542,8 @@ func _real_hour_now() -> float:
 	return fposmod(SunCycle.local_unix(), 86400.0) / 3600.0
 
 
-## Die Werkbank baut in einem Rahmen, in dem der Spawn auf WaveRunner.SPAWN_Z bleibt: die
-## Hügel des Bodens hängen daran (terrain_height), so stimmen sie ohne einen Umbau des
-## WaveRunners. Festung und Bildmitte rücken dafür um den Unterschied mit.
+## Der Spawn bleibt auf WaveRunner.SPAWN_Z, weil die Hügel (terrain_height) daran hängen;
+## Festung und Bildmitte rücken um diesen Unterschied mit.
 func _shift() -> float:
 	return _spawn_z - WaveRunnerScript.SPAWN_Z
 
@@ -653,7 +585,7 @@ func _on_light_changed(_value: float) -> void:
 
 
 ## Sonne und Schattenkarte wie in WaveRunner.setup_view, mit den Werten der Regler. Die
-## Karte spannt sich über die Tiefe der Iso-Kamera bis `far` — beides hängt zusammen wie dort.
+## Karte spannt sich über die Tiefe der Iso-Kamera bis `far`.
 func _apply_light() -> void:
 	_sun_cycle.apply()
 	_sun.directional_shadow_max_distance = _shadow_distance
@@ -712,8 +644,7 @@ func _set_tier(tier: int) -> void:
 	_update_label()
 
 
-## Die Ich-Sicht des Kampfs (mit Nebel wie dort), frei über das ganze Gelände; aus heißt
-## zurück zur Iso-Kamera.
+## Die Ich-Sicht des Kampfs mit Nebel, frei über das ganze Gelände; aus heißt Iso-Kamera.
 func _set_first_person(on: bool) -> void:
 	if _fp != null:
 		_fp.free()
@@ -732,8 +663,7 @@ func _set_first_person(on: bool) -> void:
 	_update_label()
 
 
-## Nebel nur in der Ich-Sicht, wie im Kampf — auf einer Kopie, denn das Environment ist
-## eine geteilte Ressource der Kampfszene.
+## Nebel nur in der Ich-Sicht, auf einer Kopie: das Environment ist eine geteilte Ressource.
 func _apply_fog() -> void:
 	var env := _world.environment
 	if env == _scene_env:
@@ -776,8 +706,7 @@ func _show(index: int) -> void:
 	_cover_density = GraphicsQuality.cover(_quality)
 	_sun_cycle.color = theme.sun_color
 	var noise := WaveRunnerScript.terrain_noise(SEED)
-	# Wie im Kampf für den weitesten Blick gebaut (SceneZoom kommt aus der Ferne) — sonst
-	# ragt am unteren Rand der Hintergrund unter den Hügeln hervor.
+	# Für den weitesten Blick gebaut (SceneZoom), sonst ragt unten der Hintergrund hervor.
 	_pivot.position.z = _view_z - _shift()
 	_pivot.rotation_degrees.x = -_pitch
 	_camera.size = _cam_size
@@ -899,6 +828,45 @@ func _shoot_plates() -> void:
 			await get_tree().process_frame
 		await RenderingServer.frame_post_draw
 		var path := "%s/plates_%s.png" % [dir, view]
+		get_viewport().get_texture().get_image().save_png(path)
+		print("battle_theme_lab: ", path)
+		group.free()
+	get_tree().quit()
+
+
+func _shoot_mastered() -> void:
+	var dir := ProjectSettings.globalize_path(SHOT_DIR)
+	DirAccess.make_dir_recursive_absolute(dir)
+	$UI/Margin.visible = false
+	var defs := FxWarmup.monster_defs()
+	# Einzelne Wörter, keine Wortliste.
+	var prompts := ["house", "beautiful", "to run", "yesterday", "the dog", "tree"]
+	var types := WordTypePalette.COLORS.keys()
+	# Wie „Feld füllen": über die Bahn verteilt, vorne dichter.
+	var spots := [[-5.0, 0.15], [1.5, 0.25], [-1.5, 0.42], [4.5, 0.5], [-4.0, 0.7], [2.5, 0.85]]
+	for view in ["iso", "first"]:
+		_set_first_person(view == "first")
+		if _fp != null:
+			# An der Mauer, zum Spawn gedreht — wie im Kampf.
+			_fp.position = Vector3(0.0, 0.0, _goal() - 1.0)
+			_fp.call("_set_yaw", 0.0)
+		var group := Node3D.new()
+		add_child(group)
+		for i in spots.size():
+			var monster := FxWarmup.MONSTER_SCENE.instantiate() as Monster
+			monster.setup(defs[i % defs.size()], {"prompt": prompts[i],
+					"lexeme_type": types[i % types.size()]}, 1000.0, 0.0)
+			monster.mastered = i % 2 == 1
+			monster.screen_sized_label = _fp != null
+			monster.position = Vector3(float(spots[i][0]) * _lane_half / 8.0, 0.0,
+					lerpf(_goal() - 5.0, _spawn_z + 4.0, float(spots[i][1])))
+			group.add_child(monster)
+			monster.halt()
+		# Die Schilder gleiten an ihren Platz; eine halbe Sekunde reicht.
+		for i in 30:
+			await get_tree().process_frame
+		await RenderingServer.frame_post_draw
+		var path := "%s/mastered_%s.png" % [dir, view]
 		get_viewport().get_texture().get_image().save_png(path)
 		print("battle_theme_lab: ", path)
 		group.free()
@@ -1106,8 +1074,8 @@ func _throw_at_lane() -> void:
 	_throw(_nearest_turret(turrets, target), monster, target)
 
 
-## Ein Wurf wie im Kampf (WaveRunner._catapult_later): mit Vorhalt auf `monster`, das beim
-## Einschlag platzt, ohne Monster auf `at`. Keine Spur, kein Lernstand — nur das Bild.
+## Ein Wurf wie WaveRunner._catapult_later: mit Vorhalt auf `monster`, das beim Einschlag
+## platzt, ohne Monster auf `at`. Keine Spur, kein Lernstand.
 func _throw(turret: Node3D, monster: Monster, at: Vector3) -> void:
 	var target := at
 	if monster != null:
@@ -1138,8 +1106,8 @@ func _throw(turret: Node3D, monster: Monster, at: Vector3) -> void:
 	add_child(fx)
 
 
-## Das HUD ein- oder ausblenden. Es liegt oben links wie die Regler — die rücken so lange
-## nach unten links. Unter den Reglern eingehängt, damit sie bedienbar bleiben.
+## Das HUD ein- oder ausblenden. Die Regler rücken solange nach unten links und bleiben
+## darüber eingehängt, damit sie bedienbar sind.
 func _show_hud(on: bool) -> void:
 	if on and _hud == null:
 		_hud = (load("res://scenes/ui/hud.tscn") as PackedScene).instantiate() as Control
@@ -1155,9 +1123,8 @@ func _show_hud(on: bool) -> void:
 
 
 ## Die Werte aus dem Reiter HUD: Festung, Welle und Zähler gehen in GameState (nur im
-## Speicher, wie beim Bilderlauf --hud), das HUD frischt sich selbst auf — so gelten seine
-## Farbschwellen und Regeln. Nur Meisterungen (Sitzung) und XP-Ring (Profil) setzt die
-## Werkbank direkt, statt Sitzung und Erfahrung anzufassen.
+## Speicher), damit die Regeln des HUD gelten. Meisterungen und XP-Ring setzt die Werkbank
+## direkt ins HUD, ohne Sitzung und Erfahrung anzufassen.
 func _show_tally() -> void:
 	_show_hud(true)
 	GameState.fortress_max_health = maxi(1, int(%HpMaxSpin.value))
@@ -1176,8 +1143,7 @@ func _show_tally() -> void:
 	(_hud.get_node("%XpRing") as XpRing).ratio = %XpSpin.value / 100.0
 
 
-## Ein Aufstieg, wie ihn das HUD auf PlayerLevel.leveled_up zeigt — aber ohne Erfahrung zu
-## verbuchen: Zahl und Ring werden nur im HUD gesetzt.
+## Ein Aufstieg wie auf PlayerLevel.leveled_up, ohne Erfahrung zu verbuchen.
 func _level_up() -> void:
 	_show_hud(true)
 	_shown_level += 1
@@ -1204,9 +1170,8 @@ func _fill_celebration_controls() -> void:
 		_celebration_node().announce(Badges.catalog()[%BadgeSelect.selected]))
 
 
-## Die Meister-Feier wie im Kampf (WaveRunner._on_celebration_started): der Baum hält an,
-## solange sie steht. Gefeiert wird ein beliebiges geladenes Wort, an der Meisterung
-## vorbei — Lernstand und Spur bleiben unberührt.
+## Die Meister-Feier wie in WaveRunner._on_celebration_started, mit einem beliebigen
+## geladenen Wort. Lernstand und Spur bleiben unberührt.
 func _celebrate(kind: MasteryCelebration.Kind) -> void:
 	var lexemes := ContentRegistry.all("lexemes")
 	var lex: Dictionary = lexemes.pick_random() if not lexemes.is_empty() else {}
@@ -1217,9 +1182,7 @@ func _celebrate(kind: MasteryCelebration.Kind) -> void:
 	_celebration_node().celebrate(kind, id)
 
 
-## Feier und Plaketten teilen sich eine Bühne wie im Kampf; sie entsteht beim ersten Knopf.
-## Plaketten stellen sich hinter eine laufende Feier (MasteryCelebration.announce), ohne
-## Badges-Stand und Spur.
+## Feier und Plaketten teilen sich eine Bühne; sie entsteht beim ersten Knopf.
 func _celebration_node() -> MasteryCelebration:
 	if _celebration == null:
 		_celebration = CELEBRATION_SCENE.instantiate() as MasteryCelebration
@@ -1358,12 +1321,10 @@ func _shoot_bow() -> void:
 		var path := "%s/bow_%s.png" % [dir, step]
 		get_viewport().get_texture().get_image().save_png(path)
 		print("battle_theme_lab: ", path)
-		# Das Speichern dauert: ohne diese Bilder ginge die Zeit dafür im nächsten Schritt
-		# als ein großes delta auf, und Schwenk oder Flug wären schon vorbei.
+		# Sonst ginge die Zeit des Speicherns als ein großes delta im nächsten Schritt auf.
 		await get_tree().process_frame
 		await get_tree().process_frame
-	# Wie im Kampf: sonst übersetzt die Spur ihren Shader erst im ersten Flug, und das Bild
-	# stünde genau dann.
+	# Sonst übersetzt die Spur ihren Shader erst im ersten Flug.
 	var warm := Arrow.new()
 	warm.trail = true
 	var fx_at := view.camera.global_position - view.camera.global_basis.z * 6.0
@@ -1528,8 +1489,7 @@ func _worst_frame(effect: Callable, count: int) -> float:
 	return worst
 
 
-## Das Environment der Kampfszene — gelesen, nicht nachgebaut, damit die Werkbank nicht
-## still von der Szene abweicht.
+## Das Environment der Kampfszene, aus der Szene gelesen.
 func _battle_environment() -> Environment:
 	var state := (load(BATTLE_SCENE) as PackedScene).get_state()
 	for i in state.get_node_count():
@@ -1636,8 +1596,8 @@ func _place_from(theme: BattleTheme, slot: String, x: float, z: float, noise: Fa
 			_blossom_crowns.append(AmbientParticles.crown_of(inst))
 
 
-## Nahaufnahme: die gekauften Vergleichsstücke und die Deko des Themas in einer Reihe, jedes
-## in der mittleren Größe seines Platzes, auf flachem Boden, schräg von vorn wie im Kampf.
+## Nahaufnahme: Vergleichsstücke und Deko des Themas in einer Reihe, jedes in der mittleren
+## Größe seines Platzes.
 func _shoot_specimens() -> void:
 	var dir := ProjectSettings.globalize_path(SHOT_DIR)
 	DirAccess.make_dir_recursive_absolute(dir)
@@ -1720,8 +1680,8 @@ func _setup_spells() -> void:
 	%ClearFieldButton.pressed.connect(_clear_field)
 
 
-## Wirkt `spell` auf alle Monster, die laufen, wie WaveRunner._use_spell — ohne Vorrat und
-## ohne Spur. Ein leeres Feld wird erst gefüllt. `short_frost`: Frost taut nach 3 s.
+## Wirkt `spell` auf alle laufenden Monster wie WaveRunner._use_spell, ohne Vorrat und Spur.
+## Ein leeres Feld wird erst gefüllt. `short_frost`: Frost taut nach 3 s.
 func _cast_spell(spell: Dictionary, short_frost := false) -> void:
 	var effect := str(spell.get("effect", ""))
 	if short_frost and effect == "freeze":
@@ -1743,8 +1703,7 @@ func _cast_spell(spell: Dictionary, short_frost := false) -> void:
 	($UI/SpellBanner as SpellBanner).play(spell)
 	_spell_fx.play(spell, field)
 	_strike_index = 0
-	# Die Werkbank läuft wie eine Welle ohne Ende: es kommt immer noch etwas, „für die ganze
-	# Welle" gilt also auch für die, die noch erscheinen — bis „Feld leeren".
+	# Eine Welle ohne Ende: „für die ganze Welle“ gilt bis „Feld leeren“.
 	_caster.cast(spell, field, 1)
 	if _hud != null:
 		_show_tally()
@@ -1779,7 +1738,7 @@ func _clear_field() -> void:
 	_caster.reset_wave()
 
 
-## Kamerawackeln wie im Kampf, nur kurz über den Versatz der Kamera, die gerade zeigt.
+## Kamerawackeln über den Versatz der aktiven Kamera.
 func _shake(magnitude: float) -> void:
 	var cam := get_viewport().get_camera_3d()
 	if cam == null:
@@ -1793,8 +1752,7 @@ func _shake(magnitude: float) -> void:
 	tw.parallel().tween_property(cam, "v_offset", 0.0, 0.05)
 
 
-## Bildlauf --spells: jeder Zauber in Schritten nach dem Wirken, jeder Schritt ein eigener
-## Zauber auf ein frisches Feld.
+## Bildlauf --spells: Zeitpunkte der Bilder in ms nach dem Wirken.
 const SPELL_SHOTS := [150, 450, 1000]
 const FROST_THAW_SHOTS := [2300, 3080]
 ## Schwere Luft: der Nebel, wenn er ganz da ist.

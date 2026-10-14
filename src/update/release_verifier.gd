@@ -1,17 +1,11 @@
 class_name ReleaseVerifier
 extends RefCounted
-## Prüft eine geladene Programmdatei gegen die Angaben aus latest.json.
-##
-## Eigene Klasse, weil das die Stelle ist, an der ein Fehler nicht auffallen würde: sie ist
-## ohne Netz und ohne SceneTree prüfbar (siehe tests/release_verifier_test.gd).
-##
-## Zwei Prüfungen mit zwei Aufgaben — die Prüfsumme fängt den kaputten Download, die
-## Signatur den manipulierten. Die Prüfsumme allein ist keine Sicherung: sie steht im
-## selben Manifest wie die URL.
+## Prüft eine geladene Programmdatei gegen latest.json. Die Prüfsumme fängt den kaputten
+## Download, die Signatur den manipulierten; die Prüfsumme allein sichert nichts, sie steht
+## im selben Manifest wie die URL.
 
 
-## "" wenn die Datei echt ist, sonst der benannte Grund. Nie `true` bei Zweifel: eine
-## fehlende Angabe ist ein Ablehnungsgrund, keine Ausnahme.
+## "" wenn die Datei echt ist, sonst der Grund. Eine fehlende Angabe ist ein Ablehnungsgrund.
 static func problem(path: String, expected_sha256: String, signature_b64: String) -> String:
 	var digest := Digest.of_file(path)
 	if digest.is_empty():

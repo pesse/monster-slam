@@ -4,9 +4,8 @@ extends Node
 ##
 ##     GODOT_WINDOW=1 tools/godot.sh --resolution 1920x1080 res://scenes/dev/pitch_stats.tscn
 ##
-## Das Entwicklungsprofil wird weder umgeschaltet noch gespeichert: PlayerProgress bekommt
-## nur im Speicher die Id eines zz-Profils und einen leeren Stand, auf den die Werkbank
-## Antworten bucht. Geschrieben wird nichts.
+## Schreibt nichts: PlayerProgress bekommt nur im Speicher ein zz-Profil und einen leeren
+## Stand.
 
 const SCREEN_SCENE := "res://scenes/ui/stats_screen.tscn"
 const SHOT_DIR := "res://reports/stats"

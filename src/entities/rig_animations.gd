@@ -1,11 +1,8 @@
 class_name RigAnimations
 extends RefCounted
 ## Die geteilten Animationen des KayKit-Rigs „Medium“ (assets/models/animations/).
-##
-## Die Skelette bringen keine eigenen Animationen mit; sie liegen in zwei Rig-Dateien mit
-## demselben „Rig_Medium/Skeleton3D“-Aufbau. Jede Datei wird einmal geladen und ihre
-## Library zwischen allen Figuren geteilt — wer daran etwas ändert (etwa `loop_mode`),
-## ändert es für alle (docs/CONVENTIONS.md „Geladene Ressourcen sind geteilt“).
+## Die Skelette bringen keine eigenen Animationen mit. Jede Rig-Datei wird einmal geladen
+## und ihre Library zwischen allen Figuren geteilt: eine Änderung (etwa `loop_mode`) trifft alle.
 
 const GENERAL := "res://assets/models/animations/Rig_Medium_General.glb"
 const MOVEMENT := "res://assets/models/animations/Rig_Medium_MovementBasic.glb"
