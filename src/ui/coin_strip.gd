@@ -1,7 +1,9 @@
 class_name CoinStrip
 extends VBoxContainer
 ## Monatsreihe der Statistik: ein Medaillon je Tag, auf geübten Tagen eine Münze (Issue #6,
-## keine Währung). Zustandsfolge und Monatslänge sind statisch, damit sie ohne Uhr prüfbar sind.
+## keine Währung). Die Pfeile blättern bis zum Monat der ersten Sitzung zurück, ein Klick wählt
+## einen Tag (`day_selected`). Zustandsfolge und Monatsrechnung sind statisch, damit sie ohne
+## Uhr prüfbar sind.
 
 const DAY_SCENE := preload("res://scenes/ui/stats_day.tscn")
 ## Sekunden je Tag; Mittag als Versatz, damit ein Tagesindex sicher in seinem Tag landet.
@@ -12,19 +14,45 @@ const WEEKDAYS := ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"]
 const MONTH_NAMES := ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli",
 		"August", "September", "Oktober", "November", "Dezember"]
 
+## Ein Tag wurde gewählt (lokaler Tagesindex), auch beim Blättern; -1 heißt keiner.
+signal day_selected(day_index: int)
+
+## Tagesindizes mit Plaketten (Index -> true); sie tragen die kleine Plakette.
+var badge_days: Dictionary = {}
+## Der gewählte Tag; -1 vor dem ersten `refresh`.
+var selected_day := -1
+## Wie viele Monate vor dem laufenden gezeigt werden.
+var _months_back := 0
+
 @onready var _month: Label = %Month
 @onready var _caption: Label = %Caption
 @onready var _coins: HBoxContainer = %Coins
+@onready var _prev: Button = %PrevMonth
+@onready var _next: Button = %NextMonth
 
 
-## Baut die Leiste für den laufenden Monat neu und gibt zurück, an wie vielen Tagen
-## geübt wurde. Tagesindizes aus SessionLog, wie die Tages-Serie.
+func _ready() -> void:
+	_prev.pressed.connect(_turn.bind(1))
+	_next.pressed.connect(_turn.bind(-1))
+	Hints.attach(_prev, "Monat davor")
+	Hints.attach(_next, "Monat danach")
+
+
+## Baut die Leiste für den gezeigten Monat neu und gibt zurück, an wie vielen Tagen
+## geübt wurde. Tagesindizes aus SessionLog, wie die Tages-Serie. Ohne gewählten Tag gilt heute.
 func refresh() -> int:
 	var today_index: int = SessionLog.local_day(int(Time.get_unix_time_from_system()))
-	var today := Time.get_datetime_dict_from_unix_time(today_index * DAY_SECONDS + NOON_SECONDS)
-	var month: int = int(today["month"])
-	var first_index: int = today_index - (int(today["day"]) - 1)
-	var day_count := days_in_month(int(today["year"]), month)
+	if selected_day < 0:
+		selected_day = today_index
+	var sessions := SessionLog.sessions()
+	var first_played := today_index if sessions.is_empty() \
+			else SessionLog.local_day(int((sessions[0] as Dictionary).get("started_at", 0)))
+	var oldest := months_between(first_played, today_index)
+	_months_back = clampi(_months_back, 0, oldest)
+	var first_index := month_start(today_index, _months_back)
+	var first := Time.get_datetime_dict_from_unix_time(first_index * DAY_SECONDS + NOON_SECONDS)
+	var month: int = int(first["month"])
+	var day_count := days_in_month(int(first["year"]), month)
 
 	var played := {}
 	# Ein Tag Luft an beiden Enden: die Grenzen sind Sekunden, die Indizes ganze Tage.
@@ -32,7 +60,9 @@ func refresh() -> int:
 			(first_index - 1) * DAY_SECONDS, (first_index + day_count + 1) * DAY_SECONDS):
 		played[int(index)] = true
 
+	# Gleich aus dem Baum, damit `select` nur die neuen Tage zählt.
 	for child in _coins.get_children():
+		_coins.remove_child(child)
 		child.queue_free()
 	var earned := 0
 	var day_states := states(played, today_index, first_index, day_count)
@@ -44,12 +74,65 @@ func refresh() -> int:
 		var day := DAY_SCENE.instantiate() as StatsDay
 		_coins.add_child(day)
 		var is_today := day_index == today_index
+		var with_badges := badge_days.has(day_index)
 		day.setup(day_state, is_today, i + 1, date_label(day_index),
-				state_text(day_state, is_today))
+				state_text(day_state, is_today, with_badges), with_badges)
+		day.selected = day_index == selected_day
+		if day_state != DayCoin.State.FUTURE:
+			day.chosen.connect(select.bind(day_index))
 
-	_month.text = MONTH_NAMES[month - 1]
+	var today := Time.get_datetime_dict_from_unix_time(today_index * DAY_SECONDS + NOON_SECONDS)
+	_month.text = MONTH_NAMES[month - 1] if int(first["year"]) == int(today["year"]) \
+			else "%s %d" % [MONTH_NAMES[month - 1], int(first["year"])]
 	_caption.text = "•  %d von %d Tagen geübt" % [earned, day_count]
+	_prev.disabled = _months_back >= oldest
+	_next.disabled = _months_back == 0
 	return earned
+
+
+## Wählt einen Tag des gezeigten Monats und meldet ihn.
+func select(day_index: int) -> void:
+	selected_day = day_index
+	for day: StatsDay in _coins.get_children():
+		day.selected = day.get_index() == day_index - _first_shown()
+	day_selected.emit(day_index)
+
+
+## Blättert `months` Monate zurück (negativ: vor). Gewählt ist danach heute im laufenden
+## Monat, sonst der letzte geübte Tag des Monats oder keiner.
+func _turn(months: int) -> void:
+	_months_back += months
+	refresh()
+	var today_index: int = SessionLog.local_day(int(Time.get_unix_time_from_system()))
+	var pick := today_index if _months_back == 0 else -1
+	if pick < 0:
+		for day: StatsDay in _coins.get_children():
+			if day.state == DayCoin.State.EARNED:
+				pick = _first_shown() + day.get_index()
+	select(pick)
+	# Der gedrückte Knopf kann gesperrt sein und verlöre den Fokus ins Leere.
+	if (_prev if months > 0 else _next).disabled:
+		(_next if months > 0 else _prev).grab_focus()
+
+
+func _first_shown() -> int:
+	return month_start(SessionLog.local_day(int(Time.get_unix_time_from_system())), _months_back)
+
+
+## Tagesindex des Ersten im Monat, der `months_back` Monate vor dem von `today_index` liegt.
+static func month_start(today_index: int, months_back: int) -> int:
+	var d := Time.get_datetime_dict_from_unix_time(today_index * DAY_SECONDS + NOON_SECONDS)
+	var months := int(d["year"]) * 12 + int(d["month"]) - 1 - months_back
+	var unix := Time.get_unix_time_from_datetime_dict({"year": floori(months / 12.0),
+			"month": months % 12 + 1, "day": 1, "hour": 12, "minute": 0, "second": 0})
+	return floori(float(unix) / DAY_SECONDS)
+
+
+## Wie viele Monatswechsel zwischen zwei Tagesindizes liegen (0 im selben Monat).
+static func months_between(from_index: int, to_index: int) -> int:
+	var a := Time.get_datetime_dict_from_unix_time(from_index * DAY_SECONDS + NOON_SECONDS)
+	var b := Time.get_datetime_dict_from_unix_time(to_index * DAY_SECONDS + NOON_SECONDS)
+	return maxi(0, (int(b["year"]) - int(a["year"])) * 12 + int(b["month"]) - int(a["month"]))
 
 
 ## Zustandsfolge des Monats, Tag 1 zuerst. Heute ohne Sitzung ist OPEN, nicht MISSED: der
@@ -85,7 +168,7 @@ static func date_label(day_index: int) -> String:
 
 
 ## Der Stand eines Tages in Worten, ohne Datum (das ist die Überschrift der Hinweiskarte).
-static func state_text(day_state: DayCoin.State, today := false) -> String:
+static func state_text(day_state: DayCoin.State, today := false, badges := false) -> String:
 	var text: String
 	match day_state:
 		DayCoin.State.EARNED:
@@ -96,4 +179,6 @@ static func state_text(day_state: DayCoin.State, today := false) -> String:
 			return "Kommt noch"
 		_:
 			text = "Nicht geübt"
+	if badges:
+		text += "  •  mit Plaketten"
 	return text + "  •  Heute" if today else text

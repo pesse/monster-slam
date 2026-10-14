@@ -5,9 +5,12 @@ extends Node
 ##     GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/stats_lab.tscn -- --shoot
 ##         speichert reports/stats/stats_<breite>x<höhe>.png und beendet sich.
 ##     … -- --shoot --size=1920x1080   anderes Fenster (Bezugsgröße nach Menügröße, UiScale)
-##     … -- --shoot --tab=1            zweiter Reiter (0 Überblick, 1 Fortschritt, 2 Aufgaben)
+##     … -- --shoot --tab=1            zweiter Reiter (0 Überblick, 1 Fortschritt, 2 Aufgaben,
+##                                     3 Plaketten)
 ##     … -- --shoot --day=29           Karte des Tages 29, als hätte er den Tastaturfokus
-##     … -- --shoot --scroll=400       Überblick um so viele Pixel nach unten geschoben
+##     … -- --shoot --pick=5           Tag 5 der Monatsreihe gewählt (Plaketten-Band)
+##     … -- --shoot --month=-1         Monatsreihe um so viele Monate geblättert
+##     … -- --shoot --scroll=400       gezeigter Reiter um so viele Pixel nach unten geschoben
 ##     … -- --shoot --language=fr,la   Sprachwahl auf diese Sprachen gestellt (Issue #45)
 ##     … -- --sizes                    druckt die Mindestgrößen der Überblick-Abschnitte
 ## Zeigt den echten Stand des Entwicklungsprofils, schreibt nichts. Die Bilder tragen Wörter
@@ -54,8 +57,19 @@ func _shoot(screen: Node) -> void:
 		screen._on_languages_changed(languages)
 		tag += "_" + _arg("language").replace(",", "-")
 	await get_tree().create_timer(SETTLE).timeout
+	var strip := screen.get_node("%CoinStrip") as CoinStrip
+	if not _arg("month").is_empty():
+		for i in absi(int(_arg("month"))):
+			strip._turn(1 if int(_arg("month")) < 0 else -1)
+		tag += "_month" + _arg("month")
+	if not _arg("pick").is_empty():
+		strip.select(strip._first_shown() + int(_arg("pick")) - 1)
+		tag += "_pick" + _arg("pick")
 	if not _arg("scroll").is_empty():
-		(screen.get_node("%OverviewPage") as ScrollContainer).scroll_vertical = int(_arg("scroll"))
+		for page: ScrollContainer in [screen.get_node("%OverviewPage"), screen.get_node("%ProgressPage"),
+				screen.get_node("%TaskPage"), screen.get_node("%BadgePage")]:
+			if page.visible:
+				page.scroll_vertical = int(_arg("scroll"))
 		tag += "_scroll" + _arg("scroll")
 		await get_tree().process_frame
 	if not _arg("day").is_empty():

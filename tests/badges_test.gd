@@ -152,3 +152,65 @@ func test_every_badge_has_its_art() -> void:
 	for badge: Dictionary in Badges.samples():
 		var path := "%s%s.webp" % [BadgePlate.ART_DIR, badge["palette"]]
 		assert_bool(ResourceLoader.exists(path)).append_failure_message(path).is_true()
+
+
+# --- Historie und Statistik ---------------------------------------------------
+
+## Was am Tag verdient wurde, steht nach einem neuen Kampf (neue Instanz) noch beim Tag.
+func test_earned_badges_stay_with_their_day() -> void:
+	var first := Badges.new(PROFILE)
+	first.wave_won(0.2, Badges.LAST_SECOND)
+	var today := SessionLog.local_day(int(Time.get_unix_time_from_system()))
+	var later := Badges.new(PROFILE)
+	assert_array(_ids_of(later.day_list(today))).contains(["comeback", "last_second"])
+	assert_array(later.day_list(today - 1)).is_empty()
+
+
+## Eine Datei von vor der Historie kennt nur `earned` von heute; das gilt als heutiger Tag.
+func test_a_file_without_history_keeps_today() -> void:
+	var today := SessionLog.local_day(int(Time.get_unix_time_from_system()))
+	SaveStore.write("user://progress/%s_badges.json" % PROFILE,
+			{"day": today, "earned": ["better"], "kept": []})
+	var badges := Badges.new(PROFILE)
+	assert_array(_ids_of(badges.day_list(today))).contains_exactly(["better"])
+	assert_array(_ids(badges.wave_won(1.0, Badges.LAST_SECOND))).contains_exactly(["last_second"])
+
+
+func _ids_of(stored: Array) -> Array:
+	return stored.map(func(entry: Array) -> String: return str(entry[0]))
+
+
+## Je Art eine Zeile: Treffer aus den richtigen Antworten, gestufte mit ihrer höchsten Stufe,
+## Wellen-Plaketten gezählt, alles in DAY_ORDER.
+func test_day_summary_merges_a_day() -> void:
+	var stored := [["revenge", 0], ["kept", 1], ["comeback", 0], ["kept", 2], ["revenge", 0.0]]
+	var summary := Badges.day_summary(stored, 30)
+	assert_array(summary.map(func(e: Dictionary) -> String: return e["id"])).is_equal(
+			["hits", "kept", "comeback", "revenge"])
+	assert_int(int(summary[0]["tier"])).is_equal(2)
+	assert_int(int(summary[1]["tier"])).is_equal(2)
+	assert_int(int(summary[3]["count"])).is_equal(2)
+	assert_array(Badges.day_summary([], 9)).is_empty()
+
+
+## Über alle Tage: Tage je Stufe (eine höhere zählt die niedrigeren mit), Anzahl, letzter Tag.
+func test_tally_counts_days_and_badges() -> void:
+	var days := {100: [["revenge", 0], ["revenge", 0]], 103: [["revenge", 0], ["better", 0]]}
+	var correct := {100: 25, 101: 10, 102: 3}
+	var tally := Badges.tally(days, correct)
+	assert_array(tally["hits"]["tiers"]).is_equal([2, 1, 0, 0])
+	assert_int(int(tally["hits"]["last"])).is_equal(101)
+	assert_int(int(tally["revenge"]["count"])).is_equal(3)
+	assert_int(int(tally["revenge"]["days"])).is_equal(2)
+	assert_int(int(tally["better"]["last"])).is_equal(103)
+	assert_int(int(tally["comeback"]["days"])).is_equal(0)
+	assert_int(int(tally["comeback"]["last"])).is_equal(-1)
+
+
+## Jede Plakette hat in der Statistik eine Überschrift ohne „heute“.
+func test_describe_names_every_badge() -> void:
+	for badge: Dictionary in Badges.catalog():
+		var text := Badges.describe(str(badge["id"]), int(badge["tier"]), "en")
+		assert_str(str(text["title"])).append_failure_message(str(badge["id"])).is_not_empty()
+		assert_str(str(text["title"])).not_contains("heute")
+		assert_str(str(text["body"])).is_not_empty()

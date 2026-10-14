@@ -172,6 +172,15 @@ toggle_mode = true
 button_group = SubResource("tab_group")
 text = "Aufgaben"
 
+[node name="BadgeTab" type="Button" parent="Window/Layout/Content/Body/Tabs"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(144, 40)
+layout_mode = 2
+theme_type_variation = &"WindowTab"
+toggle_mode = true
+button_group = SubResource("tab_group")
+text = "Plaketten"
+
 [node name="TabSpacer" type="Control" parent="Window/Layout/Content/Body/Tabs"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -356,6 +365,29 @@ theme_type_variation = &"StatRule"
 [node name="CoinStrip" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview" instance=ExtResource("3_r")]
 unique_name_in_owner = true
 layout_mode = 2
+
+[node name="DayBadges" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview"]
+layout_mode = 2
+theme_type_variation = &"Tight"
+
+[node name="DayBadgeTitle" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/DayBadges"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatSubline"
+text = "Plaketten"
+
+[node name="DayBadgeRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/DayBadges"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 84)
+layout_mode = 2
+theme_type_variation = &"Tight"
+
+[node name="DayBadgeEmpty" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/DayBadges/DayBadgeRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"Hint"
+text = ""
 
 [node name="BottomRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview"]
 layout_mode = 2
@@ -933,6 +965,80 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"Tight"
 size_flags_horizontal = 3
+
+[node name="BadgePage" type="ScrollContainer" parent="Window/Layout/Content/Body/Pages"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="Gutter" type="MarginContainer" parent="Window/Layout/Content/Body/Pages/BadgePage"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ScrollGutter"
+
+[node name="BadgeBook" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/BadgePage/Gutter"]
+layout_mode = 2
+theme_type_variation = &"SectionStack"
+size_flags_horizontal = 3
+
+[node name="MilestoneSection" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/BadgePage/Gutter/BadgeBook"]
+layout_mode = 2
+theme_type_variation = &"ScreenStack"
+
+[node name="MilestoneHead" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/BadgePage/Gutter/BadgeBook/MilestoneSection"]
+layout_mode = 2
+theme_type_variation = &"Tight"
+
+[node name="MilestoneTitle" type="Label" parent="Window/Layout/Content/Body/Pages/BadgePage/Gutter/BadgeBook/MilestoneSection/MilestoneHead"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatHeading"
+text = "Meilensteine"
+
+[node name="MilestoneHint" type="Label" parent="Window/Layout/Content/Body/Pages/BadgePage/Gutter/BadgeBook/MilestoneSection/MilestoneHead"]
+layout_mode = 2
+theme_type_variation = &"Hint"
+text = "Diese Plaketten gibt es nur einmal: für viele Wörter einer Sprache, die du schon einmal richtig übersetzt hast. Wie viele es noch gibt, verrät niemand."
+autowrap_mode = 3
+
+[node name="MilestoneList" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/BadgePage/Gutter/BadgeBook/MilestoneSection"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"ScreenStack"
+
+[node name="DailyRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/BadgePage/Gutter/BadgeBook"]
+layout_mode = 2
+theme_type_variation = &"StatRule"
+
+[node name="DailySection" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/BadgePage/Gutter/BadgeBook"]
+layout_mode = 2
+theme_type_variation = &"ScreenStack"
+
+[node name="DailyHead" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/BadgePage/Gutter/BadgeBook/DailySection"]
+layout_mode = 2
+theme_type_variation = &"Tight"
+
+[node name="DailyTitle" type="Label" parent="Window/Layout/Content/Body/Pages/BadgePage/Gutter/BadgeBook/DailySection/DailyHead"]
+layout_mode = 2
+theme_type_variation = &"StatHeading"
+text = "Plaketten im Kampf"
+
+[node name="DailyHint" type="Label" parent="Window/Layout/Content/Body/Pages/BadgePage/Gutter/BadgeBook/DailySection/DailyHead"]
+layout_mode = 2
+theme_type_variation = &"Hint"
+text = "Wie oft du sie schon geholt hast, alle Sprachen zusammen. Welche es an einem Tag gab, zeigt ein Klick auf den Tag in der Monatsreihe im Reiter „Überblick“."
+autowrap_mode = 3
+
+[node name="DailyList" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/BadgePage/Gutter/BadgeBook/DailySection"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"ScreenStack"
 
 [node name="JointLeft" type="TextureRect" parent="Window"]
 layout_mode = 0

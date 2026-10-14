@@ -104,3 +104,54 @@ func test_state_text_names_today() -> void:
 	assert_str(COIN_STRIP.state_text(DayCoin.State.EARNED)).not_contains("Heute")
 	assert_str(COIN_STRIP.state_text(DayCoin.State.OPEN, true)).contains("noch nicht")
 	assert_str(COIN_STRIP.state_text(DayCoin.State.FUTURE)).is_equal("Kommt noch")
+
+
+## Der Erste eines Monats, auch über den Jahreswechsel zurück.
+func test_month_start_walks_back_over_the_year() -> void:
+	var jan_15 := _index(2026, 1, 15)
+	assert_int(COIN_STRIP.month_start(jan_15, 0)).is_equal(_index(2026, 1, 1))
+	assert_int(COIN_STRIP.month_start(jan_15, 1)).is_equal(_index(2025, 12, 1))
+	assert_int(COIN_STRIP.month_start(jan_15, 13)).is_equal(_index(2024, 12, 1))
+	assert_int(COIN_STRIP.months_between(_index(2025, 11, 30), jan_15)).is_equal(2)
+	assert_int(COIN_STRIP.months_between(jan_15, jan_15)).is_equal(0)
+
+
+func _index(year: int, month: int, day: int) -> int:
+	return floori(Time.get_unix_time_from_datetime_dict({"year": year, "month": month,
+			"day": day, "hour": 12}) / 86400.0)
+
+
+## Ein Klick wählt den Tag: er meldet sich und trägt den Ring, der vorige nicht mehr.
+func test_a_click_selects_a_day() -> void:
+	var strip: CoinStrip = auto_free(COIN_STRIP_SCENE.instantiate())
+	add_child(strip)
+	strip.refresh()
+	var picked: Array[int] = []
+	strip.day_selected.connect(picked.append)
+	var first := strip.get_node("%Coins").get_child(0) as StatsDay
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	first._gui_input(click)
+	assert_int(picked.size()).is_equal(1)
+	assert_int(strip.selected_day).is_equal(picked[0])
+	assert_bool(first.selected).is_true()
+	var selected := strip.get_node("%Coins").get_children().filter(
+			func(d: StatsDay) -> bool: return d.selected)
+	assert_int(selected.size()).is_equal(1)
+	remove_child(strip)
+
+
+## Im laufenden Monat geht es nicht weiter vor, der Pfeil ist gesperrt statt weg.
+func test_the_next_arrow_is_locked_in_the_current_month() -> void:
+	var strip: CoinStrip = auto_free(COIN_STRIP_SCENE.instantiate())
+	add_child(strip)
+	strip.refresh()
+	assert_bool((strip.get_node("%NextMonth") as Button).disabled).is_true()
+	assert_bool((strip.get_node("%NextMonth") as Button).visible).is_true()
+	remove_child(strip)
+
+
+func test_state_text_names_badges() -> void:
+	assert_str(COIN_STRIP.state_text(DayCoin.State.EARNED, false, true)).contains("Plaketten")
+	assert_str(COIN_STRIP.state_text(DayCoin.State.EARNED)).not_contains("Plaketten")
