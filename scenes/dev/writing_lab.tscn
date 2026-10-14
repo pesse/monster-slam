@@ -161,6 +161,12 @@ layout_mode = 2
 text = "T  Beispieltext einfügen"
 alignment = 0
 
+[node name="TaskButton" type="Button" parent="Margin/Columns/Side"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "V  Vorlage"
+alignment = 0
+
 [node name="RestartButton" type="Button" parent="Margin/Columns/Side"]
 unique_name_in_owner = true
 layout_mode = 2

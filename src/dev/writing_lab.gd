@@ -18,11 +18,12 @@ extends Control
 ##   5  Echt             — die Abgabe geht wirklich an Anthropic (CloudModelBackend) mit
 ##                         dem Schlüssel aus „Inhalte“; nur mit eingetragenem Schlüssel
 ##   W  Wartezeit an/aus — so lange „lädt“ der Angriff auf
-##   T  Beispieltext ins Schreibfeld
+##   T  Beispieltext ins Schreibfeld (passt nur zur Fixture)
+##   V  nächste Vorlage: die Test-Fixture (tests/fixtures/writing/summary_fixture.json),
+##      danach jede Vorlage aus ContentRegistry.writing; startet den Kampf neu
 ##   R  Kampf neu starten
 ##
-## Jede Taste hat auch einen Knopf. Die Aufgabe ist die Test-Fixture
-## (tests/fixtures/writing/summary_fixture.json), ein erfundener Text, kein Lehrbuch.
+## Jede Taste hat auch einen Knopf.
 ##
 ## **Hier wird nichts gebucht**: kein WritingLog, kein BossRecord und keine EventBus-Signale
 ## (also auch keine Spur) — die Urteile sind erfunden. Ausnahme „Echt“: die Abgabe kostet
@@ -61,6 +62,9 @@ const SAMPLE := "In the short story The Lighthouse Cat by Mara Linden, an old ke
 
 var _fight: WritingBoss
 var _task: Dictionary = {}
+## Fixture zuerst, dann die installierten Vorlagen.
+var _tasks: Array = []
+var _task_index := 0
 var _answer: Answer = Answer.GOOD
 var _delay := true
 var _room: Window
@@ -71,7 +75,11 @@ var _cloud: CloudModelBackend
 func _ready() -> void:
 	_room = get_window()
 	LabRoom.enlarge(_room)
-	_task = JSON.parse_string(FileAccess.get_file_as_string(FIXTURE))
+	_tasks = [JSON.parse_string(FileAccess.get_file_as_string(FIXTURE))]
+	var installed := ContentRegistry.writing.values()
+	installed.sort_custom(func(a, b): return str(a.get("id", "")) < str(b.get("id", "")))
+	_tasks.append_array(installed)
+	_task = _tasks[0]
 	_cloud = CloudModelBackend.new()
 	add_child(_cloud)
 	for tab in [[_system_view, "System"], [_user_view, "User"], [_response_view, "Antwort"],
@@ -84,7 +92,9 @@ func _ready() -> void:
 		_answer_buttons[i].pressed.connect(_choose.bind(i))
 	_delay_button.pressed.connect(_toggle_delay)
 	(%SampleButton as Button).pressed.connect(_insert_sample)
+	(%TaskButton as Button).pressed.connect(_next_task)
 	(%RestartButton as Button).pressed.connect(_restart)
+	_render_task()
 	(%BackButton as Button).pressed.connect(func() -> void: get_tree().change_scene_to_file(MENU_SCENE))
 	_choose(Answer.GOOD)
 	_render_delay()
@@ -114,6 +124,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		KEY_5: _choose(Answer.REAL)
 		KEY_W: _toggle_delay()
 		KEY_T: _insert_sample()
+		KEY_V: _next_task()
 		KEY_R: _restart()
 		_: return
 	get_viewport().set_input_as_handled()
@@ -142,7 +153,19 @@ func _render_delay() -> void:
 	_delay_button.text = "Wartezeit %.0f s (W)" % DELAY if _delay else "Sofort (W)"
 
 
-## Stellt einen neuen Kampf auf — mit der Fixture und dem erfundenen Backend.
+func _next_task() -> void:
+	_task_index = (_task_index + 1) % _tasks.size()
+	_task = _tasks[_task_index]
+	_render_task()
+	_restart()
+
+
+func _render_task() -> void:
+	(%TaskButton as Button).text = "V  Vorlage %d/%d: %s" % [_task_index + 1, _tasks.size(),
+			str(_task.get("title", "?"))]
+
+
+## Stellt einen neuen Kampf auf — mit der gewählten Vorlage und dem Backend der Werkbank.
 func _restart() -> void:
 	if _fight != null:
 		_viewport.remove_child(_fight)
