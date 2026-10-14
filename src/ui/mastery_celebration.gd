@@ -3,8 +3,12 @@ extends Control
 ## Feier im Kampf, wenn eine Aufgabe oder ein Wort zum ersten Mal gemeistert ist (Issue #23),
 ## dazu Plaketten (Issue #63). `started` meldet die Dauer, die Pause macht der Aufrufer. Im
 ## selben Frame geht die Wort- vor der Aufgaben-Feier, Plaketten danach; weitere warten.
+## Eine Plakette endet vorzeitig mit der Leertaste, mit Enter (öffnet die Eingabe) oder mit
+## einer abgeschickten Antwort; dann kommt `cut_short`.
 
 signal started(duration_ms: int)
+## Die laufende Plakette endet `remaining_ms` vor ihrer Zeit.
+signal cut_short(remaining_ms: int)
 signal finished()
 
 enum Kind { NONE, TASK, WORD, BADGE }
@@ -12,7 +16,9 @@ enum Kind { NONE, TASK, WORD, BADGE }
 ## Dauer je Feier (ms).
 const TASK_MS := 1200
 const WORD_MS := 2000
-const BADGE_MS := 1300
+const BADGE_MS := 2500
+## Ausblenden einer weggedrückten Plakette (s).
+const SKIP_FADE_S := 0.12
 ## Wort-Feier (ms): Versatz der zweiten Funkenwelle, Dauer von Glut und Blitzen.
 const WORD_GLITTER_DELAY_MS := 350
 const WORD_EMBERS_MS := 1300
@@ -36,6 +42,12 @@ var _playing: bool = false
 var _queue_list: Array = []
 ## Angehalten (hold): Feiern stellen sich an, starten aber erst mit release().
 var _held: bool = false
+## Steht gerade eine Plakette, die sich wegdrücken lässt?
+var _badge_up := false
+## Ist die Antwort-Eingabe offen? Dann gehört die Leertaste dem Wort.
+var _typing := false
+## Das Aufspringen von `_pop_in`; eine weggedrückte Plakette bricht es ab.
+var _pop_tween: Tween
 
 @onready var _flash: ColorRect = $Flash
 @onready var _origin: Control = $Origin
@@ -56,6 +68,27 @@ func _ready() -> void:
 	visible = false
 	EventBus.task_mastered.connect(_on_task_mastered)
 	EventBus.lexeme_mastered.connect(_on_lexeme_mastered)
+	EventBus.typing_started.connect(func() -> void:
+		_typing = true
+		skip_badge())
+	EventBus.typing_stopped.connect(func() -> void: _typing = false)
+	EventBus.answer_submitted.connect(func(_text: String) -> void: skip_badge())
+
+
+## Die Leertaste drückt eine Plakette weg, solange nicht getippt wird. Enter öffnet die
+## Eingabe und kommt über `typing_started`.
+func _input(event: InputEvent) -> void:
+	var key := event as InputEventKey
+	if not _badge_up or _typing or key == null or not key.pressed or key.echo:
+		return
+	if key.keycode == KEY_SPACE:
+		get_viewport().set_input_as_handled()
+		skip_badge()
+
+
+## Beendet die laufende Plakette vorzeitig; ohne Plakette nichts.
+func skip_badge() -> void:
+	_badge_up = false
 
 
 func _on_task_mastered(task_id: String) -> void:
@@ -211,7 +244,19 @@ func _play_badge(badge: Dictionary) -> void:
 	_badge_fx.modulate = BadgePlate.glow(palette)
 	for particles in _badge_fx.get_children():
 		_emit(particles as GPUParticles2D)
-	await _wait(BADGE_MS)
+	var tree := get_tree()
+	var timer := tree.create_timer(BADGE_MS / 1000.0, true)
+	_badge_up = true
+	# Wie `_wait` endet die Plakette auch, wenn die Feier den Baum verlässt.
+	while _badge_up and timer.time_left > 0.0 and is_inside_tree():
+		await tree.process_frame
+	if not _badge_up and is_inside_tree():
+		_pop_tween.kill()
+		var fade := create_tween()
+		fade.tween_property(_badge_content, "modulate:a", 0.0, SKIP_FADE_S)
+		cut_short.emit(maxi(0, roundi((timer.time_left - SKIP_FADE_S) * 1000.0)))
+		await fade.finished
+	_badge_up = false
 
 
 ## Echtzeit-Wartezeit, die auch in der Baum-Pause läuft (process_always).
@@ -265,6 +310,7 @@ func _pop_in(content: Control, duration_ms: int) -> void:
 	content.modulate = Color(1, 1, 1, 0)
 	var seconds := duration_ms / 1000.0
 	var tw := create_tween()
+	_pop_tween = tw
 	tw.set_parallel(true)
 	tw.tween_property(content, "scale", Vector2.ONE, POP_S).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.tween_property(content, "modulate:a", 1.0, FADE_IN_S)

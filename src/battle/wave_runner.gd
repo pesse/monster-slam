@@ -250,6 +250,9 @@ func _ready() -> void:
 	_view_button.set_pressed_no_signal(_fp != null)
 	_celebration.started.connect(_on_celebration_started)
 	_celebration.finished.connect(_on_celebration_finished)
+	_celebration.cut_short.connect(func(remaining_ms: int) -> void:
+		for monster in _active:
+			monster.spawned_at_ms -= remaining_ms)
 	_spelling.started.connect(_on_spelling_started)
 	_spelling.finished.connect(_on_spelling_finished)
 	_spells.strike = _strike

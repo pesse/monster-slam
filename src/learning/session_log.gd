@@ -209,6 +209,16 @@ func correct_today() -> int:
 	return n
 
 
+## Richtige Antworten je lokalem Tagesindex, die laufende Sitzung eingeschlossen; Zählregel
+## wie `correct_today`.
+func correct_by_day() -> Dictionary:
+	var out := {}
+	for entry in _all_entries():
+		var day := local_day(int(entry.get("started_at", 0)))
+		out[day] = int(out.get(day, 0)) + int(entry.get("correct", 0))
+	return out
+
+
 func played_day_count() -> int:
 	var days := {}
 	for entry in _all_entries():

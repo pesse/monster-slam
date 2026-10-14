@@ -12,6 +12,7 @@ const MONOTONIC := {
 	"_wallet": ["total_earned", "chests_opened"],
 	"_sessions": ["#sessions"],
 	"_bosses": ["#wins"],
+	"_badges": ["#days"],
 }
 
 

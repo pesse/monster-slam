@@ -2,13 +2,13 @@ class_name Badges
 extends RefCounted
 ## Plaketten im Wellenkampf (Issue #63): kleine Erfolge unabhängig von der Meisterung; die
 ## Arten stehen im Handbuch „Kampf“. Treffer und Wörter werden nicht mitgezählt, sondern aus
-## SessionLog und PlayerProgress abgelesen. Gespeichert wird nur der laufende Tag: welche
-## Tages-Plaketten schon kamen und welche Aufgaben heute „behalten“ waren.
+## SessionLog und PlayerProgress abgelesen. Gespeichert wird je Tag, was verdient wurde (außer
+## Treffern und Wörtern, die sich rechnen lassen), und welche Aufgaben heute „behalten“ waren.
 
 const SAVE_DIR := "user://progress"
 
 const HIT_STEPS := [10, 25, 50, 100]
-const WORD_STEPS := [20, 50, 100, 250]
+const WORD_STEPS := [50, 100, 500, 1000]
 const KEPT_STEPS := [1, 5, 10, 25]
 ## Confidence vor dem Treffer, unter der es eine Aufholjagd ist. Neue Aufgaben starten bei
 ## PlayerProgress.DEFAULT_CONFIDENCE, darunter kommt man nur über Fehler.
@@ -29,11 +29,15 @@ const COMMON_PALETTES := [&"bronze", &"silver"]
 const DAILY := ["comeback", "better", "last_second"]
 ## Plaketten, die es je Welle einmal gibt.
 const PER_WAVE := ["revenge", "catch_up"]
+## Plaketten eines Tages in der Reihenfolge der Statistik. Die Treffer rechnet `day_summary`
+## aus den richtigen Antworten des Tages, alle übrigen stehen in der Datei.
+const DAY_ORDER := ["hits", "kept", "comeback", "better", "last_second", "revenge", "catch_up"]
 
 var player_id: String
 var _day := -1
-var _earned: Array = []
 var _kept: Array = []
+## Lokaler Tagesindex (als String, JSON) -> verdiente Plaketten [[id, tier], …].
+var _days: Dictionary = {}
 var _this_wave: Array = []
 
 
@@ -142,6 +146,109 @@ static func catalog() -> Array:
 			make("last_second", 0), make("better", 0, {"accuracy": 0.92, "baseline": 0.81})])
 	return all
 
+
+# --- Statistik ----------------------------------------------------------------
+
+## Höchste erreichte Stufe (0..4) bei `count`, für Treffer, Wörter und Behaltenes.
+static func reached_tier(steps: Array, count: int) -> int:
+	var tier := 0
+	for step: int in steps:
+		if count >= step:
+			tier += 1
+	return tier
+
+
+## Die Plaketten eines Tages, je Art eine: {id, tier, count}. `stored` wie in der Datei,
+## `correct` die richtigen Antworten des Tages. Gestufte Arten zeigen ihre höchste Stufe,
+## Wellen-Plaketten zählen mit.
+static func day_summary(stored: Array, correct: int) -> Array:
+	var tiers := {}
+	var counts := {}
+	var hit_tier := reached_tier(HIT_STEPS, correct)
+	if hit_tier > 0:
+		tiers["hits"] = hit_tier
+		counts["hits"] = 1
+	for entry in stored:
+		var id := str((entry as Array)[0])
+		tiers[id] = maxi(int(tiers.get(id, 0)), int((entry as Array)[1]))
+		counts[id] = int(counts.get(id, 0)) + 1
+	var out: Array = []
+	for id: String in DAY_ORDER:
+		if counts.has(id):
+			var count := int(counts[id]) if id in PER_WAVE else 1
+			out.append({"id": id, "tier": int(tiers[id]), "count": count})
+	return out
+
+
+## Wie oft es jede Art von `DAY_ORDER` gab, über alle Tage: id -> {tiers (Tage je Stufe 1..4,
+## eine höhere Stufe zählt die niedrigeren mit), count (Plaketten), days, last (Tagesindex, -1
+## für nie)}. `days` wie `all_days`, `correct_by_day` wie SessionLog.correct_by_day.
+static func tally(days: Dictionary, correct_by_day: Dictionary) -> Dictionary:
+	var out := {}
+	for id: String in DAY_ORDER:
+		out[id] = {"tiers": [0, 0, 0, 0], "count": 0, "days": 0, "last": -1}
+	var all := {}
+	for day: int in days:
+		all[day] = true
+	for day: int in correct_by_day:
+		all[day] = true
+	for day: int in all:
+		for entry: Dictionary in day_summary(days.get(day, []), int(correct_by_day.get(day, 0))):
+			var t: Dictionary = out[entry["id"]]
+			t["count"] = int(t["count"]) + int(entry["count"])
+			t["days"] = int(t["days"]) + 1
+			t["last"] = maxi(int(t["last"]), day)
+			for i in int(entry["tier"]):
+				t["tiers"][i] = int(t["tiers"][i]) + 1
+	return out
+
+
+## Überschrift und Erklärung einer Plakette in der Statistik, ohne Bezug auf „heute“ und
+## ohne das Wort, an dem sie hing.
+static func describe(id: String, tier: int, lang := "") -> Dictionary:
+	var tier_name: String = TIER_NAMES[tier - 1] if tier > 0 else ""
+	match id:
+		"hits":
+			return {"title": "%d Treffer an einem Tag" % HIT_STEPS[tier - 1],
+					"body": "%s-Plakette" % tier_name}
+		"words":
+			var language := Lexeme.language_name(lang)
+			return {"title": "%s-%s" % [language, WORD_TITLES[tier - 1]],
+					"body": "%d %s-Vokabeln schon einmal richtig übersetzt" % [WORD_STEPS[tier - 1], language]}
+		"kept":
+			return {"title": "Von gestern behalten",
+					"body": ("Ein Wort getroffen, das du an einem früheren Tag zuletzt richtig hattest"
+					if tier == 1 else "%d solche Wörter an einem Tag" % KEPT_STEPS[tier - 1])
+					+ " (%s-Plakette)" % tier_name}
+		"revenge":
+			return {"title": "Revanche!", "body": "Ein Wort getroffen, das dir zuletzt entwischt ist."}
+		"catch_up":
+			return {"title": "Aufholjagd!", "body": "Ein Wort gewusst, das fast schon vergessen war."}
+		"comeback":
+			return {"title": "Comeback des Tages!",
+					"body": "Die Festung stand im roten Bereich, und die Welle war trotzdem gewonnen."}
+		"last_second":
+			return {"title": "In letzter Sekunde!",
+					"body": "Das letzte Monster stand schon vor der Mauer."}
+		"better":
+			return {"title": "Besser als sonst!",
+					"body": "Mehr Antworten richtig als in den Tagen davor."}
+	return {"title": id, "body": ""}
+
+
+## Die verdienten Plaketten eines Tages, wie gespeichert: [[id, tier], …].
+func day_list(day: int) -> Array:
+	return (_days.get(str(day), []) as Array).duplicate(true)
+
+
+## Alle Tage mit gespeicherten Plaketten: Tagesindex -> [[id, tier], …].
+func all_days() -> Dictionary:
+	var out := {}
+	for key: String in _days:
+		out[int(key)] = (_days[key] as Array).duplicate(true)
+	return out
+
+
 # --- Im Kampf -----------------------------------------------------------------
 
 ## Eine neue Welle: Revanche und Aufholjagd gibt es wieder.
@@ -189,10 +296,12 @@ func after_hit(ctx: Dictionary) -> Array:
 				_save()
 				tier = step_tier(KEPT_STEPS, _kept.size())
 				if tier > 0:
+					_note("kept", tier)
 					out.append(make("kept", tier, {"word": word}))
 		"revenge", "catch_up":
 			if not kind in _this_wave:
 				_this_wave.append(kind)
+				_note(kind, 0)
 				out.append(make(kind, 0, {"word": word}))
 	return out
 
@@ -215,11 +324,20 @@ func wave_won(low_ratio: float, last_left := INF) -> Array:
 
 ## Heute schon verdient? Sonst jetzt verdienen (und speichern).
 func _earn(id: String) -> bool:
-	if id in _earned:
-		return false
-	_earned.append(id)
-	_save()
+	for entry: Array in _days.get(str(_day), []):
+		if str(entry[0]) == id:
+			return false
+	_note(id, 0)
 	return true
+
+
+## Trägt eine Plakette beim heutigen Tag ein und speichert.
+func _note(id: String, tier: int) -> void:
+	var key := str(_day)
+	if not _days.has(key):
+		_days[key] = []
+	(_days[key] as Array).append([id, tier])
+	_save()
 
 
 # --- Tag und Datei ------------------------------------------------------------
@@ -230,7 +348,6 @@ func _roll_day() -> void:
 	if today == _day:
 		return
 	_day = today
-	_earned.clear()
 	_kept.clear()
 
 
@@ -247,14 +364,14 @@ func save_suffix() -> String:
 
 
 func save_payload() -> Dictionary:
-	return {"day": _day, "earned": _earned.duplicate(), "kept": _kept.duplicate()}
+	return {"day": _day, "kept": _kept.duplicate(), "days": _days.duplicate(true)}
 
 
 ## Lädt den Tag neu (verworfene Welle): was in ihr verdient wurde, gibt es noch einmal.
 func reload() -> void:
 	_day = -1
-	_earned = []
 	_kept = []
+	_days = {}
 	_load()
 
 
@@ -265,8 +382,17 @@ func _save() -> void:
 func _load() -> void:
 	_roll_day()
 	var read := SaveStore.read(_save_path())
-	var parsed: Variant = read["data"]
-	if int(read["status"]) != SaveStore.Status.OK or int((parsed as Dictionary).get("day", -1)) != _day:
+	if int(read["status"]) != SaveStore.Status.OK:
 		return
-	_earned = (parsed as Dictionary).get("earned", [])
-	_kept = (parsed as Dictionary).get("kept", [])
+	var parsed: Dictionary = read["data"]
+	var days: Variant = parsed.get("days", {})
+	if days is Dictionary:
+		_days = days
+	if int(parsed.get("day", -1)) != _day:
+		return
+	_kept = parsed.get("kept", [])
+	# Dateien vor der Historie kennen nur die Tages-Plaketten von heute; gespeichert wird
+	# erst mit der nächsten Plakette.
+	var legacy: Array = parsed.get("earned", [])
+	if not legacy.is_empty() and not _days.has(str(_day)):
+		_days[str(_day)] = legacy.map(func(id): return [str(id), 0])

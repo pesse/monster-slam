@@ -1,6 +1,6 @@
 extends Control
 ## Statistik-Fenster über dem Hauptmenü (geöffnet von `ProfileBadge`); das Layout liegt in
-## stats_screen.tscn, hier wird nur befüllt. Drei Reiter, siehe Handbuch Kapitel 12:
+## stats_screen.tscn, hier wird nur befüllt. Vier Reiter, siehe Handbuch Kapitel 12:
 ## „Fortschritt“ zählt Wörter (mastered_lexemes), „Aufgaben“ learnable_ids (mastered_count).
 ## Die Sprachwahl filtert alles, was an Wörtern hängt; Profilwerte und die Sitzung
 ## (SessionLog kennt keine Sprache) zählen immer alle Sprachen.
@@ -9,6 +9,8 @@ const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 const ROW_SCENE := preload("res://scenes/ui/stat_row.tscn")
 const RECORD_ROW_SCENE := preload("res://scenes/ui/record_row.tscn")
 const PROGRESS_ROW_SCENE := preload("res://scenes/ui/progress_row.tscn")
+const CHIP_SCENE := preload("res://scenes/ui/badge_chip.tscn")
+const BADGE_ROW_SCENE := preload("res://scenes/ui/badge_row.tscn")
 ## Für Schwellen und Richtungen in den statischen Funktionen; der Autoload ist nicht statisch erreichbar.
 const PROGRESS := preload("res://src/learning/player_progress.gd")
 
@@ -37,8 +39,9 @@ static var _languages: Array = []
 
 const LANGUAGE_HINT := "Ein Klick schaltet die Sprache an oder aus, mehrere zugleich gehen. " \
 		+ "Gilt für alles, was an Wörtern hängt: gemeistert, fällig, Lernkurve, " \
-		+ "die Wortlisten, „Insgesamt“, „Fortschritt“ und „Aufgaben“. Level, Gold, Rekorde, " \
-		+ "Tages-Serie und die Genauigkeit der Sitzung zählen immer alle Sprachen."
+		+ "die Wortlisten, „Insgesamt“, „Fortschritt“, „Aufgaben“ und die Meilensteine. " \
+		+ "Level, Gold, Rekorde, Tages-Serie, Plaketten im Kampf und die Genauigkeit der " \
+		+ "Sitzung zählen immer alle Sprachen."
 
 ## Das Fenster will zu. Ohne Verbindung geht `close` selbst ins Startmenü.
 signal closed()
@@ -56,6 +59,15 @@ signal closed()
 @onready var _fresh_list: VBoxContainer = %FreshList
 @onready var _comeback_list: VBoxContainer = %ComebackList
 @onready var _wanted_list: VBoxContainer = %WantedList
+@onready var _day_badge_title: Label = %DayBadgeTitle
+@onready var _day_badge_row: HBoxContainer = %DayBadgeRow
+@onready var _day_badge_empty: Label = %DayBadgeEmpty
+@onready var _milestone_list: VBoxContainer = %MilestoneList
+@onready var _daily_list: VBoxContainer = %DailyList
+## Nur gelesen; gespeichert wird im Kampf.
+var _badges := Badges.new()
+## SessionLog.correct_by_day(), je `_refresh` einmal.
+var _correct_by_day := {}
 ## Fächert die Aufgaben eines Wortes auf (learnables_of); spawnt nichts.
 var _generator := WaveGenerator.new()
 var _resolver := TaskResolver.new()
@@ -67,7 +79,7 @@ var _resolver := TaskResolver.new()
 ## Überschrift -> Text ohne Sprache; diese Abschnitte folgen der Sprachwahl.
 @onready var _filtered_titles := {
 	%CurveTitle: "Lernkurve", %FreshTitle: "Frisch gemeistert", %ComebackTitle: "Comeback",
-	%WantedTitle: "Fahndungsliste", %TotalTitle: "Insgesamt",
+	%WantedTitle: "Fahndungsliste", %TotalTitle: "Insgesamt", %MilestoneTitle: "Meilensteine",
 }
 var _book_languages := {}
 ## Gefilterte Sprachen; leer, solange alle gewählt sind. Dann zählt auch, was keiner
@@ -79,11 +91,13 @@ var _language_choices: Array = []
 	%OverviewTab: "Reiter „Überblick“",
 	%ProgressTab: "Reiter „Fortschritt“: gezählt werden Wörter",
 	%TaskTab: "Reiter „Aufgaben“: gezählt werden Aufgaben",
+	%BadgeTab: "Reiter „Plaketten“",
 }
 @onready var _pages := {
 	%OverviewTab: %OverviewPage,
 	%ProgressTab: %ProgressPage,
 	%TaskTab: %TaskPage,
+	%BadgeTab: %BadgePage,
 }
 
 
@@ -98,6 +112,7 @@ func _ready() -> void:
 		bar.set_mode(_sort_mode)
 		bar.changed.connect(_on_sort_changed)
 	_setup_languages()
+	_coin_strip.day_selected.connect(_show_day)
 	Hints.attach(%StreakCard as Control, "Tage in Folge",
 			"Jeder Tag mit mindestens einem Lauf zählt. Heute ist keine Lücke, solange der "
 			+ "Tag läuft — die Serie reißt erst, wenn ein ganzer Tag fehlt.")
@@ -180,6 +195,7 @@ func _show_page(tab: Button) -> void:
 func _refresh() -> void:
 	for title: Label in _filtered_titles:
 		title.text = filtered_title(str(_filtered_titles[title]), _filter)
+	_correct_by_day = SessionLog.correct_by_day()
 	_refresh_streak()
 	_refresh_accuracy()
 	_refresh_numbers()
@@ -190,6 +206,7 @@ func _refresh() -> void:
 	_refresh_wanted()
 	_refresh_progress()
 	_refresh_tasks()
+	_refresh_badges()
 
 
 ## „Lernkurve · Französisch, Latein“; ohne Filter ohne Namen.
@@ -202,7 +219,9 @@ static func filtered_title(title: String, languages: Array) -> String:
 ## Tages-Serie und Monatsreihe. Der laufende Tag ist keine Lücke (SessionLog.current_streak).
 func _refresh_streak() -> void:
 	var streak := SessionLog.current_streak()
+	_coin_strip.badge_days = badge_days(_badges.all_days(), _correct_by_day)
 	_coin_strip.refresh()
+	_show_day(_coin_strip.selected_day)
 	_streak_label.text = "%d Tag%s" % [streak, "" if streak == 1 else "e"]
 	if SessionLog.played_today():
 		_streak_note.text = "Heute ist dabei"
@@ -210,6 +229,124 @@ func _refresh_streak() -> void:
 		_streak_note.text = "Heute ist ein guter Tag dafür"
 	else:
 		_streak_note.text = "Heute fehlt noch — ein Lauf hält die Serie"
+
+
+## Tage mit mindestens einer Plakette (Index -> true): gespeicherte und gerechnete Treffer.
+static func badge_days(stored: Dictionary, correct_by_day: Dictionary) -> Dictionary:
+	var out := {}
+	for day: int in stored:
+		if not (stored[day] as Array).is_empty():
+			out[day] = true
+	for day: int in correct_by_day:
+		if Badges.reached_tier(Badges.HIT_STEPS, int(correct_by_day[day])) > 0:
+			out[day] = true
+	return out
+
+
+## Das Band unter der Monatsreihe: die Plaketten des gewählten Tages. Die Höhe des Bandes
+## steht fest (stats_screen.tscn).
+func _show_day(day: int) -> void:
+	for child in _day_badge_row.get_children():
+		if child is BadgeChip:
+			_day_badge_row.remove_child(child)
+			child.queue_free()
+	var today := SessionLog.local_day(int(Time.get_unix_time_from_system()))
+	if day < 0:
+		_day_badge_title.text = "Plaketten"
+		_day_badge_empty.text = "Ein Klick auf einen Tag zeigt seine Plaketten."
+		_day_badge_empty.visible = true
+		return
+	_day_badge_title.text = "Plaketten · " + ("heute" if day == today else CoinStrip.date_label(day))
+	var summary := Badges.day_summary(_badges.day_list(day), int(_correct_by_day.get(day, 0)))
+	for entry: Dictionary in summary:
+		var id := str(entry["id"])
+		var count := int(entry["count"])
+		var text := Badges.describe(id, int(entry["tier"]))
+		_add_chip(_day_badge_row, Badges.make(id, int(entry["tier"])),
+				"×%d" % count if count > 1 else "", str(text["title"]), str(text["body"]),
+				"%d-mal an diesem Tag" % count if count > 1 else "")
+	_day_badge_empty.visible = summary.is_empty()
+	_day_badge_empty.text = day_empty_text(day == today, _correct_by_day.has(day))
+
+
+## Was das Band ohne Plakette sagt.
+static func day_empty_text(today: bool, played: bool) -> String:
+	if today:
+		return "Heute noch keine Plakette – im Kampf gibt es welche."
+	return "An diesem Tag gab es keine Plakette." if played else "An diesem Tag nicht geübt."
+
+
+func _add_chip(box: Container, badge: Dictionary, caption: String, title: String,
+		body: String, note := "") -> BadgeChip:
+	var chip := CHIP_SCENE.instantiate() as BadgeChip
+	box.add_child(chip)
+	chip.setup(badge, caption, title, body, note)
+	return chip
+
+
+## Reiter „Plaketten“: Meilensteine je Sprache (folgen der Sprachwahl) und wie oft es jede
+## Plakette im Kampf schon gab.
+func _refresh_badges() -> void:
+	_clear(_milestone_list)
+	var languages: Array = _filter if not _filter.is_empty() else _language_choices
+	for lang: String in languages:
+		var count := PlayerProgress.lexemes_answered(lang)
+		var reached := Badges.reached_tier(Badges.WORD_STEPS, count)
+		if reached == 0:
+			continue
+		var row := _add_badge_row(_milestone_list, Lexeme.language_name(lang),
+				"%d %s richtig übersetzt" % [count, "Wort" if count == 1 else "Wörter"])
+		for tier in range(1, reached + 1):
+			var text := Badges.describe("words", tier, lang)
+			row.add_chip().setup(Badges.make("words", tier, {"lang": lang}), "",
+					str(text["title"]), str(text["body"]))
+	if _milestone_list.get_child_count() == 0:
+		_add_line(_milestone_list, "Noch kein Meilenstein.")
+
+	_clear(_daily_list)
+	var tally := Badges.tally(_badges.all_days(), _correct_by_day)
+	for id: String in Badges.DAY_ORDER:
+		var t: Dictionary = tally[id]
+		if int(t["days"]) == 0:
+			continue
+		var tiered := id in ["hits", "kept"]
+		var row := _add_badge_row(_daily_list, tally_title(id), tally_line(id, t))
+		for tier in (range(1, Badges.TIER_NAMES.size() + 1) if tiered else [0]):
+			var n := int((t["tiers"] as Array)[tier - 1]) if tiered else int(t["count"])
+			if n == 0:
+				continue
+			var text := Badges.describe(id, tier)
+			row.add_chip().setup(Badges.make(id, tier), "%d×" % n, str(text["title"]),
+					str(text["body"]), ("an %d Tag%s" % [n, "" if n == 1 else "en"]) if tiered else "")
+	if _daily_list.get_child_count() == 0:
+		_add_line(_daily_list, "Noch keine Plakette – im Kampf gibt es welche.")
+
+
+func _add_badge_row(box: VBoxContainer, title: String, detail: String) -> BadgeRow:
+	var row := BADGE_ROW_SCENE.instantiate() as BadgeRow
+	box.add_child(row)
+	row.setup(title, detail)
+	return row
+
+
+## Name einer Art in der Sammlung.
+static func tally_title(id: String) -> String:
+	match id:
+		"hits":
+			return "Treffer an einem Tag"
+		"kept":
+			return "Von gestern behalten"
+	return str(Badges.describe(id, 0)["title"])
+
+
+## Stand einer Art in der Sammlung, `t` aus Badges.tally (mindestens ein Tag).
+static func tally_line(id: String, t: Dictionary) -> String:
+	var days := int(t["days"])
+	var line := "An %d Tag%s" % [days, "" if days == 1 else "en"]
+	if id in Badges.PER_WAVE:
+		line = "%d-mal, an %d Tag%s" % [int(t["count"]), days, "" if days == 1 else "en"]
+	return "%s, zuletzt %s" % [line, short_date(int(t["last"]) * CoinStrip.DAY_SECONDS
+			+ CoinStrip.NOON_SECONDS)]
 
 
 func _refresh_numbers() -> void:
