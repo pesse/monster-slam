@@ -1,7 +1,9 @@
 [gd_resource type="Theme" format=3 uid="uid://cl05typg0mkgi"]
 
-[ext_resource type="Texture2D" path="res://assets/ui/frames/silver_gold/frame@2x.webp" id="silver_gold_frame_tex"]
 [ext_resource type="Texture2D" uid="uid://c66m10uwdhhbi" path="res://assets/ui/windows/tab_highlighted.webp" id="card_gold_tex"]
+[ext_resource type="Texture2D" uid="uid://dembx1prxxvvc" path="res://assets/ui/checks/mixed.svg" id="check_mixed_tex"]
+[ext_resource type="Texture2D" uid="uid://dfrm2k7aovm1v" path="res://assets/ui/checks/off.svg" id="check_off_tex"]
+[ext_resource type="Texture2D" uid="uid://bogllglcn7a57" path="res://assets/ui/checks/on.svg" id="check_on_tex"]
 [ext_resource type="FontFile" uid="uid://80iavrpdub4p" path="res://assets/fonts/fira_sans/FiraSans-Bold.ttf" id="fira_bold"]
 [ext_resource type="FontFile" uid="uid://bx3d1j6e813vy" path="res://assets/fonts/fira_sans/FiraSans-SemiBold.ttf" id="fira_semibold"]
 [ext_resource type="Texture2D" uid="uid://p6p1vnvm3ivg" path="res://assets/ui/fortress/small/name_panel.webp" id="fort_name_tex"]
@@ -25,6 +27,7 @@
 [ext_resource type="Texture2D" uid="uid://c82gt00iovwuh" path="res://assets/ui/main_menu/buttons/button_highlighted.webp" id="menu_btn_gold_tex"]
 [ext_resource type="Texture2D" uid="uid://c4bkodinnmter" path="res://assets/ui/main_menu/buttons/button_normal.webp" id="menu_btn_tex"]
 [ext_resource type="Texture2D" uid="uid://di81uv85ill6i" path="res://assets/ui/main_menu/panels/profile_panel.webp" id="profile_plate_tex"]
+[ext_resource type="Texture2D" uid="uid://cep54v1ntb3oo" path="res://assets/ui/frames/silver_gold/frame@2x.webp" id="silver_gold_frame_tex"]
 [ext_resource type="Texture2D" uid="uid://bca73o053xenw" path="res://assets/ui/statistics/tabs/tab_highlighted.webp" id="tab_gold_tex"]
 [ext_resource type="Texture2D" uid="uid://bxlrnosg0y7m8" path="res://assets/ui/statistics/tabs/tab_normal.webp" id="tab_tex"]
 [ext_resource type="Texture2D" uid="uid://dce5klp8kinu" path="res://assets/ui/windows/title_bar.webp" id="title_bar_tex"]
@@ -35,9 +38,6 @@
 [ext_resource type="Texture2D" uid="uid://cduuweh2lcac2" path="res://assets/ui/windows/window_panel_compact.webp" id="window_tex"]
 [ext_resource type="Texture2D" uid="uid://djgdoxp4hpreu" path="res://assets/ui/main_menu/buttons/small/button_highlighted.webp" id="win_btn_gold_tex"]
 [ext_resource type="Texture2D" uid="uid://d3shf1enaqe34" path="res://assets/ui/main_menu/buttons/small/button_normal.webp" id="win_btn_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/checks/on.svg" id="check_on_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/checks/off.svg" id="check_off_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/checks/mixed.svg" id="check_mixed_tex"]
 
 [sub_resource type="StyleBoxFlat" id="action_disabled"]
 content_margin_left = 16.0
@@ -315,6 +315,22 @@ corner_radius_bottom_left = 8
 shadow_color = Color(0, 0, 0, 0.4)
 shadow_size = 6
 
+[sub_resource type="StyleBoxFlat" id="drop_panel"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.12, 0.14, 0.22, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.5, 0.56, 0.7, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
 [sub_resource type="StyleBoxTexture" id="fortress_track"]
 content_margin_left = 0.0
 content_margin_top = 0.0
@@ -404,6 +420,22 @@ corner_radius_top_left = 5
 corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxEmpty" id="handbook_heading"]
+content_margin_top = 16.0
+
+[sub_resource type="StyleBoxEmpty" id="handbook_subheading"]
+content_margin_top = 8.0
+
+[sub_resource type="FontVariation" id="handbook_bold"]
+variation_embolden = 0.6
+
+[sub_resource type="FontVariation" id="handbook_bold_italic"]
+variation_embolden = 0.6
+variation_transform = Transform2D(1, 0, 0.2, 1, 0, 0)
+
+[sub_resource type="FontVariation" id="handbook_italic"]
+variation_transform = Transform2D(1, 0, 0.2, 1, 0, 0)
 
 [sub_resource type="StyleBoxTexture" id="hint_frame"]
 texture = ExtResource("hint_frame_tex")
@@ -565,101 +597,6 @@ texture_margin_left = 8.0
 texture_margin_top = 8.0
 texture_margin_right = 8.0
 texture_margin_bottom = 8.0
-
-[sub_resource type="StyleBox" id="spell_tile"]
-resource_local_to_scene = false
-resource_name = ""
-content_margin_left = 16.0
-content_margin_top = 16.0
-content_margin_right = 16.0
-content_margin_bottom = 16.0
-script = ExtResource("frame_style")
-texture = ExtResource("silver_gold_frame_tex")
-slice_left = 64.0
-slice_top = 64.0
-slice_right = 64.0
-slice_bottom = 64.0
-scale = 0.5
-modulate = Color(1, 1, 1, 1)
-crop_middle = true
-fill = Color(0.06, 0.1, 0.2, 0.96)
-fill_inset = 14.0
-
-[sub_resource type="StyleBox" id="spell_tile_hover"]
-resource_local_to_scene = false
-resource_name = ""
-content_margin_left = 16.0
-content_margin_top = 16.0
-content_margin_right = 16.0
-content_margin_bottom = 16.0
-script = ExtResource("frame_style")
-texture = ExtResource("silver_gold_frame_tex")
-slice_left = 64.0
-slice_top = 64.0
-slice_right = 64.0
-slice_bottom = 64.0
-scale = 0.5
-modulate = Color(1.25, 1.15, 0.85, 1)
-crop_middle = true
-fill = Color(0.1, 0.16, 0.3, 0.96)
-fill_inset = 14.0
-
-[sub_resource type="StyleBox" id="spell_tile_pressed"]
-resource_local_to_scene = false
-resource_name = ""
-content_margin_left = 16.0
-content_margin_top = 16.0
-content_margin_right = 16.0
-content_margin_bottom = 16.0
-script = ExtResource("frame_style")
-texture = ExtResource("silver_gold_frame_tex")
-slice_left = 64.0
-slice_top = 64.0
-slice_right = 64.0
-slice_bottom = 64.0
-scale = 0.5
-modulate = Color(0.9, 0.85, 0.75, 1)
-crop_middle = true
-fill = Color(0.04, 0.07, 0.15, 0.96)
-fill_inset = 14.0
-
-[sub_resource type="StyleBox" id="spell_tile_disabled"]
-resource_local_to_scene = false
-resource_name = ""
-content_margin_left = 16.0
-content_margin_top = 16.0
-content_margin_right = 16.0
-content_margin_bottom = 16.0
-script = ExtResource("frame_style")
-texture = ExtResource("silver_gold_frame_tex")
-slice_left = 64.0
-slice_top = 64.0
-slice_right = 64.0
-slice_bottom = 64.0
-scale = 0.5
-modulate = Color(0.55, 0.57, 0.62, 1)
-crop_middle = true
-fill = Color(0.05, 0.07, 0.12, 0.9)
-fill_inset = 14.0
-
-[sub_resource type="StyleBox" id="spell_slot"]
-resource_local_to_scene = false
-resource_name = ""
-content_margin_left = 12.0
-content_margin_top = 12.0
-content_margin_right = 12.0
-content_margin_bottom = 12.0
-script = ExtResource("frame_style")
-texture = ExtResource("silver_gold_frame_tex")
-slice_left = 64.0
-slice_top = 64.0
-slice_right = 64.0
-slice_bottom = 64.0
-scale = 0.375
-modulate = Color(1, 1, 1, 1)
-crop_middle = true
-fill = Color(0.06, 0.1, 0.2, 0.96)
-fill_inset = 14.0
 
 [sub_resource type="StyleBox" id="hud_legend"]
 resource_local_to_scene = false
@@ -970,6 +907,99 @@ corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
+[sub_resource type="StyleBox" id="spell_slot"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = 12.0
+content_margin_top = 12.0
+content_margin_right = 12.0
+content_margin_bottom = 12.0
+script = ExtResource("frame_style")
+texture = ExtResource("silver_gold_frame_tex")
+slice_left = 64.0
+slice_top = 64.0
+slice_right = 64.0
+slice_bottom = 64.0
+scale = 0.375
+fill = Color(0.06, 0.1, 0.2, 0.96)
+fill_inset = 14.0
+crop_middle = true
+
+[sub_resource type="StyleBox" id="spell_tile_disabled"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
+script = ExtResource("frame_style")
+texture = ExtResource("silver_gold_frame_tex")
+slice_left = 64.0
+slice_top = 64.0
+slice_right = 64.0
+slice_bottom = 64.0
+scale = 0.5
+modulate = Color(0.55, 0.57, 0.62, 1)
+fill = Color(0.05, 0.07, 0.12, 0.9)
+fill_inset = 14.0
+crop_middle = true
+
+[sub_resource type="StyleBox" id="spell_tile_hover"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
+script = ExtResource("frame_style")
+texture = ExtResource("silver_gold_frame_tex")
+slice_left = 64.0
+slice_top = 64.0
+slice_right = 64.0
+slice_bottom = 64.0
+scale = 0.5
+modulate = Color(1.25, 1.15, 0.85, 1)
+fill = Color(0.1, 0.16, 0.3, 0.96)
+fill_inset = 14.0
+crop_middle = true
+
+[sub_resource type="StyleBox" id="spell_tile_pressed"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
+script = ExtResource("frame_style")
+texture = ExtResource("silver_gold_frame_tex")
+slice_left = 64.0
+slice_top = 64.0
+slice_right = 64.0
+slice_bottom = 64.0
+scale = 0.5
+modulate = Color(0.9, 0.85, 0.75, 1)
+fill = Color(0.04, 0.07, 0.15, 0.96)
+fill_inset = 14.0
+crop_middle = true
+
+[sub_resource type="StyleBox" id="spell_tile"]
+resource_local_to_scene = false
+resource_name = ""
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
+script = ExtResource("frame_style")
+texture = ExtResource("silver_gold_frame_tex")
+slice_left = 64.0
+slice_top = 64.0
+slice_right = 64.0
+slice_bottom = 64.0
+scale = 0.5
+fill = Color(0.06, 0.1, 0.2, 0.96)
+fill_inset = 14.0
+crop_middle = true
+
 [sub_resource type="StyleBoxLine" id="stat_divider"]
 color = Color(0.45, 0.55, 0.75, 0.3)
 vertical = true
@@ -1064,6 +1094,8 @@ texture_margin_left = 8.0
 texture_margin_top = 8.0
 texture_margin_right = 8.0
 texture_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxEmpty" id="tree_focus"]
 
 [sub_resource type="StyleBoxFlat" id="sb_grabber"]
 bg_color = Color(0.35, 0.4, 0.5, 1)
@@ -1256,40 +1288,6 @@ texture_margin_top = 14.0
 texture_margin_right = 16.0
 texture_margin_bottom = 14.0
 
-[sub_resource type="StyleBoxFlat" id="drop_panel"]
-content_margin_left = 4.0
-content_margin_top = 4.0
-content_margin_right = 4.0
-content_margin_bottom = 4.0
-bg_color = Color(0.12, 0.14, 0.22, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.5, 0.56, 0.7, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-
-[sub_resource type="StyleBoxEmpty" id="tree_focus"]
-
-[sub_resource type="FontVariation" id="handbook_bold"]
-variation_embolden = 0.6
-
-[sub_resource type="FontVariation" id="handbook_italic"]
-variation_transform = Transform2D(1, 0, 0.2, 1, 0, 0)
-
-[sub_resource type="FontVariation" id="handbook_bold_italic"]
-variation_embolden = 0.6
-variation_transform = Transform2D(1, 0, 0.2, 1, 0, 0)
-
-[sub_resource type="StyleBoxEmpty" id="handbook_heading"]
-content_margin_top = 16.0
-
-[sub_resource type="StyleBoxEmpty" id="handbook_subheading"]
-content_margin_top = 8.0
-
 [resource]
 default_font_size = 18
 Accent/base_type = &"Label"
@@ -1419,10 +1417,10 @@ DebugButton/styles/normal = SubResource("dbg_btn_normal")
 DebugButton/styles/pressed = SubResource("dbg_btn_pressed")
 DebugPanel/base_type = &"PanelContainer"
 DebugPanel/styles/panel = SubResource("dbg_panel")
-DropPanel/base_type = &"PanelContainer"
-DropPanel/styles/panel = SubResource("drop_panel")
 Display/base_type = &"Label"
 Display/font_sizes/font_size = 40
+DropPanel/base_type = &"PanelContainer"
+DropPanel/styles/panel = SubResource("drop_panel")
 FlagChoice/base_type = &"ToolChoice"
 FlagChoice/colors/icon_hover_color = Color(1, 1, 1, 0.8)
 FlagChoice/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)
@@ -1490,14 +1488,14 @@ HandbookText/colors/table_even_row_bg = Color(0.24, 0.28, 0.38, 0.35)
 HandbookText/colors/table_odd_row_bg = Color(0.18, 0.21, 0.3, 0.35)
 HandbookText/constants/table_h_separation = 16
 HandbookText/constants/table_v_separation = 4
-HandbookText/fonts/bold_font = SubResource("handbook_bold")
-HandbookText/fonts/bold_italics_font = SubResource("handbook_bold_italic")
-HandbookText/fonts/italics_font = SubResource("handbook_italic")
 HandbookText/font_sizes/bold_font_size = 16
 HandbookText/font_sizes/bold_italics_font_size = 16
 HandbookText/font_sizes/italics_font_size = 16
 HandbookText/font_sizes/mono_font_size = 16
 HandbookText/font_sizes/normal_font_size = 16
+HandbookText/fonts/bold_font = SubResource("handbook_bold")
+HandbookText/fonts/bold_italics_font = SubResource("handbook_bold_italic")
+HandbookText/fonts/italics_font = SubResource("handbook_italic")
 HandbookTitle/base_type = &"StatHeadline"
 Hint/base_type = &"Label"
 Hint/colors/font_color = Color(0.78, 0.8, 0.84, 1)
@@ -1686,10 +1684,10 @@ MenuNote/colors/font_outline_color = Color(0.06, 0.07, 0.12, 1)
 MenuNote/constants/outline_size = 6
 MenuNote/font_sizes/font_size = 14
 PanelContainer/styles/panel = SubResource("panel")
-PopupMenu/icons/checked = ExtResource("check_on_tex")
-PopupMenu/icons/unchecked = ExtResource("check_off_tex")
 PlayerBubble/base_type = &"PanelContainer"
 PlayerBubble/styles/panel = SubResource("bubble_player")
+PopupMenu/icons/checked = ExtResource("check_on_tex")
+PopupMenu/icons/unchecked = ExtResource("check_off_tex")
 ProfileLink/base_type = &"MenuLink"
 ProfileLink/colors/icon_focus_color = Color(1, 0.86, 0.45, 1)
 ProfileLink/colors/icon_hover_color = Color(1, 0.86, 0.45, 1)
@@ -1728,6 +1726,8 @@ Shout/constants/outline_size = 16
 Shout/font_sizes/font_size = 72
 SkillIcon/base_type = &"Label"
 SkillIcon/font_sizes/font_size = 26
+SpellSlotFrame/base_type = &"PanelContainer"
+SpellSlotFrame/styles/panel = SubResource("spell_slot")
 SpellTile/base_type = &"Button"
 SpellTile/colors/font_disabled_color = Color(0.5, 0.53, 0.6, 1)
 SpellTile/styles/disabled = SubResource("spell_tile_disabled")
@@ -1739,8 +1739,6 @@ SpellTile/styles/pressed = SubResource("spell_tile_pressed")
 SpellTileGrid/base_type = &"GridContainer"
 SpellTileGrid/constants/h_separation = 16
 SpellTileGrid/constants/v_separation = 16
-SpellSlotFrame/base_type = &"PanelContainer"
-SpellSlotFrame/styles/panel = SubResource("spell_slot")
 SpellTileIcon/base_type = &"Label"
 SpellTileIcon/font_sizes/font_size = 56
 SpellingAccent/base_type = &"Label"
@@ -1797,10 +1795,6 @@ TabContainer/styles/tab_unselected = SubResource("tab_unselected")
 TabContainer/styles/tabbar_background = SubResource("tabbar_bg")
 Tight/base_type = &"BoxContainer"
 Tight/constants/separation = 4
-Tree/icons/checked = ExtResource("check_on_tex")
-Tree/icons/indeterminate = ExtResource("check_mixed_tex")
-Tree/icons/unchecked = ExtResource("check_off_tex")
-Tree/styles/focus = SubResource("tree_focus")
 Title/base_type = &"Label"
 Title/font_sizes/font_size = 28
 ToolButton/base_type = &"Button"
@@ -1819,6 +1813,10 @@ ToolChoice/colors/font_pressed_color = Color(1, 0.84, 0.4, 1)
 ToolChoice/constants/outline_size = 4
 ToolChoice/font_sizes/font_size = 20
 ToolChoice/fonts/font = SubResource("menu_font")
+Tree/icons/checked = ExtResource("check_on_tex")
+Tree/icons/indeterminate = ExtResource("check_mixed_tex")
+Tree/icons/unchecked = ExtResource("check_off_tex")
+Tree/styles/focus = SubResource("tree_focus")
 VScrollBar/styles/grabber = SubResource("sb_grabber")
 VScrollBar/styles/grabber_highlight = SubResource("sb_grabber_hl")
 VScrollBar/styles/grabber_pressed = SubResource("sb_grabber_pressed")
