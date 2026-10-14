@@ -1,16 +1,18 @@
 # 22. The Rambler
 
-The Rambler ist ein Boss für ältere Spielerinnen und Spieler (ab Klasse 10): Hier geht
+The Rambler ist ein Boss für ältere Spielerinnen und Spieler (ab Access 4): Hier geht
 es nicht um Wörter oder Sätze, sondern um einen **ganzen Text**. Er ist ein aufgeblähter
 Bücherwurm-Drache aus Papier, der in einem Turm aus Papierstapeln haust und Geschichten
 endlos, abschweifend und falsch nacherzählt. Deine Aufgabe ist das Gegenteil: eine
 **Summary** auf Englisch – kurz, sachlich, das Wichtige in eigenen Worten.
 
-The Rambler gibt es bisher nur im Expertenmodus: „📜 The Rambler“ in „Runde
-vorbereiten“ ([Kapitel 3](03-expertenmodus.md)). Der Knopf erscheint nur, wenn
-**beides** stimmt: Es ist ein eigener API-Schlüssel eingetragen (siehe unten), und zu den
-gewählten Units gibt es eine Schreibaufgabe. Fehlt eins davon, ist der Knopf einfach nicht
-da. Es gibt **keinen Zeitdruck**.
+Du triffst ihn am Boss-Ort einer Unit auf der Gebietskarte: Markierst du den Boss, steht
+neben „Spielen“ (das den Satzmeister startet) ein „📜“ für The Rambler. Im Expertenmodus
+gibt es „📜 The Rambler“ in „Runde vorbereiten“ ([Kapitel 3](03-expertenmodus.md)). Beides
+erscheint nur, wenn **zwei Dinge** stimmen: Es ist ein eigener API-Schlüssel eingetragen
+(siehe unten), und zur Unit gibt es eine Schreibaufgabe. Fehlt eins davon, ist der Knopf
+einfach nicht da. Ein Sieg zählt für die Medaille am Boss-Ort wie ein Sieg über den
+Satzmeister. Es gibt **keinen Zeitdruck**.
 
 ## Der Kampf in Phasen
 

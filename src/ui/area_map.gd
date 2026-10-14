@@ -7,6 +7,7 @@ extends Control
 
 const BATTLE_SCENE := "res://scenes/battle/battle.tscn"
 const BOSS_SCENE := "res://scenes/battle/boss_fight.tscn"
+const WRITING_SCENE := "res://scenes/battle/writing_boss.tscn"
 const BossFight := preload("res://src/battle/boss_fight.gd")
 
 @onready var _canvas: MapCanvas = %Canvas
@@ -23,6 +24,9 @@ const BossFight := preload("res://src/battle/boss_fight.gd")
 @onready var _fortress_level: Label = %FortressLevel
 @onready var _play: Button = %PlayButton
 @onready var _discard_run: Button = %DiscardRunButton
+## Am Boss-Ort die Wahl des Schreib-Bosses (ADR 0023). Steht wie das „✕“ nur bei passender
+## Auswahl da; die beiden schließen sich aus, sonst reicht die Leiste bei 1152 px ins Schild.
+@onready var _rambler: Button = %RamblerButton
 @onready var _confirm: ConfirmDialog = %Confirm
 
 var _levels: Array = []
@@ -34,6 +38,9 @@ var _saved: Dictionary = {}
 var _on_confirmed: Callable
 ## Wurde beim Öffnen ein unspielbarer begonnener Lauf verworfen? (`_check_saved`)
 var _pending_notice := false
+## Was am Boss-Ort spielbar ist: Sätze für den Satzmeister, Vorlagen für The Rambler.
+var _golem_ready := false
+var _rambler_ready := false
 
 
 func _ready() -> void:
@@ -45,6 +52,9 @@ func _ready() -> void:
 			(%FirstPersonToggle as Button).visible = RunRequest.first_person_selectable())
 	_canvas.node_selected.connect(_on_level_clicked)
 	_play.pressed.connect(_start)
+	_rambler.pressed.connect(_start_rambler)
+	Hints.attach(_rambler, "The Rambler", "Der Schreib-Boss: Fasse seine Geschichte in einer "
+			+ "Summary zusammen.", "Dein Text geht zur Bewertung an Anthropic.")
 	_discard_run.pressed.connect(_ask_discard)
 	_confirm.confirmed.connect(func() -> void:
 		if _on_confirmed.is_valid():
@@ -144,8 +154,13 @@ func _fill() -> void:
 	_fortress_level.text = str(fortress["tier"])
 	_fortress_image.texture = fortress_image(int(fortress["tier"]))
 	var wins := int(BossRecord.wins(UserSettings.active_profile()).get("%s/%d" % [book, unit], 0))
-	var nodes := nodes_for(_levels, units, parts, wins, has_boss_sentences(book, unit),
+	_golem_ready = has_boss_sentences(book, unit)
+	_rambler_ready = WritingBoss.can_start_with(ApiKeys.available(), ["%s/%d" % [book, unit]])
+	var nodes := nodes_for(_levels, units, parts, wins, _golem_ready or _rambler_ready,
 			MapLayout.area_points(layout, unit), bonus_counts(ContentRegistry.bonuses_of(book, unit)))
+	for node: Dictionary in nodes:
+		if bool(node.get("boss", false)):
+			node["rambler"] = _rambler_ready
 	_canvas.setup(MapLayout.unit_texture(book, unit), nodes, MapLayout.area_path(layout, unit),
 			hint_lines)
 	_load_saved()
@@ -281,6 +296,8 @@ static func hint_lines(node: Dictionary) -> Dictionary:
 		var wins := int(node.get("wins", 0))
 		var medal := int(node.get("medal", 0))
 		var body := "Der Satzmeister prüft ganze Sätze aus %s." % unit_label
+		if bool(node.get("rambler", false)):
+			body += "\nOder The Rambler (📜 unten rechts): eine Summary schreiben."
 		if wins == 0:
 			body += "\nNoch nicht besiegt."
 		else:
@@ -350,9 +367,10 @@ func _select(keys: Array) -> void:
 	_selected = keys
 	_canvas.set_selected(keys)
 	var level := MapLevel.combine(_levels, keys)
-	_play.disabled = level.is_empty()
 	var boss := not level.is_empty() and str(level["kind"]) == MapLevel.KIND_BOSS
+	_play.disabled = level.is_empty() or (boss and not _golem_ready)
 	_lock_first_person(boss)
+	_rambler.visible = boss and _rambler_ready
 	var resumes := _resumes(keys)
 	_play.text = "Fortsetzen" if resumes else "Spielen"
 	_discard_run.visible = resumes
@@ -433,6 +451,14 @@ func _ask_discard() -> void:
 			"Verwerfen", "Behalten")
 
 
+func _start_rambler() -> void:
+	var level := MapLevel.combine(_levels, _selected)
+	if level.is_empty() or str(level["kind"]) != MapLevel.KIND_BOSS or _canvas.is_zooming() \
+			or _confirm.visible:
+		return
+	_launch(level, {}, WRITING_SCENE)
+
+
 func _start() -> void:
 	var level := MapLevel.combine(_levels, _selected)
 	if level.is_empty() or _canvas.is_zooming() or _confirm.visible:
@@ -456,17 +482,20 @@ func _start() -> void:
 
 
 ## Startet den Kampf mit `level`; `resume` ist der begonnene Lauf, den er fortsetzt.
-func _launch(level: Dictionary, resume: Dictionary = {}) -> void:
+## `scene` ersetzt die Szene, die sich aus der Art des Levels ergibt.
+func _launch(level: Dictionary, resume: Dictionary = {}, scene := "") -> void:
 	if level.is_empty():
 		return
 	RunRequest.start_level(level, resume)
 	_play.disabled = true
+	_rambler.disabled = true
 	_canvas.zoom_into_all(level["keys"])
 	_fade_out_hud()
 	await _canvas.zoom_finished
 	await _present_dark()
-	var boss := str(level["kind"]) == MapLevel.KIND_BOSS
-	get_tree().change_scene_to_file(BOSS_SCENE if boss else BATTLE_SCENE)
+	if scene.is_empty():
+		scene = BOSS_SCENE if str(level["kind"]) == MapLevel.KIND_BOSS else BATTLE_SCENE
+	get_tree().change_scene_to_file(scene)
 
 
 ## Kopfleiste und Schatten gehen mit ins Dunkel: während der Kampf lädt und vorwärmt

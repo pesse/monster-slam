@@ -252,10 +252,13 @@ der Ursprungswert.
 
 ## Offene Fragen
 
-1. **Wo steht The Rambler auf der Karte?** Ein zweiter Boss-Ort je Unit, eine Wahl am
-   bestehenden Boss-Ort, oder nur in ausgewählten Units?
+1. ~~Wo steht The Rambler auf der Karte?~~ Entschieden 2026-10-14: eine **Wahl am
+   bestehenden Boss-Ort**. Ist der Boss markiert und hat die Unit Vorlagen, steht neben
+   „Spielen“ ein Knopf für The Rambler; ein Sieg zählt in `BossRecord` wie einer über den
+   Satzmeister.
 2. **Schreibtagebuch:** Stufen je Kriterium über die Zeit speichern? Den Text selbst
    lokal aufheben?
 3. **Konnektoren als Lexem-Gruppe:** eigene Kategorie oder Tag an bestehenden Lexemen?
-4. **Für welchen Band?** Die Inhalte reichen derzeit bis Access 4; Klasse 10 braucht eigene
-   Vorlagen unabhängig vom Buch oder einen neuen Band.
+4. **Für welchen Band?** Die ersten Vorlagen gehören zu Access 4, Unit 1–2 (2026-10-14),
+   etwas leichter als das Ziel B1+. Klasse 10 braucht eigene Vorlagen unabhängig vom Buch
+   oder einen neuen Band.

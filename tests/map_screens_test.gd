@@ -473,6 +473,36 @@ func test_area_nodes_show_tiers_and_lock_a_boss_without_sentences() -> void:
 	assert_str(str(AreaMap.hint_lines(nodes[3])["body"])).contains("keine Sätze")
 
 
+## Hat die Unit Vorlagen für The Rambler, ist der Boss-Ort auch ohne Sätze wählbar, und sein
+## Hinweis nennt den zweiten Boss.
+func test_the_boss_hint_names_the_rambler_when_the_unit_has_him() -> void:
+	var nodes := AreaMap.nodes_for(MapLevel.levels_for("b", 1, 1), {}, {}, 0, true, {})
+	var boss: Dictionary = nodes.filter(func(n): return bool(n.get("boss", false)))[0]
+	assert_str(str(AreaMap.hint_lines(boss)["body"])).not_contains("Rambler")
+	boss["rambler"] = true
+	assert_str(str(AreaMap.hint_lines(boss)["body"])).contains("The Rambler")
+
+
+## Ohne eigenen Schlüssel gibt es den Knopf nicht, auch wenn die Unit Vorlagen hat und der
+## Boss markiert ist (ADR 0023).
+func test_the_rambler_button_needs_a_key() -> void:
+	var saved_path := ApiKeys.path
+	ApiKeys.path = "user://zz-no-api-keys.cfg"
+	ContentRegistry.writing["writing.zz.map"] = {"id": "writing.zz.map", "kind": "summary",
+			"book": "zz-book", "unit": 1}
+	MapSelection.book = "zz-book"
+	MapSelection.unit = 1
+	var area: Control = auto_free(AREA_SCENE.instantiate())
+	add_child(area)
+	var ready := bool(area.get("_rambler_ready"))
+	ApiKeys.path = saved_path
+	var with_key := WritingBoss.can_start_with(true, ["zz-book/1"])
+	remove_child(area)
+	ContentRegistry.writing.erase("writing.zz.map")
+	assert_bool(ready).is_false()
+	assert_bool(with_key).is_true()
+
+
 ## Ein Teil zählt bis zum goldenen Ring, Gesamt nur Wörter; von der Festung spricht keiner — sie steht im
 ## Kopf der Gebietskarte.
 func test_level_hints_speak_of_words_and_never_of_the_fortress() -> void:
@@ -896,7 +926,8 @@ func test_place_and_fortress_share_one_plate_and_the_toggle_sits_before_play() -
 	assert_float(r.position.x - t.end.x).is_less_equal(8.0)
 	# Das Schild in der Mitte und die Knöpfe rechts überdecken sich nicht.
 	assert_float(p.end.x).is_less_equal(t.position.x)
-	# Auch nicht mit dem „✕" eines begonnenen Laufs davor (ADR 0020).
+	# Auch nicht mit dem „✕" eines begonnenen Laufs davor (ADR 0020) — oder dem Rambler, der
+	# an seiner Stelle steht.
 	var discard := area.get_node("%DiscardRunButton") as Button
 	discard.visible = true
 	await get_tree().process_frame
