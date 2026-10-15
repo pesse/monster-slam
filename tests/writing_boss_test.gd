@@ -33,6 +33,17 @@ class StubStage:
 	extends Node3D
 	var stack_count := 0
 	var calls: Array = []
+	var mouth := Vector2.INF
+	var peeking := false
+
+	func mouth_on_screen() -> Vector2:
+		return mouth
+
+	func is_peeking() -> bool:
+		return peeking
+
+	func mutter(seconds: float) -> void:
+		calls.append(["mutter", seconds])
 
 	func set_focus(front: bool) -> void:
 		calls.append(["set_focus", front])
@@ -430,3 +441,25 @@ func test_the_bonus_comes_with_the_content_and_stays() -> void:
 	assert_bool(_fight.bonus).is_true()
 	assert_str(_row_icons("Attack", "Criteria").back()).is_equal("✨")
 	assert_int(int(WritingLog.entries(PROFILE)[0]["unit_words"])).is_equal(5)
+
+
+## Gemurmelt wird nur hinter einem Overlay und nur bei einem Auftritt am Bildrand.
+func test_he_mutters_only_while_peeking_behind_an_overlay() -> void:
+	_build()
+	var mumble: Control = _fight.get_node("%Mumble")
+	_stage.mouth = Vector2(100, 300)
+	_stage.peeking = true
+	_fight._process(5.0)
+	assert_bool(mumble.visible).is_false()
+	_press("Encounter", "ActionButton")
+	_stage.peeking = false
+	_fight._process(5.0)
+	assert_bool(mumble.visible).is_false()
+	_stage.peeking = true
+	_fight._process(WritingBoss.MUMBLE_DELAY + 0.1)
+	assert_bool(mumble.visible).is_true()
+	assert_int(_stage.named("mutter").size()).is_equal(1)
+	assert_str((_fight.get_node("%MumbleLine") as Label).text).is_not_empty()
+	_fight.goto(WritingBoss.Phase.ENCOUNTER)
+	_fight._process(0.0)
+	assert_bool(mumble.visible).is_false()

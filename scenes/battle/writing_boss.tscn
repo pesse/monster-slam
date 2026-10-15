@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://src/battle/writing_boss.gd" id="1_boss"]
 [ext_resource type="PackedScene" path="res://scenes/battle/writing/encounter_panel.tscn" id="2_encounter"]
@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
 [ext_resource type="PackedScene" path="res://scenes/ui/confirm_dialog.tscn" id="8_confirm"]
 [ext_resource type="PackedScene" path="res://scenes/ui/scene_zoom.tscn" id="20_zoom"]
+[ext_resource type="Script" path="res://src/ui/speech_bubble.gd" id="21_bubble"]
 
 [node name="WritingBoss" type="Control"]
 layout_mode = 3
@@ -149,6 +150,25 @@ layout_mode = 1
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
+
+[node name="Mumble" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+modulate = Color(1, 1, 1, 0)
+theme_type_variation = &"BossBubble"
+layout_mode = 0
+mouse_filter = 2
+script = ExtResource("21_bubble")
+tail_length = 18.0
+tail_width = 20.0
+
+[node name="MumbleLine" type="Label" parent="Mumble"]
+unique_name_in_owner = true
+theme_type_variation = &"BubbleHint"
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+autowrap_mode = 3
+text = "…"
 
 [node name="Shout" type="Label" parent="."]
 unique_name_in_owner = true

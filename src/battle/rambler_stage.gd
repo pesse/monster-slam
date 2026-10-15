@@ -19,15 +19,21 @@ extends Node3D
 ##
 ## Zwei Plätze (`set_focus`): vorn ist er groß in der Mitte und spricht. Hinten liegen
 ## Texte als Overlay über dem Bild; dann wandert er ruhig durch den Raum — hin und her über
-## die Breite des Bildes, mit Pausen, in denen er den Spieler anschaut —, sodass er zwischen
-## und neben den Panels immer wieder auftaucht (Vorbild: das Auf und Ab des Skeletts in
-## BossStage). Die Kamera steht dabei still: ein mitschwenkendes Bild lenkt beim Lesen ab.
+## die Breite des Bildes, mit Pausen, in denen er den Spieler anschaut — und tritt ab und zu
+## vorn am Bildrand auf (PEEK, `is_peeking`), wo er neben den Panels zu sehen ist (Vorbild:
+## das Auf und Ab des Skeletts in BossStage). Die Kamera steht dabei still: ein
+## mitschwenkendes Bild lenkt beim Lesen ab.
 
 ## Vorn: mitten im Bild, nah.
 const FRONT := Vector3(0.0, 0.0, -3.0)
 ## Hinten: das Feld, in dem er wandert (x von–bis, z von–bis). Breit genug, dass er bis
 ## nah an die Bildränder kommt, und frei von Papiertürmen und Kerzen.
 const WANDER := Rect2(-5.4, -6.6, 10.8, 1.2)
+## Auftritt: ein Platz am Bildrand (x je Seite ±, z), weiter vorn als WANDER und knapp neben
+## den vorderen Büchertürmen — bei 16:9 neben dem Lese-Panel zu sehen. So oft wird er als nächstes Ziel gewählt, so lange steht er dort (s).
+const PEEK := Vector2(5.0, -3.6)
+const PEEK_CHANCE := 0.4
+const PEEK_REST := Vector2(5.0, 8.0)
 ## Schritttempo beim Wandern und beim Gang nach vorn (m/s).
 const WALK_SPEED := 0.75
 const RUSH_SPEED := 3.0
@@ -122,12 +128,16 @@ var _back_k := 0.0
 ## Wohin er gerade geht, wie lange er noch steht, wohin er schauen will.
 var _goal := FRONT
 var _rest_left := 0.0
+## Ob das Ziel ein Auftritt ist, und ob er gerade dort steht.
+var _peek_goal := false
+var _peeking := false
 var _yaw_goal := 0.0
 ## 0 = steht, 1 = geht; weich, für das Watscheln.
 var _walk_k := 0.0
 var _fall_k := 0.0
 var _time := 0.0
 var _speak_left := 0.0
+var _mutter_left := 0.0
 var _gloat_left := 0.0
 ## Ein kurzes Zusammenzucken (Treffer), klingt ab.
 var _flinch := 0.0
@@ -208,6 +218,13 @@ func speak() -> void:
 		return
 	_speak_left = SPEAK_TIME
 	_burst(_mouth_point(), 4, 1.2)
+
+
+## Er murmelt `seconds` lang leise vor sich hin: nur der Kiefer klappert, ohne Gesten.
+func mutter(seconds: float) -> void:
+	if _state == State.FALLEN:
+		return
+	_mutter_left = seconds
 
 
 ## Ein Kriterium ist erfüllt: Stapel `index` reißt ab, fällt zu Boden und staubt, der
@@ -312,6 +329,11 @@ func mouth_on_screen() -> Vector2:
 	return _camera.unproject_position(point)
 
 
+## Ob er gerade bei einem Auftritt am Bildrand steht (dann ist er zu sehen).
+func is_peeking() -> bool:
+	return _peeking and not _front and _state != State.FALLEN
+
+
 ## Wie viele Stapel noch hängen.
 func stacks_left() -> int:
 	return _stacks.filter(func(e: Dictionary) -> bool: return not e["dropped"]).size()
@@ -320,6 +342,7 @@ func stacks_left() -> int:
 func _process(delta: float) -> void:
 	_time += delta
 	_speak_left = maxf(_speak_left - delta, 0.0)
+	_mutter_left = maxf(_mutter_left - delta, 0.0)
 	_gloat_left = maxf(_gloat_left - delta, 0.0)
 	_flinch = move_toward(_flinch, 0.0, delta * 1.8)
 	_puff = move_toward(_puff, 0.0, delta * 0.25)
@@ -354,7 +377,11 @@ func _move(delta: float) -> void:
 			_pick_goal()
 	else:
 		walking = _step_toward(_goal, WALK_SPEED, delta)
-		if not walking:
+		if not walking and _peek_goal:
+			_peeking = true
+			_rest(_rng.randf_range(PEEK_REST.x, PEEK_REST.y))
+			_yaw_goal = 0.0
+		elif not walking:
 			_rest(_rng.randf_range(REST_MIN, REST_MAX))
 	_walk_k = move_toward(_walk_k, 1.0 if walking else 0.0, delta * 4.0)
 	_boss.rotation.y = lerp_angle(_boss.rotation.y, _yaw_goal, clampf(TURN_RATE * delta, 0.0, 1.0))
@@ -389,6 +416,12 @@ func _pick_goal() -> void:
 	var goal := _goal
 	# Meist auf die andere Bildhälfte, damit er nicht nur auf einer Seite auftaucht.
 	var other := -signf(_boss.position.x) if absf(_boss.position.x) > 0.5 else (1.0 if _rng.randf() < 0.5 else -1.0)
+	var was_peeking := _peeking
+	_peeking = false
+	_peek_goal = not was_peeking and _rng.randf() < PEEK_CHANCE
+	if _peek_goal:
+		_goal = Vector3(other * PEEK.x, 0.0, PEEK.y)
+		return
 	for i in 6:
 		var x := _rng.randf_range(WANDER.position.x, WANDER.end.x)
 		if _rng.randf() < 0.75:
@@ -447,6 +480,7 @@ func _pose(delta: float) -> void:
 	_head.transform = Transform3D(head_basis.scaled(Vector3.ONE * HEAD_SCALE), neck + Vector3(0, 0.08, 0))
 	# Kiefer: Reden klappert, Lachen weit auf, im Hintergrund murmelt er vor sich hin.
 	var mumble := maxf(sin(t * 0.9), 0.0) * absf(sin(t * 9.0)) * 0.12
+	mumble = maxf(mumble, absf(sin(t * 10.0)) * 0.22 * clampf(_mutter_left / 0.3, 0.0, 1.0))
 	var chatter := absf(sin(t * 11.0)) * 0.55 * talk
 	var cackle := (0.45 + absf(sin(t * 16.0)) * 0.3) * laugh
 	var open := maxf(maxf(mumble * (1.0 - talk), chatter), cackle)

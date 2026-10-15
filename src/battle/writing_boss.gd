@@ -34,6 +34,10 @@ extends Control
 ## unlesbare Antwort), bleibt er stehen, der Grund aus `reply.note` steht da, und die Abgabe
 ## zählt nicht. Verlassen mit Text fragt nach (ConfirmDialog).
 ##
+## **Im Hintergrund brabbelt er.** Solange ein Overlay vorn liegt, wandert The Rambler
+## hinten (RamblerStage) und tritt ab und zu am Bildrand auf; dort murmelt er einen
+## Satzfetzen (MUMBLES) in einer schmalen Blase über dem Maul, nah am Rand.
+##
 ## **Kein Zeitdruck**, wie beim Satzmeister. Kein Gold, keine Erfahrung, kein Lernstand.
 ##
 ## Je gewertete Abgabe ein Eintrag in WritingLog und `EventBus.writing_submitted` — die
@@ -95,6 +99,29 @@ const WON_SHOUT := "SIEG!"
 const HIT_SHOUT_TINT := Color(1.0, 0.86, 0.3)
 const HOLD_SHOUT_TINT := Color(0.65, 0.85, 1.0)
 
+## Was er im Hintergrund vor sich hin murmelt.
+const MUMBLES := [
+	"Blabla … blabla …",
+	"… und dann, ach ja, meine Tante …",
+	"Wo war ich stehen geblieben?",
+	"… Kapitel siebenundvierzig …",
+	"… und so weiter und so fort …",
+	"Das erinnert mich an eine andere Geschichte …",
+	"… once upon a time … and then … and then …",
+	"Hmm-hmm … ganz kurz nur …",
+	"Die Fußnoten! Ich hab die Fußnoten vergessen!",
+	"Kurzfassung? Pah!",
+	"… Absatz, Absatz, Absatz …",
+	"… wobei, eigentlich fing alles viel früher an …",
+]
+## Pause zwischen zwei Fetzen während eines Auftritts (s, von–bis), Verzögerung nach dem
+## Ankommen (s) und wie lange ein Fetzen stehen bleibt (s).
+const MUMBLE_PAUSE := Vector2(4.0, 7.0)
+const MUMBLE_DELAY := 0.8
+const MUMBLE_TIME := 3.0
+## In diesen Phasen steht er hinten und murmelt.
+const MUMBLE_PHASES := [Phase.READING, Phase.WRITING, Phase.REVISION]
+
 ## Wortschatz-Bonus (ADR 0023, Nachtrag 2026-10-15): so viele verschiedene Wörter der Unit
 ## (UnitWords) muss eine Abgabe enthalten. Er zählt erst, wenn der Stapel „Inhalt“ gefallen
 ## ist, bleibt danach erreicht und ist für den Sieg nicht nötig.
@@ -140,6 +167,8 @@ var last_note := ""
 
 @onready var _scene_zoom: SceneZoom = $SceneZoom
 @onready var _flash: ColorRect = %Flash
+@onready var _mumble: SpeechBubble = %Mumble
+@onready var _mumble_line: Label = %MumbleLine
 @onready var _shout: Label = %Shout
 @onready var _back_button: Button = %BackButton
 @onready var _boss_name: Label = %BossName
@@ -218,6 +247,10 @@ var _unit_lexemes: Array = []
 var _unit_forms: Dictionary = {}
 ## Die Wörter der Unit in der abgegebenen Fassung.
 var _submitted_words: Array = []
+## Bis zum nächsten Fetzen (s); der zuletzt gemurmelte, damit keiner zweimal hintereinander kommt.
+var _mumble_wait := MUMBLE_DELAY
+var _mumble_last := -1
+var _mumble_tween: Tween
 
 
 func _ready() -> void:
@@ -292,13 +325,70 @@ func _scale_to(factor: float) -> void:
 	scale = Vector2(factor, factor)
 
 
-## Die Spitze der Sprechblase folgt dem Mund von The Rambler.
-func _process(_delta: float) -> void:
-	if stage == null or not stage.has_method(&"mouth_on_screen") or not _encounter.visible:
+## Die Spitze der Sprechblase folgt dem Mund von The Rambler, das Gemurmel steht darüber.
+func _process(delta: float) -> void:
+	if stage == null or not stage.has_method(&"mouth_on_screen"):
 		return
 	var mouth: Vector2 = stage.mouth_on_screen()
-	if mouth != Vector2.INF:
+	if _encounter.visible and mouth != Vector2.INF:
 		_boss_bubble.point_at(mouth)
+	_tick_mumble(delta, mouth)
+
+
+func _tick_mumble(delta: float, mouth: Vector2) -> void:
+	if not phase in MUMBLE_PHASES:
+		if _mumble.visible:
+			_hush()
+		return
+	var seen := mouth != Vector2.INF and get_viewport_rect().has_point(mouth)
+	if _mumble.visible and seen:
+		_place_mumble(mouth)
+	if not (seen and stage.has_method(&"is_peeking") and stage.is_peeking()):
+		_mumble_wait = MUMBLE_DELAY
+		return
+	_mumble_wait -= delta
+	if _mumble_wait <= 0.0:
+		_mumble_wait = randf_range(MUMBLE_PAUSE.x, MUMBLE_PAUSE.y)
+		_mutter(mouth)
+
+
+## Ein Fetzen: kurz einblenden, stehen lassen, ausblenden.
+func _mutter(mouth: Vector2) -> void:
+	var pick := randi() % MUMBLES.size()
+	if pick == _mumble_last:
+		pick = (pick + 1) % MUMBLES.size()
+	_mumble_last = pick
+	_mumble_line.text = MUMBLES[pick]
+	_mumble.reset_size()
+	_mumble.visible = true
+	_place_mumble(mouth)
+	_mumble.pop()
+	_act(&"mutter", [MUMBLE_TIME])
+	if _mumble_tween != null:
+		_mumble_tween.kill()
+	_mumble_tween = create_tween()
+	_mumble_tween.tween_property(_mumble, "modulate:a", 0.9, 0.3)
+	_mumble_tween.tween_interval(MUMBLE_TIME)
+	_mumble_tween.tween_property(_mumble, "modulate:a", 0.0, 0.6)
+	_mumble_tween.tween_callback(func() -> void: _mumble.visible = false)
+
+
+func _hush() -> void:
+	if _mumble_tween != null:
+		_mumble_tween.kill()
+	_mumble.modulate.a = 0.0
+	_mumble.visible = false
+
+
+## Über das Maul, im Bild und unter der Kopfleiste; die Spitze zeigt hin.
+func _place_mumble(mouth: Vector2) -> void:
+	var view := get_viewport_rect().size
+	var gap := _mumble.tail_length + 8.0  # Maul bis Blasenunterkante (px)
+	var at := mouth - Vector2(_mumble.size.x * 0.5, _mumble.size.y + gap)
+	at.x = clampf(at.x, 8.0, maxf(8.0, view.x - _mumble.size.x - 8.0))
+	at.y = maxf(at.y, _back_button.get_global_rect().end.y + 8.0)
+	_mumble.global_position = at
+	_mumble.point_at(mouth)
 
 
 func _input(event: InputEvent) -> void:
