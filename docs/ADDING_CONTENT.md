@@ -5,7 +5,7 @@ fertig.** Die `ContentRegistry` lädt sie beim nächsten Start (oder `reload()`)
 automatisch. Jedes Objekt braucht eine eindeutige `id`.
 
 > **Wo liegt was?** Sprachdaten (`lexemes`, `lexeme_forms`, `lexeme_relations`,
-> `sentences`, `sentence_lexemes`) liegen unter `data/language/` — ein separates
+> `sentences`, `sentence_lexemes`, `writing`) liegen unter `data/language/` — ein separates
 > **privates** Submodule, weil sie aus urheberrechtlich geschütztem
 > Lehrbuchmaterial abgeleitet sind. Spielkonfiguration (Monster, Bosse, Wellen,
 > Zauber, Fähigkeitsbäume, Aufgaben-Regeln) liegt direkt unter `data/` im öffentlichen Repo.

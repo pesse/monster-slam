@@ -110,6 +110,26 @@ func test_boss_answer_keeps_only_numbers() -> void:
 	assert_bool(bool(boss["hit"])).is_true()
 
 
+## Eine Abgabe beim Schreib-Boss geht ganz hinaus (ADR 0023, §7) — sie trägt nur Zahlen
+## und Ids. Ein Text, den ein Aufrufer versehentlich in den Eintrag legt, bleibt schon in
+## der Spur draußen.
+func test_writing_submit_keeps_usage_and_result() -> void:
+	_log.note_writing_submit({"at": 5, "boss": "boss.rambler", "task": "writing.zz.summary_01",
+			"round": 2, "model": "claude-opus-5-5", "in": 1234, "out": 456, "cr": 0, "cw": 0,
+			"s": 6.2, "met": ["intro", "length"], "words": 112, "text": "Mein Satz ist lang"})
+	_log._close()
+	var line: Dictionary = _sanitized().filter(func(l): return l["e"] == "writing_submit")[0]
+	assert_str(str(line["boss"])).is_equal("boss.rambler")
+	assert_int(int(line["round"])).is_equal(2)
+	assert_str(str(line["model"])).is_equal("claude-opus-5-5")
+	assert_int(int(line["in"])).is_equal(1234)
+	assert_int(int(line["out"])).is_equal(456)
+	assert_float(float(line["s"])).is_equal(6.2)
+	assert_array(line["met"]).contains_exactly(["intro", "length"])
+	assert_int(int(line["words"])).is_equal(112)
+	assert_bool(JSON.stringify(line).contains("Mein Satz")).is_false()
+
+
 func test_cursor_skips_sent_lines_but_still_knows_the_answers() -> void:
 	var lines := [
 		{"at": 100, "ms": 1, "e": "spawn", "id": "t:zz.k1", "answers": ["coral"]},

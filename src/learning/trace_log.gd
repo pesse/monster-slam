@@ -47,6 +47,7 @@ func _ready() -> void:
 	EventBus.boss_answer_explained.connect(note_boss_explained)
 	EventBus.boss_ended.connect(note_boss_end)
 	EventBus.boss_won.connect(note_boss_won)
+	EventBus.writing_submitted.connect(note_writing_submit)
 	EventBus.save_refused.connect(note_save_refused)
 	EventBus.save_restored.connect(note_save_restored)
 	EventBus.save_damaged.connect(note_save_damaged)
@@ -117,6 +118,16 @@ func note_boss_end(boss_id: String, won: bool) -> void:
 
 func note_boss_won(boss_id: String, unit_key: String) -> void:
 	_write({"e": "boss_won", "boss": boss_id, "unit": unit_key})
+
+
+## Eine Abgabe beim Schreib-Boss (ADR 0023, §7): Verbrauch und Ergebnis, kein Text. Nur
+## die Felder aus WritingLog.FIELDS; `at` setzt die Spur selbst.
+func note_writing_submit(entry: Dictionary) -> void:
+	var line := {"e": "writing_submit"}
+	for field in WritingLog.FIELDS:
+		if field != "at" and entry.has(field):
+			line[field] = entry[field]
+	_write(line)
 
 
 func note_wave_start(wave_id: String) -> void:

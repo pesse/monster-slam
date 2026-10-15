@@ -2,7 +2,8 @@ class_name LocalModelBackend
 extends Node
 ## Stufe 1: ein Sprachmodell als lokaler Dienst auf 127.0.0.1 in der OpenAI-Form
 ## `/v1/chat/completions` (ADR 0004 Entscheidung 3, ADR 0005). Ohne Dienst bleibt es beim
-## Ergebnis der Prüfkarte. Die Adresse bleibt lokal: Schülertexte gehen nicht ins Netz.
+## Ergebnis der Prüfkarte. Die Adresse bleibt lokal: Schülertexte gehen nicht ins Netz;
+## der Schreib-Boss regelt das eigens (ADR 0023, CloudModelBackend).
 ## `judge()` urteilt mit Lösungsschlüssel, `explain()` erklärt ohne ihn (Aufträge in
 ## StageOnePrompts). Prompt-Bau und Auswertung sind statisch und ohne Netz prüfbar.
 

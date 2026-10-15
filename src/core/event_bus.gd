@@ -43,6 +43,12 @@ signal boss_ended(boss_id: String, won: bool)
 ## Boss am Ende einer Unit besiegt (ADR 0006); kommt zusätzlich zu `boss_ended`.
 signal boss_won(boss_id: String, unit_key: String)
 
+## --- Schreib-Boss (ADR 0023) ---
+## Eine Abgabe beim Schreib-Boss ist bewertet. `entry` hat die Felder von
+## `WritingLog.FIELDS` (Boss, Abgabe-Nummer, Modell, Token, Dauer, erfüllte Kriterien,
+## Wortzahl) — kein Text, kein Schlüssel.
+signal writing_submitted(entry: Dictionary)
+
 ## --- Zauber (Verbrauchsgegenstände, ADR 0014) ---
 ## Ein Zauber hat gewirkt und ist verbraucht. Ein Zauber ohne Wirkung meldet sich nicht.
 signal spell_activated(spell_id: String)

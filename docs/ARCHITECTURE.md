@@ -8,7 +8,7 @@ und Mechaniken sollen sich ergänzen lassen, ohne bestehende Systeme zu ändern.
 ### 1. ContentRegistry (`src/core/content_registry.gd`)
 Datengetriebener Katalog. Scannt beim Start rekursiv `<root>/<kategorie>/`
 und lädt jede `.json`-Datei. Kategorien: `lexemes`, `lexeme_forms`,
-`lexeme_relations`, `sentences`, `sentence_lexemes`, `task_definitions`,
+`lexeme_relations`, `sentences`, `sentence_lexemes`, `writing`, `task_definitions`,
 `monster_task_rules`, `monsters`, `bosses`, `spells`, `skills`, `waves`.
 
 `spells` und `skills` sind **zwei Dinge**: Spells sind Zauber zum Verbrauchen, mit Gold
@@ -97,6 +97,9 @@ Darstellung unabhängig wachsen können (siehe `docs/ADDING_CONTENT.md`):
   `pitfalls`); bewertet und ausgewählt wird damit offline (siehe „Sätze bewerten" unten
   und `docs/adr/0004-satzbewertung-ohne-modell.md`). Der Bosskampf startet vom Boss-Ort der
   Gebietskarte oder aus dem Expertenmodus (`scenes/battle/boss_fight.tscn`, ADR 0005/0006).
+- **writing** — Vorlagen des Schreib-Bosses (ADR 0023): ein englischer Text mit Titel,
+  Autor, Zielwortzahl und Kernpunkten (`key_points`) als Inhaltsschlüssel. Schema in
+  `data/language/writing/README.md`.
 
 Die Auflösung Definition × Lexeme → spielbare Aufgabe `{prompt, accepted_answers, …}`
 macht `src/learning/task_resolver.gd`; die Enumeration der Kandidaten (Definition × Lexeme)
@@ -174,8 +177,9 @@ Stufen, und Stufe 0 trägt das Spiel allein.
 |---|---|
 | `sentence_card.gd` | Stufe 0, die „Prüfkarte": Abgleich gegen `accepted`, `must_contain`, `pitfalls`. Reine Rechnung, deterministisch, ohne Netz. Ein Treffer schlägt jede Stolperstelle. |
 | `sentence_judge.gd` | Der Vertrag `{quality, feedback, matched}` für ALLE Stufen. `judge()` gibt Stufe 0 sofort zurück; Stufe 1 kommt als `refined` (Treffer) oder `denied` (kein Treffer) nach — oder gar nicht. Nach `denied` folgt `explained` mit der Erklärung oder leer. Stufe 1 darf nur **heben**, nie senken, und erklärt, wo sie nicht hebt. |
-| `local_model_backend.gd` | Stufe 1: HTTP an einen Dienst auf `127.0.0.1`, zwei Aufrufe: `judge()` urteilt mit Schlüssel, `explain()` erklärt ohne. Ohne Dienst existiert sie für das Spiel nicht. Keine Stufe 2 in der Cloud. |
-| `stage_one_prompts.gd`, `grammar_rules.gd` | Die beiden Aufträge und der Regelkatalog je `grammar_tag`, wörtlich aus der Werkstatt `prompt-eval`, wo sie gemessen werden. Geändert wird dort, nicht hier. |
+| `local_model_backend.gd` | Stufe 1: HTTP an einen Dienst auf `127.0.0.1`, zwei Aufrufe: `judge()` urteilt mit Schlüssel, `explain()` erklärt ohne. Ohne Dienst existiert sie für das Spiel nicht. |
+| `cloud_model_backend.gd` | Stufe 1 in der Cloud, wenn unter „Inhalte“ gewählt (ADR 0025): ein Aufruf mit Schlüssel liefert Urteil und Erklärung, `judge()`/`explain()` in derselben Callable-Form. Nur mit eigenem Schlüssel und eigener Zustimmung; dieselbe Klasse bewertet den Schreib-Boss (ADR 0023). |
+| `stage_one_prompts.gd`, `grammar_rules.gd` | Die Aufträge (lokal zwei, Cloud einer) und der Regelkatalog je `grammar_tag`, wörtlich aus der Werkstatt `prompt-eval`, wo sie gemessen werden. Geändert wird dort, nicht hier. |
 | `sentence_selector.gd` | Welcher Satz drankommt: `sentence_lexemes` → Lexem → Scope, gewichtet nach dem Netto-Maß `t - c` — demselben, das Tempo, Punkte und XP tragen. |
 
 Ein Boss trägt deshalb **keine Sätze mehr selbst**, sondern eine `sentence_rule`
@@ -226,8 +230,8 @@ stehen so im Code, in den ADRs und in den Commit-Texten:
 - **Sie darf nur heben, nie senken**, und gefragt wird sie nur, wo die Karte nichts
   Belastendes gefunden hat. Seit „ohne Urteil kein Treffer" ist sie für Bosskämpfe
   **tragend**: nur sie macht aus einem Zweifel einen Treffer.
-- **Nur `127.0.0.1`** — keine Einstellung, sondern die Entscheidung: Kindertexte gehen
-  nicht ins Netz.
+- **Lokal nur `127.0.0.1`** — Kindertexte gehen nicht ins Netz. Die einzige Ausnahme ist
+  die Cloud mit eigenem Schlüssel, die man unter „Inhalte“ eigens ankreuzt (ADR 0025).
 - **Den Dienst stellt das Spiel selbst hin** (`LocalModelServer`, Nachtrag „Stufe 1 auf
   eigenen Beinen"): `llama-server.exe` plus GGUF aus `user://model/`, gestartet mit
   ausdrücklichem `--host 127.0.0.1`, auf `/health` gewartet, beendet auch in

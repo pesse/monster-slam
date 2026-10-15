@@ -10,7 +10,7 @@ const BACKUP_DIR := "user://backups"
 const QUARANTINE_DIR := "user://quarantine"
 ## Die Dateien eines Profils, die zu einer Sicherung gehören (ohne `_runs`, ADR 0024).
 const PROFILE_SUFFIXES := ["", "_sessions", "_wallet", "_level", "_skills", "_inventory",
-		"_bosses", "_badges", "_test_lists"]
+		"_bosses", "_badges", "_test_lists", "_writing"]
 const JOURNAL_SUFFIX := ".commit.json"
 
 ## Ein Commit ist durch (`reason` wie beim Aufruf).

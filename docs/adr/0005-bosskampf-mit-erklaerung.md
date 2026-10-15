@@ -2,7 +2,8 @@
 
 Status: **angenommen** · Datum: 2026-09-25 · Baut auf: ADR 0004 (Stufen, Prüfkarte,
 lokaler Dienst) · Ersetzt: in ADR 0004 den Nachtrag vom 2026-09-17 in der Modellwahl und
-in „Was daraus zu bauen ist"
+in „Was daraus zu bauen ist" · Ergänzt durch: ADR 0025 (Stufe 1 wahlweise in der
+Cloud, dort ein Aufruf)
 
 ## Kontext
 

@@ -23,14 +23,19 @@ const LANGUAGE_CATEGORIES: Array[String] = [
 	"lexeme_relations",
 	"sentences",
 	"sentence_lexemes",
+	"writing",
 ]
 
-## Per-category catalogs (id -> entry), filled by reload(); model in docs/ARCHITECTURE.md.
+## Per-category catalogs (id -> entry), filled by reload(); model in docs/ARCHITECTURE.md,
+## writing in ADR 0023.
 var lexemes: Dictionary = {}
 var lexeme_forms: Dictionary = {}
 var lexeme_relations: Dictionary = {}
 var sentences: Dictionary = {}
 var sentence_lexemes: Dictionary = {}
+## Schreibaufgaben für den Schreib-Boss (docs/adr/0023-schreib-boss.md): je Aufgabe eine
+## Vorlage mit Kernpunkten, Ablage wie die Sätze je Unit (`writing/en_<band>_unit<n>.json`).
+var writing: Dictionary = {}
 var task_definitions: Dictionary = {}
 var monster_task_rules: Dictionary = {}
 var monsters: Dictionary = {}
@@ -74,6 +79,7 @@ func _ready() -> void:
 		"lexeme_relations": lexeme_relations,
 		"sentences": sentences,
 		"sentence_lexemes": sentence_lexemes,
+		"writing": writing,
 		"task_definitions": task_definitions,
 		"monster_task_rules": monster_task_rules,
 		"monsters": monsters,
@@ -462,6 +468,19 @@ func units_for(book: String) -> Array:
 			seen[int(entry["unit"])] = true
 	var result: Array = seen.keys()
 	result.sort()
+	return result
+
+
+## Die Schreibaufgaben einer Unit für eine Textart (ADR 0023), sortiert nach Id — damit die
+## Reihenfolge nicht davon abhängt, ob die Aufgabe aus dem Submodule oder aus einem Pack
+## kam. Leer, wenn die Unit keine hat; der Schreib-Boss bleibt dann unsichtbar.
+func writing_tasks(book: String, unit: int, kind := "summary") -> Array:
+	var result: Array = []
+	for entry in writing.values():
+		if str(entry.get("book", "")) == book and int(entry.get("unit", -1)) == unit \
+				and str(entry.get("kind", "")) == kind:
+			result.append(entry)
+	result.sort_custom(func(a, b): return str(a.get("id", "")) < str(b.get("id", "")))
 	return result
 
 

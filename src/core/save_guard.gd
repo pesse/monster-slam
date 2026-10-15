@@ -13,6 +13,7 @@ const MONOTONIC := {
 	"_sessions": ["#sessions"],
 	"_bosses": ["#wins"],
 	"_badges": ["#days"],
+	"_writing": ["#submissions"],
 }
 
 

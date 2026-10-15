@@ -15,6 +15,7 @@ const PARTS := {
 	"_bosses": "Bosse",
 	"_badges": "Abzeichen",
 	"_test_lists": "Testlisten",
+	"_writing": "Schreib-Boss",
 }
 
 

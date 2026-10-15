@@ -24,6 +24,7 @@ import gzip
 import html
 import json
 import pathlib
+import re
 import statistics
 import sys
 import tempfile
@@ -34,6 +35,8 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 MIN_ATTEMPTS = 6
 # Abstand bis hierher heißt „verschrieben", darüber „nicht gewusst".
 TYPO_DISTANCE = 2
+# Die Preistabelle des Schreib-Bosses steht EINMAL, im Spiel (ADR 0023, §7); gelesen wird sie dort.
+PRICES_GD = ROOT / "src" / "learning" / "model_prices.gd"
 
 
 # --- Lesen -----------------------------------------------------------------------------
@@ -101,6 +104,57 @@ def lexeme_of(learnable_id: str) -> str:
 
 
 # --- Rechnen ---------------------------------------------------------------------------
+
+def load_prices(path: pathlib.Path = PRICES_GD) -> dict[str, list[dict]]:
+    """ModelPrices.TABLE aus dem GDScript: Modell -> Zeilen {from, in, out, cache_read, cache_write}."""
+    if not path.is_file():
+        return {}
+    out: dict[str, list[dict]] = {}
+    model = None
+    for line in path.read_text(encoding="utf-8").splitlines():
+        head = re.match(r'\s*"([\w.-]+)": \[\s*$', line)
+        if head:
+            model = head.group(1)
+            out[model] = []
+            continue
+        row = re.match(r'\s*\{"from": "([\d-]+)", "in": ([\d.]+), "out": ([\d.]+), '
+                       r'"cache_read": ([\d.]+), "cache_write": ([\d.]+)\}', line)
+        if row and model:
+            out[model].append({"from": row.group(1), "in": float(row.group(2)), "out": float(row.group(3)),
+                               "cache_read": float(row.group(4)), "cache_write": float(row.group(5))})
+    return out
+
+
+def cost_usd(entry: dict, prices: dict[str, list[dict]]) -> float:
+    """Wie ModelPrices.cost_usd: die Zeile, die am Tag der Abgabe galt."""
+    rows = prices.get(str(entry.get("model", "")), [])
+    if not rows:
+        return 0.0
+    day = dt.datetime.fromtimestamp(int(entry.get("at", 0))).strftime("%Y-%m-%d")
+    row = rows[0]
+    for r in rows:
+        if r["from"] <= day:
+            row = r
+    return (int(entry.get("in", 0)) * row["in"] + int(entry.get("out", 0)) * row["out"]
+            + int(entry.get("cr", 0)) * row["cache_read"] + int(entry.get("cw", 0)) * row["cache_write"]) / 1e6
+
+
+def writing_rows(profiles: list[dict], prices: dict[str, list[dict]]) -> list[list]:
+    """Je Profil mit Abgaben beim Schreib-Boss: Zahl, Token, Kosten, Wörter."""
+    rows = []
+    for profile in profiles:
+        subs = profile["snapshots"][-1].get("writing", []) or []
+        if not subs:
+            continue
+        cost = sum(cost_usd(e, prices) for e in subs)
+        tasks = {e.get("task") for e in subs}
+        rows.append([profile["id"][:8], len(subs), len(tasks),
+                     sum(int(e.get("in", 0)) for e in subs), sum(int(e.get("out", 0)) for e in subs),
+                     "%.2f" % cost, "%.3f" % (cost / len(subs)),
+                     round(statistics.median(int(e.get("words", 0)) for e in subs)),
+                     round(statistics.median(float(e.get("s", 0)) for e in subs), 1)])
+    return rows
+
 
 def profile_summary(profile: dict) -> dict:
     last = profile["snapshots"][-1]
@@ -225,7 +279,8 @@ def table(headers: list[str], rows: list[list]) -> str:
     return "<table><thead><tr>%s</tr></thead><tbody>%s</tbody></table>" % (head, body)
 
 
-def render(profiles: list[dict], lemmas: dict[str, str]) -> str:
+def render(profiles: list[dict], lemmas: dict[str, str], prices: dict | None = None) -> str:
+    prices = load_prices() if prices is None else prices
     summaries = [profile_summary(p) for p in profiles]
     days = sessions_per_day(profiles)
     peak = max((n for _, n, _ in days), default=1)
@@ -266,6 +321,9 @@ def render(profiles: list[dict], lemmas: dict[str, str]) -> str:
         table(["Wort", "Aufgabe", "Versuche", "Quote", "Profile"],
               [[r["word"], r["id"], r["attempts"], pct(r["accuracy"]), r["players"]]
                for r in hardest(profiles, lemmas)]),
+        "<h2>Schreib-Boss: Abgaben und Kosten</h2>",
+        table(["Profil", "Abgaben", "Aufgaben", "Token ein", "Token aus", "USD gesamt", "USD je Abgabe",
+               "Wörter (Median)", "Sekunden (Median)"], writing_rows(profiles, prices)),
     ]
     style = """
     :root { --bg:#fbfaf7; --fg:#1f1d1a; --muted:#6b665e; --line:#e3dfd6; --bar:#7a5cc4; }
@@ -306,6 +364,8 @@ def self_test() -> None:
                          "translate:de_to_en:lex.zz.b": {"attempts": 2, "correct_total": 0,
                                                          "mastered_at": 5}},
             "settings": {"difficulty": 3},
+            "writing": [{"at": 1791000000, "task": "writing.zz", "model": "zz-model", "in": 1000000,
+                         "out": 100000, "cr": 0, "cw": 0, "s": 5.0, "words": 100}],
         }
         with gzip.open(profile / "snapshot-2026-10-01.json.gz", "wt", encoding="utf-8") as fh:
             json.dump(snap, fh)
@@ -328,8 +388,12 @@ def self_test() -> None:
         answers = answer_profile(profiles)
         assert answers["rt_median"] == 1200 and answers["leaks"] == 1, answers
         assert lexeme_of("conjugation:lex.zz.go:past") == "lex.zz.go"
-        page = render(profiles, {})
-        assert "<table>" in page and "lex.zz.a" in page
+        prices = {"zz-model": [{"from": "2026-01-01", "in": 4.0, "out": 20.0, "cache_read": 0.2,
+                                "cache_write": 5.0}]}
+        assert writing_rows(profiles, prices)[0][5] == "6.00", writing_rows(profiles, prices)
+        assert "claude-opus-5-5" in load_prices(), "Preistabelle aus model_prices.gd nicht gelesen"
+        page = render(profiles, {}, prices)
+        assert "<table>" in page and "lex.zz.a" in page and "Schreib-Boss" in page
     print("report.py: Selbsttest bestanden.")
 
 

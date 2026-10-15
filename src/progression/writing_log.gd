@@ -1,0 +1,80 @@
+class_name WritingLog
+extends RefCounted
+## Die Abgaben beim Schreib-Boss (docs/adr/0023-schreib-boss.md, §7): je Abgabe, was der
+## Anbieter verbraucht hat, und was dabei herauskam. Dazu die Cloud-Urteile im Satzmeister
+## (ADR 0025, `kind` "sentence"), damit die Kosten eines Schlüssels an einer Stelle stehen.
+##
+## Gespeichert wird der Ursprungswert — Modell, Token, Dauer, erfüllte Kriterien —, nie
+## ein Betrag. Die Kosten rechnet `ModelPrices` beim Lesen; kein Zähler daneben. Dieselbe
+## Datei liest die Anzeige in „Inhalte“ (letzte 30 Tage) und der Statistik-Kanal
+## (`StatsUploader.SNAPSHOT_FILES["_writing"]`).
+##
+## Kein Text, kein Schlüssel: `record` übernimmt nur die Felder in `FIELDS`. Was der
+## Aufrufer sonst noch in den Eintrag legt, bleibt draußen.
+##
+## Ablage: user://progress/<profil>_writing.json = { "submissions": [ … ] }, wie BossRecord.
+## Statisch und mit Profil-Argument, damit Tests auf einem `zz-`-Profil laufen.
+
+const SAVE_DIR := "user://progress"
+
+## Die Felder einer Abgabe. at: Unix-Zeit; boss, task: Ids; round: Abgabe-Nummer im Kampf
+## (1 = erste, danach Überarbeitungen); model: Modell-Id der Antwort; in, out, cr, cw:
+## Eingabe-, Ausgabe-, Cache-Lese-, Cache-Schreib-Token; s: Sekunden bis zur Antwort;
+## met: Ids der erfüllten Kriterien (WritingJudge.CRITERIA); words: Wortzahl des Textes.
+## `failed`: der Anbieter hat Token berechnet, aber kein brauchbares Urteil geliefert — die
+## Abgabe zählte im Kampf nicht, ihre Kosten zählen trotzdem. `kind`: "summary", oder
+## "sentence" für ein Satz-Urteil im Satzmeister (task = Satz-Id, ohne round/met/words);
+## Einträge ohne `kind` sind Summaries. `unit_words`: verschiedene Wörter der Unit in der
+## Abgabe (UnitWords), Grundlage des Wortschatz-Bonus.
+const FIELDS := ["at", "boss", "task", "round", "model", "in", "out", "cr", "cw", "s", "met", "words",
+		"failed", "kind", "unit_words"]
+
+## So weit zurück reicht die Kostenanzeige in den Einstellungen.
+const RECENT_DAYS := 30
+
+
+static func path(profile: String) -> String:
+	return "%s/%s_writing.json" % [SAVE_DIR, profile]
+
+
+## Bucht eine Abgabe, nie über eine unlesbare Datei (SaveGuard). Fehlt `at`, gilt jetzt.
+static func record(entry: Dictionary, profile: String) -> void:
+	var clean := {}
+	for field in FIELDS:
+		if entry.has(field):
+			clean[field] = entry[field]
+	if not clean.has("at"):
+		clean["at"] = int(Time.get_unix_time_from_system())
+	var all := entries(profile)
+	all.append(clean)
+	SaveGuard.write(path(profile), "_writing", {"submissions": all})
+
+
+## Alle Abgaben des Profils, älteste zuerst.
+static func entries(profile: String) -> Array:
+	var read := SaveStore.read(path(profile))
+	if int(read["status"]) != SaveStore.Status.OK:
+		return []
+	var list: Variant = (read["data"] as Dictionary).get("submissions", [])
+	return list if list is Array else []
+
+
+## Die Kosten der Abgaben in US-Dollar.
+static func cost_usd(list: Array) -> float:
+	var total := 0.0
+	for entry in list:
+		if entry is Dictionary:
+			total += ModelPrices.cost_usd(entry)
+	return total
+
+
+## Die Abgaben ab `unix` (einschließlich).
+static func since(list: Array, unix: int) -> Array:
+	return list.filter(func(entry): return entry is Dictionary \
+			and int((entry as Dictionary).get("at", 0)) >= unix)
+
+
+## Was das Profil in den letzten `days` Tagen gekostet hat — für die Anzeige.
+static func recent_cost_usd(profile: String, days := RECENT_DAYS) -> float:
+	var start := int(Time.get_unix_time_from_system()) - days * 86400
+	return cost_usd(since(entries(profile), start))

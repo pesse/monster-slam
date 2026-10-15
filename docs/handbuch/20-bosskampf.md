@@ -31,6 +31,17 @@ steht dort „Er erwacht …“. Nichts, was getippt wird, verlässt den Rechner
 Sprachmodell gibt es bisher nur unter Windows. Auf dem Mac wird es unter „Inhalte“ gar
 nicht erst angeboten.
 
+**Oder in der Cloud.** Wer für The Rambler einen eigenen API-Schlüssel eingetragen hat
+([Kapitel 22](22-schreib-boss.md)), kann unter „Inhalte“ zusätzlich „Auch den Satzmeister
+in der Cloud bewerten“ ankreuzen. Dann urteilt statt des Modells auf diesem Rechner ein
+großes Sprachmodell von Anthropic, das genauer ist und auch auf dem Mac läuft. Unten im
+Bosskampf steht das dann. Dafür geht jede Übersetzung, die nicht als Lösung hinterlegt ist,
+zusammen mit dem deutschen Satz und der Musterlösung an Anthropic – ohne Profilname. Jede
+solche Antwort kostet einen Bruchteil eines Cents auf dem Schlüssel; die Kosten stehen mit
+denen von The Rambler unter „Inhalte“. Ohne Netz zählt wie ohne Modell nur, was als Lösung
+hinterlegt ist. Das Kreuz gilt für alle Profile auf dem Gerät und verschwindet, wenn der
+Schlüssel entfernt wird.
+
 **Ohne Sprachmodell** zählt nur, was als Lösung hinterlegt ist – für die meisten Sätze
 also nur die Musterlösung Wort für Wort. Das Spiel sagt das unten im Bosskampf.
 

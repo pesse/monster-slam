@@ -49,6 +49,8 @@ func test_snapshot_takes_only_allowed_fields() -> void:
 	_write("_level", {"player_id": PROFILE, "total_xp": 900, "level": 4, "skill_points": 2})
 	_write("_skills", {"player_id": PROFILE, "unlocked": ["s.a"], "spent_points": 1})
 	_write("_bosses", {"wins": [{"unit": "zz/1", "won_at": 5}]})
+	_write("_writing", {"submissions": [{"at": 6, "boss": "boss.rambler", "model": "claude-opus-5-5",
+			"in": 1000, "out": 200, "cr": 0, "cw": 0, "s": 4.0, "met": ["intro"], "words": 90}]})
 	var snap := StatsUploader.snapshot(PROFILE, {"difficulty": 3}, {"stats_id": "x"}, DIR)
 
 	assert_int(int(snap["format"])).is_equal(StatsUploader.FORMAT)
@@ -59,6 +61,8 @@ func test_snapshot_takes_only_allowed_fields() -> void:
 	# Abgeleitetes (Level, Punkte) bleibt daheim — gerechnet wird in der Auswertung.
 	assert_dict(snap["level"]).is_equal({"total_xp": 900.0})
 	assert_int((snap["bosses"] as Array).size()).is_equal(1)
+	assert_int((snap["writing"] as Array).size()).is_equal(1)
+	assert_int(int(snap["writing"][0]["in"])).is_equal(1000)
 	assert_bool(snap.has("inventory")).is_false()      # keine Datei, kein Eintrag
 	# Die player_id ist der Name des Kindes.
 	assert_bool(JSON.stringify(snap).contains(PROFILE)).is_false()

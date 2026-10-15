@@ -1,0 +1,139 @@
+[gd_scene format=3]
+
+[node name="RevisionPanel" type="HBoxContainer"]
+theme_type_variation = &"ScreenStack"
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Side" type="PanelContainer" parent="."]
+theme_type_variation = &"HudPanel"
+custom_minimum_size = Vector2(340, 0)
+layout_mode = 2
+
+[node name="SideStack" type="VBoxContainer" parent="Side"]
+theme_type_variation = &"Tight"
+layout_mode = 2
+
+[node name="Tabs" type="HBoxContainer" parent="Side/SideStack"]
+theme_type_variation = &"Tight"
+layout_mode = 2
+
+[node name="HintsTab" type="Button" parent="Side/SideStack/Tabs"]
+unique_name_in_owner = true
+theme_type_variation = &"WindowTab"
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+button_pressed = true
+text = "Hinweise"
+
+[node name="SourceTab" type="Button" parent="Side/SideStack/Tabs"]
+unique_name_in_owner = true
+theme_type_variation = &"WindowTab"
+layout_mode = 2
+size_flags_horizontal = 3
+toggle_mode = true
+text = "Geschichte"
+
+[node name="HintsScroll" type="ScrollContainer" parent="Side/SideStack"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Gutter" type="MarginContainer" parent="Side/SideStack/HintsScroll"]
+theme_type_variation = &"ScrollGutter"
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HintsList" type="VBoxContainer" parent="Side/SideStack/HintsScroll/Gutter"]
+theme_type_variation = &"ScreenStack"
+layout_mode = 2
+
+[node name="Criteria" type="VBoxContainer" parent="Side/SideStack/HintsScroll/Gutter/HintsList"]
+unique_name_in_owner = true
+theme_type_variation = &"Tight"
+layout_mode = 2
+
+[node name="MarksTitle" type="Label" parent="Side/SideStack/HintsScroll/Gutter/HintsList"]
+unique_name_in_owner = true
+theme_type_variation = &"SectionTitle"
+layout_mode = 2
+text = "Markierte Stellen"
+
+[node name="Marks" type="VBoxContainer" parent="Side/SideStack/HintsScroll/Gutter/HintsList"]
+unique_name_in_owner = true
+theme_type_variation = &"ScreenStack"
+layout_mode = 2
+
+[node name="NoMarks" type="Label" parent="Side/SideStack/HintsScroll/Gutter/HintsList"]
+unique_name_in_owner = true
+theme_type_variation = &"Hint"
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+autowrap_mode = 3
+text = "Keine Stelle markiert."
+
+[node name="SourceScroll" type="ScrollContainer" parent="Side/SideStack"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Gutter" type="MarginContainer" parent="Side/SideStack/SourceScroll"]
+theme_type_variation = &"ScrollGutter"
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SourceText" type="Label" parent="Side/SideStack/SourceScroll/Gutter"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="Editor" type="PanelContainer" parent="."]
+theme_type_variation = &"PlayerBubble"
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="EditorStack" type="VBoxContainer" parent="Editor"]
+theme_type_variation = &"Tight"
+layout_mode = 2
+
+[node name="EditorTitle" type="Label" parent="Editor/EditorStack"]
+unique_name_in_owner = true
+theme_type_variation = &"BubbleAccent"
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+autowrap_mode = 3
+text = "Überarbeite deinen Text – farbig ist, was noch nicht stimmt."
+
+[node name="TextEdit" type="TextEdit" parent="Editor/EditorStack"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+wrap_mode = 1
+
+[node name="Bottom" type="HBoxContainer" parent="Editor/EditorStack"]
+theme_type_variation = &"ScreenStack"
+layout_mode = 2
+
+[node name="Words" type="Label" parent="Editor/EditorStack/Bottom"]
+unique_name_in_owner = true
+theme_type_variation = &"BubbleText"
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "0 Wörter"
+
+[node name="SubmitButton" type="Button" parent="Editor/EditorStack/Bottom"]
+unique_name_in_owner = true
+theme_type_variation = &"ActionButton"
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+text = "⚔ Erneut abgeben"

@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://src/ui/content_manager.gd" id="1_content"]
 [ext_resource type="Texture2D" path="res://assets/ui/windows/window_surface.webp" id="2_surface"]
@@ -10,6 +10,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/content.webp" id="8_icon"]
 [ext_resource type="PackedScene" path="res://scenes/ui/content_pack_row.tscn" id="9_row"]
 [ext_resource type="PackedScene" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
+[ext_resource type="PackedScene" path="res://scenes/ui/confirm_dialog.tscn" id="10_confirm"]
 [ext_resource type="PackedScene" path="res://scenes/ui/model_part_row.tscn" id="10_part"]
 
 [node name="ContentManager" type="Control"]
@@ -192,6 +193,70 @@ show_percentage = false
 layout_mode = 2
 theme_type_variation = &"StatRule"
 
+[node name="Cloud" type="VBoxContainer" parent="Window/Layout/Content/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Head" type="HBoxContainer" parent="Window/Layout/Content/Body/Cloud"]
+layout_mode = 2
+
+[node name="CloudTitle" type="Label" parent="Window/Layout/Content/Body/Cloud/Head"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"StatHeading"
+text = "Cloud-Bewertung (eigener Schlüssel)"
+
+[node name="CloudCheckButton" type="Button" parent="Window/Layout/Content/Body/Cloud/Head"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(200, 44)
+layout_mode = 2
+theme_type_variation = &"WindowButton"
+text = "Schlüssel prüfen"
+
+[node name="CloudRemoveButton" type="Button" parent="Window/Layout/Content/Body/Cloud/Head"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(200, 44)
+layout_mode = 2
+theme_type_variation = &"WindowButton"
+text = "Entfernen"
+
+[node name="KeyRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Cloud"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="KeyInput" type="LineEdit" parent="Window/Layout/Content/Body/Cloud/KeyRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Eigener API-Schlüssel von Anthropic (sk-ant-…)"
+secret = true
+
+[node name="KeySaveButton" type="Button" parent="Window/Layout/Content/Body/Cloud/KeyRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 44)
+layout_mode = 2
+theme_type_variation = &"WindowButton"
+text = "Eintragen"
+
+[node name="CloudHint" type="Label" parent="Window/Layout/Content/Body/Cloud"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Caption"
+autowrap_mode = 3
+
+[node name="SentenceCloudToggle" type="CheckBox" parent="Window/Layout/Content/Body/Cloud"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Auch den Satzmeister in der Cloud bewerten"
+
+[node name="CloudRule" type="HSeparator" parent="Window/Layout/Content/Body/Cloud"]
+layout_mode = 2
+theme_type_variation = &"StatRule"
+
 [node name="PacksTitle" type="Label" parent="Window/Layout/Content/Body"]
 layout_mode = 2
 theme_type_variation = &"StatHeading"
@@ -271,3 +336,7 @@ texture_filter = 4
 texture = ExtResource("7_joint_right")
 expand_mode = 1
 stretch_mode = 5
+
+[node name="CloudConfirm" parent="." instance=ExtResource("10_confirm")]
+unique_name_in_owner = true
+visible = false

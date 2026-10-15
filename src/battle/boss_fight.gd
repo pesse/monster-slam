@@ -39,6 +39,7 @@ const EMPTY_POOL_TEXT := "Für den Satzmeister passt kein Satz zu deiner Auswahl
 const NO_MODEL_NOTE := "Ohne Sprachmodell zählt nur, was als Lösung hinterlegt ist. Das Modell gibt es unter „Inhalte“."
 const MODEL_NOTE := "Das Sprachmodell läuft auf diesem Rechner; nichts verlässt ihn."
 const FAILED_MODEL_NOTE := "Das Sprachmodell ließ sich nicht starten — es zählt nur, was als Lösung hinterlegt ist."
+const CLOUD_NOTE := "Übersetzungen, die nicht als Lösung hinterlegt sind, bewertet ein Modell bei Anthropic."
 
 ## Ob beim Betreten der lokale Dienst gestartet wird; aus für Tests. Vor dem Einhängen setzen.
 var start_service := true
@@ -81,6 +82,7 @@ var hits := 0
 var _judge: SentenceJudge
 var _backend: LocalModelBackend
 var _server: LocalModelServer
+var _cloud: CloudModelBackend
 ## Der Dienst lädt noch — solange nimmt der Satzmeister keine Antwort an.
 var _waking := false
 ## Diese Runde ist entschieden; „Weiter" führt zum nächsten Satz.
@@ -204,6 +206,9 @@ func _attach_stage_one() -> void:
 		_judge.explainer = fake_explainer
 		_model_note.text = MODEL_NOTE
 		return
+	if uses_cloud():
+		_attach_cloud()
+		return
 	_backend = LocalModelBackend.new()
 	add_child(_backend)
 	if not start_service or not ModelService.installed():
@@ -226,6 +231,42 @@ func _attach_stage_one() -> void:
 	else:
 		_model_note.text = FAILED_MODEL_NOTE
 	_render_answer_gate()
+
+
+## Urteilt die Cloud statt des lokalen Modells (ADR 0025)? Nur mit Schlüssel und Zustimmung.
+static func uses_cloud() -> bool:
+	return UserSettings.sentence_cloud() and ApiKeys.available()
+
+
+func _attach_cloud() -> void:
+	_cloud = CloudModelBackend.new()
+	_cloud.model = CloudModelBackend.SENTENCE_MODEL
+	_cloud.http_timeout = LocalModelBackend.HTTP_TIMEOUT
+	add_child(_cloud)
+	_cloud.sentence_answered.connect(_log_cloud)
+	_judge.model_backend = _cloud.judge
+	_judge.explainer = _cloud.explain
+	_model_note.text = CLOUD_NOTE
+
+
+## Bucht den Verbrauch eines Cloud-Urteils (WritingLog, `kind` "sentence"). Was nichts
+## gekostet hat — kein Netz, kein Schlüssel —, wird nicht gebucht.
+func _log_cloud(sentence_id: String, reply: Dictionary) -> void:
+	var usage: Dictionary = reply.get("usage", {})
+	if int(usage.get("input_tokens", 0)) + int(usage.get("output_tokens", 0)) == 0:
+		return
+	WritingLog.record({
+		"kind": "sentence",
+		"boss": str(boss.get("id", "")),
+		"task": sentence_id,
+		"model": str(usage.get("model", "")),
+		"in": int(usage.get("input_tokens", 0)),
+		"out": int(usage.get("output_tokens", 0)),
+		"cr": int(usage.get("cache_read_input_tokens", 0)),
+		"cw": int(usage.get("cache_creation_input_tokens", 0)),
+		"s": snappedf(float(usage.get("seconds", 0.0)), 0.1),
+		"failed": (reply.get("result", {}) as Dictionary).is_empty(),
+	}, UserSettings.active_profile())
 
 
 ## Zeigt den aktuellen Satz.
