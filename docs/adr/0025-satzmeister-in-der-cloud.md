@@ -19,12 +19,12 @@ explanation}`), `effort: medium`, Bewertung durch Opus gegen das Urteil der Lehr
 „Schaden“ heißt: falsche Antwort durchgelassen, richtige abgewiesen, oder eine Erklärung,
 die etwas Falsches behauptet. Werte: gut / Schaden.
 
-| Set | Gemma (2 Aufrufe, ADR 0005) | v1 Opus | v2 Opus | v2 Sonnet | v3 Opus | **v3 Sonnet** |
+| Set | Gemma (2 Aufrufe, ADR 0005) | v1 Opus | v2 Opus | v2 Sonnet | v3 Opus, 3 Läufe | **v3 Sonnet, 3 Läufe** |
 |---|---|---|---|---|---|---|
-| Einzelsätze (51, davon 32 falsch) | Urteil: 2 abgewiesen | – | 32 / 5 | 32 / 2 | 32 / 3 | **32 / 0** |
-| Texte aus 2–3 Sätzen (66, 42) | 33 / 4 | 42 / 4 | 42 / 0 | 41 / 2 | 42 / 0 | **42 / 0** |
-| Texte aus 5 Sätzen (60, 42) | 21–23 / 5–7 | 42 / 0 | 42 / 0 | 42 / 0 | 42 / 0 | **42 / 0** |
-| 5 Sätze, mehrere Fehler (35, 35) | 18–23 / 10 | 33 / 2 | 35 / 0 | 33 / 2 | 35 / 0 | **35 / 0** |
+| Einzelsätze (51, davon 32 falsch) | Urteil: 2 abgewiesen | – | 32 / 5 | 32 / 2 | 32 / 3 · 3 · 3 | **32 / 0 · 3 · 1** |
+| Texte aus 2–3 Sätzen (66, 42) | 33 / 4 | 42 / 4 | 42 / 0 | 41 / 2 | 42 / 0 · 0 · 1 | **40–42 / 0 · 0 · 1** |
+| Texte aus 5 Sätzen (60, 42) | 21–23 / 5–7 | 42 / 0 | 42 / 0 | 42 / 0 | 42 / 0 · 0 · 0 | **42 / 0 · 0 · 0** |
+| 5 Sätze, mehrere Fehler (35, 35) | 18–23 / 10 | 33 / 2 | 35 / 0 | 33 / 2 | 35 / 0 · 0 · 0 | **34–35 / 0 · 1 · 1** |
 
 satz-v1 hatte die geübte Struktur zur Pflicht gemacht und wies deshalb richtige freie
 Fassungen ab („will“ statt „going to“, „a lot“ statt „often“, umgedrehter Vergleich).
@@ -40,10 +40,19 @@ schief, ADR 0005).
 satz-v3 sagt dazu allgemein, dass die Bedeutung zählt und nicht die Nähe zum deutschen
 Wortlaut (idiomatische Wendung, Füllwort, Possessiv nach englischem Gebrauch, andere
 Konstruktion), und dass eine Übersetzung nur falsch ist, wenn sich etwas ändert. Die
-abgewiesenen Testsätze stehen bewusst nicht als Beispiele im Prompt. Sonnet ist damit auf
-allen vier Sets ohne Schaden (212 Antworten), Opus weist am Einzelsatz noch drei ab
-(„that one“, „can't wait“, „there is no need“). Je ein Lauf; die Grundsätze stammen aus
-den Fehlern auf denselben Sets, ein frisches Set steht aus.
+abgewiesenen Testsätze stehen bewusst nicht als Beispiele im Prompt. Über drei Läufe
+richtet Sonnet im Mittel 2,3 Schäden in 212 Antworten an (0, 4, 3), Opus 3,3 (3, 3, 4); mit
+v2 waren es in einem Lauf 6 und 5. Der fehlerfreie erste Sonnet-Lauf war also Glück.
+Durchgelassen hat auch hier kein Modell etwas. Was bleibt:
+
+- Sonnet weist am Einzelsatz in zwei von drei Läufen das Present Progressive im
+  Hauptsatz eines if-Satzes ab, einmal „your bike“ und „on foot to school“; in Texten
+  bemängelt es in der Erklärung noch richtige Nebenstellen („sunny“ für „schön“, „than we
+  had thought“), das Urteil stimmt dabei.
+- Opus weist in jedem Lauf dieselben freien Fassungen ab („that one“, „can't wait“,
+  „there is no need“): es hält an der geübten Form fest.
+
+Die Grundsätze stammen aus den Fehlern auf denselben Sets, ein frisches Set steht aus.
 
 Dauer im Median: Opus ~5 s, Sonnet ~4 s; je Aufruf ~1.400 Token hinein (fast alles Systemprompt, cachebar) und ~300
 heraus.
@@ -71,9 +80,9 @@ keinen lokalen Dienst, sondern hängt `CloudModelBackend` als Stufe 1 ein.
 unverändert: Stufe 0 zuerst, Stufe 1 nur bei Zweifel, sie hebt nur und senkt nie.
 
 Damit fällt für die Cloud der zweite, unabhängige Blick aus ADR 0005 weg, der abgewiesene
-richtige Antworten auffing. Am Einzelsatz weist Sonnet so selten ab wie Gemmas Urteil
-allein, und mit v3 in der Messung gar nicht mehr; ein zweiter Aufruf kostete Zeit und Geld
-für einen Fehler, den es dort nicht gab.
+richtige Antworten auffing. Am Einzelsatz weist Sonnet mit v3 im Mittel etwa so oft ab wie
+Gemmas Urteil allein (1,3 von 51 gegen 2); ein zweiter Aufruf kostete bei jeder
+Antwort Zeit und Geld für einen Fehler, der etwa jede vierzigste trifft.
 
 ### 3. Prompt und Modell
 
