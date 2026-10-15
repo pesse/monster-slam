@@ -46,6 +46,12 @@ zurück**: Was einmal erfüllt war, bleibt erfüllt, auch wenn du danach weiters
 | Sprache | keine schweren Fehler mehr im Text stehen |
 | Länge | die Wortzahl im Zielbereich liegt |
 
+**Bonus: Wortschatz.** Benutzt dein Text mindestens fünf verschiedene Wörter aus der
+Unit, gibt es den Wortschatz-Bonus ✨. Rechts beim Schreiben zählt das Spiel mit, wie viele
+es schon sind; gebeugte Formen zählen mit („fetches“ für „fetch“). Der Bonus zählt aber erst,
+wenn auch der Stapel „Inhalt“ gefallen ist – eine Liste von Wörtern allein reicht nicht.
+Für den Sieg brauchst du ihn nicht. Gezählt wird auf diesem Rechner, nicht vom Modell.
+
 Die Hinweise nennen immer **die Regel**, nie die Lösung: „Eine Summary steht im Present
 Tense“, nicht der verbesserte Satz. Verbessern sollst du selbst – The Rambler ist keine
 Hausaufgabenmaschine.

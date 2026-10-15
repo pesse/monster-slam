@@ -150,7 +150,8 @@ func _reply(result: Dictionary, note := "", billed := true) -> void:
 func _row_icons(panel: String, list: String) -> Array:
 	var out: Array = []
 	for row in _fight.get_node("%" + panel).get_node("%" + list).get_children():
-		out.append((row as WritingCriterionRow).icon())
+		if (row as Control).visible:
+			out.append((row as WritingCriterionRow).icon())
 	return out
 
 
@@ -373,3 +374,59 @@ func test_the_entry_button_is_invisible_without_a_key() -> void:
 	var setup: Control = auto_free(load(SETUP_SCENE).instantiate())
 	add_child(setup)
 	assert_bool((setup.get_node("%WritingStartButton") as Button).visible).is_false()
+
+
+# --- Wortschatz-Bonus ---------------------------------------------------------------------
+
+## Erfundene Lexeme der Unit; fünf davon stehen in GOOD („looks after“ gebeugt, „boat“ im
+## Lemma „fishing boat“, „fetch“ als „fetches“).
+const UNIT_LEXEMES := [
+	{"id": "lex.zz.keeper", "type": "noun", "lemma_en": "keeper"},
+	{"id": "lex.zz.look_after", "type": "verb", "lemma_en": "look after sb./sth."},
+	{"id": "lex.zz.fishing_boat", "type": "noun", "lemma_en": "fishing boat"},
+	{"id": "lex.zz.fetch", "type": "verb", "lemma_en": "fetch sth."},
+	{"id": "lex.zz.harbour", "type": "noun", "lemma_en": "harbour"},
+	{"id": "lex.zz.volcano", "type": "noun", "lemma_en": "volcano"},
+]
+
+
+func _build_with_words() -> void:
+	_build()
+	_fight.use_unit_lexemes(UNIT_LEXEMES)
+
+
+func test_without_unit_words_there_is_no_bonus_row() -> void:
+	_build()
+	assert_bool(_fight.has_bonus()).is_false()
+	_write_and_submit(GOOD)
+	_reply(_result())
+	assert_int(_row_icons("Attack", "Criteria").size()).is_equal(WritingJudge.CRITERIA.size())
+
+
+func test_the_sidebar_counts_unit_words_while_typing() -> void:
+	_build_with_words()
+	_press("Encounter", "ActionButton")
+	_press("Reading", "WriteButton")
+	_type("Writing", "The keeper looks after the lamp.")
+	_fight._refresh_checks()
+	assert_int(_fight.unit_words.size()).is_equal(2)
+	_type("Writing", GOOD)
+	_fight._refresh_checks()
+	assert_int(_fight.unit_words.size()).is_equal(5)
+
+
+func test_the_bonus_needs_the_content_first() -> void:
+	_build_with_words()
+	_write_and_submit(GOOD)
+	_reply(_result(["kp5"]))
+	assert_bool(_fight.bonus).is_false()
+	assert_str(_row_icons("Attack", "Criteria").back()).is_equal("○")
+
+
+func test_the_bonus_comes_with_the_content_and_stays() -> void:
+	_build_with_words()
+	_write_and_submit(GOOD)
+	_reply(_result())
+	assert_bool(_fight.bonus).is_true()
+	assert_str(_row_icons("Attack", "Criteria").back()).is_equal("✨")
+	assert_int(int(WritingLog.entries(PROFILE)[0]["unit_words"])).is_equal(5)

@@ -24,9 +24,10 @@ const SAVE_DIR := "user://progress"
 ## `failed`: der Anbieter hat Token berechnet, aber kein brauchbares Urteil geliefert — die
 ## Abgabe zählte im Kampf nicht, ihre Kosten zählen trotzdem. `kind`: "summary", oder
 ## "sentence" für ein Satz-Urteil im Satzmeister (task = Satz-Id, ohne round/met/words);
-## Einträge ohne `kind` sind Summaries.
+## Einträge ohne `kind` sind Summaries. `unit_words`: verschiedene Wörter der Unit in der
+## Abgabe (UnitWords), Grundlage des Wortschatz-Bonus.
 const FIELDS := ["at", "boss", "task", "round", "model", "in", "out", "cr", "cw", "s", "met", "words",
-		"failed", "kind"]
+		"failed", "kind", "unit_words"]
 
 ## So weit zurück reicht die Kostenanzeige in den Einstellungen.
 const RECENT_DAYS := 30

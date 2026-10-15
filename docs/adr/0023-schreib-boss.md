@@ -239,6 +239,28 @@ Wie beim Satzmeister wird ein Sieg in `BossRecord` gespeichert. Ob zusätzlich j
 Stufen je Kriterium festgehalten werden (Schreibtagebuch), ist offen; gespeichert würde nur
 der Ursprungswert.
 
+### 11. Wortschatz-Bonus (Nachtrag 2026-10-15)
+
+Eine Summary mit Wörtern der Unit ist ein eigenes Lernziel, und anders als beim
+Satzmeister hat das Kind hier die Wahl der Wörter. Deshalb gibt es einen Bonus, der
+**offline** gezählt wird (`UnitWords`): verschiedene Lexeme der Unit der Aufgabe, deren
+Kern im Text steht. Das erste Wort darf gebeugt sein, regelmäßig oder aus
+`lexeme_forms`; Präpositionen und Konjunktionen zählen nicht. Gezählt wird großzügig, denn
+der Bonus urteilt über nichts.
+
+- Ziel: `WritingBoss.UNIT_WORD_GOAL` = 5 verschiedene Wörter. Die Vorlagen von Access 4,
+  Unit 1–2 enthalten 10–19 Wörter ihrer Unit; eine Summary von 70–110 Wörtern erreicht 5
+  nicht von selbst.
+- Der Bonus zählt erst, wenn der Stapel „Inhalt“ gefallen ist. Sonst brächte eine
+  Wortliste ohne Zusammenhang etwas.
+- Einmal erreicht, bleibt er (wie ein gefallener Stapel). Für den Sieg ist er nicht nötig,
+  und er bringt wie der Boss selbst kein Gold und keine Erfahrung.
+- Die Randleiste zählt live mit, der Angriff deckt ihn nach den fünf Kriterien auf.
+- `WritingLog` speichert je Abgabe `unit_words` (die Zahl, nicht die Wörter). Ob der Bonus
+  erreicht ist, wird daraus und aus `met` gerechnet, nicht gespeichert.
+
+Das Modell sieht von der Zählung nichts; der Prompt (summary-v5) bleibt unverändert.
+
 ## Folgen
 
 - Zum ersten Mal verlässt ein Kindertext den Rechner — nur mit eigenem Schlüssel und

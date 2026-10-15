@@ -95,6 +95,14 @@ const WON_SHOUT := "SIEG!"
 const HIT_SHOUT_TINT := Color(1.0, 0.86, 0.3)
 const HOLD_SHOUT_TINT := Color(0.65, 0.85, 1.0)
 
+## Wortschatz-Bonus (ADR 0023, Nachtrag 2026-10-15): so viele verschiedene Wörter der Unit
+## (UnitWords) muss eine Abgabe enthalten. Er zählt erst, wenn der Stapel „Inhalt“ gefallen
+## ist, bleibt danach erreicht und ist für den Sieg nicht nötig.
+const UNIT_WORD_GOAL := 5
+const BONUS_NAME := "Wortschatz-Bonus"
+const BONUS_SHOUT := "BONUS!"
+const BONUS_SHOUT_TINT := Color(0.75, 1.0, 0.55)
+
 ## Vor dem Einhängen setzen: ein erfundenes Backend statt CloudModelBackend, Zuschnitt wie
 ## `CloudModelBackend.judge_summary(task, text, on_done)`. Kein Test spricht mit dem Dienst.
 var fake_backend: Callable = Callable()
@@ -121,6 +129,10 @@ var text := ""
 var rounds := 0
 ## Kriterien-Id -> true, sobald ihr Stapel gefallen ist.
 var fallen: Dictionary = {}
+## Ist der Wortschatz-Bonus erreicht? Bleibt danach erreicht, wie ein gefallener Stapel.
+var bonus := false
+## Die Wörter der Unit im Text, wie er gerade steht (UnitWords.found).
+var unit_words: Array = []
 ## Das Urteil der letzten gewerteten Abgabe (WritingJudge.criteria).
 var last_criteria: Array = []
 ## Der Grund, wenn die letzte Abgabe kein Urteil bekam, sonst leer.
@@ -201,6 +213,11 @@ var _warming := false
 var _shout_tween: Tween
 var _bar_tween: Tween
 var _check_rows: Dictionary = {}
+## Die Lexeme der Unit der Aufgabe und ihre Formen; leer = kein Bonus.
+var _unit_lexemes: Array = []
+var _unit_forms: Dictionary = {}
+## Die Wörter der Unit in der abgegebenen Fassung.
+var _submitted_words: Array = []
 
 
 func _ready() -> void:
@@ -364,6 +381,11 @@ func begin(the_boss: Dictionary, the_task: Dictionary) -> void:
 	text = ""
 	rounds = 0
 	fallen = {}
+	bonus = false
+	unit_words = []
+	_submitted_words = []
+	_unit_lexemes = UnitWords.lexemes_for(task) if not task.is_empty() else []
+	_unit_forms = UnitWords.forms_for(_unit_lexemes)
 	last_criteria = []
 	last_note = ""
 	_pending = false
@@ -462,6 +484,9 @@ func goto(next: Phase) -> void:
 			_boss_line.text = WON_TEXT
 			_task_title.text = WON_TITLE
 			_task_text.text = "Abgaben: %d" % rounds
+			if bonus:
+				_task_text.text += " · ✨ %s: %d Wörter aus der Unit" \
+						% [BONUS_NAME, _submitted_words.size()]
 			_task_note.visible = false
 			_encounter_button.text = "← Zurück"
 			_encounter_button.disabled = false
@@ -496,7 +521,7 @@ func _on_text_edited(edit: TextEdit) -> void:
 
 ## Die Zeilen der Randleiste — einmal aus der Vorlage, danach nur noch beschriftet.
 func _build_check_rows() -> void:
-	for id in ["length"]:
+	for id in ["length", "unit_words"]:
 		var row: WritingCriterionRow = CRITERION_ROW.instantiate()
 		_checks.add_child(row)
 		_check_rows[id] = row
@@ -516,6 +541,35 @@ func _refresh_checks() -> void:
 	if not length_ok and target.size() == 2:
 		length_detail = "Noch zu kurz." if words < int(target[0]) else "Zu lang – fasse knapper zusammen."
 	_row(_check_rows["length"], length_ok, "Länge", length_detail)
+	unit_words = UnitWords.found(text, _unit_lexemes, _unit_forms)
+	var words_row: WritingCriterionRow = _check_rows["unit_words"]
+	words_row.visible = has_bonus()
+	if has_bonus():
+		_row(words_row, bonus or unit_words.size() >= UNIT_WORD_GOAL, "Wörter der Unit",
+				_bonus_detail(unit_words.size()))
+
+
+## Die Naht für Tests und Werkbank: erfundene Lexeme der Unit statt der installierten.
+func use_unit_lexemes(lexemes: Array, forms: Dictionary = {}) -> void:
+	_unit_lexemes = lexemes
+	_unit_forms = forms
+	_refresh_checks()
+
+
+## Gibt es zu dieser Aufgabe einen Wortschatz-Bonus? Nur mit Lexemen der Unit.
+func has_bonus() -> bool:
+	return not _unit_lexemes.is_empty()
+
+
+## Was die Zeile zum Bonus sagt, bei `count` Wörtern der Unit.
+func _bonus_detail(count: int) -> String:
+	if bonus:
+		return "Bonus erreicht (%d Wörter)." % count
+	if count < UNIT_WORD_GOAL:
+		return "%d von %d – benutze Wörter aus der Unit." % [count, UNIT_WORD_GOAL]
+	if not fallen.has("content"):
+		return "%d – der Bonus zählt, sobald der Inhalt stimmt." % count
+	return "%d – gib ab, dann zählt der Bonus." % count
 
 
 ## Eine Prüfzeile: erfüllt ✔, offen ○.
@@ -538,6 +592,7 @@ func submit() -> void:
 	_submit_note.text = "Strg+Enter gibt ab."
 	_submitted = text
 	_card = SummaryCard.check(task, _submitted)
+	_submitted_words = UnitWords.found(_submitted, _unit_lexemes, _unit_forms)
 	_pending = true
 	_ticket += 1
 	var ticket := _ticket
@@ -620,6 +675,7 @@ func _log(reply: Dictionary, failed := false) -> void:
 		"words": int(_card.get("words", 0)),
 		"failed": failed,
 		"kind": "summary",
+		"unit_words": _submitted_words.size(),
 	}
 	if record:
 		WritingLog.record(entry, _profile())
@@ -647,6 +703,10 @@ func _fill_attack_rows() -> void:
 		_attack_rows.add_child(row)
 		row.show_row("📄" if not fallen.has(id) else "✔", CRITERION_NAMES.get(id, id),
 				"schon gefallen" if fallen.has(id) else "")
+	if has_bonus():
+		var bonus_row: WritingCriterionRow = CRITERION_ROW.instantiate()
+		_attack_rows.add_child(bonus_row)
+		bonus_row.show_row("✨" if bonus else "○", BONUS_NAME, "schon erreicht" if bonus else "")
 
 
 ## Kriterium für Kriterium: Stapel fällt oder hält. Mit `reveal_step` 0 alles auf einmal.
@@ -662,6 +722,12 @@ func _reveal(criteria: Array) -> void:
 				return
 		if _reveal_one(i, criteria[i]):
 			dropped += 1
+	if has_bonus():
+		if reveal_step > 0.0:
+			await get_tree().create_timer(reveal_step).timeout
+			if not is_inside_tree() or ticket != _ticket:
+				return
+		_reveal_bonus()
 	_revealing = false
 	_attack_line.text = HIT_TEXT if dropped > 0 else HOLD_TEXT
 	_continue_button.disabled = false
@@ -695,6 +761,23 @@ func _reveal_one(index: int, criterion: Dictionary) -> bool:
 	_act(&"hold_stack", [index])
 	_cheer(HOLD_SHOUT, HOLD_SHOUT_TINT)
 	return false
+
+
+## Der Wortschatz-Bonus nach den Kriterien: erreicht, sobald die Abgabe genug Wörter der
+## Unit hat und der Inhalt stimmt.
+func _reveal_bonus() -> void:
+	var row := _attack_rows.get_child(_attack_rows.get_child_count() - 1) as WritingCriterionRow
+	var count := _submitted_words.size()
+	if bonus:
+		row.show_row("✨", BONUS_NAME, "schon erreicht")
+		return
+	if count >= UNIT_WORD_GOAL and fallen.has("content"):
+		bonus = true
+		row.show_row("✨", BONUS_NAME, "%d Wörter aus der Unit!" % count)
+		_cheer(BONUS_SHOUT, BONUS_SHOUT_TINT)
+		Sfx.play(&"monster_kill")
+		return
+	row.show_row("○", BONUS_NAME, _bonus_detail(count))
 
 
 func _on_continue() -> void:
@@ -738,6 +821,11 @@ func _render_revision() -> void:
 			mark_row.show_mark(quote, str(mark.get("hint", "")))
 			mark_row.picked.connect(_select_quote)
 			quotes.append(quote)
+	if has_bonus():
+		var bonus_row: WritingCriterionRow = CRITERION_ROW.instantiate()
+		_revision_rows.add_child(bonus_row)
+		bonus_row.show_row("✨" if bonus else "○", BONUS_NAME,
+				_bonus_detail(_submitted_words.size()))
 	_highlighter.set_quotes(quotes)
 	_marks_title.visible = not quotes.is_empty()
 	_no_marks.visible = quotes.is_empty()
