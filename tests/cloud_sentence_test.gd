@@ -61,8 +61,9 @@ func test_an_empty_key_field_reads_as_none() -> void:
 
 
 func test_the_prompt_lets_alternatives_stand() -> void:
-	# Der Kern von satz-v2: eine andere richtige Form ist kein Fehler.
+	# Der Kern von satz-v2/v3: eine andere richtige Form ist kein Fehler.
 	assert_str(StageOnePrompts.CLOUD_SYSTEM).contains("every one of them is correct")
+	assert_str(StageOnePrompts.CLOUD_SYSTEM).contains("not how closely it follows the German words")
 	assert_str(StageOnePrompts.CLOUD_SYSTEM) \
 			.contains("Do not present one correct form as the only one")
 
