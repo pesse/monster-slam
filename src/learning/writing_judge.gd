@@ -18,6 +18,10 @@ extends RefCounted
 ##
 ## **Gewertet wird in Stufen, nicht in Punkten:** ein Kriterium ist erfüllt oder nicht.
 ##
+## **Ohne Fehler ist nicht ohne Text.** Textsorte und Sprache gelten als erfüllt, wenn das
+## Modell nichts findet — in einem Fetzen wie „dsgf“ findet es auch nichts. Sie fallen erst
+## ab `MIN_SHARE` der Mindestlänge (`substantial`), sonst halten sie ohne Markierung.
+##
 ## Reine Rechnung ohne Zustand und ohne Netz (tests/writing_judge_test.gd).
 ##
 ## Rückgabe von `criteria`, je Kriterium in CRITERIA-Reihenfolge:
@@ -65,6 +69,11 @@ const CORRECTION_PATTERNS := [
 	"\\bersetz\\w*\\b.*\\bdurch\\b",
 ]
 
+## Ab diesem Anteil der unteren Zielwortzahl lassen sich Textsorte und Sprache beurteilen.
+const MIN_SHARE := 0.5
+## Dasselbe für eine Aufgabe ohne Zielbereich (Wörter).
+const MIN_WORDS := 20
+
 static var _correction_res: Array = []
 
 
@@ -73,6 +82,7 @@ static func criteria(task: Dictionary, text: String, card: Dictionary,
 	if card.is_empty():
 		card = SummaryCard.check(task, text)
 	var has_reply := not reply.is_empty()
+	var judgeable := substantial(task, int(card.get("words", 0)))
 	var out: Array = []
 	for id in CRITERIA:
 		if id == "length":
@@ -86,10 +96,21 @@ static func criteria(task: Dictionary, text: String, card: Dictionary,
 				"content":
 					out.append(_content(task, text, reply))
 				"genre":
-					out.append(_genre(text, reply))
+					out.append(_genre(text, reply) if judgeable
+							else _entry(id, true, false, "model", []))
 				"language":
-					out.append(_language(text, reply))
+					out.append(_language(text, reply) if judgeable
+							else _entry(id, true, false, "model", []))
 	return out
+
+
+## Ob ein Text lang genug ist, dass Textsorte und Sprache etwas über ihn sagen.
+static func substantial(task: Dictionary, words: int) -> bool:
+	var target: Array = Array(task.get("target_words", []))
+	var floor_words := MIN_WORDS
+	if target.size() == 2:
+		floor_words = ceili(int(target[0]) * MIN_SHARE)
+	return words >= floor_words
 
 
 ## Titel und Autor im ersten Satz — erfüllt nur mit einem Zitat, das im Text steht.

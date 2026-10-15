@@ -74,6 +74,25 @@ func test_without_a_reply_the_model_criteria_stay_open() -> void:
 		assert_bool(bool(result[id]["met"])).override_failure_message(id).is_false()
 
 
+## Ein Fetzen ohne Fehler ist keine Summary: Textsorte und Sprache halten, auch wenn das
+## Modell nichts findet.
+func test_a_scrap_does_not_meet_genre_or_language() -> void:
+	var reply := _reply({"intro": {"met": false, "quote": ""}, "key_points": []})
+	var result := _judge(reply, "dsgf")
+	for id in ["genre", "language", "length"]:
+		assert_bool(bool(result[id]["decided"])).override_failure_message(id).is_true()
+		assert_bool(bool(result[id]["met"])).override_failure_message(id).is_false()
+	assert_array(result["genre"]["marks"]).is_empty()
+	assert_array(result["language"]["marks"]).is_empty()
+
+
+func test_half_the_minimum_length_is_enough_to_judge() -> void:
+	assert_bool(WritingJudge.substantial(_task, 39)).is_false()
+	assert_bool(WritingJudge.substantial(_task, 40)).is_true()
+	assert_bool(WritingJudge.substantial({}, 19)).is_false()
+	assert_bool(WritingJudge.substantial({}, 20)).is_true()
+
+
 ## Die Einleitung gilt nur mit einem Zitat, das im Text steht.
 func test_the_intro_needs_evidence() -> void:
 	var reply := _reply({"intro": {"met": true, "quote": "The Lighthouse Dog by Mara Linden"}})

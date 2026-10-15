@@ -159,6 +159,10 @@ zeigt nur noch die Wortzahl; die Konnektoren sind entfallen (offene Frage 3).
 | Sprache | keine schweren Fehler mehr | Modell |
 | Länge | im Zielbereich | offline |
 
+Textsorte und Sprache sind „frei von Fehlern“ — das wäre auch ein Text aus einem Wort.
+Beurteilt werden sie deshalb erst ab der Hälfte der unteren Zielwortzahl (ohne Zielbereich
+ab 20 Wörtern); darunter halten ihre Stapel ohne Markierung.
+
 ### 6. Überarbeiten ist der zweite Angriff
 
 Nach der ersten Abgabe ist The Rambler angeschlagen; was hält, wird am Text markiert.
