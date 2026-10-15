@@ -24,9 +24,8 @@ const BossFight := preload("res://src/battle/boss_fight.gd")
 @onready var _fortress_level: Label = %FortressLevel
 @onready var _play: Button = %PlayButton
 @onready var _discard_run: Button = %DiscardRunButton
-## Am Boss-Ort die Wahl des Schreib-Bosses (ADR 0023). Steht wie das „✕“ nur bei passender
-## Auswahl da; die beiden schließen sich aus, sonst reicht die Leiste bei 1152 px ins Schild.
-@onready var _rambler: Button = %RamblerButton
+## Am Boss-Ort fragt „Spielen“, welcher Boss, wenn die Unit beide hergibt (ADR 0023).
+@onready var _boss_choice: BossChoice = %BossChoice
 @onready var _confirm: ConfirmDialog = %Confirm
 
 var _levels: Array = []
@@ -52,9 +51,7 @@ func _ready() -> void:
 			(%FirstPersonToggle as Button).visible = RunRequest.first_person_selectable())
 	_canvas.node_selected.connect(_on_level_clicked)
 	_play.pressed.connect(_start)
-	_rambler.pressed.connect(_start_rambler)
-	Hints.attach(_rambler, "The Rambler", "Der Schreib-Boss: Fasse seine Geschichte in einer "
-			+ "Summary zusammen.", "Dein Text geht zur Bewertung an Anthropic.")
+	_boss_choice.chosen.connect(_start_boss)
 	_discard_run.pressed.connect(_ask_discard)
 	_confirm.confirmed.connect(func() -> void:
 		if _on_confirmed.is_valid():
@@ -297,7 +294,7 @@ static func hint_lines(node: Dictionary) -> Dictionary:
 		var medal := int(node.get("medal", 0))
 		var body := "Der Satzmeister prüft ganze Sätze aus %s." % unit_label
 		if bool(node.get("rambler", false)):
-			body += "\nOder The Rambler (📜 unten rechts): eine Summary schreiben."
+			body += "\nOder The Rambler: eine Summary schreiben."
 		if wins == 0:
 			body += "\nNoch nicht besiegt."
 		else:
@@ -368,9 +365,8 @@ func _select(keys: Array) -> void:
 	_canvas.set_selected(keys)
 	var level := MapLevel.combine(_levels, keys)
 	var boss := not level.is_empty() and str(level["kind"]) == MapLevel.KIND_BOSS
-	_play.disabled = level.is_empty() or (boss and not _golem_ready)
+	_play.disabled = level.is_empty() or (boss and not (_golem_ready or _rambler_ready))
 	_lock_first_person(boss)
-	_rambler.visible = boss and _rambler_ready
 	var resumes := _resumes(keys)
 	_play.text = "Fortsetzen" if resumes else "Spielen"
 	_discard_run.visible = resumes
@@ -451,20 +447,27 @@ func _ask_discard() -> void:
 			"Verwerfen", "Behalten")
 
 
-func _start_rambler() -> void:
+## Am Boss-Ort: der eine Boss, den die Unit hergibt, oder die Wahl zwischen beiden.
+func _ask_boss(level: Dictionary) -> void:
+	if _golem_ready and _rambler_ready:
+		_boss_choice.ask()
+	else:
+		_launch(level, {}, WRITING_SCENE if _rambler_ready and not _golem_ready else "")
+
+
+func _start_boss(writing: bool) -> void:
 	var level := MapLevel.combine(_levels, _selected)
-	if level.is_empty() or str(level["kind"]) != MapLevel.KIND_BOSS or _canvas.is_zooming() \
-			or _confirm.visible:
+	if level.is_empty() or str(level["kind"]) != MapLevel.KIND_BOSS:
 		return
-	_launch(level, {}, WRITING_SCENE)
+	_launch(level, {}, WRITING_SCENE if writing else "")
 
 
 func _start() -> void:
 	var level := MapLevel.combine(_levels, _selected)
-	if level.is_empty() or _canvas.is_zooming() or _confirm.visible:
+	if level.is_empty() or _canvas.is_zooming() or _confirm.visible or _boss_choice.visible:
 		return
 	if str(level["kind"]) == MapLevel.KIND_BOSS:
-		_launch(level)
+		_ask_boss(level)
 	elif _resumes(_selected):
 		var resume := _saved.duplicate(true)
 		resume["added"] = RunSave.added(_saved, _selected, _levels)
@@ -488,7 +491,6 @@ func _launch(level: Dictionary, resume: Dictionary = {}, scene := "") -> void:
 		return
 	RunRequest.start_level(level, resume)
 	_play.disabled = true
-	_rambler.disabled = true
 	_canvas.zoom_into_all(level["keys"])
 	_fade_out_hud()
 	await _canvas.zoom_finished

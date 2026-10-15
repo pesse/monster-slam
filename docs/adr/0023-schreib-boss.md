@@ -282,9 +282,9 @@ Das Modell sieht von der Zählung nichts; der Prompt (summary-v5) bleibt unverä
 ## Offene Fragen
 
 1. ~~Wo steht The Rambler auf der Karte?~~ Entschieden 2026-10-14: eine **Wahl am
-   bestehenden Boss-Ort**. Ist der Boss markiert und hat die Unit Vorlagen, steht neben
-   „Spielen“ ein Knopf für The Rambler; ein Sieg zählt in `BossRecord` wie einer über den
-   Satzmeister.
+   bestehenden Boss-Ort**. Hat die Unit Vorlagen und Sätze, fragt „Spielen“ am Boss-Ort,
+   welcher Boss (`BossChoice`, eine Karte je Boss); gibt sie nur einen her, startet er
+   direkt. Ein Sieg zählt in `BossRecord` wie einer über den Satzmeister.
 2. **Schreibtagebuch:** Stufen je Kriterium über die Zeit speichern? Den Text selbst
    lokal aufheben?
 3. ~~Konnektoren als Lexem-Gruppe?~~ Entfallen 2026-10-14: die Randleiste zählt keine

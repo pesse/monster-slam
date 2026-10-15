@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://src/ui/area_map.gd" id="1_screen"]
 [ext_resource type="Script" path="res://src/ui/map_canvas.gd" id="2_canvas"]
@@ -12,6 +12,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/profile_badge.tscn" id="12_badge"]
 [ext_resource type="PackedScene" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
 [ext_resource type="PackedScene" path="res://scenes/ui/confirm_dialog.tscn" id="13_confirm"]
+[ext_resource type="PackedScene" path="res://scenes/ui/boss_choice.tscn" id="14_choice"]
 
 [sub_resource type="Gradient" id="shade_g"]
 colors = PackedColorArray(0, 0, 0, 0.6, 0, 0, 0, 0)
@@ -247,16 +248,6 @@ focus_mode = 0
 theme_type_variation = &"WindowToggle"
 text = "✕"
 
-[node name="RamblerButton" type="Button" parent="Hud/Corners/BottomRight"]
-unique_name_in_owner = true
-visible = false
-custom_minimum_size = Vector2(48, 48)
-layout_mode = 2
-size_flags_vertical = 4
-focus_mode = 0
-theme_type_variation = &"WindowToggle"
-text = "📜"
-
 [node name="FirstPersonToggle" type="Button" parent="Hud/Corners/BottomRight"]
 unique_name_in_owner = true
 visible = false
@@ -294,6 +285,10 @@ offset_right = 0.0
 offset_bottom = 136.0
 grow_horizontal = 0
 compact = 1.0
+
+[node name="BossChoice" parent="." instance=ExtResource("14_choice")]
+unique_name_in_owner = true
+layout_mode = 1
 
 [node name="Confirm" parent="." instance=ExtResource("13_confirm")]
 unique_name_in_owner = true

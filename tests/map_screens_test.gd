@@ -503,6 +503,26 @@ func test_the_rambler_button_needs_a_key() -> void:
 	assert_bool(with_key).is_true()
 
 
+## Gibt die Unit beide Bosse her, fragt „Spielen" am Boss-Ort nach; eine Karte wählt.
+func test_play_at_the_boss_asks_which_boss_when_both_are_ready() -> void:
+	MapSelection.book = "zz-kein-buch"
+	MapSelection.unit = 1
+	var area: AreaMap = auto_free(AREA_SCENE.instantiate())
+	add_child(area)
+	var choice := area.get_node("%BossChoice") as BossChoice
+	assert_bool(choice.visible).is_false()
+	area.set("_golem_ready", true)
+	area.set("_rambler_ready", true)
+	area.call("_ask_boss", {})
+	assert_bool(choice.visible).is_true()
+	var picked: Array = []
+	choice.chosen.connect(func(writing: bool) -> void: picked.append(writing))
+	(choice.get_node("%RamblerCard") as Button).pressed.emit()
+	assert_array(picked).is_equal([true])
+	assert_bool(choice.visible).is_false()
+	remove_child(area)
+
+
 ## Ein Teil zählt bis zum goldenen Ring, Gesamt nur Wörter; von der Festung spricht keiner — sie steht im
 ## Kopf der Gebietskarte.
 func test_level_hints_speak_of_words_and_never_of_the_fortress() -> void:
@@ -926,8 +946,7 @@ func test_place_and_fortress_share_one_plate_and_the_toggle_sits_before_play() -
 	assert_float(r.position.x - t.end.x).is_less_equal(8.0)
 	# Das Schild in der Mitte und die Knöpfe rechts überdecken sich nicht.
 	assert_float(p.end.x).is_less_equal(t.position.x)
-	# Auch nicht mit dem „✕" eines begonnenen Laufs davor (ADR 0020) — oder dem Rambler, der
-	# an seiner Stelle steht.
+	# Auch nicht mit dem „✕" eines begonnenen Laufs davor (ADR 0020).
 	var discard := area.get_node("%DiscardRunButton") as Button
 	discard.visible = true
 	await get_tree().process_frame

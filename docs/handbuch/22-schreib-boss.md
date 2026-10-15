@@ -6,12 +6,12 @@ Bücherwurm-Drache aus Papier, der in einem Turm aus Papierstapeln haust und Ges
 endlos, abschweifend und falsch nacherzählt. Deine Aufgabe ist das Gegenteil: eine
 **Summary** auf Englisch – kurz, sachlich, das Wichtige in eigenen Worten.
 
-Du triffst ihn am Boss-Ort einer Unit auf der Gebietskarte: Markierst du den Boss, steht
-neben „Spielen“ (das den Satzmeister startet) ein „📜“ für The Rambler. Im Expertenmodus
-gibt es „📜 The Rambler“ in „Runde vorbereiten“ ([Kapitel 3](03-expertenmodus.md)). Beides
-erscheint nur, wenn **zwei Dinge** stimmen: Es ist ein eigener API-Schlüssel eingetragen
-(siehe unten), und zur Unit gibt es eine Schreibaufgabe. Fehlt eins davon, ist der Knopf
-einfach nicht da. Ein Sieg zählt für die Medaille am Boss-Ort wie ein Sieg über den
+Du triffst ihn am Boss-Ort einer Unit auf der Gebietskarte: Markierst du den Boss und
+drückst „Spielen“, fragt das Spiel „Welcher Boss?“ – eine Karte für den Satzmeister, eine
+für The Rambler. Im Expertenmodus gibt es „📜 The Rambler“ in „Runde vorbereiten“
+([Kapitel 3](03-expertenmodus.md)). The Rambler steht nur zur Wahl, wenn **zwei Dinge**
+stimmen: Es ist ein eigener API-Schlüssel eingetragen (siehe unten), und zur Unit gibt es
+eine Schreibaufgabe. Fehlt eins davon, startet „Spielen“ gleich den Satzmeister. Ein Sieg zählt für die Medaille am Boss-Ort wie ein Sieg über den
 Satzmeister. Es gibt **keinen Zeitdruck**.
 
 ## Der Kampf in Phasen
