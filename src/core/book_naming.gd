@@ -3,7 +3,8 @@ extends RefCounted
 ## Wie ein Buch sich und seine Ebenen nennt („Dossier 2 · Partie A“), aus `naming` in
 ## assets/maps/<book>/map.json (ADR 0008). Alle Felder optional: `title`, `unit`, `part`,
 ## `part_glyph` ("letter" zählt A, B, C), `parts_per_unit` (> 0 zählt die Teile über das
-## Buch durch). Nur die Anzeige; intern bleiben Unit und Teil Zahlen.
+## Buch durch), `color` (Einband, "#rrggbb"). Nur die Anzeige; intern bleiben Unit und Teil
+## Zahlen.
 
 const UNIT_WORD := "Unit"
 const PART_WORD := "Teil"
@@ -22,6 +23,11 @@ static func of(book: String) -> Dictionary:
 ## Der Anzeigename des Buchs aus `title`, leer ohne.
 static func title(book: String) -> String:
 	return str(of(book).get("title", ""))
+
+
+## Die Einbandfarbe aus `color`, `fallback` ohne oder bei ungültigem Wert.
+static func color(book: String, fallback: Color) -> Color:
+	return Color.from_string(str(of(book).get("color", "")), fallback)
 
 
 ## „Dossier 2"

@@ -36,7 +36,8 @@ aktuelle Stand steigen um denselben Betrag.
 
 1. **Bibliothek.** Die Kamera fährt vom Hauptmenü in den Turm; dort stehen die Bücher
    nebeneinander auf einem Lesepult, das Cover nach vorn. Je mehr Units, desto dicker das
-   Buch; erst Englisch, dann Latein. Passen nicht alle aufs Pult, blätterst du mit den
+   Buch. Vorn stehen die Bücher, mit denen du zuletzt gespielt hast, dahinter die übrigen
+   nach Sprache. Passen nicht alle aufs Pult, blätterst du mit den
    Pfeilen links und rechts. Zeigt die Maus auf den Platz eines Buchs (oder mit ←/→), wird
    es vom Pult genommen: es kommt groß nach vorn, leuchtet golden und zeigt auf dem Cover
    unter der Landkarte seinen Stand – wie viele Wörter gemeistert und wie viele Bosse

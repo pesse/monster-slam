@@ -138,6 +138,13 @@ func _initialize() -> void:
 	_export("gondola_fallen", _gondola_fallen())
 	_export("cabin_ruin", _cabin_ruin())
 	_export("boat_wreck", _boat_wreck())
+	# Green Line — digitale Stadt und Flussdelta
+	_export("satellite_dish", _satellite_dish())
+	_export("radio_mast", _radio_mast(), 0.8)
+	_export("data_centre", _data_centre())
+	_export("solar_panel", _solar_panel())
+	_export("wind_turbine", _wind_turbine(), 0.8)
+	_export("rice_tuft", _rice_tuft())
 	quit()
 
 
@@ -2934,6 +2941,153 @@ func _boat_wreck() -> Forge:
 		for side: float in [-1.0, 1.0]:
 			f.box(Vector3(x, 0.55, side * 0.8 * (1.0 - (x / 2.2) * (x / 2.2)) + side * 0.02),
 					Vector3(0.12, rng.randf_range(0.3, 0.55), 0.02), RUST_B, 0.0)
+	return f
+
+
+const DISH_A := Color(0.74, 0.75, 0.76)
+const DISH_B := Color(0.62, 0.64, 0.66)
+const MAST_RED := Color(0.78, 0.22, 0.17)
+const MAST_WHITE := Color(0.78, 0.78, 0.76)
+const TECH_WALL_A := Color(0.72, 0.74, 0.73)
+const TECH_WALL_B := Color(0.60, 0.62, 0.62)
+const TECH_TEAL := Color(0.18, 0.64, 0.66)
+const PANEL_A := Color(0.15, 0.23, 0.42)
+const PANEL_B := Color(0.19, 0.29, 0.50)
+const PANEL_FRAME := Color(0.70, 0.72, 0.74)
+const TURBINE_A := Color(0.80, 0.80, 0.79)
+const TURBINE_B := Color(0.68, 0.69, 0.69)
+const RICE_A := Color(0.47, 0.70, 0.22)
+const RICE_B := Color(0.38, 0.60, 0.17)
+const RICE_HEAD := Color(0.74, 0.70, 0.36)
+
+
+## Satellitenschüssel auf einem Betonsockel: Mast, darauf die Schale, schräg nach oben und
+## zur Seite (+x) gekippt, damit man sie von vorn im Profil sieht; vor ihr auf drei Streben
+## der Empfänger. Etwa 2.6 hoch.
+func _satellite_dish() -> Forge:
+	var f := Forge.new()
+	f.box(Vector3(0, 0.2, 0), Vector3(1.0, 0.4, 1.0), CONCRETE_A, 0.0)
+	f.frustum(Vector3(0, 0.4, 0), Vector3(0, 1.5, 0), 0.1, 0.08, 6, STEEL_B)
+	var look := Vector3(0.75, 0.6, 0.3).normalized()
+	var back := Vector3(0, 1.6, 0)
+	var rim := back + look * 0.35
+	f.frustum(back, rim, 0.14, 1.0, 12, DISH_A, 0.0, DISH_B)
+	var focus := rim + look * 0.8
+	var side := look.cross(Vector3.RIGHT).normalized()
+	for k in 3:
+		var ang := TAU * k / 3.0
+		var at := rim + (Vector3.RIGHT * cos(ang) + side * sin(ang)) * 0.85
+		f.frustum(at, focus, 0.025, 0.025, 4, STEEL_B)
+	f.box(focus, Vector3(0.18, 0.18, 0.18), STEEL_A, 0.0)
+	return f
+
+
+## Funkmast: dreibeiniger Gittermast, rot und weiß im Wechsel, oben Antennenpaneele und
+## eine Spitze. Etwa 10 hoch (vor der Verkleinerung) — gehört ins Umland.
+func _radio_mast() -> Forge:
+	var f := Forge.new()
+	var segments := 6
+	var seg_h := 1.5
+	var corner := func(k: int, y: float) -> Vector3:
+		var half := lerpf(1.1, 0.3, y / (segments * seg_h))
+		var ang := TAU * k / 3.0 + PI / 2.0
+		return Vector3(cos(ang) * half, y, sin(ang) * half)
+	for i in segments:
+		var y0 := i * seg_h
+		var y1 := y0 + seg_h
+		var col := MAST_RED if i % 2 == 0 else MAST_WHITE
+		for k in 3:
+			f.frustum(corner.call(k, y0), corner.call(k, y1), 0.06, 0.06, 4, col)
+			f.frustum(corner.call(k, y1), corner.call((k + 1) % 3, y1), 0.03, 0.03, 4, col)
+			f.frustum(corner.call(k, y0), corner.call((k + 1) % 3, y1), 0.025, 0.025, 4, col)
+	var top := segments * seg_h
+	f.frustum(Vector3(0, top, 0), Vector3(0, top + 1.6, 0), 0.06, 0.02, 4, MAST_RED)
+	for k in 3:
+		var at: Vector3 = corner.call(k, top - 0.9)
+		f.box(at * Vector3(1.4, 1, 1.4), Vector3(0.32, 1.0, 0.1), MAST_WHITE, -atan2(at.z, at.x) + PI / 2.0)
+	f.frustum(Vector3(0.2, top - 2.4, 0.3), Vector3(0.2, top - 2.4, 0.55), 0.05, 0.35, 8, DISH_A)
+	f.box(Vector3(0, 0.15, 0), Vector3(2.8, 0.3, 2.8), CONCRETE_A, 0.0)
+	return f
+
+
+## Flaches Rechenzentrum: heller Quader mit türkisem Band und Fensterband vorn (+z), auf
+## dem Dach Solarpaneele, Lüfterkästen und eine kleine Schüssel. Etwa 3.6 hoch, 5 breit.
+func _data_centre() -> Forge:
+	var f := Forge.new()
+	var h := 2.6
+	f.box(Vector3(0, h * 0.5, 0), Vector3(5.0, h, 3.0), TECH_WALL_A, 0.0)
+	f.box(Vector3(0, h + 0.08, 0), Vector3(5.2, 0.16, 3.2), TECH_WALL_B, 0.0)
+	f.box(Vector3(0, 1.75, 1.51), Vector3(4.6, 0.55, 0.04), WINDOW, 0.0)
+	f.box(Vector3(0, 1.3, 1.52), Vector3(5.0, 0.16, 0.04), TECH_TEAL, 0.0)
+	f.box(Vector3(-1.6, 0.6, 1.51), Vector3(0.9, 1.2, 0.04), WINDOW, 0.0)
+	for k in 3:
+		var x := -1.4 + k * 1.05
+		f.box(Vector3(x, h + 0.42, -0.5), Vector3(0.9, 0.04, 1.1), PANEL_FRAME, 0.0, 0.45)
+		f.box(Vector3(x, h + 0.45, -0.49), Vector3(0.82, 0.04, 1.02), PANEL_A if k % 2 == 0 else PANEL_B, 0.0, 0.45)
+	for x: float in [1.4, 2.0]:
+		f.box(Vector3(x, h + 0.35, -0.6), Vector3(0.45, 0.4, 0.9), TECH_WALL_B, 0.0)
+	f.frustum(Vector3(1.7, h + 0.16, 0.8), Vector3(1.7, h + 0.7, 0.8), 0.04, 0.04, 4, STEEL_B)
+	f.frustum(Vector3(1.7, h + 0.7, 0.8), Vector3(1.7, h + 0.95, 1.05), 0.06, 0.4, 10, DISH_A)
+	return f
+
+
+## Solaranlage: drei Paneele in einer Reihe auf einem Gestell, zur Sonne nach vorn (+z)
+## geneigt, blau mit hellem Rahmen. Etwa 1.3 hoch, 2.7 breit — Kram am Feldrand.
+func _solar_panel() -> Forge:
+	var f := Forge.new()
+	var tilt := 0.5
+	var y := 0.85
+	for k in 3:
+		var x := (k - 1) * 0.9
+		f.box(Vector3(x, y, 0), Vector3(0.86, 0.04, 1.3), PANEL_FRAME, 0.0, tilt)
+		var lift := Vector3(0, cos(tilt), sin(tilt)) * 0.03
+		f.box(Vector3(x, y, 0) + lift, Vector3(0.78, 0.03, 1.2), PANEL_A if k % 2 == 0 else PANEL_B, 0.0, tilt)
+	# Pfosten an der Unterkante vorn und hinten, wo das gekippte Paneel aufliegt.
+	for x: float in [-1.2, 0.0, 1.2]:
+		for z: float in [-0.55, 0.55]:
+			var top := y - z * tan(tilt)
+			f.box(Vector3(x, top * 0.5, z * cos(tilt)), Vector3(0.07, top, 0.07), STEEL_B, 0.0)
+	return f
+
+
+## Windrad: hoher, schlanker weißer Turm, oben die Gondel, vorn (+z) die Nabe mit drei
+## Flügeln. Etwa 11 hoch (vor der Verkleinerung) — gehört ins Umland.
+func _wind_turbine() -> Forge:
+	var f := Forge.new()
+	var top := 8.6
+	f.frustum(Vector3.ZERO, Vector3(0, 0.3, 0), 0.7, 0.7, 10, CONCRETE_A)
+	f.frustum(Vector3(0, 0.3, 0), Vector3(0, top, 0), 0.32, 0.16, 10, TURBINE_A, 0.0, TURBINE_B)
+	f.box(Vector3(0, top + 0.2, -0.2), Vector3(0.5, 0.5, 1.3), TURBINE_A, 0.0)
+	var hub := Vector3(0, top + 0.2, 0.6)
+	f.frustum(hub - Vector3(0, 0, 0.15), hub + Vector3(0, 0, 0.25), 0.22, 0.05, 8, TURBINE_B)
+	for k in 3:
+		var ang := TAU * k / 3.0 + 0.3
+		var d := Vector3(cos(ang), sin(ang), 0)
+		var side := Vector3(-sin(ang), cos(ang), 0)
+		var p0 := hub + d * 0.15
+		var p1 := hub + d * 3.4
+		f.leaf_quad(p0 - side * 0.12, p1, p1 + side * 0.05, p0 + side * 0.22, TURBINE_A)
+	return f
+
+
+## Reisbüschel im Feld: achtundzwanzig schmale, hellgrüne Halme, außen überhängend, an
+## fünf hängen goldgrüne Rispen. Etwa 1.1 hoch, wie grass.glb.
+func _rice_tuft() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(491)
+	for k in 28:
+		var yaw := TAU * k / 28.0 + rng.randf_range(-0.2, 0.2)
+		var out := Vector3(cos(yaw), 0, sin(yaw))
+		var side := Vector3(-out.z, 0, out.x) * 0.04
+		var foot := out * rng.randf_range(0.02, 0.18)
+		var tip := foot + out * rng.randf_range(0.2, 0.45) + Vector3(0, rng.randf_range(0.8, 1.15), 0)
+		f.blade(foot - side, foot + side, tip, RICE_A if k % 2 == 0 else RICE_B)
+	for k in 5:
+		var yaw := TAU * k / 5.0 + 0.5
+		var out := Vector3(cos(yaw), 0, sin(yaw))
+		var stem_top := out * 0.18 + Vector3(0, 1.0, 0)
+		f.frustum(out * 0.05, stem_top, 0.018, 0.018, 4, RICE_A)
+		f.frustum(stem_top, stem_top + out * 0.26 - Vector3(0, 0.24, 0), 0.05, 0.02, 5, RICE_HEAD)
 	return f
 
 

@@ -674,12 +674,46 @@ func test_each_language_gets_its_own_shelf_row() -> void:
 	assert_array(rows).is_equal([["a1", "a2"], ["c1"], ["b1"]])
 
 
+## Zuletzt gespielte Bücher stehen vorn, das jüngste zuerst; die übrigen behalten die Reihe.
+func test_recently_played_books_come_first() -> void:
+	var order: Array = load("res://src/ui/book_select.gd").recent_first(
+			["a1", "a2", "b1", "c1"], {"c1": 300, "a2": 100})
+	assert_array(order).is_equal(["c1", "a2", "a1", "b1"])
+
+
+## Jedes Buch mit Karte trägt seine eigene Einbandfarbe; die Farbe hängt nicht am Platz.
+func test_every_book_has_its_own_cover_color() -> void:
+	var seen := {}
+	for book in DirAccess.get_directories_at(MapLayout.ROOT):
+		if not FileAccess.file_exists(MapLayout.json_path(book)):
+			continue
+		var color := BookNaming.color(book, Color.TRANSPARENT)
+		assert_bool(color.a > 0.0).override_failure_message("%s ohne color" % book).is_true()
+		assert_bool(seen.has(color)).override_failure_message(
+				"%s hat die Farbe von %s" % [book, seen.get(color, "")]).is_false()
+		seen[color] = book
+
+
+## Die letzte Antwort je Buch kommt aus allen Aufgabentypen seiner Lexeme; nie gesehene
+## Aufgaben zählen nicht.
+func test_last_seen_per_book_spans_all_task_types() -> void:
+	var records := {
+		"translate:en_de:lex.a": {"last_seen_at": 100},
+		"forms:lex.a:past": {"last_seen_at": 250},
+		"example:lex.b:2": {"last_seen_at": 80},
+		"translate:de_en:lex.c": {"last_seen_at": 0},
+	}
+	var book_of := {"lex.a": "a1", "lex.b": "b1", "lex.c": "c1"}
+	assert_dict(PlayerProgress.last_seen_by_book_in(records, book_of)).is_equal(
+			{"a1": 250, "b1": 80})
+
+
 ## Das Cover nennt die Sprache, und ein Buch ohne Boss (Latein, Issue #31) zählt keine
 ## Bosse, die es nicht gibt.
 func test_the_cover_names_the_language_and_a_missing_boss() -> void:
 	var book: Book3D = auto_free(load("res://scenes/ui/book_3d.tscn").instantiate())
 	add_child(book)
-	book.fill("Buch", null, 0, {"units": 2, "done": 0, "total": 10, "crowns": 0,
+	book.fill("Buch", null, Book3D.COLORS[0], {"units": 2, "done": 0, "total": 10, "crowns": 0,
 			"language": "Latein", "bosses": 0})
 	assert_str((book.get_node("%Language") as Label).text).is_equal("Latein")
 	assert_str((book.get_node("%Crowns") as Label).text).is_equal("Noch kein Bosskampf")
@@ -692,7 +726,7 @@ func test_a_selected_book_comes_out_and_turns() -> void:
 	var book: Book3D = auto_free(load("res://scenes/ui/book_3d.tscn").instantiate())
 	add_child(book)
 	book.center_x = 1.0
-	book.fill("Buch", null, 0, {"units": 2, "done": 3, "total": 10, "crowns": 1})
+	book.fill("Buch", null, Book3D.COLORS[0], {"units": 2, "done": 3, "total": 10, "crowns": 1})
 	assert_str((book.get_node("%Crowns") as Label).text).contains("1 / 2")
 	var body := book.get_node("%Body") as Node3D
 	var stats := book.get_node("%Stats") as Control
