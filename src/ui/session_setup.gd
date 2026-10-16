@@ -24,6 +24,7 @@ const TASK_TYPE_LABELS := {
 	"conjugation": "Konjugation",
 	"tense": "Zeitform",
 	"forms": "Formen",
+	"example": "Buchsätze",
 }
 
 ## Höchstzahl der Vorschläge zur Tag-Eingabe.

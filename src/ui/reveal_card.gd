@@ -33,7 +33,7 @@ func solution() -> CanvasItem:
 	return _solution
 
 
-## Füllt die Karte aus { prompt, prompt_alt, answers, lexeme_type, meaning, leaked }.
+## Füllt die Karte aus { prompt, prompt_alt, answers, lexeme_type, meaning, leaked, task_type }.
 ## `revealed` = false hält den Lösungsteil unsichtbar.
 func setup(item: Dictionary, revealed: bool) -> void:
 	var type_key := String(item.get("lexeme_type", ""))
@@ -46,14 +46,16 @@ func setup(item: Dictionary, revealed: bool) -> void:
 
 	_prompt.text = String(item.get("prompt", ""))
 	# Die Alternativen der Aufgabe verraten die Antwort nicht, also außerhalb des Lösungsteils.
-	var prompt_alt := _as_strings(item.get("prompt_alt", []))
+	# Beim Buchsatz ist es das Stichwort, und von den Lösungen zählt der Satz aus dem Buch.
+	var book_sentence := String(item.get("task_type", "")) == "example"
+	var prompt_alt := PackedStringArray() if book_sentence else _as_strings(item.get("prompt_alt", []))
 	_prompt_alt.visible = not prompt_alt.is_empty()
 	if _prompt_alt.visible:
 		_prompt_alt.text = "auch: %s" % ", ".join(prompt_alt)
 
 	var answers := _as_strings(item.get("answers", []))
 	_primary.text = answers[0] if not answers.is_empty() else "—"
-	_alt.visible = answers.size() > 1
+	_alt.visible = answers.size() > 1 and not book_sentence
 	if _alt.visible:
 		_alt.text = "auch: %s" % ", ".join(answers.slice(1))
 

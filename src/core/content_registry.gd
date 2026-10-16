@@ -61,8 +61,8 @@ var _parts: Dictionary = {}
 ## Lexem-Id -> learnable_ids, die für seine Meisterung sitzen müssen; nur `irregular: true`.
 var _form_requirements: Dictionary = {}
 
-## Die Bonus-Level (ADR 0012, 0013): Scope-Schlüssel -> { key, book, unit, part, topic,
-## form_type, lexeme_ids, task_ids }.
+## Die Bonus-Level (ADR 0012, 0013, 0026): Scope-Schlüssel -> { key, book, unit, part, topic,
+## form_type, lexeme_ids, task_ids, explicit }. `explicit`: spielt nur, wo er selbst gewählt ist.
 var _bonuses: Dictionary = {}
 ## Form-Id -> Schlüssel ihres Bonus, nur für Formen, die in einem Bonus stehen.
 var _bonus_of_form: Dictionary = {}
@@ -70,6 +70,8 @@ var _bonus_of_form: Dictionary = {}
 ## Präfix eines Bonus-Scope-Schlüssels „bonus:<book>/<unit>/<part>/<topic>“ (Thema: die
 ## Formart, beim Wort-Bonus das Feld `bonus`, Teil 0). Hält ihn aus Buch-/Unit-Vergleichen.
 const BONUS_PREFIX := "bonus:"
+## Thema des Bonus „Sätze aus dem Buch“ je Unit (ADR 0026), Teil 0.
+const EXAMPLE_TOPIC := "examples"
 
 
 func _ready() -> void:
@@ -241,6 +243,7 @@ func _index_bonuses() -> void:
 				(bonus["task_ids"] as Array).append(id)
 		_bonus_of_form[str(form_id)] = key
 	_index_word_bonuses(resolver)
+	_index_example_bonuses(resolver)
 
 
 ## Sammelt die Wort-Boni (ADR 0013): je Unit und Thema, Teil 0. Ihre Aufgaben sind die der
@@ -269,6 +272,65 @@ func _index_word_bonuses(resolver: TaskResolver) -> void:
 			var bonus: Dictionary = _bonuses[key]
 			(bonus["lexeme_ids"] as Array).append(lexeme_id)
 			(bonus["task_ids"] as Array).append_array(task_ids)
+
+
+## Sammelt die Buchsatz-Boni (ADR 0026): je Unit einer mit den Buchsätzen ihrer Wörter.
+func _index_example_bonuses(resolver: TaskResolver) -> void:
+	for lexeme_id in lexemes:
+		var lexeme: Dictionary = lexemes[lexeme_id]
+		var key := example_bonus_key(lexeme)
+		if key.is_empty():
+			continue
+		var task_ids := example_task_ids(resolver, lexeme)
+		if task_ids.is_empty():
+			continue
+		if not _bonuses.has(key):
+			_bonuses[key] = {"key": key, "book": str(lexeme["book"]), "unit": int(lexeme["unit"]),
+					"part": 0, "topic": EXAMPLE_TOPIC, "form_type": "", "lexeme_ids": [],
+					"task_ids": [], "explicit": true}
+		var bonus: Dictionary = _bonuses[key]
+		(bonus["lexeme_ids"] as Array).append(lexeme_id)
+		(bonus["task_ids"] as Array).append_array(task_ids)
+
+
+## Die learnable_ids der Buchsätze eines Lexems. Muss dieselbe Auswahl treffen wie
+## WaveGenerator._instances.
+func example_task_ids(resolver: TaskResolver, lexeme: Dictionary) -> Array:
+	var ids: Array = []
+	var examples := Lexeme.examples(lexeme)
+	if examples.is_empty():
+		return ids
+	for definition in task_definitions.values():
+		if not bool(definition.get("requires_example", false)) \
+				or Lexeme.language(definition) != Lexeme.language(lexeme):
+			continue
+		var task_type := str(definition.get("task_type", ""))
+		if task_type in lexeme.get("excluded_task_types", []):
+			continue
+		for example in examples:
+			ids.append(resolver.learnable_id(task_type, str(definition.get("direction", "")),
+					str(lexeme.get("id", "")), {"example_key": str(example["key"])}))
+	return ids
+
+
+## Der Scope-Schlüssel des Buchsatz-Bonus eines Lexems, leer ohne Buchsätze oder ohne Unit.
+static func example_bonus_key(lexeme: Dictionary) -> String:
+	var book := str(lexeme.get("book", ""))
+	if book.is_empty() or not lexeme.has("unit") or Lexeme.examples(lexeme).is_empty():
+		return ""
+	return bonus_key(book, int(lexeme["unit"]), 0, EXAMPLE_TOPIC)
+
+
+## Kommen die Buchsätze des Lexems in `scope` dran? Nur, wo ihr Bonus selbst gewählt ist.
+func examples_in_scope(lexeme: Dictionary, scope: Array) -> bool:
+	var key := example_bonus_key(lexeme)
+	return not key.is_empty() and key in scope
+
+
+## Der Scope-Schlüssel des Buchsatz-Bonus einer Unit, leer, wenn sie keine Buchsätze hat.
+func examples_bonus_of(book: String, unit: int) -> String:
+	var key := bonus_key(book, unit, 0, EXAMPLE_TOPIC)
+	return key if _bonuses.has(key) else ""
 
 
 ## Der Scope-Schlüssel eines Bonus; `topic` ist die Formart oder das Thema des Wort-Bonus.
@@ -330,12 +392,13 @@ func bonus_of_form(form: Dictionary) -> String:
 
 
 ## Spielt `scope` den Bonus `key` mit? Wenn er selbst gewählt ist oder der Scope seine
-## ganze Unit oder sein Buch umfasst (ADR 0012); ein Teil bringt keinen Bonus mit.
+## ganze Unit oder sein Buch umfasst (ADR 0012); ein Teil bringt keinen Bonus mit, und ein
+## Bonus mit `explicit` kommt nur, wo er selbst gewählt ist (ADR 0026).
 func bonus_in_scope(key: String, scope: Array) -> bool:
 	if key in scope:
 		return true
 	var bonus: Dictionary = _bonuses.get(key, {})
-	if bonus.is_empty():
+	if bonus.is_empty() or bool(bonus.get("explicit", false)):
 		return false
 	return str(bonus["book"]) in scope or "%s/%d" % [bonus["book"], int(bonus["unit"])] in scope
 

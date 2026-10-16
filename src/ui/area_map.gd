@@ -24,6 +24,8 @@ const BossFight := preload("res://src/battle/boss_fight.gd")
 @onready var _fortress_level: Label = %FortressLevel
 @onready var _play: Button = %PlayButton
 @onready var _discard_run: Button = %DiscardRunButton
+## Bei „Gesamt“: ob die Sätze aus dem Buch mitkommen (RunRequest.want_examples, ADR 0026).
+@onready var _examples: Button = %ExamplesToggle
 ## Am Boss-Ort fragt „Spielen“, welcher Boss, wenn die Unit beide hergibt (ADR 0023).
 @onready var _boss_choice: BossChoice = %BossChoice
 @onready var _confirm: ConfirmDialog = %Confirm
@@ -58,6 +60,11 @@ func _ready() -> void:
 			_on_confirmed.call())
 	Hints.attach(_discard_run, "Begonnenen Lauf verwerfen",
 			"Danach beginnt „Spielen“ auch mit denselben Orten einen neuen Lauf.")
+	_examples.button_pressed = RunRequest.wants_examples()
+	_examples.toggled.connect(func(on: bool) -> void:
+		RunRequest.want_examples(on)
+		_hint_examples())
+	_hint_examples()
 	# Kleine Orte, die unter dem Zeiger wachsen; den Weg zeigt das Bild selbst.
 	_canvas.node_radius = MapCanvas.AREA_NODE_RADIUS
 	_canvas.hover_radius = MapCanvas.NODE_RADIUS
@@ -109,6 +116,20 @@ func _lock_first_person(locked: bool) -> void:
 	else:
 		Hints.attach(toggle, "Ich-Sicht",
 				"Du stehst selbst auf dem Feld: WASD zum Laufen, die Maus zum Umsehen, Enter öffnet die Eingabe.")
+
+
+func _hint_examples() -> void:
+	Hints.attach(_examples, "Sätze aus dem Buch",
+			"Gesamt fragt auch die Sätze aus dem Buch ab." if _examples.button_pressed
+					else "Gesamt fragt nur die Wörter ab.",
+			"Umschalten geht jederzeit, auch in einem begonnenen Lauf.")
+	Hints.refresh()
+
+
+## Der Schalter steht nur bei „Gesamt“ und nur, wenn die Unit Buchsätze hat.
+func _show_examples_toggle(level: Dictionary) -> void:
+	_examples.visible = not level.is_empty() and str(level["kind"]) == MapLevel.KIND_ALL \
+			and not ContentRegistry.examples_bonus_of(MapSelection.book, MapSelection.unit).is_empty()
 
 
 ## Der Kopf weicht den Orten aus, bevor er zu sehen ist (erst nach einem Frame Layout).
@@ -367,11 +388,12 @@ func _select(keys: Array) -> void:
 	var boss := not level.is_empty() and str(level["kind"]) == MapLevel.KIND_BOSS
 	_play.disabled = level.is_empty() or (boss and not (_golem_ready or _rambler_ready))
 	_lock_first_person(boss)
+	_show_examples_toggle(level)
 	var resumes := _resumes(keys)
 	_play.text = "Fortsetzen" if resumes else "Spielen"
 	_discard_run.visible = resumes
 	var note := ""
-	if boss and not _saved.is_empty():
+	if (boss or not RunSave.keeps(level)) and not level.is_empty() and not _saved.is_empty():
 		note = "Dein begonnener Lauf (%s) bleibt liegen." % saved_label(_saved)
 	elif not _saved.is_empty() and not resumes:
 		note = "Begonnener Lauf: %s" % saved_label(_saved)
@@ -468,6 +490,8 @@ func _start() -> void:
 		return
 	if str(level["kind"]) == MapLevel.KIND_BOSS:
 		_ask_boss(level)
+	elif not RunSave.keeps(level):
+		_launch(level)
 	elif _resumes(_selected):
 		var resume := _saved.duplicate(true)
 		resume["added"] = RunSave.added(_saved, _selected, _levels)

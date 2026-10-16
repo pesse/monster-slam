@@ -11,6 +11,10 @@ const HOLD_TIME := 3.0
 const READ_QUESTION_TIME := 0.5
 const SWIPE_TIME := 0.35
 const REVEAL_TIME := 0.3
+## Lange Karten (Buchsätze) stehen länger: über SHORT_TEXT_CHARS Zeichen in Frage und
+## Antwort zusammen kommt je READ_CHARS_PER_SECOND Zeichen eine Sekunde dazu.
+const SHORT_TEXT_CHARS := 40
+const READ_CHARS_PER_SECOND := 15.0
 ## So lange nach dem Freigeben von „Weiter“ zählt Enter noch nicht, damit das Enter der
 ## letzten Antwort nicht durchklickt. Variable für Tests.
 var enter_grace_ms := 400
@@ -47,7 +51,7 @@ func _ready() -> void:
 
 
 ## Awaitbar: zeigt das Karussell und kehrt zurück, wenn der Spieler „Weiter“ klickt. Je Eintrag:
-## {"prompt", "answers", "lexeme_type", "source_id", "learnable_id", "leaked"}.
+## {"prompt", "answers", "lexeme_type", "task_type", "source_id", "learnable_id", "leaked"}.
 ## `again`: der Rückweg aus dem Ergebnis, ohne Durchlauf.
 func play(played: Array, again := false) -> void:
 	if played.is_empty():
@@ -131,9 +135,18 @@ func _autoplay() -> void:
 		await _swipe_in()
 		await get_tree().create_timer(READ_QUESTION_TIME).timeout
 		await _reveal_solution()
-		await get_tree().create_timer(HOLD_TIME).timeout
+		await get_tree().create_timer(hold_time(_leaked[i])).timeout
 		if i < _leaked.size() - 1:
 			await _swipe_out()
+
+
+## Wie lange die aufgedeckte Karte im Durchlauf steht (s), nach der Länge von Frage und
+## erster Antwort.
+static func hold_time(item: Dictionary) -> float:
+	var answers: Array = item.get("answers", [])
+	var chars := str(item.get("prompt", "")).length() \
+			+ (str(answers[0]).length() if not answers.is_empty() else 0)
+	return HOLD_TIME + maxf(0.0, chars - SHORT_TEXT_CHARS) / READ_CHARS_PER_SECOND
 
 
 ## Baut die Karte für `index` und hängt sie in die Bühne. `offscreen` platziert sie

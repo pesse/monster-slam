@@ -90,9 +90,15 @@ func word_color() -> Color:
 	return WordTypePalette.color_for(str(task.get("lexeme_type", "")))
 
 
-## Die Alternativen der Aufgabe („go, auch: walk“); nur Übersetzungen haben welche.
+## Die Alternativen der Aufgabe („go, auch: walk“); Übersetzungen haben welche, ein
+## Buchsatz sein Stichwort.
 func alts() -> Array:
 	return task.get("prompt_alt", []) as Array
+
+
+## Wie die Zeile der Alternativen beginnt: „auch“, beim Buchsatz „Wort“.
+func alt_label() -> String:
+	return str(task.get("alt_label", "auch"))
 
 
 ## Zeigt die Alternativen nach `delay` Sekunden. False, wenn es keine gibt oder sie schon stehen.

@@ -121,6 +121,14 @@ der Unit, zu der der Bonus gehört, und `"bonus": "<thema>"`, ohne `part`. Dazu 
 bekommt das vorhandene Lexem `"also_bonus": [{"unit": <n>, "bonus": "<thema>"}]` statt
 einer Dublette. Der Pack hebt sein `min_app_version` (ab 0.22.0).
 
+**Sätze aus dem Buch** (ADR 0026), die Beispielsätze der dritten Spalte: am Lexem unter
+`examples` als `[{ "key": "1", "de": …, "en": …, "en_alt": [...] }]`. `en` ist der Satz
+aus dem Buch, ausgeschrieben, ohne „~“, „/“ und Klammern; `en_alt` nennt jede weitere
+Fassung, die gilt, auch Kurz- und Langformen. Jede Fassung enthält das Stichwort, und der
+deutsche Satz lässt kein anderes Wort zu. `key` bleibt fest, er trägt den Lernstand.
+Dazu ein Punkt `bonus/0/examples` mit `title` unter `areas` in `map.json`. Der Pack hebt
+sein `min_app_version` (ab 0.35.0).
+
 **Einstiegsseiten einer Unit** (bei *À plus!* Auftaktseite und *Mots en contexte*) sind
 immer ein Wort-Bonus `auftakt` der Unit, Datei `fr_<buch>_unit<n>_auftakt.json`, Titel
 auf der Karte „Auftakt und Mots en contexte“. Kein Teil, keine Wörter ohne `part` in der
@@ -238,6 +246,8 @@ unmögliche Kombinationen (z. B. Adjektiv konjugieren).
 `requires_relation` (opposite/synonym) bzw. `requires_form` (conjugation/tense): nur Lexeme,
 die die Relation/Form besitzen, werden zu Kandidaten; die Enumeration expandiert über die
 tatsächlich vorhandenen Relationen/Formen.
+`requires_example: true` (`example`): je Buchsatz unter `examples` am Lexem eine Aufgabe,
+nur im Bonus „Sätze aus dem Buch" der Unit (ADR 0026).
 `difficulty`: Basis-Schwierigkeit der Aufgaben-*Art*. Sie ist das `t` im Netto-Maß `t - c`
 und trägt Tempo, Punkte und Erfahrung — sie schaltet **keine** Aufgabentypen frei oder aus;
 die Wellen-Schwierigkeit filtert den Pool nicht. (\*`fill_gap`/`sentence` sind vorerst zurückgestellt.)

@@ -158,9 +158,9 @@ func show_stats(data: Dictionary) -> void:
 
 
 ## Der Weg zurück auf Stufe 2. Ein Lauf von der Karte, dessen Festung steht, rastet dabei
-## (ADR 0020, `WaveRunner.can_rest`).
+## (ADR 0020, `WaveRunner.can_rest`), außer er spielt nur Boni.
 func _label_menu_button() -> void:
-	if RunRequest.is_level() and _won:
+	if RunRequest.keeps_run() and _won:
 		_menu_button.text = REST_TEXT
 		Hints.attach(_menu_button, "Rasten",
 				"Der Lauf wird gespeichert, mit Festung und Welle. Auf der Karte geht er mit "

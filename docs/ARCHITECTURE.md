@@ -80,7 +80,7 @@ Darstellung unabhängig wachsen können (siehe `docs/ADDING_CONTENT.md`):
 	`AreaMap.part_count` fest: so viele, wie Inhalt oder Kartenpunkte (`t1`…`t6`) es
 	verlangen; ein Teil ohne Wörter steht gesperrt da.
 - **task_definitions** — *Regeln*, was abgefragt wird (translate/opposite/synonym/
-  conjugation/… + `direction`, `allowed_types`, `requires_relation`/`requires_form`,
+  conjugation/… + `direction`, `allowed_types`, `requires_relation`/`requires_form`/`requires_example`,
   `difficulty`). Wenige, statische Einträge (Größenordnung ~10–20) — **unabhängig von
   der Wortanzahl**. Die konkrete Aufgabe entsteht erst zur Laufzeit aus
   *Definition × Lexeme (× Form/Relation)*; es gibt keine per-Wort-Aufgaben mehr.
@@ -586,6 +586,10 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
   (`FortressTier.unit_key`) und nicht in den Sätzen; im Bonus und in „Gesamt" kommen sie
   mit allen Aufgaben (`in_word_bonus`). Ein vorhandenes Wort spielt über
   `also_bonus` mit, ohne Dublette.
+- **Sätze aus dem Buch** (ADR 0026): Buchsätze unter `examples` am Lexem bilden je Unit
+  den Bonus `bonus:<book>/<unit>/0/examples` (Aufgabe `example`, `requires_example`).
+  Der Bonus trägt `explicit`: kein Scope spielt ihn von selbst mit (`examples_in_scope`).
+  „Gesamt“ nimmt ihn über den Schalter neben „Spielen“ dazu (`RunRequest.level_scope`).
 - **Ein Klick markiert, „Spielen" startet.** `MapLevel.toggle` führt die Auswahl der
   Gebietskarte: Teile und Boni beliebig zusammen, Gesamt und Boss allein. `MapLevel.combine` macht
   daraus EIN Level für `RunRequest` — mehrere Teile mit allen ihren Scopes, `keys` nennt

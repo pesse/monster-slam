@@ -30,6 +30,24 @@ static func bonus(entry: Dictionary) -> String:
 	return str(entry.get("bonus", ""))
 
 
+## Die Buchsätze eines Lexems (Feld `examples`, ADR 0026): je Satz { key, de,
+## <sprache>, <sprache>_alt }. Sätze ohne `key` fallen weg, der Key trägt den Lernstand.
+static func examples(entry: Dictionary) -> Array:
+	var raw: Variant = entry.get("examples", [])
+	if not raw is Array:
+		return []
+	return (raw as Array).filter(func(e: Variant) -> bool:
+			return e is Dictionary and not str((e as Dictionary).get("key", "")).is_empty())
+
+
+## Der Buchsatz mit `key`, {} ohne.
+static func example(entry: Dictionary, key: String) -> Dictionary:
+	for e in examples(entry):
+		if str(e["key"]) == key:
+			return e
+	return {}
+
+
 ## „de_to_la": Deutsch gefragt, Fremdsprache getippt.
 static func to_foreign(lang: String) -> String:
 	return "de_to_%s" % lang

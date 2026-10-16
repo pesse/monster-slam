@@ -229,6 +229,11 @@
 				"x": 0.813,
 				"y": 0.6019
 			},
+			"bonus/0/examples": {
+				"x": 0.57,
+				"y": 0.78,
+				"title": "Sätze aus dem Buch"
+			},
 			"path": [
 				{
 					"x": 0.1677,
@@ -476,6 +481,11 @@
 			"boss": {
 				"x": 0.8583,
 				"y": 0.1537
+			},
+			"bonus/0/examples": {
+				"x": 0.8,
+				"y": 0.8,
+				"title": "Sätze aus dem Buch"
 			},
 			"path": [
 				{
@@ -845,6 +855,11 @@
 				"x": 0.1661,
 				"y": 0.588
 			},
+			"bonus/0/examples": {
+				"x": 0.53,
+				"y": 0.6,
+				"title": "Sätze aus dem Buch"
+			},
 			"path": [
 				{
 					"x": 0.9036,
@@ -1144,6 +1159,11 @@
 			"boss": {
 				"x": 0.1974,
 				"y": 0.1565
+			},
+			"bonus/0/examples": {
+				"x": 0.55,
+				"y": 0.3,
+				"title": "Sätze aus dem Buch"
 			},
 			"path": [
 				{
