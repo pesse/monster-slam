@@ -5,10 +5,18 @@ extends RefCounted
 ## ContentRegistry ab; hier wird er gezählt und benannt. Er zählt für sich (gemeisterte
 ## von allen seinen Aufgaben), nicht zur Festung und nicht zu seiner Unit.
 
+const MAP_PREFIX := "bonus/"
+
 ## Der Name des Punkts in assets/maps/<book>/map.json unter `areas`:
 ## „bonus/<lektion>/<formart>“, beim Wort-Bonus „bonus/0/<thema>“.
 static func map_key(bonus: Dictionary) -> String:
-	return "bonus/%d/%s" % [int(bonus["part"]), str(bonus.get("topic", bonus.get("form_type", "")))]
+	return "%s%d/%s" % [MAP_PREFIX, int(bonus["part"]),
+			str(bonus.get("topic", bonus.get("form_type", "")))]
+
+
+## Ist `key` der Punkt eines Bonus (map_key)?
+static func is_map_key(key: String) -> bool:
+	return key.begins_with(MAP_PREFIX)
 
 
 ## Der Titel eines Bonus aus dem Punkt in map.json (`layout` ist MapLayout.data), sonst

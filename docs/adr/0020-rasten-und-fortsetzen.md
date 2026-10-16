@@ -237,3 +237,14 @@ Punkt 2 und Punkt 6 ändern sich deshalb:
 3. **Gebietskarte.** Sie kennt nur noch den Lauf ihrer Unit. Die Rückfrage „Neuer Lauf?“
    kommt nur noch, wenn ein gespeicherter Ort in der Auswahl fehlt. Eine andere Unit hat
    ihren eigenen Platz und fragt nichts.
+
+## Nachtrag 2026-10-16: Boni gehören zu keinem Lauf
+
+Boni sind optional, auch für den begonnenen Lauf. Wer zwischendurch einen Bonus übt, etwa
+die Sätze aus dem Buch (ADR 0026), soll seinen Lauf nicht verlieren.
+
+1. **Ein Lauf nur aus Boni** fragt nicht nach, verwirft den Platz nicht und wird nicht
+   gespeichert (`RunSave.keeps`, `RunRequest.keeps_run`). Ohne Rastplatz bietet er weder
+   „Rasten?“ noch den Rast-Knopf an.
+2. **Ein Bonus neben Orten** spielt mit, steht aber nicht im Stand (`RunSave.main_keys`).
+   Beim Fortsetzen darf er fehlen. Ältere Stände mit Bonus-Orten lesen sich ohne sie.

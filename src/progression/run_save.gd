@@ -2,6 +2,8 @@ class_name RunSave
 extends RefCounted
 ## Begonnene Läufe von der Karte, ein Platz je Unit (ADR 0020 mit Nachträgen). Ein Stand
 ## trägt nur Ursprungswerte; fest sitzt der Bereich (`keys`), nicht der Inhalt.
+## Boni sind Beiwerk: sie stehen nie im Stand, ein Lauf nur aus Boni wird nicht gespeichert
+## und lässt den begonnenen liegen.
 ## Ablage: user://progress/<profil>_runs.json als { "runs": { <book>/<unit>: <stand> } }.
 ## Statisch mit Profil-Argument, damit Tests auf einem `zz-`-Profil laufen.
 
@@ -94,7 +96,7 @@ static func build(level: Dictionary, next_wave: int, difficulty: int, run: Dicti
 		"level": {
 			"book": str(level.get("book", "")),
 			"unit": int(level.get("unit", 0)),
-			"keys": Array(level.get("keys", [level.get("key", "")])),
+			"keys": main_keys(Array(level.get("keys", [level.get("key", "")]))),
 		},
 		"next_wave": next_wave,
 		"difficulty": difficulty,
@@ -123,7 +125,7 @@ static func continues(state: Dictionary, unit: int, keys: Array, levels: Array) 
 	if state.is_empty() or int((state.get("level", {}) as Dictionary).get("unit", 0)) != unit:
 		return false
 	var level := MapLevel.combine(levels, keys)
-	if level.is_empty() or str(level.get("kind", "")) == MapLevel.KIND_BOSS:
+	if level.is_empty() or str(level.get("kind", "")) == MapLevel.KIND_BOSS or not keeps(level):
 		return false
 	var chosen := _covered(keys, levels)
 	for key in _covered(_saved_keys(state), levels):
@@ -146,7 +148,17 @@ static func added(state: Dictionary, keys: Array, levels: Array) -> Array:
 
 
 static func _saved_keys(state: Dictionary) -> Array:
-	return Array((state.get("level", {}) as Dictionary).get("keys", []))
+	return main_keys(Array((state.get("level", {}) as Dictionary).get("keys", [])))
+
+
+## Die Orte ohne Boni: nur sie tragen einen begonnenen Lauf.
+static func main_keys(keys: Array) -> Array:
+	return keys.filter(func(k): return not BonusLevel.is_map_key(str(k)))
+
+
+## Wird ein Lauf mit `level` (RunRequest.level()) gespeichert? Nicht, wenn er nur Boni spielt.
+static func keeps(level: Dictionary) -> bool:
+	return not main_keys(Array(level.get("keys", [level.get("key", "")]))).is_empty()
 
 
 ## Die Orte, die eine Auswahl abdeckt: jeder gewählte Ort, Gesamt als alle Teile der Unit.

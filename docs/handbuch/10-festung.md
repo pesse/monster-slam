@@ -93,6 +93,17 @@ Unit. Ein Bonus kann auch zusätzliche Vokabeln bringen, etwa eine Seite aus ein
 Buch: Dann fragt er diese Wörter in beide Richtungen ab, und auch sie zählen nicht zur
 Festung.
 
+**Sätze aus dem Buch.** Manche Lehrkräfte fragen auch die Beispielsätze im
+Vokabelverzeichnis ab, also die dritte Spalte. Dafür hat jede Unit einen Bonus „Sätze aus dem
+Buch“. Das Monster trägt einen deutschen Satz, und du tippst den ganzen Satz auf Englisch.
+Richtig ist er nur, wenn er genau passt – mit dem Wort aus der Vokabelliste, nicht mit einem
+anderen, das auch ginge. Groß- und Kleinschreibung, Kommas und der Punkt am Ende sind egal,
+„don't“ und „do not“ zählen beide. Weil ein Satz länger dauert, laufen diese Monster
+langsamer und kommen in größerem Abstand. Das Dritte Auge und der Orakelblick zeigen hier
+das gesuchte Wort. Nach der Welle siehst du den Satz, wie er im Buch steht. Bei „Gesamt“
+kommen die Sätze mit, solange der Schalter „…“ neben „Spielen“ an ist; aus fragt Gesamt nur
+die Wörter ab. Umschalten darfst du jederzeit, auch in einem begonnenen Lauf.
+
 **Boss-Medaillen.** Jeder Sieg über den Boss einer Unit wird gezählt. Ab 1 Sieg bekommt er
 einen bronzenen Ring und eine Krone, ab 3 einen silbernen, ab 5 einen goldenen. Die Zahl
 der Siege steht auch auf der Buchkarte. Gibt es zu einer Unit noch keine Sätze, ist ihr
@@ -129,6 +140,10 @@ Hälfte gewachsen, wird sie am Ende der Welle ausgebaut wie sonst.
   das Spiel vorher nach, denn der begonnene Lauf dieser Unit geht dabei verloren.
 - **Der Bosskampf gehört zu keinem Lauf.** Du kannst ihn jederzeit spielen, der begonnene
   Lauf bleibt liegen.
+- **Boni gehören zu keinem Lauf.** Einen Bonus allein kannst du jederzeit üben, der begonnene
+  Lauf bleibt liegen. Ein solcher Bonus-Lauf wird nicht gespeichert. Nimmst du einen Bonus
+  zu deinen Orten dazu, spielt er mit, gehört aber nicht fest zum Lauf. Beim nächsten
+  Fortsetzen darfst du ihn weglassen.
 - **Mit denselben Orten neu anfangen:** das **✕** neben „Fortsetzen“ verwirft den
   begonnenen Lauf.
 - **Nur einmal:** Ein fortgesetzter Lauf ist nicht mehr gespeichert, bis du wieder rastest.

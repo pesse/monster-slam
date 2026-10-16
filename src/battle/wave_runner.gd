@@ -957,7 +957,7 @@ func _request_abort() -> void:
 	if _leaving or _abort_confirm.visible:
 		return
 	var from_pause := _paused_since_ms >= 0
-	var rests := escape_rests(RunRequest.is_level(), _wave_number)
+	var rests := escape_rests(RunRequest.keeps_run(), _wave_number)
 	# Läuft die Welle schon aus, rastet gleich ihr Abschluss.
 	if rests and (_fast_resolving or (_spawned >= _total and _active.is_empty())):
 		return
@@ -1328,15 +1328,17 @@ func _clear_active_monsters() -> void:
 func _run_spawn_batch(entry: Dictionary, gen: int) -> void:
 	var count := int(entry.get("count", 0))
 	var interval := float(entry.get("interval", 2.0))
+	var gap := 0.0
 	for i in count:
 		# process_always = false: in der Baum-Pause läuft der Timer nicht weiter.
-		await get_tree().create_timer(interval, false).timeout
+		await get_tree().create_timer(maxf(interval, gap), false).timeout
 		if _finished or not is_inside_tree() or gen != _wave_gen:
 			return
-		_spawn(entry)
+		gap = _spawn(entry)
 
 
-func _spawn(entry: Dictionary) -> void:
+## Gibt zurück, wie lange der nächste Spawn mindestens warten soll (Tippzeit, ADR 0026).
+func _spawn(entry: Dictionary) -> float:
 	# Sichtbare Grundwörter ausschließen: dieselbe Vokabel nie zweimal auf dem Feld.
 	var active_sources := {}
 	for m in _active:
@@ -1350,7 +1352,7 @@ func _spawn(entry: Dictionary) -> void:
 		_total = maxi(0, _total - 1)
 		EventBus.wave_totals.emit(_total)
 		_check_end()
-		return
+		return 0.0
 
 	var monster := MONSTER_SCENE.instantiate() as Monster
 	# Der Zeitwandler-Skill bremst erst hier, hinter der Formel: `plan["reward"]` und
@@ -1375,6 +1377,7 @@ func _spawn(entry: Dictionary) -> void:
 		_wave_open += 1
 	if _catapult and _fortress_tier >= FortressModel.CATAPULT_TIER and mastered:
 		_catapult_later(monster, _wave_gen)
+	return float(plan.get("gap", 0.0)) * _spawn_gap_scale
 
 
 ## Muss der nächste Spawn offen sein? Eine Testliste behält ihre Reihenfolge.
@@ -1717,6 +1720,7 @@ func _task_snapshot(monster: Monster, leaked: bool) -> Dictionary:
 		"prompt_alt": (monster.task.get("prompt_alt", []) as Array).duplicate(),
 		"answers": (monster.task.get("accepted_answers", []) as Array).duplicate(),
 		"lexeme_type": String(monster.task.get("lexeme_type", "")),
+		"task_type": String(monster.task.get("task_type", "")),
 		"meaning": String(monster.task.get("meaning", "")),
 		"source_id": String(monster.task.get("source_id", "")),
 		"learnable_id": String(monster.task.get("learnable_id", "")),
@@ -2112,7 +2116,7 @@ func _on_next_wave_requested(delta: int) -> void:
 
 ## Vom Statistik-Screen ins Menü: rasten, Lauf beenden, Sitzungs-Log speichern.
 func _on_back_to_menu() -> void:
-	if can_rest(RunRequest.is_level(), _last_won):
+	if can_rest(RunRequest.keeps_run(), _last_won):
 		_rest(_wave_number + 1)
 	_report_run_ended()
 	SaveCoordinator.commit("run_end")
@@ -2127,8 +2131,11 @@ static func can_rest(is_level: bool, last_won: bool) -> bool:
 
 
 ## Legt den Lauf auf den Platz seines Buchs: an der Wellengrenze mit der nächsten Welle und
-## der zuletzt gespielten Schwierigkeit, mitten in der Welle mit der angefangenen.
+## der zuletzt gespielten Schwierigkeit, mitten in der Welle mit der angefangenen. Ein Lauf
+## nur aus Boni rastet nicht (RunSave.keeps).
 func _rest(next_wave: int, wave := {}) -> void:
+	if not RunSave.keeps(RunRequest.level()):
+		return
 	RunSave.store(RunSave.build(RunRequest.level(), next_wave, _difficulty,
 			GameState.run_snapshot(), _run_started_at, int(Time.get_unix_time_from_system()),
 			wave), UserSettings.active_profile())

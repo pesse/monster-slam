@@ -919,8 +919,8 @@ func test_every_real_level_is_playable(do_skip := LanguageData.missing(), skip_r
 							"%s/%s %s: nichts spielbar" % [book, unit, level["key"]]).is_true()
 
 
-## Ort und Festung sind EIN Schild unten in der Mitte; unten rechts stehen nur der
-## Ich-Sicht-Schalter und „Spielen", gleich hoch, der Schalter direkt davor.
+## Ort und Festung sind EIN Schild unten in der Mitte; unten rechts stehen die Schalter und
+## „Spielen", gleich hoch, die Ich-Sicht direkt davor.
 func test_place_and_fortress_share_one_plate_and_the_toggle_sits_before_play() -> void:
 	MapSelection.book = "zz-kein-buch"
 	MapSelection.unit = 1
@@ -951,6 +951,13 @@ func test_place_and_fortress_share_one_plate_and_the_toggle_sits_before_play() -
 	discard.visible = true
 	await get_tree().process_frame
 	assert_object(discard.get_parent()).is_same(play.get_parent())
+	assert_float(p.end.x).is_less_equal(discard.get_global_rect().position.x)
+	# Der Satz-Schalter von „Gesamt“ (ADR 0026) steht vor der Ich-Sicht, so rückt sie nicht.
+	var examples := area.get_node("%ExamplesToggle") as Button
+	assert_int(toggle.get_index()).is_equal(examples.get_index() + 1)
+	examples.visible = true
+	await get_tree().process_frame
+	assert_float(examples.get_global_rect().size.y).is_equal_approx(r.size.y, 0.5)
 	assert_float(p.end.x).is_less_equal(discard.get_global_rect().position.x)
 	remove_child(area)
 

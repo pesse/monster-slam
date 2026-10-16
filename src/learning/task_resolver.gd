@@ -15,6 +15,7 @@ extends RefCounted
 ## `extra` trägt die aufgaben-spezifischen Bausteine:
 ##   opposite/synonym/confusables -> { "target_lexeme_id": String }
 ##   conjugation                  -> { "form_type": String }
+##   example                      -> { "example_key": String }
 ## Gibt {} zurück, wenn die Aufgabe nicht auflösbar ist (fehlende Daten oder ein
 ## nicht unterstützter task_type wie fill_gap/sentence).
 
@@ -75,6 +76,8 @@ func resolve(definition: Dictionary, source: Dictionary, extra: Dictionary = {})
 			return _resolve_confusables(definition, source, extra)
 		"conjugation", "tense", "forms":
 			return _resolve_conjugation(definition, source, extra)
+		"example":
+			return _resolve_example(definition, source, extra)
 		"fill_gap", "sentence":
 			push_warning("TaskResolver: task_type '%s' noch nicht unterstützt (%s)" % [task_type, definition.get("id", "")])
 			return {}
@@ -88,6 +91,7 @@ func resolve(definition: Dictionary, source: Dictionary, extra: Dictionary = {})
 ##   opposite    -> "opposite:<source>:<target>"     (paar-basiert)
 ##   synonym     -> "synonym:<source>:<target>"      (paar-basiert)
 ##   conjugation -> "conjugation:<source>:<form_type>"
+##   example     -> "example:<source>:<example_key>"
 func learnable_id(task_type: String, direction: String, source_id: String, extra: Dictionary = {}) -> String:
 	match task_type:
 		"translate":
@@ -96,6 +100,8 @@ func learnable_id(task_type: String, direction: String, source_id: String, extra
 			return "%s:%s:%s" % [task_type, source_id, str(extra.get("target_lexeme_id", ""))]
 		"conjugation", "tense", "forms":
 			return "%s:%s:%s" % [task_type, source_id, str(extra.get("form_type", ""))]
+		"example":
+			return "example:%s:%s" % [source_id, str(extra.get("example_key", ""))]
 		_:
 			return "%s:%s:%s" % [task_type, direction, source_id]
 
@@ -128,6 +134,11 @@ func describe_learnable(id: String) -> String:
 			if lex.is_empty():
 				return id
 			return "%s (%s)" % [Lexeme.foreign(lex), FORM_LABELS.get(parts[2], parts[2])]
+		"example":
+			var lex := _lexeme(parts[1])
+			if lex.is_empty():
+				return id
+			return "%s (Buchsatz %s)" % [Lexeme.foreign(lex), parts[2]]
 		_:
 			return id
 
@@ -216,6 +227,24 @@ func _resolve_conjugation(definition: Dictionary, source: Dictionary, extra: Dic
 	return _build(definition, source, prompt, answers, extra, _meaning_of(source))
 
 
+## Buchsatz (ADR 0026): der deutsche Satz, getippt wird der ganze fremdsprachige. Der
+## Buchsatz steht vorn, damit ihn das Reveal nach der Welle zeigt. Der Zauber deckt nur das
+## Stichwort auf (`alt_label`).
+func _resolve_example(definition: Dictionary, source: Dictionary, extra: Dictionary) -> Dictionary:
+	var example := Lexeme.example(source, str(extra.get("example_key", "")))
+	var lang := Lexeme.language(source)
+	var book := str(example.get(lang, ""))
+	if example.is_empty() or book.is_empty() or str(example.get("de", "")).is_empty():
+		push_warning("TaskResolver: kein Buchsatz '%s' an %s" % [extra.get("example_key", ""), source.get("id", "")])
+		return {}
+	var answers: Array = [book]
+	answers.append_array(example.get("%s_alt" % lang, []))
+	var task := _build(definition, source, str(example["de"]), answers, extra, _meaning_of(source),
+			[Lexeme.foreign(source)])
+	task["alt_label"] = "Wort"
+	return task
+
+
 ## Die Bedeutung eines Lexems fürs Reveal („bully = schikanieren“), mit Alternativen.
 ## Leer, wenn eine der beiden Seiten fehlt.
 func _meaning_of(lex: Dictionary) -> String:
@@ -246,5 +275,5 @@ func _build(definition: Dictionary, source: Dictionary, prompt: String, answers:
 		"difficulty": int(definition.get("difficulty", 1)),
 		"lexeme_type": str(source.get("type", "")),   # Wortart fürs Monster-Outline (siehe WordTypePalette)
 		"meaning": meaning,            # Bedeutung fürs Reveal; leer, wo die Aufgabe sie schon zeigt
-		"prompt_alt": prompt_alt,      # Alternativen zur Aufgabe fürs Reveal (nur Übersetzung)
+		"prompt_alt": prompt_alt,      # Alternativen zur Aufgabe fürs Reveal; beim Buchsatz das Stichwort
 	}

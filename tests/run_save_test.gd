@@ -132,6 +132,46 @@ func test_the_boss_belongs_to_no_run() -> void:
 	assert_bool(RunSave.continues(_state(["all"]), 1, ["boss"], _levels())).is_false()
 
 
+# --- Boni sind Beiwerk ------------------------------------------------------------
+
+const BONUS := "bonus/0/examples"
+
+
+func _with_bonus() -> Array:
+	return MapLevel.levels_for("zz_book", 1, 4, [{"key": "bonus:zz_book/1/0/examples",
+			"part": 0, "topic": "examples", "title": "Sätze"}])
+
+
+func test_a_bonus_alone_keeps_no_run_and_continues_none() -> void:
+	var levels := _with_bonus()
+	var bonus := MapLevel.combine(levels, [BONUS])
+	assert_bool(RunSave.keeps(bonus)).is_false()
+	assert_bool(RunSave.continues(_state(["t1"]), 1, [BONUS], levels)).is_false()
+
+
+func test_a_bonus_never_enters_the_saved_run() -> void:
+	var levels := _with_bonus()
+	var state := RunSave.build(MapLevel.combine(levels, ["t1", BONUS]), 3, 1, {}, 0, 0)
+	assert_array(state["level"]["keys"]).is_equal(["t1"])
+	assert_bool(RunSave.continues(state, 1, ["t1"], levels)).is_true()
+	assert_bool(RunSave.continues(state, 1, ["t1", BONUS], levels)).is_true()
+
+
+func test_an_older_state_with_a_bonus_resumes_without_it() -> void:
+	var levels := _with_bonus()
+	var state := _state(["t1"])
+	state["level"]["keys"] = ["t1", BONUS]
+	assert_bool(RunSave.continues(state, 1, ["t1"], levels)).is_true()
+	assert_array(RunSave.resumable_level(state, levels)["keys"]).is_equal(["t1"])
+
+
+func test_only_a_run_with_places_can_rest() -> void:
+	RunRequest.start_level(MapLevel.combine(_with_bonus(), [BONUS]))
+	assert_bool(RunRequest.keeps_run()).is_false()
+	RunRequest.start_level(MapLevel.combine(_with_bonus(), ["t2", BONUS]))
+	assert_bool(RunRequest.keeps_run()).is_true()
+
+
 func test_the_scope_is_rebuilt_from_todays_levels() -> void:
 	var level := RunSave.resumable_level(_state(["t2", "t3"]), _levels())
 	assert_array(level["scope"]).is_equal(["zz_book/1/2", "zz_book/1/3"])

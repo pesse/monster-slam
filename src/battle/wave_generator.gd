@@ -2,7 +2,7 @@ class_name WaveGenerator
 extends RefCounted
 ## Wählt für einen Spawn eine Aufgabe und ihr Monster (ADR 0018). Tempo, Punkte und
 ## Erfahrung kommen aus `t - c` (docs/ARCHITECTURE.md, „Tempo = Schwierigkeit“).
-## pick(pool) -> {task, monster_def, speed, damage, reward, xp} oder {}, wenn nichts
+## pick(pool) -> {task, monster_def, speed, gap, damage, reward, xp} oder {}, wenn nichts
 ## Spielbares da ist.
 
 var _resolver := TaskResolver.new()
@@ -44,6 +44,15 @@ const URGENCY_CAP := 2.0
 ## das Wachkatapult nicht die ganze Welle abräumt.
 const OPEN_SHARE := 0.5
 
+## Tippzeit (ADR 0026): Eine Antwort über LONG_ANSWER_CHARS Zeichen bremst ihr Monster im
+## Verhältnis der Länge, höchstens bis MIN_TYPING_PACE, und hält den nächsten Spawn so lange
+## zurück, wie das Tippen bei TYPING_CHARS_PER_SECOND dauert. Kein Maß der Schwierigkeit:
+## Punkte und Erfahrung bleiben bei `t - c`.
+const LONG_ANSWER_CHARS := 20
+const MIN_TYPING_PACE := 0.25
+## Zeichen je Sekunde samt Lesen und Nachdenken.
+const TYPING_CHARS_PER_SECOND := 2.0
+
 ## Wellenfaktor auf Tempo und Punkte, nicht auf Erfahrung (1.0 = neutral, >1 schwerer).
 var speed_scale: float = 1.0
 ## Schadens-Multiplikator der Welle (wave_damage_scale()); trifft nur den Schaden.
@@ -56,6 +65,30 @@ static func wave_damage_scale(wave_number: int) -> float:
 	if n <= EARLY_WAVE_DAMAGE.size():
 		return EARLY_WAVE_DAMAGE[n - 1]
 	return 1.0 + DAMAGE_GROWTH_PER_WAVE * (n - EARLY_WAVE_DAMAGE.size() - 1)
+
+## Zeichenzahl der kürzesten Antwort, die eine Aufgabe annimmt.
+static func answer_chars(answers: Array) -> int:
+	var shortest := -1
+	for answer in answers:
+		var n := str(answer).strip_edges().length()
+		if n > 0 and (shortest < 0 or n < shortest):
+			shortest = n
+	return maxi(shortest, 0)
+
+
+## Tempofaktor für eine Antwort mit `chars` Zeichen, 1 bei kurzen.
+static func typing_pace(chars: int) -> float:
+	if chars <= LONG_ANSWER_CHARS:
+		return 1.0
+	return maxf(MIN_TYPING_PACE, float(LONG_ANSWER_CHARS) / chars)
+
+
+## Sekunden, die der nächste Spawn mindestens wartet, 0 bei kurzen Antworten.
+static func typing_gap(chars: int) -> float:
+	if chars <= LONG_ANSWER_CHARS:
+		return 0.0
+	return chars / TYPING_CHARS_PER_SECOND
+
 
 ## Start-Confidence (Prior) einer ungesehenen Aufgabe aus `cefr` / `frequency_band` des
 ## Lexems; ohne beide gilt PlayerProgress.DEFAULT_CONFIDENCE.
@@ -472,8 +505,10 @@ func _expand(definition: Dictionary, lexemes: Array, result: Array, limit: int =
 
 
 ## Ist die Definition für dieses Wort eine Bonus-Aufgabe — eine Formaufgabe, deren Form in
-## `scope` als Bonus mitspielt?
+## `scope` als Bonus mitspielt, oder ein Buchsatz, dessen Bonus gewählt ist?
 func _bonus_task(definition: Dictionary, source: Dictionary, scope: Array) -> bool:
+	if bool(definition.get("requires_example", false)):
+		return ContentRegistry.examples_in_scope(source, scope)
 	var form_type := str(definition.get("requires_form", ""))
 	if form_type.is_empty():
 		return false
@@ -509,6 +544,11 @@ func _instances(definition: Dictionary, source: Dictionary, scope: Array = []) -
 		var forms := ContentRegistry.forms_for(source_id, form_req, scope)
 		return [{"form_type": form_req}] if forms.any(func(f):
 				return ContentRegistry.form_task_in_scope(f, scope)) else []
+	# Buchsätze nur im gewählten Bonus (ADR 0026), nie im leeren Scope.
+	if bool(definition.get("requires_example", false)):
+		if not ContentRegistry.examples_in_scope(source, scope):
+			return []
+		return Lexeme.examples(source).map(func(e): return {"example_key": str(e["key"])})
 	return [{}]
 
 
@@ -571,8 +611,11 @@ func _build_plan(candidate: Dictionary) -> Dictionary:
 	# für Tempo, Punkte und Erfahrung.
 	var net := t - c
 
-	# Schwer heißt langsamer (Zeit zum Abrufen), Tempo höchstens ±30 %.
-	var speed := REFERENCE_SPEED * clampf(1.0 - SPEED_SENSITIVITY * net, 0.7, 1.3) * speed_scale
+	# Schwer heißt langsamer (Zeit zum Abrufen), Tempo höchstens ±30 %; lange Antworten
+	# zusätzlich nach ihrer Tippzeit.
+	var chars := answer_chars(task.get("accepted_answers", []))
+	var speed := REFERENCE_SPEED * clampf(1.0 - SPEED_SENSITIVITY * net, 0.7, 1.3) * speed_scale \
+			* typing_pace(chars)
 
 	# Punkte invers zum Tempo: schwer heißt mehr Punkte (0,4- bis 1,6-fach).
 	var mastered := c >= PlayerProgress.MASTERY_CONFIDENCE
@@ -588,6 +631,7 @@ func _build_plan(candidate: Dictionary) -> Dictionary:
 		"task": task,
 		"monster_def": monster_def,
 		"speed": speed,
+		"gap": typing_gap(chars),
 		"damage": maxi(1, roundi(int(rule.get("base_damage", 10)) * damage_scale)),
 		"reward": reward,
 		"xp": xp,

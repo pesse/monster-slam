@@ -5,5 +5,6 @@
   { "id": "def.synonym",              "task_type": "synonym",     "direction": "en_to_en", "requires_relation": "synonym",  "allowed_types": ["adjective"], "difficulty": 3 },
   { "id": "def.confusables",          "task_type": "confusables", "direction": "de_to_en", "requires_relation": "confused_with", "allowed_types": ["*"], "difficulty": 3 },
   { "id": "def.conj.past_simple",     "task_type": "conjugation", "direction": "en",       "requires_form": "past_simple",     "allowed_types": ["verb"], "difficulty": 2 },
-  { "id": "def.conj.past_participle", "task_type": "conjugation", "direction": "en",       "requires_form": "past_participle", "allowed_types": ["verb"], "difficulty": 3 }
+  { "id": "def.conj.past_participle", "task_type": "conjugation", "direction": "en",       "requires_form": "past_participle", "allowed_types": ["verb"], "difficulty": 3 },
+  { "id": "def.example.de_en",        "task_type": "example",     "direction": "de_to_en", "requires_example": true, "allowed_types": ["*"], "difficulty": 4 }
 ]

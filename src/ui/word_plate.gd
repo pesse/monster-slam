@@ -16,6 +16,10 @@ const MASTERED_RIM_DARKEN := 0.25
 const MASTERED_TEXT_GRAY := 0.7
 const MASTERED_TEXT_DARKEN := 0.1
 const MASTERED_MARK := "✓ "
+## Längere Aufgaben (Buchsätze) brechen auf dieser Breite um, px; die Ich-Sicht ist größer.
+const WRAP_CHARS := 32
+const WRAP_WIDTH := 280.0
+const LARGE_WRAP_FACTOR := 1.5
 ## So leuchtet ein Schild auf, das der Zauber aufdeckt (überhellt).
 const REVEAL_GLOW := Color(1.6, 1.25, 2.0)
 ## Startgröße des Aufspringens und Dauer von Rückfedern und Ausleuchten, s.
@@ -42,7 +46,10 @@ func setup(of: Monster, large: bool) -> void:
 		_text.theme_type_variation = &"HudPlateTextLarge"
 		_alt.theme_type_variation = &"HudPlateAltLarge"
 	_text.text = (MASTERED_MARK if of.mastered else "") + of.prompt()
-	_alt.text = alt_line(of.alts())
+	if _text.text.length() > WRAP_CHARS:
+		_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_text.custom_minimum_size.x = WRAP_WIDTH * (LARGE_WRAP_FACTOR if large else 1.0)
+	_alt.text = alt_line(of.alts(), of.alt_label())
 	_alt.visible = of.alts_shown
 	of.alts_revealed.connect(_on_alts_revealed)
 	# Wortartfarbe in Rand und Schrift; die Schrift aufgehellt für die dunkle Fläche.
@@ -77,9 +84,9 @@ func _on_alts_revealed(delay: float) -> void:
 	tw.tween_property(self, "modulate", Color.WHITE, REVEAL_FADE)
 
 
-## Die zweite Zeile: „auch: walk, run“.
-static func alt_line(alts: Array) -> String:
-	return "auch: %s" % ", ".join(alts.map(func(a: Variant) -> String: return str(a)))
+## Die zweite Zeile: „auch: walk, run“, beim Buchsatz „Wort: victim“.
+static func alt_line(alts: Array, label := "auch") -> String:
+	return "%s: %s" % [label, ", ".join(alts.map(func(a: Variant) -> String: return str(a)))]
 
 
 ## Plakette und Zipfel zusammen; der Zipfel hängt unten über den Rand hinaus.
@@ -97,6 +104,10 @@ func _scale() -> float:
 
 
 func _fit() -> void:
+	# Ein umbrechendes Label misst seine Höhe an der eigenen Breite (CONVENTIONS „Fallen“).
+	if _text.autowrap_mode != TextServer.AUTOWRAP_OFF:
+		_text.size = Vector2(_text.custom_minimum_size.x, 0.0)
+		_text.update_minimum_size()
 	var frame := _frame.get_combined_minimum_size()
 	_frame.position = Vector2.ZERO
 	_frame.size = frame

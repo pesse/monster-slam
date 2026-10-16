@@ -144,3 +144,20 @@ func test_a_mastered_monster_gets_a_dull_plate_with_a_mark() -> void:
 	assert_float(rim.s).is_less(color.s)
 	assert_float(rim.v).is_less(color.v)
 	assert_float(plate.modulate.a).is_equal(1.0)
+
+
+## Ein Buchsatz bricht auf WRAP_WIDTH um: das Schild bleibt so breit und nur wenige Zeilen
+## hoch, auch nach dem Aufdecken.
+func test_a_long_sentence_wraps_to_a_few_lines() -> void:
+	var monster := auto_free(MONSTER_SCENE.instantiate()) as Monster
+	monster.setup({}, {"prompt": "Wir bekommen hier im Sommer viel Regen, deshalb ist es oft sehr feucht.",
+			"lexeme_type": "adjective", "prompt_alt": ["humid"], "alt_label": "Wort"}, 1000.0, 0.0)
+	var plate := auto_free((load("res://scenes/ui/word_plate.tscn") as PackedScene).instantiate()) as WordPlate
+	add_child(plate)
+	plate.setup(monster, false)
+	var text := plate.get_node("%Text") as Label
+	var lines := 4
+	assert_float(plate.size.x).is_less_equal(WordPlate.WRAP_WIDTH + 64.0)
+	assert_float(plate.size.y).is_less(text.get_line_height() * lines + 64.0)
+	plate._on_alts_revealed(0.0)
+	assert_float(plate.size.y).is_less(text.get_line_height() * (lines + 1) + 64.0)
