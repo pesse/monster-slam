@@ -59,14 +59,6 @@ unique_name_in_owner = true
 [node name="LeftMap" type="MeshInstance3D" parent="Body/Hinge"]
 unique_name_in_owner = true
 
-[node name="SpineTitle" type="Label3D" parent="Body"]
-unique_name_in_owner = true
-pixel_size = 0.004
-double_sided = false
-font_size = 36
-outline_size = 0
-text = "Buch"
-
 [node name="BandTop" type="MeshInstance3D" parent="Body"]
 unique_name_in_owner = true
 material_override = SubResource("gold")

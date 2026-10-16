@@ -1,5 +1,6 @@
 {
 	"naming": {
+		"color": "#bd7024",
 		"unit": "Abschnitt",
 		"part": "Lektion",
 		"parts_per_unit": 6.0

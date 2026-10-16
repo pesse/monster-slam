@@ -164,6 +164,28 @@ func last_seen_at(task_id: String) -> int:
 	return int(_records.get(task_id, {}).get("last_seen_at", 0))
 
 
+## Die letzte Antwort (unix) je Buch über alle Aufgaben seiner Lexeme; ungespielte Bücher
+## fehlen. `book_of`: Lexem-Id -> Buch.
+func last_seen_by_book(book_of: Dictionary) -> Dictionary:
+	return last_seen_by_book_in(_records, book_of)
+
+
+static func last_seen_by_book_in(records: Dictionary, book_of: Dictionary) -> Dictionary:
+	var out := {}
+	for id in records:
+		var seen := int(records[id].get("last_seen_at", 0))
+		if seen <= 0:
+			continue
+		# Die Lexem-Id steht je nach Aufgabentyp an Stelle 1 oder 2 (TaskResolver.learnable_id).
+		var parts := str(id).split(":")
+		for i in range(1, mini(parts.size(), 3)):
+			var book := str(book_of.get(parts[i], ""))
+			if not book.is_empty():
+				out[book] = maxi(int(out.get(book, 0)), seen)
+				break
+	return out
+
+
 func last_correct(task_id: String) -> bool:
 	return bool(_records.get(task_id, {}).get("last_correct", false))
 

@@ -36,7 +36,7 @@ const BAND_HEIGHT := 0.035
 ## Die Karte auf der Doppelseite: ihre Breite auf jeder Seite und der Abstand zum Bund.
 const SPREAD_HALF := 0.84
 const SPREAD_GUTTER := 0.01
-## Einbandfarben nach Position auf dem Pult, damit Nachbarn sich unterscheiden.
+## Einbandfarben für Bücher ohne `color` in ihrem `naming` (BookNaming.color).
 const COLORS := [
 	Color(0.16, 0.33, 0.62), Color(0.62, 0.2, 0.22), Color(0.18, 0.46, 0.3),
 	Color(0.44, 0.27, 0.6), Color(0.74, 0.44, 0.14),
@@ -107,12 +107,11 @@ func _ready() -> void:
 	set_process(false)
 
 
-## Titel, Kartenbild (oder null), Platz auf dem Pult und Stand aus BookSelect.stats, dazu
+## Titel, Kartenbild (oder null), Einbandfarbe und Stand aus BookSelect.stats, dazu
 ## `language` (Anzeigename der Sprache) und `bosses` (Units mit Boss; ohne Feld alle).
-func fill(title: String, texture: Texture2D, index: int, stats: Dictionary) -> void:
+func fill(title: String, texture: Texture2D, color: Color, stats: Dictionary) -> void:
 	_texture = texture
 	thickness = thickness_for(int(stats.get("units", 0)))
-	var color: Color = COLORS[index % COLORS.size()]
 	_cloth.albedo_color = _gained(color)
 	(%Paper as TextureRect).self_modulate = _gained(color.darkened(0.15))
 	(%Map as TextureRect).texture = texture
@@ -120,7 +119,6 @@ func fill(title: String, texture: Texture2D, index: int, stats: Dictionary) -> v
 	_right_map.albedo_texture = texture
 	(%Language as Label).text = str(stats.get("language", ""))
 	(%Title as Label).text = title
-	(%SpineTitle as Label3D).text = title
 	var done := int(stats.get("done", 0))
 	var total := int(stats.get("total", 0))
 	(%Words as Label).text = "📖 %d / %d" % [done, total]
@@ -270,10 +268,7 @@ func _shape() -> void:
 	_quad(%RightMap, Vector2(SPREAD_HALF, map_height),
 			Vector3(hx + SPREAD_GUTTER + SPREAD_HALF * 0.5, 0.0, half - BOARD + 0.002), false)
 
-	# Auf dem Rücken (-X): der Titel läuft von oben nach unten, die Goldbänder quer.
-	var title := %SpineTitle as Label3D
-	title.position = Vector3(hx - BULGE - 0.004, 0.0, 0.0)
-	title.rotation_degrees = Vector3(0.0, -90.0, -90.0)
+	# Quer über den Rücken (-X) die Goldbänder.
 	var arc := BookMesh.spine_arc(hx, half, BULGE, 0.002)
 	(%BandTop as MeshInstance3D).mesh = BookMesh.extrude(arc, BAND_Y - BAND_HEIGHT * 0.5,
 			BAND_Y + BAND_HEIGHT * 0.5, false)

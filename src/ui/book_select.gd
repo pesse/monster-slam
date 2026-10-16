@@ -110,11 +110,16 @@ func _fill() -> void:
 	var wins := BossRecord.wins(UserSettings.active_profile())
 	_empty_hint.visible = shelves.is_empty()
 	var books := Array(ContentRegistry.all_books()).filter(func(b): return shelves.has(b))
-	var order: Array = []
+	var shelved: Array = []
 	for row: Array in shelf_rows(books, ContentRegistry.book_language):
-		order.append_array(row)
-	for i in order.size():
-		_place_book(order[i], i, shelves, wins)
+		shelved.append_array(row)
+	var book_of := {}
+	for id in ContentRegistry.lexemes:
+		book_of[id] = str(ContentRegistry.lexemes[id].get("book", ""))
+	var order := recent_first(shelved, PlayerProgress.last_seen_by_book(book_of))
+	# Ohne eigene Farbe hängt sie am Platz in der festen Reihe, nicht am Platz auf dem Pult.
+	for book in order:
+		_place_book(book, shelved.find(book), shelves, wins)
 	# Jede Seite steht mittig auf dem Pult, auch die letzte, wenn sie nicht voll ist.
 	for node: Book3D in _books.get_children():
 		var i := node.get_index()
@@ -129,7 +134,7 @@ static func slot_x(index: int, on_page: int) -> float:
 	return (index - page - (on_page - 1) * 0.5) * SLOT_WIDTH + page * SLOT_WIDTH
 
 
-func _place_book(book: String, i: int, shelves: Dictionary, wins: Dictionary) -> Book3D:
+func _place_book(book: String, color_index: int, shelves: Dictionary, wins: Dictionary) -> Book3D:
 	var node := BOOK_SCENE.instantiate() as Book3D
 	node.set_meta("book", book)
 	_books.add_child(node)
@@ -138,7 +143,8 @@ func _place_book(book: String, i: int, shelves: Dictionary, wins: Dictionary) ->
 	# Bosse gibt es nur, wo die Unit Sätze hat — ein Buch ohne Sätze (Latein) hat keine.
 	info["bosses"] = ContentRegistry.units_for(book).filter(
 			func(u): return AreaMap.has_boss_sentences(book, int(u))).size()
-	node.fill(ContentRegistry.book_label(book), MapLayout.book_texture(book), i, info)
+	node.fill(ContentRegistry.book_label(book), MapLayout.book_texture(book),
+			BookNaming.color(book, Book3D.COLORS[color_index % Book3D.COLORS.size()]), info)
 	return node
 
 
@@ -157,6 +163,14 @@ static func shelf_rows(books: Array, language_of: Callable) -> Array:
 			return a == Lexeme.DEFAULT_LANGUAGE
 		return str(a) < str(b))
 	return languages.map(func(lang): return by_language[lang])
+
+
+## Die gespielten Bücher nach letzter Antwort, das jüngste zuerst; dahinter die übrigen in
+## der Reihenfolge von `books`. `last_seen`: Buch -> unix.
+static func recent_first(books: Array, last_seen: Dictionary) -> Array:
+	var played := books.filter(func(b): return last_seen.has(b))
+	played.sort_custom(func(a, b): return int(last_seen[a]) > int(last_seen[b]))
+	return played + books.filter(func(b): return not last_seen.has(b))
 
 
 static func stats(units: Array, wins: Dictionary) -> Dictionary:
