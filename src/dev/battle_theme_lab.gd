@@ -814,9 +814,11 @@ func _shoot_plates() -> void:
 		for i in spots.size():
 			var monster := FxWarmup.MONSTER_SCENE.instantiate() as Monster
 			var types := WordTypePalette.COLORS.keys()
-			# Jedes dritte zeigt Alternativen wie nach dem Zauber „Drittes Auge".
+			# Jedes dritte zeigt Alternativen wie nach dem Zauber „Drittes Auge", jedes zweite
+			# die Lösung einer neuen Aufgabe (ADR 0027).
 			var alts := ["Alternative", "noch eine"] if i % 3 == 0 else []
 			monster.setup(defs[i % defs.size()], {"prompt": prompts[i], "prompt_alt": alts,
+					"help": i % 2 == 0, "accepted_answers": ["Lösung"],
 					"lexeme_type": types[i % types.size()]}, 1000.0, 0.0)
 			monster.screen_sized_label = _fp != null
 			monster.position = spots[i]
@@ -1261,9 +1263,10 @@ func _shoot_spelling() -> void:
 	# Wie im Kampf: das Standbild hält den Baum an, die Explosion steht.
 	freeze.started.connect(func(_ms: int) -> void: get_tree().paused = true)
 	freeze.finished.connect(func() -> void: get_tree().paused = false)
-	# [Ich-Sicht, richtig, getippt, Name]
-	var shots := [[false, "l'élève", "l eleve", "iso"], [true, "l'élève", "l eleve", "first"],
-			[false, "die Meinung (zu etwas)", "meinung zu", "missing"]]
+	# [Ich-Sicht, richtig, getippt, Name, Aufgabe nach einem Durchlass (ADR 0027)]
+	var shots := [[false, "l'élève", "l eleve", "iso", ""], [true, "l'élève", "l eleve", "first", ""],
+			[false, "die Meinung (zu etwas)", "meinung zu", "missing", ""],
+			[false, "house", "house", "leak", "Haus"]]
 	for shot: Array in shots:
 		var first: bool = shot[0]
 		var word: String = shot[1]
@@ -1277,7 +1280,7 @@ func _shoot_spelling() -> void:
 		add_child(fx)
 		freeze.play(word, AnswerEvaluator.spelling_marks(word, shot[2]),
 				WaveRunnerScript.spelling_zoom(camera, at + Vector3(0.0, 1.0, 0.0)),
-				AnswerEvaluator.missing_marks(word, shot[2]))
+				AnswerEvaluator.missing_marks(word, shot[2]), shot[4])
 		await get_tree().create_timer(
 				(SpellingFreeze.LEAD_MS + SpellingFreeze.ZOOM_IN_MS + 300) / 1000.0, true, false, true).timeout
 		await RenderingServer.frame_post_draw

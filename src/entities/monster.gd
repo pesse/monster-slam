@@ -96,6 +96,14 @@ func alts() -> Array:
 	return task.get("prompt_alt", []) as Array
 
 
+## Die Lösung, die auf dem Schild einer neuen Aufgabe steht (ADR 0027), sonst leer.
+func help_answer() -> String:
+	if not bool(task.get("help", false)):
+		return ""
+	var answers: Array = task.get("accepted_answers", [])
+	return str(answers[0]) if not answers.is_empty() else ""
+
+
 ## Wie die Zeile der Alternativen beginnt: „auch“, beim Buchsatz „Wort“.
 func alt_label() -> String:
 	return str(task.get("alt_label", "auch"))

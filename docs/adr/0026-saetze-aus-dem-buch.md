@@ -42,9 +42,10 @@ gar kein „~“.
 4. **Der Zauber „reveal_alts“ zeigt beim Buchsatz das Stichwort** („Wort: …“), nicht die
    Lösung. Nach der Welle zeigt die Auflösung den Buchsatz, ohne die übrigen Fassungen.
 5. **Tippzeit.** Eine Antwort über `LONG_ANSWER_CHARS` Zeichen (kürzeste angenommene
-   Fassung) bekommt mehr Zeit:
+   Fassung, ohne optionalen Artikel und weglassbare Klammern) bekommt mehr Zeit:
    - Ihr Monster wird im Verhältnis der Länge langsamer, höchstens bis `MIN_TYPING_PACE`.
-   - Der nächste Spawn wartet die Tippzeit ab (`TYPING_CHARS_PER_SECOND`).
+   - Der nächste Spawn wartet, bis dieses Monster getroffen oder durch ist, höchstens die
+     Tippzeit (`TYPING_CHARS_PER_SECOND`).
 
    Das ist kein zweites Maß der Schwierigkeit: Punkte und Erfahrung bleiben bei `t - c`.
    Es gilt für jede lange Antwort, nicht nur für Buchsätze.

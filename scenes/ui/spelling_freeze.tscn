@@ -38,6 +38,13 @@ layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"Tight"
 
+[node name="Prompt" type="Label" parent="Content/Stack"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"SpellingPrompt"
+horizontal_alignment = 1
+
 [node name="Names" type="Control" parent="Content/Stack"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(1100, 32)

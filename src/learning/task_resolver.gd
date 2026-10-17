@@ -92,7 +92,7 @@ func resolve(definition: Dictionary, source: Dictionary, extra: Dictionary = {})
 ##   synonym     -> "synonym:<source>:<target>"      (paar-basiert)
 ##   conjugation -> "conjugation:<source>:<form_type>"
 ##   example     -> "example:<source>:<example_key>"
-func learnable_id(task_type: String, direction: String, source_id: String, extra: Dictionary = {}) -> String:
+static func learnable_id(task_type: String, direction: String, source_id: String, extra: Dictionary = {}) -> String:
 	match task_type:
 		"translate":
 			return "translate:%s:%s" % [direction, source_id]

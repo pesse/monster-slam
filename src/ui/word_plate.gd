@@ -16,6 +16,13 @@ const MASTERED_RIM_DARKEN := 0.25
 const MASTERED_TEXT_GRAY := 0.7
 const MASTERED_TEXT_DARKEN := 0.1
 const MASTERED_MARK := "✓ "
+## Die Lösung einer neuen Aufgabe (ADR 0027), heller als das Wort.
+const HELP_INK := Color(1.0, 0.95, 0.7)
+## Das Abzeichen „neu“ an der linken oberen Ecke: Höhe in Texturpixeln der Plakette (mit
+## FrameStyle.scale skaliert, Breite nach Seitenverhältnis) und wie weit es links und oben
+## übersteht, als Anteil seiner Größe.
+const BADGE_HEIGHT := 34.0
+const BADGE_OVERHANG := Vector2(0.25, 0.55)
 ## Längere Aufgaben (Buchsätze) brechen auf dieser Breite um, px; die Ich-Sicht ist größer.
 const WRAP_CHARS := 32
 const WRAP_WIDTH := 280.0
@@ -33,7 +40,10 @@ var push := Vector2.ZERO
 
 @onready var _frame: PanelContainer = $Frame
 @onready var _text: Label = %Text
-## Die Alternativen der Aufgabe in einer zweiten Zeile, erst nach dem Zauber (ADR 0014).
+## Die Lösung einer neuen Aufgabe (ADR 0027), von Anfang an.
+@onready var _help: Label = %Help
+@onready var _badge: TextureRect = $Badge
+## Die Alternativen der Aufgabe in einer weiteren Zeile, erst nach dem Zauber (ADR 0014).
 @onready var _alt: Label = %Alt
 @onready var _pointer: TextureRect = $Pointer
 
@@ -45,12 +55,16 @@ func setup(of: Monster, large: bool) -> void:
 		_frame.theme_type_variation = &"HudWordPlateLarge"
 		_text.theme_type_variation = &"HudPlateTextLarge"
 		_alt.theme_type_variation = &"HudPlateAltLarge"
+		_help.theme_type_variation = &"HudPlateAltLarge"
 	_text.text = (MASTERED_MARK if of.mastered else "") + of.prompt()
 	if _text.text.length() > WRAP_CHARS:
 		_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_text.custom_minimum_size.x = WRAP_WIDTH * (LARGE_WRAP_FACTOR if large else 1.0)
 	_alt.text = alt_line(of.alts(), of.alt_label())
 	_alt.visible = of.alts_shown
+	_help.text = of.help_answer()
+	_help.visible = not _help.text.is_empty()
+	_badge.visible = _help.visible
 	of.alts_revealed.connect(_on_alts_revealed)
 	# Wortartfarbe in Rand und Schrift; die Schrift aufgehellt für die dunkle Fläche.
 	var color := of.word_color()
@@ -63,6 +77,7 @@ func setup(of: Monster, large: bool) -> void:
 	_pointer.self_modulate = rim
 	_text.self_modulate = ink
 	_alt.self_modulate = _text.self_modulate
+	_help.self_modulate = HELP_INK
 	_fit()
 
 
@@ -115,6 +130,9 @@ func _fit() -> void:
 	var k := _scale()
 	_pointer.size = POINTER_SIZE * k
 	_pointer.position = Vector2((frame.x - _pointer.size.x) / 2.0, frame.y - POINTER_OVERLAP * k)
+	var tex := _badge.texture.get_size()
+	_badge.size = Vector2(tex.x / tex.y, 1.0) * BADGE_HEIGHT * k
+	_badge.position = -_badge.size * BADGE_OVERHANG
 
 
 ## Die Spitze des Zipfels, in Koordinaten des Elternknotens.

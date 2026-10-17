@@ -37,6 +37,8 @@ var _queue: Array = []
 var _running := false
 
 @onready var _word: RichTextLabel = %Word
+## Die Aufgabe über der Lösung, nur nach einem Durchlass.
+@onready var _prompt: Label = %Prompt
 @onready var _names: Control = %Names
 
 
@@ -51,9 +53,10 @@ static func duration_ms() -> int:
 
 ## `marks`: Schreibfehler (AnswerEvaluator.spelling_marks), `missing`: fehlende Teile
 ## (AnswerEvaluator.missing_marks). Akzentnamen gibt es nur über den Schreibfehlern.
+## `prompt`: die Aufgabe, nach einem Durchlass (ADR 0027), sonst leer.
 func play(canonical: String, marks: PackedInt32Array, zoom := Callable(),
-		missing := PackedInt32Array()) -> void:
-	_queue.append([canonical, marks, zoom, missing])
+		missing := PackedInt32Array(), prompt := "") -> void:
+	_queue.append([canonical, marks, zoom, missing, prompt])
 	if not _running:
 		_run()
 
@@ -62,15 +65,17 @@ func _run() -> void:
 	_running = true
 	while not _queue.is_empty():
 		var next: Array = _queue.pop_front()
-		await _show(next[0], next[1], next[2], next[3])
+		await _show(next[0], next[1], next[2], next[3], next[4])
 	visible = false
 	_running = false
 	finished.emit()
 
 
 func _show(canonical: String, marks: PackedInt32Array, zoom: Callable,
-		missing: PackedInt32Array) -> void:
+		missing: PackedInt32Array, prompt: String) -> void:
 	# Inhalt vor dem Einblenden setzen (docs/CONVENTIONS.md, „Oberfläche“).
+	_prompt.text = prompt
+	_prompt.visible = not prompt.is_empty()
 	_word.text = markup(canonical, marks, get_theme_color("font_color", &"SpellingMark"),
 			missing, get_theme_color("font_color", &"SpellingMissing"))
 	_place_names(canonical, marks)
@@ -98,6 +103,8 @@ func warm_up() -> void:
 	_word.text = markup(FxWarmup.GLYPHS, PackedInt32Array([0]),
 			get_theme_color("font_color", &"SpellingMark"), PackedInt32Array([1]),
 			get_theme_color("font_color", &"SpellingMissing"))
+	_prompt.text = FxWarmup.GLYPHS
+	_prompt.visible = true
 	_clear_names()
 	var label := ACCENT_NAME_SCENE.instantiate() as Label
 	label.text = FxWarmup.GLYPHS

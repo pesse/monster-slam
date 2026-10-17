@@ -152,7 +152,7 @@ func note_fast_resolve(unspawned: int, on_field: int) -> void:
 ## Ein Lexem erscheint. `conf` ist der Wert vor der Antwort, die answer-Zeile trägt den danach.
 func note_spawn(task: Dictionary) -> void:
 	var id := str(task.get("learnable_id", ""))
-	_write({
+	var line := {
 		"e": "spawn", "id": id,
 		"lex": str(task.get("source_id", "")),
 		"type": str(task.get("task_type", "")),
@@ -163,7 +163,11 @@ func note_spawn(task: Dictionary) -> void:
 		"diff": int(task.get("difficulty", 0)),
 		# Warum dieses Wort (WaveGenerator.pick_reason): Gruppe, Stelle, Größe des Pools.
 		"why": task.get("pick", {}),
-	})
+	}
+	# Die Lösung stand auf dem Schild (ADR 0027); das Feld steht nur dann.
+	if bool(task.get("help", false)):
+		line["help"] = true
+	_write(line)
 
 
 ## Eine abgeschickte Antwort samt Urteil. Passte sie auf kein Monster, ist `id` leer und
@@ -183,6 +187,9 @@ func note_answer(text: String, verdict: Dictionary) -> void:
 	# Nur nachsichtig getroffen (ADR 0008); das Feld steht nur dann.
 	if not bool(verdict.get("exact", true)):
 		line["exact"] = false
+	# Abgetippt (ADR 0027): kein Lernstand-Eintrag, `conf` ist unverändert.
+	if bool(verdict.get("help", false)):
+		line["help"] = true
 	var canonical := str(verdict.get("canonical", ""))
 	if not canonical.is_empty():
 		line["canonical"] = canonical

@@ -44,11 +44,18 @@ const URGENCY_CAP := 2.0
 ## das Wachkatapult nicht die ganze Welle abräumt.
 const OPEN_SHARE := 0.5
 
+## Neue Aufgaben (ADR 0027): so viele Einführungen je Welle, solange es in der Welle noch
+## nicht gezeigte bekannte Aufgaben gibt; danach kommen erst die.
+const INTRODUCTIONS_PER_WAVE := 5
+## So viele Spawns nach dem Abtippen kommt die Aufgabe ohne Lösung wieder.
+const RETEST_AFTER := 2
+
 ## Tippzeit (ADR 0026): Eine Antwort über LONG_ANSWER_CHARS Zeichen bremst ihr Monster im
-## Verhältnis der Länge, höchstens bis MIN_TYPING_PACE, und hält den nächsten Spawn so lange
-## zurück, wie das Tippen bei TYPING_CHARS_PER_SECOND dauert. Kein Maß der Schwierigkeit:
+## Verhältnis der Länge, höchstens bis MIN_TYPING_PACE, und hält den nächsten Spawn zurück,
+## bis es weg ist, höchstens so lange, wie das Tippen bei TYPING_CHARS_PER_SECOND dauert.
+## Kein Maß der Schwierigkeit:
 ## Punkte und Erfahrung bleiben bei `t - c`.
-const LONG_ANSWER_CHARS := 20
+const LONG_ANSWER_CHARS := 30
 const MIN_TYPING_PACE := 0.25
 ## Zeichen je Sekunde samt Lesen und Nachdenken.
 const TYPING_CHARS_PER_SECOND := 2.0
@@ -66,13 +73,16 @@ static func wave_damage_scale(wave_number: int) -> float:
 		return EARLY_WAVE_DAMAGE[n - 1]
 	return 1.0 + DAMAGE_GROWTH_PER_WAVE * (n - EARLY_WAVE_DAMAGE.size() - 1)
 
-## Zeichenzahl der kürzesten Antwort, die eine Aufgabe annimmt.
+## Zeichenzahl der kürzesten Eingabe, die eine Aufgabe annimmt: ohne optionalen Artikel,
+## ohne weglassbare Klammergruppe (`AnswerEvaluator.variants`).
 static func answer_chars(answers: Array) -> int:
+	var evaluator := AnswerEvaluator.new()
 	var shortest := -1
 	for answer in answers:
-		var n := str(answer).strip_edges().length()
-		if n > 0 and (shortest < 0 or n < shortest):
-			shortest = n
+		for key in evaluator.variants(str(answer)):
+			var n := str(key).length()
+			if n > 0 and (shortest < 0 or n < shortest):
+				shortest = n
 	return maxi(shortest, 0)
 
 
@@ -198,12 +208,15 @@ func has_playable(pool: Dictionary) -> bool:
 ## `exclude_sources` (Lexem-id -> true): Grundwörter auf dem Feld. `shown_sources` (Lexem-id
 ## -> Spawn-Nummer): in dieser Welle gezeigte, sie kommen nach dem Rest. `order`: Playlist
 ## einer Testliste (TestPlaylist.wave_order). `open_first`: eine nicht gemeisterte Aufgabe
-## vorziehen, wenn es eine gibt (open_due()). Der Grund der Wahl steht in `task["pick"]`.
+## vorziehen, wenn es eine gibt (open_due()). `intro`: die Einführungen des Laufs (ADR 0027),
+## eine fällige Wiederholung geht allem vor. Der Grund der Wahl steht in `task["pick"]`.
 func pick(pool: Dictionary, exclude_sources: Dictionary = {}, shown_sources: Dictionary = {},
-		order: Array = [], open_first := false) -> Dictionary:
-	var candidates := listing(pool, shown_sources)
+		order: Array = [], open_first := false, intro: Introductions = null) -> Dictionary:
+	var candidates := listing(pool, shown_sources, -1, intro)
 	if not order.is_empty():
 		candidates = TestPlaylist.arrange(candidates, order)
+	if intro != null:
+		candidates = retests_first(candidates, intro.due())
 	var plan := pick_with(candidates, exclude_sources, open_first)
 	if not order.is_empty() and not plan.is_empty():
 		plan["task"]["pick"]["playlist"] = true
@@ -217,10 +230,62 @@ func candidates(pool: Dictionary) -> Array:
 
 ## Die Kandidaten des Pools in der Reihenfolge, in der pick() sie probiert, jeder mit
 ## `group`, `repeat` und `weight` (siehe ordered()). `now`: Bezugszeit (unix, -1 = jetzt).
-func listing(pool: Dictionary, shown_sources: Dictionary, now := -1) -> Array:
+func listing(pool: Dictionary, shown_sources: Dictionary, now := -1,
+		intro: Introductions = null) -> Array:
 	if now < 0:
 		now = int(Time.get_unix_time_from_system())
-	return ordered(_candidates(pool), PlayerProgress.state_of, shown_sources, now)
+	return ordered(_candidates(pool), PlayerProgress.state_of, shown_sources, now, intro)
+
+
+## Stellt die Kandidaten mit fälliger Wiederholung (`due`: learnable_ids) nach vorn und
+## markiert sie mit `retest`; die übrige Reihenfolge bleibt.
+static func retests_first(candidates: Array, due: Array) -> Array:
+	if due.is_empty():
+		return candidates
+	var front: Array = []
+	var rest: Array = []
+	for c in candidates:
+		if c["learnable_id"] in due:
+			c["retest"] = true
+			front.append(c)
+		else:
+			rest.append(c)
+	return front + rest
+
+
+## Woran „schon eingeführt" hängt: eine Übersetzung am Wort, denn wer eine Richtung
+## abgetippt hat, kennt beide Seiten; jede andere Aufgabe an sich selbst.
+static func help_key(candidate: Dictionary) -> String:
+	if str(candidate["definition"].get("task_type", "")) == "translate":
+		return "translate:" + str(candidate["source"].get("id", ""))
+	return str(candidate["learnable_id"])
+
+
+## Steht die Lösung auf dem Schild? Ja für eine nie beantwortete Aufgabe, die im Lauf noch
+## nicht eingeführt war; eine Übersetzung nur, wenn auch die Gegenrichtung nie dran war.
+## Eine Form nie: sie folgt meist aus dem Wort. Abtippen verbucht nichts, die Wiederholung
+## (RETEST_AFTER) ist die erste Antwort.
+static func needs_help(candidate: Dictionary, state: Callable, intro: Introductions) -> bool:
+	if intro == null or intro.keys.has(help_key(candidate)):
+		return false
+	if not str(candidate["definition"].get("requires_form", "")).is_empty():
+		return false
+	if not (state.call(candidate["learnable_id"]) as Dictionary).is_empty():
+		return false
+	var reverse := reverse_translation(candidate)
+	return reverse.is_empty() or (state.call(reverse) as Dictionary).is_empty()
+
+
+## Die learnable_id der Gegenrichtung einer Übersetzung, leer für jede andere Aufgabe.
+static func reverse_translation(candidate: Dictionary) -> String:
+	var definition: Dictionary = candidate["definition"]
+	if str(definition.get("task_type", "")) != "translate":
+		return ""
+	var sides := str(definition.get("direction", "")).split("_to_")
+	if sides.size() != 2:
+		return ""
+	return TaskResolver.learnable_id("translate", "%s_to_%s" % [sides[1], sides[0]],
+			str(candidate["source"].get("id", "")))
 
 
 ## Muss der nächste Spawn offen sein? `open` von `spawned` bisherigen Monstern waren es.
@@ -249,7 +314,7 @@ func _first_plan(ordered_candidates: Array, exclude_sources: Dictionary, respect
 	for i in ordered_candidates.size():
 		var candidate: Dictionary = ordered_candidates[i]
 		if open_only and (bool(candidate.get("mastered", false))
-				or bool(candidate.get("repeat", false))):
+				or (bool(candidate.get("repeat", false)) and not bool(candidate.get("retest", false)))):
 			continue
 		if respect_exclude and exclude_sources.has(str(candidate["source"].get("id", ""))):
 			continue
@@ -272,6 +337,7 @@ func _first_plan(ordered_candidates: Array, exclude_sources: Dictionary, respect
 ##   due_at:   Fälligkeit (unix), 0 = nie beantwortet
 ##   last_seen: zuletzt beantwortet, über alle Aufgaben des Grundworts (unix), 0 = nie
 ##   weight:   Gewicht in der Auswahl (selection_weight())
+##   retest:   Wiederholung ohne Lösung nach dem Abtippen (ADR 0027)
 static func pick_reason(candidates: Array, index: int, fallback: bool, net: float,
 		due_at: int) -> Dictionary:
 	var counts := {GROUP_DUE: 0, GROUP_NEW: 0, GROUP_REST: 0, "repeat": 0}
@@ -292,6 +358,7 @@ static func pick_reason(candidates: Array, index: int, fallback: bool, net: floa
 		"due_at": due_at,
 		"last_seen": int(chosen.get("last_seen", 0)),
 		"weight": snappedf(float(chosen.get("weight", 0.0)), 0.01),
+		"retest": bool(chosen.get("retest", false)),
 	}
 
 
@@ -311,6 +378,8 @@ static func describe_reason(why: Dictionary, now: int) -> String:
 		group += ", zuletzt vor " + span_text(now - last_seen)
 	if bool(why.get("repeat", false)):
 		group = "Wiederholung, " + group
+	if bool(why.get("retest", false)):
+		group = "nach dem Abtippen, " + group
 	var counts: Dictionary = why.get("counts", {})
 	var parts: Array = [
 		group,
@@ -344,9 +413,11 @@ static func span_text(seconds: int) -> String:
 
 ## Die Auswahlreihenfolge von pick() (ADR 0018). `state`: learnable_id -> {} oder
 ## PlayerProgress.state_of. `now`: Bezugszeit (unix). Setzt an jedem Kandidaten `group`,
-## `repeat`, `last_seen` (des Grundworts), `due_at`, `weight` und `mastered` (wie
-## PlayerProgress.is_mastered).
-static func ordered(candidates: Array, state: Callable, shown: Dictionary, now: int) -> Array:
+## `repeat`, `last_seen` (des Grundworts), `due_at`, `weight`, `mastered` (wie
+## PlayerProgress.is_mastered) und `help` (needs_help()). Hat `intro` in dieser Welle schon
+## INTRODUCTIONS_PER_WAVE eingeführt, stehen die ungezeigten ohne Lösung vor denen mit.
+static func ordered(candidates: Array, state: Callable, shown: Dictionary, now: int,
+		intro: Introductions = null) -> Array:
 	# `last_seen` am Grundwort, über alle Richtungen und Aufgabenarten.
 	var states := {}
 	var word_seen := {}
@@ -371,6 +442,7 @@ static func ordered(candidates: Array, state: Callable, shown: Dictionary, now: 
 		c["mastered"] = not st.is_empty() \
 				and float(st.get("confidence", 0.0)) >= PlayerProgress.MASTERY_CONFIDENCE
 		c["repeat"] = shown.has(source_id)
+		c["help"] = needs_help(c, state, intro)
 		if shown.has(source_id):
 			var key := int(shown[source_id])
 			if not repeats.has(key):
@@ -378,7 +450,13 @@ static func ordered(candidates: Array, state: Callable, shown: Dictionary, now: 
 			repeats[key].append(c)
 		else:
 			fresh.append(c)
-	var out := weighted_order(_with_new_share(fresh))
+	var out: Array
+	var known := fresh.filter(func(c): return not bool(c["help"]))
+	if intro != null and intro.in_wave >= INTRODUCTIONS_PER_WAVE and not known.is_empty():
+		out = weighted_order(_with_new_share(known))
+		out.append_array(weighted_order(fresh.filter(func(c): return bool(c["help"]))))
+	else:
+		out = weighted_order(_with_new_share(fresh))
 	var keys := repeats.keys()
 	keys.sort()
 	for key in keys:
@@ -622,11 +700,19 @@ func _build_plan(candidate: Dictionary) -> Dictionary:
 	var reward_scale := clampf(1.0 + REWARD_SENSITIVITY * net, 0.4, 1.6) * speed_scale
 	if mastered:
 		reward_scale *= MASTERED_REWARD_FACTOR
+
+	# Mit der Lösung auf dem Schild (ADR 0027) ist Abtippen kein Abruf: Punkte und Erfahrung
+	# wie gemeistert, das Tempo bleibt das einer neuen Aufgabe, zum Lesen.
+	var help := bool(candidate.get("help", false))
+	task["help_key"] = help_key(candidate)
+	if help:
+		task["help"] = true
+		reward_scale *= MASTERED_REWARD_FACTOR
 	var reward := maxi(1, int(round(REFERENCE_REWARD * reward_scale)))
 
 	# Erfahrung ohne `speed_scale`; `net` auf 0..1 abgebildet. Gemeistert beim Spawn geprüft,
 	# damit das Monster, das die Meisterung bringt, noch voll zählt.
-	var xp := Experience.for_monster(0.5 + 0.5 * net, mastered)
+	var xp := Experience.for_monster(0.5 + 0.5 * net, mastered or help)
 	return {
 		"task": task,
 		"monster_def": monster_def,

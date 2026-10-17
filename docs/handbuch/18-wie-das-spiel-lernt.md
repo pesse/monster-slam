@@ -119,7 +119,7 @@ fällig, mehr als 2 wird es nicht).
 | sehr sicher (95 %), fällig | 0,05 | etwa ein Zwanzigstel |
 | eben gerade beantwortet | fast 0 | so gut wie nie |
 
-Dazu drei Regeln:
+Dazu vier Regeln:
 
 - **Gemeisterte Wörter kommen selten, aber nicht nie.** Auch mit 99 % bleibt ein kleines
   Gewicht, damit ein Wort ab und zu auftaucht.
@@ -128,6 +128,12 @@ Dazu drei Regeln:
   dritte Monster bringt dann ein neues Wort.
 - **Die andere Richtung wartet.** Kam gerade „Hund → dog“, gilt auch „dog → Hund“ als eben
   beantwortet — sonst wäre die Antwort geschenkt.
+- **Neue Wörter kommen in Portionen.** Ein Wort, das du noch nie hattest, bringt seine
+  Lösung auf dem Schild mit ([Kapitel 5](05-kampf.md)). Formen wie das Past Participle
+  nicht, die lassen sich meist aus dem Wort ableiten. Abtippen zählt nicht als Antwort,
+  aber zwei Monster später kommt sie ohne Lösung zurück, vor allen anderen. Mehr als fünf
+  neue Aufgaben je Welle gibt es nur, wenn die Unit nichts Bekanntes mehr übrig hat, das in
+  dieser Welle noch nicht dran war. Wörter aus anderen Units kommen nie dazu.
 
 ## Weiteres
 

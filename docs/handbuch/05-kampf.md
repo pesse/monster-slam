@@ -23,6 +23,13 @@
 - **Halb durchsichtige Monster** tragen eine Aufgabe, die du schon gemeistert hast. Sie
   haben keinen leuchtenden Rand, ihr Schild ist matt und zeigt einen Haken vor dem Wort.
   Sie bringen kaum noch etwas, kümmere dich zuerst um die anderen.
+- **Neue Wörter** tragen die Lösung gleich mit: ihr Schild hat an der linken oberen Ecke
+  ein goldenes Abzeichen, und unter dem Wort steht hell die Antwort. Tipp sie ab, so lernst
+  du das Wort kennen. Gelernt hast du damit noch nichts, deshalb gibt es dafür kaum
+  Erfahrung und Gold. Zwei Monster später kommt dasselbe Wort noch einmal, diesmal ohne
+  Lösung: das ist dein erster echter Versuch, und der zählt voll. Formen wie das Past
+  Participle bekommen keine Lösung, die lassen sich meist aus dem Wort ableiten. Mehr dazu
+  in [Kapitel 18](18-wie-das-spiel-lernt.md).
 - **Die Wortschilder** stehen über den Köpfen. Drängen sich mehrere Monster, rücken die
   Schilder zur Seite, eine dünne Linie zeigt dann auf das Monster.
 - **Die Kopfleiste** oben links:
@@ -71,6 +78,10 @@ und das P. Ist es zu, setzen die Ziffern Zauber ein, und P hält den Kampf an.
   über jedem Akzent steht klein sein Name („accent aigu“, „cédille“ …). Danach läuft das
   Spiel von selbst weiter; was du in der Zeit tippst, zählt danach.
   Umlaute zählen nicht dazu: „schon“ ist nicht „schön“.
+- **Durchgelassen:** Erreicht ein Monster die Festung, steht das Spiel kurz still wie bei
+  einem Schreibfehler: klein die Aufgabe, groß darunter die richtige Antwort. Nach der Welle
+  kommt sie in der Auflösung noch einmal ([Kapitel 8](08-wellenabschluss.md)). Beim
+  Schnell-Auflösen gibt es kein Standbild.
 - **Falsch:** Es blitzt rot und das Bild wackelt. Sonst passiert nichts. Eine falsche
   Eingabe wird keinem Wort als Fehler angerechnet, weil nicht klar ist, welches Monster
   gemeint war. Als Fehler zählt erst ein Monster, das die Festung erreicht.

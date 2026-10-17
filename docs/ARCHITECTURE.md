@@ -113,6 +113,10 @@ Anteil des Intervalls seit der letzten Antwort auf das Grundwort, gedeckelt bei 
 neues Wort 1. Die neuen tragen zusammen mindestens 30 % des Gewichts. Gemeistertes kommt
 so selten, aber nicht nie; ein Fehler (c halbiert, nach 10 min fällig) bald wieder. Die
 Gruppen fällig/neu/Rest stehen nur noch zur Erklärung in der Spur.
+Eine nie richtig beantwortete Aufgabe zeigt ihre Lösung auf dem Schild, das Abtippen
+verbucht nichts, und kurz danach kommt sie ohne Lösung wieder; höchstens fünf solche
+Einführungen je Welle, solange Bekanntes da ist. Ein Durchlass zeigt Aufgabe und Lösung im
+Standbild von ADR 0010 (ADR 0027, `Introductions`).
 
 ### Tempo = Schwierigkeit (Monster-Geschwindigkeit)
 Geschwindigkeit ist **kein eigenständiges Attribut**, sondern die sichtbare Projektion der

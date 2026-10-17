@@ -7,6 +7,7 @@ const FIRST_PERSON_SCENE := preload("res://scenes/battle/first_person_view.tscn"
 const GOAL_Z := 16.5          # Festungsfront (Monster-Ziel)
 const SPAWN_Z := -24.0        # Spawn am hinteren Ende der Bahn (längerer Anmarsch)
 const LANE_HALF_WIDTH := 8.0
+const TYPING_POLL := 0.1       # s, so oft prüft der Spawn, ob die lange Antwort erledigt ist
 ## Bildmitte auf der Bahn (z); der Boden richtet sich danach. Eingestellt in battle_theme_lab.
 const VIEW_CENTER_Z := -3.5
 
@@ -51,6 +52,8 @@ var _held_answers: Array[String] = []
 var _spelling_due: Dictionary = {}
 ## Gezeigte Grundwörter der Welle: Lexem-id → Spawn-Nummer (WaveGenerator.pick()).
 var _wave_shown: Dictionary = {}
+## Neue Aufgaben mit Lösung auf dem Schild und ihre Wiederholung (ADR 0027), je Lauf.
+var _intro := Introductions.new()
 ## Monster mit nicht gemeisterter Aufgabe seit `_open_from` (Spawn-Nummer: Wellenbeginn
 ## oder Fortsetzung); WaveGenerator.open_due() sagt, ob pick() Offenes vorziehen muss.
 var _wave_open: int = 0
@@ -88,6 +91,8 @@ var _catapult := false
 ## Spawn-Abstand. Punkte bleiben unberührt.
 var _monster_pace := 1.0
 var _spawn_gap_scale := 1.0
+## Das Monster mit langer Antwort, auf das der nächste Spawn wartet (ADR 0026).
+var _typing_monster: Monster = null
 ## Die Katapulte der Festung (FortressModel.catapults), erst ab FortressModel.CATAPULT_TIER.
 var _catapults: Array[Node3D] = []
 ## Höhe (m), an der ein Fehlschuss vorbeizielt: die Körpermitte.
@@ -1143,6 +1148,7 @@ func _start_next_wave() -> void:
 	_wave_leaked = 0
 	_previous_shown = _wave_shown.duplicate()
 	_wave_shown.clear()
+	_intro.new_wave()
 	_wave_open = 0
 	_open_from = 0
 	_wave_leaked_tasks.clear()
@@ -1331,7 +1337,11 @@ func _run_spawn_batch(entry: Dictionary, gen: int) -> void:
 	var gap := 0.0
 	for i in count:
 		# process_always = false: in der Baum-Pause läuft der Timer nicht weiter.
-		await get_tree().create_timer(maxf(interval, gap), false).timeout
+		await get_tree().create_timer(interval, false).timeout
+		var waited := interval
+		while waited < gap and _typing_monster in _active:
+			await get_tree().create_timer(TYPING_POLL, false).timeout
+			waited += TYPING_POLL
 		if _finished or not is_inside_tree() or gen != _wave_gen:
 			return
 		gap = _spawn(entry)
@@ -1344,7 +1354,7 @@ func _spawn(entry: Dictionary) -> float:
 	for m in _active:
 		active_sources[str(m.task.get("source_id", ""))] = true
 	var plan: Dictionary = _generator.pick(entry.get("task_pool", {}), active_sources, _wave_shown,
-			_playlist_order, _open_due())
+			_playlist_order, _open_due(), _intro)
 	if plan.is_empty():
 		# Kein Plan heißt „nichts Spielbares im Pool“ (pick() lässt die active_sources-Sperre
 		# zuletzt fallen). Der Spawn fällt aus dem Soll, sonst wartete _check_end() ewig.
@@ -1370,6 +1380,7 @@ func _spawn(entry: Dictionary) -> float:
 	_active.append(monster)
 	_spell_fx.on_spawn(monster, _spells.on_spawn(monster))
 	_wave_shown[str(plan["task"].get("source_id", ""))] = _spawned
+	_intro.note_spawn(plan["task"])
 	_spawned += 1
 	EventBus.monster_spawned.emit(plan["monster_def"], plan["task"])
 	var mastered := PlayerProgress.is_mastered(str(plan["task"].get("learnable_id", "")))
@@ -1377,6 +1388,7 @@ func _spawn(entry: Dictionary) -> float:
 		_wave_open += 1
 	if _catapult and _fortress_tier >= FortressModel.CATAPULT_TIER and mastered:
 		_catapult_later(monster, _wave_gen)
+	_typing_monster = monster if float(plan.get("gap", 0.0)) > 0.0 else null
 	return float(plan.get("gap", 0.0)) * _spawn_gap_scale
 
 
@@ -1562,6 +1574,9 @@ func _score_hit(monster: Monster, text: String = "", verdict: Dictionary = {}) -
 				AnswerEvaluator.spelling_marks(full_form, text),
 				AnswerEvaluator.missing_marks(full_form, text)]
 	_last_left = monster.seconds_left() if _spawned >= _total and _active.size() == 1 else INF
+	if bool(monster.task.get("help", false)):
+		_score_copy(monster, text, complete, exact, full_form, rt)
+		return
 	# Der Stand davor: record() überschreibt, woran Revanche und Co. hängen.
 	var badge_ctx := _badges.before_hit(task_id)
 	var newly_mastered := PlayerProgress.record(task_id, true, rt,
@@ -1581,6 +1596,25 @@ func _score_hit(monster: Monster, text: String = "", verdict: Dictionary = {}) -
 			EventBus.lexeme_mastered.emit(lexeme_id)
 	# Nach der Meisterung: ihre Feier geht vor.
 	_announce_badges(_badges.after_hit(badge_ctx))
+	_finish_hit(monster)
+
+
+## Die Lösung stand auf dem Schild (ADR 0027): Abtippen ist kein Abruf und kommt nicht in
+## den Lernstand, keine Plakette. Die Aufgabe kommt bald ohne Lösung wieder.
+func _score_copy(monster: Monster, text: String, complete: bool, exact: bool, full_form: String,
+		rt: int) -> void:
+	var task_id := str(monster.task.get("learnable_id", ""))
+	_intro.note_copied(monster.task)
+	EventBus.answer_judged.emit(text, {
+		"matched": true, "complete": complete, "exact": exact, "learnable_id": task_id,
+		"source_id": str(monster.task.get("source_id", "")), "response_time_ms": rt,
+		"canonical": full_form, "candidates": _active_learnable_ids(), "help": true,
+	})
+	_finish_hit(monster)
+
+
+## Das Bild eines Treffers, je nach Waffe.
+func _finish_hit(monster: Monster) -> void:
 	var weapon := _fp.weapon if _fp != null else FirstPersonView.Weapon.NONE
 	if weapon == FirstPersonView.Weapon.CHARGE:
 		_defeat_by_charge(monster)
@@ -1995,7 +2029,20 @@ func _on_monster_reached_goal(monster: Monster) -> void:
 	if GameState.fortress_health <= 0:
 		_finish_wave(false)
 		return
+	_reveal_leak(monster)
 	_check_end()
+
+
+## Standbild wie bei einem Schreibfehler (ADR 0010, ADR 0027): Aufgabe und Lösung, solange
+## das Monster an der Mauer platzt. Nicht beim Vorspulen.
+func _reveal_leak(monster: Monster) -> void:
+	var answers: Array = monster.task.get("accepted_answers", [])
+	if _fast_resolving or answers.is_empty():
+		return
+	var target := monster.global_position + Vector3(0.0, 1.0, 0.0)
+	_spelling.play(str(answers[0]), PackedInt32Array(),
+			spelling_zoom(_fp.camera if _fp != null else _camera, target), PackedInt32Array(),
+			monster.prompt())
 
 
 func _check_end() -> void:

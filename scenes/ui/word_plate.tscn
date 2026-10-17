@@ -5,6 +5,7 @@
 [ext_resource type="Shader" path="res://assets/shaders/word_plate.gdshader" id="3_shader"]
 [ext_resource type="Texture2D" path="res://assets/ui/gameplay/frames/word_plate_base.webp" id="4_base"]
 [ext_resource type="Texture2D" path="res://assets/ui/gameplay/frames/word_plate_pointer_base.webp" id="5_pointer_base"]
+[ext_resource type="Texture2D" path="res://assets/ui/gameplay/icons/new_badge.webp" id="6_badge"]
 
 [sub_resource type="ShaderMaterial" id="pointer_layers"]
 shader = ExtResource("3_shader")
@@ -43,6 +44,14 @@ theme_type_variation = &"HudPlateText"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="Help" type="Label" parent="Frame/Lines"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"HudPlateAlt"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="Alt" type="Label" parent="Frame/Lines"]
 unique_name_in_owner = true
 visible = false
@@ -50,3 +59,10 @@ layout_mode = 2
 theme_type_variation = &"HudPlateAlt"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="Badge" type="TextureRect" parent="."]
+visible = false
+layout_mode = 0
+mouse_filter = 2
+texture = ExtResource("6_badge")
+expand_mode = 1

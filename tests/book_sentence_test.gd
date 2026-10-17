@@ -119,10 +119,12 @@ func test_the_spell_reveals_the_word() -> void:
 func test_long_answers_slow_the_monster_and_hold_the_next_spawn() -> void:
 	assert_float(GENERATOR.typing_pace(12)).is_equal(1.0)
 	assert_float(GENERATOR.typing_gap(12)).is_equal(0.0)
-	assert_float(GENERATOR.typing_pace(40)).is_equal_approx(0.5, 0.001)
+	assert_float(GENERATOR.typing_pace(60)).is_equal_approx(0.5, 0.001)
 	assert_float(GENERATOR.typing_gap(40)).is_equal_approx(20.0, 0.001)
 	assert_float(GENERATOR.typing_pace(400)).is_equal(GENERATOR.MIN_TYPING_PACE)
 	assert_int(GENERATOR.answer_chars(["The garden is big.", "A garden"])).is_equal(8)
+	# Artikel und Klammergruppe muss niemand tippen.
+	assert_int(GENERATOR.answer_chars(["das (Garten-)Haus"])).is_equal(4)
 	var plan := GENERATOR.new()._build_plan(_example_candidate())
 	var pace := GENERATOR.typing_pace(SENTENCE.length())
 	assert_float(float(plan["speed"])).is_less_equal(GENERATOR.REFERENCE_SPEED * 1.3 * pace)
