@@ -1,0 +1,212 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/dev/controls_lab.gd" id="1_lab"]
+
+[sub_resource type="ButtonGroup" id="diff_group"]
+
+[sub_resource type="ButtonGroup" id="step_group"]
+
+[sub_resource type="ButtonGroup" id="gfx_group"]
+
+[node name="ControlsLab" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_lab")
+
+[node name="Frame" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"GameWindow"
+
+[node name="Body" type="VBoxContainer" parent="Frame"]
+layout_mode = 2
+theme_type_variation = &"SectionStack"
+
+[node name="Fields" type="HBoxContainer" parent="Frame/Body"]
+layout_mode = 2
+theme_type_variation = &"ScreenStack"
+
+[node name="NormalField" type="LineEdit" parent="Frame/Body/Fields"]
+layout_mode = 2
+custom_minimum_size = Vector2(240, 44)
+text = "Normal"
+
+[node name="FocusField" type="LineEdit" parent="Frame/Body/Fields"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(240, 44)
+text = "Fokus"
+
+[node name="ReadOnlyField" type="LineEdit" parent="Frame/Body/Fields"]
+layout_mode = 2
+custom_minimum_size = Vector2(240, 44)
+text = "Nur lesen"
+editable = false
+
+[node name="Hover" type="Button" parent="Frame/Body/Fields"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"WindowButton"
+text = "Hover/Fokus"
+
+[node name="Text" type="TextEdit" parent="Frame/Body"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 96)
+text = "Mehrzeiliges Feld\nzweite Zeile"
+
+[node name="Digits" type="HBoxContainer" parent="Frame/Body"]
+layout_mode = 2
+theme_type_variation = &"SegmentRow"
+
+[node name="Digits0" type="Button" parent="Frame/Body/Digits"]
+layout_mode = 2
+custom_minimum_size = Vector2(44, 44)
+theme_type_variation = &"SegmentFirst"
+toggle_mode = true
+button_group = SubResource("diff_group")
+text = "1"
+
+[node name="Digits1" type="Button" parent="Frame/Body/Digits"]
+layout_mode = 2
+custom_minimum_size = Vector2(44, 44)
+theme_type_variation = &"SegmentMid"
+toggle_mode = true
+button_group = SubResource("diff_group")
+text = "2"
+
+[node name="Digits2" type="Button" parent="Frame/Body/Digits"]
+layout_mode = 2
+custom_minimum_size = Vector2(44, 44)
+theme_type_variation = &"SegmentMid"
+toggle_mode = true
+button_pressed = true
+button_group = SubResource("diff_group")
+text = "3"
+
+[node name="HoverSegment" type="Button" parent="Frame/Body/Digits"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(44, 44)
+theme_type_variation = &"SegmentMid"
+toggle_mode = true
+button_group = SubResource("diff_group")
+text = "4"
+
+[node name="Digits4" type="Button" parent="Frame/Body/Digits"]
+layout_mode = 2
+custom_minimum_size = Vector2(44, 44)
+theme_type_variation = &"SegmentLast"
+toggle_mode = true
+button_group = SubResource("diff_group")
+text = "5"
+
+[node name="Steps" type="HBoxContainer" parent="Frame/Body"]
+layout_mode = 2
+theme_type_variation = &"SegmentRow"
+
+[node name="Steps0" type="Button" parent="Frame/Body/Steps"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 44)
+theme_type_variation = &"SegmentFirst"
+toggle_mode = true
+button_group = SubResource("step_group")
+text = "Viel leichter"
+
+[node name="Steps1" type="Button" parent="Frame/Body/Steps"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 44)
+theme_type_variation = &"SegmentMid"
+toggle_mode = true
+button_group = SubResource("step_group")
+text = "Leichter"
+
+[node name="Steps2" type="Button" parent="Frame/Body/Steps"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 44)
+theme_type_variation = &"SegmentMid"
+toggle_mode = true
+button_pressed = true
+button_group = SubResource("step_group")
+text = "Gleich"
+
+[node name="Steps3" type="Button" parent="Frame/Body/Steps"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 44)
+theme_type_variation = &"SegmentMid"
+toggle_mode = true
+button_group = SubResource("step_group")
+text = "Schwieriger"
+
+[node name="Steps4" type="Button" parent="Frame/Body/Steps"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 44)
+disabled = true
+theme_type_variation = &"SegmentLast"
+toggle_mode = true
+button_group = SubResource("step_group")
+text = "Viel schwieriger"
+
+[node name="Graphics" type="HBoxContainer" parent="Frame/Body"]
+layout_mode = 2
+theme_type_variation = &"SegmentRow"
+
+[node name="Graphics0" type="Button" parent="Frame/Body/Graphics"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 44)
+theme_type_variation = &"SegmentFirst"
+toggle_mode = true
+button_pressed = true
+button_group = SubResource("gfx_group")
+text = "Schön"
+
+[node name="Graphics1" type="Button" parent="Frame/Body/Graphics"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 44)
+theme_type_variation = &"SegmentMid"
+toggle_mode = true
+button_group = SubResource("gfx_group")
+text = "Mittel"
+
+[node name="Graphics2" type="Button" parent="Frame/Body/Graphics"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 44)
+theme_type_variation = &"SegmentLast"
+toggle_mode = true
+button_group = SubResource("gfx_group")
+text = "Schnell"
+
+[node name="Checks" type="HBoxContainer" parent="Frame/Body"]
+layout_mode = 2
+theme_type_variation = &"ScreenStack"
+
+[node name="On" type="CheckBox" parent="Frame/Body/Checks"]
+layout_mode = 2
+button_pressed = true
+text = "An"
+
+[node name="Off" type="CheckBox" parent="Frame/Body/Checks"]
+layout_mode = 2
+text = "Aus"
+
+[node name="OnDisabled" type="CheckBox" parent="Frame/Body/Checks"]
+layout_mode = 2
+disabled = true
+button_pressed = true
+text = "An, gesperrt"
+
+[node name="OffDisabled" type="CheckBox" parent="Frame/Body/Checks"]
+layout_mode = 2
+disabled = true
+text = "Aus, gesperrt"

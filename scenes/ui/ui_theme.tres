@@ -43,6 +43,25 @@
 [ext_resource type="Texture2D" uid="uid://cduuweh2lcac2" path="res://assets/ui/windows/window_panel_compact.webp" id="window_tex"]
 [ext_resource type="Texture2D" uid="uid://djgdoxp4hpreu" path="res://assets/ui/main_menu/buttons/small/button_highlighted.webp" id="win_btn_gold_tex"]
 [ext_resource type="Texture2D" uid="uid://d3shf1enaqe34" path="res://assets/ui/main_menu/buttons/small/button_normal.webp" id="win_btn_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/field_normal.webp" id="field_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/field_focus.webp" id="field_focus_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/field_read_only.webp" id="field_ro_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/seg_first_normal.webp" id="seg_first_normal_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/seg_first_hover.webp" id="seg_first_hover_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/seg_first_selected.webp" id="seg_first_selected_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/seg_first_disabled.webp" id="seg_first_disabled_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/seg_mid_normal.webp" id="seg_mid_normal_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/seg_mid_hover.webp" id="seg_mid_hover_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/seg_mid_selected.webp" id="seg_mid_selected_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/seg_mid_disabled.webp" id="seg_mid_disabled_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/seg_last_normal.webp" id="seg_last_normal_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/seg_last_hover.webp" id="seg_last_hover_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/seg_last_selected.webp" id="seg_last_selected_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/seg_last_disabled.webp" id="seg_last_disabled_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/check_on.webp" id="check_on_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/check_off.webp" id="check_off_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/check_on_disabled.webp" id="check_on_disabled_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/check_off_disabled.webp" id="check_off_disabled_tex"]
 
 [sub_resource type="StyleBoxFlat" id="action_disabled"]
 content_margin_left = 16.0
@@ -765,37 +784,38 @@ texture_margin_bottom = 32.0
 axis_stretch_horizontal = 2
 axis_stretch_vertical = 2
 
-[sub_resource type="StyleBoxFlat" id="le_focus"]
+[sub_resource type="StyleBoxTexture" id="field_normal"]
 content_margin_left = 12.0
 content_margin_top = 8.0
 content_margin_right = 12.0
 content_margin_bottom = 8.0
-bg_color = Color(0.1, 0.12, 0.18, 0.98)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(1, 0.55, 0.2, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
+texture = ExtResource("field_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
 
-[sub_resource type="StyleBoxFlat" id="le_normal"]
+[sub_resource type="StyleBoxTexture" id="field_focus"]
 content_margin_left = 12.0
 content_margin_top = 8.0
 content_margin_right = 12.0
 content_margin_bottom = 8.0
-bg_color = Color(0.1, 0.12, 0.18, 0.96)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.5, 0.56, 0.7, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
+texture = ExtResource("field_focus_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxTexture" id="field_read_only"]
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+texture = ExtResource("field_ro_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
 
 [sub_resource type="StyleBoxTexture" id="menu_btn_disabled"]
 content_margin_left = 24.0
@@ -1315,6 +1335,140 @@ texture_margin_top = 14.0
 texture_margin_right = 16.0
 texture_margin_bottom = 14.0
 
+[sub_resource type="StyleBoxTexture" id="seg_first_normal"]
+content_margin_left = 16.0
+content_margin_top = 4.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+texture = ExtResource("seg_first_normal_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxTexture" id="seg_first_hover"]
+content_margin_left = 16.0
+content_margin_top = 4.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+texture = ExtResource("seg_first_hover_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxTexture" id="seg_first_selected"]
+content_margin_left = 16.0
+content_margin_top = 4.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+texture = ExtResource("seg_first_selected_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxTexture" id="seg_first_disabled"]
+content_margin_left = 16.0
+content_margin_top = 4.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+texture = ExtResource("seg_first_disabled_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxTexture" id="seg_mid_normal"]
+content_margin_left = 16.0
+content_margin_top = 4.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+texture = ExtResource("seg_mid_normal_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxTexture" id="seg_mid_hover"]
+content_margin_left = 16.0
+content_margin_top = 4.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+texture = ExtResource("seg_mid_hover_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxTexture" id="seg_mid_selected"]
+content_margin_left = 16.0
+content_margin_top = 4.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+texture = ExtResource("seg_mid_selected_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxTexture" id="seg_mid_disabled"]
+content_margin_left = 16.0
+content_margin_top = 4.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+texture = ExtResource("seg_mid_disabled_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxTexture" id="seg_last_normal"]
+content_margin_left = 16.0
+content_margin_top = 4.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+texture = ExtResource("seg_last_normal_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxTexture" id="seg_last_hover"]
+content_margin_left = 16.0
+content_margin_top = 4.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+texture = ExtResource("seg_last_hover_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxTexture" id="seg_last_selected"]
+content_margin_left = 16.0
+content_margin_top = 4.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+texture = ExtResource("seg_last_selected_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxTexture" id="seg_last_disabled"]
+content_margin_left = 16.0
+content_margin_top = 4.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+texture = ExtResource("seg_last_disabled_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxEmpty" id="seg_focus"]
+
 [resource]
 default_font_size = 18
 Accent/base_type = &"Label"
@@ -1403,6 +1557,10 @@ CelebrateWord/colors/font_outline_color = Color(0.3, 0.1, 0, 1)
 CheckBox/colors/font_color = Color(0.92, 0.94, 0.98, 1)
 CheckBox/colors/font_disabled_color = Color(0.55, 0.58, 0.64, 1)
 CheckBox/constants/h_separation = 8
+CheckBox/icons/checked = ExtResource("check_on_tex")
+CheckBox/icons/checked_disabled = ExtResource("check_on_disabled_tex")
+CheckBox/icons/unchecked = ExtResource("check_off_tex")
+CheckBox/icons/unchecked_disabled = ExtResource("check_off_disabled_tex")
 CheckBox/styles/disabled = SubResource("check_flat")
 CheckBox/styles/focus = SubResource("check_focus")
 CheckBox/styles/hover = SubResource("check_hover")
@@ -1656,17 +1814,17 @@ LineEdit/colors/caret_color = Color(1, 0.55, 0.2, 1)
 LineEdit/colors/font_color = Color(0.95, 0.96, 1, 1)
 LineEdit/colors/font_placeholder_color = Color(0.6, 0.64, 0.74, 1)
 LineEdit/font_sizes/font_size = 20
-LineEdit/styles/focus = SubResource("le_focus")
-LineEdit/styles/normal = SubResource("le_normal")
-LineEdit/styles/read_only = SubResource("le_normal")
+LineEdit/styles/focus = SubResource("field_focus")
+LineEdit/styles/normal = SubResource("field_normal")
+LineEdit/styles/read_only = SubResource("field_read_only")
 TextEdit/colors/caret_color = Color(1, 0.55, 0.2, 1)
 TextEdit/colors/font_color = Color(0.95, 0.96, 1, 1)
 TextEdit/colors/font_placeholder_color = Color(0.6, 0.64, 0.74, 1)
 TextEdit/colors/font_readonly_color = Color(0.82, 0.85, 0.92, 1)
 TextEdit/colors/selection_color = Color(0.32, 0.4, 0.62, 1)
-TextEdit/styles/focus = SubResource("le_focus")
-TextEdit/styles/normal = SubResource("le_normal")
-TextEdit/styles/read_only = SubResource("le_normal")
+TextEdit/styles/focus = SubResource("field_focus")
+TextEdit/styles/normal = SubResource("field_normal")
+TextEdit/styles/read_only = SubResource("field_read_only")
 MainMenuButton/base_type = &"Button"
 MainMenuButton/colors/font_color = Color(0.94, 0.95, 0.98, 1)
 MainMenuButton/colors/font_disabled_color = Color(0.62, 0.64, 0.7, 1)
@@ -1823,6 +1981,29 @@ StatSubline/base_type = &"Label"
 StatSubline/colors/font_color = Color(0.86, 0.9, 0.97, 1)
 StatSubline/font_sizes/font_size = 16
 StatSubline/fonts/font = SubResource("menu_font")
+SegmentFirst/base_type = &"ToolChoice"
+SegmentFirst/styles/disabled = SubResource("seg_first_disabled")
+SegmentFirst/styles/focus = SubResource("seg_focus")
+SegmentFirst/styles/hover = SubResource("seg_first_hover")
+SegmentFirst/styles/hover_pressed = SubResource("seg_first_selected")
+SegmentFirst/styles/normal = SubResource("seg_first_normal")
+SegmentFirst/styles/pressed = SubResource("seg_first_selected")
+SegmentLast/base_type = &"ToolChoice"
+SegmentLast/styles/disabled = SubResource("seg_last_disabled")
+SegmentLast/styles/focus = SubResource("seg_focus")
+SegmentLast/styles/hover = SubResource("seg_last_hover")
+SegmentLast/styles/hover_pressed = SubResource("seg_last_selected")
+SegmentLast/styles/normal = SubResource("seg_last_normal")
+SegmentLast/styles/pressed = SubResource("seg_last_selected")
+SegmentMid/base_type = &"ToolChoice"
+SegmentMid/styles/disabled = SubResource("seg_mid_disabled")
+SegmentMid/styles/focus = SubResource("seg_focus")
+SegmentMid/styles/hover = SubResource("seg_mid_hover")
+SegmentMid/styles/hover_pressed = SubResource("seg_mid_selected")
+SegmentMid/styles/normal = SubResource("seg_mid_normal")
+SegmentMid/styles/pressed = SubResource("seg_mid_selected")
+SegmentRow/base_type = &"BoxContainer"
+SegmentRow/constants/separation = 0
 TabRail/base_type = &"PanelContainer"
 TabRail/styles/panel = SubResource("window_tab_rail")
 TabRow/base_type = &"BoxContainer"

@@ -5,19 +5,21 @@ extends HBoxContainer
 
 signal changed(mode: int)
 
-@onready var _buttons: Array[Button] = [$Best as Button, $Weakest as Button, $Alpha as Button]
+@onready var _buttons: Array[Button] = [
+	$Choices/Best as Button, $Choices/Weakest as Button, $Choices/Alpha as Button,
+]
 
 
 func _ready() -> void:
 	for i in _buttons.size():
 		var mode := i
 		_buttons[i].pressed.connect(func() -> void: changed.emit(mode))
-	Hints.attach($Best as Control, "Beste zuerst",
+	Hints.attach($Choices/Best as Control, "Beste zuerst",
 			"Was am sichersten sitzt, steht oben. Noch nicht Geübtes steht immer am Ende.")
-	Hints.attach($Weakest as Control, "Schwächste zuerst",
+	Hints.attach($Choices/Weakest as Control, "Schwächste zuerst",
 			"Woran gerade am meisten zu holen ist, steht oben. Noch nicht Geübtes steht "
 			+ "immer am Ende.")
-	Hints.attach($Alpha as Control, "Alphabetisch", "Nach dem Wort sortiert.")
+	Hints.attach($Choices/Alpha as Control, "Alphabetisch", "Nach dem Wort sortiert.")
 
 
 ## Drückt den Knopf zu `mode`, ohne `changed` zu melden. Alle Knöpfe einzeln, weil
