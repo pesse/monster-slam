@@ -136,14 +136,13 @@ func set_base_speed(value: float, profile := "") -> void:
 	_save()
 
 
-## Lautstärke der Effekte (0.0..1.0), geräteweit.
-func sfx_volume() -> float:
-	return clampf(float(_config.get_value("general", "sfx_volume", DEFAULT_VOLUME)), 0.0, 1.0)
+## Lautstärke der Effekte eines Profils (0.0..1.0).
+func sfx_volume(profile := "") -> float:
+	return clampf(float(_profile_value("sfx_volume", profile, DEFAULT_VOLUME)), 0.0, 1.0)
 
 
-func set_sfx_volume(value: float) -> void:
-	_config.set_value("general", "sfx_volume", clampf(value, 0.0, 1.0))
-	_save()
+func set_sfx_volume(value: float, profile := "") -> void:
+	_set_profile_value("sfx_volume", profile, clampf(value, 0.0, 1.0))
 
 
 ## Schreibt das Ereignis-Protokoll eines Profils mit (TraceLog)? Vorgabe an.
@@ -166,14 +165,22 @@ func set_sentence_cloud(value: bool) -> void:
 	_save()
 
 
-## Lautstärke der Musik (0.0..1.0), geräteweit.
-func music_volume() -> float:
-	return clampf(float(_config.get_value("general", "music_volume", DEFAULT_VOLUME)), 0.0, 1.0)
+## Lautstärke der Musik eines Profils (0.0..1.0).
+func music_volume(profile := "") -> float:
+	return clampf(float(_profile_value("music_volume", profile, DEFAULT_VOLUME)), 0.0, 1.0)
 
 
-func set_music_volume(value: float) -> void:
-	_config.set_value("general", "music_volume", clampf(value, 0.0, 1.0))
-	_save()
+func set_music_volume(value: float, profile := "") -> void:
+	_set_profile_value("music_volume", profile, clampf(value, 0.0, 1.0))
+
+
+## Musik-Set eines Profils (`MusicSet.id`, ADR 0033); ein unbekanntes spielt das Standard-Set.
+func music_set(profile := "") -> StringName:
+	return StringName(str(_profile_value("music_set", profile, String(MusicSet.DEFAULT_ID))))
+
+
+func set_music_set(id: StringName, profile := "") -> void:
+	_set_profile_value("music_set", profile, String(id))
 
 
 ## Grafikstufe eines Profils, Vorgabe „Schön“. Ohne gespeicherte Stufe gilt der alte

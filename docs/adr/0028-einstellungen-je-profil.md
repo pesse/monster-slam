@@ -24,7 +24,7 @@ auch das andere.
    startet jedes Profil mit dem bisherigen Stand; `[general]` wird nicht mehr geschrieben.
 4. **Ein Profilwechsel stellt das Fenster um** (Grafik, Menügröße, Vollbild nur in der EXE
    wie ADR 0017) und schaltet das Protokoll nach dem Wert des neuen Profils.
-5. **Geräteweit bleiben** die Lautstärken (ohne Bedienung), der Satzmeister in der Cloud
+5. **Geräteweit bleiben** die Lautstärken (ohne Bedienung; seit ADR 0033 je Profil), der Satzmeister in der Cloud
    (hängt am Schlüssel des Rechners, ADR 0025) und der Statistik-Hinweis (ADR 0021).
 
 ## Folgen

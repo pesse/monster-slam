@@ -1,7 +1,7 @@
 # Audio-Credits
 
-Dieses Repo ist öffentlich. Jede Datei unter `assets/audio/` (Effekte in `sfx/`, Musik in
-einem eigenen Ordner daneben) braucht deshalb einen Eintrag mit belegter Herkunft und
+Dieses Repo ist öffentlich. Jede Datei unter `assets/audio/` (Effekte in `sfx/`, Musik je
+Set in `music/<set>/`, ADR 0033) braucht deshalb einen Eintrag mit belegter Herkunft und
 Lizenz — auch „Public Domain"/CC0 muss auf eine Quelle zeigen, sonst lässt sich später
 nicht mehr nachweisen, dass die Datei hier stehen darf. Neue Datei und Eintrag gehören in
 denselben Commit.

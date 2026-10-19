@@ -1,6 +1,6 @@
 extends Control
 ## Einstellungs-Fenster mit den Reitern „Profil" (Name, Schwierigkeit, Tempo, Grafik,
-## Menügröße, Spielstand, Reset), „Melden" (Rückkanal, ADR 0022) und „Protokoll"
+## Menügröße, Spielstand, Reset), „Audio" (Lautstärken, Musik-Set), „Melden" (Rückkanal, ADR 0022) und „Protokoll"
 ## (TraceLog). Öffnet über `ProfileBadge.open_window`; die Reiter sind Knöpfe über
 ## gestapelten Seiten, damit das Fenster seine Größe behält. Hier wird nur bedient und
 ## angezeigt; das aktive Profil wird nur umbenannt, nicht gewechselt.
@@ -9,6 +9,7 @@ const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 ## Aufblenden des Fensters (s).
 const FADE_IN := 0.15
 const TRACE_ROW_SCENE := preload("res://scenes/ui/trace_row.tscn")
+const MUSIC_SET_CHOICE_SCENE := preload("res://scenes/ui/music_set_choice.tscn")
 ## Höchstzahl der im Reiter „Protokoll" gezeigten Ereignisse.
 const TRACE_SHOWN := 200
 
@@ -23,6 +24,9 @@ signal closed()
 @onready var _speed_slider: HSlider = %SpeedSlider
 @onready var _speed_label: Label = %SpeedLabel
 @onready var _standstill: CheckBox = %StandstillToggle
+@onready var _music_slider: HSlider = %MusicSlider
+@onready var _sfx_slider: HSlider = %SfxSlider
+@onready var _set_row: HFlowContainer = %SetRow
 @onready var _reset_confirm: ConfirmDialog = %ResetDialog
 @onready var _import_confirm: ConfirmDialog = %ImportDialog
 @onready var _save_status: Label = %SaveStatus
@@ -38,12 +42,14 @@ signal closed()
 ## Reiter → Abschnitt im Handbuch: das „?“ im Titelband führt zum offenen Reiter.
 @onready var _handbook_sections := {
 	%ProfileTab: "Reiter „Profil“",
+	%SoundTab: "Reiter „Audio“",
 	%ReportTab: "Reiter „Melden“",
 	%TraceTab: "Reiter „Protokoll“",
 }
 ## Reiter → Seite, in der Reihenfolge der Knöpfe.
 @onready var _pages := {
 	%ProfileTab: %ProfilePage,
+	%SoundTab: %SoundPage,
 	%ReportTab: %ReportPage,
 	%TraceTab: %TracePage,
 }
@@ -63,6 +69,11 @@ func _ready() -> void:
 		(_diff_buttons[i] as Button).pressed.connect(_on_difficulty_pressed.bind(i + 1))
 	_speed_slider.value_changed.connect(_on_speed_changed)
 	_standstill.toggled.connect(func(on: bool) -> void: UserSettings.set_typing_standstill(on))
+	_music_slider.value_changed.connect(_on_music_volume_changed)
+	_sfx_slider.value_changed.connect(_on_sfx_volume_changed)
+	# Zum Abhören des neuen Pegels; bei jedem Schritt wäre es ein Geknatter.
+	_sfx_slider.drag_ended.connect(func(_changed: bool) -> void: Sfx.play(&"monster_kill"))
+	_build_set_choices()
 	(%GraphicsFine as Button).pressed.connect(_on_graphics_pressed.bind(GraphicsQuality.Level.FINE))
 	(%GraphicsMedium as Button).pressed.connect(_on_graphics_pressed.bind(GraphicsQuality.Level.MEDIUM))
 	(%GraphicsFast as Button).pressed.connect(_on_graphics_pressed.bind(GraphicsQuality.Level.FAST))
@@ -135,6 +146,7 @@ func _refresh() -> void:
 	_refresh_graphics()
 	_refresh_ui_size()
 	_refresh_fullscreen()
+	_refresh_sound()
 	_refresh_report()
 	_refresh_trace()
 
@@ -177,6 +189,52 @@ func _refresh_fullscreen() -> void:
 
 func _update_speed_label(value: float) -> void:
 	_speed_label.text = "%d %%" % int(round(value * 100.0))
+
+
+# --- Reiter „Audio" -------------------------------------------------------------
+
+## Ein Knopf je Musik-Set; die Zahl steht beim Öffnen fest.
+func _build_set_choices() -> void:
+	var group := ButtonGroup.new()
+	for music_set in Music.sets():
+		var choice: Button = MUSIC_SET_CHOICE_SCENE.instantiate()
+		choice.text = music_set.title
+		choice.button_group = group
+		choice.set_meta(&"set_id", music_set.id)
+		choice.pressed.connect(_on_music_set_pressed.bind(music_set.id))
+		_set_row.add_child(choice)
+
+
+## Ohne `value_changed`, sonst speicherte jedes _refresh die Lautstärke erneut.
+func _refresh_sound() -> void:
+	_music_slider.set_value_no_signal(UserSettings.music_volume())
+	_sfx_slider.set_value_no_signal(UserSettings.sfx_volume())
+	_update_volume_labels()
+	var chosen := Music.music_set(UserSettings.music_set())
+	for choice: Button in _set_row.get_children():
+		choice.set_pressed_no_signal(chosen != null and choice.get_meta(&"set_id") == chosen.id)
+
+
+func _update_volume_labels() -> void:
+	(%MusicLabel as Label).text = "%d %%" % int(round(_music_slider.value * 100.0))
+	(%SfxLabel as Label).text = "%d %%" % int(round(_sfx_slider.value * 100.0))
+
+
+func _on_music_volume_changed(value: float) -> void:
+	UserSettings.set_music_volume(value)
+	Sfx.apply_volumes()
+	_update_volume_labels()
+
+
+func _on_sfx_volume_changed(value: float) -> void:
+	UserSettings.set_sfx_volume(value)
+	Sfx.apply_volumes()
+	_update_volume_labels()
+
+
+func _on_music_set_pressed(id: StringName) -> void:
+	UserSettings.set_music_set(id)
+	Music.refresh()
 
 
 ## Reiter „Melden": Zustand des Rückkanals oben, die eigenen Meldungen darunter.

@@ -1005,6 +1005,7 @@ Kamera frei; die Äste darunter heben nur das Lauftempo (`walk_speed`, Anteile a
 | Neuer Baum | JSON in `data/skills/` (ein `kind: "tree"`-Kopf plus Knoten) | nein |
 | Neuer Skill-*Effekt-Schlüssel* | `SkillTree.EFFECT_KEYS` + ein `apply_skills`, das ihn liest | nur additiv |
 | Neue Mechanik | Neues System, das EventBus-Signale abonniert | nein |
+| Neues Musik-Set | Ordner `assets/audio/music/<id>/` mit `set.tres` (`MusicSet`) und Stücken, Einträge in `assets/audio/CREDITS.md` (ADR 0033) | nein |
 
 ### Zauber (ADR 0014)
 Ein Zauber ist ein Verbrauchsgegenstand: `price` in Gold, `effect` aus

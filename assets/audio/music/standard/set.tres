@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="MusicSet" format=3 uid="uid://ceb4lrix5eoh"]
+
+[ext_resource type="Script" uid="uid://bts4dyo1wc8yg" path="res://src/core/music_set.gd" id="1_set"]
+
+[resource]
+script = ExtResource("1_set")
+id = &"standard"
+title = "Standard"

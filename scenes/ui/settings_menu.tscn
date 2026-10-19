@@ -160,6 +160,15 @@ button_pressed = true
 button_group = SubResource("tab_group")
 text = "Profil"
 
+[node name="SoundTab" type="Button" parent="Window/Layout/Content/Body/Tabs" unique_id=1072726312]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(144, 44)
+layout_mode = 2
+theme_type_variation = &"WindowTab"
+toggle_mode = true
+button_group = SubResource("tab_group")
+text = "Audio"
+
 [node name="ReportTab" type="Button" parent="Window/Layout/Content/Body/Tabs" unique_id=584801433]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(144, 44)
@@ -512,6 +521,95 @@ autowrap_mode = 3
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"StatSubline"
+autowrap_mode = 3
+
+[node name="SoundPage" type="ScrollContainer" parent="Window/Layout/Content/Body/Pages" unique_id=1077941419]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="Gutter" type="MarginContainer" parent="Window/Layout/Content/Body/Pages/SoundPage" unique_id=1524906166]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ScrollGutter"
+
+[node name="Sound" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/SoundPage/Gutter" unique_id=399719952]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MusicHead" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/SoundPage/Gutter/Sound" unique_id=546469143]
+layout_mode = 2
+
+[node name="MusicTitle" type="Label" parent="Window/Layout/Content/Body/Pages/SoundPage/Gutter/Sound/MusicHead" unique_id=1258348888]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"StatHeading"
+text = "Musik"
+
+[node name="MusicLabel" type="Label" parent="Window/Layout/Content/Body/Pages/SoundPage/Gutter/Sound/MusicHead" unique_id=1133120065]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatGold"
+text = "100 %"
+
+[node name="MusicSlider" type="HSlider" parent="Window/Layout/Content/Body/Pages/SoundPage/Gutter/Sound" unique_id=663226084]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 1.0
+step = 0.05
+value = 1.0
+
+[node name="SfxHead" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/SoundPage/Gutter/Sound" unique_id=1200703370]
+layout_mode = 2
+
+[node name="SfxTitle" type="Label" parent="Window/Layout/Content/Body/Pages/SoundPage/Gutter/Sound/SfxHead" unique_id=306426717]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"StatHeading"
+text = "Effekte"
+
+[node name="SfxLabel" type="Label" parent="Window/Layout/Content/Body/Pages/SoundPage/Gutter/Sound/SfxHead" unique_id=601204849]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatGold"
+text = "100 %"
+
+[node name="SfxSlider" type="HSlider" parent="Window/Layout/Content/Body/Pages/SoundPage/Gutter/Sound" unique_id=765912473]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 1.0
+step = 0.05
+value = 1.0
+
+[node name="VolumeNote" type="Label" parent="Window/Layout/Content/Body/Pages/SoundPage/Gutter/Sound" unique_id=1196679270]
+layout_mode = 2
+theme_type_variation = &"Caption"
+text = "Ganz links ist der Ton aus. Die Lautstärken gelten nur für dieses Profil."
+autowrap_mode = 3
+
+[node name="VolumeRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/SoundPage/Gutter/Sound" unique_id=1931458421]
+layout_mode = 2
+theme_type_variation = &"StatRule"
+
+[node name="SetLabel" type="Label" parent="Window/Layout/Content/Body/Pages/SoundPage/Gutter/Sound" unique_id=816748420]
+layout_mode = 2
+theme_type_variation = &"StatHeading"
+text = "Musik-Set"
+
+[node name="SetRow" type="HFlowContainer" parent="Window/Layout/Content/Body/Pages/SoundPage/Gutter/Sound" unique_id=72302867]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="SetNote" type="Label" parent="Window/Layout/Content/Body/Pages/SoundPage/Gutter/Sound" unique_id=1782852809]
+layout_mode = 2
+theme_type_variation = &"Caption"
+text = "Das Set bestimmt die Musik im Menü, im Kampf und beim Boss. Ein Wechsel ist sofort zu hören."
 autowrap_mode = 3
 
 [node name="ReportPage" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages" unique_id=388386329]

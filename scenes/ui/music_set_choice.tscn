@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://dhqivu1vg87tr"]
+
+[node name="MusicSetChoice" type="Button" unique_id=453558257]
+custom_minimum_size = Vector2(0, 44)
+theme_type_variation = &"ToolChoice"
+toggle_mode = true
+text = "Standard"

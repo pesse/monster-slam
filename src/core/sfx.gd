@@ -96,6 +96,7 @@ func _ready() -> void:
 		add_child(player)
 		_players.append(player)
 	apply_volumes()
+	UserSettings.active_profile_changed.connect(func(_id: String) -> void: apply_volumes())
 
 
 ## Spielt den Sound zur Id, wenn Datei, Cooldown und ein freier Player es zulassen.
@@ -134,7 +135,7 @@ func _path_of(id: StringName) -> String:
 	return AUDIO_DIR + str((SOUNDS[id] as Dictionary)["file"])
 
 
-## Überträgt die Lautstärken aus UserSettings auf die Busse.
+## Überträgt die Lautstärken des aktiven Profils auf die Busse.
 func apply_volumes() -> void:
 	_apply_bus_volume(BUS_SFX, UserSettings.sfx_volume())
 	_apply_bus_volume(BUS_MUSIC, UserSettings.music_volume())

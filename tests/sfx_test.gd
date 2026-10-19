@@ -14,7 +14,7 @@ var _saved_sfx_volume := 1.0
 
 
 func before_test() -> void:
-	# Die Lautstärke steht geräteweit in user://settings.cfg — der Testlauf darf die echte
+	# Die Lautstärke steht im aktiven Profil in user://settings.cfg — der Testlauf darf die echte
 	# Einstellung des Entwicklers nicht verstellen.
 	_saved_sfx_volume = UserSettings.sfx_volume()
 

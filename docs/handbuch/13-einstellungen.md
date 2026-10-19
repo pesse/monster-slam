@@ -1,7 +1,7 @@
 # 13. Einstellungen
 
 „Einstellungen“ im Hauptmenü öffnet ein Fenster über dem Menü; „✕“ oben rechts oder
-**Esc** schließt es wieder. Das Fenster hat drei Reiter.
+**Esc** schließt es wieder. Das Fenster hat vier Reiter.
 
 Alle Einstellungen gelten nur für das Profil, das gerade spielt. Wechselst du das Profil,
 stellt sich das Spiel auf dessen Einstellungen um, auch Grafik, Menügröße und Vollbild.
@@ -29,6 +29,17 @@ stellt sich das Spiel auf dessen Einstellungen um, auch Grafik, Menügröße und
   dieses Profils. Gold, Erfahrung und gelernte Fähigkeiten sind davon nicht betroffen.
 - **„Spielstand“**: „Sichern…“ legt den Spielstand dieses Profils als Datei ab, „Laden…“
   spielt so eine Datei ein ([Kapitel 23](23-spielstand-und-sicherungen.md)).
+
+## Reiter „Audio“
+
+- **„Musik“** und **„Effekte“**: die Lautstärke der Hintergrundmusik und der Geräusche im
+  Spiel. Ganz links ist der jeweilige Ton aus. Nach dem Loslassen des Effekte-Reglers
+  ist ein Beispiel zu hören.
+- **„Musik-Set“**: welche Musik im Menü, im Kampf und beim Boss läuft. Das gewählte Set
+  steht gedrückt; ein Wechsel ist sofort zu hören.
+
+Im Kampf läuft die Musik leiser, solange das Spiel pausiert, und klingt gedämpft, solange
+die Zeitlupe beim Tippen läuft.
 
 ## Reiter „Melden“
 

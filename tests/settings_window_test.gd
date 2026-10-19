@@ -30,6 +30,21 @@ func test_the_tabs_switch_pages() -> void:
 	remove_child(screen)
 
 
+## Je Musik-Set ein Knopf, das gewählte gedrückt; die Regler zeigen die Lautstärken.
+func test_the_sound_tab_shows_the_chosen_set_and_volumes() -> void:
+	var screen := _window()
+	var chosen := Music.music_set(UserSettings.music_set())
+	var pressed: Array = []
+	for choice: Button in screen.get_node("%SetRow").get_children():
+		if choice.button_pressed:
+			pressed.append(choice.get_meta(&"set_id"))
+	assert_int(screen.get_node("%SetRow").get_child_count()).is_equal(Music.sets().size())
+	assert_array(pressed).is_equal([chosen.id])
+	assert_float((screen.get_node("%MusicSlider") as HSlider).value) \
+			.is_equal_approx(UserSettings.music_volume(), 0.05)
+	remove_child(screen)
+
+
 ## Die gespeicherte Menügröße steht gedrückt, genau eine (Issue #38).
 func test_the_chosen_menu_size_is_pressed() -> void:
 	var screen := _window()
@@ -116,7 +131,7 @@ func test_a_broken_file_only_says_so() -> void:
 ## Das Fenster passt in die Bezugsgröße: Kopf und Reiter stehen, der Rest scrollt.
 func test_the_window_fits_the_reference_size() -> void:
 	var screen := _window()
-	for tab in ["%ProfileTab", "%ReportTab", "%TraceTab"]:
+	for tab in ["%ProfileTab", "%SoundTab", "%ReportTab", "%TraceTab"]:
 		(screen.get_node(tab) as Button).button_pressed = true
 		var need := (screen.get_node("%Layout") as Control).get_combined_minimum_size() \
 				+ Vector2(32, 32)
