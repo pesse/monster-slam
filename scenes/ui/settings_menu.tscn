@@ -140,10 +140,11 @@ layout_mode = 2
 [node name="Tabs" type="HBoxContainer" parent="Window/Layout/Content/Body"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"TabRow"
 
 [node name="ProfileTab" type="Button" parent="Window/Layout/Content/Body/Tabs"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(144, 40)
+custom_minimum_size = Vector2(144, 44)
 layout_mode = 2
 theme_type_variation = &"WindowTab"
 toggle_mode = true
@@ -153,7 +154,7 @@ text = "Profil"
 
 [node name="ReportTab" type="Button" parent="Window/Layout/Content/Body/Tabs"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(144, 40)
+custom_minimum_size = Vector2(144, 44)
 layout_mode = 2
 theme_type_variation = &"WindowTab"
 toggle_mode = true
@@ -162,16 +163,17 @@ text = "Melden"
 
 [node name="TraceTab" type="Button" parent="Window/Layout/Content/Body/Tabs"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(144, 40)
+custom_minimum_size = Vector2(144, 44)
 layout_mode = 2
 theme_type_variation = &"WindowTab"
 toggle_mode = true
 button_group = SubResource("tab_group")
 text = "Protokoll"
 
-[node name="TabRule" type="HSeparator" parent="Window/Layout/Content/Body"]
+[node name="TabRail" type="PanelContainer" parent="Window/Layout/Content/Body/Tabs"]
 layout_mode = 2
-theme_type_variation = &"StatRule"
+size_flags_horizontal = 3
+theme_type_variation = &"TabRail"
 
 [node name="Pages" type="Control" parent="Window/Layout/Content/Body"]
 layout_mode = 2
