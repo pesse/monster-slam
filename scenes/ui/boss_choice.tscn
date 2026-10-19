@@ -4,6 +4,7 @@
 [ext_resource type="Script" path="res://src/ui/window_chrome.gd" id="2_chrome"]
 [ext_resource type="Texture2D" path="res://assets/ui/bosses/satzmeister.webp" id="3_golem"]
 [ext_resource type="Texture2D" path="res://assets/ui/bosses/rambler.webp" id="4_rambler"]
+[ext_resource type="Material" path="res://scenes/ui/title_metal.tres" id="title_metal"]
 
 [node name="BossChoice" type="Control"]
 layout_mode = 3
@@ -58,6 +59,7 @@ part = 1
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
+material = ExtResource("title_metal")
 theme_type_variation = &"WindowTitle"
 text = "Welcher Boss?"
 vertical_alignment = 1

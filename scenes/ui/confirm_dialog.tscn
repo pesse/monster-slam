@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://src/ui/confirm_dialog.gd" id="1_confirm"]
 [ext_resource type="Script" path="res://src/ui/window_chrome.gd" id="2_chrome"]
+[ext_resource type="Material" path="res://scenes/ui/title_metal.tres" id="title_metal"]
 
 [node name="ConfirmDialog" type="Control"]
 layout_mode = 3
@@ -56,6 +57,7 @@ part = 1
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
+material = ExtResource("title_metal")
 theme_type_variation = &"WindowTitle"
 text = "Wirklich?"
 vertical_alignment = 1

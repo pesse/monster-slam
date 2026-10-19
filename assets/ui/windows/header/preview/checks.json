@@ -1,0 +1,37 @@
+{
+  "title_bar": {
+    "width": 512,
+    "height": 64,
+    "channels": 4,
+    "alpha_min": 0,
+    "alpha_max": 255,
+    "lossless_VP8L": true,
+    "rgba_roundtrip_visible_equal": true,
+    "max_roundtrip_delta": 0,
+    "horizontal_seam_all_64_rows": {
+      "max_channel_delta": 0,
+      "mean_channel_delta": 0
+    },
+    "original_top_8_rows_max_delta": 0,
+    "original_separator_rows_62_63_max_delta": 0
+  },
+  "title_medallion": {
+    "width": 64,
+    "height": 64,
+    "channels": 4,
+    "alpha_min": 0,
+    "alpha_max": 255,
+    "lossless_VP8L": true,
+    "rgba_roundtrip_visible_equal": true,
+    "max_roundtrip_delta": 0,
+    "interior_radius_24_opaque": true,
+    "exterior_radius_31_5_transparent": true
+  },
+  "rendered_widths": [
+    480,
+    640,
+    1100,
+    1152
+  ],
+  "every_width_480_to_1100": true
+}
