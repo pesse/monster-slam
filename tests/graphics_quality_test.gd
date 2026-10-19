@@ -1,8 +1,8 @@
 extends GdUnitTestSuite
 ## Die Grafikstufe (GraphicsQuality) und ihr Ablageort in UserSettings.
 ##
-## Geräteweit wie die Lautstärke — kein Wegwerf-Profil, der Test sichert den echten Wert
-## und stellt ihn wieder her.
+## Sie gilt je Profil (ADR 0028); die Tests am Fenster laufen im aktiven Profil, sichern
+## dessen Wert und stellen ihn wieder her.
 
 const Level := GraphicsQuality.Level
 
@@ -47,12 +47,12 @@ func test_fast_drops_the_expensive_parts() -> void:
 	assert_float(GraphicsQuality.cover(Level.FAST)).is_equal(0.0)
 
 
-## Die Stufe liegt in [general] und damit am Gerät, nicht am Profil.
-func test_the_setting_is_device_wide() -> void:
+## Die Stufe liegt beim aktiven Profil.
+func test_the_setting_belongs_to_the_profile() -> void:
 	UserSettings.set_graphics_quality(Level.MEDIUM)
 	var cfg := ConfigFile.new()
 	assert_int(cfg.load(UserSettings.PATH)).is_equal(OK)
-	assert_int(cfg.get_value("general", "graphics_quality", -1)).is_equal(Level.MEDIUM)
+	assert_int(cfg.get_value("graphics_quality", UserSettings.active_profile(), -1)).is_equal(Level.MEDIUM)
 	assert_int(GraphicsQuality.level()).is_equal(Level.MEDIUM)
 
 

@@ -152,3 +152,15 @@ func test_the_factor_never_reaches_a_standstill() -> void:
 func test_without_skills_the_base_values_stand() -> void:
 	_sm.apply_skills({})
 	assert_float(_sm.factor).is_equal_approx(SlowMotion.BASE_FACTOR, 0.001)
+
+
+## Stillstand beim Tippen (UserSettings.typing_standstill): die Zeit steht, bis abgeschickt
+## wird, und läuft danach sofort wieder.
+func test_standstill_stops_time_until_submit() -> void:
+	_sm.apply_skills({})
+	_sm.stand_still()
+	EventBus.typing_started.emit()
+	await _pump(500)
+	assert_float(Engine.time_scale).is_equal(0.0)
+	EventBus.typing_stopped.emit()
+	assert_float(Engine.time_scale).is_equal(1.0)

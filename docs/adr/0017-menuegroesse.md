@@ -23,7 +23,7 @@ Vollbild zu groß. Die 3D-Welt rendert ohnehin in Fensterauflösung und darf wac
    1,2 darauf.
 
 3. **Gespeichert wird nur die Stufe**, geräteweit in `[general] ui_size` wie die
-   Grafikstufe. Was „Mittel" in Pixeln heißt, wird bei jedem Start und jeder
+   Grafikstufe (seit ADR 0028 je Profil in `[ui_size]`). Was „Mittel" in Pixeln heißt, wird bei jedem Start und jeder
    Größenänderung gerechnet.
 
 4. **Die Bezugsgröße setzt nur `UiScale.apply`.** Ausgelöst wird sie von `UserSettings`

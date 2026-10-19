@@ -1,6 +1,7 @@
 extends Node
-## Einstellungen in user://settings.cfg (Autoload): Profile, ihre Filter und geräteweite
-## Werte unter [general]. Lädt vor PlayerProgress, das in `_ready()` das aktive Profil liest.
+## Einstellungen in user://settings.cfg (Autoload): Profile, ihre Einstellungen und Filter
+## je `[<einstellung>] <id>=…`, geräteweite Werte unter [general] (ADR 0028). Lädt vor
+## PlayerProgress, das in `_ready()` das aktive Profil liest.
 
 const PATH := "user://settings.cfg"
 const PROGRESS_DIR := "user://progress"
@@ -35,13 +36,19 @@ func _ready() -> void:
 	if str(_config.get_value("names", DEFAULT_PROFILE, "")).is_empty():
 		_config.set_value("names", DEFAULT_PROFILE, "Spieler")
 		_save()
-	GraphicsQuality.apply_window(get_tree().root, graphics_quality())
 	var root := get_tree().root
-	UiScale.apply(root, ui_size())
 	root.size_changed.connect(func() -> void: UiScale.apply(root, ui_size()))
-	# Vollbild beim Start nur in der EXE (ADR 0017).
-	if OS.has_feature("template") and fullscreen():
-		_apply_fullscreen(true)
+	_apply_window()
+
+
+## Grafik, Menügröße und Vollbild des aktiven Profils aufs Fenster.
+func _apply_window() -> void:
+	var root := get_tree().root
+	GraphicsQuality.apply_window(root, graphics_quality())
+	UiScale.apply(root, ui_size())
+	# Vollbild nur in der EXE (ADR 0017).
+	if OS.has_feature("template"):
+		_apply_fullscreen(fullscreen())
 
 
 func active_profile() -> String:
@@ -57,6 +64,7 @@ func set_active_profile(id: String) -> void:
 		return
 	_config.set_value("general", "active_profile", id)
 	_save()
+	_apply_window()
 	active_profile_changed.emit(id)
 
 
@@ -107,6 +115,15 @@ func set_default_difficulty(value: int, profile := "") -> void:
 	_save()
 
 
+## Stehen die Monster still, solange die Eingabe offen ist (statt der Zeitlupe)? Vorgabe aus.
+func typing_standstill(profile := "") -> bool:
+	return bool(_profile_value("typing_standstill", profile, false))
+
+
+func set_typing_standstill(on: bool, profile := "") -> void:
+	_set_profile_value("typing_standstill", profile, on)
+
+
 ## Grund-Geschwindigkeit eines Profils als Faktor (0.5..1.5) zusätzlich zur Schwierigkeit.
 func base_speed(profile := "") -> float:
 	var id := profile if not profile.is_empty() else active_profile()
@@ -129,14 +146,13 @@ func set_sfx_volume(value: float) -> void:
 	_save()
 
 
-## Schreibt das Ereignis-Protokoll mit (TraceLog)? Geräteweit, Vorgabe an.
-func trace_enabled() -> bool:
-	return bool(_config.get_value("general", "trace_log", DEFAULT_TRACE_ENABLED))
+## Schreibt das Ereignis-Protokoll eines Profils mit (TraceLog)? Vorgabe an.
+func trace_enabled(profile := "") -> bool:
+	return bool(_profile_value("trace_log", profile, DEFAULT_TRACE_ENABLED))
 
 
-func set_trace_enabled(value: bool) -> void:
-	_config.set_value("general", "trace_log", value)
-	_save()
+func set_trace_enabled(value: bool, profile := "") -> void:
+	_set_profile_value("trace_log", profile, value)
 
 
 ## Bewertet die Cloud statt des lokalen Modells die Sätze im Satzmeister (ADR 0025)?
@@ -160,43 +176,38 @@ func set_music_volume(value: float) -> void:
 	_save()
 
 
-## Grafikstufe, geräteweit, Vorgabe „Schön“. Ohne gespeicherte Stufe gilt der alte
+## Grafikstufe eines Profils, Vorgabe „Schön“. Ohne gespeicherte Stufe gilt der alte
 ## Schlüssel `graphics_simple` als „Schnell“.
-func graphics_quality() -> GraphicsQuality.Level:
-	if _config.has_section_key("general", "graphics_quality"):
-		return clampi(int(_config.get_value("general", "graphics_quality")),
-				GraphicsQuality.Level.FAST, GraphicsQuality.Level.FINE) as GraphicsQuality.Level
-	if bool(_config.get_value("general", "graphics_simple", false)):
-		return GraphicsQuality.Level.FAST
-	return GraphicsQuality.Level.FINE
+func graphics_quality(profile := "") -> GraphicsQuality.Level:
+	var fallback := GraphicsQuality.Level.FAST \
+			if bool(_config.get_value("general", "graphics_simple", false)) else GraphicsQuality.Level.FINE
+	return clampi(int(_profile_value("graphics_quality", profile, fallback)),
+			GraphicsQuality.Level.FAST, GraphicsQuality.Level.FINE) as GraphicsQuality.Level
 
 
 func set_graphics_quality(value: GraphicsQuality.Level) -> void:
-	_config.set_value("general", "graphics_quality", int(value))
-	_save()
+	_set_profile_value("graphics_quality", "", int(value))
 	GraphicsQuality.apply_window(get_tree().root, value)
 
 
-## Menügröße, geräteweit; gespeichert wird nur die Stufe (ADR 0017).
-func ui_size() -> UiScale.Size:
-	return clampi(int(_config.get_value("general", "ui_size", UiScale.Size.MEDIUM)),
+## Menügröße eines Profils; gespeichert wird nur die Stufe (ADR 0017).
+func ui_size(profile := "") -> UiScale.Size:
+	return clampi(int(_profile_value("ui_size", profile, UiScale.Size.MEDIUM)),
 			UiScale.Size.SMALL, UiScale.Size.LARGE) as UiScale.Size
 
 
 func set_ui_size(value: UiScale.Size) -> void:
-	_config.set_value("general", "ui_size", int(value))
-	_save()
+	_set_profile_value("ui_size", "", int(value))
 	UiScale.apply(get_tree().root, value)
 
 
-## Gewünschtes Vollbild, geräteweit; den tatsächlichen Zustand sagt `window_is_fullscreen()`.
-func fullscreen() -> bool:
-	return bool(_config.get_value("general", "fullscreen", false))
+## Gewünschtes Vollbild eines Profils; den tatsächlichen Zustand sagt `window_is_fullscreen()`.
+func fullscreen(profile := "") -> bool:
+	return bool(_profile_value("fullscreen", profile, false))
 
 
 func set_fullscreen(on: bool) -> void:
-	_config.set_value("general", "fullscreen", on)
-	_save()
+	_set_profile_value("fullscreen", "", on)
 	_apply_fullscreen(on)
 
 
@@ -322,6 +333,20 @@ func stats_sent_at(profile: String) -> int:
 
 func set_stats_sent_at(profile: String, unix: int) -> void:
 	_config.set_value("stats_sent", profile, unix)
+	_save()
+
+
+## Wert eines Profils aus `[key]`; ohne eigenen Eintrag der alte geräteweite aus
+## `[general] key` (ADR 0028), sonst `default`. Leeres `profile` -> aktives Profil.
+func _profile_value(key: String, profile: String, default: Variant) -> Variant:
+	var id := profile if not profile.is_empty() else active_profile()
+	if _config.has_section_key(key, id):
+		return _config.get_value(key, id)
+	return _config.get_value("general", key, default)
+
+
+func _set_profile_value(key: String, profile: String, value: Variant) -> void:
+	_config.set_value(key, profile if not profile.is_empty() else active_profile(), value)
 	_save()
 
 

@@ -2,7 +2,7 @@ class_name GraphicsQuality
 extends RefCounted
 ## Grafikstufe „Schön“ (Vorgabe), „Mittel“ oder „Schnell“; was sie weglassen, steht in
 ## docs/ARCHITECTURE.md („Grafikstufen“), gemessen mit `battle_theme_lab -- --fps`.
-## Die Stufe gilt je Rechner; wer zeichnet, fragt hier und nicht in UserSettings.
+## Die Stufe gilt je Profil (ADR 0028); wer zeichnet, fragt hier und nicht in UserSettings.
 
 enum Level { FAST, MEDIUM, FINE }
 

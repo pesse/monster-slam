@@ -202,7 +202,7 @@ func send_profile(profile: String) -> bool:
 		return false
 	_busy = true
 	var ok := await _send_snapshot(profile)
-	if ok and UserSettings.trace_enabled():
+	if ok and UserSettings.trace_enabled(profile):
 		ok = await _send_trace(profile)
 	_busy = false
 	if not _again.is_empty():

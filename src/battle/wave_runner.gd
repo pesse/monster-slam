@@ -209,6 +209,8 @@ func _ready() -> void:
 			+ FortressTier.health_bonus(_fortress_tier)
 	GameState.apply_skills(skill_bonuses)
 	_slow_motion.apply_skills(skill_bonuses)
+	if UserSettings.typing_standstill():
+		_slow_motion.stand_still()
 	_catapult = float(skill_bonuses.get("auto_catapult", 0.0)) > 0.0
 	_monster_pace = SkillTree.monster_pace(skill_bonuses)
 	_spawn_gap_scale = SkillTree.spawn_gap_scale(skill_bonuses)

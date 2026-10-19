@@ -25,7 +25,9 @@ func _ready() -> void:
 	player_id = UserSettings.active_profile()
 	enabled = UserSettings.trace_enabled() and not _under_test()
 	progress = PlayerProgress
-	UserSettings.active_profile_changed.connect(switch_to)
+	UserSettings.active_profile_changed.connect(func(id: String) -> void:
+		switch_to(id)
+		set_enabled(UserSettings.trace_enabled(id) and not _under_test()))
 	EventBus.run_started.connect(note_run_start)
 	EventBus.run_ended.connect(note_run_end)
 	EventBus.run_suspended.connect(note_run_suspended)

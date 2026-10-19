@@ -3,6 +3,9 @@
 „Einstellungen“ im Hauptmenü öffnet ein Fenster über dem Menü; „✕“ oben rechts oder
 **Esc** schließt es wieder. Das Fenster hat drei Reiter.
 
+Alle Einstellungen gelten nur für das Profil, das gerade spielt. Wechselst du das Profil,
+stellt sich das Spiel auf dessen Einstellungen um, auch Grafik, Menügröße und Vollbild.
+
 ## Reiter „Profil“
 
 - **„Profilname“**: dem Profil, das gerade spielt, mit **„Umbenennen“** einen neuen Namen
@@ -12,13 +15,16 @@
 - **„Grund-Geschwindigkeit“** (50 % bis 150 %): macht alle Monster langsamer oder
   schneller, unabhängig von der Schwierigkeit. Gut für Kinder, die noch langsam tippen
   oder lesen.
+- **„Beim Tippen bleibt die Zeit stehen“**: statt der Zeitlupe stehen die Monster ganz
+  still, solange das Eingabefeld offen ist ([Kapitel 5](05-kampf.md#zeitlupe-beim-tippen)).
+  Mit Enter oder Esc läuft die Zeit sofort weiter. Gedacht für Kinder, die gerade nur mit
+  einer Hand tippen können, etwa mit gebrochenem Arm.
 - **„Menügröße“** (Klein, Mittel, Groß): wie groß Menüs, Karte und die Anzeigen im Kampf
   auf dem Bildschirm stehen. „Mittel“ richtet sich nach der Anzeige-Einstellung des
-  Rechners. Ein größeres Fenster gibt mehr Platz, die Schrift bleibt gleich groß. Gilt für
-  diesen Rechner, nicht nur für das Profil.
+  Rechners. Ein größeres Fenster gibt mehr Platz, die Schrift bleibt gleich groß.
 - **„Im Vollbild spielen“**: das Spiel füllt den ganzen Bildschirm, ohne Fensterrahmen.
   **F11** oder **Alt+Enter** schaltet jederzeit um, auch mitten im Kampf. Beenden geht dann
-  über „Beenden“ im Startmenü. Gilt für diesen Rechner, nicht nur für das Profil.
+  über „Beenden“ im Startmenü.
 - **„Fortschritt zurücksetzen“**: löscht nach einer Rückfrage den Lernstand der Wörter
   dieses Profils. Gold, Erfahrung und gelernte Fähigkeiten sind davon nicht betroffen.
 - **„Spielstand“**: „Sichern…“ legt den Spielstand dieses Profils als Datei ab, „Laden…“

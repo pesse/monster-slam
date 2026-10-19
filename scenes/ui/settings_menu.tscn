@@ -315,6 +315,18 @@ theme_type_variation = &"Caption"
 text = "Macht alle Monster langsamer oder schneller, unabhängig von der Schwierigkeit — gut für alle, die noch langsam tippen."
 autowrap_mode = 3
 
+[node name="StandstillToggle" type="CheckBox" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Beim Tippen bleibt die Zeit stehen"
+
+[node name="StandstillNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+layout_mode = 2
+theme_type_variation = &"Caption"
+text = "Statt der Zeitlupe stehen die Monster still, solange das Eingabefeld offen ist — für alle, die gerade nur mit einer Hand tippen können."
+autowrap_mode = 3
+
 [node name="SpeedRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
 layout_mode = 2
 theme_type_variation = &"StatRule"
@@ -358,7 +370,7 @@ text = "Schnell"
 [node name="GraphicsNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
 layout_mode = 2
 theme_type_variation = &"Caption"
-text = "„Mittel“ lässt das Leuchten weg und glättet Kanten weniger. „Schnell“ lässt dazu Kantenglättung, Wolkenschatten, Bodenflecken und fliegende Blätter oder Flocken weg — für ältere Rechner, wenn das Spiel ruckelt. Gilt für diesen Rechner, nicht nur für dieses Profil."
+text = "„Mittel“ lässt das Leuchten weg und glättet Kanten weniger. „Schnell“ lässt dazu Kantenglättung, Wolkenschatten, Bodenflecken und fliegende Blätter oder Flocken weg — für ältere Rechner, wenn das Spiel ruckelt."
 autowrap_mode = 3
 
 [node name="GraphicsRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
@@ -404,7 +416,7 @@ text = "Groß"
 [node name="UiSizeNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
 layout_mode = 2
 theme_type_variation = &"Caption"
-text = "Wie groß Menüs, Karte und Anzeigen im Kampf stehen. „Mittel“ richtet sich nach der Bildschirmeinstellung des Rechners; ein größeres Fenster gibt mehr Platz statt größerer Schrift. Gilt für diesen Rechner, nicht nur für dieses Profil."
+text = "Wie groß Menüs, Karte und Anzeigen im Kampf stehen. „Mittel“ richtet sich nach der Bildschirmeinstellung des Rechners; ein größeres Fenster gibt mehr Platz statt größerer Schrift."
 autowrap_mode = 3
 
 [node name="UiSizeRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
@@ -425,7 +437,7 @@ text = "Im Vollbild spielen"
 [node name="FullscreenNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
 layout_mode = 2
 theme_type_variation = &"Caption"
-text = "Umschalten geht jederzeit auch mit F11 oder Alt+Enter. Beenden im Vollbild über „Beenden“ im Startmenü. Gilt für diesen Rechner, nicht nur für dieses Profil."
+text = "Umschalten geht jederzeit auch mit F11 oder Alt+Enter. Beenden im Vollbild über „Beenden“ im Startmenü."
 autowrap_mode = 3
 
 [node name="FullscreenRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]

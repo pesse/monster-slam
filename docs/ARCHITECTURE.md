@@ -719,7 +719,7 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
 - **Farbgebung.** Die Kampfszene tonemappt (Filmic) und hebt Kontrast und Sättigung leicht
   (`adjustment_*`). Die Sonne wird tief golden (`SunCycle.tint_at`, von `NOON_TINT` nach
   `GOLDEN`) auf die Farbe des Themas; derselbe Ton geht als `sun_tint` an den Bodenshader.
-- **Grafikstufen** (`GraphicsQuality`, geräteweit in `UserSettings.graphics_quality`):
+- **Grafikstufen** (`GraphicsQuality`, je Profil in `UserSettings.graphics_quality`, ADR 0028):
   „Schön" zeigt alles, „Mittel" lässt Glow weg und halbiert MSAA, „Schnell" lässt dazu MSAA,
   Wolken, Teilchen, Bodenflecken und die Farbkorrektur weg. Die Büschel des Bewuchses
   halbiert „Mittel", „Schnell" lässt sie weg; die Sträucher bleiben. Schatten, Wind und der Weg
@@ -841,7 +841,8 @@ Start-Screen (`🌳 Fähigkeiten`), nicht am Kampf: gelernt wird zwischen den L�
   Low-Poly, der Einschlag ist der `Blast` des Explosionspfeils (`WaveRunner._blast_at`).
   Stein und Blast sind im Vorwärmen.
 - **Die Zeitlupe hat eine Untergrenze** (`SkillTree.MIN_SLOW_FACTOR`), sonst fröre ein
-  tiefer Baum das Spiel ein.
+  tiefer Baum das Spiel ein. Den Stillstand gibt es nur als Einstellung des Profils
+  (`UserSettings.typing_standstill`, ADR 0028); er endet mit der offenen Eingabe.
 - **Verlernen geht einzeln** (`SkillBook.forget`): mit dem Knoten fällt jeder gelernte
   Knoten, der über ihn hängt (`SkillTree.forget_set`) — ein Knoten ohne Vorstufe ist ein
   Zustand, den das Lernen nie herstellt. Die Rückfrage nennt jeden mitfallenden Knoten beim
@@ -871,7 +872,8 @@ Tasten des Kampfs:
 - **Die Zeitlupe hält, solange die Eingabe offen ist**: das öffnende Enter sendet
   `EventBus.typing_started`, SlowMotion hält (`hold_open`), bis `typing_stopped` kommt —
   beim Abschicken, bei Escape und wenn die offene Eingabe verschwindet. Keine Haltedauer
-  je Zeichen; der Zeitwandler vertieft nur (`slow_factor`). `typing_activity` (jede
+  je Zeichen; der Zeitwandler vertieft nur (`slow_factor`), der Stillstand des Profils
+  setzt den Faktor auf 0 (`SlowMotion.stand_still`). `typing_activity` (jede
   Zeichenänderung) spannt nur noch den Bogen.
 
 ### Ich-Sicht (Späher-Baum)
@@ -1121,7 +1123,7 @@ Zeile JSON.
 - **Zwei Generationen à 2 MB je Profil**, mehr nicht: ein Protokoll, das den Rechner
   vollschreibt, schaltet man ab, und dann hilft es niemandem. Geschrieben wird sofort und
   mit `flush()` — der Absturz, den die Spur erklären soll, kündigt sich nicht an.
-- **Abschaltbar, Vorgabe an** (`UserSettings.trace_enabled`, geräteweit wie die Lautstärke).
+- **Abschaltbar, Vorgabe an** (`UserSettings.trace_enabled`, je Profil, ADR 0028).
   Der Zugang ist der Reiter „Protokoll" im Einstellungs-Fenster: Pfad, Ordner öffnen, leeren.
   Eine Aufzeichnung, die man erst einschalten muss, ist beim Fehler von gestern leer.
 - **Die Rohspur bleibt auf dem Rechner.** Sie enthält getippte Kindertexte und Lemmata aus

@@ -174,6 +174,10 @@ schließt. Wie lange du tippst, spielt dabei keine Rolle.
 langsam tippt, soll deshalb nicht verlieren. Mit dem Fähigkeitsbaum „Zeitwandler“ wird die
 Zeitlupe noch tiefer.
 
+Wer gerade nur mit einer Hand tippen kann, schaltet in den Einstellungen
+„Beim Tippen bleibt die Zeit stehen“ ein ([Kapitel 13](13-einstellungen.md)): Dann stehen
+die Monster still, solange das Feld offen ist.
+
 ## Feier beim Meistern
 
 Meisterst du im Kampf eine Aufgabe **zum ersten Mal**, hält das Spiel kurz an: ein grüner

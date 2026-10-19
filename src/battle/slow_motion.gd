@@ -59,6 +59,12 @@ func apply_skills(bonuses: Dictionary) -> void:
 			SkillTree.MIN_SLOW_FACTOR, 1.0)
 
 
+## Die Zeit steht, solange die Eingabe offen ist (`UserSettings.typing_standstill`). Der Lauf
+## endet trotzdem: Abschicken oder Esc beendet den Stillstand.
+func stand_still() -> void:
+	factor = 0.0
+
+
 ## Spult mit Rampe bis zum nächsten stop() vor. Die Vignette bleibt aus, weil
 ## _publish_intensity auf 0..1 klemmt.
 func fast_forward() -> void:

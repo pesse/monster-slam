@@ -22,6 +22,7 @@ signal closed()
 @onready var _diff_buttons: Array = %DiffRow.get_children()
 @onready var _speed_slider: HSlider = %SpeedSlider
 @onready var _speed_label: Label = %SpeedLabel
+@onready var _standstill: CheckBox = %StandstillToggle
 @onready var _reset_confirm: ConfirmDialog = %ResetDialog
 @onready var _import_confirm: ConfirmDialog = %ImportDialog
 @onready var _save_status: Label = %SaveStatus
@@ -61,6 +62,7 @@ func _ready() -> void:
 	for i in _diff_buttons.size():
 		(_diff_buttons[i] as Button).pressed.connect(_on_difficulty_pressed.bind(i + 1))
 	_speed_slider.value_changed.connect(_on_speed_changed)
+	_standstill.toggled.connect(func(on: bool) -> void: UserSettings.set_typing_standstill(on))
 	(%GraphicsFine as Button).pressed.connect(_on_graphics_pressed.bind(GraphicsQuality.Level.FINE))
 	(%GraphicsMedium as Button).pressed.connect(_on_graphics_pressed.bind(GraphicsQuality.Level.MEDIUM))
 	(%GraphicsFast as Button).pressed.connect(_on_graphics_pressed.bind(GraphicsQuality.Level.FAST))
@@ -152,6 +154,7 @@ func _refresh_speed() -> void:
 	var value := UserSettings.base_speed()
 	_speed_slider.set_value_no_signal(value)
 	_update_speed_label(value)
+	_standstill.set_pressed_no_signal(UserSettings.typing_standstill())
 
 
 func _refresh_graphics() -> void:
