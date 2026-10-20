@@ -1,0 +1,155 @@
+{
+  "revision": 2,
+  "selected_sha256_before": "947d20640afba2af2d8365cfa5aa23aa5d73de5a9891c50afc89cc768a7dc58c",
+  "normal": {
+    "width": 192,
+    "height": 192,
+    "channels": 4,
+    "alpha_min": 0,
+    "alpha_max": 255,
+    "lossless_VP8L": true,
+    "rgba_roundtrip_visible_equal": true,
+    "max_roundtrip_delta": 0,
+    "seams": {
+      "center_x": {
+        "max_channel_delta": 0,
+        "mean_channel_delta": 0
+      },
+      "center_y": {
+        "max_channel_delta": 0,
+        "mean_channel_delta": 0
+      },
+      "top_x": {
+        "max_channel_delta": 0,
+        "mean_channel_delta": 0
+      },
+      "bottom_x": {
+        "max_channel_delta": 0,
+        "mean_channel_delta": 0
+      },
+      "left_y": {
+        "max_channel_delta": 0,
+        "mean_channel_delta": 0
+      },
+      "right_y": {
+        "max_channel_delta": 0,
+        "mean_channel_delta": 0
+      }
+    },
+    "alpha_mask_max_delta": 0,
+    "center_opaque": true,
+    "frame_luminance_max_delta": 0.4894000000000007,
+    "geometry_source": "card_selected.webp: pixel positions, bevels, rivets, alpha preserved; luminance-preserving steel recolor",
+    "inner_shadow": {
+      "inset": 15,
+      "diagonal": 39,
+      "falloff_extent": 16,
+      "strength": 0.42,
+      "source": "same selected R1 construction; original luminance residual retained"
+    },
+    "center_luminance": {
+      "mean": 28.24650386963067,
+      "sd": 2.547809424767916
+    }
+  },
+  "hover": {
+    "width": 192,
+    "height": 192,
+    "channels": 4,
+    "alpha_min": 0,
+    "alpha_max": 255,
+    "lossless_VP8L": true,
+    "rgba_roundtrip_visible_equal": true,
+    "max_roundtrip_delta": 0,
+    "seams": {
+      "center_x": {
+        "max_channel_delta": 0,
+        "mean_channel_delta": 0
+      },
+      "center_y": {
+        "max_channel_delta": 0,
+        "mean_channel_delta": 0
+      },
+      "top_x": {
+        "max_channel_delta": 0,
+        "mean_channel_delta": 0
+      },
+      "bottom_x": {
+        "max_channel_delta": 0,
+        "mean_channel_delta": 0
+      },
+      "left_y": {
+        "max_channel_delta": 0,
+        "mean_channel_delta": 0
+      },
+      "right_y": {
+        "max_channel_delta": 0,
+        "mean_channel_delta": 0
+      }
+    },
+    "alpha_mask_max_delta": 0,
+    "center_opaque": true,
+    "center_identical_to_normal": true
+  },
+  "selected": {
+    "width": 192,
+    "height": 192,
+    "channels": 4,
+    "alpha_min": 0,
+    "alpha_max": 255,
+    "lossless_VP8L": true,
+    "rgba_roundtrip_visible_equal": true,
+    "max_roundtrip_delta": 0,
+    "seams": {
+      "center_x": {
+        "max_channel_delta": 0,
+        "mean_channel_delta": 0
+      },
+      "center_y": {
+        "max_channel_delta": 0,
+        "mean_channel_delta": 0
+      },
+      "top_x": {
+        "max_channel_delta": 0,
+        "mean_channel_delta": 0
+      },
+      "bottom_x": {
+        "max_channel_delta": 0,
+        "mean_channel_delta": 0
+      },
+      "left_y": {
+        "max_channel_delta": 0,
+        "mean_channel_delta": 0
+      },
+      "right_y": {
+        "max_channel_delta": 0,
+        "mean_channel_delta": 0
+      }
+    },
+    "center_opaque": true,
+    "center_matches_unshaded_tile": true,
+    "alpha_mask_max_delta": 0,
+    "center_luminance": {
+      "mean": 28.23913730468892,
+      "sd": 2.605014265161355
+    }
+  },
+  "rendered_sizes": [
+    [
+      200,
+      224
+    ],
+    [
+      240,
+      280
+    ],
+    [
+      64,
+      96
+    ]
+  ],
+  "preview": "Decoded final WebP; fixed corners, tiled edges/center, clipped partial tiles.",
+  "selected_sha256_after": "947d20640afba2af2d8365cfa5aa23aa5d73de5a9891c50afc89cc768a7dc58c",
+  "selected_unchanged": true,
+  "visual_review": "Pair geometry identical on light/dark backgrounds. Steel brush straighter and more uniform than wood; blue speculars colder, shared highlight locations. Repetition inspectable in 3x3 sheet. Raster preview, not in-game capture."
+}

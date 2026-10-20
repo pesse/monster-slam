@@ -238,6 +238,7 @@ autowrap_mode = 3
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
+theme_type_variation = &"WindowPrimary"
 size_flags_horizontal = 8
 text = "⬆ Update verfügbar"
 
@@ -245,6 +246,7 @@ text = "⬆ Update verfügbar"
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
+theme_type_variation = &"WindowPrimary"
 size_flags_horizontal = 8
 text = "⬆ Inhalte aktualisieren"
 

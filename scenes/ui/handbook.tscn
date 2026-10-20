@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/windows/close_hover.webp" id="4_close_hover"]
 [ext_resource type="Texture2D" path="res://assets/ui/windows/close_pressed.webp" id="5_close_pressed"]
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/handbook.webp" id="6_icon"]
+[ext_resource type="Material" path="res://scenes/ui/title_metal.tres" id="title_metal"]
 
 [node name="HandbookWindow" type="Control"]
 layout_mode = 3
@@ -80,8 +81,14 @@ theme_type_variation = &"WindowTitleBar"
 layout_mode = 2
 theme_type_variation = &"ScreenStack"
 
-[node name="TitleIcon" type="TextureRect" parent="Window/Layout/TitleBar/Header"]
-custom_minimum_size = Vector2(40, 40)
+[node name="TitleMedallion" type="PanelContainer" parent="Window/Layout/TitleBar/Header"]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_type_variation = &"TitleMedallion"
+
+[node name="TitleIcon" type="TextureRect" parent="Window/Layout/TitleBar/Header/TitleMedallion"]
+custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
@@ -93,6 +100,7 @@ stretch_mode = 5
 [node name="Title" type="Label" parent="Window/Layout/TitleBar/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
+material = ExtResource("title_metal")
 theme_type_variation = &"WindowTitle"
 text = "HANDBUCH"
 vertical_alignment = 1

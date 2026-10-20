@@ -1,0 +1,4203 @@
+{
+  "comparison": {
+    "canvas": [
+      1152.0,
+      340.0
+    ],
+    "file": "preview/compare-v1.png",
+    "group_widths": [
+      [
+        52.0,
+        53.0,
+        53.0,
+        54.0,
+        57.0
+      ],
+      [
+        97.0,
+        107.0,
+        110.0
+      ]
+    ],
+    "note": "Per-control region comparison avoids comparing the concept's 59px rail against a 44px runtime rail.",
+    "reference_top": "Unretouched concept region crops, Lanczos downsampled to 44px control height (checkboxes 32px).",
+    "runtime_bottom": "Same positions, widths and heights, composed exclusively from decoded runtime assets; labels added by preview_text.ps1."
+  },
+  "errors": [],
+  "files": [
+    {
+      "alpha_max": 255.0,
+      "alpha_min": 0.0,
+      "canvas": [
+        128.0,
+        44.0
+      ],
+      "decoded_native_format": 5.0,
+      "dimensions_passed": true,
+      "file": "field_normal.webp",
+      "format": "RGBA8",
+      "horizontal_facets_and_glints_within_fixed_margins": true,
+      "horizontal_stretch_column_mismatches": 0.0,
+      "partial_alpha_pixels": 340.0,
+      "sha256": "f6995dc6978b7c3f42d244724eb9fcd53b02fdb48795510a45fec4eed02795fe",
+      "slices_LTRB": [
+        16.0,
+        16.0,
+        16.0,
+        16.0
+      ],
+      "vertical_stretch_row_mismatches": 0.0,
+      "webp_chunk": "VP8L",
+      "webp_lossless_pixel_roundtrip": true
+    },
+    {
+      "alpha_max": 255.0,
+      "alpha_min": 0.0,
+      "canvas": [
+        128.0,
+        44.0
+      ],
+      "decoded_native_format": 5.0,
+      "dimensions_passed": true,
+      "file": "field_read_only.webp",
+      "format": "RGBA8",
+      "horizontal_facets_and_glints_within_fixed_margins": true,
+      "horizontal_stretch_column_mismatches": 0.0,
+      "partial_alpha_pixels": 340.0,
+      "sha256": "677a237397ab78899bfec73165f7a4acd1f9e1b22d79a72cd10043d8a5707ea2",
+      "slices_LTRB": [
+        16.0,
+        16.0,
+        16.0,
+        16.0
+      ],
+      "vertical_stretch_row_mismatches": 0.0,
+      "webp_chunk": "VP8L",
+      "webp_lossless_pixel_roundtrip": true
+    },
+    {
+      "alpha_max": 255.0,
+      "alpha_min": 0.0,
+      "canvas": [
+        128.0,
+        44.0
+      ],
+      "decoded_native_format": 5.0,
+      "dimensions_passed": true,
+      "file": "field_focus.webp",
+      "focus_center_nontransparent_pixels": 0.0,
+      "format": "RGBA8",
+      "horizontal_facets_and_glints_within_fixed_margins": true,
+      "horizontal_stretch_column_mismatches": 0.0,
+      "partial_alpha_pixels": 1660.0,
+      "sha256": "8335a3851580239a827ffaa43bfa7225aba6edb61580da702aac4b4fb3d4b33a",
+      "slices_LTRB": [
+        16.0,
+        16.0,
+        16.0,
+        16.0
+      ],
+      "vertical_stretch_row_mismatches": 0.0,
+      "webp_chunk": "VP8L",
+      "webp_lossless_pixel_roundtrip": true
+    },
+    {
+      "alpha_max": 255.0,
+      "alpha_min": 0.0,
+      "canvas": [
+        96.0,
+        44.0
+      ],
+      "decoded_native_format": 5.0,
+      "dimensions_passed": true,
+      "file": "seg_first_normal.webp",
+      "format": "RGBA8",
+      "horizontal_facets_and_glints_within_fixed_margins": true,
+      "horizontal_stretch_column_mismatches": 0.0,
+      "partial_alpha_pixels": 130.0,
+      "sha256": "f10325af2a0b0acce95617889bb778a7bff9f44f4d277dc5ef0806554448f084",
+      "slices_LTRB": [
+        16.0,
+        16.0,
+        16.0,
+        16.0
+      ],
+      "webp_chunk": "VP8L",
+      "webp_lossless_pixel_roundtrip": true
+    },
+    {
+      "alpha_max": 255.0,
+      "alpha_min": 0.0,
+      "canvas": [
+        96.0,
+        44.0
+      ],
+      "decoded_native_format": 5.0,
+      "dimensions_passed": true,
+      "file": "seg_first_hover.webp",
+      "format": "RGBA8",
+      "horizontal_facets_and_glints_within_fixed_margins": true,
+      "horizontal_stretch_column_mismatches": 0.0,
+      "partial_alpha_pixels": 130.0,
+      "sha256": "69575ef624e1cc96db333319ffa5a236b56c9fc827c61f5f515a5803a768d2f9",
+      "slices_LTRB": [
+        16.0,
+        16.0,
+        16.0,
+        16.0
+      ],
+      "webp_chunk": "VP8L",
+      "webp_lossless_pixel_roundtrip": true
+    },
+    {
+      "alpha_max": 255.0,
+      "alpha_min": 0.0,
+      "canvas": [
+        96.0,
+        44.0
+      ],
+      "decoded_native_format": 5.0,
+      "dimensions_passed": true,
+      "file": "seg_first_selected.webp",
+      "format": "RGBA8",
+      "horizontal_facets_and_glints_within_fixed_margins": true,
+      "horizontal_stretch_column_mismatches": 0.0,
+      "partial_alpha_pixels": 130.0,
+      "sha256": "ca0148282cdfab20c6494c5be3e1337a1288668152874f8cdc24c24ccf0c145b",
+      "slices_LTRB": [
+        16.0,
+        16.0,
+        16.0,
+        16.0
+      ],
+      "webp_chunk": "VP8L",
+      "webp_lossless_pixel_roundtrip": true
+    },
+    {
+      "alpha_max": 255.0,
+      "alpha_min": 0.0,
+      "canvas": [
+        96.0,
+        44.0
+      ],
+      "decoded_native_format": 5.0,
+      "dimensions_passed": true,
+      "file": "seg_first_disabled.webp",
+      "format": "RGBA8",
+      "horizontal_facets_and_glints_within_fixed_margins": true,
+      "horizontal_stretch_column_mismatches": 0.0,
+      "partial_alpha_pixels": 130.0,
+      "sha256": "884996cb91a0d410649140dc55350b422dfd95c120c99c47da7d7e788810d03b",
+      "slices_LTRB": [
+        16.0,
+        16.0,
+        16.0,
+        16.0
+      ],
+      "webp_chunk": "VP8L",
+      "webp_lossless_pixel_roundtrip": true
+    },
+    {
+      "alpha_max": 255.0,
+      "alpha_min": 0.0,
+      "canvas": [
+        96.0,
+        44.0
+      ],
+      "decoded_native_format": 5.0,
+      "dimensions_passed": true,
+      "file": "seg_mid_normal.webp",
+      "format": "RGBA8",
+      "horizontal_facets_and_glints_within_fixed_margins": true,
+      "horizontal_stretch_column_mismatches": 0.0,
+      "partial_alpha_pixels": 64.0,
+      "sha256": "134e2bf5cbe93cf29e2b37262847c306d4a647cdfcbd652627ef4065169ffe17",
+      "slices_LTRB": [
+        16.0,
+        16.0,
+        16.0,
+        16.0
+      ],
+      "webp_chunk": "VP8L",
+      "webp_lossless_pixel_roundtrip": true
+    },
+    {
+      "alpha_max": 255.0,
+      "alpha_min": 0.0,
+      "canvas": [
+        96.0,
+        44.0
+      ],
+      "decoded_native_format": 5.0,
+      "dimensions_passed": true,
+      "file": "seg_mid_hover.webp",
+      "format": "RGBA8",
+      "horizontal_facets_and_glints_within_fixed_margins": true,
+      "horizontal_stretch_column_mismatches": 0.0,
+      "partial_alpha_pixels": 64.0,
+      "sha256": "9a0e425b96854f593c371ba660cf362c5cfa8b450deb191133cba8a836a046f0",
+      "slices_LTRB": [
+        16.0,
+        16.0,
+        16.0,
+        16.0
+      ],
+      "webp_chunk": "VP8L",
+      "webp_lossless_pixel_roundtrip": true
+    },
+    {
+      "alpha_max": 255.0,
+      "alpha_min": 0.0,
+      "canvas": [
+        96.0,
+        44.0
+      ],
+      "decoded_native_format": 5.0,
+      "dimensions_passed": true,
+      "file": "seg_mid_selected.webp",
+      "format": "RGBA8",
+      "horizontal_facets_and_glints_within_fixed_margins": true,
+      "horizontal_stretch_column_mismatches": 0.0,
+      "partial_alpha_pixels": 64.0,
+      "sha256": "f9268940b08935cc19d1b702d4c39c42910e4eb8d50620f89833387c419032ba",
+      "slices_LTRB": [
+        16.0,
+        16.0,
+        16.0,
+        16.0
+      ],
+      "webp_chunk": "VP8L",
+      "webp_lossless_pixel_roundtrip": true
+    },
+    {
+      "alpha_max": 255.0,
+      "alpha_min": 0.0,
+      "canvas": [
+        96.0,
+        44.0
+      ],
+      "decoded_native_format": 5.0,
+      "dimensions_passed": true,
+      "file": "seg_mid_disabled.webp",
+      "format": "RGBA8",
+      "horizontal_facets_and_glints_within_fixed_margins": true,
+      "horizontal_stretch_column_mismatches": 0.0,
+      "partial_alpha_pixels": 64.0,
+      "sha256": "7d23ac030c3bc0c83713f50af4bd5faf8e94bff667647ca666fb8bf8abc5a6f3",
+      "slices_LTRB": [
+        16.0,
+        16.0,
+        16.0,
+        16.0
+      ],
+      "webp_chunk": "VP8L",
+      "webp_lossless_pixel_roundtrip": true
+    },
+    {
+      "alpha_max": 255.0,
+      "alpha_min": 0.0,
+      "canvas": [
+        96.0,
+        44.0
+      ],
+      "decoded_native_format": 5.0,
+      "dimensions_passed": true,
+      "file": "seg_last_normal.webp",
+      "format": "RGBA8",
+      "horizontal_facets_and_glints_within_fixed_margins": true,
+      "horizontal_stretch_column_mismatches": 0.0,
+      "partial_alpha_pixels": 130.0,
+      "sha256": "5992ab93281e01ec8ed4784d185e5ef5ccdb6ec87653a1236d59c088c3c6d555",
+      "slices_LTRB": [
+        16.0,
+        16.0,
+        16.0,
+        16.0
+      ],
+      "webp_chunk": "VP8L",
+      "webp_lossless_pixel_roundtrip": true
+    },
+    {
+      "alpha_max": 255.0,
+      "alpha_min": 0.0,
+      "canvas": [
+        96.0,
+        44.0
+      ],
+      "decoded_native_format": 5.0,
+      "dimensions_passed": true,
+      "file": "seg_last_hover.webp",
+      "format": "RGBA8",
+      "horizontal_facets_and_glints_within_fixed_margins": true,
+      "horizontal_stretch_column_mismatches": 0.0,
+      "partial_alpha_pixels": 130.0,
+      "sha256": "bf5aa7377774525bde5b7560c610a1dbce7c4ff8cb7dd77274da7a34afda5d2e",
+      "slices_LTRB": [
+        16.0,
+        16.0,
+        16.0,
+        16.0
+      ],
+      "webp_chunk": "VP8L",
+      "webp_lossless_pixel_roundtrip": true
+    },
+    {
+      "alpha_max": 255.0,
+      "alpha_min": 0.0,
+      "canvas": [
+        96.0,
+        44.0
+      ],
+      "decoded_native_format": 5.0,
+      "dimensions_passed": true,
+      "file": "seg_last_selected.webp",
+      "format": "RGBA8",
+      "horizontal_facets_and_glints_within_fixed_margins": true,
+      "horizontal_stretch_column_mismatches": 0.0,
+      "partial_alpha_pixels": 130.0,
+      "sha256": "13aabe0e481e60c4b9a6fbd70926fe2f9f8cbd8baccd3d9fa23a25922151529f",
+      "slices_LTRB": [
+        16.0,
+        16.0,
+        16.0,
+        16.0
+      ],
+      "webp_chunk": "VP8L",
+      "webp_lossless_pixel_roundtrip": true
+    },
+    {
+      "alpha_max": 255.0,
+      "alpha_min": 0.0,
+      "canvas": [
+        96.0,
+        44.0
+      ],
+      "decoded_native_format": 5.0,
+      "dimensions_passed": true,
+      "file": "seg_last_disabled.webp",
+      "format": "RGBA8",
+      "horizontal_facets_and_glints_within_fixed_margins": true,
+      "horizontal_stretch_column_mismatches": 0.0,
+      "partial_alpha_pixels": 130.0,
+      "sha256": "94f4e1ef69fed0449a89588c3471246307d1dd9a6942ff61dd432ee4c137ab25",
+      "slices_LTRB": [
+        16.0,
+        16.0,
+        16.0,
+        16.0
+      ],
+      "webp_chunk": "VP8L",
+      "webp_lossless_pixel_roundtrip": true
+    },
+    {
+      "alpha_max": 255.0,
+      "alpha_min": 0.0,
+      "canvas": [
+        32.0,
+        32.0
+      ],
+      "decoded_native_format": 5.0,
+      "dimensions_passed": true,
+      "file": "check_off.webp",
+      "format": "RGBA8",
+      "partial_alpha_pixels": 124.0,
+      "sha256": "b118fb9b3957fad53653e0b451923ca730e4775a2107aea43d1b1a97b4c66f80",
+      "webp_chunk": "VP8L",
+      "webp_lossless_pixel_roundtrip": true
+    },
+    {
+      "alpha_max": 255.0,
+      "alpha_min": 0.0,
+      "canvas": [
+        32.0,
+        32.0
+      ],
+      "decoded_native_format": 5.0,
+      "dimensions_passed": true,
+      "file": "check_off_disabled.webp",
+      "format": "RGBA8",
+      "partial_alpha_pixels": 124.0,
+      "sha256": "ec7efba5fe38ea9b900f45f23b857b79bf0be3b803cd005d1ea1773e846ff0d1",
+      "webp_chunk": "VP8L",
+      "webp_lossless_pixel_roundtrip": true
+    },
+    {
+      "alpha_max": 255.0,
+      "alpha_min": 0.0,
+      "canvas": [
+        32.0,
+        32.0
+      ],
+      "decoded_native_format": 5.0,
+      "dimensions_passed": true,
+      "file": "check_on.webp",
+      "format": "RGBA8",
+      "partial_alpha_pixels": 124.0,
+      "sha256": "da0a4657d2741bc58e86bad5a4bebd1037a2dcb801c4606ba10d1a871427353c",
+      "webp_chunk": "VP8L",
+      "webp_lossless_pixel_roundtrip": true
+    },
+    {
+      "alpha_max": 255.0,
+      "alpha_min": 0.0,
+      "canvas": [
+        32.0,
+        32.0
+      ],
+      "decoded_native_format": 5.0,
+      "dimensions_passed": true,
+      "file": "check_on_disabled.webp",
+      "format": "RGBA8",
+      "partial_alpha_pixels": 124.0,
+      "sha256": "2ead996c64a7d82de8f55629d7875eab123da7ed2659688a591cf961dbdf5e43",
+      "webp_chunk": "VP8L",
+      "webp_lossless_pixel_roundtrip": true
+    }
+  ],
+  "hud": {
+    "errors": [],
+    "files": [
+      {
+        "alpha_range": [
+          0,
+          255
+        ],
+        "canvas": [
+          96,
+          64
+        ],
+        "center_alpha": 235,
+        "file": "hud_plate.webp",
+        "format": "RGBA8",
+        "horizontal_stretch_pixel_errors": 0,
+        "lossless_RGBA_roundtrip": true,
+        "partial_alpha_pixels": 4076,
+        "raw_png_equal": true,
+        "sha256": "63322bdf6b203a4ea48118c2bd9c88c208328724a97c363259327a88c667b9ef",
+        "slices_LTRB": [
+          16,
+          16,
+          16,
+          16
+        ],
+        "vertical_stretch_pixel_errors": 0,
+        "webp_chunk": "VP8L"
+      },
+      {
+        "alpha_range": [
+          0,
+          255
+        ],
+        "canvas": [
+          64,
+          16
+        ],
+        "file": "bar_track.webp",
+        "format": "RGBA8",
+        "horizontal_stretch_pixel_errors": 0,
+        "lossless_RGBA_roundtrip": true,
+        "partial_alpha_pixels": 286,
+        "raw_png_equal": true,
+        "sha256": "1c2086dc07371675ffe4b7f6a16ac7c91148487dff9ba528e2e9d9e94360ba91",
+        "slices_LTRB": [
+          8,
+          6,
+          8,
+          6
+        ],
+        "webp_chunk": "VP8L"
+      },
+      {
+        "alpha_range": [
+          0,
+          255
+        ],
+        "canvas": [
+          64,
+          16
+        ],
+        "file": "bar_fill.webp",
+        "format": "RGBA8",
+        "horizontal_stretch_pixel_errors": 0,
+        "lossless_RGBA_roundtrip": true,
+        "non_neutral_pixels": 0,
+        "partial_alpha_pixels": 206,
+        "raw_png_equal": true,
+        "sha256": "d5d34846e0f7967abe12e5579522b7f46571c6426313be06d678febd349facb2",
+        "slices_LTRB": [
+          8,
+          6,
+          8,
+          6
+        ],
+        "webp_chunk": "VP8L"
+      },
+      {
+        "alpha_range": [
+          0,
+          255
+        ],
+        "canvas": [
+          24,
+          24
+        ],
+        "file": "slider_grabber.webp",
+        "format": "RGBA8",
+        "lossless_RGBA_roundtrip": true,
+        "partial_alpha_pixels": 168,
+        "raw_png_equal": true,
+        "sha256": "37a266c24cffa7d115e98092445c8eb3819a9a2dfc7c16afa193fac5348b9849",
+        "slices_LTRB": [],
+        "webp_chunk": "VP8L"
+      },
+      {
+        "alpha_range": [
+          0,
+          255
+        ],
+        "canvas": [
+          24,
+          24
+        ],
+        "file": "slider_grabber_hover.webp",
+        "format": "RGBA8",
+        "lossless_RGBA_roundtrip": true,
+        "partial_alpha_pixels": 168,
+        "raw_png_equal": true,
+        "sha256": "5adaad6812cc9296337245f91b94b6651c76a24502698abe01c343a8559cb78e",
+        "slices_LTRB": [],
+        "webp_chunk": "VP8L"
+      },
+      {
+        "alpha_range": [
+          0,
+          255
+        ],
+        "canvas": [
+          12,
+          48
+        ],
+        "file": "scroll_track.webp",
+        "format": "RGBA8",
+        "lossless_RGBA_roundtrip": true,
+        "partial_alpha_pixels": 132,
+        "raw_png_equal": true,
+        "sha256": "72c9af343037b0ac5bf1015041ed56474da492a6cf9d84e5232e4a139103eb28",
+        "slices_LTRB": [
+          0,
+          6,
+          0,
+          6
+        ],
+        "vertical_stretch_pixel_errors": 0,
+        "webp_chunk": "VP8L"
+      },
+      {
+        "alpha_range": [
+          0,
+          255
+        ],
+        "canvas": [
+          12,
+          48
+        ],
+        "file": "scroll_grabber.webp",
+        "format": "RGBA8",
+        "lossless_RGBA_roundtrip": true,
+        "partial_alpha_pixels": 170,
+        "raw_png_equal": true,
+        "sha256": "479db2886cc104eb383f387a9e31e3d8d543bfb25310b4da14ab20224666f155",
+        "slices_LTRB": [
+          0,
+          6,
+          0,
+          6
+        ],
+        "vertical_stretch_pixel_errors": 0,
+        "webp_chunk": "VP8L"
+      },
+      {
+        "alpha_range": [
+          0,
+          255
+        ],
+        "canvas": [
+          12,
+          48
+        ],
+        "file": "scroll_grabber_hover.webp",
+        "format": "RGBA8",
+        "lossless_RGBA_roundtrip": true,
+        "partial_alpha_pixels": 170,
+        "raw_png_equal": true,
+        "sha256": "23c3f510c245e06d11771598455599355dc3b1d60894abc38ded2e5b694d1d41",
+        "slices_LTRB": [
+          0,
+          6,
+          0,
+          6
+        ],
+        "vertical_stretch_pixel_errors": 0,
+        "webp_chunk": "VP8L"
+      },
+      {
+        "alpha_range": [
+          0,
+          255
+        ],
+        "canvas": [
+          12,
+          48
+        ],
+        "file": "scroll_grabber_pressed.webp",
+        "format": "RGBA8",
+        "lossless_RGBA_roundtrip": true,
+        "partial_alpha_pixels": 170,
+        "raw_png_equal": true,
+        "sha256": "92a0c49ad9ef8663a967bc4a6339c4bf278553cca60dbd047882c28248f027c9",
+        "slices_LTRB": [
+          0,
+          6,
+          0,
+          6
+        ],
+        "vertical_stretch_pixel_errors": 0,
+        "webp_chunk": "VP8L"
+      }
+    ],
+    "material_method": "Derived from the approved source-based runtime textures: original corner facets and bevels, repeated horizontal/vertical stretch samples; fill luminance remapped to neutral grayscale; gold tint of the same metal for slider core. No new generated atlas.",
+    "passed": true,
+    "preview": {
+      "background_rgb": [
+        40,
+        36,
+        70
+      ],
+      "boss_fraction": 0.7,
+      "canvas": [
+        1152,
+        648
+      ],
+      "composition": "Decoded new runtime assets; only local Fira Sans labels and a heart placeholder are added by hud_preview_text.ps1.",
+      "experience_fraction": 0.3,
+      "file": "preview/hud-1152.png",
+      "scroll_states": [
+        "normal",
+        "hover",
+        "pressed"
+      ],
+      "slider_fraction": 0.5
+    },
+    "revision": 1,
+    "sources": [
+      {
+        "file": "seg_first_normal.webp",
+        "sha256": "f10325af2a0b0acce95617889bb778a7bff9f44f4d277dc5ef0806554448f084"
+      },
+      {
+        "file": "seg_last_normal.webp",
+        "sha256": "5992ab93281e01ec8ed4784d185e5ef5ccdb6ec87653a1236d59c088c3c6d555"
+      },
+      {
+        "file": "field_normal.webp",
+        "sha256": "f6995dc6978b7c3f42d244724eb9fcd53b02fdb48795510a45fec4eed02795fe"
+      },
+      {
+        "file": "seg_first_hover.webp",
+        "sha256": "69575ef624e1cc96db333319ffa5a236b56c9fc827c61f5f515a5803a768d2f9"
+      },
+      {
+        "file": "seg_last_hover.webp",
+        "sha256": "bf5aa7377774525bde5b7560c610a1dbce7c4ff8cb7dd77274da7a34afda5d2e"
+      },
+      {
+        "file": "check_off.webp",
+        "sha256": "b118fb9b3957fad53653e0b451923ca730e4775a2107aea43d1b1a97b4c66f80"
+      },
+      {
+        "file": "seg_first_selected.webp",
+        "sha256": "ca0148282cdfab20c6494c5be3e1337a1288668152874f8cdc24c24ccf0c145b"
+      },
+      {
+        "file": "seg_last_selected.webp",
+        "sha256": "13aabe0e481e60c4b9a6fbd70926fe2f9f8cbd8baccd3d9fa23a25922151529f"
+      }
+    ],
+    "state_checks": [
+      {
+        "alpha_mask_errors": 0,
+        "hover_brighter": true,
+        "luminance_ratio": 1.24773019235773,
+        "pair": [
+          "slider_grabber",
+          "slider_grabber_hover"
+        ]
+      },
+      {
+        "alpha_mask_errors": 0,
+        "hover_brighter": true,
+        "luminance_ratio": 1.20407513402412,
+        "pair": [
+          "scroll_grabber",
+          "scroll_grabber_hover"
+        ]
+      }
+    ],
+    "stretch_cases": [
+      {
+        "canvas": [
+          120,
+          44
+        ],
+        "file": "hud_plate.webp",
+        "fill_2px_padding_errors": 0,
+        "passed": true,
+        "stretch_errors": 0
+      },
+      {
+        "canvas": [
+          400,
+          64
+        ],
+        "file": "hud_plate.webp",
+        "fill_2px_padding_errors": 0,
+        "passed": true,
+        "stretch_errors": 0
+      },
+      {
+        "canvas": [
+          1100,
+          400
+        ],
+        "file": "hud_plate.webp",
+        "fill_2px_padding_errors": 0,
+        "passed": true,
+        "stretch_errors": 0
+      },
+      {
+        "canvas": [
+          16,
+          16
+        ],
+        "file": "bar_track.webp",
+        "fill_2px_padding_errors": 0,
+        "passed": true,
+        "stretch_errors": 0
+      },
+      {
+        "canvas": [
+          200,
+          16
+        ],
+        "file": "bar_track.webp",
+        "fill_2px_padding_errors": 0,
+        "passed": true,
+        "stretch_errors": 0
+      },
+      {
+        "canvas": [
+          600,
+          16
+        ],
+        "file": "bar_track.webp",
+        "fill_2px_padding_errors": 0,
+        "passed": true,
+        "stretch_errors": 0
+      },
+      {
+        "canvas": [
+          16,
+          16
+        ],
+        "file": "bar_fill.webp",
+        "fill_2px_padding_errors": 0,
+        "passed": true,
+        "stretch_errors": 0
+      },
+      {
+        "canvas": [
+          200,
+          16
+        ],
+        "file": "bar_fill.webp",
+        "fill_2px_padding_errors": 0,
+        "passed": true,
+        "stretch_errors": 0
+      },
+      {
+        "canvas": [
+          600,
+          16
+        ],
+        "file": "bar_fill.webp",
+        "fill_2px_padding_errors": 0,
+        "passed": true,
+        "stretch_errors": 0
+      },
+      {
+        "canvas": [
+          12,
+          48
+        ],
+        "file": "scroll_track.webp",
+        "fill_2px_padding_errors": 0,
+        "passed": true,
+        "stretch_errors": 0
+      },
+      {
+        "canvas": [
+          12,
+          600
+        ],
+        "file": "scroll_track.webp",
+        "fill_2px_padding_errors": 0,
+        "passed": true,
+        "stretch_errors": 0
+      },
+      {
+        "canvas": [
+          12,
+          48
+        ],
+        "file": "scroll_grabber.webp",
+        "fill_2px_padding_errors": 0,
+        "passed": true,
+        "stretch_errors": 0
+      },
+      {
+        "canvas": [
+          12,
+          600
+        ],
+        "file": "scroll_grabber.webp",
+        "fill_2px_padding_errors": 0,
+        "passed": true,
+        "stretch_errors": 0
+      },
+      {
+        "canvas": [
+          12,
+          48
+        ],
+        "file": "scroll_grabber_hover.webp",
+        "fill_2px_padding_errors": 0,
+        "passed": true,
+        "stretch_errors": 0
+      },
+      {
+        "canvas": [
+          12,
+          600
+        ],
+        "file": "scroll_grabber_hover.webp",
+        "fill_2px_padding_errors": 0,
+        "passed": true,
+        "stretch_errors": 0
+      },
+      {
+        "canvas": [
+          12,
+          48
+        ],
+        "file": "scroll_grabber_pressed.webp",
+        "fill_2px_padding_errors": 0,
+        "passed": true,
+        "stretch_errors": 0
+      },
+      {
+        "canvas": [
+          12,
+          600
+        ],
+        "file": "scroll_grabber_pressed.webp",
+        "fill_2px_padding_errors": 0,
+        "passed": true,
+        "stretch_errors": 0
+      }
+    ],
+    "visual_review": {
+      "reference": "concept/controls-v1.webp and preview/compare-v1.png",
+      "status": "pending"
+    }
+  },
+  "logical_resolution": [
+    1152.0,
+    648.0
+  ],
+  "material_samples": {
+    "disabled": [
+      {
+        "rgb": [
+          26.0,
+          30.0,
+          38.0
+        ],
+        "y": 2.0
+      },
+      {
+        "rgb": [
+          30.0,
+          34.0,
+          40.0
+        ],
+        "y": 4.0
+      },
+      {
+        "rgb": [
+          6.0,
+          8.0,
+          11.0
+        ],
+        "y": 6.0
+      },
+      {
+        "rgb": [
+          9.0,
+          12.0,
+          17.0
+        ],
+        "y": 10.0
+      },
+      {
+        "rgb": [
+          10.0,
+          13.0,
+          18.0
+        ],
+        "y": 16.0
+      },
+      {
+        "rgb": [
+          7.0,
+          11.0,
+          15.0
+        ],
+        "y": 22.0
+      },
+      {
+        "rgb": [
+          7.0,
+          10.0,
+          15.0
+        ],
+        "y": 28.0
+      },
+      {
+        "rgb": [
+          8.0,
+          12.0,
+          16.0
+        ],
+        "y": 34.0
+      },
+      {
+        "rgb": [
+          19.0,
+          21.0,
+          27.0
+        ],
+        "y": 38.0
+      },
+      {
+        "rgb": [
+          19.0,
+          22.0,
+          28.0
+        ],
+        "y": 40.0
+      },
+      {
+        "rgb": [
+          13.0,
+          16.0,
+          22.0
+        ],
+        "y": 42.0
+      }
+    ],
+    "hover": [
+      {
+        "rgb": [
+          61.0,
+          96.0,
+          140.0
+        ],
+        "y": 2.0
+      },
+      {
+        "rgb": [
+          224.0,
+          238.0,
+          251.0
+        ],
+        "y": 4.0
+      },
+      {
+        "rgb": [
+          69.0,
+          108.0,
+          161.0
+        ],
+        "y": 6.0
+      },
+      {
+        "rgb": [
+          57.0,
+          85.0,
+          135.0
+        ],
+        "y": 10.0
+      },
+      {
+        "rgb": [
+          64.0,
+          91.0,
+          140.0
+        ],
+        "y": 16.0
+      },
+      {
+        "rgb": [
+          39.0,
+          67.0,
+          110.0
+        ],
+        "y": 22.0
+      },
+      {
+        "rgb": [
+          29.0,
+          58.0,
+          102.0
+        ],
+        "y": 28.0
+      },
+      {
+        "rgb": [
+          33.0,
+          65.0,
+          111.0
+        ],
+        "y": 34.0
+      },
+      {
+        "rgb": [
+          145.0,
+          176.0,
+          214.0
+        ],
+        "y": 38.0
+      },
+      {
+        "rgb": [
+          146.0,
+          204.0,
+          251.0
+        ],
+        "y": 40.0
+      },
+      {
+        "rgb": [
+          18.0,
+          40.0,
+          74.0
+        ],
+        "y": 42.0
+      }
+    ],
+    "normal": [
+      {
+        "rgb": [
+          41.0,
+          63.0,
+          109.0
+        ],
+        "y": 2.0
+      },
+      {
+        "rgb": [
+          52.0,
+          71.0,
+          109.0
+        ],
+        "y": 4.0
+      },
+      {
+        "rgb": [
+          5.0,
+          18.0,
+          36.0
+        ],
+        "y": 6.0
+      },
+      {
+        "rgb": [
+          9.0,
+          27.0,
+          54.0
+        ],
+        "y": 10.0
+      },
+      {
+        "rgb": [
+          10.0,
+          29.0,
+          56.0
+        ],
+        "y": 16.0
+      },
+      {
+        "rgb": [
+          4.0,
+          24.0,
+          48.0
+        ],
+        "y": 22.0
+      },
+      {
+        "rgb": [
+          4.0,
+          23.0,
+          48.0
+        ],
+        "y": 28.0
+      },
+      {
+        "rgb": [
+          5.0,
+          26.0,
+          52.0
+        ],
+        "y": 34.0
+      },
+      {
+        "rgb": [
+          29.0,
+          45.0,
+          77.0
+        ],
+        "y": 38.0
+      },
+      {
+        "rgb": [
+          29.0,
+          46.0,
+          84.0
+        ],
+        "y": 40.0
+      },
+      {
+        "rgb": [
+          17.0,
+          35.0,
+          69.0
+        ],
+        "y": 42.0
+      }
+    ],
+    "selected": [
+      {
+        "rgb": [
+          146.0,
+          99.0,
+          32.0
+        ],
+        "y": 2.0
+      },
+      {
+        "rgb": [
+          222.0,
+          171.0,
+          92.0
+        ],
+        "y": 4.0
+      },
+      {
+        "rgb": [
+          59.0,
+          33.0,
+          9.0
+        ],
+        "y": 6.0
+      },
+      {
+        "rgb": [
+          56.0,
+          32.0,
+          11.0
+        ],
+        "y": 10.0
+      },
+      {
+        "rgb": [
+          64.0,
+          37.0,
+          12.0
+        ],
+        "y": 16.0
+      },
+      {
+        "rgb": [
+          54.0,
+          31.0,
+          12.0
+        ],
+        "y": 22.0
+      },
+      {
+        "rgb": [
+          56.0,
+          32.0,
+          11.0
+        ],
+        "y": 28.0
+      },
+      {
+        "rgb": [
+          64.0,
+          35.0,
+          10.0
+        ],
+        "y": 34.0
+      },
+      {
+        "rgb": [
+          160.0,
+          124.0,
+          60.0
+        ],
+        "y": 38.0
+      },
+      {
+        "rgb": [
+          184.0,
+          92.0,
+          6.0
+        ],
+        "y": 40.0
+      },
+      {
+        "rgb": [
+          7.0,
+          33.0,
+          69.0
+        ],
+        "y": 42.0
+      }
+    ]
+  },
+  "passed": true,
+  "preview": {
+    "background": [
+      "../window_panel_compact.webp",
+      "../window_surface.webp"
+    ],
+    "canvas": [
+      1152.0,
+      648.0
+    ],
+    "labels": "preview_text.ps1 overlays local Fira Sans SemiBold/Bold only",
+    "runtime_only_compositing": true,
+    "zoom": {
+      "factor": 4.0,
+      "interpolation": "nearest",
+      "pairs": [
+        "first_selected | mid_hover",
+        "mid_hover | last_normal"
+      ]
+    }
+  },
+  "revision": 4.0,
+  "schema": 1.0,
+  "seam_reference": {
+    "height": 44.0,
+    "rgba": [
+      [
+        [
+          255.0,
+          255.0,
+          255.0,
+          0.0
+        ],
+        [
+          255.0,
+          255.0,
+          255.0,
+          0.0
+        ],
+        [
+          255.0,
+          255.0,
+          255.0,
+          0.0
+        ],
+        [
+          255.0,
+          255.0,
+          255.0,
+          0.0
+        ],
+        [
+          255.0,
+          255.0,
+          255.0,
+          0.0
+        ],
+        [
+          255.0,
+          255.0,
+          255.0,
+          0.0
+        ]
+      ],
+      [
+        [
+          36.0,
+          57.0,
+          103.0,
+          255.0
+        ],
+        [
+          52.0,
+          75.0,
+          123.0,
+          255.0
+        ],
+        [
+          23.0,
+          33.0,
+          58.0,
+          255.0
+        ],
+        [
+          23.0,
+          37.0,
+          70.0,
+          255.0
+        ],
+        [
+          49.0,
+          72.0,
+          121.0,
+          255.0
+        ],
+        [
+          47.0,
+          68.0,
+          114.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          38.0,
+          55.0,
+          100.0,
+          255.0
+        ],
+        [
+          65.0,
+          87.0,
+          135.0,
+          255.0
+        ],
+        [
+          12.0,
+          23.0,
+          45.0,
+          255.0
+        ],
+        [
+          14.0,
+          27.0,
+          55.0,
+          255.0
+        ],
+        [
+          51.0,
+          76.0,
+          127.0,
+          255.0
+        ],
+        [
+          40.0,
+          63.0,
+          113.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          111.0,
+          134.0,
+          179.0,
+          255.0
+        ],
+        [
+          68.0,
+          92.0,
+          134.0,
+          255.0
+        ],
+        [
+          8.0,
+          19.0,
+          40.0,
+          255.0
+        ],
+        [
+          2.0,
+          15.0,
+          40.0,
+          255.0
+        ],
+        [
+          71.0,
+          93.0,
+          136.0,
+          255.0
+        ],
+        [
+          127.0,
+          148.0,
+          191.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          89.0,
+          109.0,
+          149.0,
+          255.0
+        ],
+        [
+          56.0,
+          80.0,
+          122.0,
+          255.0
+        ],
+        [
+          6.0,
+          16.0,
+          35.0,
+          255.0
+        ],
+        [
+          0.0,
+          13.0,
+          39.0,
+          255.0
+        ],
+        [
+          81.0,
+          108.0,
+          148.0,
+          255.0
+        ],
+        [
+          106.0,
+          125.0,
+          156.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          25.0,
+          37.0,
+          63.0,
+          255.0
+        ],
+        [
+          52.0,
+          77.0,
+          118.0,
+          255.0
+        ],
+        [
+          5.0,
+          13.0,
+          31.0,
+          255.0
+        ],
+        [
+          6.0,
+          18.0,
+          42.0,
+          255.0
+        ],
+        [
+          45.0,
+          73.0,
+          118.0,
+          255.0
+        ],
+        [
+          23.0,
+          41.0,
+          70.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          6.0,
+          13.0,
+          32.0,
+          255.0
+        ],
+        [
+          36.0,
+          57.0,
+          96.0,
+          255.0
+        ],
+        [
+          11.0,
+          20.0,
+          39.0,
+          255.0
+        ],
+        [
+          3.0,
+          10.0,
+          24.0,
+          255.0
+        ],
+        [
+          26.0,
+          48.0,
+          83.0,
+          255.0
+        ],
+        [
+          14.0,
+          27.0,
+          47.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          54.0,
+          70.0,
+          101.0,
+          255.0
+        ],
+        [
+          52.0,
+          76.0,
+          122.0,
+          255.0
+        ],
+        [
+          7.0,
+          18.0,
+          39.0,
+          255.0
+        ],
+        [
+          1.0,
+          9.0,
+          24.0,
+          255.0
+        ],
+        [
+          24.0,
+          43.0,
+          76.0,
+          255.0
+        ],
+        [
+          15.0,
+          30.0,
+          55.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          53.0,
+          71.0,
+          114.0,
+          255.0
+        ],
+        [
+          56.0,
+          81.0,
+          132.0,
+          255.0
+        ],
+        [
+          8.0,
+          20.0,
+          43.0,
+          255.0
+        ],
+        [
+          3.0,
+          12.0,
+          31.0,
+          255.0
+        ],
+        [
+          30.0,
+          50.0,
+          85.0,
+          255.0
+        ],
+        [
+          21.0,
+          37.0,
+          65.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          37.0,
+          56.0,
+          90.0,
+          255.0
+        ],
+        [
+          47.0,
+          69.0,
+          112.0,
+          255.0
+        ],
+        [
+          37.0,
+          46.0,
+          67.0,
+          255.0
+        ],
+        [
+          29.0,
+          38.0,
+          59.0,
+          255.0
+        ],
+        [
+          42.0,
+          63.0,
+          104.0,
+          255.0
+        ],
+        [
+          36.0,
+          54.0,
+          90.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          29.0,
+          43.0,
+          69.0,
+          255.0
+        ],
+        [
+          82.0,
+          101.0,
+          138.0,
+          255.0
+        ],
+        [
+          68.0,
+          80.0,
+          106.0,
+          255.0
+        ],
+        [
+          26.0,
+          41.0,
+          75.0,
+          255.0
+        ],
+        [
+          55.0,
+          76.0,
+          123.0,
+          255.0
+        ],
+        [
+          53.0,
+          73.0,
+          116.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          87.0,
+          99.0,
+          123.0,
+          255.0
+        ],
+        [
+          127.0,
+          145.0,
+          183.0,
+          255.0
+        ],
+        [
+          41.0,
+          61.0,
+          108.0,
+          255.0
+        ],
+        [
+          42.0,
+          59.0,
+          105.0,
+          255.0
+        ],
+        [
+          69.0,
+          93.0,
+          145.0,
+          255.0
+        ],
+        [
+          72.0,
+          93.0,
+          142.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          114.0,
+          133.0,
+          167.0,
+          255.0
+        ],
+        [
+          105.0,
+          127.0,
+          176.0,
+          255.0
+        ],
+        [
+          82.0,
+          103.0,
+          152.0,
+          255.0
+        ],
+        [
+          74.0,
+          95.0,
+          145.0,
+          255.0
+        ],
+        [
+          79.0,
+          102.0,
+          162.0,
+          255.0
+        ],
+        [
+          80.0,
+          103.0,
+          161.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          48.0,
+          71.0,
+          121.0,
+          255.0
+        ],
+        [
+          33.0,
+          50.0,
+          99.0,
+          255.0
+        ],
+        [
+          76.0,
+          93.0,
+          134.0,
+          255.0
+        ],
+        [
+          122.0,
+          139.0,
+          177.0,
+          255.0
+        ],
+        [
+          157.0,
+          173.0,
+          213.0,
+          255.0
+        ],
+        [
+          157.0,
+          174.0,
+          213.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          78.0,
+          102.0,
+          146.0,
+          255.0
+        ],
+        [
+          26.0,
+          43.0,
+          84.0,
+          255.0
+        ],
+        [
+          27.0,
+          48.0,
+          93.0,
+          255.0
+        ],
+        [
+          32.0,
+          53.0,
+          100.0,
+          255.0
+        ],
+        [
+          80.0,
+          96.0,
+          135.0,
+          255.0
+        ],
+        [
+          159.0,
+          172.0,
+          200.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          77.0,
+          97.0,
+          144.0,
+          255.0
+        ],
+        [
+          32.0,
+          47.0,
+          86.0,
+          255.0
+        ],
+        [
+          42.0,
+          59.0,
+          106.0,
+          255.0
+        ],
+        [
+          47.0,
+          69.0,
+          119.0,
+          255.0
+        ],
+        [
+          32.0,
+          55.0,
+          105.0,
+          255.0
+        ],
+        [
+          45.0,
+          69.0,
+          119.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          75.0,
+          98.0,
+          144.0,
+          255.0
+        ],
+        [
+          32.0,
+          48.0,
+          87.0,
+          255.0
+        ],
+        [
+          35.0,
+          51.0,
+          90.0,
+          255.0
+        ],
+        [
+          41.0,
+          58.0,
+          104.0,
+          255.0
+        ],
+        [
+          46.0,
+          66.0,
+          114.0,
+          255.0
+        ],
+        [
+          67.0,
+          90.0,
+          138.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          67.0,
+          88.0,
+          131.0,
+          255.0
+        ],
+        [
+          33.0,
+          49.0,
+          86.0,
+          255.0
+        ],
+        [
+          37.0,
+          51.0,
+          89.0,
+          255.0
+        ],
+        [
+          39.0,
+          54.0,
+          94.0,
+          255.0
+        ],
+        [
+          43.0,
+          60.0,
+          104.0,
+          255.0
+        ],
+        [
+          64.0,
+          87.0,
+          135.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          70.0,
+          91.0,
+          134.0,
+          255.0
+        ],
+        [
+          34.0,
+          50.0,
+          86.0,
+          255.0
+        ],
+        [
+          38.0,
+          53.0,
+          92.0,
+          255.0
+        ],
+        [
+          41.0,
+          56.0,
+          96.0,
+          255.0
+        ],
+        [
+          39.0,
+          55.0,
+          97.0,
+          255.0
+        ],
+        [
+          59.0,
+          83.0,
+          128.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          73.0,
+          95.0,
+          139.0,
+          255.0
+        ],
+        [
+          33.0,
+          49.0,
+          86.0,
+          255.0
+        ],
+        [
+          38.0,
+          52.0,
+          90.0,
+          255.0
+        ],
+        [
+          39.0,
+          54.0,
+          93.0,
+          255.0
+        ],
+        [
+          39.0,
+          55.0,
+          95.0,
+          255.0
+        ],
+        [
+          59.0,
+          83.0,
+          128.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          72.0,
+          95.0,
+          138.0,
+          255.0
+        ],
+        [
+          33.0,
+          48.0,
+          85.0,
+          255.0
+        ],
+        [
+          36.0,
+          51.0,
+          87.0,
+          255.0
+        ],
+        [
+          39.0,
+          54.0,
+          94.0,
+          255.0
+        ],
+        [
+          41.0,
+          59.0,
+          100.0,
+          255.0
+        ],
+        [
+          55.0,
+          77.0,
+          121.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          69.0,
+          89.0,
+          133.0,
+          255.0
+        ],
+        [
+          33.0,
+          49.0,
+          86.0,
+          255.0
+        ],
+        [
+          37.0,
+          52.0,
+          89.0,
+          255.0
+        ],
+        [
+          39.0,
+          55.0,
+          94.0,
+          255.0
+        ],
+        [
+          43.0,
+          60.0,
+          102.0,
+          255.0
+        ],
+        [
+          53.0,
+          74.0,
+          116.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          64.0,
+          85.0,
+          124.0,
+          255.0
+        ],
+        [
+          31.0,
+          46.0,
+          81.0,
+          255.0
+        ],
+        [
+          37.0,
+          52.0,
+          92.0,
+          255.0
+        ],
+        [
+          39.0,
+          55.0,
+          94.0,
+          255.0
+        ],
+        [
+          39.0,
+          55.0,
+          94.0,
+          255.0
+        ],
+        [
+          60.0,
+          82.0,
+          126.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          68.0,
+          88.0,
+          131.0,
+          255.0
+        ],
+        [
+          30.0,
+          44.0,
+          77.0,
+          255.0
+        ],
+        [
+          33.0,
+          48.0,
+          81.0,
+          255.0
+        ],
+        [
+          38.0,
+          54.0,
+          92.0,
+          255.0
+        ],
+        [
+          38.0,
+          55.0,
+          94.0,
+          255.0
+        ],
+        [
+          59.0,
+          80.0,
+          121.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          67.0,
+          87.0,
+          128.0,
+          255.0
+        ],
+        [
+          32.0,
+          48.0,
+          83.0,
+          255.0
+        ],
+        [
+          35.0,
+          50.0,
+          85.0,
+          255.0
+        ],
+        [
+          36.0,
+          51.0,
+          89.0,
+          255.0
+        ],
+        [
+          39.0,
+          55.0,
+          95.0,
+          255.0
+        ],
+        [
+          46.0,
+          65.0,
+          104.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          69.0,
+          90.0,
+          133.0,
+          255.0
+        ],
+        [
+          33.0,
+          50.0,
+          87.0,
+          255.0
+        ],
+        [
+          37.0,
+          52.0,
+          89.0,
+          255.0
+        ],
+        [
+          37.0,
+          51.0,
+          89.0,
+          255.0
+        ],
+        [
+          38.0,
+          54.0,
+          94.0,
+          255.0
+        ],
+        [
+          48.0,
+          69.0,
+          110.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          72.0,
+          94.0,
+          139.0,
+          255.0
+        ],
+        [
+          34.0,
+          51.0,
+          89.0,
+          255.0
+        ],
+        [
+          37.0,
+          52.0,
+          88.0,
+          255.0
+        ],
+        [
+          37.0,
+          51.0,
+          88.0,
+          255.0
+        ],
+        [
+          42.0,
+          58.0,
+          98.0,
+          255.0
+        ],
+        [
+          55.0,
+          78.0,
+          124.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          80.0,
+          101.0,
+          148.0,
+          255.0
+        ],
+        [
+          35.0,
+          53.0,
+          92.0,
+          255.0
+        ],
+        [
+          38.0,
+          52.0,
+          90.0,
+          255.0
+        ],
+        [
+          43.0,
+          59.0,
+          99.0,
+          255.0
+        ],
+        [
+          52.0,
+          71.0,
+          116.0,
+          255.0
+        ],
+        [
+          65.0,
+          90.0,
+          138.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          81.0,
+          101.0,
+          151.0,
+          255.0
+        ],
+        [
+          34.0,
+          51.0,
+          91.0,
+          255.0
+        ],
+        [
+          40.0,
+          55.0,
+          96.0,
+          255.0
+        ],
+        [
+          52.0,
+          69.0,
+          115.0,
+          255.0
+        ],
+        [
+          58.0,
+          77.0,
+          128.0,
+          255.0
+        ],
+        [
+          69.0,
+          92.0,
+          140.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          78.0,
+          101.0,
+          148.0,
+          255.0
+        ],
+        [
+          28.0,
+          44.0,
+          85.0,
+          255.0
+        ],
+        [
+          39.0,
+          54.0,
+          95.0,
+          255.0
+        ],
+        [
+          62.0,
+          80.0,
+          126.0,
+          255.0
+        ],
+        [
+          75.0,
+          96.0,
+          145.0,
+          255.0
+        ],
+        [
+          86.0,
+          106.0,
+          154.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          82.0,
+          102.0,
+          150.0,
+          255.0
+        ],
+        [
+          44.0,
+          59.0,
+          102.0,
+          255.0
+        ],
+        [
+          66.0,
+          84.0,
+          129.0,
+          255.0
+        ],
+        [
+          66.0,
+          87.0,
+          135.0,
+          255.0
+        ],
+        [
+          46.0,
+          64.0,
+          107.0,
+          255.0
+        ],
+        [
+          45.0,
+          61.0,
+          104.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          84.0,
+          107.0,
+          154.0,
+          255.0
+        ],
+        [
+          57.0,
+          76.0,
+          122.0,
+          255.0
+        ],
+        [
+          37.0,
+          53.0,
+          92.0,
+          255.0
+        ],
+        [
+          27.0,
+          43.0,
+          82.0,
+          255.0
+        ],
+        [
+          29.0,
+          46.0,
+          84.0,
+          255.0
+        ],
+        [
+          26.0,
+          41.0,
+          77.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          25.0,
+          42.0,
+          73.0,
+          255.0
+        ],
+        [
+          48.0,
+          70.0,
+          115.0,
+          255.0
+        ],
+        [
+          23.0,
+          37.0,
+          72.0,
+          255.0
+        ],
+        [
+          24.0,
+          40.0,
+          73.0,
+          255.0
+        ],
+        [
+          31.0,
+          51.0,
+          89.0,
+          255.0
+        ],
+        [
+          26.0,
+          43.0,
+          75.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          6.0,
+          17.0,
+          37.0,
+          255.0
+        ],
+        [
+          35.0,
+          55.0,
+          91.0,
+          255.0
+        ],
+        [
+          35.0,
+          52.0,
+          83.0,
+          255.0
+        ],
+        [
+          17.0,
+          30.0,
+          61.0,
+          255.0
+        ],
+        [
+          30.0,
+          50.0,
+          88.0,
+          255.0
+        ],
+        [
+          24.0,
+          40.0,
+          71.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          8.0,
+          26.0,
+          53.0,
+          255.0
+        ],
+        [
+          21.0,
+          37.0,
+          71.0,
+          255.0
+        ],
+        [
+          20.0,
+          33.0,
+          58.0,
+          255.0
+        ],
+        [
+          20.0,
+          33.0,
+          59.0,
+          255.0
+        ],
+        [
+          29.0,
+          49.0,
+          85.0,
+          255.0
+        ],
+        [
+          22.0,
+          38.0,
+          67.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          11.0,
+          31.0,
+          61.0,
+          255.0
+        ],
+        [
+          26.0,
+          48.0,
+          88.0,
+          255.0
+        ],
+        [
+          7.0,
+          16.0,
+          35.0,
+          255.0
+        ],
+        [
+          8.0,
+          20.0,
+          39.0,
+          255.0
+        ],
+        [
+          30.0,
+          53.0,
+          89.0,
+          255.0
+        ],
+        [
+          19.0,
+          35.0,
+          63.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          7.0,
+          22.0,
+          49.0,
+          255.0
+        ],
+        [
+          28.0,
+          54.0,
+          96.0,
+          255.0
+        ],
+        [
+          9.0,
+          19.0,
+          39.0,
+          255.0
+        ],
+        [
+          2.0,
+          10.0,
+          23.0,
+          255.0
+        ],
+        [
+          27.0,
+          49.0,
+          80.0,
+          255.0
+        ],
+        [
+          18.0,
+          34.0,
+          62.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          34.0,
+          59.0,
+          97.0,
+          255.0
+        ],
+        [
+          33.0,
+          61.0,
+          107.0,
+          255.0
+        ],
+        [
+          6.0,
+          17.0,
+          37.0,
+          255.0
+        ],
+        [
+          1.0,
+          8.0,
+          23.0,
+          255.0
+        ],
+        [
+          27.0,
+          48.0,
+          82.0,
+          255.0
+        ],
+        [
+          19.0,
+          38.0,
+          66.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          58.0,
+          88.0,
+          139.0,
+          255.0
+        ],
+        [
+          49.0,
+          79.0,
+          133.0,
+          255.0
+        ],
+        [
+          7.0,
+          19.0,
+          44.0,
+          255.0
+        ],
+        [
+          17.0,
+          39.0,
+          75.0,
+          255.0
+        ],
+        [
+          46.0,
+          80.0,
+          130.0,
+          255.0
+        ],
+        [
+          21.0,
+          41.0,
+          74.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          99.0,
+          132.0,
+          184.0,
+          255.0
+        ],
+        [
+          52.0,
+          79.0,
+          136.0,
+          255.0
+        ],
+        [
+          12.0,
+          25.0,
+          53.0,
+          255.0
+        ],
+        [
+          17.0,
+          41.0,
+          82.0,
+          255.0
+        ],
+        [
+          51.0,
+          84.0,
+          138.0,
+          255.0
+        ],
+        [
+          85.0,
+          114.0,
+          163.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          30.0,
+          56.0,
+          103.0,
+          255.0
+        ],
+        [
+          43.0,
+          72.0,
+          129.0,
+          255.0
+        ],
+        [
+          14.0,
+          26.0,
+          56.0,
+          255.0
+        ],
+        [
+          16.0,
+          35.0,
+          71.0,
+          255.0
+        ],
+        [
+          48.0,
+          78.0,
+          131.0,
+          255.0
+        ],
+        [
+          59.0,
+          88.0,
+          134.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          2.0,
+          21.0,
+          55.0,
+          255.0
+        ],
+        [
+          29.0,
+          54.0,
+          101.0,
+          255.0
+        ],
+        [
+          15.0,
+          29.0,
+          57.0,
+          255.0
+        ],
+        [
+          22.0,
+          40.0,
+          74.0,
+          255.0
+        ],
+        [
+          25.0,
+          48.0,
+          92.0,
+          255.0
+        ],
+        [
+          2.0,
+          20.0,
+          52.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          12.0,
+          31.0,
+          66.0,
+          255.0
+        ],
+        [
+          20.0,
+          43.0,
+          82.0,
+          255.0
+        ],
+        [
+          18.0,
+          33.0,
+          60.0,
+          255.0
+        ],
+        [
+          19.0,
+          36.0,
+          69.0,
+          255.0
+        ],
+        [
+          16.0,
+          35.0,
+          75.0,
+          255.0
+        ],
+        [
+          15.0,
+          34.0,
+          69.0,
+          255.0
+        ]
+      ],
+      [
+        [
+          14.0,
+          36.0,
+          72.0,
+          255.0
+        ],
+        [
+          15.0,
+          41.0,
+          79.0,
+          255.0
+        ],
+        [
+          18.0,
+          37.0,
+          69.0,
+          255.0
+        ],
+        [
+          16.0,
+          34.0,
+          66.0,
+          255.0
+        ],
+        [
+          15.0,
+          37.0,
+          73.0,
+          255.0
+        ],
+        [
+          17.0,
+          38.0,
+          73.0,
+          255.0
+        ]
+      ]
+    ],
+    "source": [
+      108.0,
+      171.0,
+      9.0,
+      59.0
+    ],
+    "width": 6.0
+  },
+  "seam_summary": {
+    "criterion": "All 6x44 actual RGBA pixels of the assembled rib match the source-derived common reference in every state combination.",
+    "pairs_passed": 48.0,
+    "pairs_tested": 48.0
+  },
+  "seams": [
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "first",
+        "mid"
+      ],
+      "states": [
+        "normal",
+        "normal"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "first",
+        "mid"
+      ],
+      "states": [
+        "normal",
+        "hover"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "first",
+        "mid"
+      ],
+      "states": [
+        "normal",
+        "selected"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "first",
+        "mid"
+      ],
+      "states": [
+        "normal",
+        "disabled"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "first",
+        "mid"
+      ],
+      "states": [
+        "hover",
+        "normal"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "first",
+        "mid"
+      ],
+      "states": [
+        "hover",
+        "hover"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "first",
+        "mid"
+      ],
+      "states": [
+        "hover",
+        "selected"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "first",
+        "mid"
+      ],
+      "states": [
+        "hover",
+        "disabled"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "first",
+        "mid"
+      ],
+      "states": [
+        "selected",
+        "normal"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "first",
+        "mid"
+      ],
+      "states": [
+        "selected",
+        "hover"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "first",
+        "mid"
+      ],
+      "states": [
+        "selected",
+        "selected"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "first",
+        "mid"
+      ],
+      "states": [
+        "selected",
+        "disabled"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "first",
+        "mid"
+      ],
+      "states": [
+        "disabled",
+        "normal"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "first",
+        "mid"
+      ],
+      "states": [
+        "disabled",
+        "hover"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "first",
+        "mid"
+      ],
+      "states": [
+        "disabled",
+        "selected"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "first",
+        "mid"
+      ],
+      "states": [
+        "disabled",
+        "disabled"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "mid"
+      ],
+      "states": [
+        "normal",
+        "normal"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "mid"
+      ],
+      "states": [
+        "normal",
+        "hover"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "mid"
+      ],
+      "states": [
+        "normal",
+        "selected"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "mid"
+      ],
+      "states": [
+        "normal",
+        "disabled"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "mid"
+      ],
+      "states": [
+        "hover",
+        "normal"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "mid"
+      ],
+      "states": [
+        "hover",
+        "hover"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "mid"
+      ],
+      "states": [
+        "hover",
+        "selected"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "mid"
+      ],
+      "states": [
+        "hover",
+        "disabled"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "mid"
+      ],
+      "states": [
+        "selected",
+        "normal"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "mid"
+      ],
+      "states": [
+        "selected",
+        "hover"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "mid"
+      ],
+      "states": [
+        "selected",
+        "selected"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "mid"
+      ],
+      "states": [
+        "selected",
+        "disabled"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "mid"
+      ],
+      "states": [
+        "disabled",
+        "normal"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "mid"
+      ],
+      "states": [
+        "disabled",
+        "hover"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "mid"
+      ],
+      "states": [
+        "disabled",
+        "selected"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "mid"
+      ],
+      "states": [
+        "disabled",
+        "disabled"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "last"
+      ],
+      "states": [
+        "normal",
+        "normal"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "last"
+      ],
+      "states": [
+        "normal",
+        "hover"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "last"
+      ],
+      "states": [
+        "normal",
+        "selected"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "last"
+      ],
+      "states": [
+        "normal",
+        "disabled"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "last"
+      ],
+      "states": [
+        "hover",
+        "normal"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "last"
+      ],
+      "states": [
+        "hover",
+        "hover"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "last"
+      ],
+      "states": [
+        "hover",
+        "selected"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "last"
+      ],
+      "states": [
+        "hover",
+        "disabled"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "last"
+      ],
+      "states": [
+        "selected",
+        "normal"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "last"
+      ],
+      "states": [
+        "selected",
+        "hover"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "last"
+      ],
+      "states": [
+        "selected",
+        "selected"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "last"
+      ],
+      "states": [
+        "selected",
+        "disabled"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "last"
+      ],
+      "states": [
+        "disabled",
+        "normal"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "last"
+      ],
+      "states": [
+        "disabled",
+        "hover"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "last"
+      ],
+      "states": [
+        "disabled",
+        "selected"
+      ]
+    },
+    {
+      "frame_vertical_offset_px": 0.0,
+      "half_width_px": 3.0,
+      "interface_pixel_mismatches": 0.0,
+      "joint_width_px": 6.0,
+      "passed": true,
+      "positions": [
+        "mid",
+        "last"
+      ],
+      "states": [
+        "disabled",
+        "disabled"
+      ]
+    }
+  ],
+  "source": {
+    "file": "concept/sources/controls-v1.png",
+    "method": "Direct source pixels; fixed 16px bevel zones, vertical remapping of text-free profiles, horizontal column repetition. No regenerated or redrawn material.",
+    "normalized_width": 1152.0,
+    "raw_canvas": [
+      2128.0,
+      739.0
+    ],
+    "regions": {
+      "check_off": [
+        47.0,
+        327.0,
+        43.0,
+        45.0
+      ],
+      "check_on": [
+        47.0,
+        268.0,
+        43.0,
+        44.0
+      ],
+      "field_focus": [
+        42.0,
+        63.0,
+        428.0,
+        52.0
+      ],
+      "gold_left_cap": [
+        626.0,
+        171.0,
+        16.0,
+        59.0
+      ],
+      "hover_face": [
+        265.0,
+        171.0,
+        5.0,
+        59.0
+      ],
+      "joint_rib": [
+        108.0,
+        171.0,
+        9.0,
+        59.0
+      ],
+      "joint_rib_metal_plane": [
+        42.0,
+        171.0,
+        7.0,
+        59.0
+      ],
+      "normal_face": [
+        60.0,
+        171.0,
+        6.0,
+        59.0
+      ],
+      "normal_left_cap": [
+        42.0,
+        171.0,
+        16.0,
+        59.0
+      ],
+      "normal_right_cap": [
+        387.0,
+        171.0,
+        16.0,
+        59.0
+      ],
+      "selected_face": [
+        193.0,
+        171.0,
+        6.0,
+        59.0
+      ]
+    },
+    "sha256": "e9177e3c40729b179a8a4003d306a738ece08510c370315e56479d11ad2de1a9"
+  },
+  "stretch_cases": [
+    {
+      "canvas": [
+        128.0,
+        44.0
+      ],
+      "center_or_focus_errors": 0.0,
+      "kind": "field normal plus focus"
+    },
+    {
+      "canvas": [
+        360.0,
+        44.0
+      ],
+      "center_or_focus_errors": 0.0,
+      "kind": "field normal plus focus"
+    },
+    {
+      "canvas": [
+        1000.0,
+        300.0
+      ],
+      "center_or_focus_errors": 0.0,
+      "kind": "field normal plus focus"
+    },
+    {
+      "canvas": [
+        44.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "first",
+      "state": "normal"
+    },
+    {
+      "canvas": [
+        44.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "first",
+      "state": "hover"
+    },
+    {
+      "canvas": [
+        44.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "first",
+      "state": "selected"
+    },
+    {
+      "canvas": [
+        44.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "first",
+      "state": "disabled"
+    },
+    {
+      "canvas": [
+        44.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "mid",
+      "state": "normal"
+    },
+    {
+      "canvas": [
+        44.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "mid",
+      "state": "hover"
+    },
+    {
+      "canvas": [
+        44.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "mid",
+      "state": "selected"
+    },
+    {
+      "canvas": [
+        44.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "mid",
+      "state": "disabled"
+    },
+    {
+      "canvas": [
+        44.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "last",
+      "state": "normal"
+    },
+    {
+      "canvas": [
+        44.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "last",
+      "state": "hover"
+    },
+    {
+      "canvas": [
+        44.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "last",
+      "state": "selected"
+    },
+    {
+      "canvas": [
+        44.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "last",
+      "state": "disabled"
+    },
+    {
+      "canvas": [
+        96.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "first",
+      "state": "normal"
+    },
+    {
+      "canvas": [
+        96.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "first",
+      "state": "hover"
+    },
+    {
+      "canvas": [
+        96.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "first",
+      "state": "selected"
+    },
+    {
+      "canvas": [
+        96.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "first",
+      "state": "disabled"
+    },
+    {
+      "canvas": [
+        96.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "mid",
+      "state": "normal"
+    },
+    {
+      "canvas": [
+        96.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "mid",
+      "state": "hover"
+    },
+    {
+      "canvas": [
+        96.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "mid",
+      "state": "selected"
+    },
+    {
+      "canvas": [
+        96.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "mid",
+      "state": "disabled"
+    },
+    {
+      "canvas": [
+        96.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "last",
+      "state": "normal"
+    },
+    {
+      "canvas": [
+        96.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "last",
+      "state": "hover"
+    },
+    {
+      "canvas": [
+        96.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "last",
+      "state": "selected"
+    },
+    {
+      "canvas": [
+        96.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "last",
+      "state": "disabled"
+    },
+    {
+      "canvas": [
+        220.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "first",
+      "state": "normal"
+    },
+    {
+      "canvas": [
+        220.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "first",
+      "state": "hover"
+    },
+    {
+      "canvas": [
+        220.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "first",
+      "state": "selected"
+    },
+    {
+      "canvas": [
+        220.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "first",
+      "state": "disabled"
+    },
+    {
+      "canvas": [
+        220.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "mid",
+      "state": "normal"
+    },
+    {
+      "canvas": [
+        220.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "mid",
+      "state": "hover"
+    },
+    {
+      "canvas": [
+        220.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "mid",
+      "state": "selected"
+    },
+    {
+      "canvas": [
+        220.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "mid",
+      "state": "disabled"
+    },
+    {
+      "canvas": [
+        220.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "last",
+      "state": "normal"
+    },
+    {
+      "canvas": [
+        220.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "last",
+      "state": "hover"
+    },
+    {
+      "canvas": [
+        220.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "last",
+      "state": "selected"
+    },
+    {
+      "canvas": [
+        220.0,
+        44.0
+      ],
+      "center_errors": 0.0,
+      "kind": "segment",
+      "position": "last",
+      "state": "disabled"
+    }
+  ],
+  "total_runtime_files": 28,
+  "visual_review": {
+    "comparison": "preview/compare-v1.png",
+    "comparison_sha256": "6ea0718c7af623738d008ff97115c93ded723ae87497e18c4676b289331d7738",
+    "controls_preview_sha256": "2f8512f78b7adbfbf5b39ad4cf5e463afa3f4d46cb920bd02db9b549d22825ae",
+    "differences": [
+      "Stretch-center columns are identical; field center is vertically constant.",
+      "The right gold end cap mirrors the original left gold cap; hover end caps reuse original silver corner facets.",
+      "Shared six-pixel ribs remain neutral across all states.",
+      "Preview text uses local Fira Sans SemiBold with the requested stronger 4px contour."
+    ],
+    "reference": "concept/sources/controls-v1.png",
+    "review": "Reviewed the actual final comparison at identical per-control sizes, plus the 1152px page and 4x nearest seam crop. Wide silver bevels and corner planes, gold inset relief, original blue and brown vertical gradients, bright raised hover, and wider recessed checkbox frames are visibly retained. The six-pixel rib uses an actual broad source metal plane instead of hairlines.",
+    "revision": 4.0,
+    "status": "passed_manual_review"
+  }
+}

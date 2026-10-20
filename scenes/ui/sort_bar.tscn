@@ -14,27 +14,31 @@ size_flags_vertical = 4
 theme_type_variation = &"Hint"
 text = "Sortieren:"
 
-[node name="Best" type="Button" parent="."]
+[node name="Choices" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_type_variation = &"SegmentRow"
+
+[node name="Best" type="Button" parent="Choices"]
 layout_mode = 2
 focus_mode = 0
-theme_type_variation = &"ToolChoice"
+theme_type_variation = &"SegmentFirst"
 toggle_mode = true
 button_pressed = true
 button_group = SubResource("sort_group")
 text = "Beste zuerst"
 
-[node name="Weakest" type="Button" parent="."]
+[node name="Weakest" type="Button" parent="Choices"]
 layout_mode = 2
 focus_mode = 0
-theme_type_variation = &"ToolChoice"
+theme_type_variation = &"SegmentMid"
 toggle_mode = true
 button_group = SubResource("sort_group")
 text = "Schwächste zuerst"
 
-[node name="Alpha" type="Button" parent="."]
+[node name="Alpha" type="Button" parent="Choices"]
 layout_mode = 2
 focus_mode = 0
-theme_type_variation = &"ToolChoice"
+theme_type_variation = &"SegmentLast"
 toggle_mode = true
 button_group = SubResource("sort_group")
 text = "A–Z"

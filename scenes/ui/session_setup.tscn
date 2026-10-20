@@ -121,6 +121,7 @@ layout_mode = 2
 [node name="BackButton" type="Button" parent="Margin/Root/Buttons" unique_id=1244154423]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"WindowButton"
 text = "◀ Zurück"
 
 [node name="HandbookLink" parent="Margin/Root/Buttons" instance=ExtResource("handbook_link")]
@@ -132,12 +133,14 @@ custom_minimum_size = Vector2(40, 40)
 [node name="StartButton" type="Button" parent="Margin/Root/Buttons" unique_id=1330835382]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"WindowPrimary"
 size_flags_horizontal = 3
 text = "▶ Kampf starten"
 
 [node name="BossStartButton" type="Button" parent="Margin/Root/Buttons"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"WindowPrimary"
 size_flags_horizontal = 3
 text = "👹 Bosskampf starten"
 
@@ -145,5 +148,6 @@ text = "👹 Bosskampf starten"
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
+theme_type_variation = &"WindowPrimary"
 size_flags_horizontal = 3
 text = "📜 The Rambler"

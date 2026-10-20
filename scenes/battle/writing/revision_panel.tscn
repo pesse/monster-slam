@@ -19,7 +19,7 @@ theme_type_variation = &"Tight"
 layout_mode = 2
 
 [node name="Tabs" type="HBoxContainer" parent="Side/SideStack"]
-theme_type_variation = &"Tight"
+theme_type_variation = &"TabRow"
 layout_mode = 2
 
 [node name="HintsTab" type="Button" parent="Side/SideStack/Tabs"]

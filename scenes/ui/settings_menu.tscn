@@ -10,6 +10,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/settings.webp" id="8_icon"]
 [ext_resource type="PackedScene" path="res://scenes/ui/confirm_dialog.tscn" id="9_confirm"]
 [ext_resource type="PackedScene" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
+[ext_resource type="Material" path="res://scenes/ui/title_metal.tres" id="title_metal"]
 
 [sub_resource type="ButtonGroup" id="tab_group"]
 
@@ -93,8 +94,14 @@ theme_type_variation = &"WindowTitleBar"
 layout_mode = 2
 theme_type_variation = &"ScreenStack"
 
-[node name="TitleIcon" type="TextureRect" parent="Window/Layout/TitleBar/Header"]
-custom_minimum_size = Vector2(40, 40)
+[node name="TitleMedallion" type="PanelContainer" parent="Window/Layout/TitleBar/Header"]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_type_variation = &"TitleMedallion"
+
+[node name="TitleIcon" type="TextureRect" parent="Window/Layout/TitleBar/Header/TitleMedallion"]
+custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
@@ -106,6 +113,7 @@ stretch_mode = 5
 [node name="Title" type="Label" parent="Window/Layout/TitleBar/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
+material = ExtResource("title_metal")
 theme_type_variation = &"WindowTitle"
 text = "EINSTELLUNGEN"
 vertical_alignment = 1
@@ -140,10 +148,11 @@ layout_mode = 2
 [node name="Tabs" type="HBoxContainer" parent="Window/Layout/Content/Body"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"TabRow"
 
 [node name="ProfileTab" type="Button" parent="Window/Layout/Content/Body/Tabs"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(144, 40)
+custom_minimum_size = Vector2(144, 44)
 layout_mode = 2
 theme_type_variation = &"WindowTab"
 toggle_mode = true
@@ -153,7 +162,7 @@ text = "Profil"
 
 [node name="ReportTab" type="Button" parent="Window/Layout/Content/Body/Tabs"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(144, 40)
+custom_minimum_size = Vector2(144, 44)
 layout_mode = 2
 theme_type_variation = &"WindowTab"
 toggle_mode = true
@@ -162,16 +171,17 @@ text = "Melden"
 
 [node name="TraceTab" type="Button" parent="Window/Layout/Content/Body/Tabs"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(144, 40)
+custom_minimum_size = Vector2(144, 44)
 layout_mode = 2
 theme_type_variation = &"WindowTab"
 toggle_mode = true
 button_group = SubResource("tab_group")
 text = "Protokoll"
 
-[node name="TabRule" type="HSeparator" parent="Window/Layout/Content/Body"]
+[node name="TabRail" type="PanelContainer" parent="Window/Layout/Content/Body/Tabs"]
 layout_mode = 2
-theme_type_variation = &"StatRule"
+size_flags_horizontal = 3
+theme_type_variation = &"TabRail"
 
 [node name="Pages" type="Control" parent="Window/Layout/Content/Body"]
 layout_mode = 2
@@ -235,11 +245,12 @@ text = "Standard-Schwierigkeit"
 [node name="DiffRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"SegmentRow"
 
 [node name="Diff1" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/DiffRow"]
 custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
-theme_type_variation = &"ToolChoice"
+theme_type_variation = &"SegmentFirst"
 toggle_mode = true
 button_group = SubResource("diff_group")
 text = "1"
@@ -247,7 +258,7 @@ text = "1"
 [node name="Diff2" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/DiffRow"]
 custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
-theme_type_variation = &"ToolChoice"
+theme_type_variation = &"SegmentMid"
 toggle_mode = true
 button_group = SubResource("diff_group")
 text = "2"
@@ -255,7 +266,7 @@ text = "2"
 [node name="Diff3" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/DiffRow"]
 custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
-theme_type_variation = &"ToolChoice"
+theme_type_variation = &"SegmentMid"
 toggle_mode = true
 button_group = SubResource("diff_group")
 text = "3"
@@ -263,7 +274,7 @@ text = "3"
 [node name="Diff4" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/DiffRow"]
 custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
-theme_type_variation = &"ToolChoice"
+theme_type_variation = &"SegmentMid"
 toggle_mode = true
 button_group = SubResource("diff_group")
 text = "4"
@@ -271,7 +282,7 @@ text = "4"
 [node name="Diff5" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/DiffRow"]
 custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
-theme_type_variation = &"ToolChoice"
+theme_type_variation = &"SegmentLast"
 toggle_mode = true
 button_group = SubResource("diff_group")
 text = "5"
@@ -339,12 +350,13 @@ text = "Grafik"
 [node name="GraphicsRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"SegmentRow"
 
 [node name="GraphicsFine" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/GraphicsRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-theme_type_variation = &"ToolChoice"
+theme_type_variation = &"SegmentFirst"
 toggle_mode = true
 button_group = SubResource("graphics_group")
 text = "Schön"
@@ -353,7 +365,7 @@ text = "Schön"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-theme_type_variation = &"ToolChoice"
+theme_type_variation = &"SegmentMid"
 toggle_mode = true
 button_group = SubResource("graphics_group")
 text = "Mittel"
@@ -362,7 +374,7 @@ text = "Mittel"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-theme_type_variation = &"ToolChoice"
+theme_type_variation = &"SegmentLast"
 toggle_mode = true
 button_group = SubResource("graphics_group")
 text = "Schnell"
@@ -385,12 +397,13 @@ text = "Menügröße"
 [node name="UiSizeRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"SegmentRow"
 
 [node name="UiSizeSmall" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/UiSizeRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-theme_type_variation = &"ToolChoice"
+theme_type_variation = &"SegmentFirst"
 toggle_mode = true
 button_group = SubResource("ui_size_group")
 text = "Klein"
@@ -399,7 +412,7 @@ text = "Klein"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-theme_type_variation = &"ToolChoice"
+theme_type_variation = &"SegmentMid"
 toggle_mode = true
 button_group = SubResource("ui_size_group")
 text = "Mittel"
@@ -408,7 +421,7 @@ text = "Mittel"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-theme_type_variation = &"ToolChoice"
+theme_type_variation = &"SegmentLast"
 toggle_mode = true
 button_group = SubResource("ui_size_group")
 text = "Groß"

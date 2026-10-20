@@ -43,6 +43,7 @@ layout_mode = 2
 [node name="BackButton" type="Button" parent="Margin/Root/Header"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"WindowButton"
 text = "◀ Karte"
 
 [node name="Title" type="Label" parent="Margin/Root/Header"]
@@ -60,6 +61,7 @@ layout_mode = 2
 unique_name_in_owner = true
 custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
+theme_type_variation = &"WindowButton"
 clip_text = true
 
 [node name="NameEdit" type="LineEdit" parent="Margin/Root/ListBar"]
@@ -71,11 +73,13 @@ placeholder_text = "Name der Liste"
 [node name="SaveButton" type="Button" parent="Margin/Root/ListBar"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"WindowButton"
 text = "Speichern"
 
 [node name="DeleteButton" type="Button" parent="Margin/Root/ListBar"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"WindowButton"
 text = "Löschen"
 
 [node name="Filters" type="HBoxContainer" parent="Margin/Root"]
@@ -93,6 +97,7 @@ clear_button_enabled = true
 unique_name_in_owner = true
 custom_minimum_size = Vector2(240, 0)
 layout_mode = 2
+theme_type_variation = &"WindowButton"
 clip_text = true
 text = "Units, Teile ▾"
 
@@ -129,11 +134,13 @@ layout_mode = 2
 [node name="MarkVisible" type="Button" parent="Margin/Root/Footer"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"WindowButton"
 text = "☑ Sichtbare"
 
 [node name="UnmarkVisible" type="Button" parent="Margin/Root/Footer"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"WindowButton"
 text = "☐ Sichtbare"
 
 [node name="Count" type="Label" parent="Margin/Root/Footer"]
@@ -150,16 +157,19 @@ text_overrun_behavior = 3
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
+theme_type_variation = &"WindowButton"
 clip_text = true
 
 [node name="RoundButton" type="Button" parent="Margin/Root/Footer"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"WindowButton"
 text = "Neue Runde"
 
 [node name="PlayButton" type="Button" parent="Margin/Root/Footer"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"WindowPrimary"
 text = "▶ Spielen"
 
 [node name="PlaceDrop" type="Control" parent="."]

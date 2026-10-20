@@ -1,0 +1,8 @@
+DETERMINISTISCHE BEARBEITUNGSVORGABE — kein zusätzlicher ImageGen-Aufruf für Teil B.
+
+Vorbild: assets/ui/windows/folder_tabs/sources/concept-v1.png, freigegebene Kopfzeile.
+title_bar.webp: 512 x 64 RGBA, verlustfreies WebP, keine Schrift/Symbole. Bestehendes assets/ui/windows/title_bar.webp als Geometrievorlage. Obere 8 Pixelzeilen, seitliche Fasen und Trennkante y=62/63 beibehalten. Textfreie Metallfläche aus dem Originalkonzept (x=680, y=82, 1330 x 128) auf 448 x 54 reduzieren; horizontale Gegenkanten symmetrisch angleichen, zurückhaltender vertikaler Lichtverlauf und obere Glanzkante. Mittlere Spalten x=32 bis479 über alle64 Zeilen exakt periodisch, Höhe unverändert64, Slices32/32/8/8.
+
+title_medallion.webp: 64 x64 RGBA, transparente Außenseite. Ring aus der auf1152 x384 skalierten Referenzregion x40/y43/68x68 ableiten; auf64x64 reduzieren. Pokal aus der Innenfläche vollständig entfernen, Innenkreis dunkel füllen, silberblauen Fasenring erhalten, weiche transparente Außenkontur bis Radius31.5. 40x40-Pokal wird ausschließlich als Overlay in preview/header.png eingesetzt.
+
+Vorschau: Titelbänder1152x64 und640x64, Medaillon64x64, records_trophy.webp40x40, FiraSans SemiBold36, Titel STATISTIK nur als Overlay; Originalkopfzeile auf1152px darunter. Alle Laufzeitteile aus exportierten WebP erneut laden. Originale unverändert lassen.

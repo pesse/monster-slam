@@ -22,9 +22,8 @@ Quelle: eingebautes `image_gen.imagegen`, Stilreferenz `concept/statistics-v2.we
 - **Fenster:** `scenes/ui/stats_screen.tscn`, dieselben Schichten wie die Fähigkeiten
   (Rahmen, Fläche, Titelband mit Pokal, Schließen-X, Anschlussplatten). Öffnet über dem
   Hauptmenü, Esc schließt.
-- **Reiter:** `tabs/tab_normal.webp` und `tabs/tab_highlighted.webp` sind die Reiter aus
-  `../windows/` auf zwei Drittel verkleinert (347 × 64, `src/dev/shrink_image.gd`): ihr
-  28-px-Rand passte in keinen 40 px hohen Reiter. Im Theme als `WindowTab` mit 19 px Rand.
+- **Reiter:** offene Reiter aus `../windows/folder_tabs/` (Theme `WindowTab`, Zeile `TabRow`,
+  Reststück mit Sprachauswahl `TabRail`). `tabs/` ist der frühere Plaketten-Reiter, ungenutzt.
 - **Medaillons:** 80 px, `skill_tree/medallions/available.webp` als Basis, Icon mit 14 px
   Rand darüber (Stern 18 px). Mipmaps an, die Icons stehen bei 1152 × 648 auf gut einem
   Viertel.

@@ -1,0 +1,19 @@
+CURRENT EXPORT – REVISION 4
+
+User direction: derive runtime materials directly from concept/sources/controls-v1.png; preserve wide sculpted metal bevels, corner reflections, brushed highlights, original navy and gold face gradients. Keep 44px control height and existing canvases. Allow 16px slices. Replace the thin double seam with a 6px source-derived metal rib split 3+3. Recheck all 48 state pairs and stretch cases and compare original/runtime at identical sizes.
+
+No new image-generation prompt or new generated image is used for this revision. All current material pixels come from the existing selected concept. The explicit pixel-extraction request is implemented by sources/build_controls.gd. Source rectangles, raw-source hash, material samples and exact export checks are recorded in preview/checks.json. The original field focus, checkmark and checkbox frames are directly cropped. Only alpha masks, resampling, column repetition, rib-source blending and disabled tone adjustment are deterministic finishing operations.
+
+HISTORICAL ATLAS PROMPT BELOW – NOT USED BY THE CURRENT EXPORT
+
+Use case: ui-mockup. Asset type: production texture source atlas for Monster Slam controls, NOT a page mockup. Reference image is the SELECTED visual design, preserve its tactile faceted silver-blue metal, gold chamfers, inset depth, strong glossy edge highlights, rich navy dark steel. Generate a clean transparent-background sheet of TEXT-FREE isolated control textures. No text, digits, letters, labels, symbols, ticks EXCEPT a gold check on the checked checkbox icons. No window frame or scenery.
+Atlas layout on canvas 1024 x 1024 with precise regular grid:
+Four wide horizontal bare button rectangles all exactly the SAME size 768 x 128, centered at x128 to896, top edges at y48,224,400,576 respectively. Each wide rectangle has cut corners, 12px bevel at this source scale, extremely uniform quiet fill, continuous straight polished top/bottom metal strips. Row1 NORMAL navy blue recessed metal with clearly visible silver-blue beveled border. Row2 HOVER brighter blue-steel raised face with brilliant silver-blue bevel, not gold. Row3 SELECTED gold edged inset panel with warm very dark brown-blue center, bright gold lip and inner shadow, match the selected 3 / Schön in reference. Row4 DISABLED dark muted desaturated silver navy with visible border.
+At bottom y800 to928, four square checkbox icons 128 x128 each, at x128,320,512,704: unchecked silver-blue recessed metal square, checked gold framed square containing a bold dimensional GOLD CHECK, disabled unchecked dim silver-blue square, disabled checked muted gold-grey check. Same clipped 45-degree corners and thick sculpted metal as the reference. These squares must be closed on all four sides and contrast against dark navy.
+Edges hard crisp game UI, orthographic straight-on, small chamfers and multilayer facets, lighting from upper left, material glints restrained along straight borders. Transparent outside each object with alpha. No checkerboard painted in. No shadows extending far beyond objects. Avoid flat vector or flat CSS style, rounded pill buttons, rivets, background, repeated decorative motifs. All four button rows have identical geometry; only material/state changes.
+
+Built-in image_gen; transparent_background=true.
+Style reference: ../concept/controls-v1.webp.
+Deterministic finishing: build_controls.gd samples the generated bevels, freezes corner zones,
+repeats one column across every horizontal stretch region, and creates shared half-seams.
+The field center is constant in both axes. Focus is a transparent overlay.

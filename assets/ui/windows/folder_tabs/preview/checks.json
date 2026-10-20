@@ -1,0 +1,211 @@
+{
+  "revision": 4,
+  "format": "lossless WebP RGBA (VP8L)",
+  "baseline_rgba": [
+    [
+      0,
+      5,
+      24,
+      255
+    ],
+    [
+      107,
+      126,
+      173,
+      255
+    ],
+    [
+      63,
+      84,
+      130,
+      255
+    ]
+  ],
+  "baseline_source": {
+    "file": "sources/concept-v1.png",
+    "resampled_width": 1152,
+    "scale": 0.5303867403314917,
+    "x_average_after_resampling": [
+      796,
+      1007
+    ],
+    "rows_after_resampling": [
+      172,
+      173,
+      174
+    ]
+  },
+  "assets": {
+    "tab_normal": {
+      "size": [
+        128,
+        44
+      ],
+      "mode": "RGBA",
+      "alpha_range": [
+        0,
+        255
+      ],
+      "fill_alpha_range": [
+        200,
+        200
+      ],
+      "max_face_rgb_error_over_reference_backdrop": 0
+    },
+    "tab_hover": {
+      "size": [
+        128,
+        44
+      ],
+      "mode": "RGBA",
+      "alpha_range": [
+        0,
+        255
+      ],
+      "fill_alpha_range": [
+        200,
+        200
+      ],
+      "max_face_rgb_error_over_reference_backdrop": 0
+    },
+    "tab_selected": {
+      "size": [
+        128,
+        44
+      ],
+      "mode": "RGBA",
+      "alpha_range": [
+        0,
+        255
+      ],
+      "fill_alpha_range": [
+        5,
+        27
+      ]
+    },
+    "rail": {
+      "size": [
+        32,
+        44
+      ],
+      "mode": "RGBA",
+      "alpha_range": [
+        0,
+        255
+      ],
+      "fill_alpha_range": [
+        0,
+        0
+      ]
+    }
+  },
+  "tested_widths": {
+    "min": 100,
+    "max": 260,
+    "step": 1
+  },
+  "rail_sha256": "db6c712d80af6703db76873eb9794c0f976610dcce2387688c6a821bab22764a",
+  "vertical_rows_constant_required": false,
+  "text_outline_px": 2,
+  "source_colour_measurements": {
+    "normal": {
+      "upper": [
+        10,
+        26,
+        46,
+        255
+      ],
+      "middle": [
+        8,
+        23,
+        41,
+        255
+      ],
+      "lower": [
+        7,
+        21,
+        39,
+        255
+      ],
+      "rim": [
+        120,
+        138,
+        189,
+        255
+      ]
+    },
+    "hover": {
+      "upper": [
+        22,
+        41,
+        69,
+        255
+      ],
+      "middle": [
+        12,
+        30,
+        54,
+        255
+      ],
+      "lower": [
+        10,
+        28,
+        50,
+        255
+      ],
+      "rim": [
+        215,
+        227,
+        235,
+        255
+      ]
+    },
+    "selected": {
+      "upper": [
+        15,
+        25,
+        36,
+        255
+      ],
+      "middle": [
+        5,
+        20,
+        37,
+        255
+      ],
+      "lower": [
+        6,
+        20,
+        37,
+        255
+      ],
+      "rim": [
+        250,
+        228,
+        98,
+        255
+      ]
+    }
+  },
+  "result": "PASS: dimensions, lossless RGBA roundtrip, face alpha, gutter alpha <=60, identical concept baseline/stubs, selected opening, constant horizontal stretch columns, full-height vertical variation, every integer width 100..260",
+  "reference_comparison": "compare-v1.png: original concept-v1.png at 1152/2172, exported textures with outlined labels, both additionally 3x nearest",
+  "reference_scale": 0.5303867403314917,
+  "comparison_tab_widths": [
+    182,
+    180,
+    173,
+    184
+  ],
+  "comparison_sizes": {
+    "compare-v1.png": [
+      3456,
+      600
+    ],
+    "compare-v1-1152.png": [
+      1152,
+      164
+    ]
+  },
+  "visual_review": "Revision 4: measured concept steel-blue restored without grey lift; continuous sampled vertical gradient/grain; shared brighter blue concept rail; outline 2px. Horizontal material variation is removed by repeated columns; 44px height, 6px gutters and 16px font differ slightly from scaled painted concept.",
+  "reference_sha256": "4651c2a4412ad3941bab960272136b93b05e61df9394ffbfedfb2991baed2664"
+}

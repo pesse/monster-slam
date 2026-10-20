@@ -5,6 +5,7 @@
 [ext_resource type="Script" path="res://src/ui/page_stack.gd" id="3_pages"]
 [ext_resource type="Script" path="res://src/ui/window_chrome.gd" id="4_chrome"]
 [ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/play.webp" id="5_play"]
+[ext_resource type="Material" path="res://scenes/ui/title_metal.tres" id="title_metal"]
 
 [sub_resource type="ButtonGroup" id="choice_group"]
 
@@ -42,6 +43,7 @@ part = 1
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
+material = ExtResource("title_metal")
 theme_type_variation = &"WindowTitle"
 vertical_alignment = 1
 
@@ -167,12 +169,13 @@ horizontal_alignment = 1
 unique_name_in_owner = true
 layout_mode = 2
 alignment = 1
+theme_type_variation = &"SegmentRow"
 
 [node name="Choice0" type="Button" parent="Layout/Content/Root/Pages/NextPage/Decision/ChoiceRow"]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 focus_mode = 0
-theme_type_variation = &"ToolChoice"
+theme_type_variation = &"SegmentFirst"
 toggle_mode = true
 button_group = SubResource("choice_group")
 text = "Viel leichter"
@@ -181,7 +184,7 @@ text = "Viel leichter"
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 focus_mode = 0
-theme_type_variation = &"ToolChoice"
+theme_type_variation = &"SegmentMid"
 toggle_mode = true
 button_group = SubResource("choice_group")
 text = "Leichter"
@@ -190,7 +193,7 @@ text = "Leichter"
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 focus_mode = 0
-theme_type_variation = &"ToolChoice"
+theme_type_variation = &"SegmentMid"
 toggle_mode = true
 button_group = SubResource("choice_group")
 text = "Gleich"
@@ -199,7 +202,7 @@ text = "Gleich"
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 focus_mode = 0
-theme_type_variation = &"ToolChoice"
+theme_type_variation = &"SegmentMid"
 toggle_mode = true
 button_group = SubResource("choice_group")
 text = "Schwieriger"
@@ -208,7 +211,7 @@ text = "Schwieriger"
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 focus_mode = 0
-theme_type_variation = &"ToolChoice"
+theme_type_variation = &"SegmentLast"
 toggle_mode = true
 button_group = SubResource("choice_group")
 text = "Viel schwieriger"
