@@ -1658,9 +1658,9 @@ func _spell_out(key: int, at: Vector3) -> void:
 
 
 ## Die Kamerafahrt des Standbilds: k = 0 Spielbild, k = 1 ganz herangefahren. Den
-## Ausgangsstand nimmt sie beim ersten Aufruf, k = 0 stellt ihn genau wieder her.
-## Statisch für die Werkbank (`--spelling`).
-static func spelling_zoom(camera: Camera3D, target: Vector3) -> Callable:
+## Ausgangsstand nimmt sie beim ersten Aufruf, k = 0 stellt ihn genau wieder her. `turn`:
+## Anteil der Drehung zum Ziel in der Ich-Sicht. Statisch für die Werkbank (`--spelling`).
+static func spelling_zoom(camera: Camera3D, target: Vector3, turn := SPELLING_TURN) -> Callable:
 	var start := {}
 	if camera.projection != Camera3D.PROJECTION_ORTHOGONAL:
 		return func(k: float) -> void:
@@ -1669,7 +1669,7 @@ static func spelling_zoom(camera: Camera3D, target: Vector3) -> Callable:
 				start["from"] = camera.global_basis.get_rotation_quaternion()
 				var look := Basis.looking_at(target - camera.global_position, Vector3.UP)
 				start["to"] = (start["from"] as Quaternion).slerp(
-						look.get_rotation_quaternion(), SPELLING_TURN)
+						look.get_rotation_quaternion(), turn)
 			camera.fov = lerpf(start["fov"], float(start["fov"]) * SPELLING_FOV, k)
 			camera.global_basis = Basis((start["from"] as Quaternion).slerp(start["to"], k))
 	return func(k: float) -> void:
@@ -2036,14 +2036,15 @@ func _on_monster_reached_goal(monster: Monster) -> void:
 
 
 ## Standbild wie bei einem Schreibfehler (ADR 0010, ADR 0027): Aufgabe und Lösung, solange
-## das Monster an der Mauer platzt. Nicht beim Vorspulen.
+## das Monster an der Mauer platzt. Nicht beim Vorspulen. Die Ich-Sicht dreht sich dabei
+## nicht: die Mauer liegt meist hinter dem Spieler.
 func _reveal_leak(monster: Monster) -> void:
 	var answers: Array = monster.task.get("accepted_answers", [])
 	if _fast_resolving or answers.is_empty():
 		return
 	var target := monster.global_position + Vector3(0.0, 1.0, 0.0)
 	_spelling.play(str(answers[0]), PackedInt32Array(),
-			spelling_zoom(_fp.camera if _fp != null else _camera, target), PackedInt32Array(),
+			spelling_zoom(_fp.camera if _fp != null else _camera, target, 0.0), PackedInt32Array(),
 			monster.prompt())
 
 

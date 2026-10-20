@@ -135,6 +135,22 @@ func test_charge_turns_towards_the_monster() -> void:
 	assert_float(FirstPersonView.yaw_towards(Vector3.ZERO, Vector3(5.0, 0.0, 0.0))).is_equal_approx(-PI / 2.0, 0.001)
 
 
+## Das Standbild eines durchgelassenen Monsters (turn 0) fährt heran, ohne den Blick zur
+## Mauer hinter dem Spieler zu drehen; das eines Schreibfehlers dreht zum Monster.
+func test_the_leak_freeze_keeps_the_view() -> void:
+	var camera := auto_free(Camera3D.new()) as Camera3D
+	add_child(camera)
+	var behind := Vector3(0.0, 0.0, 10.0)
+	var still := WaveRunnerScript.spelling_zoom(camera, behind, 0.0)
+	still.call(1.0)
+	assert_vector(-camera.global_basis.z).is_equal_approx(Vector3.FORWARD, Vector3.ONE * 0.001)
+	assert_float(camera.fov).is_less(70.0)
+	still.call(0.0)
+	var turning := WaveRunnerScript.spelling_zoom(camera, Vector3(10.0, 0.0, 0.0))
+	turning.call(1.0)
+	assert_float((-camera.global_basis.z).x).is_greater(0.1)
+
+
 ## Der Anlauf kommt an, und ein zweiter Treffer während des ersten lässt den ersten sofort
 ## ankommen, statt ihn hängen zu lassen.
 func test_charge_arrives_and_a_second_one_completes_the_first() -> void:
