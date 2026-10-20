@@ -1,0 +1,25 @@
+HUD control extension – direct material derivation, no new generated image.
+
+Source: approved runtime controls produced from concept/sources/controls-v1.png.
+Each input's SHA-256 is recorded in preview/checks.json -> hud.sources.
+Exact deterministic exporter: build_hud.gd. Labels: hud_preview_text.ps1.
+
+hud_plate: first/last normal segment caps form a closed plate. The full 16px
+source border zones are retained; middle columns and rows repeat source samples.
+The quiet navy face has alpha 235. Highlights and shadows remain in fixed edges.
+
+bar_track: the existing silver-blue field recess is remapped to 64x16 with 8x6
+fixed zones. bar_fill: original raised hover bevel and face remapped to a 60x12
+visible shape, luminance graded to near-white neutral metal and lower diffuse
+shadow. The 2px transparent perimeter is part of the 64x16 texture.
+
+slider_grabber: original silver checkbox casing, no checkmark, plus a gold-tinted
+core made from the neutralized raised hover material. Hover increases luminance.
+scroll_track and grabbers: narrow versions of the recess and raised hover/gold
+materials, transposed to retain the original upper/left light direction.
+Every vertical middle row is identical. Normal thumb is dimmer than hover.
+
+The existing runtime files, raw inputs, scripts and previews are read-only.
+Only new outputs plus README.md and preview/checks.json are written.
+The old builder is intentionally not invoked. No generation prompt is required
+for this explicit pixel/material extraction workflow.

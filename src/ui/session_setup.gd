@@ -172,6 +172,7 @@ func _add_unit_row(book: String, unit: int, selected: PackedStringArray) -> void
 	if part_row == null:
 		return
 	var toggle := Button.new()
+	toggle.theme_type_variation = &"ToolButton"
 	toggle.text = "▸"
 	toggle.focus_mode = Control.FOCUS_NONE
 	toggle.pressed.connect(func():
@@ -292,6 +293,7 @@ func _refresh_badges() -> void:
 		child.queue_free()
 	for tag in _selected_tags:
 		var badge := Button.new()
+		badge.theme_type_variation = &"WindowButton"
 		badge.text = "%s  ✕" % tag
 		badge.focus_mode = Control.FOCUS_NONE
 		badge.pressed.connect(_remove_tag.bind(tag))
@@ -311,6 +313,7 @@ func _on_tag_input_changed(text: String) -> void:
 			continue
 		if tag.to_lower().contains(query):
 			var btn := Button.new()
+			btn.theme_type_variation = &"WindowButton"
 			btn.text = tag
 			btn.focus_mode = Control.FOCUS_NONE
 			btn.pressed.connect(_add_tag.bind(tag))

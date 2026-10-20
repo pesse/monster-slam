@@ -2,6 +2,8 @@
 
 Revision 4 ersetzt die flache Atlas-Ableitung. Die 19 Laufzeitdateien übernehmen Material, Fasen, Glanz, Eckreflexe, Haken und vertikale Flächenverläufe direkt aus [concept/sources/controls-v1.png](concept/sources/controls-v1.png), 2128 × 739. Quelle und exakte Ausschnitte sind in [preview/checks.json](preview/checks.json) mit SHA-256 dokumentiert. Der alte `sources/controls-atlas.png` bleibt historische Quelle und wird beim aktuellen Export nicht verwendet.
 
+HUD-Ergänzung: neun weitere Texturen, insgesamt 28 Laufzeitdateien; neue Einbau- und Prüfangaben stehen am Ende dieser README.
+
 | Datei | Leinwand | Slices L/T/R/B | Verwendung |
 | --- | --- | --- | --- |
 | `field_normal.webp` | 128 × 44 | 16 / 16 / 16 / 16 | Vertieftes LineEdit/TextEdit, dunkle ruhige Mitte |
@@ -23,6 +25,15 @@ Revision 4 ersetzt die flache Atlas-Ableitung. Die 19 Laufzeitdateien übernehme
 | `check_on.webp` | 32 × 32 | keine | CheckBox-Icon `checked`, Goldfassung und goldener Haken |
 | `check_off_disabled.webp` | 32 × 32 | keine | CheckBox-Icon `unchecked_disabled` |
 | `check_on_disabled.webp` | 32 × 32 | keine | CheckBox-Icon `checked_disabled` |
+| `hud_plate.webp` | 96 × 64 | 16 / 16 / 16 / 16 | Erhabene Kampfplatte; ruhige Mitte, Alpha 235 |
+| `bar_track.webp` | 64 × 16 | 8 / 6 / 8 / 6 | Vertiefte Metallrinne für Balken und HSlider |
+| `bar_fill.webp` | 64 × 16 | 8 / 6 / 8 / 6 | Neutral hellgraue, gewölbte Füllung; 2 px transparenter Rand bereits enthalten |
+| `slider_grabber.webp` | 24 × 24 | keine | Achteckiger Silberknopf mit goldenem Kern |
+| `slider_grabber_hover.webp` | 24 × 24 | keine | Hellerer Knopf; gleiche Geometrie und Alphamaske |
+| `scroll_track.webp` | 12 × 48 | 0 / 6 / 0 / 6 | Senkrecht dehnbare vertiefte Bildlaufrinne |
+| `scroll_grabber.webp` | 12 × 48 | 0 / 6 / 0 / 6 | Erhabener stahlblauer Bildlaufgriff |
+| `scroll_grabber_hover.webp` | 12 × 48 | 0 / 6 / 0 / 6 | Heller silberblauer Bildlaufgriff |
+| `scroll_grabber_pressed.webp` | 12 × 48 | 0 / 6 / 0 / 6 | Goldener gedrückter Bildlaufgriff |
 
 ## Aufbau und Einbau
 
@@ -82,3 +93,66 @@ powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $controlsDir 'sou
 ```
 
 Das Textskript direkt nach dem Builder ausführen, damit das Overlay nur einmal aufgetragen wird. Der Builder setzt die manuelle Sichtprüfung bei jedem Neuaufbau auf `pending`; ihr abschließendes Ergebnis im gelieferten `checks.json` wurde nach Sichtung der tatsächlichen PNGs gesetzt und ist kein automatischer Ähnlichkeitswert.
+
+## HUD-Ergänzung
+
+Neun zusätzliche Texturen für Kampfplatten, Fortschrittsbalken, HSlider und VScrollBar; zusammen mit den bisherigen Controls **28 Laufzeitdateien**. Die Originaldateien der 19 Controls, deren Quellen, Skripte, Importdateien und Vorschauen bleiben unverändert. Nur diese README und `preview/checks.json` wurden ergänzt. Der Prüfbericht enthält die neuen Ergebnisse unter `hud`; die bisherigen Kontrollprüfungen bleiben erhalten.
+
+[preview/hud-1152.png](preview/hud-1152.png) zeigt die Komposition auf RGB **40/36/70**: Bossplatte mit Herz-Platzhalter und 70 % roter Füllung, Satzplatte, Schieberegler bei 50 %, goldener Erfahrungsbalken bei 30 % und die drei Bildlaufgriffzustände. Zusätzliche Farbproben zeigen Grün/Gelb/Blau, eine 16 px breite Füllung und beide Schieberknöpfe. Text und Herz sind ausschließlich Vorschau-Overlays, keine Laufzeitgrafiken.
+
+### Material und Dehnverhalten
+
+- Die HUD-Platte übernimmt die breiten Fasen und abgeschrägten Eckreflexe aus den fertigen first/last-Normal-Texturen. Verlauf und Wölbung liegen in den festen Randzonen; die Mitte ist in beiden Achsen pixelgleich, mit Alpha **235/255**. So bleiben auch große Kampfpanels ruhig, ohne gezogene Glanzflecken.
+- Die Rinne stammt aus dem vorhandenen vertieften Feld. Bei nur 16 px Höhe werden die Metallfasen proportional verkleinert. Die Füllung übernimmt den erhabenen Hover-Look und seine Glanzstellen, wird neutral hellgrau umgerechnet und erhält unten einen kräftigeren Schatten. **R=G=B** ist für alle sichtbaren Pixel geprüft; Godot kann sie ohne Blaustich einfärben.
+- Der Sliderknopf kombiniert die originale silberne Kästchenfassung ohne Haken mit einem goldgetönten Kern aus demselben Metallmaterial. Die Hover-Variante ist heller und verwendet exakt dieselbe Alphamaske.
+- Die Scroll-Texturen werden aus Rinne und Hover-/Gold-Metall abgeleitet und transponiert, damit Licht weiter von oben/links kommt. Die mittleren Zeilen y=6…41 sind identisch; sie dehnen ohne wandernde Glanzpunkte. Hover ist messbar heller als Normal.
+
+### Godot-Zuordnung
+
+| Element | Theme-Zuordnung / Einstellungen |
+| --- | --- |
+| Kampfplatte | `Panel/styles/panel` oder entsprechende PanelContainer-StyleBoxTexture, Slices 16/16/16/16, beide Achsen STRETCH |
+| ProgressBar | `background = bar_track`, `fill = bar_fill`, Slices 8/6/8/6, feste Höhe 16 |
+| HSlider | `slider = bar_track`, `grabber_area` und `grabber_area_highlight = bar_fill` goldgetönt; Icons `grabber` und `grabber_highlight` aus den 24-px-Knöpfen |
+| VScrollBar | `scroll = scroll_track`; `grabber`, `grabber_highlight`, `grabber_pressed` aus den drei Grifftexturen; Breite explizit 12; Slices 0/6/0/6, senkrecht STRETCH |
+
+Filter Linear, Lossless-Import, Mipmaps aus. Die Knöpfe werden bei 24 × 24 nicht gesliced und sitzen mittig auf der 16-px-Rinne, also 4 px Überstand oben/unten.
+
+Bei Balken ist der **2-px-Abstand bereits in bar_fill enthalten**. Track und Fill erhalten dieselbe äußere Position und Höhe; keine weiteren 2 px versetzen und nicht um zusätzliche Innenabstände verkleinern. StyleBox-Content-Margins für die Balken auf 0 setzen. Die Vorschau berechnet die sichtbare Fülllänge über die innere Breite `W−4`: `Fill-Leinwandbreite = 4 + round((W−4) × Anteil)`. Unter 16 px Füllbreite eine 16-px-Füllung passend clippen; bei 0 % die Füllung ausblenden. Die Texturen selbst sind ab 16 px Breite geprüft.
+
+`bar_fill` bleibt neutral. Über `StyleBoxTexture.modulate_color` z. B. Rot `(1, 0.20, 0.23, 1)`, Gold `(1, 0.76, 0.19, 1)`, Grün `(0.28, 1, 0.39, 1)` oder Blau `(0.25, 0.58, 1, 1)` zuweisen. Nur die Füllung färben, die Rinne behält ihre silberblaue Fassung.
+
+### HUD-Prüfergebnis
+
+**9/9 neue Dateien und 17/17 Dehnfälle bestanden.**
+
+| Prüfung | Ergebnis |
+| --- | --- |
+| Maße / Format | Alle Leinwände exakt gemäß Dateitabelle, nativ RGBA8 und VP8L |
+| Verlustfreiheit | Erneut dekodierte WebP-RGBA-Bytes stimmen exakt mit dem Exportbild und der jeweiligen Roh-PNG überein |
+| Alpha | Transparente Außenbereiche, geglättete Ränder; HUD-Flächenmitte genau 235/255 |
+| Dehnzonen | HUD in beiden Achsen, Balken waagerecht, Scroll-Texturen senkrecht: 0 Pixelabweichungen |
+| Platte | 120 × 44, 400 × 64, 1100 × 400; Ecken und Fasen bleiben fest |
+| Balken | Beide Texturen bei 16, 200 und 600 px Breite, Höhe 16 |
+| Füllungsrand | Ringsum exakt 2 transparente Pixel, auch in allen drei Dehnfällen |
+| Neutrale Füllung | 0 farbige sichtbare Pixel, exaktes R=G=B vor Modulation |
+| Bildlauf | Alle vier Texturen bei 48 und 600 px Höhe, Breite 12 |
+| Hover | Knopf und Scrollgriff heller als Normal, Alphamasken pixelgleich |
+
+Die finale HUD-Vorschau wurde mit `concept/controls-v1.webp` und `preview/compare-v1.png` verglichen: die originalen Metallfacetten, Eckreflexe und die Silberblau-/Gold-Farbwelt bleiben erhalten. Unterschiede ergeben sich aus den geforderten Abmessungen: 16-px-Balken und 12-px-Scrollleisten haben proportional kleinere Fasen; die große Plattenmitte bleibt absichtlich homogen. Die neutrale Füllung und der goldene Knopfkern sind Tonwert-/Farbableitungen des Originals. Es sind keine offenen Maß-, Alpha-, Dehn- oder Anschlussfehler bekannt.
+
+### HUD-Quellen und Reproduktion
+
+`sources/hud-source-notes.txt` dokumentiert die Ableitung. Jede neue Textur besitzt ein gleichnamiges `sources/<Name>-raw.png`. Quelltexturen und SHA-256 stehen unter `hud.sources` im Prüfbericht.
+
+Für diese Ergänzung ausschließlich den separaten Builder verwenden; er ruft den früheren Controls-Builder nicht auf und erhält dessen Prüfdatensätze:
+
+```powershell
+$controlsDir = 'C:\dev\privat\monster-slam\assets\ui\windows\controls'
+$taskDir = Join-Path $env:TEMP 'monster-controls-hud-build'
+New-Item -ItemType Directory -Path $taskDir -Force | Out-Null
+& 'C:\dev\_tools\godot\Godot_v4.7-stable_win64_console.exe' --headless --path $taskDir --script (Join-Path $controlsDir 'sources\build_hud.gd')
+powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $controlsDir 'sources\hud_preview_text.ps1')
+```
+
+Der HUD-Builder überschreibt bei Wiederholung ausschließlich die neun HUD-Dateien, ihre neun Roh-PNGs, `preview/hud-1152.png` und den HUD-Abschnitt in `checks.json`. Das Textskript direkt danach ausführen. Die manuelle Sichtprüfung wird beim Neuaufbau zunächst auf `pending` gesetzt und ist im gelieferten Bericht nach Prüfung der tatsächlichen Vorschau dokumentiert.
