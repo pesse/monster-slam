@@ -1,51 +1,21 @@
 class_name WritingBoss
 extends Control
-## Der Schreib-Boss „The Rambler“ (scenes/battle/writing_boss.tscn) —
-## docs/adr/0023-schreib-boss.md.
-##
-## The Rambler erzählt eine Geschichte endlos und abschweifend; das Kind schreibt eine
-## Summary dazu. An ihm hängen fünf Papierstapel, je Kriterium einer (WritingJudge.CRITERIA).
-## Ein erfülltes Kriterium wirft seinen Stapel ab; fällt der letzte, ist er besiegt.
-##
-## **Ablauf in Phasen** (ADR 0023, Abschnitt 4). Die Bühne (RamblerStage, Ich-Sicht) steht
-## immer dahinter, jede Phase hat ihr eigenes Overlay (scenes/battle/writing/*.tscn):
+## Der Schreib-Boss „The Rambler“ (scenes/battle/writing_boss.tscn), Ablauf nach
+## docs/adr/0023-schreib-boss.md §4. Jede Phase ist ein eigenes Overlay
+## (scenes/battle/writing/*.tscn) vor der RamblerStage:
 ##
 ##     Begegnung ─► Lesen ─► Schreiben ─► Angriff ─► Überarbeiten ─► Angriff ─► … ─► Sieg
 ##                    ▲         │  ▲          │
 ##                    └─────────┘  └──────────┘ Dienstfehler: zurück, die Abgabe zählt nicht
 ##
-## - **Begegnung:** der Boss vorn, er stellt die Aufgabe.
-## - **Lesen:** die Vorlage groß und scrollbar, der Boss tritt zurück.
-## - **Schreiben:** die Vorlage schmal links, das Schreibfeld breit, rechts die Randleiste
-##   mit Wortzahl und Länge (SummaryCard.check) — entprellt, damit nicht jeder Tastendruck
-##   den ganzen Text zerlegt. Alles Inhaltliche urteilt erst das Modell beim Angriff.
-## - **Angriff:** das Warten auf das Modell ist das Aufladen; danach Kriterium für
-##   Kriterium: Stapel fällt (`drop_stack`) oder hält (`hold_stack`).
-## - **Überarbeiten:** der eigene Text mit den markierten Stellen und ihren Hinweisen;
-##   erneut abgeben ist der nächste Angriff. **Die Zahl der Abgaben ist nicht begrenzt**
-##   (ADR 0023, Abschnitt 6).
+## Ein gefallener Stapel kehrt nicht zurück, auch wenn eine spätere Abgabe das Kriterium
+## anders bewertet: jede Abgabe wird ganz neu bewertet, eine Überarbeitung soll nichts kosten.
 ##
-## **Ein gefallener Stapel kehrt nicht zurück.** Jede Abgabe wird ganz neu bewertet; was
-## schon einmal erfüllt war, bleibt gefallen, auch wenn das Modell es diesmal anders sieht —
-## gewertet wird in Stufen, und ein Kind soll für eine Überarbeitung nicht bestraft werden.
+## Der Text lebt in `text`, nicht im Schreibfeld; beide Felder spiegeln ihn. Scheitert der
+## Dienst, bleibt er stehen, und `reply.note` nennt den Grund.
 ##
-## **Der Text geht nie verloren.** Er lebt in `text`, nicht im Schreibfeld; beide Felder
-## (Schreiben, Überarbeiten) spiegeln ihn. Scheitert der Dienst (kein Netz, Zeitlimit,
-## unlesbare Antwort), bleibt er stehen, der Grund aus `reply.note` steht da, und die Abgabe
-## zählt nicht. Verlassen mit Text fragt nach (ConfirmDialog).
-##
-## **Im Hintergrund brabbelt er.** Solange ein Overlay vorn liegt, wandert The Rambler
-## hinten (RamblerStage) und tritt ab und zu am Bildrand auf; dort murmelt er einen
-## Satzfetzen (MUMBLES) in einer schmalen Blase über dem Maul, nah am Rand.
-##
-## **Kein Zeitdruck**, wie beim Satzmeister. Kein Gold, keine Erfahrung, kein Lernstand.
-##
-## Je gewertete Abgabe ein Eintrag in WritingLog und `EventBus.writing_submitted` — die
-## Kosten (ADR 0023, Abschnitt 7); ein Sieg über einen Boss von der Karte zählt in
-## BossRecord wie beim Satzmeister (ADR 0006).
-##
-## **Die Szene ändert ihre Größe nicht**: jede Phase füllt dieselbe Fläche unter der
-## Kopfleiste, umgeschaltet wird über Sichtbarkeit ganzer Overlays, nicht einzelner Felder.
+## Je gewertete Abgabe ein Eintrag in WritingLog und `EventBus.writing_submitted`; ein Sieg
+## über einen Boss von der Karte zählt in BossRecord (ADR 0006).
 
 const SELF_SCENE := "res://scenes/battle/writing_boss.tscn"
 const STAGE_SCENE := "res://scenes/battle/rambler_stage.tscn"

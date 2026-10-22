@@ -1,6 +1,6 @@
 class_name CloudModelBackend
 extends Node
-## Das Modell in der Cloud: Anthropic, mit dem EIGENEN Schlüssel des Spielers — für den
+## Das Modell in der Cloud: Anthropic, mit dem eigenen Schlüssel des Spielers — für den
 ## Schreib-Boss (docs/adr/0023-schreib-boss.md, §1 und §2) und, wenn eingestellt, als
 ## Stufe 1 des Satzmeisters (ADR 0025).
 ##
@@ -13,7 +13,7 @@ extends Node
 ##
 ## Derselbe Zuschnitt wie `LocalModelBackend`: Anfrage rein, Dictionary raus, Zeitlimit,
 ## `last_note` im Klartext, und Anfrage-Bau wie Antwort-Auswertung statisch — ohne Netz
-## prüfbar. Ein zweiter Anbieter passt dahinter, ohne dass Boss oder Richter davon wissen.
+## prüfbar.
 ##
 ## **Strukturierte Ausgabe über `output_config.format`, nicht über ein erzwungenes Tool.**
 ## Claude Opus 5.5 lehnt `tool_choice` `any`/`tool` mit HTTP 400 ab; die JSON-Ausgabe mit
@@ -27,10 +27,9 @@ extends Node
 
 const URL := "https://api.anthropic.com/v1/messages"
 const MODELS_URL := "https://api.anthropic.com/v1/models/"
-## Die Modell-Id steht an dieser EINEN Stelle (ADR 0023, §2).
+## Die einzige Stelle mit der Modell-Id (ADR 0023, §2).
 const MODEL := "claude-opus-5-5"
-## Das Modell für den Satzmeister: am Einzelsatz in der Werkstatt besser als Opus,
-## schneller und billiger (ADR 0025).
+## Das Modell für den Satzmeister (ADR 0025).
 const SENTENCE_MODEL := "claude-sonnet-5-5"
 const API_VERSION := "2023-06-01"
 ## Beta für die serverseitige Ersatzanfrage in der Form `fallbacks: "default"`.
@@ -58,7 +57,7 @@ const BUSY_NOTE := "Vorige Anfrage läuft noch — diese wurde nicht gestellt."
 const NO_KEY_NOTE := "Kein bestätigter API-Schlüssel eingetragen."
 
 var model := MODEL
-## Verstellbar für Werkbank und Messung; gelesen in _ready(), also VOR dem Einhängen setzen.
+## Verstellbar für Werkbank und Messung; gelesen in _ready(), also vor dem Einhängen setzen.
 var http_timeout := HTTP_TIMEOUT
 ## Ein Schlüssel für Werkbank oder Messung. Leer heißt: der bestätigte aus ApiKeys.
 var api_key := ""
@@ -176,7 +175,7 @@ func busy() -> bool:
 
 # --- Anfrage (statisch) --------------------------------------------------------
 
-## Die Kopfzeilen. Der Schlüssel steht NUR hier.
+## Die Kopfzeilen. Nur hier steht der Schlüssel.
 static func request_headers(key: String, with_fallback := true) -> PackedStringArray:
 	var headers := PackedStringArray([
 		"Content-Type: application/json",

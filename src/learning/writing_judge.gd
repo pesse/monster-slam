@@ -14,7 +14,6 @@ extends RefCounted
 ##
 ## **Ein Hinweis verrät nie die Lösung.** Enthält er wörtlich eine Korrektur (CORRECTION_
 ## PATTERNS), wird er durch die Standardregel seiner Kategorie ersetzt (DEFAULT_HINTS).
-## Lieber eine allgemeine Regel als eine Hausaufgabenmaschine.
 ##
 ## **Gewertet wird in Stufen, nicht in Punkten:** ein Kriterium ist erfüllt oder nicht.
 ##

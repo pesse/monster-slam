@@ -1,13 +1,10 @@
 class_name RamblerStage
 extends Node3D
-## Die Bühne des Schreib-Kampfs (scenes/battle/rambler_stage.tscn, ADR 0023 §3): der
-## The Rambler in seinem Turm aus Papier und Büchern, gesehen aus der Ich-Sicht.
+## Die Bühne des Schreib-Kampfs (scenes/battle/rambler_stage.tscn, ADR 0023 §3): The
+## Rambler in seinem Turm aus Papier und Büchern, gesehen aus der Ich-Sicht.
 ##
-## The Rambler ist ein aufgeblähter Bücherwurm-Drache — Leibringe aus Seiten zwischen
-## grünen Einbänden, ein Buch als Kopf, dessen Deckel das Maul sind, Lesebrille, Flügel aus
-## Blättern. Die Teile kommen aus src/dev/rambler_forge.gd; zusammengesetzt und bewegt
-## werden sie hier, ohne Rig: der Leib ist eine Kette von Ringen auf einer Kurve, die atmet
-## und sich wiegt, der Kiefer klappt auf wie ein Buchdeckel.
+## Die Teile kommen aus src/dev/rambler_forge.gd und werden hier ohne Rig zusammengesetzt
+## und bewegt: der Leib ist eine Kette von Ringen auf einer Kurve.
 ##
 ## Um den Bauch trägt er eine Schnur, an der `stack_count` Papierstapel hängen — einer je
 ## Bewertungskriterium. Sie sind die Lebensleiste: `drop_stack` lässt einen abfallen (und
@@ -20,9 +17,8 @@ extends Node3D
 ## Zwei Plätze (`set_focus`): vorn ist er groß in der Mitte und spricht. Hinten liegen
 ## Texte als Overlay über dem Bild; dann wandert er ruhig durch den Raum — hin und her über
 ## die Breite des Bildes, mit Pausen, in denen er den Spieler anschaut — und tritt ab und zu
-## vorn am Bildrand auf (PEEK, `is_peeking`), wo er neben den Panels zu sehen ist (Vorbild:
-## das Auf und Ab des Skeletts in BossStage). Die Kamera steht dabei still: ein
-## mitschwenkendes Bild lenkt beim Lesen ab.
+## vorn am Bildrand auf (PEEK, `is_peeking`), wo er neben den Panels zu sehen ist. Die
+## Kamera steht dabei still: ein mitschwenkendes Bild lenkt beim Lesen ab.
 
 ## Vorn: mitten im Bild, nah.
 const FRONT := Vector3(0.0, 0.0, -3.0)
@@ -30,9 +26,11 @@ const FRONT := Vector3(0.0, 0.0, -3.0)
 ## nah an die Bildränder kommt, und frei von Papiertürmen und Kerzen.
 const WANDER := Rect2(-5.4, -6.6, 10.8, 1.2)
 ## Auftritt: ein Platz am Bildrand (x je Seite ±, z), weiter vorn als WANDER und knapp neben
-## den vorderen Büchertürmen — bei 16:9 neben dem Lese-Panel zu sehen. So oft wird er als nächstes Ziel gewählt, so lange steht er dort (s).
+## den vorderen Büchertürmen — bei 16:9 neben dem Lese-Panel zu sehen.
 const PEEK := Vector2(5.0, -3.6)
+## Wahrscheinlichkeit, dass das nächste Ziel ein Auftritt ist (0–1).
 const PEEK_CHANCE := 0.4
+## Wie lange er am Bildrand steht (s, von–bis).
 const PEEK_REST := Vector2(5.0, 8.0)
 ## Schritttempo beim Wandern und beim Gang nach vorn (m/s).
 const WALK_SPEED := 0.75
@@ -228,7 +226,7 @@ func mutter(seconds: float) -> void:
 
 
 ## Ein Kriterium ist erfüllt: Stapel `index` reißt ab, fällt zu Boden und staubt, der
-## The Rambler zuckt zusammen und schrumpft ein Stück.
+## Rambler zuckt zusammen und schrumpft ein Stück.
 func drop_stack(index: int) -> void:
 	if index < 0 or index >= _stacks.size() or _stacks[index]["dropped"]:
 		return

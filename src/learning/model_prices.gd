@@ -1,6 +1,6 @@
 class_name ModelPrices
 extends RefCounted
-## Preistabelle der Cloud-Modelle — die EINE Stelle, an der aus Token Geld wird
+## Preistabelle der Cloud-Modelle — die einzige Stelle, an der aus Token Geld wird
 ## (docs/adr/0023-schreib-boss.md, §7).
 ##
 ## Gespeichert wird je Abgabe nur der Verbrauch (`WritingLog`: Modell, Token, Zeitpunkt),

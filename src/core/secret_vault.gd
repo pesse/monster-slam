@@ -1,8 +1,7 @@
 class_name SecretVault
 extends RefCounted
 ## Legt ein Geheimnis in den Schlüsselspeicher des Betriebssystems, statt es im Klartext
-## nach `user://` zu schreiben (docs/adr/0023-schreib-boss.md, §1). Bisher einziger Nutzer:
-## `ApiKeys`.
+## nach `user://` zu schreiben (docs/adr/0023-schreib-boss.md, §1).
 ##
 ## - **Windows: DPAPI** (`ProtectedData`, Bereich CurrentUser) über die mitgelieferte
 ##   Windows PowerShell. Heraus kommt ein Base64-Block, den der Aufrufer selbst ablegt;
