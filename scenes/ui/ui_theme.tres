@@ -1,11 +1,18 @@
 [gd_resource type="Theme" format=3 uid="uid://cl05typg0mkgi"]
 
-[ext_resource type="Texture2D" path="res://assets/ui/windows/cards/card_selected.webp" id="card_gold_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/cards/card_normal.webp" id="card_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/cards/card_hover.webp" id="card_hover_tex"]
+[ext_resource type="Texture2D" uid="uid://cofvritk08avq" path="res://assets/ui/windows/controls/bar_fill.webp" id="bar_fill_tex"]
+[ext_resource type="Texture2D" uid="uid://dccotip3weatv" path="res://assets/ui/windows/controls/bar_track.webp" id="bar_track_tex"]
+[ext_resource type="Texture2D" uid="uid://b8lk6nmlm3b2o" path="res://assets/ui/windows/cards/card_selected.webp" id="card_gold_tex"]
+[ext_resource type="Texture2D" uid="uid://dsrg57fxvxc4p" path="res://assets/ui/windows/cards/card_hover.webp" id="card_hover_tex"]
+[ext_resource type="Texture2D" uid="uid://bmke7hvga6t61" path="res://assets/ui/windows/cards/card_normal.webp" id="card_tex"]
 [ext_resource type="Texture2D" uid="uid://dembx1prxxvvc" path="res://assets/ui/checks/mixed.svg" id="check_mixed_tex"]
-[ext_resource type="Texture2D" uid="uid://dfrm2k7aovm1v" path="res://assets/ui/checks/off.svg" id="check_off_tex"]
-[ext_resource type="Texture2D" uid="uid://bogllglcn7a57" path="res://assets/ui/checks/on.svg" id="check_on_tex"]
+[ext_resource type="Texture2D" uid="uid://chlsqe70sgoq7" path="res://assets/ui/windows/controls/check_off_disabled.webp" id="check_off_disabled_tex"]
+[ext_resource type="Texture2D" uid="uid://csr3vadb60bao" path="res://assets/ui/windows/controls/check_off.webp" id="check_off_tex"]
+[ext_resource type="Texture2D" uid="uid://45d2x7vgtvf1" path="res://assets/ui/windows/controls/check_on_disabled.webp" id="check_on_disabled_tex"]
+[ext_resource type="Texture2D" uid="uid://dxhvqc1c0bsej" path="res://assets/ui/windows/controls/check_on.webp" id="check_on_tex"]
+[ext_resource type="Texture2D" uid="uid://bsbhtupsi6vud" path="res://assets/ui/windows/controls/field_focus.webp" id="field_focus_tex"]
+[ext_resource type="Texture2D" uid="uid://bejssvm2r7ob6" path="res://assets/ui/windows/controls/field_read_only.webp" id="field_ro_tex"]
+[ext_resource type="Texture2D" uid="uid://75xf2p0gevly" path="res://assets/ui/windows/controls/field_normal.webp" id="field_tex"]
 [ext_resource type="FontFile" uid="uid://80iavrpdub4p" path="res://assets/fonts/fira_sans/FiraSans-Bold.ttf" id="fira_bold"]
 [ext_resource type="FontFile" uid="uid://bx3d1j6e813vy" path="res://assets/fonts/fira_sans/FiraSans-SemiBold.ttf" id="fira_semibold"]
 [ext_resource type="Texture2D" uid="uid://p6p1vnvm3ivg" path="res://assets/ui/fortress/small/name_panel.webp" id="fort_name_tex"]
@@ -21,6 +28,7 @@
 [ext_resource type="Texture2D" uid="uid://bmm4imuvs4ns0" path="res://assets/ui/gameplay/frames/fortress.webp" id="hud_fortress_tex"]
 [ext_resource type="Texture2D" uid="uid://cbgy6kpfllhqp" path="res://assets/ui/gameplay/frames/legend.webp" id="hud_legend_tex"]
 [ext_resource type="Texture2D" uid="uid://bnu0o8rjubc23" path="res://assets/ui/gameplay/frames/name.webp" id="hud_name_tex"]
+[ext_resource type="Texture2D" uid="uid://5qyt8db5jgpy" path="res://assets/ui/windows/controls/hud_plate.webp" id="hud_plate_tex"]
 [ext_resource type="Texture2D" uid="uid://bbw41b6pmqvrp" path="res://assets/ui/gameplay/frames/round_button_disabled.webp" id="hud_round_button_disabled_tex"]
 [ext_resource type="Texture2D" uid="uid://c7m0extdvxc0r" path="res://assets/ui/gameplay/frames/round_button_hover.webp" id="hud_round_button_hover_tex"]
 [ext_resource type="Texture2D" uid="uid://c2w8xby7cefvu" path="res://assets/ui/gameplay/frames/round_button_pressed.webp" id="hud_round_button_pressed_tex"]
@@ -29,13 +37,31 @@
 [ext_resource type="Texture2D" uid="uid://c82gt00iovwuh" path="res://assets/ui/main_menu/buttons/button_highlighted.webp" id="menu_btn_gold_tex"]
 [ext_resource type="Texture2D" uid="uid://c4bkodinnmter" path="res://assets/ui/main_menu/buttons/button_normal.webp" id="menu_btn_tex"]
 [ext_resource type="Texture2D" uid="uid://di81uv85ill6i" path="res://assets/ui/main_menu/panels/profile_panel.webp" id="profile_plate_tex"]
+[ext_resource type="Texture2D" uid="uid://cvdnv4k8ty0c4" path="res://assets/ui/windows/controls/scroll_grabber_hover.webp" id="scroll_grab_hover_tex"]
+[ext_resource type="Texture2D" uid="uid://33rr6f68pskt" path="res://assets/ui/windows/controls/scroll_grabber_pressed.webp" id="scroll_grab_pressed_tex"]
+[ext_resource type="Texture2D" uid="uid://dweff00x8w8mg" path="res://assets/ui/windows/controls/scroll_grabber.webp" id="scroll_grab_tex"]
+[ext_resource type="Texture2D" uid="uid://crts23k7ojc5h" path="res://assets/ui/windows/controls/scroll_track.webp" id="scroll_track_tex"]
+[ext_resource type="Texture2D" uid="uid://dnpbb3ipgo21y" path="res://assets/ui/windows/controls/seg_first_disabled.webp" id="seg_first_disabled_tex"]
+[ext_resource type="Texture2D" uid="uid://dk58f62bf08k8" path="res://assets/ui/windows/controls/seg_first_hover.webp" id="seg_first_hover_tex"]
+[ext_resource type="Texture2D" uid="uid://xkkngri7u3vm" path="res://assets/ui/windows/controls/seg_first_normal.webp" id="seg_first_normal_tex"]
+[ext_resource type="Texture2D" uid="uid://bctm6frcnj3t" path="res://assets/ui/windows/controls/seg_first_selected.webp" id="seg_first_selected_tex"]
+[ext_resource type="Texture2D" uid="uid://dbhvliiu560f2" path="res://assets/ui/windows/controls/seg_last_disabled.webp" id="seg_last_disabled_tex"]
+[ext_resource type="Texture2D" uid="uid://ctg0fs0sok500" path="res://assets/ui/windows/controls/seg_last_hover.webp" id="seg_last_hover_tex"]
+[ext_resource type="Texture2D" uid="uid://cvvcrukgamspo" path="res://assets/ui/windows/controls/seg_last_normal.webp" id="seg_last_normal_tex"]
+[ext_resource type="Texture2D" uid="uid://dpwiri2v3p255" path="res://assets/ui/windows/controls/seg_last_selected.webp" id="seg_last_selected_tex"]
+[ext_resource type="Texture2D" uid="uid://7rxnas8htr1s" path="res://assets/ui/windows/controls/seg_mid_disabled.webp" id="seg_mid_disabled_tex"]
+[ext_resource type="Texture2D" uid="uid://t8lgfo5whdvj" path="res://assets/ui/windows/controls/seg_mid_hover.webp" id="seg_mid_hover_tex"]
+[ext_resource type="Texture2D" uid="uid://se3he0jbdfst" path="res://assets/ui/windows/controls/seg_mid_normal.webp" id="seg_mid_normal_tex"]
+[ext_resource type="Texture2D" uid="uid://df7swsqjhq88e" path="res://assets/ui/windows/controls/seg_mid_selected.webp" id="seg_mid_selected_tex"]
 [ext_resource type="Texture2D" uid="uid://cep54v1ntb3oo" path="res://assets/ui/frames/silver_gold/frame@2x.webp" id="silver_gold_frame_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/folder_tabs/tab_hover.webp" id="tab_hover_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/folder_tabs/rail.webp" id="tab_rail_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/folder_tabs/tab_selected.webp" id="tab_gold_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/folder_tabs/tab_normal.webp" id="tab_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/header/title_bar.webp" id="title_bar_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/header/title_medallion.webp" id="title_medallion_tex"]
+[ext_resource type="Texture2D" uid="uid://cg8jxy3prfcxr" path="res://assets/ui/windows/controls/slider_grabber_hover.webp" id="slider_grab_hover_tex"]
+[ext_resource type="Texture2D" uid="uid://ds4sevnwp1ity" path="res://assets/ui/windows/controls/slider_grabber.webp" id="slider_grab_tex"]
+[ext_resource type="Texture2D" uid="uid://dxiy42ufik5md" path="res://assets/ui/windows/folder_tabs/tab_selected.webp" id="tab_gold_tex"]
+[ext_resource type="Texture2D" uid="uid://c0fkic5tsjn43" path="res://assets/ui/windows/folder_tabs/tab_hover.webp" id="tab_hover_tex"]
+[ext_resource type="Texture2D" uid="uid://7fafc55tccfx" path="res://assets/ui/windows/folder_tabs/rail.webp" id="tab_rail_tex"]
+[ext_resource type="Texture2D" uid="uid://bnwp1vj75w7ds" path="res://assets/ui/windows/folder_tabs/tab_normal.webp" id="tab_tex"]
+[ext_resource type="Texture2D" uid="uid://dvi8mmxdwh4wt" path="res://assets/ui/windows/header/title_bar.webp" id="title_bar_tex"]
+[ext_resource type="Texture2D" uid="uid://c5gcvk06uh62t" path="res://assets/ui/windows/header/title_medallion.webp" id="title_medallion_tex"]
 [ext_resource type="Texture2D" uid="uid://bobiur7js46kb" path="res://assets/ui/windows/tool_button_disabled.webp" id="tool_disabled_tex"]
 [ext_resource type="Texture2D" uid="uid://blld8ukmmmx1t" path="res://assets/ui/windows/tool_button_hover.webp" id="tool_hover_tex"]
 [ext_resource type="Texture2D" uid="uid://5lbsrx7d7m8o" path="res://assets/ui/windows/tool_button_normal.webp" id="tool_normal_tex"]
@@ -43,34 +69,6 @@
 [ext_resource type="Texture2D" uid="uid://cduuweh2lcac2" path="res://assets/ui/windows/window_panel_compact.webp" id="window_tex"]
 [ext_resource type="Texture2D" uid="uid://djgdoxp4hpreu" path="res://assets/ui/main_menu/buttons/small/button_highlighted.webp" id="win_btn_gold_tex"]
 [ext_resource type="Texture2D" uid="uid://d3shf1enaqe34" path="res://assets/ui/main_menu/buttons/small/button_normal.webp" id="win_btn_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/field_normal.webp" id="field_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/field_focus.webp" id="field_focus_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/field_read_only.webp" id="field_ro_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/seg_first_normal.webp" id="seg_first_normal_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/seg_first_hover.webp" id="seg_first_hover_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/seg_first_selected.webp" id="seg_first_selected_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/seg_first_disabled.webp" id="seg_first_disabled_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/seg_mid_normal.webp" id="seg_mid_normal_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/seg_mid_hover.webp" id="seg_mid_hover_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/seg_mid_selected.webp" id="seg_mid_selected_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/seg_mid_disabled.webp" id="seg_mid_disabled_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/seg_last_normal.webp" id="seg_last_normal_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/seg_last_hover.webp" id="seg_last_hover_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/seg_last_selected.webp" id="seg_last_selected_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/seg_last_disabled.webp" id="seg_last_disabled_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/check_on.webp" id="check_on_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/check_off.webp" id="check_off_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/check_on_disabled.webp" id="check_on_disabled_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/check_off_disabled.webp" id="check_off_disabled_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/hud_plate.webp" id="hud_plate_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/bar_track.webp" id="bar_track_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/bar_fill.webp" id="bar_fill_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/slider_grabber.webp" id="slider_grab_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/slider_grabber_hover.webp" id="slider_grab_hover_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/scroll_track.webp" id="scroll_track_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/scroll_grabber.webp" id="scroll_grab_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/scroll_grabber_hover.webp" id="scroll_grab_hover_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/controls/scroll_grabber_pressed.webp" id="scroll_grab_pressed_tex"]
 
 [sub_resource type="FontVariation" id="menu_font"]
 variation_embolden = 0.9
@@ -358,11 +356,9 @@ texture_margin_top = 32.0
 texture_margin_right = 32.0
 texture_margin_bottom = 32.0
 
-[sub_resource type="StyleBoxTexture" id="xp_fill"]
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
+[sub_resource type="StyleBoxTexture" id="slider_fill"]
+content_margin_top = 8.0
+content_margin_bottom = 8.0
 texture = ExtResource("bar_fill_tex")
 texture_margin_left = 8.0
 texture_margin_top = 6.0
@@ -370,11 +366,9 @@ texture_margin_right = 8.0
 texture_margin_bottom = 6.0
 modulate_color = Color(1, 0.78, 0.25, 1)
 
-[sub_resource type="StyleBoxTexture" id="pb_bg"]
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
+[sub_resource type="StyleBoxTexture" id="slider_track"]
+content_margin_top = 8.0
+content_margin_bottom = 8.0
 texture = ExtResource("bar_track_tex")
 texture_margin_left = 8.0
 texture_margin_top = 6.0
@@ -712,23 +706,23 @@ texture_margin_bottom = 32.0
 axis_stretch_horizontal = 2
 axis_stretch_vertical = 2
 
-[sub_resource type="StyleBoxTexture" id="field_normal"]
-content_margin_left = 12.0
-content_margin_top = 8.0
-content_margin_right = 12.0
-content_margin_bottom = 8.0
-texture = ExtResource("field_tex")
-texture_margin_left = 16.0
-texture_margin_top = 16.0
-texture_margin_right = 16.0
-texture_margin_bottom = 16.0
-
 [sub_resource type="StyleBoxTexture" id="field_focus"]
 content_margin_left = 12.0
 content_margin_top = 8.0
 content_margin_right = 12.0
 content_margin_bottom = 8.0
 texture = ExtResource("field_focus_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxTexture" id="field_normal"]
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+texture = ExtResource("field_tex")
 texture_margin_left = 16.0
 texture_margin_top = 16.0
 texture_margin_right = 16.0
@@ -830,6 +824,17 @@ content_margin_right = 24.0
 content_margin_bottom = 8.0
 texture = ExtResource("profile_plate_tex")
 
+[sub_resource type="StyleBoxTexture" id="pb_bg"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+texture = ExtResource("bar_track_tex")
+texture_margin_left = 8.0
+texture_margin_top = 6.0
+texture_margin_right = 8.0
+texture_margin_bottom = 6.0
+
 [sub_resource type="StyleBoxTexture" id="pb_fill"]
 content_margin_left = 0.0
 content_margin_top = 0.0
@@ -869,6 +874,140 @@ corner_radius_top_left = 6
 corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxTexture" id="seg_first_disabled"]
+content_margin_left = 16.0
+content_margin_top = 4.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+texture = ExtResource("seg_first_disabled_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxEmpty" id="seg_focus"]
+
+[sub_resource type="StyleBoxTexture" id="seg_first_hover"]
+content_margin_left = 16.0
+content_margin_top = 4.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+texture = ExtResource("seg_first_hover_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxTexture" id="seg_first_selected"]
+content_margin_left = 16.0
+content_margin_top = 4.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+texture = ExtResource("seg_first_selected_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxTexture" id="seg_first_normal"]
+content_margin_left = 16.0
+content_margin_top = 4.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+texture = ExtResource("seg_first_normal_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxTexture" id="seg_last_disabled"]
+content_margin_left = 16.0
+content_margin_top = 4.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+texture = ExtResource("seg_last_disabled_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxTexture" id="seg_last_hover"]
+content_margin_left = 16.0
+content_margin_top = 4.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+texture = ExtResource("seg_last_hover_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxTexture" id="seg_last_selected"]
+content_margin_left = 16.0
+content_margin_top = 4.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+texture = ExtResource("seg_last_selected_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxTexture" id="seg_last_normal"]
+content_margin_left = 16.0
+content_margin_top = 4.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+texture = ExtResource("seg_last_normal_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxTexture" id="seg_mid_disabled"]
+content_margin_left = 16.0
+content_margin_top = 4.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+texture = ExtResource("seg_mid_disabled_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxTexture" id="seg_mid_hover"]
+content_margin_left = 16.0
+content_margin_top = 4.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+texture = ExtResource("seg_mid_hover_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxTexture" id="seg_mid_selected"]
+content_margin_left = 16.0
+content_margin_top = 4.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+texture = ExtResource("seg_mid_selected_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+
+[sub_resource type="StyleBoxTexture" id="seg_mid_normal"]
+content_margin_left = 16.0
+content_margin_top = 4.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+texture = ExtResource("seg_mid_normal_tex")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
 
 [sub_resource type="StyleBox" id="spell_slot"]
 resource_local_to_scene = false
@@ -1025,6 +1164,23 @@ corner_radius_top_right = 8
 
 [sub_resource type="StyleBoxEmpty" id="tabbar_bg"]
 
+[sub_resource type="StyleBoxTexture" id="window_tab_rail"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 4.0
+texture = ExtResource("tab_rail_tex")
+texture_margin_bottom = 3.0
+
+[sub_resource type="StyleBoxTexture" id="title_medallion"]
+content_margin_left = 10.0
+content_margin_top = 4.0
+content_margin_right = 10.0
+content_margin_bottom = 4.0
+texture = ExtResource("title_medallion_tex")
+expand_margin_top = 6.0
+expand_margin_bottom = 6.0
+
 [sub_resource type="StyleBoxTexture" id="tool_button_disabled"]
 content_margin_left = 7.0
 content_margin_top = 7.0
@@ -1066,9 +1222,7 @@ content_margin_top = 0.0
 content_margin_right = 6.0
 content_margin_bottom = 0.0
 texture = ExtResource("scroll_grab_tex")
-texture_margin_left = 0.0
 texture_margin_top = 6.0
-texture_margin_right = 0.0
 texture_margin_bottom = 6.0
 
 [sub_resource type="StyleBoxTexture" id="sb_grabber_hl"]
@@ -1077,9 +1231,7 @@ content_margin_top = 0.0
 content_margin_right = 6.0
 content_margin_bottom = 0.0
 texture = ExtResource("scroll_grab_hover_tex")
-texture_margin_left = 0.0
 texture_margin_top = 6.0
-texture_margin_right = 0.0
 texture_margin_bottom = 6.0
 
 [sub_resource type="StyleBoxTexture" id="sb_grabber_pressed"]
@@ -1088,9 +1240,7 @@ content_margin_top = 0.0
 content_margin_right = 6.0
 content_margin_bottom = 0.0
 texture = ExtResource("scroll_grab_pressed_tex")
-texture_margin_left = 0.0
 texture_margin_top = 6.0
-texture_margin_right = 0.0
 texture_margin_bottom = 6.0
 
 [sub_resource type="StyleBoxTexture" id="sb_scroll"]
@@ -1099,9 +1249,7 @@ content_margin_top = 0.0
 content_margin_right = 6.0
 content_margin_bottom = 0.0
 texture = ExtResource("scroll_track_tex")
-texture_margin_left = 0.0
 texture_margin_top = 6.0
-texture_margin_right = 0.0
 texture_margin_bottom = 6.0
 
 [sub_resource type="StyleBoxTexture" id="win_btn_disabled"]
@@ -1195,14 +1343,6 @@ texture_margin_top = 12.0
 texture_margin_right = 16.0
 texture_margin_bottom = 6.0
 
-[sub_resource type="StyleBoxTexture" id="window_tab_rail"]
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 4.0
-texture = ExtResource("tab_rail_tex")
-texture_margin_bottom = 3.0
-
 [sub_resource type="StyleBoxTexture" id="window_title_bar"]
 content_margin_left = 24.0
 content_margin_top = 12.0
@@ -1214,15 +1354,6 @@ texture_margin_top = 8.0
 texture_margin_right = 32.0
 texture_margin_bottom = 8.0
 axis_stretch_horizontal = 2
-
-[sub_resource type="StyleBoxTexture" id="title_medallion"]
-content_margin_left = 10.0
-content_margin_top = 4.0
-content_margin_right = 10.0
-content_margin_bottom = 4.0
-texture = ExtResource("title_medallion_tex")
-expand_margin_top = 6.0
-expand_margin_bottom = 6.0
 
 [sub_resource type="StyleBoxTexture" id="win_toggle_disabled"]
 content_margin_left = 8.0
@@ -1282,152 +1413,11 @@ texture_margin_top = 14.0
 texture_margin_right = 16.0
 texture_margin_bottom = 14.0
 
-[sub_resource type="StyleBoxTexture" id="seg_first_normal"]
-content_margin_left = 16.0
-content_margin_top = 4.0
-content_margin_right = 16.0
-content_margin_bottom = 4.0
-texture = ExtResource("seg_first_normal_tex")
-texture_margin_left = 16.0
-texture_margin_top = 16.0
-texture_margin_right = 16.0
-texture_margin_bottom = 16.0
-
-[sub_resource type="StyleBoxTexture" id="seg_first_hover"]
-content_margin_left = 16.0
-content_margin_top = 4.0
-content_margin_right = 16.0
-content_margin_bottom = 4.0
-texture = ExtResource("seg_first_hover_tex")
-texture_margin_left = 16.0
-texture_margin_top = 16.0
-texture_margin_right = 16.0
-texture_margin_bottom = 16.0
-
-[sub_resource type="StyleBoxTexture" id="seg_first_selected"]
-content_margin_left = 16.0
-content_margin_top = 4.0
-content_margin_right = 16.0
-content_margin_bottom = 4.0
-texture = ExtResource("seg_first_selected_tex")
-texture_margin_left = 16.0
-texture_margin_top = 16.0
-texture_margin_right = 16.0
-texture_margin_bottom = 16.0
-
-[sub_resource type="StyleBoxTexture" id="seg_first_disabled"]
-content_margin_left = 16.0
-content_margin_top = 4.0
-content_margin_right = 16.0
-content_margin_bottom = 4.0
-texture = ExtResource("seg_first_disabled_tex")
-texture_margin_left = 16.0
-texture_margin_top = 16.0
-texture_margin_right = 16.0
-texture_margin_bottom = 16.0
-
-[sub_resource type="StyleBoxTexture" id="seg_mid_normal"]
-content_margin_left = 16.0
-content_margin_top = 4.0
-content_margin_right = 16.0
-content_margin_bottom = 4.0
-texture = ExtResource("seg_mid_normal_tex")
-texture_margin_left = 16.0
-texture_margin_top = 16.0
-texture_margin_right = 16.0
-texture_margin_bottom = 16.0
-
-[sub_resource type="StyleBoxTexture" id="seg_mid_hover"]
-content_margin_left = 16.0
-content_margin_top = 4.0
-content_margin_right = 16.0
-content_margin_bottom = 4.0
-texture = ExtResource("seg_mid_hover_tex")
-texture_margin_left = 16.0
-texture_margin_top = 16.0
-texture_margin_right = 16.0
-texture_margin_bottom = 16.0
-
-[sub_resource type="StyleBoxTexture" id="seg_mid_selected"]
-content_margin_left = 16.0
-content_margin_top = 4.0
-content_margin_right = 16.0
-content_margin_bottom = 4.0
-texture = ExtResource("seg_mid_selected_tex")
-texture_margin_left = 16.0
-texture_margin_top = 16.0
-texture_margin_right = 16.0
-texture_margin_bottom = 16.0
-
-[sub_resource type="StyleBoxTexture" id="seg_mid_disabled"]
-content_margin_left = 16.0
-content_margin_top = 4.0
-content_margin_right = 16.0
-content_margin_bottom = 4.0
-texture = ExtResource("seg_mid_disabled_tex")
-texture_margin_left = 16.0
-texture_margin_top = 16.0
-texture_margin_right = 16.0
-texture_margin_bottom = 16.0
-
-[sub_resource type="StyleBoxTexture" id="seg_last_normal"]
-content_margin_left = 16.0
-content_margin_top = 4.0
-content_margin_right = 16.0
-content_margin_bottom = 4.0
-texture = ExtResource("seg_last_normal_tex")
-texture_margin_left = 16.0
-texture_margin_top = 16.0
-texture_margin_right = 16.0
-texture_margin_bottom = 16.0
-
-[sub_resource type="StyleBoxTexture" id="seg_last_hover"]
-content_margin_left = 16.0
-content_margin_top = 4.0
-content_margin_right = 16.0
-content_margin_bottom = 4.0
-texture = ExtResource("seg_last_hover_tex")
-texture_margin_left = 16.0
-texture_margin_top = 16.0
-texture_margin_right = 16.0
-texture_margin_bottom = 16.0
-
-[sub_resource type="StyleBoxTexture" id="seg_last_selected"]
-content_margin_left = 16.0
-content_margin_top = 4.0
-content_margin_right = 16.0
-content_margin_bottom = 4.0
-texture = ExtResource("seg_last_selected_tex")
-texture_margin_left = 16.0
-texture_margin_top = 16.0
-texture_margin_right = 16.0
-texture_margin_bottom = 16.0
-
-[sub_resource type="StyleBoxTexture" id="seg_last_disabled"]
-content_margin_left = 16.0
-content_margin_top = 4.0
-content_margin_right = 16.0
-content_margin_bottom = 4.0
-texture = ExtResource("seg_last_disabled_tex")
-texture_margin_left = 16.0
-texture_margin_top = 16.0
-texture_margin_right = 16.0
-texture_margin_bottom = 16.0
-
-[sub_resource type="StyleBoxEmpty" id="seg_focus"]
-
-[sub_resource type="StyleBoxTexture" id="slider_track"]
-content_margin_top = 8.0
-content_margin_bottom = 8.0
-texture = ExtResource("bar_track_tex")
-texture_margin_left = 8.0
-texture_margin_top = 6.0
-texture_margin_right = 8.0
-texture_margin_bottom = 6.0
-
-[sub_resource type="StyleBoxTexture" id="slider_fill"]
-content_margin_top = 8.0
-content_margin_bottom = 8.0
+[sub_resource type="StyleBoxTexture" id="xp_fill"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
 texture = ExtResource("bar_fill_tex")
 texture_margin_left = 8.0
 texture_margin_top = 6.0
@@ -1776,14 +1766,6 @@ LineEdit/font_sizes/font_size = 20
 LineEdit/styles/focus = SubResource("field_focus")
 LineEdit/styles/normal = SubResource("field_normal")
 LineEdit/styles/read_only = SubResource("field_read_only")
-TextEdit/colors/caret_color = Color(1, 0.55, 0.2, 1)
-TextEdit/colors/font_color = Color(0.95, 0.96, 1, 1)
-TextEdit/colors/font_placeholder_color = Color(0.6, 0.64, 0.74, 1)
-TextEdit/colors/font_readonly_color = Color(0.82, 0.85, 0.92, 1)
-TextEdit/colors/selection_color = Color(0.32, 0.4, 0.62, 1)
-TextEdit/styles/focus = SubResource("field_focus")
-TextEdit/styles/normal = SubResource("field_normal")
-TextEdit/styles/read_only = SubResource("field_read_only")
 MainMenuButton/base_type = &"Button"
 MainMenuButton/colors/font_color = Color(0.94, 0.95, 0.98, 1)
 MainMenuButton/colors/font_disabled_color = Color(0.62, 0.64, 0.7, 1)
@@ -1871,6 +1853,29 @@ SectionStack/base_type = &"BoxContainer"
 SectionStack/constants/separation = 24
 SectionTitle/base_type = &"Label"
 SectionTitle/font_sizes/font_size = 20
+SegmentFirst/base_type = &"ToolChoice"
+SegmentFirst/styles/disabled = SubResource("seg_first_disabled")
+SegmentFirst/styles/focus = SubResource("seg_focus")
+SegmentFirst/styles/hover = SubResource("seg_first_hover")
+SegmentFirst/styles/hover_pressed = SubResource("seg_first_selected")
+SegmentFirst/styles/normal = SubResource("seg_first_normal")
+SegmentFirst/styles/pressed = SubResource("seg_first_selected")
+SegmentLast/base_type = &"ToolChoice"
+SegmentLast/styles/disabled = SubResource("seg_last_disabled")
+SegmentLast/styles/focus = SubResource("seg_focus")
+SegmentLast/styles/hover = SubResource("seg_last_hover")
+SegmentLast/styles/hover_pressed = SubResource("seg_last_selected")
+SegmentLast/styles/normal = SubResource("seg_last_normal")
+SegmentLast/styles/pressed = SubResource("seg_last_selected")
+SegmentMid/base_type = &"ToolChoice"
+SegmentMid/styles/disabled = SubResource("seg_mid_disabled")
+SegmentMid/styles/focus = SubResource("seg_focus")
+SegmentMid/styles/hover = SubResource("seg_mid_hover")
+SegmentMid/styles/hover_pressed = SubResource("seg_mid_selected")
+SegmentMid/styles/normal = SubResource("seg_mid_normal")
+SegmentMid/styles/pressed = SubResource("seg_mid_selected")
+SegmentRow/base_type = &"BoxContainer"
+SegmentRow/constants/separation = 0
 Shout/base_type = &"Label"
 Shout/colors/font_color = Color(1, 1, 1, 1)
 Shout/colors/font_outline_color = Color(0.2, 0.06, 0.02, 1)
@@ -1940,35 +1945,6 @@ StatSubline/base_type = &"Label"
 StatSubline/colors/font_color = Color(0.86, 0.9, 0.97, 1)
 StatSubline/font_sizes/font_size = 16
 StatSubline/fonts/font = SubResource("menu_font")
-SegmentFirst/base_type = &"ToolChoice"
-SegmentFirst/styles/disabled = SubResource("seg_first_disabled")
-SegmentFirst/styles/focus = SubResource("seg_focus")
-SegmentFirst/styles/hover = SubResource("seg_first_hover")
-SegmentFirst/styles/hover_pressed = SubResource("seg_first_selected")
-SegmentFirst/styles/normal = SubResource("seg_first_normal")
-SegmentFirst/styles/pressed = SubResource("seg_first_selected")
-SegmentLast/base_type = &"ToolChoice"
-SegmentLast/styles/disabled = SubResource("seg_last_disabled")
-SegmentLast/styles/focus = SubResource("seg_focus")
-SegmentLast/styles/hover = SubResource("seg_last_hover")
-SegmentLast/styles/hover_pressed = SubResource("seg_last_selected")
-SegmentLast/styles/normal = SubResource("seg_last_normal")
-SegmentLast/styles/pressed = SubResource("seg_last_selected")
-SegmentMid/base_type = &"ToolChoice"
-SegmentMid/styles/disabled = SubResource("seg_mid_disabled")
-SegmentMid/styles/focus = SubResource("seg_focus")
-SegmentMid/styles/hover = SubResource("seg_mid_hover")
-SegmentMid/styles/hover_pressed = SubResource("seg_mid_selected")
-SegmentMid/styles/normal = SubResource("seg_mid_normal")
-SegmentMid/styles/pressed = SubResource("seg_mid_selected")
-SegmentRow/base_type = &"BoxContainer"
-SegmentRow/constants/separation = 0
-TabRail/base_type = &"PanelContainer"
-TabRail/styles/panel = SubResource("window_tab_rail")
-TabRow/base_type = &"BoxContainer"
-TabRow/constants/separation = 0
-TitleMedallion/base_type = &"PanelContainer"
-TitleMedallion/styles/panel = SubResource("title_medallion")
 TabContainer/colors/font_hovered_color = Color(1, 1, 1, 1)
 TabContainer/colors/font_selected_color = Color(0.98, 0.99, 1, 1)
 TabContainer/colors/font_unselected_color = Color(0.7, 0.74, 0.82, 1)
@@ -1979,10 +1955,24 @@ TabContainer/styles/tab_hovered = SubResource("tab_hovered")
 TabContainer/styles/tab_selected = SubResource("tab_selected")
 TabContainer/styles/tab_unselected = SubResource("tab_unselected")
 TabContainer/styles/tabbar_background = SubResource("tabbar_bg")
+TabRail/base_type = &"PanelContainer"
+TabRail/styles/panel = SubResource("window_tab_rail")
+TabRow/base_type = &"BoxContainer"
+TabRow/constants/separation = 0
+TextEdit/colors/caret_color = Color(1, 0.55, 0.2, 1)
+TextEdit/colors/font_color = Color(0.95, 0.96, 1, 1)
+TextEdit/colors/font_placeholder_color = Color(0.6, 0.64, 0.74, 1)
+TextEdit/colors/font_readonly_color = Color(0.82, 0.85, 0.92, 1)
+TextEdit/colors/selection_color = Color(0.32, 0.4, 0.62, 1)
+TextEdit/styles/focus = SubResource("field_focus")
+TextEdit/styles/normal = SubResource("field_normal")
+TextEdit/styles/read_only = SubResource("field_read_only")
 Tight/base_type = &"BoxContainer"
 Tight/constants/separation = 4
 Title/base_type = &"Label"
 Title/font_sizes/font_size = 28
+TitleMedallion/base_type = &"PanelContainer"
+TitleMedallion/styles/panel = SubResource("title_medallion")
 ToolButton/base_type = &"Button"
 ToolButton/colors/font_disabled_color = Color(0.5, 0.53, 0.6, 1)
 ToolButton/constants/icon_max_width = 24
