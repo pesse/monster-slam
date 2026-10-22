@@ -241,7 +241,13 @@ Einheit, einen Vertrag, eine Engine-Falle.
   JSON und Dateien im Submodule. `tools/godot.sh` setzt reine Einrückungsänderungen danach
   zurück und meldet alles andere. Ein offener GUI-Editor schreibt auch Sekunden später
   noch nach — vor jedem Commit `git diff -w --stat` gegen `git diff --stat` halten und
-  reine Einrückungsänderungen zurücksetzen.
+  reine Einrückungsänderungen zurücksetzen. Markdown und JSON deshalb nicht im
+  Skripteditor offen lassen.
+- **Der Editor bringt jede `.tscn`/`.tres` beim Öffnen in sein Format** (uid, `unique_id`,
+  Reihenfolge, ohne Standardwerte). Eine von Hand oder per Skript geschriebene Datei
+  taucht danach als geändert auf. Vor dem Commit normalisieren:
+  `tools/godot.sh --editor -s res://src/dev/resave_resources.gd -- <dateien>`
+  (bei geschlossenem Editor; wiederholen, bis nichts mehr geändert wird).
 - **Das Vollbild ist der schmalste Fall.** `canvas_items`/`expand` dehnt die längere Achse;
   ein maximiertes Fenster ist breiter als 1152, das Vollbild auf 16:9 bei großer Menügröße
   nicht. Was im Fenster passt, kann im Vollbild abgeschnitten sein.
