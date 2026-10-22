@@ -413,3 +413,76 @@ func test_correct_by_day_sums_each_day() -> void:
 	assert_int(int(by_day[today - 2])).is_equal(7)
 	assert_int(int(by_day[today])).is_equal(5)
 	assert_bool(by_day.has(today - 1)).is_false()
+
+
+# --- Kampfzeit ----------------------------------------------------------------
+
+func test_wave_time_goes_into_the_running_session() -> void:
+	_log.begin()
+	_log.note_battle_time("wave", 0, 30000)
+	_log.note_battle_time("wave", 0, 12000)
+	_log.note_answer(true, 1000)
+	_log.end()
+	assert_int(int(_log.sessions()[0]["battle_ms"])).is_equal(42000)
+	assert_int(_log.battle_ms_total()).is_equal(42000)
+
+
+func test_boss_time_is_an_entry_of_its_own() -> void:
+	_log.note_battle_time("boss.grammar_golem", _midday(-1), 90000)
+	assert_array(_log.sessions()).is_empty()
+	var today: int = _log.local_day(int(Time.get_unix_time_from_system()))
+	assert_int(int(_log.battle_ms_by_day()[today - 1])).is_equal(90000)
+
+
+func test_battle_time_by_day_counts_sessions_bosses_and_the_running_one() -> void:
+	_log._sessions = [_fake_session(-2, {"battle_ms": 60000}), _fake_session(0, {"battle_ms": 5000}),
+			_fake_session(0)]
+	_log.note_battle_time("boss.grammar_golem", _midday(0), 1000)
+	_log.begin()
+	_log.note_battle_time("wave", 0, 500)
+	var today: int = _log.local_day(int(Time.get_unix_time_from_system()))
+	var by_day: Dictionary = _log.battle_ms_by_day()
+	assert_int(int(by_day[today - 2])).is_equal(60000)
+	assert_int(int(by_day[today])).is_equal(6500)
+	assert_bool(by_day.has(today - 1)).is_false()
+	assert_int(_log.battle_ms_total()).is_equal(66500)
+
+
+func test_battle_time_survives_a_reload() -> void:
+	_log.load_sessions()
+	_log.note_battle_time("boss.grammar_golem", _midday(0), 90000)
+	var since: int = _log.battle_measured_since()
+	_log.load_sessions()
+	assert_int(_log.battle_ms_total()).is_equal(90000)
+	assert_int(_log.battle_measured_since()).is_equal(since)
+
+
+func test_a_new_profile_measures_from_the_start() -> void:
+	_log.load_sessions()
+	assert_int(_log.battle_measured_since()).is_greater(0)
+
+
+## Ein Log von vor der Kampfuhr bekommt seine Kampfzeit einmal aus der Spur.
+func test_an_old_log_is_backfilled_from_the_trace_once() -> void:
+	var start := _midday(-1)
+	SaveStore.write("user://progress/%s_sessions.json" % TEST_PROFILE, {"player_id": TEST_PROFILE,
+			"sessions": [_fake_session(-1, {"ended_at": start + 600})], "current": {}})
+	var trace := "user://logs/%s_trace.jsonl" % TEST_PROFILE
+	var file := FileAccess.open(trace, FileAccess.WRITE)
+	for line in [
+		{"at": start, "ms": 1000, "e": "run_start"},
+		{"at": start + 5, "ms": 6000, "e": "wave_start"},
+		{"at": start + 35, "ms": 36000, "e": "wave_clear"},
+		{"at": start + 900, "ms": 900000, "e": "boss_start", "boss": "boss.grammar_golem"},
+		{"at": start + 960, "ms": 960000, "e": "boss_end", "boss": "boss.grammar_golem"},
+	]:
+		file.store_line(JSON.stringify(line))
+	file.close()
+	_log.load_sessions()
+	DirAccess.remove_absolute(trace)
+	assert_int(int(_log.sessions()[0]["battle_ms"])).is_equal(30000)
+	assert_int(_log.battle_ms_total()).is_equal(90000)
+	assert_int(_log.battle_measured_since()).is_greater(0)
+	_log._save()
+	_log.load_sessions()
+	assert_int(_log.battle_ms_total()).is_equal(90000)

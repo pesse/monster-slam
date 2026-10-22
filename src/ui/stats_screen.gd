@@ -68,6 +68,8 @@ signal closed()
 var _badges := Badges.new()
 ## SessionLog.correct_by_day(), je `_refresh` einmal.
 var _correct_by_day := {}
+## Kampfzeit (ms) je Tagesindex, für Monatsreihe und Tagesband.
+var _battle_by_day := {}
 ## Fächert die Aufgaben eines Wortes auf (learnables_of); spawnt nichts.
 var _generator := WaveGenerator.new()
 var _resolver := TaskResolver.new()
@@ -196,6 +198,7 @@ func _refresh() -> void:
 	for title: Label in _filtered_titles:
 		title.text = filtered_title(str(_filtered_titles[title]), _filter)
 	_correct_by_day = SessionLog.correct_by_day()
+	_battle_by_day = SessionLog.battle_ms_by_day()
 	_refresh_streak()
 	_refresh_accuracy()
 	_refresh_numbers()
@@ -220,6 +223,7 @@ static func filtered_title(title: String, languages: Array) -> String:
 func _refresh_streak() -> void:
 	var streak := SessionLog.current_streak()
 	_coin_strip.badge_days = badge_days(_badges.all_days(), _correct_by_day)
+	_coin_strip.battle_ms = _battle_by_day
 	_coin_strip.refresh()
 	_show_day(_coin_strip.selected_day)
 	_streak_label.text = "%d Tag%s" % [streak, "" if streak == 1 else "e"]
@@ -256,7 +260,8 @@ func _show_day(day: int) -> void:
 		_day_badge_empty.text = "Ein Klick auf einen Tag zeigt seine Plaketten."
 		_day_badge_empty.visible = true
 		return
-	_day_badge_title.text = "Plaketten · " + ("heute" if day == today else CoinStrip.date_label(day))
+	_day_badge_title.text = day_title(day == today, CoinStrip.date_label(day),
+			int(_battle_by_day.get(day, 0)))
 	var summary := Badges.day_summary(_badges.day_list(day), int(_correct_by_day.get(day, 0)))
 	for entry: Dictionary in summary:
 		var id := str(entry["id"])
@@ -267,6 +272,12 @@ func _show_day(day: int) -> void:
 				"%d-mal an diesem Tag" % count if count > 1 else "")
 	_day_badge_empty.visible = summary.is_empty()
 	_day_badge_empty.text = day_empty_text(day == today, _correct_by_day.has(day))
+
+
+## Überschrift des Tagesbands: „Plaketten · heute · 12 Min. im Kampf“.
+static func day_title(today: bool, date: String, battle_ms: int) -> String:
+	var text := "Plaketten · " + ("heute" if today else date)
+	return text + " · %s im Kampf" % CoinStrip.duration_text(battle_ms) if battle_ms > 0 else text
 
 
 ## Was das Band ohne Plakette sagt.
@@ -382,6 +393,14 @@ func _refresh_totals() -> void:
 	var days := SessionLog.played_day_count()
 	_add_line(_total_lines, "Geübt an %d Tag%s%s" % [days, "" if days == 1 else "en",
 			"" if _filter.is_empty() else " (alle Sprachen)"])
+	var battle := _add_line(_total_lines, "Kampfzeit: %s%s" % [
+			CoinStrip.duration_text(SessionLog.battle_ms_total()),
+			"" if _filter.is_empty() else " (alle Sprachen)"])
+	_attach_hint(battle, "Kampfzeit",
+			"So lange liefen deine Wellen und Bosskämpfe wirklich — ohne Pause, ohne Feiern "
+			+ "und ohne die Zeit zwischen den Wellen. Wie viel auf einen Tag fällt, zeigt "
+			+ "die Monatsreihe.", battle_note(SessionLog.sessions(),
+					SessionLog.battle_measured_since()))
 	_add_line(_total_lines, "Gesamt-Genauigkeit: %d %%" % int(round(
 			PlayerProgress.overall_accuracy(_filter) * 100.0)))
 	_add_line(_total_lines, "Gesehene Wörter: %d    Versuche: %d" % [
@@ -392,6 +411,16 @@ func _refresh_totals() -> void:
 			+ "am besten Wort gemessen, über alle Sitzungen und Tage hinweg. Ein Fehler "
 			+ "bei genau diesem Wort setzt seine Serie auf 0.",
 			"Nicht die Tages-Serie oben und nicht die Serie ohne Durchlass bei den Rekorden.")
+
+
+## Der Nachsatz zur Kampfzeit: gab es Sitzungen vor `measured_since`, ist ihre Zeit aus
+## dem Protokoll geschätzt; leer sonst.
+static func battle_note(sessions: Array, measured_since: int) -> String:
+	if sessions.is_empty() or measured_since <= 0 \
+			or int((sessions[0] as Dictionary).get("started_at", 0)) >= measured_since:
+		return ""
+	return ("Bis zum %s ist sie aus dem Protokoll geschätzt; Pausen standen dort nicht drin, "
+			+ "deshalb kann sie etwas zu hoch sein.") % short_date(measured_since)
 
 
 ## Kopfzahl, Unterzeile und Trendzeile aus SessionLog.accuracy_trend():

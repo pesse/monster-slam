@@ -121,6 +121,8 @@ const CATAPULT_AIM := Vector3(0.0, 1.0, 0.0)
 var _leaving := false
 ## Hinter dem Schleier wird noch vorgewärmt; solange bricht Escape nicht ab.
 var _warming := false
+## Kampfzeit der laufenden Welle (SessionLog); steht zwischen den Wellen.
+var _battle_clock := BattleClock.new()
 @onready var _end_label: Label = $UI/EndLabel
 @onready var _flash: ColorRect = $UI/Flash
 @onready var _stats: PanelContainer = $UI/WaveStats
@@ -274,12 +276,15 @@ func _ready() -> void:
 	add_child(_spell_fx)
 	_difficulty = UserSettings.default_difficulty()
 	_resume_run(resume)
+	add_child(_battle_clock)
+	_battle_clock.hold(true)
 	_start_next_wave()
 	# Hinter dem Schleier vorwärmen (FxWarmup).
 	_scene_zoom.hold()
 	_warming = true
 	await _warm_up()
 	_warming = false
+	_battle_clock.hold(false)
 	_scene_zoom.reveal(func(k: float) -> void:
 		_camera.size = view_size / lerpf(SceneZoom.FROM, 1.0, k))
 
@@ -1000,6 +1005,7 @@ func _on_abort_confirmed() -> void:
 func _rest_in_wave() -> void:
 	var wave := _open_wave_state()
 	_finished = true
+	_battle_clock.stop()
 	_wave_gen += 1   # bindet laufende Spawn-Coroutinen ab (siehe _run_spawn_batch)
 	_rest(_wave_number, wave)
 	_report_run_ended()
@@ -1020,6 +1026,7 @@ func _on_abort_cancelled() -> void:
 
 func _abort_battle() -> void:
 	_finished = true
+	_battle_clock.stop()
 	SaveCoordinator.discard_uncommitted()
 	_report_run_ended()
 	SaveCoordinator.commit("run_abort")
@@ -1202,6 +1209,7 @@ func _start_next_wave() -> void:
 		_continue_wave(open, spawns)
 	# Die Festungs-HP bleiben dabei, sie gelten über die Wellen hinweg.
 	EventBus.wave_started.emit(GameState.current_wave)
+	_battle_clock.start()
 	if not open.is_empty():
 		GameState.continue_wave(_spawned, armor)
 	# Kein Sprung auf den Morgen, solange Monster laufen (_finish_wave gibt ihn frei).
@@ -2077,6 +2085,7 @@ func _finish_wave(won: bool) -> void:
 		return
 	_finished = true
 	_last_won = won
+	_battle_clock.stop()
 	# Die Wellengrenze (ADR 0024). Nach wave_cleared, damit das Sitzungs-Log die Welle zählt.
 	SaveCoordinator.commit("wave_end")
 	if _sun_cycle != null:

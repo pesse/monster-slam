@@ -17,6 +17,7 @@ const KEEP := {
 	"boss_explained": ["id"],
 	"boss_end": ["boss", "won"],
 	"boss_won": ["boss", "unit"],
+	"battle_time": ["kind", "dur"],
 	# Schreib-Boss (ADR 0023, §7): Verbrauch und Ergebnis je Abgabe, nichts Getipptes.
 	"writing_submit": ["boss", "task", "round", "model", "in", "out", "cr", "cw", "s", "met", "words",
 			"failed"],

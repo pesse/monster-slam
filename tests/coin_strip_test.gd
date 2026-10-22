@@ -155,3 +155,17 @@ func test_the_next_arrow_is_locked_in_the_current_month() -> void:
 func test_state_text_names_badges() -> void:
 	assert_str(COIN_STRIP.state_text(DayCoin.State.EARNED, false, true)).contains("Plaketten")
 	assert_str(COIN_STRIP.state_text(DayCoin.State.EARNED)).not_contains("Plaketten")
+
+
+func test_duration_text_rounds_down_to_minutes() -> void:
+	assert_str(COIN_STRIP.duration_text(0)).is_equal("0 Min.")
+	assert_str(COIN_STRIP.duration_text(59000)).is_equal("unter 1 Min.")
+	assert_str(COIN_STRIP.duration_text(12 * 60000 + 59000)).is_equal("12 Min.")
+	assert_str(COIN_STRIP.duration_text(120 * 60000)).is_equal("2 Std.")
+	assert_str(COIN_STRIP.duration_text(65 * 60000)).is_equal("1 Std. 5 Min.")
+
+
+func test_state_text_names_the_battle_time() -> void:
+	assert_str(COIN_STRIP.state_text(DayCoin.State.EARNED, false, false, 12 * 60000)) \
+			.contains("12 Min. im Kampf")
+	assert_str(COIN_STRIP.state_text(DayCoin.State.EARNED)).not_contains("Kampf")

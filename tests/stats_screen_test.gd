@@ -229,12 +229,15 @@ func test_scene_builds_and_finds_its_lists() -> void:
 	for list in ["%WantedList", "%FreshList", "%ComebackList", "%TaskList", "%RecordList",
 			"%CloseButton", "%CoinStrip", "%XpBar"]:
 		assert_object(screen.get_node(list)).override_failure_message(list).is_not_null()
-	# Vier Lebenszeitwerte füllt _refresh_totals — die Gesamt-Genauigkeit steht dort und
+	# Fünf Lebenszeitwerte füllt _refresh_totals — die Gesamt-Genauigkeit steht dort und
 	# nicht mehr oben (Issue #13).
-	assert_int(screen.get_node("%TotalLines").get_child_count()).is_equal(4)
+	assert_int(screen.get_node("%TotalLines").get_child_count()).is_equal(5)
+	var battle := screen.get_node("%TotalLines").get_child(1) as Label
+	assert_str(battle.text).starts_with("Kampfzeit")
+	assert_str(str(Hints.hint_of(battle).get("body", ""))).contains("ohne Pause")
 	# Die Wort-Serie erklärt sich zusätzlich am Zeiger — ohne Karte verwechselt man sie mit der
 	# Tages-Serie und der Serie ohne Durchlass. Ohne MOUSE_FILTER_PASS käme die Karte nie.
-	var streak := screen.get_node("%TotalLines").get_child(3) as Label
+	var streak := screen.get_node("%TotalLines").get_child(4) as Label
 	assert_str(streak.text).starts_with("Längste Wort-Serie")
 	assert_str(str(Hints.hint_of(streak).get("body", ""))).contains("einzelne Aufgabe")
 	assert_int(streak.mouse_filter).is_equal(Control.MOUSE_FILTER_PASS)
@@ -428,3 +431,15 @@ func test_an_empty_day_says_why() -> void:
 	assert_str(STATS_SCREEN.day_empty_text(true, true)).contains("Heute")
 	assert_str(STATS_SCREEN.day_empty_text(false, true)).contains("keine Plakette")
 	assert_str(STATS_SCREEN.day_empty_text(false, false)).contains("nicht geübt")
+
+
+func test_the_day_title_names_the_battle_time() -> void:
+	assert_str(STATS_SCREEN.day_title(true, "Mi, 21. Oktober", 0)).is_equal("Plaketten · heute")
+	assert_str(STATS_SCREEN.day_title(false, "Mi, 21. Oktober", 25 * 60000)) \
+			.is_equal("Plaketten · Mi, 21. Oktober · 25 Min. im Kampf")
+
+
+func test_the_battle_note_only_speaks_of_an_estimate_with_older_sessions() -> void:
+	assert_str(STATS_SCREEN.battle_note([], 1000)).is_empty()
+	assert_str(STATS_SCREEN.battle_note([{"started_at": 2000}], 1000)).is_empty()
+	assert_str(STATS_SCREEN.battle_note([{"started_at": 500}], 1000)).contains("geschätzt")

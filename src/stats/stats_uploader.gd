@@ -25,7 +25,8 @@ const MAX_CHUNKS := 20
 ## Je Datei einer Sicherung, was davon hinausgeht. `player_id` fehlt überall.
 const SNAPSHOT_FILES := {
 	"": {"progress": "records"},
-	"_sessions": {"sessions": "sessions"},
+	"_sessions": {"sessions": "sessions", "battles": "battles",
+			"battle_measured_since": "battle_measured_since"},
 	"_wallet": {"wallet": ["gold", "total_earned", "chests_opened"]},
 	"_level": {"level": ["total_xp"]},
 	"_skills": {"skills": ["unlocked", "spent_points"]},

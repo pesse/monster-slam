@@ -95,6 +95,8 @@ var _result_shown := false
 ## Hinter dem Schleier wird noch vorgewärmt; solange führt kein Weg hinaus, sonst liefe
 ## das Einblenden über das Ausblenden.
 var _warming := false
+## Kampfzeit (SessionLog), von `boss_started` bis zum Ende oder Verlassen.
+var _battle_clock := BattleClock.new()
 
 
 func _ready() -> void:
@@ -110,6 +112,8 @@ func _ready() -> void:
 	_answer_edit.text_submitted.connect(func(_t: String): _submit())
 	_next_button.pressed.connect(_next)
 
+	add_child(_battle_clock)
+	_battle_clock.hold(true)
 	var chosen := ContentRegistry.get_entry("bosses", BOSS_ID)
 	begin(chosen, pick_sentences(chosen))
 	_attach_stage_one()
@@ -118,6 +122,7 @@ func _ready() -> void:
 	await _warm_up()
 	if not is_inside_tree():
 		return
+	_battle_clock.hold(false)
 	_scene_zoom.reveal(func(k: float) -> void: _scale_to(lerpf(SceneZoom.FROM, 1.0, k)))
 
 
@@ -196,6 +201,8 @@ func begin(the_boss: Dictionary, the_sentences: Array) -> void:
 		_next_button.disabled = true
 		return
 	EventBus.boss_started.emit(str(boss.get("id", "")))
+	_battle_clock.kind = str(boss.get("id", BOSS_ID))
+	_battle_clock.start()
 	_present()
 
 
@@ -443,6 +450,7 @@ func _finish() -> void:
 		Sfx.play(&"wave_cleared")
 	else:
 		_stage.leave()
+	_battle_clock.stop()
 	EventBus.boss_ended.emit(str(boss.get("id", "")), won)
 	if won:
 		_record_win()
