@@ -1,6 +1,11 @@
-[gd_resource type="ShaderMaterial" format=3]
+[gd_resource type="ShaderMaterial" format=3 uid="uid://dxo2j2mfichtf"]
 
-[ext_resource type="Shader" path="res://assets/shaders/title_metal.gdshader" id="1_shader"]
+[ext_resource type="Shader" uid="uid://b06ldkyu2ostv" path="res://assets/shaders/title_metal.gdshader" id="1_shader"]
 
 [resource]
 shader = ExtResource("1_shader")
+shader_parameter/top = null
+shader_parameter/bottom = null
+shader_parameter/light = null
+shader_parameter/mid = null
+shader_parameter/deep = null

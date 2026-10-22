@@ -1,6 +1,5 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://ispkflj0501e"]
 
-[node name="AccentName" type="Label"]
-mouse_filter = 2
+[node name="AccentName" type="Label" unique_id=221696088]
 theme_type_variation = &"SpellingAccent"
 text = "accent aigu"

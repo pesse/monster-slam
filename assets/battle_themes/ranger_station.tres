@@ -1,26 +1,25 @@
-[gd_resource type="Resource" script_class="BattleTheme" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="BattleTheme" format=3 uid="uid://tkxqctk5pydx"]
 
-[ext_resource type="Script" path="res://src/battle/battle_theme.gd" id="1_theme"]
+[ext_resource type="Script" uid="uid://c6bpe22eo7xiw" path="res://src/battle/battle_theme.gd" id="1_theme"]
 
 [resource]
 script = ExtResource("1_theme")
-ground_patch = Color(0.62, 0.58, 0.3, 1)
-ground_patch_amount = 0.3
-path = "road"
-path_color = Color(0.66, 0.58, 0.44, 1)
-light_from = "wetland"
-ground_texture = "grass"
-ground_texture_strength = 0.8
 ground_low = Color(0.44, 0.5, 0.24, 1)
 ground_high = Color(0.58, 0.6, 0.3, 1)
 hill = Color(0.74, 0.66, 0.52, 1)
-trees = Array[String](["forge/eucalyptus.glb", "forge/pandanus.glb"])
-rocks = Array[String](["forge/boulder_grey.glb"])
-grass = Array[String](["forge/green_grass.glb", "forge/dry_grass.glb"])
-props = Array[String](["props/crates_stacked.gltf", "props/barrel_large.gltf", "forge/canoe.glb"])
-landmarks = Array[String](["forge/lookout_tower.glb", "forge/tin_shed.glb", "forge/water_tank.glb"])
+ground_patch = Color(0.62, 0.58, 0.3, 1)
+path = "road"
+path_color = Color(0.66, 0.58, 0.44, 1)
 cover = 2.0
 cover_flowers = Array[Color]([Color(0.95, 0.95, 0.9, 1), Color(0.95, 0.85, 0.3, 1)])
 cover_flower_amount = 0.03
 bush_color = Color(0.3, 0.38, 0.18, 1)
 bushes = 0.7
+ground_texture = "grass"
+ground_texture_strength = 0.8
+light_from = "wetland"
+trees = Array[String](["forge/eucalyptus.glb", "forge/pandanus.glb"])
+rocks = Array[String](["forge/boulder_grey.glb"])
+grass = Array[String](["forge/green_grass.glb", "forge/dry_grass.glb"])
+props = Array[String](["props/crates_stacked.gltf", "props/barrel_large.gltf", "forge/canoe.glb"])
+landmarks = Array[String](["forge/lookout_tower.glb", "forge/tin_shed.glb", "forge/water_tank.glb"])

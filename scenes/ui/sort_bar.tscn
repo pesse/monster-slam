@@ -1,24 +1,22 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://btiwbepa1pr4i"]
 
-[ext_resource type="Script" path="res://src/ui/sort_bar.gd" id="1_sort_bar"]
+[ext_resource type="Script" uid="uid://urk365h78m22" path="res://src/ui/sort_bar.gd" id="1_sort_bar"]
 
 [sub_resource type="ButtonGroup" id="sort_group"]
-resource_local_to_scene = true
 
-[node name="SortBar" type="HBoxContainer"]
+[node name="SortBar" type="HBoxContainer" unique_id=1824366466]
 script = ExtResource("1_sort_bar")
 
-[node name="Caption" type="Label" parent="."]
+[node name="Caption" type="Label" parent="." unique_id=1231473747]
 layout_mode = 2
-size_flags_vertical = 4
 theme_type_variation = &"Hint"
 text = "Sortieren:"
 
-[node name="Choices" type="HBoxContainer" parent="."]
+[node name="Choices" type="HBoxContainer" parent="." unique_id=1948817018]
 layout_mode = 2
 theme_type_variation = &"SegmentRow"
 
-[node name="Best" type="Button" parent="Choices"]
+[node name="Best" type="Button" parent="Choices" unique_id=853235836]
 layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"SegmentFirst"
@@ -27,7 +25,7 @@ button_pressed = true
 button_group = SubResource("sort_group")
 text = "Beste zuerst"
 
-[node name="Weakest" type="Button" parent="Choices"]
+[node name="Weakest" type="Button" parent="Choices" unique_id=1131278308]
 layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"SegmentMid"
@@ -35,7 +33,7 @@ toggle_mode = true
 button_group = SubResource("sort_group")
 text = "Schwächste zuerst"
 
-[node name="Alpha" type="Button" parent="Choices"]
+[node name="Alpha" type="Button" parent="Choices" unique_id=865167323]
 layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"SegmentLast"

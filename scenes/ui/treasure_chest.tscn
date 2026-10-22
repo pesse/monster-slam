@@ -1,21 +1,20 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://bov6uw7f5ifgt"]
 
-[ext_resource type="Script" path="res://src/ui/treasure_chest.gd" id="1_chest"]
+[ext_resource type="Script" uid="uid://be2mu0q5hft4y" path="res://src/ui/treasure_chest.gd" id="1_chest"]
 
 [sub_resource type="Environment" id="Env_1"]
-background_mode = 0
 ambient_light_source = 2
 ambient_light_color = Color(0.5, 0.52, 0.62, 1)
-ambient_light_energy = 1.0
 
-[node name="TreasureChest" type="Control"]
+[node name="TreasureChest" type="Control" unique_id=1273962751]
 custom_minimum_size = Vector2(220, 170)
 layout_mode = 3
-focus_mode = 0
+anchors_preset = 0
 script = ExtResource("1_chest")
 
-[node name="Stage" type="SubViewportContainer" parent="."]
+[node name="Stage" type="SubViewportContainer" parent="." unique_id=683571398]
 unique_name_in_owner = true
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
@@ -23,37 +22,37 @@ grow_vertical = 2
 mouse_filter = 2
 stretch = true
 
-[node name="View" type="SubViewport" parent="Stage"]
+[node name="View" type="SubViewport" parent="Stage" unique_id=663690517]
 unique_name_in_owner = true
 own_world_3d = true
 transparent_bg = true
 handle_input_locally = false
 
-[node name="Env" type="WorldEnvironment" parent="Stage/View"]
+[node name="Env" type="WorldEnvironment" parent="Stage/View" unique_id=1414794448]
 environment = SubResource("Env_1")
 
-[node name="Sun" type="DirectionalLight3D" parent="Stage/View"]
+[node name="Sun" type="DirectionalLight3D" parent="Stage/View" unique_id=959982309]
 unique_name_in_owner = true
 
-[node name="Fill" type="DirectionalLight3D" parent="Stage/View"]
+[node name="Fill" type="DirectionalLight3D" parent="Stage/View" unique_id=549621292]
 unique_name_in_owner = true
 light_energy = 0.4
-shadow_enabled = false
 
-[node name="Pivot" type="Node3D" parent="Stage/View"]
+[node name="Pivot" type="Node3D" parent="Stage/View" unique_id=80931144]
 unique_name_in_owner = true
 
-[node name="Coins3D" type="Node3D" parent="Stage/View"]
+[node name="Coins3D" type="Node3D" parent="Stage/View" unique_id=2008629947]
 unique_name_in_owner = true
 
-[node name="CamPivot" type="Node3D" parent="Stage/View"]
+[node name="CamPivot" type="Node3D" parent="Stage/View" unique_id=294562268]
 unique_name_in_owner = true
 
-[node name="Cam" type="Camera3D" parent="Stage/View/CamPivot"]
+[node name="Cam" type="Camera3D" parent="Stage/View/CamPivot" unique_id=1445633441]
 unique_name_in_owner = true
 
-[node name="Coins" type="Control" parent="."]
+[node name="Coins" type="Control" parent="." unique_id=414958995]
 unique_name_in_owner = true
+anchors_preset = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2

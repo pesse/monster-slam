@@ -1,10 +1,10 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://f0ojpbs2lx7v"]
 
-[ext_resource type="Script" path="res://src/ui/confirm_dialog.gd" id="1_confirm"]
-[ext_resource type="Script" path="res://src/ui/window_chrome.gd" id="2_chrome"]
-[ext_resource type="Material" path="res://scenes/ui/title_metal.tres" id="title_metal"]
+[ext_resource type="Script" uid="uid://du1n0bio0pu5h" path="res://src/ui/confirm_dialog.gd" id="1_confirm"]
+[ext_resource type="Script" uid="uid://db2ap8k5hl8vk" path="res://src/ui/window_chrome.gd" id="2_chrome"]
+[ext_resource type="Material" uid="uid://dxo2j2mfichtf" path="res://scenes/ui/title_metal.tres" id="title_metal"]
 
-[node name="ConfirmDialog" type="Control"]
+[node name="ConfirmDialog" type="Control" unique_id=1613147853]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -13,7 +13,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_confirm")
 
-[node name="Dim" type="ColorRect" parent="."]
+[node name="Dim" type="ColorRect" parent="." unique_id=1065025852]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -22,7 +22,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.02, 0.03, 0.06, 0.6)
 
-[node name="Center" type="CenterContainer" parent="."]
+[node name="Center" type="CenterContainer" parent="." unique_id=1195818676]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -30,47 +30,47 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Panel" type="PanelContainer" parent="Center"]
+[node name="Panel" type="PanelContainer" parent="Center" unique_id=437525143]
 custom_minimum_size = Vector2(520, 0)
 layout_mode = 2
 theme_type_variation = &"GameCard"
 
-[node name="Surface" type="Control" parent="Center/Panel"]
+[node name="Surface" type="Control" parent="Center/Panel" unique_id=1674476202]
 layout_mode = 2
 mouse_filter = 2
 script = ExtResource("2_chrome")
 
-[node name="Layout" type="VBoxContainer" parent="Center/Panel"]
+[node name="Layout" type="VBoxContainer" parent="Center/Panel" unique_id=107774167]
 layout_mode = 2
 
-[node name="TitleBar" type="PanelContainer" parent="Center/Panel/Layout"]
+[node name="TitleBar" type="PanelContainer" parent="Center/Panel/Layout" unique_id=2039126654]
 layout_mode = 2
 theme_type_variation = &"WindowTitleBar"
 
-[node name="Joints" type="Control" parent="Center/Panel/Layout/TitleBar"]
+[node name="Joints" type="Control" parent="Center/Panel/Layout/TitleBar" unique_id=1340334073]
 layout_mode = 2
 mouse_filter = 2
 script = ExtResource("2_chrome")
 part = 1
 
-[node name="Title" type="Label" parent="Center/Panel/Layout/TitleBar"]
+[node name="Title" type="Label" parent="Center/Panel/Layout/TitleBar" unique_id=675622633]
 unique_name_in_owner = true
+material = ExtResource("title_metal")
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
-material = ExtResource("title_metal")
 theme_type_variation = &"WindowTitle"
 text = "Wirklich?"
 vertical_alignment = 1
 
-[node name="Content" type="MarginContainer" parent="Center/Panel/Layout"]
+[node name="Content" type="MarginContainer" parent="Center/Panel/Layout" unique_id=1069417345]
 layout_mode = 2
 theme_type_variation = &"WindowContent"
 
-[node name="Root" type="VBoxContainer" parent="Center/Panel/Layout/Content"]
+[node name="Root" type="VBoxContainer" parent="Center/Panel/Layout/Content" unique_id=1650194821]
 layout_mode = 2
 theme_type_variation = &"ScreenStack"
 
-[node name="Body" type="Label" parent="Center/Panel/Layout/Content/Root"]
+[node name="Body" type="Label" parent="Center/Panel/Layout/Content/Root" unique_id=368972646]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(472, 0)
 layout_mode = 2
@@ -78,18 +78,18 @@ theme_type_variation = &"StatSubline"
 text = "."
 autowrap_mode = 3
 
-[node name="Buttons" type="HBoxContainer" parent="Center/Panel/Layout/Content/Root"]
+[node name="Buttons" type="HBoxContainer" parent="Center/Panel/Layout/Content/Root" unique_id=619233285]
 layout_mode = 2
 alignment = 2
 
-[node name="CancelButton" type="Button" parent="Center/Panel/Layout/Content/Root/Buttons"]
+[node name="CancelButton" type="Button" parent="Center/Panel/Layout/Content/Root/Buttons" unique_id=943252951]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(160, 44)
 layout_mode = 2
 theme_type_variation = &"WindowButton"
 text = "Abbrechen"
 
-[node name="ActionButton" type="Button" parent="Center/Panel/Layout/Content/Root/Buttons"]
+[node name="ActionButton" type="Button" parent="Center/Panel/Layout/Content/Root/Buttons" unique_id=1631344858]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(160, 44)
 layout_mode = 2

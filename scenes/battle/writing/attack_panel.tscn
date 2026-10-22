@@ -1,65 +1,63 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bpich5gimu1pl"]
 
-[node name="AttackPanel" type="HBoxContainer"]
-theme_type_variation = &"ScreenStack"
-anchors_preset = 15
+[node name="AttackPanel" type="HBoxContainer" unique_id=2097127585]
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+theme_type_variation = &"ScreenStack"
 
-[node name="BossSpace" type="Control" parent="."]
+[node name="BossSpace" type="Control" parent="." unique_id=1594260683]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="Card" type="PanelContainer" parent="."]
-theme_type_variation = &"HudPanel"
+[node name="Card" type="PanelContainer" parent="." unique_id=1037476248]
 custom_minimum_size = Vector2(420, 0)
 layout_mode = 2
+theme_type_variation = &"HudPanel"
 
-[node name="CardStack" type="VBoxContainer" parent="Card"]
-theme_type_variation = &"ScreenStack"
+[node name="CardStack" type="VBoxContainer" parent="Card" unique_id=566359555]
 layout_mode = 2
+theme_type_variation = &"ScreenStack"
 
-[node name="BossLine" type="Label" parent="Card/CardStack"]
+[node name="BossLine" type="Label" parent="Card/CardStack" unique_id=1482017953]
 unique_name_in_owner = true
-theme_type_variation = &"Accent"
 custom_minimum_size = Vector2(380, 0)
 layout_mode = 2
-autowrap_mode = 3
+theme_type_variation = &"Accent"
 text = "…"
+autowrap_mode = 3
 
-[node name="Charge" type="ProgressBar" parent="Card/CardStack"]
+[node name="Charge" type="ProgressBar" parent="Card/CardStack" unique_id=24822737]
 unique_name_in_owner = true
-theme_type_variation = &"BossHp"
 custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
+theme_type_variation = &"BossHp"
 max_value = 1.0
-step = 0.01
 show_percentage = false
 
-[node name="Criteria" type="VBoxContainer" parent="Card/CardStack"]
+[node name="Criteria" type="VBoxContainer" parent="Card/CardStack" unique_id=2048781182]
 unique_name_in_owner = true
-theme_type_variation = &"Tight"
 layout_mode = 2
+theme_type_variation = &"Tight"
 
-[node name="Note" type="Label" parent="Card/CardStack"]
+[node name="Note" type="Label" parent="Card/CardStack" unique_id=945747045]
 unique_name_in_owner = true
-theme_type_variation = &"Hint"
 custom_minimum_size = Vector2(380, 0)
 layout_mode = 2
+theme_type_variation = &"Hint"
 autowrap_mode = 3
 
-[node name="Space" type="Control" parent="Card/CardStack"]
+[node name="Space" type="Control" parent="Card/CardStack" unique_id=1528069855]
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
 
-[node name="ContinueButton" type="Button" parent="Card/CardStack"]
+[node name="ContinueButton" type="Button" parent="Card/CardStack" unique_id=1186131389]
 unique_name_in_owner = true
-theme_type_variation = &"ActionButton"
 layout_mode = 2
+theme_type_variation = &"ActionButton"
 disabled = true
 text = "…"

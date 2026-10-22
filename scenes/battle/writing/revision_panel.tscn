@@ -1,139 +1,137 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bsb3a7jhsx7bx"]
 
-[node name="RevisionPanel" type="HBoxContainer"]
-theme_type_variation = &"ScreenStack"
-anchors_preset = 15
+[node name="RevisionPanel" type="HBoxContainer" unique_id=1899972781]
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+theme_type_variation = &"ScreenStack"
 
-[node name="Side" type="PanelContainer" parent="."]
-theme_type_variation = &"HudPanel"
+[node name="Side" type="PanelContainer" parent="." unique_id=1743030058]
 custom_minimum_size = Vector2(340, 0)
 layout_mode = 2
+theme_type_variation = &"HudPanel"
 
-[node name="SideStack" type="VBoxContainer" parent="Side"]
+[node name="SideStack" type="VBoxContainer" parent="Side" unique_id=125583639]
+layout_mode = 2
 theme_type_variation = &"Tight"
-layout_mode = 2
 
-[node name="Tabs" type="HBoxContainer" parent="Side/SideStack"]
+[node name="Tabs" type="HBoxContainer" parent="Side/SideStack" unique_id=2133100169]
+layout_mode = 2
 theme_type_variation = &"TabRow"
-layout_mode = 2
 
-[node name="HintsTab" type="Button" parent="Side/SideStack/Tabs"]
+[node name="HintsTab" type="Button" parent="Side/SideStack/Tabs" unique_id=1346688320]
 unique_name_in_owner = true
-theme_type_variation = &"WindowTab"
 layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"WindowTab"
 toggle_mode = true
 button_pressed = true
 text = "Hinweise"
 
-[node name="SourceTab" type="Button" parent="Side/SideStack/Tabs"]
+[node name="SourceTab" type="Button" parent="Side/SideStack/Tabs" unique_id=148884554]
 unique_name_in_owner = true
-theme_type_variation = &"WindowTab"
 layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"WindowTab"
 toggle_mode = true
 text = "Geschichte"
 
-[node name="HintsScroll" type="ScrollContainer" parent="Side/SideStack"]
+[node name="HintsScroll" type="ScrollContainer" parent="Side/SideStack" unique_id=188295882]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="Gutter" type="MarginContainer" parent="Side/SideStack/HintsScroll"]
-theme_type_variation = &"ScrollGutter"
+[node name="Gutter" type="MarginContainer" parent="Side/SideStack/HintsScroll" unique_id=756303402]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"ScrollGutter"
 
-[node name="HintsList" type="VBoxContainer" parent="Side/SideStack/HintsScroll/Gutter"]
+[node name="HintsList" type="VBoxContainer" parent="Side/SideStack/HintsScroll/Gutter" unique_id=1036476417]
+layout_mode = 2
 theme_type_variation = &"ScreenStack"
-layout_mode = 2
 
-[node name="Criteria" type="VBoxContainer" parent="Side/SideStack/HintsScroll/Gutter/HintsList"]
+[node name="Criteria" type="VBoxContainer" parent="Side/SideStack/HintsScroll/Gutter/HintsList" unique_id=739608111]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"Tight"
-layout_mode = 2
 
-[node name="MarksTitle" type="Label" parent="Side/SideStack/HintsScroll/Gutter/HintsList"]
+[node name="MarksTitle" type="Label" parent="Side/SideStack/HintsScroll/Gutter/HintsList" unique_id=38802372]
 unique_name_in_owner = true
-theme_type_variation = &"SectionTitle"
 layout_mode = 2
+theme_type_variation = &"SectionTitle"
 text = "Markierte Stellen"
 
-[node name="Marks" type="VBoxContainer" parent="Side/SideStack/HintsScroll/Gutter/HintsList"]
+[node name="Marks" type="VBoxContainer" parent="Side/SideStack/HintsScroll/Gutter/HintsList" unique_id=894139547]
 unique_name_in_owner = true
-theme_type_variation = &"ScreenStack"
 layout_mode = 2
+theme_type_variation = &"ScreenStack"
 
-[node name="NoMarks" type="Label" parent="Side/SideStack/HintsScroll/Gutter/HintsList"]
+[node name="NoMarks" type="Label" parent="Side/SideStack/HintsScroll/Gutter/HintsList" unique_id=2060119183]
 unique_name_in_owner = true
-theme_type_variation = &"Hint"
 custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
-autowrap_mode = 3
+theme_type_variation = &"Hint"
 text = "Keine Stelle markiert."
+autowrap_mode = 3
 
-[node name="SourceScroll" type="ScrollContainer" parent="Side/SideStack"]
+[node name="SourceScroll" type="ScrollContainer" parent="Side/SideStack" unique_id=308956704]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="Gutter" type="MarginContainer" parent="Side/SideStack/SourceScroll"]
-theme_type_variation = &"ScrollGutter"
+[node name="Gutter" type="MarginContainer" parent="Side/SideStack/SourceScroll" unique_id=354855901]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"ScrollGutter"
 
-[node name="SourceText" type="Label" parent="Side/SideStack/SourceScroll/Gutter"]
+[node name="SourceText" type="Label" parent="Side/SideStack/SourceScroll/Gutter" unique_id=1094556813]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
 autowrap_mode = 3
 
-[node name="Editor" type="PanelContainer" parent="."]
-theme_type_variation = &"PlayerBubble"
+[node name="Editor" type="PanelContainer" parent="." unique_id=1201506734]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"PlayerBubble"
 
-[node name="EditorStack" type="VBoxContainer" parent="Editor"]
-theme_type_variation = &"Tight"
+[node name="EditorStack" type="VBoxContainer" parent="Editor" unique_id=860590461]
 layout_mode = 2
+theme_type_variation = &"Tight"
 
-[node name="EditorTitle" type="Label" parent="Editor/EditorStack"]
+[node name="EditorTitle" type="Label" parent="Editor/EditorStack" unique_id=118934]
 unique_name_in_owner = true
-theme_type_variation = &"BubbleAccent"
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-autowrap_mode = 3
+theme_type_variation = &"BubbleAccent"
 text = "Überarbeite deinen Text – farbig ist, was noch nicht stimmt."
+autowrap_mode = 3
 
-[node name="TextEdit" type="TextEdit" parent="Editor/EditorStack"]
+[node name="TextEdit" type="TextEdit" parent="Editor/EditorStack" unique_id=483780250]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 wrap_mode = 1
 
-[node name="Bottom" type="HBoxContainer" parent="Editor/EditorStack"]
-theme_type_variation = &"ScreenStack"
+[node name="Bottom" type="HBoxContainer" parent="Editor/EditorStack" unique_id=522184646]
 layout_mode = 2
+theme_type_variation = &"ScreenStack"
 
-[node name="Words" type="Label" parent="Editor/EditorStack/Bottom"]
+[node name="Words" type="Label" parent="Editor/EditorStack/Bottom" unique_id=412062214]
 unique_name_in_owner = true
-theme_type_variation = &"BubbleText"
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 4
+theme_type_variation = &"BubbleText"
 text = "0 Wörter"
 
-[node name="SubmitButton" type="Button" parent="Editor/EditorStack/Bottom"]
+[node name="SubmitButton" type="Button" parent="Editor/EditorStack/Bottom" unique_id=154926651]
 unique_name_in_owner = true
-theme_type_variation = &"ActionButton"
 custom_minimum_size = Vector2(240, 0)
 layout_mode = 2
+theme_type_variation = &"ActionButton"
 text = "⚔ Erneut abgeben"

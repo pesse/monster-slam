@@ -1,9 +1,10 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://cxl4hlnmn0l3t"]
 
-[ext_resource type="Script" path="res://src/ui/word_plates.gd" id="1_plates"]
+[ext_resource type="Script" uid="uid://70dwmslvdcim" path="res://src/ui/word_plates.gd" id="1_plates"]
 
-[node name="WordPlates" type="Control"]
+[node name="WordPlates" type="Control" unique_id=1264482417]
 texture_filter = 4
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0

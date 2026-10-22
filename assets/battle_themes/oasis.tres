@@ -1,24 +1,22 @@
-[gd_resource type="Resource" script_class="BattleTheme" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="BattleTheme" format=3 uid="uid://broh4ux11bshy"]
 
-[ext_resource type="Script" path="res://src/battle/battle_theme.gd" id="1_theme"]
+[ext_resource type="Script" uid="uid://c6bpe22eo7xiw" path="res://src/battle/battle_theme.gd" id="1_theme"]
 
 [resource]
 script = ExtResource("1_theme")
-ground_patch = Color(0.6, 0.66, 0.3, 1)
-ground_patch_amount = 0.25
-path = "trail"
-path_color = Color(0.76, 0.62, 0.38, 1)
-light_from = "desert"
-ground_texture = "sand"
 ground_low = Color(0.88, 0.78, 0.46, 1)
 ground_high = Color(0.94, 0.84, 0.54, 1)
 hill = Color(0.88, 0.6, 0.36, 1)
+ground_patch = Color(0.6, 0.66, 0.3, 1)
+ground_patch_amount = 0.25
+path_color = Color(0.76, 0.62, 0.38, 1)
+cover = 0.8
+cover_color = Color(0.5, 0.6, 0.25, 1)
+bush_color = Color(0.22, 0.42, 0.16, 1)
+ground_texture = "sand"
+light_from = "desert"
 trees = Array[String](["forge/palm.glb", "forge/palm.glb", "forge/palm.glb", "forge/olive.glb"])
 rocks = Array[String](["forge/sandstone_rock.glb"])
 grass = Array[String](["forge/reeds.glb", "forge/dune_grass.glb"])
 props = Array[String]([])
 landmarks = Array[String](["forge/oasis_pond.glb"])
-cover = 0.8
-cover_color = Color(0.5, 0.6, 0.25, 1)
-bush_color = Color(0.22, 0.42, 0.16, 1)
-bushes = 0.6

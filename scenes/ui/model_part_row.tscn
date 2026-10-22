@@ -1,6 +1,6 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://cokerytfqw4v4"]
 
-[node name="ModelPartRow" type="Label"]
+[node name="ModelPartRow" type="Label" unique_id=307816909]
 theme_type_variation = &"Caption"
 text = "model.gguf (2/2): 4.3 GB"
 clip_text = true

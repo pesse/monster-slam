@@ -1,11 +1,11 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene format=3 uid="uid://rn6wck24jpl2"]
 
-[ext_resource type="Script" path="res://src/ui/book_select.gd" id="1_screen"]
-[ext_resource type="Texture2D" path="res://assets/ui/library/back.webp" id="3_back"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/play.webp" id="4_next"]
-[ext_resource type="Texture2D" path="res://assets/ui/library/title.webp" id="5_title"]
+[ext_resource type="Script" uid="uid://c08vfggscievr" path="res://src/ui/book_select.gd" id="1_screen"]
+[ext_resource type="Texture2D" uid="uid://3etmo0mb64ej" path="res://assets/ui/library/back.webp" id="3_back"]
+[ext_resource type="Texture2D" uid="uid://c23n78atueopp" path="res://assets/ui/main_menu/icons/play.webp" id="4_next"]
+[ext_resource type="Texture2D" uid="uid://xau5tim8lwbf" path="res://assets/ui/library/title.webp" id="5_title"]
 
-[node name="BookSelect" type="Control"]
+[node name="BookSelect" type="Control" unique_id=564969898]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -15,7 +15,7 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1_screen")
 
-[node name="Stage" type="Control" parent="."]
+[node name="Stage" type="Control" parent="." unique_id=1207138559]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -24,7 +24,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Ui" type="Control" parent="."]
+[node name="Ui" type="Control" parent="." unique_id=1706903062]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -34,7 +34,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="BackButton" type="Button" parent="Ui"]
+[node name="BackButton" type="Button" parent="Ui" unique_id=391084692]
 unique_name_in_owner = true
 layout_mode = 1
 offset_left = 24.0
@@ -46,7 +46,7 @@ theme_type_variation = &"IntroSmallButton"
 text = "Zurück"
 icon = ExtResource("3_back")
 
-[node name="Heading" type="VBoxContainer" parent="Ui"]
+[node name="Heading" type="VBoxContainer" parent="Ui" unique_id=336598728]
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.5
@@ -58,7 +58,7 @@ grow_horizontal = 2
 mouse_filter = 2
 theme_type_variation = &"Tight"
 
-[node name="Title" type="TextureRect" parent="Ui/Heading"]
+[node name="Title" type="TextureRect" parent="Ui/Heading" unique_id=1900299168]
 custom_minimum_size = Vector2(320, 80)
 layout_mode = 2
 mouse_filter = 2
@@ -66,7 +66,7 @@ texture = ExtResource("5_title")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="PrevButton" type="Button" parent="Ui"]
+[node name="PrevButton" type="Button" parent="Ui" unique_id=1966651888]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = -1
@@ -82,7 +82,7 @@ icon = ExtResource("3_back")
 icon_alignment = 1
 expand_icon = true
 
-[node name="NextButton" type="Button" parent="Ui"]
+[node name="NextButton" type="Button" parent="Ui" unique_id=860346575]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = -1
@@ -101,7 +101,7 @@ icon = ExtResource("4_next")
 icon_alignment = 1
 expand_icon = true
 
-[node name="EmptyHint" type="Label" parent="Ui"]
+[node name="EmptyHint" type="Label" parent="Ui" unique_id=1008020158]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
@@ -119,14 +119,14 @@ text = "Noch kein Buch vorhanden — im Hauptmenü unter „Inhalte“ einen Vok
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="Dive" type="Control" parent="."]
+[node name="Dive" type="Control" parent="." unique_id=1855282985]
 unique_name_in_owner = true
 visible = false
 clip_contents = true
-layout_mode = 0
+anchors_preset = 0
 mouse_filter = 2
 
-[node name="Image" type="TextureRect" parent="Dive"]
+[node name="Image" type="TextureRect" parent="Dive" unique_id=1346380229]
 unique_name_in_owner = true
 layout_mode = 0
 mouse_filter = 2

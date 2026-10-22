@@ -1,8 +1,8 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://boy2y8whb3cou"]
 
-[ext_resource type="Script" path="res://src/ui/mastery_celebration.gd" id="1_celebration"]
-[ext_resource type="Script" path="res://src/fx/lightning.gd" id="2_lightning"]
-[ext_resource type="PackedScene" path="res://scenes/ui/badge_plate.tscn" id="3_plate"]
+[ext_resource type="Script" uid="uid://bc71tfx5o8iee" path="res://src/ui/mastery_celebration.gd" id="1_celebration"]
+[ext_resource type="Script" uid="uid://ccsdbsshyncy5" path="res://src/fx/lightning.gd" id="2_lightning"]
+[ext_resource type="PackedScene" uid="uid://bjrisbkmsjf8i" path="res://scenes/ui/badge_plate.tscn" id="3_plate"]
 
 [sub_resource type="CanvasItemMaterial" id="additive"]
 blend_mode = 1
@@ -19,48 +19,6 @@ fill = 1
 fill_from = Vector2(0.5, 0.5)
 fill_to = Vector2(1, 0.5)
 
-[sub_resource type="GradientTexture2D" id="streak"]
-gradient = SubResource("glow_g")
-width = 32
-height = 128
-fill = 1
-fill_from = Vector2(0.5, 0.5)
-fill_to = Vector2(1, 0.5)
-
-[sub_resource type="GradientTexture2D" id="ray"]
-gradient = SubResource("glow_g")
-width = 64
-height = 512
-fill = 1
-fill_from = Vector2(0.5, 0.5)
-fill_to = Vector2(1, 0.5)
-
-[sub_resource type="Gradient" id="ring_g"]
-offsets = PackedFloat32Array(0, 0.6, 0.88, 0.94, 1)
-colors = PackedColorArray(1, 1, 1, 0, 1, 1, 1, 0.08, 1, 1, 1, 0.9, 1, 1, 1, 0.35, 1, 1, 1, 0)
-
-[sub_resource type="GradientTexture2D" id="ring"]
-gradient = SubResource("ring_g")
-width = 512
-height = 512
-fill = 1
-fill_from = Vector2(0.5, 0.5)
-fill_to = Vector2(1, 0.5)
-
-[sub_resource type="Gradient" id="fade_g"]
-offsets = PackedFloat32Array(0, 0.6, 1)
-colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0.8, 1, 1, 1, 0)
-
-[sub_resource type="GradientTexture1D" id="fade"]
-gradient = SubResource("fade_g")
-
-[sub_resource type="Gradient" id="green_g"]
-offsets = PackedFloat32Array(0, 0.5, 1)
-colors = PackedColorArray(0.45, 1, 0.45, 1, 0.75, 1, 0.6, 1, 0.4, 0.9, 1, 1)
-
-[sub_resource type="GradientTexture1D" id="green"]
-gradient = SubResource("green_g")
-
 [sub_resource type="Gradient" id="gold_g"]
 offsets = PackedFloat32Array(0, 0.5, 1)
 colors = PackedColorArray(1, 0.8, 0.25, 1, 1, 0.6, 0.15, 1, 1, 0.95, 0.75, 1)
@@ -68,162 +26,12 @@ colors = PackedColorArray(1, 0.8, 0.25, 1, 1, 0.6, 0.15, 1, 1, 0.95, 0.75, 1)
 [sub_resource type="GradientTexture1D" id="gold"]
 gradient = SubResource("gold_g")
 
-[sub_resource type="Gradient" id="glitter_g"]
-offsets = PackedFloat32Array(0, 1)
-colors = PackedColorArray(1, 1, 1, 1, 1, 0.85, 0.4, 1)
+[sub_resource type="Gradient" id="fade_g"]
+offsets = PackedFloat32Array(0, 0.6, 1)
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0.8, 1, 1, 1, 0)
 
-[sub_resource type="GradientTexture1D" id="glitter"]
-gradient = SubResource("glitter_g")
-
-[sub_resource type="Gradient" id="task_shock_g"]
-offsets = PackedFloat32Array(0, 1)
-colors = PackedColorArray(0.75, 1, 0.6, 0.9, 0.75, 1, 0.6, 0)
-
-[sub_resource type="GradientTexture1D" id="task_shock"]
-gradient = SubResource("task_shock_g")
-
-[sub_resource type="Gradient" id="word_shock_g"]
-offsets = PackedFloat32Array(0, 1)
-colors = PackedColorArray(1, 0.95, 0.75, 1, 1, 0.8, 0.3, 0)
-
-[sub_resource type="GradientTexture1D" id="word_shock"]
-gradient = SubResource("word_shock_g")
-
-[sub_resource type="Gradient" id="task_bloom_g"]
-offsets = PackedFloat32Array(0, 1)
-colors = PackedColorArray(0.8, 1, 0.7, 0.9, 0.45, 1, 0.45, 0)
-
-[sub_resource type="GradientTexture1D" id="task_bloom"]
-gradient = SubResource("task_bloom_g")
-
-[sub_resource type="Gradient" id="word_bloom_g"]
-offsets = PackedFloat32Array(0, 0.3, 1)
-colors = PackedColorArray(1, 1, 1, 1, 1, 0.85, 0.35, 0.8, 1, 0.7, 0.2, 0)
-
-[sub_resource type="GradientTexture1D" id="word_bloom"]
-gradient = SubResource("word_bloom_g")
-
-[sub_resource type="Gradient" id="ray_g"]
-offsets = PackedFloat32Array(0, 0.15, 0.7, 1)
-colors = PackedColorArray(1, 0.85, 0.35, 0, 1, 0.85, 0.35, 0.4, 1, 0.85, 0.35, 0.3, 1, 0.85, 0.35, 0)
-
-[sub_resource type="GradientTexture1D" id="rays"]
-gradient = SubResource("ray_g")
-
-[sub_resource type="Curve" id="shrink"]
-_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0.2), 0.0, 0.0, 0, 0]
-point_count = 2
-
-[sub_resource type="CurveTexture" id="shrink_tex"]
-curve = SubResource("shrink")
-
-[sub_resource type="Curve" id="grow"]
-_data = [Vector2(0, 0.05), 0.0, 0.0, 0, 0, Vector2(0.3, 0.7), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
-point_count = 3
-
-[sub_resource type="CurveTexture" id="grow_tex"]
-curve = SubResource("grow")
-
-[sub_resource type="Curve" id="swell"]
-_data = [Vector2(0, 0.3), 0.0, 0.0, 0, 0, Vector2(0.15, 1), 0.0, 0.0, 0, 0, Vector2(1, 0.8), 0.0, 0.0, 0, 0]
-point_count = 3
-
-[sub_resource type="CurveTexture" id="swell_tex"]
-curve = SubResource("swell")
-
-[sub_resource type="Curve" id="taper"]
-_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0.35), 0.0, 0.0, 0, 0]
-point_count = 2
-
-[sub_resource type="CurveTexture" id="taper_tex"]
-curve = SubResource("taper")
-
-[sub_resource type="ParticleProcessMaterial" id="p_task_sparks"]
-particle_flag_disable_z = true
-particle_flag_align_y = true
-spread = 180.0
-initial_velocity_min = 450.0
-initial_velocity_max = 1000.0
-gravity = Vector3(0, 350, 0)
-damping_min = 700.0
-damping_max = 1000.0
-scale_min = 0.35
-scale_max = 0.8
-scale_curve = SubResource("shrink_tex")
-color_ramp = SubResource("fade")
-color_initial_ramp = SubResource("green")
-
-[sub_resource type="ParticleProcessMaterial" id="p_task_shock"]
-particle_flag_disable_z = true
-gravity = Vector3(0, 0, 0)
-scale_min = 1.6
-scale_max = 1.6
-scale_curve = SubResource("grow_tex")
-color_ramp = SubResource("task_shock")
-
-[sub_resource type="ParticleProcessMaterial" id="p_task_bloom"]
-particle_flag_disable_z = true
-gravity = Vector3(0, 0, 0)
-scale_min = 5.0
-scale_max = 5.0
-scale_curve = SubResource("swell_tex")
-color_ramp = SubResource("task_bloom")
-
-[sub_resource type="ParticleProcessMaterial" id="p_word_rays"]
-particle_flag_disable_z = true
-gravity = Vector3(0, 0, 0)
-angle_min = -180.0
-angle_max = 180.0
-angular_velocity_min = 15.0
-angular_velocity_max = 25.0
-scale_min = 1.6
-scale_max = 2.2
-color_ramp = SubResource("rays")
-
-[sub_resource type="ParticleProcessMaterial" id="p_word_shock"]
-particle_flag_disable_z = true
-gravity = Vector3(0, 0, 0)
-scale_min = 2.2
-scale_max = 2.2
-scale_curve = SubResource("grow_tex")
-color_ramp = SubResource("word_shock")
-
-[sub_resource type="ParticleProcessMaterial" id="p_word_bloom"]
-particle_flag_disable_z = true
-gravity = Vector3(0, 0, 0)
-scale_min = 8.0
-scale_max = 8.0
-scale_curve = SubResource("swell_tex")
-color_ramp = SubResource("word_bloom")
-
-[sub_resource type="ParticleProcessMaterial" id="p_word_sparks"]
-particle_flag_disable_z = true
-particle_flag_align_y = true
-spread = 180.0
-initial_velocity_min = 700.0
-initial_velocity_max = 1500.0
-gravity = Vector3(0, 300, 0)
-damping_min = 900.0
-damping_max = 1300.0
-scale_min = 0.4
-scale_max = 1.0
-scale_curve = SubResource("shrink_tex")
-color_ramp = SubResource("fade")
-color_initial_ramp = SubResource("gold")
-
-[sub_resource type="ParticleProcessMaterial" id="p_word_glitter"]
-particle_flag_disable_z = true
-spread = 180.0
-initial_velocity_min = 300.0
-initial_velocity_max = 800.0
-gravity = Vector3(0, 500, 0)
-damping_min = 350.0
-damping_max = 450.0
-scale_min = 0.15
-scale_max = 0.35
-scale_curve = SubResource("shrink_tex")
-color_ramp = SubResource("fade")
-color_initial_ramp = SubResource("glitter")
+[sub_resource type="GradientTexture1D" id="fade"]
+gradient = SubResource("fade_g")
 
 [sub_resource type="ParticleProcessMaterial" id="p_word_embers"]
 particle_flag_disable_z = true
@@ -239,8 +47,190 @@ scale_max = 0.3
 color_ramp = SubResource("fade")
 color_initial_ramp = SubResource("gold")
 
+[sub_resource type="Gradient" id="task_bloom_g"]
+colors = PackedColorArray(0.8, 1, 0.7, 0.9, 0.45, 1, 0.45, 0)
+
+[sub_resource type="GradientTexture1D" id="task_bloom"]
+gradient = SubResource("task_bloom_g")
+
+[sub_resource type="Curve" id="swell"]
+_data = [Vector2(0, 0.3), 0.0, 0.0, 0, 0, Vector2(0.15, 1), 0.0, 0.0, 0, 0, Vector2(1, 0.8), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="swell_tex"]
+curve = SubResource("swell")
+
+[sub_resource type="ParticleProcessMaterial" id="p_task_bloom"]
+particle_flag_disable_z = true
+gravity = Vector3(0, 0, 0)
+scale_min = 5.0
+scale_max = 5.0
+scale_curve = SubResource("swell_tex")
+color_ramp = SubResource("task_bloom")
+
+[sub_resource type="Gradient" id="ring_g"]
+offsets = PackedFloat32Array(0, 0.6, 0.88, 0.94, 1)
+colors = PackedColorArray(1, 1, 1, 0, 1, 1, 1, 0.08, 1, 1, 1, 0.9, 1, 1, 1, 0.35, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="ring"]
+gradient = SubResource("ring_g")
+width = 512
+height = 512
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="Gradient" id="task_shock_g"]
+colors = PackedColorArray(0.75, 1, 0.6, 0.9, 0.75, 1, 0.6, 0)
+
+[sub_resource type="GradientTexture1D" id="task_shock"]
+gradient = SubResource("task_shock_g")
+
+[sub_resource type="Curve" id="grow"]
+_data = [Vector2(0, 0.05), 0.0, 0.0, 0, 0, Vector2(0.3, 0.7), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="CurveTexture" id="grow_tex"]
+curve = SubResource("grow")
+
+[sub_resource type="ParticleProcessMaterial" id="p_task_shock"]
+particle_flag_disable_z = true
+gravity = Vector3(0, 0, 0)
+scale_min = 1.6
+scale_max = 1.6
+scale_curve = SubResource("grow_tex")
+color_ramp = SubResource("task_shock")
+
+[sub_resource type="GradientTexture2D" id="streak"]
+gradient = SubResource("glow_g")
+width = 32
+height = 128
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="Gradient" id="green_g"]
+offsets = PackedFloat32Array(0, 0.5, 1)
+colors = PackedColorArray(0.45, 1, 0.45, 1, 0.75, 1, 0.6, 1, 0.4, 0.9, 1, 1)
+
+[sub_resource type="GradientTexture1D" id="green"]
+gradient = SubResource("green_g")
+
+[sub_resource type="Curve" id="shrink"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0.2), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="shrink_tex"]
+curve = SubResource("shrink")
+
+[sub_resource type="ParticleProcessMaterial" id="p_task_sparks"]
+particle_flag_align_y = true
+particle_flag_disable_z = true
+spread = 180.0
+initial_velocity_min = 450.0
+initial_velocity_max = 1000.0
+gravity = Vector3(0, 350, 0)
+damping_min = 700.0
+damping_max = 1000.0
+scale_min = 0.35
+scale_max = 0.8
+scale_curve = SubResource("shrink_tex")
+color_ramp = SubResource("fade")
+color_initial_ramp = SubResource("green")
+
+[sub_resource type="GradientTexture2D" id="ray"]
+gradient = SubResource("glow_g")
+height = 512
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="Gradient" id="ray_g"]
+offsets = PackedFloat32Array(0, 0.15, 0.7, 1)
+colors = PackedColorArray(1, 0.85, 0.35, 0, 1, 0.85, 0.35, 0.4, 1, 0.85, 0.35, 0.3, 1, 0.85, 0.35, 0)
+
+[sub_resource type="GradientTexture1D" id="rays"]
+gradient = SubResource("ray_g")
+
+[sub_resource type="ParticleProcessMaterial" id="p_word_rays"]
+particle_flag_disable_z = true
+angle_min = -180.0
+angle_max = 180.0
+angular_velocity_min = 15.0
+angular_velocity_max = 25.0
+gravity = Vector3(0, 0, 0)
+scale_min = 1.6
+scale_max = 2.2
+color_ramp = SubResource("rays")
+
+[sub_resource type="Gradient" id="word_bloom_g"]
+offsets = PackedFloat32Array(0, 0.3, 1)
+colors = PackedColorArray(1, 1, 1, 1, 1, 0.85, 0.35, 0.8, 1, 0.7, 0.2, 0)
+
+[sub_resource type="GradientTexture1D" id="word_bloom"]
+gradient = SubResource("word_bloom_g")
+
+[sub_resource type="ParticleProcessMaterial" id="p_word_bloom"]
+particle_flag_disable_z = true
+gravity = Vector3(0, 0, 0)
+scale_min = 8.0
+scale_max = 8.0
+scale_curve = SubResource("swell_tex")
+color_ramp = SubResource("word_bloom")
+
+[sub_resource type="Gradient" id="word_shock_g"]
+colors = PackedColorArray(1, 0.95, 0.75, 1, 1, 0.8, 0.3, 0)
+
+[sub_resource type="GradientTexture1D" id="word_shock"]
+gradient = SubResource("word_shock_g")
+
+[sub_resource type="ParticleProcessMaterial" id="p_word_shock"]
+particle_flag_disable_z = true
+gravity = Vector3(0, 0, 0)
+scale_min = 2.2
+scale_max = 2.2
+scale_curve = SubResource("grow_tex")
+color_ramp = SubResource("word_shock")
+
+[sub_resource type="ParticleProcessMaterial" id="p_word_sparks"]
+particle_flag_align_y = true
+particle_flag_disable_z = true
+spread = 180.0
+initial_velocity_min = 700.0
+initial_velocity_max = 1500.0
+gravity = Vector3(0, 300, 0)
+damping_min = 900.0
+damping_max = 1300.0
+scale_min = 0.4
+scale_curve = SubResource("shrink_tex")
+color_ramp = SubResource("fade")
+color_initial_ramp = SubResource("gold")
+
+[sub_resource type="Gradient" id="glitter_g"]
+colors = PackedColorArray(1, 1, 1, 1, 1, 0.85, 0.4, 1)
+
+[sub_resource type="GradientTexture1D" id="glitter"]
+gradient = SubResource("glitter_g")
+
+[sub_resource type="ParticleProcessMaterial" id="p_word_glitter"]
+particle_flag_disable_z = true
+spread = 180.0
+initial_velocity_min = 300.0
+initial_velocity_max = 800.0
+gravity = Vector3(0, 500, 0)
+damping_min = 350.0
+damping_max = 450.0
+scale_min = 0.15
+scale_max = 0.35
+scale_curve = SubResource("shrink_tex")
+color_ramp = SubResource("fade")
+color_initial_ramp = SubResource("glitter")
+
+[sub_resource type="Curve" id="taper"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0.35), 0.0, 0.0, 0, 0]
+point_count = 2
+
 [sub_resource type="Gradient" id="badge_shock_g"]
-offsets = PackedFloat32Array(0, 1)
 colors = PackedColorArray(1, 1, 1, 0.85, 1, 1, 1, 0)
 
 [sub_resource type="GradientTexture1D" id="badge_shock"]
@@ -255,8 +245,8 @@ scale_curve = SubResource("grow_tex")
 color_ramp = SubResource("badge_shock")
 
 [sub_resource type="ParticleProcessMaterial" id="p_badge_sparks"]
-particle_flag_disable_z = true
 particle_flag_align_y = true
+particle_flag_disable_z = true
 spread = 180.0
 initial_velocity_min = 260.0
 initial_velocity_max = 560.0
@@ -268,8 +258,9 @@ scale_max = 0.55
 scale_curve = SubResource("shrink_tex")
 color_ramp = SubResource("fade")
 
-[node name="MasteryCelebration" type="Control"]
+[node name="MasteryCelebration" type="Control" unique_id=1351399856]
 process_mode = 3
+visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -277,10 +268,10 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-visible = false
 script = ExtResource("1_celebration")
 
-[node name="Flash" type="ColorRect" parent="."]
+[node name="Flash" type="ColorRect" parent="." unique_id=1197524378]
+modulate = Color(1, 1, 1, 0)
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -288,10 +279,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(1, 1, 1, 1)
-modulate = Color(1, 1, 1, 0)
 
-[node name="Bottom" type="Control" parent="."]
+[node name="Bottom" type="Control" parent="." unique_id=337672133]
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
@@ -304,18 +293,16 @@ grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
 
-[node name="WordEmbers" type="GPUParticles2D" parent="Bottom"]
+[node name="WordEmbers" type="GPUParticles2D" parent="Bottom" unique_id=1949182563]
 material = SubResource("additive")
 emitting = false
 amount = 90
+texture = SubResource("glow")
 lifetime = 1.6
-one_shot = false
-explosiveness = 0.0
 visibility_rect = Rect2(-2000, -2000, 4000, 4000)
 process_material = SubResource("p_word_embers")
-texture = SubResource("glow")
 
-[node name="Origin" type="Control" parent="."]
+[node name="Origin" type="Control" parent="." unique_id=1489170688]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -326,98 +313,98 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="TaskBloom" type="GPUParticles2D" parent="Origin"]
+[node name="TaskBloom" type="GPUParticles2D" parent="Origin" unique_id=1736156410]
 material = SubResource("additive")
 emitting = false
 amount = 1
+texture = SubResource("glow")
 lifetime = 0.9
 one_shot = true
 explosiveness = 1.0
 visibility_rect = Rect2(-2000, -2000, 4000, 4000)
 process_material = SubResource("p_task_bloom")
-texture = SubResource("glow")
 
-[node name="TaskShock" type="GPUParticles2D" parent="Origin"]
+[node name="TaskShock" type="GPUParticles2D" parent="Origin" unique_id=958515405]
 material = SubResource("additive")
 emitting = false
 amount = 1
+texture = SubResource("ring")
 lifetime = 0.6
 one_shot = true
 explosiveness = 1.0
 visibility_rect = Rect2(-2000, -2000, 4000, 4000)
 process_material = SubResource("p_task_shock")
-texture = SubResource("ring")
 
-[node name="TaskSparks" type="GPUParticles2D" parent="Origin"]
+[node name="TaskSparks" type="GPUParticles2D" parent="Origin" unique_id=603560488]
 material = SubResource("additive")
 emitting = false
 amount = 140
+texture = SubResource("streak")
 lifetime = 1.1
 one_shot = true
 explosiveness = 1.0
 visibility_rect = Rect2(-2000, -2000, 4000, 4000)
 process_material = SubResource("p_task_sparks")
-texture = SubResource("streak")
 
-[node name="WordRays" type="GPUParticles2D" parent="Origin"]
+[node name="WordRays" type="GPUParticles2D" parent="Origin" unique_id=809478432]
 material = SubResource("additive")
 emitting = false
 amount = 14
+texture = SubResource("ray")
 lifetime = 2.0
 one_shot = true
 explosiveness = 1.0
 visibility_rect = Rect2(-2000, -2000, 4000, 4000)
 process_material = SubResource("p_word_rays")
-texture = SubResource("ray")
 
-[node name="WordBloom" type="GPUParticles2D" parent="Origin"]
+[node name="WordBloom" type="GPUParticles2D" parent="Origin" unique_id=817296650]
 material = SubResource("additive")
 emitting = false
 amount = 1
+texture = SubResource("glow")
 lifetime = 1.4
 one_shot = true
 explosiveness = 1.0
 visibility_rect = Rect2(-2000, -2000, 4000, 4000)
 process_material = SubResource("p_word_bloom")
-texture = SubResource("glow")
 
-[node name="WordShock" type="GPUParticles2D" parent="Origin"]
+[node name="WordShock" type="GPUParticles2D" parent="Origin" unique_id=1267402770]
 material = SubResource("additive")
 emitting = false
 amount = 2
+texture = SubResource("ring")
 lifetime = 0.8
 one_shot = true
 explosiveness = 0.75
 visibility_rect = Rect2(-2000, -2000, 4000, 4000)
 process_material = SubResource("p_word_shock")
-texture = SubResource("ring")
 
-[node name="WordSparks" type="GPUParticles2D" parent="Origin"]
+[node name="WordSparks" type="GPUParticles2D" parent="Origin" unique_id=136807423]
 material = SubResource("additive")
 emitting = false
 amount = 260
+texture = SubResource("streak")
 lifetime = 1.6
 one_shot = true
 explosiveness = 1.0
 visibility_rect = Rect2(-2000, -2000, 4000, 4000)
 process_material = SubResource("p_word_sparks")
-texture = SubResource("streak")
 
-[node name="WordGlitter" type="GPUParticles2D" parent="Origin"]
+[node name="WordGlitter" type="GPUParticles2D" parent="Origin" unique_id=1091901773]
 material = SubResource("additive")
 emitting = false
 amount = 140
+texture = SubResource("glow")
 lifetime = 1.3
 one_shot = true
 explosiveness = 1.0
 visibility_rect = Rect2(-2000, -2000, 4000, 4000)
 process_material = SubResource("p_word_glitter")
-texture = SubResource("glow")
 
-[node name="Lightning" type="Node2D" parent="Origin"]
+[node name="Lightning" type="Node2D" parent="Origin" unique_id=1231891560]
 script = ExtResource("2_lightning")
 
-[node name="Halo0" type="Line2D" parent="Origin/Lightning"]
+[node name="Halo0" type="Line2D" parent="Origin/Lightning" unique_id=1601374675]
 material = SubResource("additive")
 width = 26.0
 width_curve = SubResource("taper")
@@ -427,17 +414,16 @@ begin_cap_mode = 2
 end_cap_mode = 2
 antialiased = true
 
-[node name="Core0" type="Line2D" parent="Origin/Lightning"]
+[node name="Core0" type="Line2D" parent="Origin/Lightning" unique_id=771985318]
 material = SubResource("additive")
 width = 6.0
 width_curve = SubResource("taper")
-default_color = Color(1, 1, 1, 1)
 joint_mode = 2
 begin_cap_mode = 2
 end_cap_mode = 2
 antialiased = true
 
-[node name="Halo1" type="Line2D" parent="Origin/Lightning"]
+[node name="Halo1" type="Line2D" parent="Origin/Lightning" unique_id=1148756335]
 material = SubResource("additive")
 width = 26.0
 width_curve = SubResource("taper")
@@ -447,17 +433,16 @@ begin_cap_mode = 2
 end_cap_mode = 2
 antialiased = true
 
-[node name="Core1" type="Line2D" parent="Origin/Lightning"]
+[node name="Core1" type="Line2D" parent="Origin/Lightning" unique_id=818636544]
 material = SubResource("additive")
 width = 6.0
 width_curve = SubResource("taper")
-default_color = Color(1, 1, 1, 1)
 joint_mode = 2
 begin_cap_mode = 2
 end_cap_mode = 2
 antialiased = true
 
-[node name="Halo2" type="Line2D" parent="Origin/Lightning"]
+[node name="Halo2" type="Line2D" parent="Origin/Lightning" unique_id=1972960606]
 material = SubResource("additive")
 width = 26.0
 width_curve = SubResource("taper")
@@ -467,17 +452,16 @@ begin_cap_mode = 2
 end_cap_mode = 2
 antialiased = true
 
-[node name="Core2" type="Line2D" parent="Origin/Lightning"]
+[node name="Core2" type="Line2D" parent="Origin/Lightning" unique_id=571184296]
 material = SubResource("additive")
 width = 6.0
 width_curve = SubResource("taper")
-default_color = Color(1, 1, 1, 1)
 joint_mode = 2
 begin_cap_mode = 2
 end_cap_mode = 2
 antialiased = true
 
-[node name="Halo3" type="Line2D" parent="Origin/Lightning"]
+[node name="Halo3" type="Line2D" parent="Origin/Lightning" unique_id=1964440771]
 material = SubResource("additive")
 width = 26.0
 width_curve = SubResource("taper")
@@ -487,17 +471,16 @@ begin_cap_mode = 2
 end_cap_mode = 2
 antialiased = true
 
-[node name="Core3" type="Line2D" parent="Origin/Lightning"]
+[node name="Core3" type="Line2D" parent="Origin/Lightning" unique_id=1948259333]
 material = SubResource("additive")
 width = 6.0
 width_curve = SubResource("taper")
-default_color = Color(1, 1, 1, 1)
 joint_mode = 2
 begin_cap_mode = 2
 end_cap_mode = 2
 antialiased = true
 
-[node name="Halo4" type="Line2D" parent="Origin/Lightning"]
+[node name="Halo4" type="Line2D" parent="Origin/Lightning" unique_id=842772810]
 material = SubResource("additive")
 width = 26.0
 width_curve = SubResource("taper")
@@ -507,41 +490,40 @@ begin_cap_mode = 2
 end_cap_mode = 2
 antialiased = true
 
-[node name="Core4" type="Line2D" parent="Origin/Lightning"]
+[node name="Core4" type="Line2D" parent="Origin/Lightning" unique_id=617377508]
 material = SubResource("additive")
 width = 6.0
 width_curve = SubResource("taper")
-default_color = Color(1, 1, 1, 1)
 joint_mode = 2
 begin_cap_mode = 2
 end_cap_mode = 2
 antialiased = true
 
-[node name="BadgeFx" type="Node2D" parent="Origin"]
+[node name="BadgeFx" type="Node2D" parent="Origin" unique_id=1701005590]
 
-[node name="BadgeShock" type="GPUParticles2D" parent="Origin/BadgeFx"]
+[node name="BadgeShock" type="GPUParticles2D" parent="Origin/BadgeFx" unique_id=1158504924]
 material = SubResource("additive")
 emitting = false
 amount = 1
+texture = SubResource("ring")
 lifetime = 0.5
 one_shot = true
 explosiveness = 1.0
 visibility_rect = Rect2(-2000, -2000, 4000, 4000)
 process_material = SubResource("p_badge_shock")
-texture = SubResource("ring")
 
-[node name="BadgeSparks" type="GPUParticles2D" parent="Origin/BadgeFx"]
+[node name="BadgeSparks" type="GPUParticles2D" parent="Origin/BadgeFx" unique_id=303287834]
 material = SubResource("additive")
 emitting = false
 amount = 48
+texture = SubResource("streak")
 lifetime = 0.8
 one_shot = true
 explosiveness = 1.0
 visibility_rect = Rect2(-2000, -2000, 4000, 4000)
 process_material = SubResource("p_badge_sparks")
-texture = SubResource("streak")
 
-[node name="Content" type="CenterContainer" parent="."]
+[node name="Content" type="CenterContainer" parent="." unique_id=21590731]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -550,25 +532,25 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="Stack" type="VBoxContainer" parent="Content"]
+[node name="Stack" type="VBoxContainer" parent="Content" unique_id=613427866]
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"Tight"
 
-[node name="Headline" type="Label" parent="Content/Stack"]
+[node name="Headline" type="Label" parent="Content/Stack" unique_id=1705742735]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"CelebrateTask"
 text = "Aufgabe gemeistert!"
 horizontal_alignment = 1
 
-[node name="Detail" type="Label" parent="Content/Stack"]
+[node name="Detail" type="Label" parent="Content/Stack" unique_id=446815995]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"CelebrateDetail"
 horizontal_alignment = 1
 
-[node name="BadgeContent" type="CenterContainer" parent="."]
+[node name="BadgeContent" type="CenterContainer" parent="." unique_id=1355281319]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -577,24 +559,24 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="Stack" type="VBoxContainer" parent="BadgeContent"]
+[node name="Stack" type="VBoxContainer" parent="BadgeContent" unique_id=942775934]
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"Tight"
 
-[node name="Plate" parent="BadgeContent/Stack" instance=ExtResource("3_plate")]
+[node name="Plate" parent="BadgeContent/Stack" unique_id=447048952 instance=ExtResource("3_plate")]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4
 
-[node name="BadgeTitle" type="Label" parent="BadgeContent/Stack"]
+[node name="BadgeTitle" type="Label" parent="BadgeContent/Stack" unique_id=834206116]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"CelebrateBadge"
 text = "10 Treffer heute!"
 horizontal_alignment = 1
 
-[node name="BadgeDetail" type="Label" parent="BadgeContent/Stack"]
+[node name="BadgeDetail" type="Label" parent="BadgeContent/Stack" unique_id=1090007370]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"CelebrateBadgeDetail"

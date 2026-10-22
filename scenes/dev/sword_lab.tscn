@@ -1,93 +1,109 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://cijheimuki1wt"]
 
-[ext_resource type="Script" path="res://src/dev/sword_lab.gd" id="1_lab"]
-[ext_resource type="PackedScene" path="res://scenes/ui/menu_backdrop.tscn" id="2_backdrop"]
+[ext_resource type="Script" uid="uid://cyrepxb4asdbt" path="res://src/dev/sword_lab.gd" id="1_lab"]
+[ext_resource type="PackedScene" uid="uid://ck1yk1vmu4b64" path="res://scenes/ui/menu_backdrop.tscn" id="2_backdrop"]
 
-[node name="SwordLab" type="Node3D"]
+[node name="SwordLab" type="Node3D" unique_id=316341542]
 script = ExtResource("1_lab")
 
-[node name="Backdrop" parent="." instance=ExtResource("2_backdrop")]
+[node name="Backdrop" parent="." unique_id=1281313668 instance=ExtResource("2_backdrop")]
 unique_name_in_owner = true
 
-[node name="UI" type="CanvasLayer" parent="."]
+[node name="UI" type="CanvasLayer" parent="." unique_id=589127791]
 
-[node name="Margin" type="MarginContainer" parent="UI"]
-theme_type_variation = &"ScreenMargin"
+[node name="Margin" type="MarginContainer" parent="UI" unique_id=852027523]
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+theme_type_variation = &"ScreenMargin"
 
-[node name="Root" type="VBoxContainer" parent="UI/Margin"]
-theme_type_variation = &"ScreenStack"
+[node name="Root" type="VBoxContainer" parent="UI/Margin" unique_id=374803678]
+layout_mode = 2
 mouse_filter = 2
+theme_type_variation = &"ScreenStack"
 
-[node name="Menu" type="PanelContainer" parent="UI/Margin/Root"]
+[node name="Menu" type="PanelContainer" parent="UI/Margin/Root" unique_id=1542286222]
 self_modulate = Color(1, 1, 1, 0.75)
+layout_mode = 2
 size_flags_horizontal = 0
 
-[node name="Items" type="VBoxContainer" parent="UI/Margin/Root/Menu"]
+[node name="Items" type="VBoxContainer" parent="UI/Margin/Root/Menu" unique_id=1511665475]
+layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="Title" type="Label" parent="UI/Margin/Root/Menu/Items"]
+[node name="Title" type="Label" parent="UI/Margin/Root/Menu/Items" unique_id=531124947]
+layout_mode = 2
 theme_type_variation = &"SectionTitle"
 text = "Schwert-Werkbank"
 
-[node name="Hint" type="Label" parent="UI/Margin/Root/Menu/Items"]
-theme_type_variation = &"Hint"
+[node name="Hint" type="Label" parent="UI/Margin/Root/Menu/Items" unique_id=727901049]
 custom_minimum_size = Vector2(420, 0)
-autowrap_mode = 3
+layout_mode = 2
+theme_type_variation = &"Hint"
 text = "Das Skelett aus dem Hauptmenü. Oberarm und Handgelenk wirken nur beim Gehen (WALK_ARM), der Griff immer (SWORD_TURN). Winkel in Grad, je im Raum des Knochens."
+autowrap_mode = 3
 
-[node name="Play" type="GridContainer" parent="UI/Margin/Root/Menu/Items"]
+[node name="Play" type="GridContainer" parent="UI/Margin/Root/Menu/Items" unique_id=660658574]
+layout_mode = 2
 columns = 2
 
-[node name="AnimCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Play"]
+[node name="AnimCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Play" unique_id=1203681784]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Animation"
 
-[node name="AnimSelect" type="OptionButton" parent="UI/Margin/Root/Menu/Items/Play"]
+[node name="AnimSelect" type="OptionButton" parent="UI/Margin/Root/Menu/Items/Play" unique_id=453427486]
 unique_name_in_owner = true
+layout_mode = 2
 focus_mode = 0
 
-[node name="PauseCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Play"]
+[node name="PauseCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Play" unique_id=2055381541]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Anhalten (Leertaste)"
 
-[node name="PauseToggle" type="CheckButton" parent="UI/Margin/Root/Menu/Items/Play"]
+[node name="PauseToggle" type="CheckButton" parent="UI/Margin/Root/Menu/Items/Play" unique_id=1127469915]
 unique_name_in_owner = true
+layout_mode = 2
 focus_mode = 0
-text = ""
 
-[node name="TimeCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Play"]
+[node name="TimeCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Play" unique_id=1085552918]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Zeitpunkt"
 
-[node name="TimeSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Play"]
+[node name="TimeSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Play" unique_id=1685026053]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
 size_flags_vertical = 4
 focus_mode = 0
 max_value = 1.0
 step = 0.01
 
-[node name="ViewCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Play"]
+[node name="ViewCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Play" unique_id=559576842]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Blick (←/→)"
 
-[node name="ViewSelect" type="OptionButton" parent="UI/Margin/Root/Menu/Items/Play"]
+[node name="ViewSelect" type="OptionButton" parent="UI/Margin/Root/Menu/Items/Play" unique_id=1132324428]
 unique_name_in_owner = true
+layout_mode = 2
 focus_mode = 0
 
-[node name="DistCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Play"]
+[node name="DistCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Play" unique_id=2131351107]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Abstand (Mausrad, +/−)"
 
-[node name="DistSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Play"]
+[node name="DistSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Play" unique_id=752951273]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
 size_flags_vertical = 4
 focus_mode = 0
 min_value = 0.8
@@ -95,118 +111,140 @@ max_value = 10.0
 step = 0.1
 value = 3.5
 
-[node name="InfluenceCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Play"]
+[node name="InfluenceCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Play" unique_id=2009554916]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Wirkung beim Gehen"
 
-[node name="InfluenceSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Play"]
+[node name="InfluenceSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Play" unique_id=1417843457]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
 size_flags_vertical = 4
 focus_mode = 0
 max_value = 1.0
 step = 0.05
 value = 1.0
 
-[node name="Angles" type="GridContainer" parent="UI/Margin/Root/Menu/Items"]
+[node name="Angles" type="GridContainer" parent="UI/Margin/Root/Menu/Items" unique_id=1884702005]
+layout_mode = 2
 columns = 4
 
-[node name="Corner" type="Label" parent="UI/Margin/Root/Menu/Items/Angles"]
+[node name="Corner" type="Label" parent="UI/Margin/Root/Menu/Items/Angles" unique_id=1203040203]
+layout_mode = 2
 theme_type_variation = &"Hint"
-text = ""
 
-[node name="AxisX" type="Label" parent="UI/Margin/Root/Menu/Items/Angles"]
+[node name="AxisX" type="Label" parent="UI/Margin/Root/Menu/Items/Angles" unique_id=1630477693]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "x °"
 
-[node name="AxisY" type="Label" parent="UI/Margin/Root/Menu/Items/Angles"]
+[node name="AxisY" type="Label" parent="UI/Margin/Root/Menu/Items/Angles" unique_id=93574468]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "y °"
 
-[node name="AxisZ" type="Label" parent="UI/Margin/Root/Menu/Items/Angles"]
+[node name="AxisZ" type="Label" parent="UI/Margin/Root/Menu/Items/Angles" unique_id=300759958]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "z °"
 
-[node name="ArmCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Angles"]
+[node name="ArmCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Angles" unique_id=1694557001]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Oberarm (upperarm.r)"
 
-[node name="ArmX" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Angles"]
+[node name="ArmX" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Angles" unique_id=302457592]
 unique_name_in_owner = true
+layout_mode = 2
 min_value = -180.0
 max_value = 180.0
 step = 0.5
 
-[node name="ArmY" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Angles"]
+[node name="ArmY" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Angles" unique_id=1473113512]
 unique_name_in_owner = true
+layout_mode = 2
 min_value = -180.0
 max_value = 180.0
 step = 0.5
 
-[node name="ArmZ" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Angles"]
+[node name="ArmZ" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Angles" unique_id=272366675]
 unique_name_in_owner = true
+layout_mode = 2
 min_value = -180.0
 max_value = 180.0
 step = 0.5
 
-[node name="WristCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Angles"]
+[node name="WristCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Angles" unique_id=1300272693]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Handgelenk (wrist.r)"
 
-[node name="WristX" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Angles"]
+[node name="WristX" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Angles" unique_id=2032020697]
 unique_name_in_owner = true
+layout_mode = 2
 min_value = -180.0
 max_value = 180.0
 step = 0.5
 
-[node name="WristY" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Angles"]
+[node name="WristY" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Angles" unique_id=180163821]
 unique_name_in_owner = true
+layout_mode = 2
 min_value = -180.0
 max_value = 180.0
 step = 0.5
 
-[node name="WristZ" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Angles"]
+[node name="WristZ" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Angles" unique_id=1969093554]
 unique_name_in_owner = true
+layout_mode = 2
 min_value = -180.0
 max_value = 180.0
 step = 0.5
 
-[node name="GripCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Angles"]
+[node name="GripCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Angles" unique_id=1045539979]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Griff (Schwert)"
 
-[node name="GripX" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Angles"]
+[node name="GripX" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Angles" unique_id=1167240976]
 unique_name_in_owner = true
+layout_mode = 2
 min_value = -180.0
 max_value = 180.0
 step = 0.5
 
-[node name="GripY" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Angles"]
+[node name="GripY" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Angles" unique_id=1244308947]
 unique_name_in_owner = true
+layout_mode = 2
 min_value = -180.0
 max_value = 180.0
 step = 0.5
 
-[node name="GripZ" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Angles"]
+[node name="GripZ" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Angles" unique_id=897924318]
 unique_name_in_owner = true
+layout_mode = 2
 min_value = -180.0
 max_value = 180.0
 step = 0.5
 
-[node name="Buttons" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items"]
+[node name="Buttons" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items" unique_id=287279568]
+layout_mode = 2
 
-[node name="CopyButton" type="Button" parent="UI/Margin/Root/Menu/Items/Buttons"]
+[node name="CopyButton" type="Button" parent="UI/Margin/Root/Menu/Items/Buttons" unique_id=1375876336]
 unique_name_in_owner = true
+layout_mode = 2
 focus_mode = 0
 text = "Werte kopieren (C)"
 
-[node name="ResetButton" type="Button" parent="UI/Margin/Root/Menu/Items/Buttons"]
+[node name="ResetButton" type="Button" parent="UI/Margin/Root/Menu/Items/Buttons" unique_id=1864916062]
 unique_name_in_owner = true
+layout_mode = 2
 focus_mode = 0
 text = "Wie im Spiel (R)"
 
-[node name="Output" type="Label" parent="UI/Margin/Root/Menu/Items"]
+[node name="Output" type="Label" parent="UI/Margin/Root/Menu/Items" unique_id=1805813173]
 unique_name_in_owner = true
-theme_type_variation = &"Hint"
 custom_minimum_size = Vector2(420, 0)
+layout_mode = 2
+theme_type_variation = &"Hint"
 autowrap_mode = 3

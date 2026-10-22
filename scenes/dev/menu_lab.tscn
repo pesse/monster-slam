@@ -1,30 +1,33 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://ci7nd1u01io4q"]
 
-[ext_resource type="Script" path="res://src/dev/menu_lab.gd" id="1_lab"]
+[ext_resource type="Script" uid="uid://drd6q8dqfnjke" path="res://src/dev/menu_lab.gd" id="1_lab"]
 
-[node name="MenuLab" type="Node"]
+[node name="MenuLab" type="Node" unique_id=2146423740]
 script = ExtResource("1_lab")
 
-[node name="Overlay" type="CanvasLayer" parent="."]
+[node name="Overlay" type="CanvasLayer" parent="." unique_id=744269330]
 layer = 100
 
-[node name="Margin" type="MarginContainer" parent="Overlay"]
-theme_type_variation = &"ScreenMargin"
+[node name="Margin" type="MarginContainer" parent="Overlay" unique_id=319981173]
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+theme_type_variation = &"ScreenMargin"
 
-[node name="Clock" type="PanelContainer" parent="Overlay/Margin"]
+[node name="Clock" type="PanelContainer" parent="Overlay/Margin" unique_id=231402126]
 unique_name_in_owner = true
 visible = false
-theme_type_variation = &"DebugPanel"
+layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 8
 mouse_filter = 2
+theme_type_variation = &"DebugPanel"
 
-[node name="ClockText" type="Label" parent="Overlay/Margin/Clock"]
+[node name="ClockText" type="Label" parent="Overlay/Margin/Clock" unique_id=1011387419]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "12:00"

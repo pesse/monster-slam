@@ -1,19 +1,18 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://gglritpatfek"]
 
-[ext_resource type="Script" path="res://src/ui/spell_shop.gd" id="1_shop"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/window_surface.webp" id="2_surface"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/close.webp" id="3_close"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/close_hover.webp" id="4_close_hover"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/close_pressed.webp" id="5_close_pressed"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/title_joint_left.webp" id="6_joint_left"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/title_joint_right.webp" id="7_joint_right"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/content.webp" id="8_icon"]
+[ext_resource type="Script" uid="uid://c25j3hdwnrxls" path="res://src/ui/spell_shop.gd" id="1_shop"]
+[ext_resource type="Texture2D" uid="uid://b7it7uu6fv1vh" path="res://assets/ui/windows/window_surface.webp" id="2_surface"]
+[ext_resource type="Texture2D" uid="uid://bgs3phr42xdgd" path="res://assets/ui/windows/close.webp" id="3_close"]
+[ext_resource type="Texture2D" uid="uid://bqsyuqm58c657" path="res://assets/ui/windows/close_hover.webp" id="4_close_hover"]
+[ext_resource type="Texture2D" uid="uid://bamnug1qht4ei" path="res://assets/ui/windows/close_pressed.webp" id="5_close_pressed"]
+[ext_resource type="Texture2D" uid="uid://b1apvpq0dh1yo" path="res://assets/ui/windows/title_joint_left.webp" id="6_joint_left"]
+[ext_resource type="Texture2D" uid="uid://btp63ud2mimw5" path="res://assets/ui/windows/title_joint_right.webp" id="7_joint_right"]
+[ext_resource type="Texture2D" uid="uid://cdb173u0tkb0e" path="res://assets/ui/main_menu/icons/content.webp" id="8_icon"]
+[ext_resource type="Texture2D" uid="uid://bovj4j8gew6q6" path="res://assets/ui/statistics/icons/gold_coins.webp" id="gold_icon"]
+[ext_resource type="PackedScene" uid="uid://badeio0oospuy" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
+[ext_resource type="Material" uid="uid://dxo2j2mfichtf" path="res://scenes/ui/title_metal.tres" id="title_metal"]
 
-[ext_resource type="Texture2D" path="res://assets/ui/statistics/icons/gold_coins.webp" id="gold_icon"]
-[ext_resource type="PackedScene" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
-[ext_resource type="Material" path="res://scenes/ui/title_metal.tres" id="title_metal"]
-
-[node name="SpellShop" type="Control"]
+[node name="SpellShop" type="Control" unique_id=1181742447]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -22,7 +21,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_shop")
 
-[node name="Dim" type="ColorRect" parent="."]
+[node name="Dim" type="ColorRect" parent="." unique_id=584746214]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -31,20 +30,20 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.02, 0.03, 0.06, 0.6)
 
-[node name="Window" type="Control" parent="."]
+[node name="Window" type="Control" parent="." unique_id=597647040]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 offset_left = 16.0
 offset_top = 16.0
 offset_right = -16.0
 offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 2
 
-[node name="Frame" type="PanelContainer" parent="Window"]
+[node name="Frame" type="PanelContainer" parent="Window" unique_id=1613659940]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -54,23 +53,23 @@ grow_vertical = 2
 mouse_filter = 2
 theme_type_variation = &"GameWindow"
 
-[node name="Surface" type="TextureRect" parent="Window"]
+[node name="Surface" type="TextureRect" parent="Window" unique_id=176617335]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 offset_left = 9.0
 offset_top = 9.0
 offset_right = -9.0
 offset_bottom = -9.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
 texture = ExtResource("2_surface")
 expand_mode = 1
 stretch_mode = 1
 
-[node name="Layout" type="VBoxContainer" parent="Window"]
+[node name="Layout" type="VBoxContainer" parent="Window" unique_id=1633624682]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -79,50 +78,50 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TitleBar" type="PanelContainer" parent="Window/Layout"]
+[node name="TitleBar" type="PanelContainer" parent="Window/Layout" unique_id=887411334]
 layout_mode = 2
 theme_type_variation = &"WindowTitleBar"
 
-[node name="Header" type="HBoxContainer" parent="Window/Layout/TitleBar"]
+[node name="Header" type="HBoxContainer" parent="Window/Layout/TitleBar" unique_id=1528034322]
 layout_mode = 2
 theme_type_variation = &"ScreenStack"
 
-[node name="TitleMedallion" type="PanelContainer" parent="Window/Layout/TitleBar/Header"]
+[node name="TitleMedallion" type="PanelContainer" parent="Window/Layout/TitleBar/Header" unique_id=153165282]
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
 theme_type_variation = &"TitleMedallion"
 
-[node name="TitleIcon" type="TextureRect" parent="Window/Layout/TitleBar/Header/TitleMedallion"]
+[node name="TitleIcon" type="TextureRect" parent="Window/Layout/TitleBar/Header/TitleMedallion" unique_id=307103541]
+texture_filter = 4
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
-texture_filter = 4
 texture = ExtResource("8_icon")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Title" type="Label" parent="Window/Layout/TitleBar/Header"]
+[node name="Title" type="Label" parent="Window/Layout/TitleBar/Header" unique_id=1323564521]
+material = ExtResource("title_metal")
 layout_mode = 2
 size_flags_horizontal = 3
-material = ExtResource("title_metal")
 theme_type_variation = &"WindowTitle"
 text = "ZAUBER"
 vertical_alignment = 1
 
-[node name="HandbookLink" parent="Window/Layout/TitleBar/Header" instance=ExtResource("handbook_link")]
+[node name="HandbookLink" parent="Window/Layout/TitleBar/Header" unique_id=749651891 instance=ExtResource("handbook_link")]
 unique_name_in_owner = true
 layout_mode = 2
 chapter = "05-kampf.md"
 section = "Zauber"
 
-[node name="CloseButton" type="TextureButton" parent="Window/Layout/TitleBar/Header"]
+[node name="CloseButton" type="TextureButton" parent="Window/Layout/TitleBar/Header" unique_id=1002203939]
 unique_name_in_owner = true
+texture_filter = 4
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
-texture_filter = 4
 texture_normal = ExtResource("3_close")
 texture_pressed = ExtResource("5_close_pressed")
 texture_hover = ExtResource("4_close_hover")
@@ -130,32 +129,32 @@ texture_focused = ExtResource("4_close_hover")
 ignore_texture_size = true
 stretch_mode = 5
 
-[node name="Content" type="MarginContainer" parent="Window/Layout"]
+[node name="Content" type="MarginContainer" parent="Window/Layout" unique_id=1184938361]
 layout_mode = 2
 size_flags_vertical = 3
 theme_type_variation = &"WindowContent"
 
-[node name="Body" type="VBoxContainer" parent="Window/Layout/Content"]
+[node name="Body" type="VBoxContainer" parent="Window/Layout/Content" unique_id=1298515343]
 layout_mode = 2
 theme_type_variation = &"ScreenStack"
 
-[node name="StockRow" type="HBoxContainer" parent="Window/Layout/Content/Body"]
+[node name="StockRow" type="HBoxContainer" parent="Window/Layout/Content/Body" unique_id=452313720]
 layout_mode = 2
 theme_type_variation = &"ScreenStack"
 
-[node name="StockLabel" type="Label" parent="Window/Layout/Content/Body/StockRow"]
+[node name="StockLabel" type="Label" parent="Window/Layout/Content/Body/StockRow" unique_id=2058867557]
 layout_mode = 2
 theme_type_variation = &"SectionTitle"
 text = "Dein Vorrat"
 vertical_alignment = 1
 
-[node name="Stock" type="GridContainer" parent="Window/Layout/Content/Body/StockRow"]
+[node name="Stock" type="GridContainer" parent="Window/Layout/Content/Body/StockRow" unique_id=2014399942]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HudSlotGrid"
 columns = 4
 
-[node name="StockNote" type="Label" parent="Window/Layout/Content/Body/StockRow"]
+[node name="StockNote" type="Label" parent="Window/Layout/Content/Body/StockRow" unique_id=1172116853]
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -164,12 +163,12 @@ text = "Im Kampf setzt die Ziffer eines Platzes seinen Zauber ein, solange das A
 vertical_alignment = 1
 autowrap_mode = 3
 
-[node name="GoldRow" type="HBoxContainer" parent="Window/Layout/Content/Body/StockRow"]
+[node name="GoldRow" type="HBoxContainer" parent="Window/Layout/Content/Body/StockRow" unique_id=852407615]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="GoldIcon" type="TextureRect" parent="Window/Layout/Content/Body/StockRow/GoldRow"]
+[node name="GoldIcon" type="TextureRect" parent="Window/Layout/Content/Body/StockRow/GoldRow" unique_id=1990741349]
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
@@ -178,45 +177,46 @@ texture = ExtResource("gold_icon")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Gold" type="Label" parent="Window/Layout/Content/Body/StockRow/GoldRow"]
+[node name="Gold" type="Label" parent="Window/Layout/Content/Body/StockRow/GoldRow" unique_id=563347994]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"StatGold"
 text = "0"
 vertical_alignment = 1
 
-[node name="Rule" type="HSeparator" parent="Window/Layout/Content/Body"]
+[node name="Rule" type="HSeparator" parent="Window/Layout/Content/Body" unique_id=418630549]
 layout_mode = 2
 
-[node name="OfferScroll" type="ScrollContainer" parent="Window/Layout/Content/Body"]
+[node name="OfferScroll" type="ScrollContainer" parent="Window/Layout/Content/Body" unique_id=2082164033]
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="Gutter" type="MarginContainer" parent="Window/Layout/Content/Body/OfferScroll"]
+[node name="Gutter" type="MarginContainer" parent="Window/Layout/Content/Body/OfferScroll" unique_id=16183814]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"ScrollGutter"
 
-[node name="Offers" type="GridContainer" parent="Window/Layout/Content/Body/OfferScroll/Gutter"]
+[node name="Offers" type="GridContainer" parent="Window/Layout/Content/Body/OfferScroll/Gutter" unique_id=704636579]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4
 theme_type_variation = &"SpellTileGrid"
 columns = 4
 
-[node name="JointLeft" type="TextureRect" parent="Window"]
+[node name="JointLeft" type="TextureRect" parent="Window" unique_id=675075733]
+texture_filter = 4
 layout_mode = 0
 offset_top = 51.0
 offset_right = 24.0
 offset_bottom = 75.0
 mouse_filter = 2
-texture_filter = 4
 texture = ExtResource("6_joint_left")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="JointRight" type="TextureRect" parent="Window"]
+[node name="JointRight" type="TextureRect" parent="Window" unique_id=321106527]
+texture_filter = 4
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -226,7 +226,6 @@ offset_top = 51.0
 offset_bottom = 75.0
 grow_horizontal = 0
 mouse_filter = 2
-texture_filter = 4
 texture = ExtResource("7_joint_right")
 expand_mode = 1
 stretch_mode = 5

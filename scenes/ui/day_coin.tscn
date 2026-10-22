@@ -1,8 +1,9 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://y3qucha48hbn"]
 
-[ext_resource type="Script" path="res://src/ui/day_coin.gd" id="1_coin"]
+[ext_resource type="Script" uid="uid://dd2ogpyn6hifi" path="res://src/ui/day_coin.gd" id="1_coin"]
 
-[node name="DayCoin" type="Control"]
+[node name="DayCoin" type="Control" unique_id=176731499]
 custom_minimum_size = Vector2(22, 22)
 layout_mode = 3
+anchors_preset = 0
 script = ExtResource("1_coin")

@@ -1,9 +1,8 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://q4mlkmwi0q3q"]
 
-[ext_resource type="Script" path="res://src/ui/spell_slots.gd" id="1_slots"]
+[ext_resource type="Script" uid="uid://doa3ryd0j088b" path="res://src/ui/spell_slots.gd" id="1_slots"]
 
-[node name="SpellSlots" type="GridContainer" groups=["word_plate_keep_clear"]]
-anchors_preset = 2
+[node name="SpellSlots" type="GridContainer" unique_id=1150292648 groups=["word_plate_keep_clear"]]
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 16.0

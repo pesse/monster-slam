@@ -1,8 +1,8 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene format=3 uid="uid://idbr246bagjl"]
 
-[ext_resource type="Script" path="res://src/ui/profile_pick.gd" id="1_pick"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/logo.webp" id="2_logo"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/play.webp" id="3_play"]
+[ext_resource type="Script" uid="uid://dtiug6ulh6t1v" path="res://src/ui/profile_pick.gd" id="1_pick"]
+[ext_resource type="Texture2D" uid="uid://dtre3fqhb2u4" path="res://assets/ui/main_menu/logo.webp" id="2_logo"]
+[ext_resource type="Texture2D" uid="uid://c23n78atueopp" path="res://assets/ui/main_menu/icons/play.webp" id="3_play"]
 
 [sub_resource type="Gradient" id="VignetteGradient"]
 colors = PackedColorArray(0.03, 0.04, 0.08, 0.55, 0.03, 0.04, 0.08, 0)
@@ -13,7 +13,7 @@ fill = 1
 fill_from = Vector2(0.5, 0.55)
 fill_to = Vector2(1, 0.55)
 
-[node name="ProfilePick" type="Control"]
+[node name="ProfilePick" type="Control" unique_id=2022553803]
 texture_filter = 4
 layout_mode = 3
 anchors_preset = 15
@@ -24,7 +24,7 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1_pick")
 
-[node name="Vignette" type="TextureRect" parent="."]
+[node name="Vignette" type="TextureRect" parent="." unique_id=488680103]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -35,7 +35,7 @@ mouse_filter = 2
 texture = SubResource("VignetteTexture")
 expand_mode = 1
 
-[node name="Margin" type="MarginContainer" parent="."]
+[node name="Margin" type="MarginContainer" parent="." unique_id=947992254]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -45,32 +45,32 @@ grow_vertical = 2
 mouse_filter = 2
 theme_type_variation = &"ScreenMargin"
 
-[node name="Root" type="VBoxContainer" parent="Margin"]
+[node name="Root" type="VBoxContainer" parent="Margin" unique_id=1132683000]
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"ScreenStack"
 alignment = 1
 
-[node name="Logo" type="TextureRect" parent="Margin/Root"]
+[node name="Logo" type="TextureRect" parent="Margin/Root" unique_id=735813263]
 custom_minimum_size = Vector2(0, 128)
 layout_mode = 2
 texture = ExtResource("2_logo")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Question" type="Label" parent="Margin/Root"]
+[node name="Question" type="Label" parent="Margin/Root" unique_id=1086919652]
 layout_mode = 2
 theme_type_variation = &"IntroHeading"
 text = "Wer spielt?"
 horizontal_alignment = 1
 
-[node name="Profiles" type="HFlowContainer" parent="Margin/Root"]
+[node name="Profiles" type="HFlowContainer" parent="Margin/Root" unique_id=430179803]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"IntroCards"
 alignment = 1
 
-[node name="NextButton" type="Button" parent="Margin/Root"]
+[node name="NextButton" type="Button" parent="Margin/Root" unique_id=885387543]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(352, 64)
 layout_mode = 2
@@ -81,24 +81,24 @@ icon = ExtResource("3_play")
 icon_alignment = 2
 expand_icon = true
 
-[node name="NewRow" type="HBoxContainer" parent="Margin/Root"]
+[node name="NewRow" type="HBoxContainer" parent="Margin/Root" unique_id=1536318737]
 layout_mode = 2
 size_flags_horizontal = 4
 
-[node name="NameInput" type="LineEdit" parent="Margin/Root/NewRow"]
+[node name="NameInput" type="LineEdit" parent="Margin/Root/NewRow" unique_id=379996723]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(320, 44)
 layout_mode = 2
 placeholder_text = "Neuer Profilname"
 
-[node name="AddButton" type="Button" parent="Margin/Root/NewRow"]
+[node name="AddButton" type="Button" parent="Margin/Root/NewRow" unique_id=1441980604]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 44)
 layout_mode = 2
 theme_type_variation = &"IntroSmallButton"
 text = "+ Neues Profil"
 
-[node name="Help" type="Label" parent="Margin/Root"]
+[node name="Help" type="Label" parent="Margin/Root" unique_id=764921266]
 layout_mode = 2
 theme_type_variation = &"MenuNote"
 text = "Profil wählen und ins Abenteuer starten"

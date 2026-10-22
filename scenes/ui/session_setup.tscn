@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://d348wvi4kqfgf"]
 
 [ext_resource type="Script" uid="uid://b31yxuag568ts" path="res://src/ui/session_setup.gd" id="1_setup"]
-[ext_resource type="PackedScene" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
+[ext_resource type="PackedScene" uid="uid://badeio0oospuy" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
 
 [node name="SessionSetup" type="Control" unique_id=1595748894]
 layout_mode = 3
@@ -13,26 +13,26 @@ grow_vertical = 2
 script = ExtResource("1_setup")
 
 [node name="Margin" type="MarginContainer" parent="." unique_id=581506577]
-theme_type_variation = &"ScreenMargin"
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_type_variation = &"ScreenMargin"
 
 [node name="Root" type="VBoxContainer" parent="Margin" unique_id=2010398413]
-theme_type_variation = &"ScreenStack"
 layout_mode = 2
+theme_type_variation = &"ScreenStack"
 
 [node name="Title" type="Label" parent="Margin/Root" unique_id=1336642419]
-theme_type_variation = &"Display"
 layout_mode = 2
+theme_type_variation = &"Display"
 text = "Runde vorbereiten"
 horizontal_alignment = 1
 
 [node name="Hint" type="Label" parent="Margin/Root" unique_id=759819543]
-theme_type_variation = &"Hint"
 layout_mode = 2
+theme_type_variation = &"Hint"
 text = "Filter kombinieren sich: Buch/Unit UND Themen. Nichts wählen = keine Einschränkung."
 horizontal_alignment = 1
 
@@ -40,31 +40,32 @@ horizontal_alignment = 1
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Gutter" type="MarginContainer" parent="Margin/Root/Scroll"]
-theme_type_variation = &"ScrollGutter"
+[node name="Gutter" type="MarginContainer" parent="Margin/Root/Scroll" unique_id=2092931376]
+layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"ScrollGutter"
 
 [node name="Body" type="VBoxContainer" parent="Margin/Root/Scroll/Gutter" unique_id=2029362911]
 layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="ScopeHeader" type="Button" parent="Margin/Root/Scroll/Gutter/Body" unique_id=2025215384]
-theme_type_variation = &"SectionButton"
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"SectionButton"
 text = "Bücher & Units"
 alignment = 0
 
 [node name="ScopeList" type="VBoxContainer" parent="Margin/Root/Scroll/Gutter/Body" unique_id=1459443538]
-theme_type_variation = &"Tight"
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
+theme_type_variation = &"Tight"
 
 [node name="TaskTypeHeader" type="Button" parent="Margin/Root/Scroll/Gutter/Body" unique_id=400200138]
-theme_type_variation = &"SectionButton"
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"SectionButton"
 text = "Aufgabentypen"
 alignment = 0
 
@@ -75,9 +76,9 @@ layout_mode = 2
 columns = 3
 
 [node name="LexemeTypeHeader" type="Button" parent="Margin/Root/Scroll/Gutter/Body" unique_id=374934982]
-theme_type_variation = &"SectionButton"
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"SectionButton"
 text = "Vokabel-Typen"
 alignment = 0
 
@@ -88,8 +89,8 @@ layout_mode = 2
 columns = 3
 
 [node name="TagLabel" type="Label" parent="Margin/Root/Scroll/Gutter/Body" unique_id=308408134]
-theme_type_variation = &"SectionTitle"
 layout_mode = 2
+theme_type_variation = &"SectionTitle"
 text = "Tags"
 
 [node name="TagInput" type="LineEdit" parent="Margin/Root/Scroll/Gutter/Body" unique_id=31595036]
@@ -98,19 +99,19 @@ layout_mode = 2
 placeholder_text = "Tag eingeben und auswählen…"
 
 [node name="TagSuggestions" type="VBoxContainer" parent="Margin/Root/Scroll/Gutter/Body" unique_id=280008345]
-theme_type_variation = &"Tight"
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"Tight"
 
 [node name="TagBadges" type="HFlowContainer" parent="Margin/Root/Scroll/Gutter/Body" unique_id=420770308]
 unique_name_in_owner = true
 layout_mode = 2
 
 [node name="StartHint" type="Label" parent="Margin/Root" unique_id=1873204615]
-theme_type_variation = &"Accent"
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
+theme_type_variation = &"Accent"
 text = "Diese Auswahl trifft keine Vokabel — Filter lockern oder Inhalte installieren."
 horizontal_alignment = 1
 autowrap_mode = 3
@@ -124,30 +125,30 @@ layout_mode = 2
 theme_type_variation = &"WindowButton"
 text = "◀ Zurück"
 
-[node name="HandbookLink" parent="Margin/Root/Buttons" instance=ExtResource("handbook_link")]
+[node name="HandbookLink" parent="Margin/Root/Buttons" unique_id=693970083 instance=ExtResource("handbook_link")]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
 chapter = "03-expertenmodus.md"
-custom_minimum_size = Vector2(40, 40)
 
 [node name="StartButton" type="Button" parent="Margin/Root/Buttons" unique_id=1330835382]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"WindowPrimary"
 size_flags_horizontal = 3
+theme_type_variation = &"WindowPrimary"
 text = "▶ Kampf starten"
 
-[node name="BossStartButton" type="Button" parent="Margin/Root/Buttons"]
+[node name="BossStartButton" type="Button" parent="Margin/Root/Buttons" unique_id=44865583]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"WindowPrimary"
 size_flags_horizontal = 3
+theme_type_variation = &"WindowPrimary"
 text = "👹 Bosskampf starten"
 
-[node name="WritingStartButton" type="Button" parent="Margin/Root/Buttons"]
+[node name="WritingStartButton" type="Button" parent="Margin/Root/Buttons" unique_id=969430054]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-theme_type_variation = &"WindowPrimary"
 size_flags_horizontal = 3
+theme_type_variation = &"WindowPrimary"
 text = "📜 The Rambler"

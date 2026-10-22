@@ -1,20 +1,20 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene format=3 uid="uid://fu248b3cbqer"]
 
-[ext_resource type="Script" path="res://src/battle/rambler_stage.gd" id="1_script"]
-[ext_resource type="PackedScene" path="res://assets/models/props/floor_tile_large.gltf" id="2_floor"]
-[ext_resource type="PackedScene" path="res://assets/models/forge/bookcase.glb" id="3_case"]
-[ext_resource type="PackedScene" path="res://assets/models/props/paper_tower_a.glb" id="4_tower_a"]
-[ext_resource type="PackedScene" path="res://assets/models/props/paper_tower_b.glb" id="5_tower_b"]
-[ext_resource type="PackedScene" path="res://assets/models/props/book_pile.glb" id="6_pile"]
-[ext_resource type="PackedScene" path="res://assets/models/props/paper_litter.glb" id="7_litter"]
-[ext_resource type="PackedScene" path="res://assets/models/forge/candles.glb" id="8_candles"]
-[ext_resource type="PackedScene" path="res://assets/models/bosses/rambler/head.glb" id="9_head"]
-[ext_resource type="PackedScene" path="res://assets/models/bosses/rambler/jaw.glb" id="10_jaw"]
-[ext_resource type="PackedScene" path="res://assets/models/bosses/rambler/wing_l.glb" id="11_wing_l"]
-[ext_resource type="PackedScene" path="res://assets/models/bosses/rambler/wing_r.glb" id="12_wing_r"]
-[ext_resource type="PackedScene" path="res://assets/models/bosses/rambler/arm_l.glb" id="13_arm_l"]
-[ext_resource type="PackedScene" path="res://assets/models/bosses/rambler/arm_r.glb" id="14_arm_r"]
-[ext_resource type="PackedScene" path="res://assets/models/bosses/rambler/tail.glb" id="15_tail"]
+[ext_resource type="Script" uid="uid://ow5rlcjbov4g" path="res://src/battle/rambler_stage.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://dx1f2e8ggjwe4" path="res://assets/models/props/floor_tile_large.gltf" id="2_floor"]
+[ext_resource type="PackedScene" uid="uid://bqwip0eskg4oy" path="res://assets/models/forge/bookcase.glb" id="3_case"]
+[ext_resource type="PackedScene" uid="uid://cqk7tqth7oeyf" path="res://assets/models/props/paper_tower_a.glb" id="4_tower_a"]
+[ext_resource type="PackedScene" uid="uid://de5j3juhehn0w" path="res://assets/models/props/paper_tower_b.glb" id="5_tower_b"]
+[ext_resource type="PackedScene" uid="uid://dx6i7al1w2p7f" path="res://assets/models/props/book_pile.glb" id="6_pile"]
+[ext_resource type="PackedScene" uid="uid://dmosaoo5eysu" path="res://assets/models/props/paper_litter.glb" id="7_litter"]
+[ext_resource type="PackedScene" uid="uid://bx1d8ebhjm0u8" path="res://assets/models/forge/candles.glb" id="8_candles"]
+[ext_resource type="PackedScene" uid="uid://dfnfxhe3ttbe1" path="res://assets/models/bosses/rambler/head.glb" id="9_head"]
+[ext_resource type="PackedScene" uid="uid://bus31fl3pd8s8" path="res://assets/models/bosses/rambler/jaw.glb" id="10_jaw"]
+[ext_resource type="PackedScene" uid="uid://cc1533u23shh7" path="res://assets/models/bosses/rambler/wing_l.glb" id="11_wing_l"]
+[ext_resource type="PackedScene" uid="uid://b5ougiixtsgsc" path="res://assets/models/bosses/rambler/wing_r.glb" id="12_wing_r"]
+[ext_resource type="PackedScene" uid="uid://cuhf2w0arnk0f" path="res://assets/models/bosses/rambler/arm_l.glb" id="13_arm_l"]
+[ext_resource type="PackedScene" uid="uid://cvjqvrgsbvj3q" path="res://assets/models/bosses/rambler/arm_r.glb" id="14_arm_r"]
+[ext_resource type="PackedScene" uid="uid://c0v7rwwnf0sm4" path="res://assets/models/bosses/rambler/tail.glb" id="15_tail"]
 
 [sub_resource type="Environment" id="Env"]
 background_mode = 1
@@ -24,313 +24,308 @@ ambient_light_color = Color(0.52, 0.4, 0.3, 1)
 ambient_light_energy = 0.55
 glow_enabled = true
 glow_intensity = 0.9
-glow_strength = 1.0
 glow_bloom = 0.05
 glow_hdr_threshold = 0.9
 fog_enabled = true
 fog_light_color = Color(0.09, 0.055, 0.035, 1)
 fog_density = 0.03
 
-[node name="RamblerStage" type="Node3D"]
+[node name="RamblerStage" type="Node3D" unique_id=1686180049]
 script = ExtResource("1_script")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=773851757]
 environment = SubResource("Env")
 
-[node name="Moon" type="DirectionalLight3D" parent="."]
+[node name="Moon" type="DirectionalLight3D" parent="." unique_id=1894498816]
 transform = Transform3D(0.6, 0, -0.8, -0.6784, 0.53, -0.5088, 0.424, 0.848, 0.318, 3, 8, -2)
 light_color = Color(0.6, 0.66, 1, 1)
 light_energy = 0.22
 
-[node name="Camera" type="Camera3D" parent="."]
+[node name="Camera" type="Camera3D" parent="." unique_id=686468115]
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 2.4)
 current = true
 fov = 62.0
 
-[node name="Room" type="Node3D" parent="."]
+[node name="Room" type="Node3D" parent="." unique_id=1793353935]
 
-[node name="Floor0" parent="Room" instance=ExtResource("2_floor")]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -8, 0, -12)
+[node name="Floor0" parent="Room" unique_id=77025130 instance=ExtResource("2_floor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -12)
 
-[node name="Floor1" parent="Room" instance=ExtResource("2_floor")]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -8, 0, -8)
+[node name="Floor1" parent="Room" unique_id=254685234 instance=ExtResource("2_floor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -8)
 
-[node name="Floor2" parent="Room" instance=ExtResource("2_floor")]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -8, 0, -4)
+[node name="Floor2" parent="Room" unique_id=1054022864 instance=ExtResource("2_floor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -4)
 
-[node name="Floor3" parent="Room" instance=ExtResource("2_floor")]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -8, 0, 0)
+[node name="Floor3" parent="Room" unique_id=129355812 instance=ExtResource("2_floor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, 0)
 
-[node name="Floor4" parent="Room" instance=ExtResource("2_floor")]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -8, 0, 4)
+[node name="Floor4" parent="Room" unique_id=1004990244 instance=ExtResource("2_floor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, 4)
 
-[node name="Floor5" parent="Room" instance=ExtResource("2_floor")]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -4, 0, -12)
+[node name="Floor5" parent="Room" unique_id=488241594 instance=ExtResource("2_floor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -12)
 
-[node name="Floor6" parent="Room" instance=ExtResource("2_floor")]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -4, 0, -8)
+[node name="Floor6" parent="Room" unique_id=224895108 instance=ExtResource("2_floor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -8)
 
-[node name="Floor7" parent="Room" instance=ExtResource("2_floor")]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -4, 0, -4)
+[node name="Floor7" parent="Room" unique_id=764532960 instance=ExtResource("2_floor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -4)
 
-[node name="Floor8" parent="Room" instance=ExtResource("2_floor")]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -4, 0, 0)
+[node name="Floor8" parent="Room" unique_id=1463526119 instance=ExtResource("2_floor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 0)
 
-[node name="Floor9" parent="Room" instance=ExtResource("2_floor")]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, -4, 0, 4)
+[node name="Floor9" parent="Room" unique_id=1686216679 instance=ExtResource("2_floor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 4)
 
-[node name="Floor10" parent="Room" instance=ExtResource("2_floor")]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 0, -12)
+[node name="Floor10" parent="Room" unique_id=1113622978 instance=ExtResource("2_floor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -12)
 
-[node name="Floor11" parent="Room" instance=ExtResource("2_floor")]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 0, -8)
+[node name="Floor11" parent="Room" unique_id=118148133 instance=ExtResource("2_floor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -8)
 
-[node name="Floor12" parent="Room" instance=ExtResource("2_floor")]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 0, -4)
+[node name="Floor12" parent="Room" unique_id=1517014784 instance=ExtResource("2_floor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -4)
 
-[node name="Floor13" parent="Room" instance=ExtResource("2_floor")]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+[node name="Floor13" parent="Room" unique_id=1605443765 instance=ExtResource("2_floor")]
 
-[node name="Floor14" parent="Room" instance=ExtResource("2_floor")]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 0, 0, 4)
+[node name="Floor14" parent="Room" unique_id=272775005 instance=ExtResource("2_floor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4)
 
-[node name="Floor15" parent="Room" instance=ExtResource("2_floor")]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 4, 0, -12)
+[node name="Floor15" parent="Room" unique_id=2047567787 instance=ExtResource("2_floor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -12)
 
-[node name="Floor16" parent="Room" instance=ExtResource("2_floor")]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 4, 0, -8)
+[node name="Floor16" parent="Room" unique_id=1634441286 instance=ExtResource("2_floor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -8)
 
-[node name="Floor17" parent="Room" instance=ExtResource("2_floor")]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 4, 0, -4)
+[node name="Floor17" parent="Room" unique_id=65441838 instance=ExtResource("2_floor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -4)
 
-[node name="Floor18" parent="Room" instance=ExtResource("2_floor")]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 4, 0, 0)
+[node name="Floor18" parent="Room" unique_id=858922072 instance=ExtResource("2_floor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 0)
 
-[node name="Floor19" parent="Room" instance=ExtResource("2_floor")]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 4, 0, 4)
+[node name="Floor19" parent="Room" unique_id=2084260081 instance=ExtResource("2_floor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 4)
 
-[node name="Floor20" parent="Room" instance=ExtResource("2_floor")]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 8, 0, -12)
+[node name="Floor20" parent="Room" unique_id=441632118 instance=ExtResource("2_floor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -12)
 
-[node name="Floor21" parent="Room" instance=ExtResource("2_floor")]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 8, 0, -8)
+[node name="Floor21" parent="Room" unique_id=1330863970 instance=ExtResource("2_floor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -8)
 
-[node name="Floor22" parent="Room" instance=ExtResource("2_floor")]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 8, 0, -4)
+[node name="Floor22" parent="Room" unique_id=1323636371 instance=ExtResource("2_floor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -4)
 
-[node name="Floor23" parent="Room" instance=ExtResource("2_floor")]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 8, 0, 0)
+[node name="Floor23" parent="Room" unique_id=609426013 instance=ExtResource("2_floor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 0)
 
-[node name="Floor24" parent="Room" instance=ExtResource("2_floor")]
-transform = Transform3D(1, 0, -0, 0, 1, 0, 0, 0, 1, 8, 0, 4)
+[node name="Floor24" parent="Room" unique_id=1258189404 instance=ExtResource("2_floor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 4)
 
-[node name="Case0" parent="Room" instance=ExtResource("3_case")]
+[node name="Case0" parent="Room" unique_id=1392674952 instance=ExtResource("3_case")]
 transform = Transform3D(0.15643, 0, -0.98769, 0, 1, 0, 0.98769, 0, 0.15643, -8.4941, 0, -4.3453)
 
-[node name="Case1" parent="Room" instance=ExtResource("3_case")]
+[node name="Case1" parent="Room" unique_id=1684312868 instance=ExtResource("3_case")]
 transform = Transform3D(0.38268, 0, -0.92388, 0, 1, 0, 0.92388, 0, 0.38268, -7.9454, 0, -6.2911)
 
-[node name="Case2" parent="Room" instance=ExtResource("3_case")]
+[node name="Case2" parent="Room" unique_id=1751681585 instance=ExtResource("3_case")]
 transform = Transform3D(0.58779, 0, -0.80902, 0, 1, 0, 0.80902, 0, 0.58779, -6.9575, 0, -8.055)
 
-[node name="Case3" parent="Room" instance=ExtResource("3_case")]
+[node name="Case3" parent="Room" unique_id=1183117426 instance=ExtResource("3_case")]
 transform = Transform3D(0.76041, 0, -0.64945, 0, 1, 0, 0.64945, 0, 0.76041, -5.5853, 0, -9.5395)
 
-[node name="Case4" parent="Room" instance=ExtResource("3_case")]
+[node name="Case4" parent="Room" unique_id=1389784720 instance=ExtResource("3_case")]
 transform = Transform3D(0.89101, 0, -0.45399, 0, 1, 0, 0.45399, 0, 0.89101, -3.9043, 0, -10.663)
 
-[node name="Case5" parent="Room" instance=ExtResource("3_case")]
+[node name="Case5" parent="Room" unique_id=719623615 instance=ExtResource("3_case")]
 transform = Transform3D(0.97237, 0, -0.23345, 0, 1, 0, 0.23345, 0, 0.97237, -2.0076, 0, -11.362)
 
-[node name="Case6" parent="Room" instance=ExtResource("3_case")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, 0, 0, -11.6)
+[node name="Case6" parent="Room" unique_id=1870661262 instance=ExtResource("3_case")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -11.6)
 
-[node name="Case7" parent="Room" instance=ExtResource("3_case")]
+[node name="Case7" parent="Room" unique_id=460465903 instance=ExtResource("3_case")]
 transform = Transform3D(0.97237, 0, 0.23345, 0, 1, 0, -0.23345, 0, 0.97237, 2.0076, 0, -11.362)
 
-[node name="Case8" parent="Room" instance=ExtResource("3_case")]
+[node name="Case8" parent="Room" unique_id=1908025042 instance=ExtResource("3_case")]
 transform = Transform3D(0.89101, 0, 0.45399, 0, 1, 0, -0.45399, 0, 0.89101, 3.9043, 0, -10.663)
 
-[node name="Case9" parent="Room" instance=ExtResource("3_case")]
+[node name="Case9" parent="Room" unique_id=1161048970 instance=ExtResource("3_case")]
 transform = Transform3D(0.76041, 0, 0.64945, 0, 1, 0, -0.64945, 0, 0.76041, 5.5853, 0, -9.5395)
 
-[node name="Case10" parent="Room" instance=ExtResource("3_case")]
+[node name="Case10" parent="Room" unique_id=697846214 instance=ExtResource("3_case")]
 transform = Transform3D(0.58779, 0, 0.80902, 0, 1, 0, -0.80902, 0, 0.58779, 6.9575, 0, -8.055)
 
-[node name="Case11" parent="Room" instance=ExtResource("3_case")]
+[node name="Case11" parent="Room" unique_id=1530634983 instance=ExtResource("3_case")]
 transform = Transform3D(0.38268, 0, 0.92388, 0, 1, 0, -0.92388, 0, 0.38268, 7.9454, 0, -6.2911)
 
-[node name="Case12" parent="Room" instance=ExtResource("3_case")]
+[node name="Case12" parent="Room" unique_id=175161877 instance=ExtResource("3_case")]
 transform = Transform3D(0.15643, 0, 0.98769, 0, 1, 0, -0.98769, 0, 0.15643, 8.4941, 0, -4.3453)
 
-[node name="Case13" parent="Room" instance=ExtResource("3_case")]
+[node name="Case13" parent="Room" unique_id=1201344396 instance=ExtResource("3_case")]
 transform = Transform3D(0.15643, 0, -0.98769, 0, 1, 0, 0.98769, 0, 0.15643, -8.4941, 3, -4.3453)
 
-[node name="Case14" parent="Room" instance=ExtResource("3_case")]
+[node name="Case14" parent="Room" unique_id=1584019734 instance=ExtResource("3_case")]
 transform = Transform3D(0.38268, 0, -0.92388, 0, 1, 0, 0.92388, 0, 0.38268, -7.9454, 3, -6.2911)
 
-[node name="Case15" parent="Room" instance=ExtResource("3_case")]
+[node name="Case15" parent="Room" unique_id=1767642473 instance=ExtResource("3_case")]
 transform = Transform3D(0.58779, 0, -0.80902, 0, 1, 0, 0.80902, 0, 0.58779, -6.9575, 3, -8.055)
 
-[node name="Case16" parent="Room" instance=ExtResource("3_case")]
+[node name="Case16" parent="Room" unique_id=1427573785 instance=ExtResource("3_case")]
 transform = Transform3D(0.76041, 0, -0.64945, 0, 1, 0, 0.64945, 0, 0.76041, -5.5853, 3, -9.5395)
 
-[node name="Case17" parent="Room" instance=ExtResource("3_case")]
+[node name="Case17" parent="Room" unique_id=492187529 instance=ExtResource("3_case")]
 transform = Transform3D(0.89101, 0, -0.45399, 0, 1, 0, 0.45399, 0, 0.89101, -3.9043, 3, -10.663)
 
-[node name="Case18" parent="Room" instance=ExtResource("3_case")]
+[node name="Case18" parent="Room" unique_id=1832247357 instance=ExtResource("3_case")]
 transform = Transform3D(0.97237, 0, -0.23345, 0, 1, 0, 0.23345, 0, 0.97237, -2.0076, 3, -11.362)
 
-[node name="Case19" parent="Room" instance=ExtResource("3_case")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, -0, 0, 1, 0, 3, -11.6)
+[node name="Case19" parent="Room" unique_id=429481072 instance=ExtResource("3_case")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -11.6)
 
-[node name="Case20" parent="Room" instance=ExtResource("3_case")]
+[node name="Case20" parent="Room" unique_id=597977992 instance=ExtResource("3_case")]
 transform = Transform3D(0.97237, 0, 0.23345, 0, 1, 0, -0.23345, 0, 0.97237, 2.0076, 3, -11.362)
 
-[node name="Case21" parent="Room" instance=ExtResource("3_case")]
+[node name="Case21" parent="Room" unique_id=1450486398 instance=ExtResource("3_case")]
 transform = Transform3D(0.89101, 0, 0.45399, 0, 1, 0, -0.45399, 0, 0.89101, 3.9043, 3, -10.663)
 
-[node name="Case22" parent="Room" instance=ExtResource("3_case")]
+[node name="Case22" parent="Room" unique_id=541669410 instance=ExtResource("3_case")]
 transform = Transform3D(0.76041, 0, 0.64945, 0, 1, 0, -0.64945, 0, 0.76041, 5.5853, 3, -9.5395)
 
-[node name="Case23" parent="Room" instance=ExtResource("3_case")]
+[node name="Case23" parent="Room" unique_id=835402316 instance=ExtResource("3_case")]
 transform = Transform3D(0.58779, 0, 0.80902, 0, 1, 0, -0.80902, 0, 0.58779, 6.9575, 3, -8.055)
 
-[node name="Case24" parent="Room" instance=ExtResource("3_case")]
+[node name="Case24" parent="Room" unique_id=935727219 instance=ExtResource("3_case")]
 transform = Transform3D(0.38268, 0, 0.92388, 0, 1, 0, -0.92388, 0, 0.38268, 7.9454, 3, -6.2911)
 
-[node name="Case25" parent="Room" instance=ExtResource("3_case")]
+[node name="Case25" parent="Room" unique_id=1975332673 instance=ExtResource("3_case")]
 transform = Transform3D(0.15643, 0, 0.98769, 0, 1, 0, -0.98769, 0, 0.15643, 8.4941, 3, -4.3453)
 
-[node name="TowerA0" parent="Room" instance=ExtResource("4_tower_a")]
+[node name="TowerA0" parent="Room" unique_id=1275691466 instance=ExtResource("4_tower_a")]
 transform = Transform3D(0.95534, 0, -0.29552, 0, 1, 0, 0.29552, 0, 0.95534, -4.6, 0, -8.2)
 
-[node name="TowerA1" parent="Room" instance=ExtResource("4_tower_a")]
+[node name="TowerA1" parent="Room" unique_id=106702277 instance=ExtResource("4_tower_a")]
 transform = Transform3D(0.41671, 0, -1.0718, 0, 1.15, 0, 1.0718, 0, 0.41671, -6.1, 0, -3.6)
 
-[node name="TowerA2" parent="Room" instance=ExtResource("4_tower_a")]
+[node name="TowerA2" parent="Room" unique_id=170245663 instance=ExtResource("4_tower_a")]
 transform = Transform3D(-0.45776, 0, -1.0002, 0, 1.1, 0, 1.0002, 0, -0.45776, 2.6, 0, -9.4)
 
-[node name="TowerB0" parent="Room" instance=ExtResource("5_tower_b")]
+[node name="TowerB0" parent="Room" unique_id=1158701392 instance=ExtResource("5_tower_b")]
 transform = Transform3D(0.76484, 0, -0.64422, 0, 1, 0, 0.64422, 0, 0.76484, 6, 0, -8.2)
 
-[node name="TowerB1" parent="Room" instance=ExtResource("5_tower_b")]
+[node name="TowerB1" parent="Room" unique_id=1429232502 instance=ExtResource("5_tower_b")]
 transform = Transform3D(-1.0283, 0, -0.6186, 0, 1.2, 0, 0.6186, 0, -1.0283, 6.3, 0, -2.4)
 
-[node name="TowerB2" parent="Room" instance=ExtResource("5_tower_b")]
+[node name="TowerB2" parent="Room" unique_id=1231988135 instance=ExtResource("5_tower_b")]
 transform = Transform3D(0.15297, 0, -0.8869, 0, 0.9, 0, 0.8869, 0, 0.15297, -1.6, 0, -9.8)
 
-[node name="Pile0" parent="Room" instance=ExtResource("6_pile")]
+[node name="Pile0" parent="Room" unique_id=1587055550 instance=ExtResource("6_pile")]
 transform = Transform3D(0.92106, 0, -0.38942, 0, 1, 0, 0.38942, 0, 0.92106, -3, 0, -2.3)
 
-[node name="Pile1" parent="Room" instance=ExtResource("6_pile")]
+[node name="Pile1" parent="Room" unique_id=1946041828 instance=ExtResource("6_pile")]
 transform = Transform3D(0.87758, 0, 0.47943, 0, 1, 0, -0.47943, 0, 0.87758, 3.3, 0, -2)
 
-[node name="Pile2" parent="Room" instance=ExtResource("6_pile")]
+[node name="Pile2" parent="Room" unique_id=1833599672 instance=ExtResource("6_pile")]
 transform = Transform3D(0.62161, 0, -0.78333, 0, 1, 0, 0.78333, 0, 0.62161, -6.2, 0, -7.6)
 
-[node name="Litter0" parent="Room" instance=ExtResource("7_litter")]
+[node name="Litter0" parent="Room" unique_id=1253848613 instance=ExtResource("7_litter")]
 transform = Transform3D(0.95534, 0, -0.29552, 0, 1, 0, 0.29552, 0, 0.95534, 0.2, 0, -3)
 
-[node name="Litter1" parent="Room" instance=ExtResource("7_litter")]
+[node name="Litter1" parent="Room" unique_id=2135889002 instance=ExtResource("7_litter")]
 transform = Transform3D(0.4536, 0, -0.89121, 0, 1, 0, 0.89121, 0, 0.4536, -3, 0, -7)
 
-[node name="Candles" type="Node3D" parent="."]
+[node name="Candles" type="Node3D" parent="." unique_id=1362699318]
 unique_name_in_owner = true
 
-[node name="CandlesL" parent="Candles" instance=ExtResource("8_candles")]
+[node name="CandlesL" parent="Candles" unique_id=1403745584 instance=ExtResource("8_candles")]
 transform = Transform3D(1.2895, 0, -0.54519, 0, 1.4, 0, 0.54519, 0, 1.2895, -3, 0.6, -2.3)
 
-[node name="Wick0" type="Node3D" parent="Candles/CandlesL"]
+[node name="Wick0" type="Node3D" parent="Candles/CandlesL" unique_id=525130144]
 transform = Transform3D(0.09, 0, 0, 0, 0.09, 0, 0, 0, 0.09, -0.08, 0.34, 0.02)
 
-[node name="Wick1" type="Node3D" parent="Candles/CandlesL"]
+[node name="Wick1" type="Node3D" parent="Candles/CandlesL" unique_id=1879942186]
 transform = Transform3D(0.09, 0, 0, 0, 0.09, 0, 0, 0, 0.09, 0.06, 0.24, -0.04)
 
-[node name="Wick2" type="Node3D" parent="Candles/CandlesL"]
+[node name="Wick2" type="Node3D" parent="Candles/CandlesL" unique_id=1721579307]
 transform = Transform3D(0.09, 0, 0, 0, 0.09, 0, 0, 0, 0.09, 0.1, 0.14, 0.08)
 
-[node name="Light" type="OmniLight3D" parent="Candles/CandlesL"]
+[node name="Light" type="OmniLight3D" parent="Candles/CandlesL" unique_id=319873313]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 light_color = Color(1, 0.62, 0.3, 1)
 light_energy = 1.3
-omni_range = 5.0
 
-[node name="CandlesR" parent="Candles" instance=ExtResource("8_candles")]
+[node name="CandlesR" parent="Candles" unique_id=1162958955 instance=ExtResource("8_candles")]
 transform = Transform3D(1.2286, 0, 0.6712, 0, 1.4, 0, -0.6712, 0, 1.2286, 3.3, 0.6, -2)
 
-[node name="Wick0" type="Node3D" parent="Candles/CandlesR"]
+[node name="Wick0" type="Node3D" parent="Candles/CandlesR" unique_id=4083022]
 transform = Transform3D(0.09, 0, 0, 0, 0.09, 0, 0, 0, 0.09, -0.08, 0.34, 0.02)
 
-[node name="Wick1" type="Node3D" parent="Candles/CandlesR"]
+[node name="Wick1" type="Node3D" parent="Candles/CandlesR" unique_id=1021118948]
 transform = Transform3D(0.09, 0, 0, 0, 0.09, 0, 0, 0, 0.09, 0.06, 0.24, -0.04)
 
-[node name="Wick2" type="Node3D" parent="Candles/CandlesR"]
+[node name="Wick2" type="Node3D" parent="Candles/CandlesR" unique_id=491324672]
 transform = Transform3D(0.09, 0, 0, 0, 0.09, 0, 0, 0, 0.09, 0.1, 0.14, 0.08)
 
-[node name="Light" type="OmniLight3D" parent="Candles/CandlesR"]
+[node name="Light" type="OmniLight3D" parent="Candles/CandlesR" unique_id=74068717]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 light_color = Color(1, 0.62, 0.3, 1)
 light_energy = 1.3
-omni_range = 5.0
 
-[node name="CandlesB" parent="Candles" instance=ExtResource("8_candles")]
+[node name="CandlesB" parent="Candles" unique_id=1254462553 instance=ExtResource("8_candles")]
 transform = Transform3D(0.87025, 0, -1.0967, 0, 1.4, 0, 1.0967, 0, 0.87025, -6.2, 0.6, -7.6)
 
-[node name="Wick0" type="Node3D" parent="Candles/CandlesB"]
+[node name="Wick0" type="Node3D" parent="Candles/CandlesB" unique_id=1033521041]
 transform = Transform3D(0.09, 0, 0, 0, 0.09, 0, 0, 0, 0.09, -0.08, 0.34, 0.02)
 
-[node name="Wick1" type="Node3D" parent="Candles/CandlesB"]
+[node name="Wick1" type="Node3D" parent="Candles/CandlesB" unique_id=1593230083]
 transform = Transform3D(0.09, 0, 0, 0, 0.09, 0, 0, 0, 0.09, 0.06, 0.24, -0.04)
 
-[node name="Wick2" type="Node3D" parent="Candles/CandlesB"]
+[node name="Wick2" type="Node3D" parent="Candles/CandlesB" unique_id=697021967]
 transform = Transform3D(0.09, 0, 0, 0, 0.09, 0, 0, 0, 0.09, 0.1, 0.14, 0.08)
 
-[node name="Light" type="OmniLight3D" parent="Candles/CandlesB"]
+[node name="Light" type="OmniLight3D" parent="Candles/CandlesB" unique_id=939571414]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 light_color = Color(1, 0.62, 0.3, 1)
 light_energy = 1.3
-omni_range = 5.0
 
-[node name="Boss" type="Node3D" parent="."]
+[node name="Boss" type="Node3D" parent="." unique_id=904914433]
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -3)
 
-[node name="Lamp" type="SpotLight3D" parent="Boss"]
+[node name="Lamp" type="SpotLight3D" parent="Boss" unique_id=1322822687]
 transform = Transform3D(0.90055, 0, -0.43475, -0.34501, 0.60846, -0.71466, 0.26453, 0.79358, 0.54795, 1.4, 5.8, 3.2)
 light_color = Color(1, 0.8, 0.55, 1)
 light_energy = 3.2
+shadow_enabled = true
 spot_range = 12.0
 spot_angle = 30.0
-shadow_enabled = true
 
-[node name="Body" type="Node3D" parent="Boss"]
+[node name="Body" type="Node3D" parent="Boss" unique_id=54021031]
 unique_name_in_owner = true
 
-[node name="Segments" type="Node3D" parent="Boss/Body"]
+[node name="Segments" type="Node3D" parent="Boss/Body" unique_id=2035000058]
 unique_name_in_owner = true
 
-[node name="Head" parent="Boss/Body" instance=ExtResource("9_head")]
+[node name="Head" parent="Boss/Body" unique_id=292245323 instance=ExtResource("9_head")]
 unique_name_in_owner = true
 
-[node name="WingL" parent="Boss/Body" instance=ExtResource("11_wing_l")]
+[node name="Jaw" parent="Boss/Body/Head" unique_id=1729818653 instance=ExtResource("10_jaw")]
 unique_name_in_owner = true
 
-[node name="WingR" parent="Boss/Body" instance=ExtResource("12_wing_r")]
+[node name="WingL" parent="Boss/Body" unique_id=712913368 instance=ExtResource("11_wing_l")]
 unique_name_in_owner = true
 
-[node name="ArmL" parent="Boss/Body" instance=ExtResource("13_arm_l")]
+[node name="WingR" parent="Boss/Body" unique_id=944233388 instance=ExtResource("12_wing_r")]
 unique_name_in_owner = true
 
-[node name="ArmR" parent="Boss/Body" instance=ExtResource("14_arm_r")]
+[node name="ArmL" parent="Boss/Body" unique_id=834532933 instance=ExtResource("13_arm_l")]
 unique_name_in_owner = true
 
-[node name="Tail" parent="Boss/Body" instance=ExtResource("15_tail")]
+[node name="ArmR" parent="Boss/Body" unique_id=292602588 instance=ExtResource("14_arm_r")]
 unique_name_in_owner = true
 
-[node name="Jaw" parent="Boss/Body/Head" instance=ExtResource("10_jaw")]
+[node name="Tail" parent="Boss/Body" unique_id=968001267 instance=ExtResource("15_tail")]
 unique_name_in_owner = true
 
-[node name="Belt" type="Node3D" parent="Boss/Body"]
+[node name="Belt" type="Node3D" parent="Boss/Body" unique_id=442223663]
 unique_name_in_owner = true

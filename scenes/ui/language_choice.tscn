@@ -1,6 +1,6 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://c8v4afbviky38"]
 
-[node name="LanguageChoice" type="Button"]
+[node name="LanguageChoice" type="Button" unique_id=636146012]
 focus_mode = 0
 theme_type_variation = &"FlagChoice"
 toggle_mode = true

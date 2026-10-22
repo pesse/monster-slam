@@ -1,11 +1,11 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://coeqisqm23y5q"]
 
-[ext_resource type="Script" path="res://src/ui/test_prep.gd" id="1_screen"]
-[ext_resource type="PackedScene" path="res://scenes/ui/confirm_dialog.tscn" id="2_confirm"]
-[ext_resource type="Script" path="res://src/ui/check_menu.gd" id="3_check"]
-[ext_resource type="Script" path="res://src/ui/check_tree_drop.gd" id="4_drop"]
+[ext_resource type="Script" uid="uid://b3ucp1gwuwnr" path="res://src/ui/test_prep.gd" id="1_screen"]
+[ext_resource type="PackedScene" uid="uid://f0ojpbs2lx7v" path="res://scenes/ui/confirm_dialog.tscn" id="2_confirm"]
+[ext_resource type="Script" uid="uid://cyfdagiq8j4bp" path="res://src/ui/check_menu.gd" id="3_check"]
+[ext_resource type="Script" uid="uid://du7gmsxuvwekd" path="res://src/ui/check_tree_drop.gd" id="4_drop"]
 
-[node name="TestPrep" type="Control"]
+[node name="TestPrep" type="Control" unique_id=1375963068]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -14,7 +14,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_screen")
 
-[node name="Backdrop" type="ColorRect" parent="."]
+[node name="Backdrop" type="ColorRect" parent="." unique_id=1213557672]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -24,68 +24,68 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.05, 0.06, 0.1, 1)
 
-[node name="Margin" type="MarginContainer" parent="."]
-theme_type_variation = &"ScreenMargin"
+[node name="Margin" type="MarginContainer" parent="." unique_id=1442737600]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_type_variation = &"ScreenMargin"
 
-[node name="Root" type="VBoxContainer" parent="Margin"]
+[node name="Root" type="VBoxContainer" parent="Margin" unique_id=2018529977]
+layout_mode = 2
 theme_type_variation = &"ScreenStack"
+
+[node name="Header" type="HBoxContainer" parent="Margin/Root" unique_id=918578260]
 layout_mode = 2
 
-[node name="Header" type="HBoxContainer" parent="Margin/Root"]
-layout_mode = 2
-
-[node name="BackButton" type="Button" parent="Margin/Root/Header"]
+[node name="BackButton" type="Button" parent="Margin/Root/Header" unique_id=1445362882]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"WindowButton"
 text = "◀ Karte"
 
-[node name="Title" type="Label" parent="Margin/Root/Header"]
+[node name="Title" type="Label" parent="Margin/Root/Header" unique_id=196272795]
 unique_name_in_owner = true
-theme_type_variation = &"Title"
 layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"Title"
 text = "Für eine Arbeit üben"
 text_overrun_behavior = 3
 
-[node name="ListBar" type="HBoxContainer" parent="Margin/Root"]
+[node name="ListBar" type="HBoxContainer" parent="Margin/Root" unique_id=341820231]
 layout_mode = 2
 
-[node name="ListPick" type="OptionButton" parent="Margin/Root/ListBar"]
+[node name="ListPick" type="OptionButton" parent="Margin/Root/ListBar" unique_id=832181059]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
 theme_type_variation = &"WindowButton"
 clip_text = true
 
-[node name="NameEdit" type="LineEdit" parent="Margin/Root/ListBar"]
+[node name="NameEdit" type="LineEdit" parent="Margin/Root/ListBar" unique_id=732550462]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "Name der Liste"
 
-[node name="SaveButton" type="Button" parent="Margin/Root/ListBar"]
+[node name="SaveButton" type="Button" parent="Margin/Root/ListBar" unique_id=249919772]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"WindowButton"
 text = "Speichern"
 
-[node name="DeleteButton" type="Button" parent="Margin/Root/ListBar"]
+[node name="DeleteButton" type="Button" parent="Margin/Root/ListBar" unique_id=1910207891]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"WindowButton"
 text = "Löschen"
 
-[node name="Filters" type="HBoxContainer" parent="Margin/Root"]
+[node name="Filters" type="HBoxContainer" parent="Margin/Root" unique_id=659857075]
 layout_mode = 2
 
-[node name="Search" type="LineEdit" parent="Margin/Root/Filters"]
+[node name="Search" type="LineEdit" parent="Margin/Root/Filters" unique_id=2068810127]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
@@ -93,33 +93,33 @@ size_flags_horizontal = 3
 placeholder_text = "Suchen …"
 clear_button_enabled = true
 
-[node name="PlacesButton" type="Button" parent="Margin/Root/Filters"]
+[node name="PlacesButton" type="Button" parent="Margin/Root/Filters" unique_id=634620485]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(240, 0)
 layout_mode = 2
 theme_type_variation = &"WindowButton"
-clip_text = true
 text = "Units, Teile ▾"
+clip_text = true
 
-[node name="TypePick" type="MenuButton" parent="Margin/Root/Filters"]
+[node name="TypePick" type="MenuButton" parent="Margin/Root/Filters" unique_id=779916802]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
-clip_text = true
 flat = false
+clip_text = true
 script = ExtResource("3_check")
 label = "Wortarten"
 
-[node name="StatePick" type="MenuButton" parent="Margin/Root/Filters"]
+[node name="StatePick" type="MenuButton" parent="Margin/Root/Filters" unique_id=1486943787]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
-clip_text = true
 flat = false
+clip_text = true
 script = ExtResource("3_check")
 label = "Stand"
 
-[node name="Words" type="Tree" parent="Margin/Root"]
+[node name="Words" type="Tree" parent="Margin/Root" unique_id=1394291646]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
@@ -128,51 +128,51 @@ column_titles_visible = true
 hide_root = true
 select_mode = 1
 
-[node name="Footer" type="HBoxContainer" parent="Margin/Root"]
+[node name="Footer" type="HBoxContainer" parent="Margin/Root" unique_id=1483592620]
 layout_mode = 2
 
-[node name="MarkVisible" type="Button" parent="Margin/Root/Footer"]
+[node name="MarkVisible" type="Button" parent="Margin/Root/Footer" unique_id=1284585248]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"WindowButton"
 text = "☑ Sichtbare"
 
-[node name="UnmarkVisible" type="Button" parent="Margin/Root/Footer"]
+[node name="UnmarkVisible" type="Button" parent="Margin/Root/Footer" unique_id=1708257779]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"WindowButton"
 text = "☐ Sichtbare"
 
-[node name="Count" type="Label" parent="Margin/Root/Footer"]
+[node name="Count" type="Label" parent="Margin/Root/Footer" unique_id=1506120752]
 unique_name_in_owner = true
-theme_type_variation = &"Accent"
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"Accent"
 text = "0 Wörter"
 horizontal_alignment = 1
 text_overrun_behavior = 3
 
-[node name="DirectionPick" type="OptionButton" parent="Margin/Root/Footer"]
+[node name="DirectionPick" type="OptionButton" parent="Margin/Root/Footer" unique_id=940839948]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 theme_type_variation = &"WindowButton"
 clip_text = true
 
-[node name="RoundButton" type="Button" parent="Margin/Root/Footer"]
+[node name="RoundButton" type="Button" parent="Margin/Root/Footer" unique_id=1858500042]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"WindowButton"
 text = "Neue Runde"
 
-[node name="PlayButton" type="Button" parent="Margin/Root/Footer"]
+[node name="PlayButton" type="Button" parent="Margin/Root/Footer" unique_id=1285603460]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"WindowPrimary"
 text = "▶ Spielen"
 
-[node name="PlaceDrop" type="Control" parent="."]
+[node name="PlaceDrop" type="Control" parent="." unique_id=116107002]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
@@ -183,17 +183,17 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("4_drop")
 
-[node name="DropPanel" type="PanelContainer" parent="PlaceDrop"]
+[node name="DropPanel" type="PanelContainer" parent="PlaceDrop" unique_id=1003845679]
 unique_name_in_owner = true
-theme_type_variation = &"DropPanel"
 custom_minimum_size = Vector2(400, 400)
 layout_mode = 0
+theme_type_variation = &"DropPanel"
 
-[node name="DropTree" type="Tree" parent="PlaceDrop/DropPanel"]
+[node name="DropTree" type="Tree" parent="PlaceDrop/DropPanel" unique_id=510014459]
 unique_name_in_owner = true
 layout_mode = 2
 hide_root = true
 
-[node name="Confirm" parent="." instance=ExtResource("2_confirm")]
+[node name="Confirm" parent="." unique_id=1899610152 instance=ExtResource("2_confirm")]
 unique_name_in_owner = true
 layout_mode = 1

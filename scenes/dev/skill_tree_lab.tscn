@@ -1,97 +1,115 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://b6wkhlx67d7q3"]
 
-[ext_resource type="Script" path="res://src/dev/skill_tree_lab.gd" id="1_lab"]
+[ext_resource type="Script" uid="uid://bf3l5se5o7u4h" path="res://src/dev/skill_tree_lab.gd" id="1_lab"]
 
-[node name="SkillTreeLab" type="Node"]
+[node name="SkillTreeLab" type="Node" unique_id=1212145341]
 script = ExtResource("1_lab")
 
-[node name="Arrange" type="CanvasLayer" parent="."]
+[node name="Arrange" type="CanvasLayer" parent="." unique_id=437646826]
 layer = 10
 
-[node name="Margin" type="MarginContainer" parent="Arrange"]
-theme_type_variation = &"ScreenMargin"
+[node name="Margin" type="MarginContainer" parent="Arrange" unique_id=88668521]
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+theme_type_variation = &"ScreenMargin"
 
-[node name="Root" type="VBoxContainer" parent="Arrange/Margin"]
-theme_type_variation = &"ScreenStack"
+[node name="Root" type="VBoxContainer" parent="Arrange/Margin" unique_id=741471639]
+layout_mode = 2
 mouse_filter = 2
+theme_type_variation = &"ScreenStack"
 alignment = 2
 
-[node name="Bar" type="PanelContainer" parent="Arrange/Margin/Root"]
+[node name="Bar" type="PanelContainer" parent="Arrange/Margin/Root" unique_id=1926346881]
 unique_name_in_owner = true
 self_modulate = Color(1, 1, 1, 0.85)
+layout_mode = 2
 size_flags_horizontal = 4
 
-[node name="Rows" type="VBoxContainer" parent="Arrange/Margin/Root/Bar"]
+[node name="Rows" type="VBoxContainer" parent="Arrange/Margin/Root/Bar" unique_id=1178571737]
+layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="Items" type="HBoxContainer" parent="Arrange/Margin/Root/Bar/Rows"]
+[node name="Items" type="HBoxContainer" parent="Arrange/Margin/Root/Bar/Rows" unique_id=1658628720]
+layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="ArrangeButton" type="Button" parent="Arrange/Margin/Root/Bar/Rows/Items"]
+[node name="ArrangeButton" type="Button" parent="Arrange/Margin/Root/Bar/Rows/Items" unique_id=1867170819]
 unique_name_in_owner = true
+layout_mode = 2
 focus_mode = 0
 toggle_mode = true
 text = "Knoten verschieben"
 
-[node name="EditButton" type="Button" parent="Arrange/Margin/Root/Bar/Rows/Items"]
+[node name="EditButton" type="Button" parent="Arrange/Margin/Root/Bar/Rows/Items" unique_id=1420927055]
 unique_name_in_owner = true
+layout_mode = 2
 focus_mode = 0
 toggle_mode = true
 text = "Bearbeiten"
 
-[node name="DiscardButton" type="Button" parent="Arrange/Margin/Root/Bar/Rows/Items"]
+[node name="DiscardButton" type="Button" parent="Arrange/Margin/Root/Bar/Rows/Items" unique_id=1337348963]
 unique_name_in_owner = true
+layout_mode = 2
 focus_mode = 0
 text = "Daten verwerfen"
 
-[node name="SaveButton" type="Button" parent="Arrange/Margin/Root/Bar/Rows/Items"]
+[node name="SaveButton" type="Button" parent="Arrange/Margin/Root/Bar/Rows/Items" unique_id=675897584]
 unique_name_in_owner = true
+layout_mode = 2
 focus_mode = 0
 text = "Speichern"
 
-[node name="ResetButton" type="Button" parent="Arrange/Margin/Root/Bar/Rows/Items"]
+[node name="ResetButton" type="Button" parent="Arrange/Margin/Root/Bar/Rows/Items" unique_id=843632659]
 unique_name_in_owner = true
+layout_mode = 2
 focus_mode = 0
 text = "Alle berechnen"
 
-[node name="Status" type="Label" parent="Arrange/Margin/Root/Bar/Rows"]
+[node name="Status" type="Label" parent="Arrange/Margin/Root/Bar/Rows" unique_id=1187102291]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"Hint"
 
-[node name="Editor" type="VBoxContainer" parent="Arrange/Margin/Root/Bar/Rows"]
+[node name="Editor" type="VBoxContainer" parent="Arrange/Margin/Root/Bar/Rows" unique_id=970849113]
 unique_name_in_owner = true
 visible = false
+layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="NodeLabel" type="Label" parent="Arrange/Margin/Root/Bar/Rows/Editor"]
+[node name="NodeLabel" type="Label" parent="Arrange/Margin/Root/Bar/Rows/Editor" unique_id=29555200]
 unique_name_in_owner = true
+layout_mode = 2
 
-[node name="Controls" type="HBoxContainer" parent="Arrange/Margin/Root/Bar/Rows/Editor"]
+[node name="Controls" type="HBoxContainer" parent="Arrange/Margin/Root/Bar/Rows/Editor" unique_id=1975077845]
+layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="CostLabel" type="Label" parent="Arrange/Margin/Root/Bar/Rows/Editor/Controls"]
+[node name="CostLabel" type="Label" parent="Arrange/Margin/Root/Bar/Rows/Editor/Controls" unique_id=1391161578]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Kosten"
 
-[node name="CostSpin" type="SpinBox" parent="Arrange/Margin/Root/Bar/Rows/Editor/Controls"]
+[node name="CostSpin" type="SpinBox" parent="Arrange/Margin/Root/Bar/Rows/Editor/Controls" unique_id=862362766]
 unique_name_in_owner = true
+layout_mode = 2
 min_value = 1.0
 max_value = 20.0
 value = 1.0
 suffix = "P."
 
-[node name="RewireButton" type="Button" parent="Arrange/Margin/Root/Bar/Rows/Editor/Controls"]
+[node name="RewireButton" type="Button" parent="Arrange/Margin/Root/Bar/Rows/Editor/Controls" unique_id=300306405]
 unique_name_in_owner = true
+layout_mode = 2
 focus_mode = 0
 toggle_mode = true
 text = "Umhängen an …"
 
-[node name="DeselectButton" type="Button" parent="Arrange/Margin/Root/Bar/Rows/Editor/Controls"]
+[node name="DeselectButton" type="Button" parent="Arrange/Margin/Root/Bar/Rows/Editor/Controls" unique_id=1046278266]
 unique_name_in_owner = true
+layout_mode = 2
 focus_mode = 0
 text = "Abwählen"

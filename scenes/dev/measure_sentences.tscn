@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://cwbr88jtlpghh"]
 
-[ext_resource type="Script" path="res://src/dev/measure_sentences.gd" id="1_measure"]
+[ext_resource type="Script" uid="uid://b7vuhqew101c1" path="res://src/dev/measure_sentences.gd" id="1_measure"]
 
-[node name="MeasureSentences" type="Node"]
+[node name="MeasureSentences" type="Node" unique_id=1048452883]
 script = ExtResource("1_measure")

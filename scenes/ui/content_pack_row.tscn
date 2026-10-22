@@ -1,57 +1,57 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://di641kf6lhoh"]
 
-[ext_resource type="Script" path="res://src/ui/content_pack_row.gd" id="1_row"]
+[ext_resource type="Script" uid="uid://c1hd6j05uhxvn" path="res://src/ui/content_pack_row.gd" id="1_row"]
 
-[node name="ContentPackRow" type="VBoxContainer"]
+[node name="ContentPackRow" type="VBoxContainer" unique_id=1243131581]
 theme_type_variation = &"Tight"
 script = ExtResource("1_row")
 
-[node name="Head" type="HBoxContainer" parent="."]
+[node name="Head" type="HBoxContainer" parent="." unique_id=2072638042]
 layout_mode = 2
 
-[node name="Select" type="CheckBox" parent="Head"]
+[node name="Select" type="CheckBox" parent="Head" unique_id=952057502]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="Name" type="Label" parent="Head"]
+[node name="Name" type="Label" parent="Head" unique_id=387554462]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"StatSubline"
 text = "Pack"
 
-[node name="State" type="Label" parent="Head"]
+[node name="State" type="Label" parent="Head" unique_id=212443677]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"StatNumber"
 text = "Zustand"
 
-[node name="Info" type="Label" parent="."]
+[node name="Info" type="Label" parent="." unique_id=200518446]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"Caption"
 autowrap_mode = 3
 
-[node name="CodeRow" type="HBoxContainer" parent="."]
+[node name="CodeRow" type="HBoxContainer" parent="." unique_id=1542166277]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 
-[node name="CodeInput" type="LineEdit" parent="CodeRow"]
+[node name="CodeInput" type="LineEdit" parent="CodeRow" unique_id=1789529764]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "Zugangscode"
 
-[node name="RedeemButton" type="Button" parent="CodeRow"]
+[node name="RedeemButton" type="Button" parent="CodeRow" unique_id=776714116]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(160, 44)
 layout_mode = 2
 theme_type_variation = &"WindowButton"
 text = "Einlösen"
 
-[node name="ForgetButton" type="Button" parent="CodeRow"]
+[node name="ForgetButton" type="Button" parent="CodeRow" unique_id=1767271048]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(200, 44)

@@ -1,17 +1,16 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene format=3 uid="uid://beevvnmc1u0fl"]
 
-[ext_resource type="Script" path="res://src/ui/wave_stats.gd" id="1_stats"]
-[ext_resource type="PackedScene" path="res://scenes/ui/treasure_chest.tscn" id="2_chest"]
-[ext_resource type="Script" path="res://src/ui/page_stack.gd" id="3_pages"]
-[ext_resource type="Script" path="res://src/ui/window_chrome.gd" id="4_chrome"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/play.webp" id="5_play"]
-[ext_resource type="Material" path="res://scenes/ui/title_metal.tres" id="title_metal"]
+[ext_resource type="Script" uid="uid://blvppphgreq7q" path="res://src/ui/wave_stats.gd" id="1_stats"]
+[ext_resource type="PackedScene" uid="uid://bov6uw7f5ifgt" path="res://scenes/ui/treasure_chest.tscn" id="2_chest"]
+[ext_resource type="Script" uid="uid://b60006jleuv3e" path="res://src/ui/page_stack.gd" id="3_pages"]
+[ext_resource type="Script" uid="uid://db2ap8k5hl8vk" path="res://src/ui/window_chrome.gd" id="4_chrome"]
+[ext_resource type="Texture2D" uid="uid://c23n78atueopp" path="res://assets/ui/main_menu/icons/play.webp" id="5_play"]
+[ext_resource type="Material" uid="uid://dxo2j2mfichtf" path="res://scenes/ui/title_metal.tres" id="title_metal"]
 
 [sub_resource type="ButtonGroup" id="choice_group"]
 
-[node name="WaveStats" type="PanelContainer"]
+[node name="WaveStats" type="PanelContainer" unique_id=1879240845]
 visible = false
-anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
@@ -21,88 +20,88 @@ grow_vertical = 2
 theme_type_variation = &"GameCard"
 script = ExtResource("1_stats")
 
-[node name="Surface" type="Control" parent="."]
+[node name="Surface" type="Control" parent="." unique_id=279764096]
 layout_mode = 2
 mouse_filter = 2
 script = ExtResource("4_chrome")
 
-[node name="Layout" type="VBoxContainer" parent="."]
+[node name="Layout" type="VBoxContainer" parent="." unique_id=307373094]
 layout_mode = 2
 
-[node name="TitleBar" type="PanelContainer" parent="Layout"]
+[node name="TitleBar" type="PanelContainer" parent="Layout" unique_id=1420749183]
 layout_mode = 2
 theme_type_variation = &"WindowTitleBar"
 
-[node name="Joints" type="Control" parent="Layout/TitleBar"]
+[node name="Joints" type="Control" parent="Layout/TitleBar" unique_id=258760285]
 layout_mode = 2
 mouse_filter = 2
 script = ExtResource("4_chrome")
 part = 1
 
-[node name="Title" type="Label" parent="Layout/TitleBar"]
+[node name="Title" type="Label" parent="Layout/TitleBar" unique_id=1112316253]
 unique_name_in_owner = true
+material = ExtResource("title_metal")
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
-material = ExtResource("title_metal")
 theme_type_variation = &"WindowTitle"
 vertical_alignment = 1
 
-[node name="Content" type="MarginContainer" parent="Layout"]
+[node name="Content" type="MarginContainer" parent="Layout" unique_id=1828723565]
 layout_mode = 2
 theme_type_variation = &"WindowContent"
 
-[node name="Root" type="VBoxContainer" parent="Layout/Content"]
+[node name="Root" type="VBoxContainer" parent="Layout/Content" unique_id=1906097786]
 layout_mode = 2
 theme_type_variation = &"ScreenStack"
 
-[node name="Pages" type="Container" parent="Layout/Content/Root"]
+[node name="Pages" type="Container" parent="Layout/Content/Root" unique_id=1643206423]
 unique_name_in_owner = true
 layout_mode = 2
 script = ExtResource("3_pages")
 
-[node name="ResultPage" type="VBoxContainer" parent="Layout/Content/Root/Pages"]
+[node name="ResultPage" type="VBoxContainer" parent="Layout/Content/Root/Pages" unique_id=1873894021]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SectionStack"
 
-[node name="Columns" type="HBoxContainer" parent="Layout/Content/Root/Pages/ResultPage"]
+[node name="Columns" type="HBoxContainer" parent="Layout/Content/Root/Pages/ResultPage" unique_id=1370188083]
 layout_mode = 2
 theme_type_variation = &"StatColumns"
 alignment = 1
 
-[node name="Lines" type="VBoxContainer" parent="Layout/Content/Root/Pages/ResultPage/Columns"]
+[node name="Lines" type="VBoxContainer" parent="Layout/Content/Root/Pages/ResultPage/Columns" unique_id=1373247751]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(440, 0)
 layout_mode = 2
 size_flags_vertical = 4
 theme_type_variation = &"Tight"
 
-[node name="Divider" type="VSeparator" parent="Layout/Content/Root/Pages/ResultPage/Columns"]
+[node name="Divider" type="VSeparator" parent="Layout/Content/Root/Pages/ResultPage/Columns" unique_id=188973766]
 layout_mode = 2
 theme_type_variation = &"StatDivider"
 
-[node name="Reward" type="VBoxContainer" parent="Layout/Content/Root/Pages/ResultPage/Columns"]
+[node name="Reward" type="VBoxContainer" parent="Layout/Content/Root/Pages/ResultPage/Columns" unique_id=960439835]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(260, 0)
 layout_mode = 2
 size_flags_vertical = 4
 
-[node name="ChestName" type="Label" parent="Layout/Content/Root/Pages/ResultPage/Columns/Reward"]
+[node name="ChestName" type="Label" parent="Layout/Content/Root/Pages/ResultPage/Columns/Reward" unique_id=109798864]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"StatHeading"
 text = "Holzkiste"
 horizontal_alignment = 1
 
-[node name="ChestRow" type="CenterContainer" parent="Layout/Content/Root/Pages/ResultPage/Columns/Reward"]
+[node name="ChestRow" type="CenterContainer" parent="Layout/Content/Root/Pages/ResultPage/Columns/Reward" unique_id=900173899]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="Chest" parent="Layout/Content/Root/Pages/ResultPage/Columns/Reward/ChestRow" instance=ExtResource("2_chest")]
+[node name="Chest" parent="Layout/Content/Root/Pages/ResultPage/Columns/Reward/ChestRow" unique_id=2145875093 instance=ExtResource("2_chest")]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="RewardLine" type="Label" parent="Layout/Content/Root/Pages/ResultPage/Columns/Reward"]
+[node name="RewardLine" type="Label" parent="Layout/Content/Root/Pages/ResultPage/Columns/Reward" unique_id=80577935]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(240, 0)
 layout_mode = 2
@@ -111,29 +110,29 @@ text = "2 Sekunden auf die Kiste drücken"
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="NextPage" type="VBoxContainer" parent="Layout/Content/Root/Pages"]
+[node name="NextPage" type="VBoxContainer" parent="Layout/Content/Root/Pages" unique_id=1557911030]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_type_variation = &"SectionStack"
 
-[node name="Balance" type="VBoxContainer" parent="Layout/Content/Root/Pages/NextPage"]
+[node name="Balance" type="VBoxContainer" parent="Layout/Content/Root/Pages/NextPage" unique_id=766338105]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 
-[node name="BalanceTitle" type="Label" parent="Layout/Content/Root/Pages/NextPage/Balance"]
+[node name="BalanceTitle" type="Label" parent="Layout/Content/Root/Pages/NextPage/Balance" unique_id=1886597496]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"StatHeading"
 text = "Dieser Lauf"
 
-[node name="BalanceLines" type="VBoxContainer" parent="Layout/Content/Root/Pages/NextPage/Balance"]
+[node name="BalanceLines" type="VBoxContainer" parent="Layout/Content/Root/Pages/NextPage/Balance" unique_id=791040788]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="BalanceLineTemplate" type="Label" parent="Layout/Content/Root/Pages/NextPage/Balance"]
+[node name="BalanceLineTemplate" type="Label" parent="Layout/Content/Root/Pages/NextPage/Balance" unique_id=1129926837]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(600, 0)
@@ -141,14 +140,14 @@ layout_mode = 2
 theme_type_variation = &"StatSubline"
 text_overrun_behavior = 3
 
-[node name="BalanceRule" type="HSeparator" parent="Layout/Content/Root/Pages/NextPage/Balance"]
+[node name="BalanceRule" type="HSeparator" parent="Layout/Content/Root/Pages/NextPage/Balance" unique_id=1894497625]
 layout_mode = 2
 theme_type_variation = &"StatRule"
 
-[node name="Decision" type="VBoxContainer" parent="Layout/Content/Root/Pages/NextPage"]
+[node name="Decision" type="VBoxContainer" parent="Layout/Content/Root/Pages/NextPage" unique_id=1096924183]
 layout_mode = 2
 
-[node name="DefeatLabel" type="Label" parent="Layout/Content/Root/Pages/NextPage/Decision"]
+[node name="DefeatLabel" type="Label" parent="Layout/Content/Root/Pages/NextPage/Decision" unique_id=1353443218]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(600, 0)
@@ -158,20 +157,20 @@ text = "Die Festung ist gefallen — dieser Lauf ist zu Ende. Das Gold bleibt di
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="DiffLabel" type="Label" parent="Layout/Content/Root/Pages/NextPage/Decision"]
+[node name="DiffLabel" type="Label" parent="Layout/Content/Root/Pages/NextPage/Decision" unique_id=163874224]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"StatHeading"
 text = "Schwierigkeit der nächsten Welle"
 horizontal_alignment = 1
 
-[node name="ChoiceRow" type="HBoxContainer" parent="Layout/Content/Root/Pages/NextPage/Decision"]
+[node name="ChoiceRow" type="HBoxContainer" parent="Layout/Content/Root/Pages/NextPage/Decision" unique_id=259028440]
 unique_name_in_owner = true
 layout_mode = 2
-alignment = 1
 theme_type_variation = &"SegmentRow"
+alignment = 1
 
-[node name="Choice0" type="Button" parent="Layout/Content/Root/Pages/NextPage/Decision/ChoiceRow"]
+[node name="Choice0" type="Button" parent="Layout/Content/Root/Pages/NextPage/Decision/ChoiceRow" unique_id=866862317]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 focus_mode = 0
@@ -180,7 +179,7 @@ toggle_mode = true
 button_group = SubResource("choice_group")
 text = "Viel leichter"
 
-[node name="Choice1" type="Button" parent="Layout/Content/Root/Pages/NextPage/Decision/ChoiceRow"]
+[node name="Choice1" type="Button" parent="Layout/Content/Root/Pages/NextPage/Decision/ChoiceRow" unique_id=959042795]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 focus_mode = 0
@@ -189,7 +188,7 @@ toggle_mode = true
 button_group = SubResource("choice_group")
 text = "Leichter"
 
-[node name="Choice2" type="Button" parent="Layout/Content/Root/Pages/NextPage/Decision/ChoiceRow"]
+[node name="Choice2" type="Button" parent="Layout/Content/Root/Pages/NextPage/Decision/ChoiceRow" unique_id=1902071290]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 focus_mode = 0
@@ -198,7 +197,7 @@ toggle_mode = true
 button_group = SubResource("choice_group")
 text = "Gleich"
 
-[node name="Choice3" type="Button" parent="Layout/Content/Root/Pages/NextPage/Decision/ChoiceRow"]
+[node name="Choice3" type="Button" parent="Layout/Content/Root/Pages/NextPage/Decision/ChoiceRow" unique_id=897409992]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 focus_mode = 0
@@ -207,7 +206,7 @@ toggle_mode = true
 button_group = SubResource("choice_group")
 text = "Schwieriger"
 
-[node name="Choice4" type="Button" parent="Layout/Content/Root/Pages/NextPage/Decision/ChoiceRow"]
+[node name="Choice4" type="Button" parent="Layout/Content/Root/Pages/NextPage/Decision/ChoiceRow" unique_id=1980302946]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 focus_mode = 0
@@ -216,10 +215,10 @@ toggle_mode = true
 button_group = SubResource("choice_group")
 text = "Viel schwieriger"
 
-[node name="Footer" type="HBoxContainer" parent="Layout/Content/Root"]
+[node name="Footer" type="HBoxContainer" parent="Layout/Content/Root" unique_id=424265695]
 layout_mode = 2
 
-[node name="MenuButton" type="Button" parent="Layout/Content/Root/Footer"]
+[node name="MenuButton" type="Button" parent="Layout/Content/Root/Footer" unique_id=1055502141]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(240, 44)
 layout_mode = 2
@@ -228,12 +227,12 @@ focus_mode = 0
 theme_type_variation = &"WindowButton"
 text = "⟵ Zurück zum Menü"
 
-[node name="Spacer" type="Control" parent="Layout/Content/Root/Footer"]
+[node name="Spacer" type="Control" parent="Layout/Content/Root/Footer" unique_id=1244479771]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="StageBack" type="Button" parent="Layout/Content/Root/Footer"]
+[node name="StageBack" type="Button" parent="Layout/Content/Root/Footer" unique_id=795266017]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 44)
 layout_mode = 2
@@ -243,12 +242,12 @@ theme_type_variation = &"WindowButton"
 disabled = true
 text = "◂ Zurück"
 
-[node name="Spacer2" type="Control" parent="Layout/Content/Root/Footer"]
+[node name="Spacer2" type="Control" parent="Layout/Content/Root/Footer" unique_id=1317041352]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="ResultContinue" type="Button" parent="Layout/Content/Root/Footer"]
+[node name="ResultContinue" type="Button" parent="Layout/Content/Root/Footer" unique_id=45326417]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(240, 44)
 layout_mode = 2
@@ -257,7 +256,7 @@ focus_mode = 0
 theme_type_variation = &"WindowButton"
 text = "Weiter ▸"
 
-[node name="StartButton" type="Button" parent="Layout/Content/Root/Footer"]
+[node name="StartButton" type="Button" parent="Layout/Content/Root/Footer" unique_id=658653967]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(240, 44)

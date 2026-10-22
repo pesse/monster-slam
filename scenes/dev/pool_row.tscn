@@ -1,22 +1,22 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://udk7wo62h54n"]
 
-[node name="PoolRow" type="HBoxContainer"]
+[node name="PoolRow" type="HBoxContainer" unique_id=772248743]
 theme_type_variation = &"Tight"
 
-[node name="Group" type="Label" parent="."]
+[node name="Group" type="Label" parent="." unique_id=331154719]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(130, 0)
 layout_mode = 2
 theme_type_variation = &"Hint"
 
-[node name="Prompt" type="Label" parent="."]
+[node name="Prompt" type="Label" parent="." unique_id=1692061763]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(240, 0)
 layout_mode = 2
 clip_text = true
 text_overrun_behavior = 3
 
-[node name="Info" type="Label" parent="."]
+[node name="Info" type="Label" parent="." unique_id=1162773912]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3

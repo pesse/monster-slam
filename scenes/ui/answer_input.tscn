@@ -5,7 +5,6 @@
 
 [node name="AnswerInput" type="LineEdit" unique_id=562773043 groups=["word_plate_keep_clear"]]
 texture_filter = 4
-anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5

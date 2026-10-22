@@ -1,9 +1,9 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://bphpaepgxnls5"]
 
-[ext_resource type="Script" path="res://src/dev/map_ring_lab.gd" id="1_lab"]
-[ext_resource type="Script" path="res://src/ui/map_canvas.gd" id="2_canvas"]
+[ext_resource type="Script" uid="uid://cqwlkcr2s62qn" path="res://src/dev/map_ring_lab.gd" id="1_lab"]
+[ext_resource type="Script" uid="uid://bqcj7guu5orj6" path="res://src/ui/map_canvas.gd" id="2_canvas"]
 
-[node name="MapRingLab" type="Control"]
+[node name="MapRingLab" type="Control" unique_id=429403622]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -12,35 +12,43 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_lab")
 
-[node name="Margin" type="MarginContainer" parent="."]
-theme_type_variation = &"ScreenMargin"
+[node name="Margin" type="MarginContainer" parent="." unique_id=494534438]
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_type_variation = &"ScreenMargin"
 
-[node name="Root" type="VBoxContainer" parent="Margin"]
+[node name="Root" type="VBoxContainer" parent="Margin" unique_id=20076801]
+layout_mode = 2
 theme_type_variation = &"ScreenStack"
 
-[node name="Header" type="HBoxContainer" parent="Margin/Root"]
+[node name="Header" type="HBoxContainer" parent="Margin/Root" unique_id=706741278]
+layout_mode = 2
 
-[node name="BackButton" type="Button" parent="Margin/Root/Header"]
+[node name="BackButton" type="Button" parent="Margin/Root/Header" unique_id=1529952556]
 unique_name_in_owner = true
+layout_mode = 2
 text = "← Zurück"
 
-[node name="Title" type="Label" parent="Margin/Root/Header"]
-theme_type_variation = &"Title"
+[node name="Title" type="Label" parent="Margin/Root/Header" unique_id=1154092331]
+layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"Title"
 text = "Ring-Werkbank"
 
-[node name="BookSelect" type="OptionButton" parent="Margin/Root/Header"]
+[node name="BookSelect" type="OptionButton" parent="Margin/Root/Header" unique_id=1694336694]
 unique_name_in_owner = true
+layout_mode = 2
 
-[node name="MapSelect" type="OptionButton" parent="Margin/Root/Header"]
+[node name="MapSelect" type="OptionButton" parent="Margin/Root/Header" unique_id=623699772]
 unique_name_in_owner = true
+layout_mode = 2
 
-[node name="PresetSelect" type="OptionButton" parent="Margin/Root/Header"]
+[node name="PresetSelect" type="OptionButton" parent="Margin/Root/Header" unique_id=1844003486]
 unique_name_in_owner = true
+layout_mode = 2
 selected = 0
 item_count = 3
 popup/item_0/text = "Gemischt"
@@ -50,39 +58,46 @@ popup/item_1/id = 1
 popup/item_2/text = "Alles gemeistert"
 popup/item_2/id = 2
 
-[node name="Controls" type="HBoxContainer" parent="Margin/Root"]
+[node name="Controls" type="HBoxContainer" parent="Margin/Root" unique_id=1915990286]
+layout_mode = 2
 
-[node name="ProgressLabel" type="Label" parent="Margin/Root/Controls"]
+[node name="ProgressLabel" type="Label" parent="Margin/Root/Controls" unique_id=639419472]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Erster Ort: 60 %"
 
-[node name="ProgressSlider" type="HSlider" parent="Margin/Root/Controls"]
+[node name="ProgressSlider" type="HSlider" parent="Margin/Root/Controls" unique_id=2026990717]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
 size_flags_vertical = 4
-step = 1.0
 value = 60.0
 
-[node name="BonusToggle" type="CheckButton" parent="Margin/Root/Controls"]
+[node name="BonusToggle" type="CheckButton" parent="Margin/Root/Controls" unique_id=791564334]
 unique_name_in_owner = true
+layout_mode = 2
 text = "Alle Boni gemeistert"
 
-[node name="BigToggle" type="CheckButton" parent="Margin/Root/Controls"]
+[node name="BigToggle" type="CheckButton" parent="Margin/Root/Controls" unique_id=214741134]
 unique_name_in_owner = true
+layout_mode = 2
 text = "Große Orte"
 
-[node name="AppearButton" type="Button" parent="Margin/Root/Controls"]
+[node name="AppearButton" type="Button" parent="Margin/Root/Controls" unique_id=1672430640]
 unique_name_in_owner = true
+layout_mode = 2
 text = "Aufspringen"
 
-[node name="Status" type="Label" parent="Margin/Root"]
+[node name="Status" type="Label" parent="Margin/Root" unique_id=1917694421]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Regler füllt den ersten Ort. Klick: Buchkarte → Gebiet, im Gebiet Auswahl wie im Spiel."
 
-[node name="Canvas" type="Control" parent="Margin/Root"]
+[node name="Canvas" type="Control" parent="Margin/Root" unique_id=1489104471]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(320, 180)
+layout_mode = 2
 size_flags_vertical = 3
 script = ExtResource("2_canvas")

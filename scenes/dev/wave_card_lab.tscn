@@ -1,18 +1,18 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://c8sqjwdrr24qg"]
 
-[ext_resource type="Script" path="res://src/dev/wave_card_lab.gd" id="1_lab"]
+[ext_resource type="Script" uid="uid://bksykibrr3lfu" path="res://src/dev/wave_card_lab.gd" id="1_lab"]
 
-[node name="WaveCardLab" type="Node"]
+[node name="WaveCardLab" type="Node" unique_id=333311200]
 script = ExtResource("1_lab")
 
-[node name="Cards" type="CanvasLayer" parent="."]
+[node name="Cards" type="CanvasLayer" parent="." unique_id=488617965]
 unique_name_in_owner = true
 
-[node name="Switcher" type="CanvasLayer" parent="."]
+[node name="Switcher" type="CanvasLayer" parent="." unique_id=795658971]
 unique_name_in_owner = true
 layer = 2
 
-[node name="Panel" type="PanelContainer" parent="Switcher"]
+[node name="Panel" type="PanelContainer" parent="Switcher" unique_id=1474377780]
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
@@ -23,11 +23,11 @@ offset_bottom = -16.0
 grow_vertical = 0
 theme_type_variation = &"HudPanel"
 
-[node name="Stack" type="VBoxContainer" parent="Switcher/Panel"]
+[node name="Stack" type="VBoxContainer" parent="Switcher/Panel" unique_id=1998156474]
 layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="CardName" type="Label" parent="Switcher/Panel/Stack"]
+[node name="CardName" type="Label" parent="Switcher/Panel/Stack" unique_id=488756005]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
@@ -35,18 +35,18 @@ theme_type_variation = &"StatHeading"
 text = "result"
 horizontal_alignment = 1
 
-[node name="Position" type="Label" parent="Switcher/Panel/Stack"]
+[node name="Position" type="Label" parent="Switcher/Panel/Stack" unique_id=974215670]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"Caption"
 text = "1 / 8 · Bild↑ Bild↓"
 horizontal_alignment = 1
 
-[node name="Arrows" type="HBoxContainer" parent="Switcher/Panel/Stack"]
+[node name="Arrows" type="HBoxContainer" parent="Switcher/Panel/Stack" unique_id=1695442811]
 layout_mode = 2
 alignment = 1
 
-[node name="Prev" type="Button" parent="Switcher/Panel/Stack/Arrows"]
+[node name="Prev" type="Button" parent="Switcher/Panel/Stack/Arrows" unique_id=711264891]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
@@ -54,7 +54,7 @@ focus_mode = 0
 theme_type_variation = &"ToolButton"
 text = "◀"
 
-[node name="Next" type="Button" parent="Switcher/Panel/Stack/Arrows"]
+[node name="Next" type="Button" parent="Switcher/Panel/Stack/Arrows" unique_id=278843691]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(44, 44)
 layout_mode = 2

@@ -1,13 +1,13 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene format=3 uid="uid://cac81kd4himte"]
 
-[ext_resource type="Script" path="res://src/dev/map_lab.gd" id="1_lab"]
-[ext_resource type="Script" path="res://src/ui/map_canvas.gd" id="2_canvas"]
-[ext_resource type="Shader" path="res://assets/shaders/map_mask_overlay.gdshader" id="3_overlay"]
+[ext_resource type="Script" uid="uid://dfyh34yhmmdyo" path="res://src/dev/map_lab.gd" id="1_lab"]
+[ext_resource type="Script" uid="uid://bqcj7guu5orj6" path="res://src/ui/map_canvas.gd" id="2_canvas"]
+[ext_resource type="Shader" uid="uid://m618fvpi3c04" path="res://assets/shaders/map_mask_overlay.gdshader" id="3_overlay"]
 
 [sub_resource type="ShaderMaterial" id="mask_overlay"]
 shader = ExtResource("3_overlay")
 
-[node name="MapLab" type="Control"]
+[node name="MapLab" type="Control" unique_id=1185353257]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -16,75 +16,92 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_lab")
 
-[node name="Margin" type="MarginContainer" parent="."]
-theme_type_variation = &"ScreenMargin"
+[node name="Margin" type="MarginContainer" parent="." unique_id=420000648]
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_type_variation = &"ScreenMargin"
 
-[node name="Root" type="VBoxContainer" parent="Margin"]
+[node name="Root" type="VBoxContainer" parent="Margin" unique_id=988495286]
+layout_mode = 2
 theme_type_variation = &"ScreenStack"
 
-[node name="Header" type="HBoxContainer" parent="Margin/Root"]
+[node name="Header" type="HBoxContainer" parent="Margin/Root" unique_id=2041193278]
+layout_mode = 2
 
-[node name="BackButton" type="Button" parent="Margin/Root/Header"]
+[node name="BackButton" type="Button" parent="Margin/Root/Header" unique_id=1928635118]
 unique_name_in_owner = true
+layout_mode = 2
 text = "← Zurück"
 
-[node name="Title" type="Label" parent="Margin/Root/Header"]
-theme_type_variation = &"Title"
+[node name="Title" type="Label" parent="Margin/Root/Header" unique_id=1328556402]
+layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"Title"
 text = "Karten-Werkbank"
 
-[node name="BookSelect" type="OptionButton" parent="Margin/Root/Header"]
+[node name="BookSelect" type="OptionButton" parent="Margin/Root/Header" unique_id=254868805]
 unique_name_in_owner = true
+layout_mode = 2
 
-[node name="MapSelect" type="OptionButton" parent="Margin/Root/Header"]
+[node name="MapSelect" type="OptionButton" parent="Margin/Root/Header" unique_id=1801818199]
 unique_name_in_owner = true
+layout_mode = 2
 
-[node name="PointSelect" type="OptionButton" parent="Margin/Root/Header"]
+[node name="PointSelect" type="OptionButton" parent="Margin/Root/Header" unique_id=869802872]
 unique_name_in_owner = true
+layout_mode = 2
 
-[node name="ClearButton" type="Button" parent="Margin/Root/Header"]
+[node name="ClearButton" type="Button" parent="Margin/Root/Header" unique_id=689555587]
 unique_name_in_owner = true
+layout_mode = 2
 text = "Punkt löschen"
 
-[node name="ClearPathButton" type="Button" parent="Margin/Root/Header"]
+[node name="ClearPathButton" type="Button" parent="Margin/Root/Header" unique_id=882180000]
 unique_name_in_owner = true
+layout_mode = 2
 text = "Weg leeren"
 
-[node name="SaveButton" type="Button" parent="Margin/Root/Header"]
+[node name="SaveButton" type="Button" parent="Margin/Root/Header" unique_id=782768089]
 unique_name_in_owner = true
+layout_mode = 2
 text = "💾 Speichern"
 
-[node name="Bar" type="HBoxContainer" parent="Margin/Root"]
+[node name="Bar" type="HBoxContainer" parent="Margin/Root" unique_id=1455706397]
+layout_mode = 2
 
-[node name="Status" type="Label" parent="Margin/Root/Bar"]
+[node name="Status" type="Label" parent="Margin/Root/Bar" unique_id=1193711952]
 unique_name_in_owner = true
-theme_type_variation = &"Hint"
+layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"Hint"
 text = "Linke Maustaste wählt und zieht, rechte setzt Neues."
 
-[node name="DeleteSelectionButton" type="Button" parent="Margin/Root/Bar"]
+[node name="DeleteSelectionButton" type="Button" parent="Margin/Root/Bar" unique_id=2021907730]
 unique_name_in_owner = true
+layout_mode = 2
 text = "Auswahl löschen (Entf)"
 
-[node name="OutlineToggle" type="CheckButton" parent="Margin/Root/Bar"]
+[node name="OutlineToggle" type="CheckButton" parent="Margin/Root/Bar" unique_id=1763212809]
 unique_name_in_owner = true
+layout_mode = 2
 button_pressed = true
 text = "Masken"
 
-[node name="Body" type="HBoxContainer" parent="Margin/Root"]
+[node name="Body" type="HBoxContainer" parent="Margin/Root" unique_id=1494274564]
+layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Canvas" type="Control" parent="Margin/Root/Body"]
+[node name="Canvas" type="Control" parent="Margin/Root/Body" unique_id=1922059733]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(320, 180)
+layout_mode = 2
 size_flags_horizontal = 3
 script = ExtResource("2_canvas")
 
-[node name="Handles" type="Control" parent="Margin/Root/Body/Canvas"]
+[node name="Handles" type="Control" parent="Margin/Root/Body/Canvas" unique_id=78476041]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -94,48 +111,59 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="Inspector" type="PanelContainer" parent="Margin/Root/Body"]
+[node name="Inspector" type="PanelContainer" parent="Margin/Root/Body" unique_id=1708552692]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(316, 0)
+layout_mode = 2
 
-[node name="Scroll" type="ScrollContainer" parent="Margin/Root/Body/Inspector"]
+[node name="Scroll" type="ScrollContainer" parent="Margin/Root/Body/Inspector" unique_id=1020110374]
+layout_mode = 2
 horizontal_scroll_mode = 0
 
-[node name="Gutter" type="MarginContainer" parent="Margin/Root/Body/Inspector/Scroll"]
-theme_type_variation = &"ScrollGutter"
+[node name="Gutter" type="MarginContainer" parent="Margin/Root/Body/Inspector/Scroll" unique_id=1478426309]
+layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"ScrollGutter"
 
-[node name="Items" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter"]
+[node name="Items" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter" unique_id=1396397182]
+layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="EffectCaption" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items"]
+[node name="EffectCaption" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items" unique_id=1514813226]
+layout_mode = 2
 theme_type_variation = &"Caption"
 text = "Bewegung der Karte"
 
-[node name="AmbienceSelect" type="OptionButton" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items"]
+[node name="AmbienceSelect" type="OptionButton" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items" unique_id=387020962]
 unique_name_in_owner = true
+layout_mode = 2
 
-[node name="AddRow" type="HBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items"]
+[node name="AddRow" type="HBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items" unique_id=1471738054]
+layout_mode = 2
 
-[node name="KindSelect" type="OptionButton" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/AddRow"]
+[node name="KindSelect" type="OptionButton" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/AddRow" unique_id=1905032848]
 unique_name_in_owner = true
+layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="AddAmbienceButton" type="Button" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/AddRow"]
+[node name="AddAmbienceButton" type="Button" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/AddRow" unique_id=1138216431]
 unique_name_in_owner = true
+layout_mode = 2
 text = "+ Effekt"
 
-[node name="InspectorInfo" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items"]
+[node name="InspectorInfo" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items" unique_id=1429327719]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"Hint"
-autowrap_mode = 3
 text = "Einen Effekt wählen oder anlegen."
+autowrap_mode = 3
 
-[node name="ShapePreview" type="Control" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items"]
+[node name="ShapePreview" type="Control" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items" unique_id=1612288874]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 160)
+layout_mode = 2
 
-[node name="ShapeMask" type="Control" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/ShapePreview"]
+[node name="ShapeMask" type="Control" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/ShapePreview" unique_id=853811198]
 unique_name_in_owner = true
 material = SubResource("mask_overlay")
 layout_mode = 1
@@ -146,69 +174,84 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="EffectGroup" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items"]
+[node name="EffectGroup" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items" unique_id=699650763]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="KindCaption" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup"]
+[node name="KindCaption" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup" unique_id=1177651824]
+layout_mode = 2
 theme_type_variation = &"Caption"
 text = "Art"
 
-[node name="KindEdit" type="OptionButton" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup"]
+[node name="KindEdit" type="OptionButton" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup" unique_id=2112708800]
 unique_name_in_owner = true
+layout_mode = 2
 
-[node name="IntensityGroup" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup"]
+[node name="IntensityGroup" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup" unique_id=548532423]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="IntensityCaption" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/IntensityGroup"]
+[node name="IntensityCaption" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/IntensityGroup" unique_id=1160164135]
+layout_mode = 2
 theme_type_variation = &"Caption"
 text = "Intensität"
 
-[node name="IntensityRow" type="HBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/IntensityGroup"]
+[node name="IntensityRow" type="HBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/IntensityGroup" unique_id=1447198026]
+layout_mode = 2
 
-[node name="IntensitySlider" type="HSlider" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/IntensityGroup/IntensityRow"]
+[node name="IntensitySlider" type="HSlider" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/IntensityGroup/IntensityRow" unique_id=1575561196]
 unique_name_in_owner = true
+layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
-min_value = 0.0
 max_value = 2.0
 step = 0.05
 value = 1.0
 
-[node name="IntensityValue" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/IntensityGroup/IntensityRow"]
+[node name="IntensityValue" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/IntensityGroup/IntensityRow" unique_id=595100941]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
 text = "1.00"
 horizontal_alignment = 2
 
-[node name="StyleGroup" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup"]
+[node name="StyleGroup" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup" unique_id=1965437807]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="StyleCaption" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/StyleGroup"]
+[node name="StyleCaption" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/StyleGroup" unique_id=2041700887]
+layout_mode = 2
 theme_type_variation = &"Caption"
 text = "Form"
 
-[node name="StyleSelect" type="OptionButton" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/StyleGroup"]
+[node name="StyleSelect" type="OptionButton" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/StyleGroup" unique_id=677120717]
 unique_name_in_owner = true
+layout_mode = 2
 
-[node name="ParamGroup" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup"]
+[node name="ParamGroup" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup" unique_id=1752576134]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="SizeGroup" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup"]
+[node name="SizeGroup" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup" unique_id=341689137]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="SizeCaption" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/SizeGroup"]
+[node name="SizeCaption" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/SizeGroup" unique_id=1361355503]
+layout_mode = 2
 theme_type_variation = &"Caption"
 text = "Größe der Quelle"
 
-[node name="SizeRow" type="HBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/SizeGroup"]
+[node name="SizeRow" type="HBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/SizeGroup" unique_id=1945804933]
+layout_mode = 2
 
-[node name="SizeSlider" type="HSlider" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/SizeGroup/SizeRow"]
+[node name="SizeSlider" type="HSlider" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/SizeGroup/SizeRow" unique_id=486469986]
 unique_name_in_owner = true
+layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 min_value = 0.2
@@ -216,78 +259,92 @@ max_value = 4.0
 step = 0.05
 value = 1.0
 
-[node name="SizeValue" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/SizeGroup/SizeRow"]
+[node name="SizeValue" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/SizeGroup/SizeRow" unique_id=1655425013]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
 text = "1.00"
 horizontal_alignment = 2
 
-[node name="BrushGroup" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup"]
+[node name="BrushGroup" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup" unique_id=220337135]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="BrushSizeGroup" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup"]
+[node name="BrushSizeGroup" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup" unique_id=1728127877]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="BrushCaption" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/BrushSizeGroup"]
+[node name="BrushCaption" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/BrushSizeGroup" unique_id=1039436474]
+layout_mode = 2
 theme_type_variation = &"Caption"
 text = "Pinsel"
 
-[node name="BrushRow" type="HBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/BrushSizeGroup"]
+[node name="BrushRow" type="HBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/BrushSizeGroup" unique_id=1829616972]
+layout_mode = 2
 
-[node name="BrushSlider" type="HSlider" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/BrushSizeGroup/BrushRow"]
+[node name="BrushSlider" type="HSlider" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/BrushSizeGroup/BrushRow" unique_id=1136051713]
 unique_name_in_owner = true
+layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 min_value = 4.0
 max_value = 200.0
-step = 1.0
 value = 40.0
 
-[node name="BrushValue" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/BrushSizeGroup/BrushRow"]
+[node name="BrushValue" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/BrushSizeGroup/BrushRow" unique_id=813384988]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
 text = "40 px"
 horizontal_alignment = 2
 
-[node name="HardnessGroup" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup"]
+[node name="HardnessGroup" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup" unique_id=1920414759]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="HardnessCaption" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/HardnessGroup"]
+[node name="HardnessCaption" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/HardnessGroup" unique_id=11620640]
+layout_mode = 2
 theme_type_variation = &"Caption"
 text = "Härte des Randes"
 
-[node name="HardnessRow" type="HBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/HardnessGroup"]
+[node name="HardnessRow" type="HBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/HardnessGroup" unique_id=1537556990]
+layout_mode = 2
 
-[node name="HardnessSlider" type="HSlider" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/HardnessGroup/HardnessRow"]
+[node name="HardnessSlider" type="HSlider" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/HardnessGroup/HardnessRow" unique_id=1245939955]
 unique_name_in_owner = true
+layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
-min_value = 0.0
 max_value = 1.0
 step = 0.05
 value = 0.5
 
-[node name="HardnessValue" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/HardnessGroup/HardnessRow"]
+[node name="HardnessValue" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/HardnessGroup/HardnessRow" unique_id=1038244741]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
 text = "0.50"
 horizontal_alignment = 2
 
-[node name="StrengthGroup" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup"]
+[node name="StrengthGroup" type="VBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup" unique_id=915072093]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="StrengthCaption" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/StrengthGroup"]
+[node name="StrengthCaption" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/StrengthGroup" unique_id=1746178524]
+layout_mode = 2
 theme_type_variation = &"Caption"
 text = "Stärke"
 
-[node name="StrengthRow" type="HBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/StrengthGroup"]
+[node name="StrengthRow" type="HBoxContainer" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/StrengthGroup" unique_id=102488109]
+layout_mode = 2
 
-[node name="StrengthSlider" type="HSlider" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/StrengthGroup/StrengthRow"]
+[node name="StrengthSlider" type="HSlider" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/StrengthGroup/StrengthRow" unique_id=1986716603]
 unique_name_in_owner = true
+layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 min_value = 0.05
@@ -295,16 +352,19 @@ max_value = 1.0
 step = 0.05
 value = 1.0
 
-[node name="StrengthValue" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/StrengthGroup/StrengthRow"]
+[node name="StrengthValue" type="Label" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup/StrengthGroup/StrengthRow" unique_id=436290126]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
 text = "1.00"
 horizontal_alignment = 2
 
-[node name="UndoButton" type="Button" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup"]
+[node name="UndoButton" type="Button" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup/BrushGroup" unique_id=2030197288]
 unique_name_in_owner = true
+layout_mode = 2
 text = "Rückgängig (Strg+Z)"
 
-[node name="DeleteAmbienceButton" type="Button" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup"]
+[node name="DeleteAmbienceButton" type="Button" parent="Margin/Root/Body/Inspector/Scroll/Gutter/Items/EffectGroup" unique_id=1535562040]
 unique_name_in_owner = true
+layout_mode = 2
 text = "Effekt löschen"

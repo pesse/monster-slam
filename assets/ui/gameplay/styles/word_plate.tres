@@ -1,6 +1,6 @@
-[gd_resource type="StyleBoxTexture" load_steps=2 format=3]
+[gd_resource type="StyleBoxTexture" format=3 uid="uid://cy5jaqkq5vgep"]
 
-[ext_resource type="Texture2D" path="res://assets/ui/gameplay/frames/word_plate.webp" id="1"]
+[ext_resource type="Texture2D" uid="uid://w44324t73hq7" path="res://assets/ui/gameplay/frames/word_plate.webp" id="1"]
 
 [resource]
 texture = ExtResource("1")

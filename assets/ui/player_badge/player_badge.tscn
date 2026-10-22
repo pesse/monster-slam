@@ -1,9 +1,11 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://mivvpoqqnens"]
 
-[ext_resource type="Script" path="res://assets/ui/player_badge/player_badge.gd" id="1"]
+[ext_resource type="Script" uid="uid://c55a421q7m55v" path="res://assets/ui/player_badge/player_badge.gd" id="1"]
 
-[node name="PlayerBadge" type="Control"]
+[node name="PlayerBadge" type="Control" unique_id=986805908]
 custom_minimum_size = Vector2(460, 307)
+layout_mode = 3
+anchors_preset = 0
 offset_right = 460.0
 offset_bottom = 307.0
 mouse_filter = 1

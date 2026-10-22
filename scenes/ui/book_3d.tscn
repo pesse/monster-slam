@@ -1,14 +1,23 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene format=3 uid="uid://bdwjveb44jxen"]
 
-[ext_resource type="Script" path="res://src/ui/book_3d.gd" id="1_book"]
-[ext_resource type="Script" path="res://src/ui/ornate_frame.gd" id="2_frame"]
-[ext_resource type="Shader" path="res://assets/shaders/book_glow.gdshader" id="9_glow"]
-[ext_resource type="Texture2D" path="res://assets/ui/library/cover_cloth.webp" id="10_cloth"]
-[ext_resource type="Texture2D" path="res://assets/ui/library/cover_corner.webp" id="11_corner"]
+[ext_resource type="Script" uid="uid://ie5qabygw2xa" path="res://src/ui/book_3d.gd" id="1_book"]
+[ext_resource type="Script" uid="uid://c4fbpo4o2i8i2" path="res://src/ui/ornate_frame.gd" id="2_frame"]
+[ext_resource type="Shader" uid="uid://daw54u56ro5pk" path="res://assets/shaders/book_glow.gdshader" id="9_glow"]
+[ext_resource type="Texture2D" uid="uid://cudir32wtqjmo" path="res://assets/ui/library/cover_cloth.webp" id="10_cloth"]
+[ext_resource type="Texture2D" uid="uid://b41oxgkh0ra3l" path="res://assets/ui/library/cover_corner.webp" id="11_corner"]
+
+[sub_resource type="ShaderMaterial" id="glow"]
+render_priority = 0
+shader = ExtResource("9_glow")
+shader_parameter/color = null
+shader_parameter/strength = null
+shader_parameter/quad_size = null
+shader_parameter/book_size = null
+shader_parameter/falloff = null
+shader_parameter/pulse = null
 
 [sub_resource type="StandardMaterial3D" id="paper"]
 albedo_color = Color(0.8, 0.75, 0.64, 1)
-roughness = 1.0
 
 [sub_resource type="StandardMaterial3D" id="gold"]
 cull_mode = 2
@@ -16,63 +25,60 @@ albedo_color = Color(0.85, 0.66, 0.3, 1)
 metallic = 0.6
 roughness = 0.4
 
-[sub_resource type="ShaderMaterial" id="glow"]
-shader = ExtResource("9_glow")
-
-[node name="Book3D" type="Node3D"]
+[node name="Book3D" type="Node3D" unique_id=6588357]
 script = ExtResource("1_book")
 
-[node name="Body" type="Node3D" parent="."]
+[node name="Body" type="Node3D" parent="." unique_id=849414447]
 unique_name_in_owner = true
 
-[node name="Glow" type="MeshInstance3D" parent="Body"]
+[node name="Glow" type="MeshInstance3D" parent="Body" unique_id=343744045]
 unique_name_in_owner = true
 visible = false
 material_override = SubResource("glow")
 cast_shadow = 0
 
-[node name="Back" type="MeshInstance3D" parent="Body"]
+[node name="Back" type="MeshInstance3D" parent="Body" unique_id=1111653769]
 unique_name_in_owner = true
 
-[node name="Spine" type="MeshInstance3D" parent="Body"]
+[node name="Spine" type="MeshInstance3D" parent="Body" unique_id=1738444581]
 unique_name_in_owner = true
 
-[node name="Pages" type="MeshInstance3D" parent="Body"]
+[node name="Pages" type="MeshInstance3D" parent="Body" unique_id=880106296]
 unique_name_in_owner = true
 material_override = SubResource("paper")
 
-[node name="RightMap" type="MeshInstance3D" parent="Body"]
+[node name="RightMap" type="MeshInstance3D" parent="Body" unique_id=1390344171]
 unique_name_in_owner = true
 
-[node name="Hinge" type="Node3D" parent="Body"]
+[node name="Hinge" type="Node3D" parent="Body" unique_id=210032766]
 unique_name_in_owner = true
 
-[node name="Front" type="MeshInstance3D" parent="Body/Hinge"]
+[node name="Front" type="MeshInstance3D" parent="Body/Hinge" unique_id=1317456641]
 unique_name_in_owner = true
 
-[node name="CoverFace" type="MeshInstance3D" parent="Body/Hinge"]
+[node name="CoverFace" type="MeshInstance3D" parent="Body/Hinge" unique_id=1008620718]
 unique_name_in_owner = true
 
-[node name="LeftPage" type="MeshInstance3D" parent="Body/Hinge"]
+[node name="LeftPage" type="MeshInstance3D" parent="Body/Hinge" unique_id=769935269]
 unique_name_in_owner = true
 
-[node name="LeftMap" type="MeshInstance3D" parent="Body/Hinge"]
+[node name="LeftMap" type="MeshInstance3D" parent="Body/Hinge" unique_id=481104306]
 unique_name_in_owner = true
 
-[node name="BandTop" type="MeshInstance3D" parent="Body"]
-unique_name_in_owner = true
-material_override = SubResource("gold")
-
-[node name="BandBottom" type="MeshInstance3D" parent="Body"]
+[node name="BandTop" type="MeshInstance3D" parent="Body" unique_id=144040697]
 unique_name_in_owner = true
 material_override = SubResource("gold")
 
-[node name="Art" type="SubViewport" parent="."]
+[node name="BandBottom" type="MeshInstance3D" parent="Body" unique_id=1020994996]
+unique_name_in_owner = true
+material_override = SubResource("gold")
+
+[node name="Art" type="SubViewport" parent="." unique_id=1745046673]
 unique_name_in_owner = true
 disable_3d = true
 size = Vector2i(264, 420)
 
-[node name="Paper" type="TextureRect" parent="Art"]
+[node name="Paper" type="TextureRect" parent="Art" unique_id=1376193212]
 unique_name_in_owner = true
 anchors_preset = 15
 anchor_right = 1.0
@@ -82,7 +88,7 @@ grow_vertical = 2
 texture = ExtResource("10_cloth")
 stretch_mode = 1
 
-[node name="CornerTop" type="TextureRect" parent="Art"]
+[node name="CornerTop" type="TextureRect" parent="Art" unique_id=878836118]
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
@@ -92,7 +98,7 @@ grow_horizontal = 0
 texture = ExtResource("11_corner")
 expand_mode = 1
 
-[node name="CornerBottom" type="TextureRect" parent="Art"]
+[node name="CornerBottom" type="TextureRect" parent="Art" unique_id=1497817777]
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
@@ -106,7 +112,7 @@ texture = ExtResource("11_corner")
 expand_mode = 1
 flip_v = true
 
-[node name="Head" type="VBoxContainer" parent="Art"]
+[node name="Head" type="VBoxContainer" parent="Art" unique_id=1141476048]
 anchors_preset = -1
 anchor_right = 1.0
 anchor_bottom = 0.22
@@ -117,7 +123,7 @@ grow_horizontal = 2
 theme_type_variation = &"Tight"
 alignment = 1
 
-[node name="Title" type="Label" parent="Art/Head"]
+[node name="Title" type="Label" parent="Art/Head" unique_id=312040611]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"CoverTitle"
@@ -125,15 +131,15 @@ text = "Buch"
 horizontal_alignment = 1
 text_overrun_behavior = 3
 
-[node name="Language" type="Label" parent="Art/Head"]
+[node name="Language" type="Label" parent="Art/Head" unique_id=596306983]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"CoverNote"
 text = "Sprache"
 horizontal_alignment = 1
 
-[node name="Frame" type="Control" parent="Art"]
-anchors_preset = -1
+[node name="Frame" type="Control" parent="Art" unique_id=212552390]
+layout_mode = 3
 anchor_top = 0.23
 anchor_right = 1.0
 anchor_bottom = 0.61
@@ -142,9 +148,9 @@ offset_right = -16.0
 grow_horizontal = 2
 script = ExtResource("2_frame")
 
-[node name="Map" type="TextureRect" parent="Art/Frame"]
+[node name="Map" type="TextureRect" parent="Art/Frame" unique_id=788438341]
 unique_name_in_owner = true
-anchors_preset = 15
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 10.0
@@ -156,7 +162,7 @@ grow_vertical = 2
 expand_mode = 1
 stretch_mode = 6
 
-[node name="Stats" type="VBoxContainer" parent="Art"]
+[node name="Stats" type="VBoxContainer" parent="Art" unique_id=1154508677]
 unique_name_in_owner = true
 modulate = Color(1, 1, 1, 0)
 anchors_preset = -1
@@ -166,30 +172,30 @@ anchor_bottom = 0.87
 offset_left = 32.0
 offset_right = -32.0
 grow_horizontal = 2
-alignment = 1
 theme_type_variation = &"Tight"
+alignment = 1
 
-[node name="Words" type="Label" parent="Art/Stats"]
+[node name="Words" type="Label" parent="Art/Stats" unique_id=1677510053]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"CoverStat"
 text = "📖 0 / 0"
 horizontal_alignment = 1
 
-[node name="WordsNote" type="Label" parent="Art/Stats"]
+[node name="WordsNote" type="Label" parent="Art/Stats" unique_id=1747267033]
 layout_mode = 2
 theme_type_variation = &"CoverNote"
 text = "Wörter gemeistert"
 horizontal_alignment = 1
 
-[node name="Bar" type="ProgressBar" parent="Art/Stats"]
+[node name="Bar" type="ProgressBar" parent="Art/Stats" unique_id=1195544834]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 theme_type_variation = &"XpBar"
 show_percentage = false
 
-[node name="Crowns" type="Label" parent="Art/Stats"]
+[node name="Crowns" type="Label" parent="Art/Stats" unique_id=224708284]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"CoverNote"

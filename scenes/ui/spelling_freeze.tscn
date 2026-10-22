@@ -1,9 +1,10 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bsmw31rcs1ed7"]
 
-[ext_resource type="Script" path="res://src/ui/spelling_freeze.gd" id="1_freeze"]
+[ext_resource type="Script" uid="uid://b2i5ag0uwdh78" path="res://src/ui/spelling_freeze.gd" id="1_freeze"]
 
-[node name="SpellingFreeze" type="Control"]
+[node name="SpellingFreeze" type="Control" unique_id=195035403]
 process_mode = 3
+visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,10 +12,9 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-visible = false
 script = ExtResource("1_freeze")
 
-[node name="Veil" type="ColorRect" parent="."]
+[node name="Veil" type="ColorRect" parent="." unique_id=1899210303]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -24,7 +24,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(1, 1, 1, 0.55)
 
-[node name="Content" type="CenterContainer" parent="."]
+[node name="Content" type="CenterContainer" parent="." unique_id=1073054651]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -33,25 +33,25 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="Stack" type="VBoxContainer" parent="Content"]
+[node name="Stack" type="VBoxContainer" parent="Content" unique_id=890107765]
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"Tight"
 
-[node name="Prompt" type="Label" parent="Content/Stack"]
+[node name="Prompt" type="Label" parent="Content/Stack" unique_id=510200044]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_type_variation = &"SpellingPrompt"
 horizontal_alignment = 1
 
-[node name="Names" type="Control" parent="Content/Stack"]
+[node name="Names" type="Control" parent="Content/Stack" unique_id=1380349817]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(1100, 32)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Word" type="RichTextLabel" parent="Content/Stack"]
+[node name="Word" type="RichTextLabel" parent="Content/Stack" unique_id=156251540]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(1100, 0)
 layout_mode = 2

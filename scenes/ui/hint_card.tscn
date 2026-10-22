@@ -1,79 +1,91 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://buhuopbft0ut5"]
 
-[ext_resource type="Script" path="res://src/ui/hint_card.gd" id="1_hint_card"]
+[ext_resource type="Script" uid="uid://bcj5f55egjokl" path="res://src/ui/hint_card.gd" id="1_hint_card"]
 
-[node name="HintCard" type="PanelContainer"]
-theme_type_variation = &"HintCard"
+[node name="HintCard" type="PanelContainer" unique_id=1307094829]
 mouse_filter = 2
+theme_type_variation = &"HintCard"
 script = ExtResource("1_hint_card")
 
-[node name="Root" type="VBoxContainer" parent="."]
+[node name="Root" type="VBoxContainer" parent="." unique_id=1733868876]
+layout_mode = 2
+mouse_filter = 2
 theme_type_variation = &"Tight"
+
+[node name="Head" type="HBoxContainer" parent="Root" unique_id=867027378]
+layout_mode = 2
 mouse_filter = 2
 
-[node name="Head" type="HBoxContainer" parent="Root"]
-mouse_filter = 2
-
-[node name="Icon" type="TextureRect" parent="Root/Head"]
+[node name="Icon" type="TextureRect" parent="Root/Head" unique_id=51642352]
 unique_name_in_owner = true
 visible = false
-custom_minimum_size = Vector2(40, 40)
-mouse_filter = 2
 texture_filter = 4
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Titles" type="VBoxContainer" parent="Root/Head"]
-theme_type_variation = &"Tight"
+[node name="Titles" type="VBoxContainer" parent="Root/Head" unique_id=1958488965]
+layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 mouse_filter = 2
+theme_type_variation = &"Tight"
 
-[node name="Title" type="Label" parent="Root/Head/Titles"]
-theme_type_variation = &"SectionTitle"
+[node name="Title" type="Label" parent="Root/Head/Titles" unique_id=157473894]
 unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SectionTitle"
 text = "Name"
 autowrap_mode = 3
 
-[node name="Subtitle" type="Label" parent="Root/Head/Titles"]
-theme_type_variation = &"HintSubtitle"
+[node name="Subtitle" type="Label" parent="Root/Head/Titles" unique_id=1138126527]
 unique_name_in_owner = true
 visible = false
+layout_mode = 2
+theme_type_variation = &"HintSubtitle"
 text = "Zweig · Zustand"
 autowrap_mode = 3
 
-[node name="Prices" type="HBoxContainer" parent="Root/Head"]
+[node name="Prices" type="HBoxContainer" parent="Root/Head" unique_id=693598530]
 unique_name_in_owner = true
 visible = false
+layout_mode = 2
 size_flags_vertical = 0
 mouse_filter = 2
 
-[node name="Rule" type="HSeparator" parent="Root"]
-theme_type_variation = &"HintRule"
+[node name="Rule" type="HSeparator" parent="Root" unique_id=1183732635]
 unique_name_in_owner = true
 visible = false
+layout_mode = 2
 mouse_filter = 2
+theme_type_variation = &"HintRule"
 
-[node name="Image" type="TextureRect" parent="Root"]
+[node name="Image" type="TextureRect" parent="Root" unique_id=1638697671]
 unique_name_in_owner = true
 visible = false
+layout_mode = 2
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Body" type="Label" parent="Root"]
-theme_type_variation = &"Hint"
+[node name="Body" type="Label" parent="Root" unique_id=1119921127]
 unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Hint"
 text = "Wirkung"
 autowrap_mode = 3
 
-[node name="List" type="GridContainer" parent="Root"]
+[node name="List" type="GridContainer" parent="Root" unique_id=1372743415]
 unique_name_in_owner = true
+layout_mode = 2
 mouse_filter = 2
 columns = 3
 
-[node name="Note" type="Label" parent="Root"]
-theme_type_variation = &"HintNote"
+[node name="Note" type="Label" parent="Root" unique_id=1389811111]
 unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HintNote"
 text = "Zustand"
 autowrap_mode = 3

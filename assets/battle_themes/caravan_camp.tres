@@ -1,25 +1,25 @@
-[gd_resource type="Resource" script_class="BattleTheme" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="BattleTheme" format=3 uid="uid://cipci5c6cy4hy"]
 
-[ext_resource type="Script" path="res://src/battle/battle_theme.gd" id="1_theme"]
+[ext_resource type="Script" uid="uid://c6bpe22eo7xiw" path="res://src/battle/battle_theme.gd" id="1_theme"]
 
 [resource]
 script = ExtResource("1_theme")
+ground_low = Color(0.92, 0.76, 0.44, 1)
+ground_high = Color(0.98, 0.84, 0.54, 1)
+hill = Color(0.88, 0.6, 0.36, 1)
 ground_patch = Color(0.86, 0.7, 0.44, 1)
 ground_patch_amount = 0.25
 path = "road"
 path_color = Color(0.82, 0.66, 0.42, 1)
-light_from = "desert"
+cover = 0.5
+cover_color = Color(0.72, 0.66, 0.36, 1)
+bush_color = Color(0.45, 0.5, 0.25, 1)
+bushes = 0.25
 ground_texture = "sand"
-ground_low = Color(0.92, 0.76, 0.44, 1)
-ground_high = Color(0.98, 0.84, 0.54, 1)
-hill = Color(0.88, 0.6, 0.36, 1)
+light_from = "desert"
+tumbleweeds = true
 trees = Array[String](["forge/palm.glb", "forge/nomad_tent.glb", "forge/clay_house.glb"])
 rocks = Array[String](["forge/sandstone_rock.glb"])
 grass = Array[String](["forge/dry_grass.glb"])
 props = Array[String](["forge/amphorae.glb", "props/crates_stacked.gltf", "props/barrel_large.gltf"])
 landmarks = Array[String](["forge/clay_house.glb", "forge/ruin_column.glb"])
-cover = 0.5
-cover_color = Color(0.72, 0.66, 0.36, 1)
-bush_color = Color(0.45, 0.5, 0.25, 1)
-bushes = 0.25
-tumbleweeds = true

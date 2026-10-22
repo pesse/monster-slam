@@ -1,17 +1,17 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene format=3 uid="uid://bl50lmt38mvyi"]
 
-[ext_resource type="Script" path="res://src/battle/writing_boss.gd" id="1_boss"]
-[ext_resource type="PackedScene" path="res://scenes/battle/writing/encounter_panel.tscn" id="2_encounter"]
-[ext_resource type="PackedScene" path="res://scenes/battle/writing/reading_panel.tscn" id="3_reading"]
-[ext_resource type="PackedScene" path="res://scenes/battle/writing/writing_panel.tscn" id="4_writing"]
-[ext_resource type="PackedScene" path="res://scenes/battle/writing/attack_panel.tscn" id="5_attack"]
-[ext_resource type="PackedScene" path="res://scenes/battle/writing/revision_panel.tscn" id="6_revision"]
-[ext_resource type="PackedScene" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
-[ext_resource type="PackedScene" path="res://scenes/ui/confirm_dialog.tscn" id="8_confirm"]
-[ext_resource type="PackedScene" path="res://scenes/ui/scene_zoom.tscn" id="20_zoom"]
-[ext_resource type="Script" path="res://src/ui/speech_bubble.gd" id="21_bubble"]
+[ext_resource type="Script" uid="uid://bxn4gxpmiath3" path="res://src/battle/writing_boss.gd" id="1_boss"]
+[ext_resource type="PackedScene" uid="uid://c8xpwabf54wql" path="res://scenes/battle/writing/encounter_panel.tscn" id="2_encounter"]
+[ext_resource type="PackedScene" uid="uid://bi7vyfbu14y1k" path="res://scenes/battle/writing/reading_panel.tscn" id="3_reading"]
+[ext_resource type="PackedScene" uid="uid://da2g5cjqe623o" path="res://scenes/battle/writing/writing_panel.tscn" id="4_writing"]
+[ext_resource type="PackedScene" uid="uid://bpich5gimu1pl" path="res://scenes/battle/writing/attack_panel.tscn" id="5_attack"]
+[ext_resource type="PackedScene" uid="uid://bsb3a7jhsx7bx" path="res://scenes/battle/writing/revision_panel.tscn" id="6_revision"]
+[ext_resource type="PackedScene" uid="uid://f0ojpbs2lx7v" path="res://scenes/ui/confirm_dialog.tscn" id="8_confirm"]
+[ext_resource type="PackedScene" uid="uid://cw22emvppdi21" path="res://scenes/ui/scene_zoom.tscn" id="20_zoom"]
+[ext_resource type="Script" uid="uid://dkphjuyqlpubu" path="res://src/ui/speech_bubble.gd" id="21_bubble"]
+[ext_resource type="PackedScene" uid="uid://badeio0oospuy" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
 
-[node name="WritingBoss" type="Control"]
+[node name="WritingBoss" type="Control" unique_id=1484728553]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -20,7 +20,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_boss")
 
-[node name="Flash" type="ColorRect" parent="."]
+[node name="Flash" type="ColorRect" parent="." unique_id=2004629903]
 unique_name_in_owner = true
 modulate = Color(1, 1, 1, 0)
 layout_mode = 1
@@ -32,8 +32,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(1, 0.85, 0.4, 0.3)
 
-[node name="Margin" type="MarginContainer" parent="."]
-theme_type_variation = &"ScreenMargin"
+[node name="Margin" type="MarginContainer" parent="." unique_id=675536426]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -41,141 +40,144 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+theme_type_variation = &"ScreenMargin"
 
-[node name="Root" type="VBoxContainer" parent="Margin"]
+[node name="Root" type="VBoxContainer" parent="Margin" unique_id=217098376]
+layout_mode = 2
+mouse_filter = 2
 theme_type_variation = &"ScreenStack"
+
+[node name="Header" type="HBoxContainer" parent="Margin/Root" unique_id=915962916]
 layout_mode = 2
 mouse_filter = 2
-
-[node name="Header" type="HBoxContainer" parent="Margin/Root"]
 theme_type_variation = &"SectionStack"
-layout_mode = 2
-mouse_filter = 2
 
-[node name="BackButton" type="Button" parent="Margin/Root/Header"]
+[node name="BackButton" type="Button" parent="Margin/Root/Header" unique_id=543556334]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-theme_type_variation = &"WindowButton"
 size_flags_vertical = 4
+theme_type_variation = &"WindowButton"
 text = "← Zurück"
 
-[node name="LeftSpace" type="Control" parent="Margin/Root/Header"]
+[node name="LeftSpace" type="Control" parent="Margin/Root/Header" unique_id=204811078]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="BossPlate" type="PanelContainer" parent="Margin/Root/Header"]
-theme_type_variation = &"HudPanel"
+[node name="BossPlate" type="PanelContainer" parent="Margin/Root/Header" unique_id=567510712]
 custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
+theme_type_variation = &"HudPanel"
 
-[node name="PlateStack" type="VBoxContainer" parent="Margin/Root/Header/BossPlate"]
+[node name="PlateStack" type="VBoxContainer" parent="Margin/Root/Header/BossPlate" unique_id=937319801]
+layout_mode = 2
 theme_type_variation = &"Tight"
-layout_mode = 2
 
-[node name="PlateTop" type="HBoxContainer" parent="Margin/Root/Header/BossPlate/PlateStack"]
+[node name="PlateTop" type="HBoxContainer" parent="Margin/Root/Header/BossPlate/PlateStack" unique_id=1641608713]
+layout_mode = 2
 theme_type_variation = &"ScreenStack"
-layout_mode = 2
 
-[node name="BossName" type="Label" parent="Margin/Root/Header/BossPlate/PlateStack/PlateTop"]
+[node name="BossName" type="Label" parent="Margin/Root/Header/BossPlate/PlateStack/PlateTop" unique_id=600547685]
 unique_name_in_owner = true
-theme_type_variation = &"SectionTitle"
 layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"SectionTitle"
 text = "The Rambler"
 
-[node name="StackLabel" type="Label" parent="Margin/Root/Header/BossPlate/PlateStack/PlateTop"]
+[node name="StackLabel" type="Label" parent="Margin/Root/Header/BossPlate/PlateStack/PlateTop" unique_id=1142712250]
 unique_name_in_owner = true
-theme_type_variation = &"SectionTitle"
 layout_mode = 2
+theme_type_variation = &"SectionTitle"
 text = "📄 5/5"
 
-[node name="StackBar" type="ProgressBar" parent="Margin/Root/Header/BossPlate/PlateStack"]
+[node name="StackBar" type="ProgressBar" parent="Margin/Root/Header/BossPlate/PlateStack" unique_id=1187119646]
 unique_name_in_owner = true
-theme_type_variation = &"BossHp"
 custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
+theme_type_variation = &"BossHp"
 max_value = 5.0
-step = 0.01
 value = 5.0
 show_percentage = false
 
-[node name="RightSpace" type="Control" parent="Margin/Root/Header"]
+[node name="RightSpace" type="Control" parent="Margin/Root/Header" unique_id=231997221]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="RoundPlate" type="PanelContainer" parent="Margin/Root/Header"]
-theme_type_variation = &"HudPanel"
+[node name="RoundPlate" type="PanelContainer" parent="Margin/Root/Header" unique_id=2022318403]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_vertical = 4
+theme_type_variation = &"HudPanel"
 
-[node name="RoundLabel" type="Label" parent="Margin/Root/Header/RoundPlate"]
+[node name="RoundLabel" type="Label" parent="Margin/Root/Header/RoundPlate" unique_id=1665347666]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"SectionTitle"
-layout_mode = 2
-horizontal_alignment = 1
 text = "Begegnung"
+horizontal_alignment = 1
 
-[node name="HandbookLink" parent="Margin/Root/Header" instance=ExtResource("handbook_link")]
+[node name="HandbookLink" parent="Margin/Root/Header" unique_id=185351865 instance=ExtResource("handbook_link")]
 layout_mode = 2
-size_flags_vertical = 4
 chapter = "22-schreib-boss.md"
 
-[node name="Body" type="Control" parent="Margin/Root"]
+[node name="Body" type="Control" parent="Margin/Root" unique_id=318977322]
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
 
-[node name="Encounter" parent="Margin/Root/Body" instance=ExtResource("2_encounter")]
+[node name="Encounter" parent="Margin/Root/Body" unique_id=1790003414 instance=ExtResource("2_encounter")]
 unique_name_in_owner = true
 layout_mode = 1
+anchors_preset = 15
 
-[node name="Reading" parent="Margin/Root/Body" instance=ExtResource("3_reading")]
-unique_name_in_owner = true
-visible = false
-layout_mode = 1
-
-[node name="Writing" parent="Margin/Root/Body" instance=ExtResource("4_writing")]
+[node name="Reading" parent="Margin/Root/Body" unique_id=257810652 instance=ExtResource("3_reading")]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
+anchors_preset = 15
 
-[node name="Attack" parent="Margin/Root/Body" instance=ExtResource("5_attack")]
+[node name="Writing" parent="Margin/Root/Body" unique_id=1469036504 instance=ExtResource("4_writing")]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
+anchors_preset = 15
 
-[node name="Revision" parent="Margin/Root/Body" instance=ExtResource("6_revision")]
+[node name="Attack" parent="Margin/Root/Body" unique_id=1821787705 instance=ExtResource("5_attack")]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
+anchors_preset = 15
 
-[node name="Mumble" type="PanelContainer" parent="."]
+[node name="Revision" parent="Margin/Root/Body" unique_id=1525259969 instance=ExtResource("6_revision")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+
+[node name="Mumble" type="PanelContainer" parent="." unique_id=463195457]
 unique_name_in_owner = true
 visible = false
 modulate = Color(1, 1, 1, 0)
-theme_type_variation = &"BossBubble"
 layout_mode = 0
 mouse_filter = 2
+theme_type_variation = &"BossBubble"
 script = ExtResource("21_bubble")
 tail_length = 18.0
 tail_width = 20.0
 
-[node name="MumbleLine" type="Label" parent="Mumble"]
+[node name="MumbleLine" type="Label" parent="Mumble" unique_id=1004723264]
 unique_name_in_owner = true
-theme_type_variation = &"BubbleHint"
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-autowrap_mode = 3
+theme_type_variation = &"BubbleHint"
 text = "…"
+autowrap_mode = 3
 
-[node name="Shout" type="Label" parent="."]
+[node name="Shout" type="Label" parent="." unique_id=1840327384]
 unique_name_in_owner = true
 modulate = Color(1, 1, 1, 0)
-theme_type_variation = &"Shout"
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -188,17 +190,17 @@ offset_right = 300.0
 offset_bottom = 60.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 2
+theme_type_variation = &"Shout"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="CheckTimer" type="Timer" parent="."]
+[node name="CheckTimer" type="Timer" parent="." unique_id=185205929]
 unique_name_in_owner = true
 wait_time = 0.35
 one_shot = true
 
-[node name="ConfirmDialog" parent="." instance=ExtResource("8_confirm")]
+[node name="ConfirmDialog" parent="." unique_id=1292216418 instance=ExtResource("8_confirm")]
 unique_name_in_owner = true
 layout_mode = 1
 
-[node name="SceneZoom" parent="." instance=ExtResource("20_zoom")]
+[node name="SceneZoom" parent="." unique_id=1299535109 instance=ExtResource("20_zoom")]

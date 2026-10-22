@@ -1,18 +1,22 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://c6crrg60svtx"]
 
-[node name="Param" type="VBoxContainer"]
+[node name="Param" type="VBoxContainer" unique_id=950753906]
 theme_type_variation = &"Tight"
 
-[node name="Caption" type="Label" parent="."]
+[node name="Caption" type="Label" parent="." unique_id=821821226]
+layout_mode = 2
 theme_type_variation = &"Caption"
 text = "Regler"
 
-[node name="Row" type="HBoxContainer" parent="."]
+[node name="Row" type="HBoxContainer" parent="." unique_id=191295087]
+layout_mode = 2
 
-[node name="Slider" type="HSlider" parent="Row"]
+[node name="Slider" type="HSlider" parent="Row" unique_id=1368437158]
+layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 
-[node name="Value" type="Label" parent="Row"]
+[node name="Value" type="Label" parent="Row" unique_id=347692082]
 custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
 horizontal_alignment = 2

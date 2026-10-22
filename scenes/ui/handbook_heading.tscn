@@ -1,6 +1,6 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bk8vini02i8ft"]
 
-[node name="Heading" type="Label"]
+[node name="Heading" type="Label" unique_id=1649579034]
 size_flags_horizontal = 3
 theme_type_variation = &"HandbookHeading"
 autowrap_mode = 3

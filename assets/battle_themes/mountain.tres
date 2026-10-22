@@ -1,26 +1,25 @@
-[gd_resource type="Resource" script_class="BattleTheme" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="BattleTheme" format=3 uid="uid://bju8xmevd2mgb"]
 
-[ext_resource type="Script" path="res://src/battle/battle_theme.gd" id="1_theme"]
+[ext_resource type="Script" uid="uid://c6bpe22eo7xiw" path="res://src/battle/battle_theme.gd" id="1_theme"]
 
 [resource]
 script = ExtResource("1_theme")
-ground_patch = Color(0.6, 0.6, 0.56, 1)
-ground_patch_amount = 0.25
-path = "trail"
-path_color = Color(0.5, 0.44, 0.34, 1)
-ground_texture = "grass"
-ground_texture_strength = 0.8
 ground_low = Color(0.44, 0.46, 0.28, 1)
 ground_high = Color(0.6, 0.6, 0.4, 1)
 hill = Color(0.64, 0.64, 0.64, 1)
-background = Color(0.1, 0.1, 0.14, 1)
-ambient = Color(0.56, 0.58, 0.64, 1)
-sun_energy = 1.1
-trees = Array[String](["forge/pine.glb", "forge/dead_tree.glb"])
-rocks = Array[String](["forge/boulder_grey.glb"])
+ground_patch = Color(0.6, 0.6, 0.56, 1)
+ground_patch_amount = 0.25
+path_color = Color(0.5, 0.44, 0.34, 1)
 cover = 2.2
 cover_flowers = Array[Color]([Color(0.95, 0.95, 0.9, 1), Color(0.6, 0.45, 0.85, 1)])
 cover_flower_amount = 0.05
 bush_color = Color(0.26, 0.34, 0.18, 1)
 bushes = 0.4
+ground_texture = "grass"
+ground_texture_strength = 0.8
+background = Color(0.1, 0.1, 0.14, 1)
+ambient = Color(0.56, 0.58, 0.64, 1)
+sun_energy = 1.1
+trees = Array[String](["forge/pine.glb", "forge/dead_tree.glb"])
+rocks = Array[String](["forge/boulder_grey.glb"])
 grass = Array[String](["forge/green_grass.glb", "forge/wild_flowers.glb"])

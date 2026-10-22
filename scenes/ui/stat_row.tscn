@@ -1,20 +1,23 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://1560p6knfbvs"]
 
-[ext_resource type="Script" path="res://src/ui/stat_row.gd" id="1_row"]
+[ext_resource type="Script" uid="uid://cqd7kqfkolpyv" path="res://src/ui/stat_row.gd" id="1_row"]
 
-[node name="StatRow" type="HBoxContainer"]
+[node name="StatRow" type="HBoxContainer" unique_id=1743000943]
 script = ExtResource("1_row")
 
-[node name="Name" type="Label" parent="."]
+[node name="Name" type="Label" parent="." unique_id=220704520]
+layout_mode = 2
 size_flags_horizontal = 3
 text = "Bezeichnung"
 clip_text = true
 
-[node name="Value" type="Label" parent="."]
+[node name="Value" type="Label" parent="." unique_id=1011060512]
 custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
 text = "Wert"
 horizontal_alignment = 2
 
-[node name="Mark" type="Label" parent="."]
+[node name="Mark" type="Label" parent="." unique_id=618603077]
 custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
 horizontal_alignment = 2

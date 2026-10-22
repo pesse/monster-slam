@@ -1,18 +1,15 @@
-[gd_resource type="StyleBoxTexture" load_steps=2 format=3]
+[gd_resource type="StyleBoxTexture" format=3 uid="uid://di2qacb1mu4el"]
 
-[ext_resource type="Texture2D" path="res://assets/ui/windows/window_panel_compact.webp" id="1"]
+[ext_resource type="Texture2D" uid="uid://cduuweh2lcac2" path="res://assets/ui/windows/window_panel_compact.webp" id="1"]
 
 [resource]
+content_margin_left = 26.0
+content_margin_top = 26.0
+content_margin_right = 26.0
+content_margin_bottom = 26.0
 texture = ExtResource("1")
 texture_margin_left = 32.0
 texture_margin_top = 32.0
 texture_margin_right = 32.0
 texture_margin_bottom = 32.0
-axis_stretch_horizontal = 0
-axis_stretch_vertical = 0
 draw_center = false
-content_margin_left = 26.0
-content_margin_top = 26.0
-content_margin_right = 26.0
-content_margin_bottom = 26.0
-

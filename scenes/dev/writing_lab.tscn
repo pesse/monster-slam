@@ -50,6 +50,7 @@ current_tab = 0
 
 [node name="System" type="TextEdit" parent="Margin/Columns/Main/Exchange" unique_id=259732979]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 editable = false
 wrap_mode = 1

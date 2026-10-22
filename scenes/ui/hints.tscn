@@ -1,12 +1,12 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://bfgjl3vx7u1bs"]
 
-[ext_resource type="Script" path="res://src/ui/hints.gd" id="1_hints"]
-[ext_resource type="PackedScene" path="res://scenes/ui/hint_card.tscn" id="2_card"]
+[ext_resource type="Script" uid="uid://b2g457d474pc0" path="res://src/ui/hints.gd" id="1_hints"]
+[ext_resource type="PackedScene" uid="uid://buhuopbft0ut5" path="res://scenes/ui/hint_card.tscn" id="2_card"]
 
-[node name="Hints" type="CanvasLayer"]
+[node name="Hints" type="CanvasLayer" unique_id=1597731212]
 layer = 128
 script = ExtResource("1_hints")
 
-[node name="Card" parent="." instance=ExtResource("2_card")]
+[node name="Card" parent="." unique_id=931567306 instance=ExtResource("2_card")]
 unique_name_in_owner = true
 visible = false

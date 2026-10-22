@@ -1,26 +1,28 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://2bb6yok4mrc2"]
 
-[ext_resource type="Script" path="res://src/dev/rambler_lab.gd" id="1_lab"]
-[ext_resource type="PackedScene" path="res://scenes/battle/rambler_stage.tscn" id="2_stage"]
+[ext_resource type="Script" uid="uid://lhxrslaryt4v" path="res://src/dev/rambler_lab.gd" id="1_lab"]
+[ext_resource type="PackedScene" uid="uid://fu248b3cbqer" path="res://scenes/battle/rambler_stage.tscn" id="2_stage"]
 
-[node name="RamblerLab" type="Node"]
+[node name="RamblerLab" type="Node" unique_id=1565009128]
 script = ExtResource("1_lab")
 
-[node name="Stage" parent="." instance=ExtResource("2_stage")]
+[node name="Stage" parent="." unique_id=859965298 instance=ExtResource("2_stage")]
 unique_name_in_owner = true
 
-[node name="UI" type="CanvasLayer" parent="."]
+[node name="UI" type="CanvasLayer" parent="." unique_id=582697151]
 
-[node name="Probe" type="PanelContainer" parent="UI"]
+[node name="Probe" type="PanelContainer" parent="UI" unique_id=549178926]
 unique_name_in_owner = true
 visible = false
+anchors_preset = -1
 anchor_left = 0.33
 anchor_top = 0.08
 anchor_right = 0.97
 anchor_bottom = 0.92
 theme_type_variation = &"GameWindow"
 
-[node name="ProbeText" type="Label" parent="UI/Probe"]
+[node name="ProbeText" type="Label" parent="UI/Probe" unique_id=438604377]
+layout_mode = 2
 theme_type_variation = &"BubbleText"
 text = "Overlay-Probe: So viel Platz hat ein Text, der über der Bühne liegt — die Vorlage beim Lesen, das Schreibfeld, die markierten Stellen beim Überarbeiten.
 
@@ -29,7 +31,7 @@ The Rambler wandert dahinter durch den Raum und taucht zwischen den Panels auf; 
 Dies ist ein Fülltext ohne Inhalt. Er ist so lang wie ein Absatz einer kurzen Geschichte, damit man sieht, wie die Zeilen auf dem Hintergrund stehen."
 autowrap_mode = 3
 
-[node name="Mouth" type="ColorRect" parent="UI"]
+[node name="Mouth" type="ColorRect" parent="UI" unique_id=1514365186]
 unique_name_in_owner = true
 visible = false
 offset_right = 14.0
@@ -37,95 +39,114 @@ offset_bottom = 14.0
 mouse_filter = 2
 color = Color(0.2, 1, 0.9, 1)
 
-[node name="Panel" type="PanelContainer" parent="UI"]
+[node name="Panel" type="PanelContainer" parent="UI" unique_id=513587370]
 unique_name_in_owner = true
 offset_left = 8.0
 offset_top = 8.0
 theme_type_variation = &"DebugPanel"
 
-[node name="Buttons" type="VBoxContainer" parent="UI/Panel"]
+[node name="Buttons" type="VBoxContainer" parent="UI/Panel" unique_id=1183866453]
+layout_mode = 2
 
-[node name="Title" type="Label" parent="UI/Panel/Buttons"]
+[node name="Title" type="Label" parent="UI/Panel/Buttons" unique_id=770250154]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Rambler-Werkbank"
 
-[node name="FocusButton" type="Button" parent="UI/Panel/Buttons"]
+[node name="FocusButton" type="Button" parent="UI/Panel/Buttons" unique_id=704841233]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"DebugButton"
 text = "F  Fokus: vorn"
 
-[node name="SpeakButton" type="Button" parent="UI/Panel/Buttons"]
+[node name="SpeakButton" type="Button" parent="UI/Panel/Buttons" unique_id=262042450]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"DebugButton"
 text = "S  Reden"
 
-[node name="IndexRow" type="HBoxContainer" parent="UI/Panel/Buttons"]
+[node name="IndexRow" type="HBoxContainer" parent="UI/Panel/Buttons" unique_id=2113229207]
+layout_mode = 2
 
-[node name="IndexCaption" type="Label" parent="UI/Panel/Buttons/IndexRow"]
+[node name="IndexCaption" type="Label" parent="UI/Panel/Buttons/IndexRow" unique_id=1897413434]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Stapel"
 
-[node name="IndexSpin" type="SpinBox" parent="UI/Panel/Buttons/IndexRow"]
+[node name="IndexSpin" type="SpinBox" parent="UI/Panel/Buttons/IndexRow" unique_id=746011028]
 unique_name_in_owner = true
+layout_mode = 2
 max_value = 9.0
 rounded = true
 
-[node name="DropButton" type="Button" parent="UI/Panel/Buttons"]
+[node name="DropButton" type="Button" parent="UI/Panel/Buttons" unique_id=659688120]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"DebugButton"
 text = "D  Stapel fällt (1–9: dieser)"
 
-[node name="HoldButton" type="Button" parent="UI/Panel/Buttons"]
+[node name="HoldButton" type="Button" parent="UI/Panel/Buttons" unique_id=759007072]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"DebugButton"
 text = "H  Stapel hält"
 
-[node name="GloatButton" type="Button" parent="UI/Panel/Buttons"]
+[node name="GloatButton" type="Button" parent="UI/Panel/Buttons" unique_id=1643611367]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"DebugButton"
 text = "G  Freuen"
 
-[node name="FallButton" type="Button" parent="UI/Panel/Buttons"]
+[node name="FallButton" type="Button" parent="UI/Panel/Buttons" unique_id=1579146425]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"DebugButton"
 text = "X  Besiegt"
 
-[node name="CountRow" type="HBoxContainer" parent="UI/Panel/Buttons"]
+[node name="CountRow" type="HBoxContainer" parent="UI/Panel/Buttons" unique_id=1032406477]
+layout_mode = 2
 
-[node name="CountCaption" type="Label" parent="UI/Panel/Buttons/CountRow"]
+[node name="CountCaption" type="Label" parent="UI/Panel/Buttons/CountRow" unique_id=465381969]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Anzahl"
 
-[node name="CountSpin" type="SpinBox" parent="UI/Panel/Buttons/CountRow"]
+[node name="CountSpin" type="SpinBox" parent="UI/Panel/Buttons/CountRow" unique_id=906827426]
 unique_name_in_owner = true
+layout_mode = 2
 min_value = 1.0
 max_value = 9.0
 value = 5.0
 rounded = true
 
-[node name="RestoreButton" type="Button" parent="UI/Panel/Buttons"]
+[node name="RestoreButton" type="Button" parent="UI/Panel/Buttons" unique_id=1997344446]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"DebugButton"
 text = "R  Neuer Kampf"
 
-[node name="WarmButton" type="Button" parent="UI/Panel/Buttons"]
+[node name="WarmButton" type="Button" parent="UI/Panel/Buttons" unique_id=1838687342]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"DebugButton"
 text = "W  Vorwärmen"
 
-[node name="ProbeButton" type="Button" parent="UI/Panel/Buttons"]
+[node name="ProbeButton" type="Button" parent="UI/Panel/Buttons" unique_id=199059439]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"DebugButton"
 toggle_mode = true
 text = "O  Overlay-Probe"
 
-[node name="MouthButton" type="Button" parent="UI/Panel/Buttons"]
+[node name="MouthButton" type="Button" parent="UI/Panel/Buttons" unique_id=1421770088]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"DebugButton"
 toggle_mode = true
 text = "M  Mund zeigen"
 
-[node name="HideButton" type="Button" parent="UI/Panel/Buttons"]
+[node name="HideButton" type="Button" parent="UI/Panel/Buttons" unique_id=300366810]
 unique_name_in_owner = true
+layout_mode = 2
 theme_type_variation = &"DebugButton"
 text = "Tab  Knöpfe ausblenden"

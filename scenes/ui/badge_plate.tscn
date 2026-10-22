@@ -1,8 +1,8 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bjrisbkmsjf8i"]
 
-[ext_resource type="Script" path="res://src/ui/badge_plate.gd" id="1_plate"]
+[ext_resource type="Script" uid="uid://hiv2suo66mpk" path="res://src/ui/badge_plate.gd" id="1_plate"]
 
-[node name="BadgePlate" type="Control"]
+[node name="BadgePlate" type="Control" unique_id=527195222]
 custom_minimum_size = Vector2(128, 160)
 layout_mode = 3
 anchors_preset = 0
@@ -11,7 +11,7 @@ offset_bottom = 160.0
 mouse_filter = 2
 script = ExtResource("1_plate")
 
-[node name="Medal" type="TextureRect" parent="."]
+[node name="Medal" type="TextureRect" parent="." unique_id=1147440356]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -22,7 +22,7 @@ mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Mark" type="Label" parent="."]
+[node name="Mark" type="Label" parent="." unique_id=1752753757]
 layout_mode = 0
 offset_left = 25.0
 offset_top = 21.0

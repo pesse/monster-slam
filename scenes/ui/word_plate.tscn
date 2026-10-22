@@ -1,50 +1,54 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene format=3 uid="uid://bh7fv4ucysvxq"]
 
-[ext_resource type="Script" path="res://src/ui/word_plate.gd" id="1_plate"]
-[ext_resource type="Texture2D" path="res://assets/ui/gameplay/frames/word_plate_pointer_rim.webp" id="2_pointer"]
-[ext_resource type="Shader" path="res://assets/shaders/word_plate.gdshader" id="3_shader"]
-[ext_resource type="Texture2D" path="res://assets/ui/gameplay/frames/word_plate_base.webp" id="4_base"]
-[ext_resource type="Texture2D" path="res://assets/ui/gameplay/frames/word_plate_pointer_base.webp" id="5_pointer_base"]
-[ext_resource type="Texture2D" path="res://assets/ui/gameplay/icons/new_badge.webp" id="6_badge"]
+[ext_resource type="Script" uid="uid://dlm1tgloa865v" path="res://src/ui/word_plate.gd" id="1_plate"]
+[ext_resource type="Texture2D" uid="uid://ds71rcdeujvl3" path="res://assets/ui/gameplay/frames/word_plate_pointer_rim.webp" id="2_pointer"]
+[ext_resource type="Shader" uid="uid://ccnnipg2vhs3m" path="res://assets/shaders/word_plate.gdshader" id="3_shader"]
+[ext_resource type="Texture2D" uid="uid://bl1hdjve62u7e" path="res://assets/ui/gameplay/frames/word_plate_base.webp" id="4_base"]
+[ext_resource type="Texture2D" uid="uid://cqu3rmwrksted" path="res://assets/ui/gameplay/frames/word_plate_pointer_base.webp" id="5_pointer_base"]
+[ext_resource type="Texture2D" uid="uid://cfeop630058ka" path="res://assets/ui/gameplay/icons/new_badge.webp" id="6_badge"]
 
 [sub_resource type="ShaderMaterial" id="pointer_layers"]
 shader = ExtResource("3_shader")
 shader_parameter/base = ExtResource("5_pointer_base")
+shader_parameter/base_tint = null
 
 [sub_resource type="ShaderMaterial" id="plate_layers"]
 shader = ExtResource("3_shader")
 shader_parameter/base = ExtResource("4_base")
+shader_parameter/base_tint = null
 
-[node name="WordPlate" type="Control"]
+[node name="WordPlate" type="Control" unique_id=2012722451]
+layout_mode = 3
+anchors_preset = 0
 mouse_filter = 2
 script = ExtResource("1_plate")
 
-[node name="Pointer" type="TextureRect" parent="."]
+[node name="Pointer" type="TextureRect" parent="." unique_id=711599898]
 material = SubResource("pointer_layers")
 layout_mode = 0
 mouse_filter = 2
 texture = ExtResource("2_pointer")
 expand_mode = 1
 
-[node name="Frame" type="PanelContainer" parent="."]
+[node name="Frame" type="PanelContainer" parent="." unique_id=2077768933]
 material = SubResource("plate_layers")
 layout_mode = 0
 mouse_filter = 2
 theme_type_variation = &"HudWordPlate"
 
-[node name="Lines" type="VBoxContainer" parent="Frame"]
+[node name="Lines" type="VBoxContainer" parent="Frame" unique_id=683803809]
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"HudStack"
 
-[node name="Text" type="Label" parent="Frame/Lines"]
+[node name="Text" type="Label" parent="Frame/Lines" unique_id=314136168]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HudPlateText"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Help" type="Label" parent="Frame/Lines"]
+[node name="Help" type="Label" parent="Frame/Lines" unique_id=1253915340]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -52,7 +56,7 @@ theme_type_variation = &"HudPlateAlt"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Alt" type="Label" parent="Frame/Lines"]
+[node name="Alt" type="Label" parent="Frame/Lines" unique_id=1033087778]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -60,7 +64,7 @@ theme_type_variation = &"HudPlateAlt"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Badge" type="TextureRect" parent="."]
+[node name="Badge" type="TextureRect" parent="." unique_id=1412843976]
 visible = false
 layout_mode = 0
 mouse_filter = 2

@@ -1,16 +1,16 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene format=3 uid="uid://derm8euvmd1mn"]
 
-[ext_resource type="Script" path="res://src/ui/settings_menu.gd" id="1_settings"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/window_surface.webp" id="2_surface"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/close.webp" id="3_close"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/close_hover.webp" id="4_close_hover"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/close_pressed.webp" id="5_close_pressed"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/title_joint_left.webp" id="6_joint_left"]
-[ext_resource type="Texture2D" path="res://assets/ui/windows/title_joint_right.webp" id="7_joint_right"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/settings.webp" id="8_icon"]
-[ext_resource type="PackedScene" path="res://scenes/ui/confirm_dialog.tscn" id="9_confirm"]
-[ext_resource type="PackedScene" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
-[ext_resource type="Material" path="res://scenes/ui/title_metal.tres" id="title_metal"]
+[ext_resource type="Script" uid="uid://cv803ho80d2d3" path="res://src/ui/settings_menu.gd" id="1_settings"]
+[ext_resource type="Texture2D" uid="uid://b7it7uu6fv1vh" path="res://assets/ui/windows/window_surface.webp" id="2_surface"]
+[ext_resource type="Texture2D" uid="uid://bgs3phr42xdgd" path="res://assets/ui/windows/close.webp" id="3_close"]
+[ext_resource type="Texture2D" uid="uid://bqsyuqm58c657" path="res://assets/ui/windows/close_hover.webp" id="4_close_hover"]
+[ext_resource type="Texture2D" uid="uid://bamnug1qht4ei" path="res://assets/ui/windows/close_pressed.webp" id="5_close_pressed"]
+[ext_resource type="Texture2D" uid="uid://b1apvpq0dh1yo" path="res://assets/ui/windows/title_joint_left.webp" id="6_joint_left"]
+[ext_resource type="Texture2D" uid="uid://btp63ud2mimw5" path="res://assets/ui/windows/title_joint_right.webp" id="7_joint_right"]
+[ext_resource type="Texture2D" uid="uid://c6bla1olobelu" path="res://assets/ui/main_menu/icons/settings.webp" id="8_icon"]
+[ext_resource type="PackedScene" uid="uid://f0ojpbs2lx7v" path="res://scenes/ui/confirm_dialog.tscn" id="9_confirm"]
+[ext_resource type="PackedScene" uid="uid://badeio0oospuy" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
+[ext_resource type="Material" uid="uid://dxo2j2mfichtf" path="res://scenes/ui/title_metal.tres" id="title_metal"]
 
 [sub_resource type="ButtonGroup" id="tab_group"]
 
@@ -20,7 +20,7 @@
 
 [sub_resource type="ButtonGroup" id="ui_size_group"]
 
-[node name="SettingsMenu" type="Control"]
+[node name="SettingsMenu" type="Control" unique_id=1538498514]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -29,7 +29,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_settings")
 
-[node name="Dim" type="ColorRect" parent="."]
+[node name="Dim" type="ColorRect" parent="." unique_id=516265031]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -38,20 +38,20 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.02, 0.03, 0.06, 0.6)
 
-[node name="Window" type="Control" parent="."]
+[node name="Window" type="Control" parent="." unique_id=2092141586]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 offset_left = 16.0
 offset_top = 16.0
 offset_right = -16.0
 offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 2
 
-[node name="Frame" type="PanelContainer" parent="Window"]
+[node name="Frame" type="PanelContainer" parent="Window" unique_id=1161897763]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -61,23 +61,23 @@ grow_vertical = 2
 mouse_filter = 2
 theme_type_variation = &"GameWindow"
 
-[node name="Surface" type="TextureRect" parent="Window"]
+[node name="Surface" type="TextureRect" parent="Window" unique_id=378789697]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 offset_left = 9.0
 offset_top = 9.0
 offset_right = -9.0
 offset_bottom = -9.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
 texture = ExtResource("2_surface")
 expand_mode = 1
 stretch_mode = 1
 
-[node name="Layout" type="VBoxContainer" parent="Window"]
+[node name="Layout" type="VBoxContainer" parent="Window" unique_id=428943528]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -86,50 +86,50 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TitleBar" type="PanelContainer" parent="Window/Layout"]
+[node name="TitleBar" type="PanelContainer" parent="Window/Layout" unique_id=1554428017]
 layout_mode = 2
 theme_type_variation = &"WindowTitleBar"
 
-[node name="Header" type="HBoxContainer" parent="Window/Layout/TitleBar"]
+[node name="Header" type="HBoxContainer" parent="Window/Layout/TitleBar" unique_id=1109685833]
 layout_mode = 2
 theme_type_variation = &"ScreenStack"
 
-[node name="TitleMedallion" type="PanelContainer" parent="Window/Layout/TitleBar/Header"]
+[node name="TitleMedallion" type="PanelContainer" parent="Window/Layout/TitleBar/Header" unique_id=930487108]
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
 theme_type_variation = &"TitleMedallion"
 
-[node name="TitleIcon" type="TextureRect" parent="Window/Layout/TitleBar/Header/TitleMedallion"]
+[node name="TitleIcon" type="TextureRect" parent="Window/Layout/TitleBar/Header/TitleMedallion" unique_id=768101822]
+texture_filter = 4
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
-texture_filter = 4
 texture = ExtResource("8_icon")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Title" type="Label" parent="Window/Layout/TitleBar/Header"]
+[node name="Title" type="Label" parent="Window/Layout/TitleBar/Header" unique_id=1775660406]
+material = ExtResource("title_metal")
 layout_mode = 2
 size_flags_horizontal = 3
-material = ExtResource("title_metal")
 theme_type_variation = &"WindowTitle"
 text = "EINSTELLUNGEN"
 vertical_alignment = 1
 
-[node name="HandbookLink" parent="Window/Layout/TitleBar/Header" instance=ExtResource("handbook_link")]
+[node name="HandbookLink" parent="Window/Layout/TitleBar/Header" unique_id=323101485 instance=ExtResource("handbook_link")]
 unique_name_in_owner = true
 layout_mode = 2
 chapter = "13-einstellungen.md"
 section = "Reiter „Profil“"
 
-[node name="CloseButton" type="TextureButton" parent="Window/Layout/TitleBar/Header"]
+[node name="CloseButton" type="TextureButton" parent="Window/Layout/TitleBar/Header" unique_id=2049120991]
 unique_name_in_owner = true
+texture_filter = 4
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
-texture_filter = 4
 texture_normal = ExtResource("3_close")
 texture_pressed = ExtResource("5_close_pressed")
 texture_hover = ExtResource("4_close_hover")
@@ -137,20 +137,20 @@ texture_focused = ExtResource("4_close_hover")
 ignore_texture_size = true
 stretch_mode = 5
 
-[node name="Content" type="MarginContainer" parent="Window/Layout"]
+[node name="Content" type="MarginContainer" parent="Window/Layout" unique_id=2003862431]
 layout_mode = 2
 size_flags_vertical = 3
 theme_type_variation = &"WindowContent"
 
-[node name="Body" type="VBoxContainer" parent="Window/Layout/Content"]
+[node name="Body" type="VBoxContainer" parent="Window/Layout/Content" unique_id=331179727]
 layout_mode = 2
 
-[node name="Tabs" type="HBoxContainer" parent="Window/Layout/Content/Body"]
+[node name="Tabs" type="HBoxContainer" parent="Window/Layout/Content/Body" unique_id=740342570]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"TabRow"
 
-[node name="ProfileTab" type="Button" parent="Window/Layout/Content/Body/Tabs"]
+[node name="ProfileTab" type="Button" parent="Window/Layout/Content/Body/Tabs" unique_id=233829472]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(144, 44)
 layout_mode = 2
@@ -160,7 +160,7 @@ button_pressed = true
 button_group = SubResource("tab_group")
 text = "Profil"
 
-[node name="ReportTab" type="Button" parent="Window/Layout/Content/Body/Tabs"]
+[node name="ReportTab" type="Button" parent="Window/Layout/Content/Body/Tabs" unique_id=584801433]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(144, 44)
 layout_mode = 2
@@ -169,7 +169,7 @@ toggle_mode = true
 button_group = SubResource("tab_group")
 text = "Melden"
 
-[node name="TraceTab" type="Button" parent="Window/Layout/Content/Body/Tabs"]
+[node name="TraceTab" type="Button" parent="Window/Layout/Content/Body/Tabs" unique_id=1651757824]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(144, 44)
 layout_mode = 2
@@ -178,16 +178,16 @@ toggle_mode = true
 button_group = SubResource("tab_group")
 text = "Protokoll"
 
-[node name="TabRail" type="PanelContainer" parent="Window/Layout/Content/Body/Tabs"]
+[node name="TabRail" type="PanelContainer" parent="Window/Layout/Content/Body/Tabs" unique_id=162918239]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"TabRail"
 
-[node name="Pages" type="Control" parent="Window/Layout/Content/Body"]
+[node name="Pages" type="Control" parent="Window/Layout/Content/Body" unique_id=475169947]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="ProfilePage" type="ScrollContainer" parent="Window/Layout/Content/Body/Pages"]
+[node name="ProfilePage" type="ScrollContainer" parent="Window/Layout/Content/Body/Pages" unique_id=802124278]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -197,57 +197,57 @@ grow_horizontal = 2
 grow_vertical = 2
 horizontal_scroll_mode = 0
 
-[node name="Gutter" type="MarginContainer" parent="Window/Layout/Content/Body/Pages/ProfilePage"]
+[node name="Gutter" type="MarginContainer" parent="Window/Layout/Content/Body/Pages/ProfilePage" unique_id=2037673295]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"ScrollGutter"
 
-[node name="Profile" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter"]
+[node name="Profile" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter" unique_id=1658800711]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="NameLabel" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="NameLabel" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=2137197537]
 layout_mode = 2
 theme_type_variation = &"StatHeading"
 text = "Profilname"
 
-[node name="RenameRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="RenameRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=1724623518]
 layout_mode = 2
 
-[node name="RenameInput" type="LineEdit" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/RenameRow"]
+[node name="RenameInput" type="LineEdit" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/RenameRow" unique_id=1924358235]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(320, 44)
 layout_mode = 2
 placeholder_text = "Profilname"
 
-[node name="RenameButton" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/RenameRow"]
+[node name="RenameButton" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/RenameRow" unique_id=1017767177]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 44)
 layout_mode = 2
 theme_type_variation = &"WindowButton"
 text = "Umbenennen"
 
-[node name="NameNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="NameNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=1229475845]
 layout_mode = 2
 theme_type_variation = &"Caption"
 text = "Wer spielt, wählst du nicht hier, sondern mit „Profil wechseln“ im Hauptmenü."
 autowrap_mode = 3
 
-[node name="NameRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="NameRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=1988104579]
 layout_mode = 2
 theme_type_variation = &"StatRule"
 
-[node name="DiffLabel" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="DiffLabel" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=71973730]
 layout_mode = 2
 theme_type_variation = &"StatHeading"
 text = "Standard-Schwierigkeit"
 
-[node name="DiffRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="DiffRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=1915248402]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SegmentRow"
 
-[node name="Diff1" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/DiffRow"]
+[node name="Diff1" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/DiffRow" unique_id=600015100]
 custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
 theme_type_variation = &"SegmentFirst"
@@ -255,7 +255,7 @@ toggle_mode = true
 button_group = SubResource("diff_group")
 text = "1"
 
-[node name="Diff2" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/DiffRow"]
+[node name="Diff2" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/DiffRow" unique_id=2003788845]
 custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
 theme_type_variation = &"SegmentMid"
@@ -263,7 +263,7 @@ toggle_mode = true
 button_group = SubResource("diff_group")
 text = "2"
 
-[node name="Diff3" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/DiffRow"]
+[node name="Diff3" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/DiffRow" unique_id=543769730]
 custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
 theme_type_variation = &"SegmentMid"
@@ -271,7 +271,7 @@ toggle_mode = true
 button_group = SubResource("diff_group")
 text = "3"
 
-[node name="Diff4" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/DiffRow"]
+[node name="Diff4" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/DiffRow" unique_id=2108350608]
 custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
 theme_type_variation = &"SegmentMid"
@@ -279,7 +279,7 @@ toggle_mode = true
 button_group = SubResource("diff_group")
 text = "4"
 
-[node name="Diff5" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/DiffRow"]
+[node name="Diff5" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/DiffRow" unique_id=525826305]
 custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
 theme_type_variation = &"SegmentLast"
@@ -287,32 +287,32 @@ toggle_mode = true
 button_group = SubResource("diff_group")
 text = "5"
 
-[node name="DiffNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="DiffNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=1522661658]
 layout_mode = 2
 theme_type_variation = &"Caption"
 text = "Damit beginnt die erste Welle jedes Laufs. Danach wählst du nach jeder Welle selbst."
 autowrap_mode = 3
 
-[node name="DiffRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="DiffRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=1544144623]
 layout_mode = 2
 theme_type_variation = &"StatRule"
 
-[node name="SpeedHead" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="SpeedHead" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=1065169593]
 layout_mode = 2
 
-[node name="SpeedTitle" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/SpeedHead"]
+[node name="SpeedTitle" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/SpeedHead" unique_id=983869659]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"StatHeading"
 text = "Grund-Geschwindigkeit"
 
-[node name="SpeedLabel" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/SpeedHead"]
+[node name="SpeedLabel" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/SpeedHead" unique_id=1419623314]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"StatGold"
 text = "100 %"
 
-[node name="SpeedSlider" type="HSlider" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="SpeedSlider" type="HSlider" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=1590511590]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 0.5
@@ -320,39 +320,39 @@ max_value = 1.5
 step = 0.05
 value = 1.0
 
-[node name="SpeedNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="SpeedNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=18733433]
 layout_mode = 2
 theme_type_variation = &"Caption"
 text = "Macht alle Monster langsamer oder schneller, unabhängig von der Schwierigkeit — gut für alle, die noch langsam tippen."
 autowrap_mode = 3
 
-[node name="StandstillToggle" type="CheckBox" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="StandstillToggle" type="CheckBox" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=5465440]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 0
 text = "Beim Tippen bleibt die Zeit stehen"
 
-[node name="StandstillNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="StandstillNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=2172940]
 layout_mode = 2
 theme_type_variation = &"Caption"
 text = "Statt der Zeitlupe stehen die Monster still, solange das Eingabefeld offen ist — für alle, die gerade nur mit einer Hand tippen können."
 autowrap_mode = 3
 
-[node name="SpeedRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="SpeedRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=1610574797]
 layout_mode = 2
 theme_type_variation = &"StatRule"
 
-[node name="GraphicsLabel" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="GraphicsLabel" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=877908069]
 layout_mode = 2
 theme_type_variation = &"StatHeading"
 text = "Grafik"
 
-[node name="GraphicsRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="GraphicsRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=1700474967]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SegmentRow"
 
-[node name="GraphicsFine" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/GraphicsRow"]
+[node name="GraphicsFine" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/GraphicsRow" unique_id=339411958]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
@@ -361,7 +361,7 @@ toggle_mode = true
 button_group = SubResource("graphics_group")
 text = "Schön"
 
-[node name="GraphicsMedium" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/GraphicsRow"]
+[node name="GraphicsMedium" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/GraphicsRow" unique_id=499769235]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
@@ -370,7 +370,7 @@ toggle_mode = true
 button_group = SubResource("graphics_group")
 text = "Mittel"
 
-[node name="GraphicsFast" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/GraphicsRow"]
+[node name="GraphicsFast" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/GraphicsRow" unique_id=780085352]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
@@ -379,27 +379,27 @@ toggle_mode = true
 button_group = SubResource("graphics_group")
 text = "Schnell"
 
-[node name="GraphicsNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="GraphicsNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=1369978269]
 layout_mode = 2
 theme_type_variation = &"Caption"
 text = "„Mittel“ lässt das Leuchten weg und glättet Kanten weniger. „Schnell“ lässt dazu Kantenglättung, Wolkenschatten, Bodenflecken und fliegende Blätter oder Flocken weg — für ältere Rechner, wenn das Spiel ruckelt."
 autowrap_mode = 3
 
-[node name="GraphicsRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="GraphicsRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=1882252645]
 layout_mode = 2
 theme_type_variation = &"StatRule"
 
-[node name="UiSizeLabel" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="UiSizeLabel" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=1870261605]
 layout_mode = 2
 theme_type_variation = &"StatHeading"
 text = "Menügröße"
 
-[node name="UiSizeRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="UiSizeRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=1332763888]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SegmentRow"
 
-[node name="UiSizeSmall" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/UiSizeRow"]
+[node name="UiSizeSmall" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/UiSizeRow" unique_id=410709701]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
@@ -408,7 +408,7 @@ toggle_mode = true
 button_group = SubResource("ui_size_group")
 text = "Klein"
 
-[node name="UiSizeMedium" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/UiSizeRow"]
+[node name="UiSizeMedium" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/UiSizeRow" unique_id=1032242424]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
@@ -417,7 +417,7 @@ toggle_mode = true
 button_group = SubResource("ui_size_group")
 text = "Mittel"
 
-[node name="UiSizeLarge" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/UiSizeRow"]
+[node name="UiSizeLarge" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/UiSizeRow" unique_id=1677289706]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
@@ -426,43 +426,43 @@ toggle_mode = true
 button_group = SubResource("ui_size_group")
 text = "Groß"
 
-[node name="UiSizeNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="UiSizeNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=1861066122]
 layout_mode = 2
 theme_type_variation = &"Caption"
 text = "Wie groß Menüs, Karte und Anzeigen im Kampf stehen. „Mittel“ richtet sich nach der Bildschirmeinstellung des Rechners; ein größeres Fenster gibt mehr Platz statt größerer Schrift."
 autowrap_mode = 3
 
-[node name="UiSizeRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="UiSizeRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=1210246120]
 layout_mode = 2
 theme_type_variation = &"StatRule"
 
-[node name="FullscreenLabel" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="FullscreenLabel" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=150837721]
 layout_mode = 2
 theme_type_variation = &"StatHeading"
 text = "Vollbild"
 
-[node name="FullscreenToggle" type="CheckBox" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="FullscreenToggle" type="CheckBox" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=1983462022]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 0
 text = "Im Vollbild spielen"
 
-[node name="FullscreenNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="FullscreenNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=722836978]
 layout_mode = 2
 theme_type_variation = &"Caption"
 text = "Umschalten geht jederzeit auch mit F11 oder Alt+Enter. Beenden im Vollbild über „Beenden“ im Startmenü."
 autowrap_mode = 3
 
-[node name="FullscreenRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="FullscreenRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=1184557233]
 layout_mode = 2
 theme_type_variation = &"StatRule"
 
-[node name="ResetLabel" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="ResetLabel" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=506249097]
 layout_mode = 2
 theme_type_variation = &"StatHeading"
 text = "Lernstand"
 
-[node name="ResetButton" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="ResetButton" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=1637588274]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
@@ -470,51 +470,51 @@ size_flags_horizontal = 0
 theme_type_variation = &"WindowButton"
 text = "Fortschritt zurücksetzen"
 
-[node name="ResetNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="ResetNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=424535175]
 layout_mode = 2
 theme_type_variation = &"Caption"
 text = "Löscht nach einer Rückfrage den Lernstand der Wörter dieses Profils. Gold, Erfahrung und Fähigkeiten bleiben."
 autowrap_mode = 3
 
-[node name="ResetRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="ResetRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=1931769308]
 layout_mode = 2
 theme_type_variation = &"StatRule"
 
-[node name="SaveLabel" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="SaveLabel" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=427087668]
 layout_mode = 2
 theme_type_variation = &"StatHeading"
 text = "Spielstand"
 
-[node name="SaveRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="SaveRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=1448872092]
 layout_mode = 2
 
-[node name="SaveExport" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/SaveRow"]
+[node name="SaveExport" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/SaveRow" unique_id=1369510314]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 44)
 layout_mode = 2
 theme_type_variation = &"WindowButton"
 text = "Sichern…"
 
-[node name="SaveImport" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/SaveRow"]
+[node name="SaveImport" type="Button" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile/SaveRow" unique_id=1261058020]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 44)
 layout_mode = 2
 theme_type_variation = &"WindowButton"
 text = "Laden…"
 
-[node name="SaveNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="SaveNote" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=1137013824]
 layout_mode = 2
 theme_type_variation = &"Caption"
 text = "Das Spiel sichert nach jeder Welle von selbst. „Sichern…“ legt den Spielstand dieses Profils zusätzlich als Datei ab — etwa auf einem USB-Stick oder für einen neuen Rechner. „Laden…“ spielt so eine Datei in dieses Profil ein; der bisherige Stand bleibt in den Sicherungen."
 autowrap_mode = 3
 
-[node name="SaveStatus" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile"]
+[node name="SaveStatus" type="Label" parent="Window/Layout/Content/Body/Pages/ProfilePage/Gutter/Profile" unique_id=1591705321]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"StatSubline"
 autowrap_mode = 3
 
-[node name="ReportPage" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages"]
+[node name="ReportPage" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages" unique_id=388386329]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
@@ -524,44 +524,44 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="ReportLabel" type="Label" parent="Window/Layout/Content/Body/Pages/ReportPage"]
+[node name="ReportLabel" type="Label" parent="Window/Layout/Content/Body/Pages/ReportPage" unique_id=651471486]
 layout_mode = 2
 theme_type_variation = &"StatHeading"
 text = "Wörter melden"
 
-[node name="ReportHint" type="Label" parent="Window/Layout/Content/Body/Pages/ReportPage"]
+[node name="ReportHint" type="Label" parent="Window/Layout/Content/Body/Pages/ReportPage" unique_id=909595128]
 layout_mode = 2
 theme_type_variation = &"Caption"
 text = "Ist ein Wort falsch oder unklar, melde es in der Auflösung nach einer Welle mit „⚑ Melden“. Übertragen werden nur das gemeldete Wort, dein Kommentar, die Spielversion und die zufällige Nummer deines Profils — kein Profilname."
 autowrap_mode = 3
 
-[node name="ReportStatus" type="Label" parent="Window/Layout/Content/Body/Pages/ReportPage"]
+[node name="ReportStatus" type="Label" parent="Window/Layout/Content/Body/Pages/ReportPage" unique_id=1833467633]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"StatSubline"
 autowrap_mode = 3
 
-[node name="FlagRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ReportPage"]
+[node name="FlagRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/ReportPage" unique_id=606191030]
 layout_mode = 2
 theme_type_variation = &"StatRule"
 
-[node name="FlagScroll" type="ScrollContainer" parent="Window/Layout/Content/Body/Pages/ReportPage"]
+[node name="FlagScroll" type="ScrollContainer" parent="Window/Layout/Content/Body/Pages/ReportPage" unique_id=1210710787]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="Gutter" type="MarginContainer" parent="Window/Layout/Content/Body/Pages/ReportPage/FlagScroll"]
+[node name="Gutter" type="MarginContainer" parent="Window/Layout/Content/Body/Pages/ReportPage/FlagScroll" unique_id=590159668]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"ScrollGutter"
 
-[node name="FlagList" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/ReportPage/FlagScroll/Gutter"]
+[node name="FlagList" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/ReportPage/FlagScroll/Gutter" unique_id=2064734023]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="TracePage" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages"]
+[node name="TracePage" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages" unique_id=317066349]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
@@ -572,46 +572,46 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_type_variation = &"StatColumns"
 
-[node name="Controls" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/TracePage"]
+[node name="Controls" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/TracePage" unique_id=703934349]
 custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 
-[node name="TraceTitle" type="Label" parent="Window/Layout/Content/Body/Pages/TracePage/Controls"]
+[node name="TraceTitle" type="Label" parent="Window/Layout/Content/Body/Pages/TracePage/Controls" unique_id=2009348719]
 layout_mode = 2
 theme_type_variation = &"StatHeading"
 text = "Ereignis-Protokoll"
 
-[node name="TraceHint" type="Label" parent="Window/Layout/Content/Body/Pages/TracePage/Controls"]
+[node name="TraceHint" type="Label" parent="Window/Layout/Content/Body/Pages/TracePage/Controls" unique_id=1307429157]
 layout_mode = 2
 theme_type_variation = &"Caption"
 text = "Für die Fehlersuche: welches Wort wann erschienen ist, was getippt wurde und wie es bewertet wurde. Die Datei bleibt auf diesem Rechner — sie wird nirgendwohin übertragen."
 autowrap_mode = 3
 
-[node name="TraceToggle" type="CheckBox" parent="Window/Layout/Content/Body/Pages/TracePage/Controls"]
+[node name="TraceToggle" type="CheckBox" parent="Window/Layout/Content/Body/Pages/TracePage/Controls" unique_id=1810924443]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Aufgaben und Eingaben protokollieren"
 
-[node name="TraceRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/TracePage/Controls"]
+[node name="TraceRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/TracePage/Controls" unique_id=456909801]
 layout_mode = 2
 theme_type_variation = &"StatRule"
 
-[node name="TraceStatus" type="Label" parent="Window/Layout/Content/Body/Pages/TracePage/Controls"]
+[node name="TraceStatus" type="Label" parent="Window/Layout/Content/Body/Pages/TracePage/Controls" unique_id=663346672]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"StatSubline"
 autowrap_mode = 3
 
-[node name="TracePath" type="Label" parent="Window/Layout/Content/Body/Pages/TracePage/Controls"]
+[node name="TracePath" type="Label" parent="Window/Layout/Content/Body/Pages/TracePage/Controls" unique_id=1113280946]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"Caption"
 autowrap_mode = 3
 
-[node name="TraceRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/TracePage/Controls"]
+[node name="TraceRow" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/TracePage/Controls" unique_id=143210803]
 layout_mode = 2
 
-[node name="TraceOpen" type="Button" parent="Window/Layout/Content/Body/Pages/TracePage/Controls/TraceRow"]
+[node name="TraceOpen" type="Button" parent="Window/Layout/Content/Body/Pages/TracePage/Controls/TraceRow" unique_id=1307532256]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
@@ -619,7 +619,7 @@ size_flags_horizontal = 3
 theme_type_variation = &"WindowButton"
 text = "Ordner öffnen"
 
-[node name="TraceClear" type="Button" parent="Window/Layout/Content/Body/Pages/TracePage/Controls/TraceRow"]
+[node name="TraceClear" type="Button" parent="Window/Layout/Content/Body/Pages/TracePage/Controls/TraceRow" unique_id=1554103377]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
@@ -627,39 +627,40 @@ size_flags_horizontal = 3
 theme_type_variation = &"WindowButton"
 text = "Protokoll leeren"
 
-[node name="TraceDivider" type="VSeparator" parent="Window/Layout/Content/Body/Pages/TracePage"]
+[node name="TraceDivider" type="VSeparator" parent="Window/Layout/Content/Body/Pages/TracePage" unique_id=1326542487]
 layout_mode = 2
 theme_type_variation = &"StatDivider"
 
-[node name="TraceScroll" type="ScrollContainer" parent="Window/Layout/Content/Body/Pages/TracePage"]
+[node name="TraceScroll" type="ScrollContainer" parent="Window/Layout/Content/Body/Pages/TracePage" unique_id=1780455597]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 horizontal_scroll_mode = 0
 
-[node name="Gutter" type="MarginContainer" parent="Window/Layout/Content/Body/Pages/TracePage/TraceScroll"]
+[node name="Gutter" type="MarginContainer" parent="Window/Layout/Content/Body/Pages/TracePage/TraceScroll" unique_id=276380202]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"ScrollGutter"
 
-[node name="TraceList" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/TracePage/TraceScroll/Gutter"]
+[node name="TraceList" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/TracePage/TraceScroll/Gutter" unique_id=611070011]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"Tight"
 
-[node name="JointLeft" type="TextureRect" parent="Window"]
+[node name="JointLeft" type="TextureRect" parent="Window" unique_id=1577396607]
+texture_filter = 4
 layout_mode = 0
 offset_top = 51.0
 offset_right = 24.0
 offset_bottom = 75.0
 mouse_filter = 2
-texture_filter = 4
 texture = ExtResource("6_joint_left")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="JointRight" type="TextureRect" parent="Window"]
+[node name="JointRight" type="TextureRect" parent="Window" unique_id=757997963]
+texture_filter = 4
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -669,15 +670,16 @@ offset_top = 51.0
 offset_bottom = 75.0
 grow_horizontal = 0
 mouse_filter = 2
-texture_filter = 4
 texture = ExtResource("7_joint_right")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="ResetDialog" parent="." instance=ExtResource("9_confirm")]
+[node name="ResetDialog" parent="." unique_id=423375083 instance=ExtResource("9_confirm")]
 unique_name_in_owner = true
 visible = false
+layout_mode = 1
 
-[node name="ImportDialog" parent="." instance=ExtResource("9_confirm")]
+[node name="ImportDialog" parent="." unique_id=1249779118 instance=ExtResource("9_confirm")]
 unique_name_in_owner = true
 visible = false
+layout_mode = 1

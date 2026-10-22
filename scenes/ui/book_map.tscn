@@ -1,11 +1,11 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene format=3 uid="uid://dhppp8t752u0x"]
 
-[ext_resource type="Script" path="res://src/ui/book_map.gd" id="1_screen"]
-[ext_resource type="Script" path="res://src/ui/map_canvas.gd" id="2_canvas"]
-[ext_resource type="Texture2D" path="res://assets/ui/library/back.webp" id="3_back"]
-[ext_resource type="PackedScene" path="res://scenes/ui/profile_badge.tscn" id="4_badge"]
-[ext_resource type="PackedScene" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/play.webp" id="5_play"]
+[ext_resource type="Script" uid="uid://dt7au2q1xgs20" path="res://src/ui/book_map.gd" id="1_screen"]
+[ext_resource type="Script" uid="uid://bqcj7guu5orj6" path="res://src/ui/map_canvas.gd" id="2_canvas"]
+[ext_resource type="Texture2D" uid="uid://3etmo0mb64ej" path="res://assets/ui/library/back.webp" id="3_back"]
+[ext_resource type="PackedScene" uid="uid://u1ox5aaff65i" path="res://scenes/ui/profile_badge.tscn" id="4_badge"]
+[ext_resource type="Texture2D" uid="uid://c23n78atueopp" path="res://assets/ui/main_menu/icons/play.webp" id="5_play"]
+[ext_resource type="PackedScene" uid="uid://badeio0oospuy" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
 
 [sub_resource type="Gradient" id="shade_g"]
 colors = PackedColorArray(0, 0, 0, 0.6, 0, 0, 0, 0)
@@ -13,10 +13,9 @@ colors = PackedColorArray(0, 0, 0, 0.6, 0, 0, 0, 0)
 [sub_resource type="GradientTexture2D" id="shade"]
 gradient = SubResource("shade_g")
 width = 4
-height = 64
 fill_to = Vector2(0, 1)
 
-[node name="BookMap" type="Control"]
+[node name="BookMap" type="Control" unique_id=1160303069]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -25,7 +24,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_screen")
 
-[node name="Backdrop" type="ColorRect" parent="."]
+[node name="Backdrop" type="ColorRect" parent="." unique_id=658618254]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -35,7 +34,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.05, 0.06, 0.1, 1)
 
-[node name="Canvas" type="Control" parent="."]
+[node name="Canvas" type="Control" parent="." unique_id=1689406996]
 unique_name_in_owner = true
 clip_contents = true
 layout_mode = 1
@@ -46,7 +45,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("2_canvas")
 
-[node name="Shade" type="TextureRect" parent="."]
+[node name="Shade" type="TextureRect" parent="." unique_id=897393633]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
@@ -56,8 +55,7 @@ mouse_filter = 2
 texture = SubResource("shade")
 expand_mode = 1
 
-[node name="Hud" type="MarginContainer" parent="."]
-theme_type_variation = &"ScreenMargin"
+[node name="Hud" type="MarginContainer" parent="." unique_id=1806382361]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -65,17 +63,18 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+theme_type_variation = &"ScreenMargin"
 
-[node name="Corners" type="Control" parent="Hud"]
+[node name="Corners" type="Control" parent="Hud" unique_id=1209127992]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Header" type="HBoxContainer" parent="Hud/Corners"]
+[node name="Header" type="HBoxContainer" parent="Hud/Corners" unique_id=2115059921]
 unique_name_in_owner = true
 layout_mode = 0
 mouse_filter = 2
 
-[node name="BackButton" type="Button" parent="Hud/Corners/Header"]
+[node name="BackButton" type="Button" parent="Hud/Corners/Header" unique_id=1342501665]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
@@ -85,24 +84,23 @@ theme_type_variation = &"WindowButton"
 text = "Bücher"
 icon = ExtResource("3_back")
 
-[node name="Banner" type="PanelContainer" parent="Hud/Corners/Header"]
+[node name="Banner" type="PanelContainer" parent="Hud/Corners/Header" unique_id=1478055917]
+layout_mode = 2
+mouse_filter = 2
 theme_type_variation = &"MapBanner"
+
+[node name="Lines" type="VBoxContainer" parent="Hud/Corners/Header/Banner" unique_id=1881247049]
 layout_mode = 2
 mouse_filter = 2
-
-[node name="Lines" type="VBoxContainer" parent="Hud/Corners/Header/Banner"]
 theme_type_variation = &"Tight"
-layout_mode = 2
-mouse_filter = 2
 
-[node name="Title" type="Label" parent="Hud/Corners/Header/Banner/Lines"]
+[node name="Title" type="Label" parent="Hud/Corners/Header/Banner/Lines" unique_id=605013203]
 unique_name_in_owner = true
-theme_type_variation = &"Title"
 layout_mode = 2
+theme_type_variation = &"Title"
 text = "Buch"
 
-
-[node name="TestButton" type="Button" parent="Hud/Corners/Header"]
+[node name="TestButton" type="Button" parent="Hud/Corners/Header" unique_id=291849784]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
@@ -111,18 +109,17 @@ focus_mode = 0
 theme_type_variation = &"WindowButton"
 text = "Für eine Arbeit üben"
 
-[node name="HandbookLink" parent="Hud/Corners/Header" instance=ExtResource("handbook_link")]
+[node name="HandbookLink" parent="Hud/Corners/Header" unique_id=557346440 instance=ExtResource("handbook_link")]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
 chapter = "10-festung.md"
 section = "Die Landkarte"
-custom_minimum_size = Vector2(40, 40)
 
-[node name="EmptyHint" type="Label" parent="Hud/Corners"]
+[node name="EmptyHint" type="Label" parent="Hud/Corners" unique_id=327095430]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(480, 0)
-theme_type_variation = &"Hint"
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -131,11 +128,12 @@ anchor_right = 0.5
 anchor_bottom = 0.5
 grow_horizontal = 2
 grow_vertical = 2
+theme_type_variation = &"Hint"
 text = "Dieses Buch hat noch keine Units — im Start-Screen unter „Inhalte“ einen Vokabel-Pack installieren."
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="BottomRight" type="HBoxContainer" parent="Hud/Corners"]
+[node name="BottomRight" type="HBoxContainer" parent="Hud/Corners" unique_id=1878203178]
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
@@ -146,7 +144,7 @@ grow_horizontal = 0
 grow_vertical = 0
 mouse_filter = 2
 
-[node name="ResumeButton" type="Button" parent="Hud/Corners/BottomRight"]
+[node name="ResumeButton" type="Button" parent="Hud/Corners/BottomRight" unique_id=1386900040]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(200, 48)
@@ -159,7 +157,7 @@ icon = ExtResource("5_play")
 icon_alignment = 2
 expand_icon = true
 
-[node name="ProfileBadge" parent="Hud/Corners" instance=ExtResource("4_badge")]
+[node name="ProfileBadge" parent="Hud/Corners" unique_id=1872368586 instance=ExtResource("4_badge")]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = -1
@@ -167,6 +165,5 @@ anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -277.0
 offset_right = 0.0
-offset_bottom = 136.0
 grow_horizontal = 0
 compact = 1.0

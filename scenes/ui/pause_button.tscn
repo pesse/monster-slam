@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://dg68lc8px8081"]
 
-[ext_resource type="Texture2D" path="res://assets/ui/gameplay/icons/pause.webp" id="1_icon"]
+[ext_resource type="Texture2D" uid="uid://r6ee3qwajtpg" path="res://assets/ui/gameplay/icons/pause.webp" id="1_icon"]
 
-[node name="PauseButton" type="Button" groups=["word_plate_keep_clear"]]
+[node name="PauseButton" type="Button" unique_id=964010004 groups=["word_plate_keep_clear"]]
 process_mode = 3
 texture_filter = 4
 custom_minimum_size = Vector2(40, 40)

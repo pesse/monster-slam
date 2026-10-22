@@ -1,18 +1,18 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene format=3 uid="uid://detijlqlt3fji"]
 
-[ext_resource type="Script" path="res://src/ui/area_map.gd" id="1_screen"]
-[ext_resource type="Script" path="res://src/ui/map_canvas.gd" id="2_canvas"]
-[ext_resource type="Texture2D" path="res://assets/ui/library/back.webp" id="3_back"]
-[ext_resource type="Texture2D" path="res://assets/ui/main_menu/icons/play.webp" id="4_play"]
-[ext_resource type="Texture2D" path="res://assets/ui/skill_tree/icons/scout_eye.webp" id="5_eye"]
-[ext_resource type="Script" path="res://src/ui/overlap_row.gd" id="6_overlap"]
-[ext_resource type="Texture2D" path="res://assets/ui/fortress/small/medallion.webp" id="7_medal"]
-[ext_resource type="Texture2D" path="res://assets/ui/fortress/tiers/tier_0.webp" id="8_tier"]
-[ext_resource type="Texture2D" path="res://assets/ui/fortress/small/level_plate.webp" id="9_plate"]
-[ext_resource type="PackedScene" path="res://scenes/ui/profile_badge.tscn" id="12_badge"]
-[ext_resource type="PackedScene" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
-[ext_resource type="PackedScene" path="res://scenes/ui/confirm_dialog.tscn" id="13_confirm"]
-[ext_resource type="PackedScene" path="res://scenes/ui/boss_choice.tscn" id="14_choice"]
+[ext_resource type="Script" uid="uid://bc020voydt24k" path="res://src/ui/area_map.gd" id="1_screen"]
+[ext_resource type="Script" uid="uid://bqcj7guu5orj6" path="res://src/ui/map_canvas.gd" id="2_canvas"]
+[ext_resource type="Texture2D" uid="uid://3etmo0mb64ej" path="res://assets/ui/library/back.webp" id="3_back"]
+[ext_resource type="Texture2D" uid="uid://c23n78atueopp" path="res://assets/ui/main_menu/icons/play.webp" id="4_play"]
+[ext_resource type="Texture2D" uid="uid://cokdtox5mxmj2" path="res://assets/ui/skill_tree/icons/scout_eye.webp" id="5_eye"]
+[ext_resource type="Script" uid="uid://cd24iffqfpa8q" path="res://src/ui/overlap_row.gd" id="6_overlap"]
+[ext_resource type="Texture2D" uid="uid://sk1qn1aky7vk" path="res://assets/ui/fortress/small/medallion.webp" id="7_medal"]
+[ext_resource type="Texture2D" uid="uid://cjllada5uwp0t" path="res://assets/ui/fortress/tiers/tier_0.webp" id="8_tier"]
+[ext_resource type="Texture2D" uid="uid://vbul2o38l3av" path="res://assets/ui/fortress/small/level_plate.webp" id="9_plate"]
+[ext_resource type="PackedScene" uid="uid://u1ox5aaff65i" path="res://scenes/ui/profile_badge.tscn" id="12_badge"]
+[ext_resource type="PackedScene" uid="uid://f0ojpbs2lx7v" path="res://scenes/ui/confirm_dialog.tscn" id="13_confirm"]
+[ext_resource type="PackedScene" uid="uid://snht6xwu26bk" path="res://scenes/ui/boss_choice.tscn" id="14_choice"]
+[ext_resource type="PackedScene" uid="uid://badeio0oospuy" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
 
 [sub_resource type="Gradient" id="shade_g"]
 colors = PackedColorArray(0, 0, 0, 0.6, 0, 0, 0, 0)
@@ -20,10 +20,9 @@ colors = PackedColorArray(0, 0, 0, 0.6, 0, 0, 0, 0)
 [sub_resource type="GradientTexture2D" id="shade"]
 gradient = SubResource("shade_g")
 width = 4
-height = 64
 fill_to = Vector2(0, 1)
 
-[node name="AreaMap" type="Control"]
+[node name="AreaMap" type="Control" unique_id=1247275036]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -32,7 +31,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_screen")
 
-[node name="Backdrop" type="ColorRect" parent="."]
+[node name="Backdrop" type="ColorRect" parent="." unique_id=277905109]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -42,7 +41,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.05, 0.06, 0.1, 1)
 
-[node name="Canvas" type="Control" parent="."]
+[node name="Canvas" type="Control" parent="." unique_id=1949182529]
 unique_name_in_owner = true
 clip_contents = true
 layout_mode = 1
@@ -53,7 +52,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("2_canvas")
 
-[node name="Shade" type="TextureRect" parent="."]
+[node name="Shade" type="TextureRect" parent="." unique_id=579215331]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
@@ -63,8 +62,7 @@ mouse_filter = 2
 texture = SubResource("shade")
 expand_mode = 1
 
-[node name="Hud" type="MarginContainer" parent="."]
-theme_type_variation = &"ScreenMargin"
+[node name="Hud" type="MarginContainer" parent="." unique_id=1082017658]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -72,17 +70,18 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+theme_type_variation = &"ScreenMargin"
 
-[node name="Corners" type="Control" parent="Hud"]
+[node name="Corners" type="Control" parent="Hud" unique_id=1472572159]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Header" type="HBoxContainer" parent="Hud/Corners"]
+[node name="Header" type="HBoxContainer" parent="Hud/Corners" unique_id=274972353]
 unique_name_in_owner = true
 layout_mode = 0
 mouse_filter = 2
 
-[node name="BackButton" type="Button" parent="Hud/Corners/Header"]
+[node name="BackButton" type="Button" parent="Hud/Corners/Header" unique_id=1962907536]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
@@ -92,14 +91,14 @@ theme_type_variation = &"WindowButton"
 text = "Buchkarte"
 icon = ExtResource("3_back")
 
-[node name="HandbookLink" parent="Hud/Corners/Header" instance=ExtResource("handbook_link")]
+[node name="HandbookLink" parent="Hud/Corners/Header" unique_id=2073230723 instance=ExtResource("handbook_link")]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
 chapter = "10-festung.md"
 section = "Die Landkarte"
-custom_minimum_size = Vector2(40, 40)
 
-[node name="Plate" type="Container" parent="Hud/Corners"]
+[node name="Plate" type="Container" parent="Hud/Corners" unique_id=1394198376]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 7
@@ -113,19 +112,19 @@ mouse_filter = 2
 script = ExtResource("6_overlap")
 order = PackedStringArray("NamePanel", "Fortress", "Medal")
 
-[node name="Fortress" type="PanelContainer" parent="Hud/Corners/Plate"]
+[node name="Fortress" type="PanelContainer" parent="Hud/Corners/Plate" unique_id=872904900]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"FortressProgress"
 
-[node name="Lines" type="VBoxContainer" parent="Hud/Corners/Plate/Fortress"]
+[node name="Lines" type="VBoxContainer" parent="Hud/Corners/Plate/Fortress" unique_id=1682426569]
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
 theme_type_variation = &"Tight"
 
-[node name="FortressBar" type="ProgressBar" parent="Hud/Corners/Plate/Fortress/Lines"]
+[node name="FortressBar" type="ProgressBar" parent="Hud/Corners/Plate/Fortress/Lines" unique_id=445818511]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(176, 12)
 layout_mode = 2
@@ -134,67 +133,67 @@ theme_type_variation = &"FortressBar"
 max_value = 1.0
 show_percentage = false
 
-[node name="FortressNext" type="HBoxContainer" parent="Hud/Corners/Plate/Fortress/Lines"]
+[node name="FortressNext" type="HBoxContainer" parent="Hud/Corners/Plate/Fortress/Lines" unique_id=197796735]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"Tight"
 
-[node name="Before" type="Label" parent="Hud/Corners/Plate/Fortress/Lines/FortressNext"]
+[node name="Before" type="Label" parent="Hud/Corners/Plate/Fortress/Lines/FortressNext" unique_id=1533041973]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"FortressLine"
 text = "Noch"
 
-[node name="Count" type="Label" parent="Hud/Corners/Plate/Fortress/Lines/FortressNext"]
+[node name="Count" type="Label" parent="Hud/Corners/Plate/Fortress/Lines/FortressNext" unique_id=266565248]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"FortressCount"
 text = "0"
 
-[node name="After" type="Label" parent="Hud/Corners/Plate/Fortress/Lines/FortressNext"]
+[node name="After" type="Label" parent="Hud/Corners/Plate/Fortress/Lines/FortressNext" unique_id=1454566829]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"FortressLine"
 text = "Wörter bis Stufe 1"
 
-[node name="NamePanel" type="PanelContainer" parent="Hud/Corners/Plate"]
+[node name="NamePanel" type="PanelContainer" parent="Hud/Corners/Plate" unique_id=1673422023]
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"FortressName"
 
-[node name="Place" type="VBoxContainer" parent="Hud/Corners/Plate/NamePanel"]
+[node name="Place" type="VBoxContainer" parent="Hud/Corners/Plate/NamePanel" unique_id=1330765034]
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
 theme_type_variation = &"Tight"
 
-[node name="Book" type="Label" parent="Hud/Corners/Plate/NamePanel/Place"]
+[node name="Book" type="Label" parent="Hud/Corners/Plate/NamePanel/Place" unique_id=737930906]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"FortressBook"
 text = "Buch"
 
-[node name="Title" type="Label" parent="Hud/Corners/Plate/NamePanel/Place"]
+[node name="Title" type="Label" parent="Hud/Corners/Plate/NamePanel/Place" unique_id=44562674]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"FortressTitle"
 text = "Unit"
 
-[node name="Medal" type="Control" parent="Hud/Corners/Plate"]
+[node name="Medal" type="Control" parent="Hud/Corners/Plate" unique_id=379888915]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(96, 108)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Ring" type="TextureRect" parent="Hud/Corners/Plate/Medal"]
+[node name="Ring" type="TextureRect" parent="Hud/Corners/Plate/Medal" unique_id=1462522232]
 layout_mode = 0
 offset_right = 96.0
 offset_bottom = 96.0
 mouse_filter = 2
 texture = ExtResource("7_medal")
 
-[node name="FortressImage" type="TextureRect" parent="Hud/Corners/Plate/Medal"]
+[node name="FortressImage" type="TextureRect" parent="Hud/Corners/Plate/Medal" unique_id=830228412]
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = 12.0
@@ -204,7 +203,7 @@ offset_bottom = 80.0
 mouse_filter = 2
 texture = ExtResource("8_tier")
 
-[node name="LevelPlate" type="TextureRect" parent="Hud/Corners/Plate/Medal"]
+[node name="LevelPlate" type="TextureRect" parent="Hud/Corners/Plate/Medal" unique_id=1721113802]
 layout_mode = 0
 offset_left = 24.0
 offset_top = 72.0
@@ -213,7 +212,7 @@ offset_bottom = 108.0
 mouse_filter = 2
 texture = ExtResource("9_plate")
 
-[node name="FortressLevel" type="Label" parent="Hud/Corners/Plate/Medal/LevelPlate"]
+[node name="FortressLevel" type="Label" parent="Hud/Corners/Plate/Medal/LevelPlate" unique_id=102887728]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -226,7 +225,7 @@ text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="BottomRight" type="HBoxContainer" parent="Hud/Corners"]
+[node name="BottomRight" type="HBoxContainer" parent="Hud/Corners" unique_id=1441651679]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 3
@@ -238,7 +237,7 @@ grow_horizontal = 0
 grow_vertical = 0
 mouse_filter = 2
 
-[node name="DiscardRunButton" type="Button" parent="Hud/Corners/BottomRight"]
+[node name="DiscardRunButton" type="Button" parent="Hud/Corners/BottomRight" unique_id=1053661562]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(48, 48)
@@ -248,7 +247,7 @@ focus_mode = 0
 theme_type_variation = &"WindowToggle"
 text = "✕"
 
-[node name="ExamplesToggle" type="Button" parent="Hud/Corners/BottomRight"]
+[node name="ExamplesToggle" type="Button" parent="Hud/Corners/BottomRight" unique_id=2069748539]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(48, 48)
@@ -260,7 +259,7 @@ toggle_mode = true
 button_pressed = true
 text = "„…“"
 
-[node name="FirstPersonToggle" type="Button" parent="Hud/Corners/BottomRight"]
+[node name="FirstPersonToggle" type="Button" parent="Hud/Corners/BottomRight" unique_id=470491409]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(48, 48)
@@ -273,7 +272,7 @@ icon = ExtResource("5_eye")
 icon_alignment = 1
 expand_icon = true
 
-[node name="PlayButton" type="Button" parent="Hud/Corners/BottomRight"]
+[node name="PlayButton" type="Button" parent="Hud/Corners/BottomRight" unique_id=395660180]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(152, 48)
 layout_mode = 2
@@ -286,7 +285,7 @@ icon = ExtResource("4_play")
 icon_alignment = 2
 expand_icon = true
 
-[node name="ProfileBadge" parent="Hud/Corners" instance=ExtResource("12_badge")]
+[node name="ProfileBadge" parent="Hud/Corners" unique_id=447105440 instance=ExtResource("12_badge")]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = -1
@@ -294,13 +293,13 @@ anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -277.0
 offset_right = 0.0
-offset_bottom = 136.0
 grow_horizontal = 0
 compact = 1.0
 
-[node name="BossChoice" parent="." instance=ExtResource("14_choice")]
+[node name="BossChoice" parent="." unique_id=2079063611 instance=ExtResource("14_choice")]
 unique_name_in_owner = true
 layout_mode = 1
 
-[node name="Confirm" parent="." instance=ExtResource("13_confirm")]
+[node name="Confirm" parent="." unique_id=1288934150 instance=ExtResource("13_confirm")]
 unique_name_in_owner = true
+layout_mode = 1

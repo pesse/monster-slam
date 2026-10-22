@@ -1,38 +1,45 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://71mdqmskfivb"]
 
-[ext_resource type="Script" path="res://src/ui/progress_row.gd" id="1_progress_row"]
+[ext_resource type="Script" uid="uid://bt2bxhuix0hk4" path="res://src/ui/progress_row.gd" id="1_progress_row"]
 
-[node name="ProgressRow" type="VBoxContainer"]
+[node name="ProgressRow" type="VBoxContainer" unique_id=2132234074]
 theme_type_variation = &"Tight"
 script = ExtResource("1_progress_row")
 
-[node name="Row" type="HBoxContainer" parent="."]
+[node name="Row" type="HBoxContainer" parent="." unique_id=1756810836]
+layout_mode = 2
 
-[node name="Header" type="Button" parent="Row"]
-theme_type_variation = &"RowButton"
+[node name="Header" type="Button" parent="Row" unique_id=1555468369]
 custom_minimum_size = Vector2(360, 0)
+layout_mode = 2
+theme_type_variation = &"RowButton"
 text = "Bezeichnung"
 alignment = 0
 clip_text = true
 
-[node name="Bar" type="ProgressBar" parent="Row"]
+[node name="Bar" type="ProgressBar" parent="Row" unique_id=39129076]
 custom_minimum_size = Vector2(80, 14)
+layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 max_value = 1.0
 show_percentage = false
 
-[node name="Count" type="Label" parent="Row"]
+[node name="Count" type="Label" parent="Row" unique_id=251438634]
 custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
 text = "0 von 0"
 horizontal_alignment = 2
 
-[node name="Words" type="HBoxContainer" parent="."]
+[node name="Words" type="HBoxContainer" parent="." unique_id=1397283580]
 visible = false
+layout_mode = 2
 
-[node name="Indent" type="Control" parent="Words"]
+[node name="Indent" type="Control" parent="Words" unique_id=1564481991]
 custom_minimum_size = Vector2(24, 0)
+layout_mode = 2
 
-[node name="WordList" type="VBoxContainer" parent="Words"]
-theme_type_variation = &"Tight"
+[node name="WordList" type="VBoxContainer" parent="Words" unique_id=1757268734]
+layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"Tight"

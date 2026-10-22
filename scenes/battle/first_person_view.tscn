@@ -1,17 +1,17 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://dfn2s2oe3a8dp"]
 
-[ext_resource type="Script" path="res://src/battle/first_person_view.gd" id="1_view"]
-[ext_resource type="Script" path="res://src/ui/offscreen_markers.gd" id="2_markers"]
+[ext_resource type="Script" uid="uid://dolfc1il2iex6" path="res://src/battle/first_person_view.gd" id="1_view"]
+[ext_resource type="Script" uid="uid://bej2l2naabxya" path="res://src/ui/offscreen_markers.gd" id="2_markers"]
 
-[node name="FirstPersonView" type="Node3D"]
+[node name="FirstPersonView" type="Node3D" unique_id=872860706]
 script = ExtResource("1_view")
 
-[node name="Camera" type="Camera3D" parent="."]
+[node name="Camera" type="Camera3D" parent="." unique_id=384705699]
 fov = 70.0
 
-[node name="Overlay" type="CanvasLayer" parent="."]
+[node name="Overlay" type="CanvasLayer" parent="." unique_id=1970676821]
 
-[node name="Markers" type="Control" parent="Overlay"]
+[node name="Markers" type="Control" parent="Overlay" unique_id=924579258]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

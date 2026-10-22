@@ -1,17 +1,19 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://cahth5hfu1rb1"]
 
-[ext_resource type="Script" path="res://src/ui/trace_row.gd" id="1_row"]
+[ext_resource type="Script" uid="uid://daqhiopfbm6mm" path="res://src/ui/trace_row.gd" id="1_row"]
 
-[node name="TraceRow" type="HBoxContainer"]
+[node name="TraceRow" type="HBoxContainer" unique_id=1968884506]
 script = ExtResource("1_row")
 
-[node name="Time" type="Label" parent="."]
-theme_type_variation = &"Caption"
+[node name="Time" type="Label" parent="." unique_id=424679080]
 custom_minimum_size = Vector2(72, 0)
+layout_mode = 2
+theme_type_variation = &"Caption"
 text = "00:00:00"
 
-[node name="Text" type="Label" parent="."]
+[node name="Text" type="Label" parent="." unique_id=498129968]
 custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
 size_flags_horizontal = 3
 text = "Ereignis"
 autowrap_mode = 3

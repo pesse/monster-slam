@@ -1,44 +1,42 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://ccyrfi242g3x1"]
 
-[ext_resource type="Script" path="res://src/ui/coin_strip.gd" id="1_strip"]
+[ext_resource type="Script" uid="uid://ch33brei0yd43" path="res://src/ui/coin_strip.gd" id="1_strip"]
 
-[node name="CoinStrip" type="VBoxContainer"]
+[node name="CoinStrip" type="VBoxContainer" unique_id=534435879]
 script = ExtResource("1_strip")
 
-[node name="Head" type="HBoxContainer" parent="."]
+[node name="Head" type="HBoxContainer" parent="." unique_id=106810851]
 layout_mode = 2
 
-[node name="PrevMonth" type="Button" parent="Head"]
+[node name="PrevMonth" type="Button" parent="Head" unique_id=1501144804]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 theme_type_variation = &"ToolButton"
 text = "‹"
 
-[node name="Month" type="Label" parent="Head"]
+[node name="Month" type="Label" parent="Head" unique_id=612193813]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(176, 0)
 layout_mode = 2
-size_flags_vertical = 4
 theme_type_variation = &"StatHeading"
 text = "Monat"
 horizontal_alignment = 1
 
-[node name="NextMonth" type="Button" parent="Head"]
+[node name="NextMonth" type="Button" parent="Head" unique_id=1419926674]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 theme_type_variation = &"ToolButton"
 text = "›"
 
-[node name="Caption" type="Label" parent="Head"]
+[node name="Caption" type="Label" parent="Head" unique_id=1422971809]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_vertical = 4
 theme_type_variation = &"StatSubline"
 text = "•  0 von 30 Tagen geübt"
 
-[node name="Coins" type="HBoxContainer" parent="."]
+[node name="Coins" type="HBoxContainer" parent="." unique_id=957147179]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"Tight"

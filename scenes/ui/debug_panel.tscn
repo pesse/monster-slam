@@ -1,9 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://ctn7axmdawrkn"]
 
-[ext_resource type="Script" path="res://src/ui/debug_panel.gd" id="1_debug"]
+[ext_resource type="Script" uid="uid://dokwnu763sruq" path="res://src/ui/debug_panel.gd" id="1_debug"]
 
-[node name="DebugPanel" type="PanelContainer"]
-anchors_preset = 3
+[node name="DebugPanel" type="PanelContainer" unique_id=1305020937]
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
@@ -15,85 +14,103 @@ grow_vertical = 0
 theme_type_variation = &"DebugPanel"
 script = ExtResource("1_debug")
 
-[node name="Root" type="VBoxContainer" parent="."]
+[node name="Root" type="VBoxContainer" parent="." unique_id=1585795056]
+layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="Toggle" type="Button" parent="Root"]
+[node name="Toggle" type="Button" parent="Root" unique_id=651929510]
+layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"DebugButton"
 toggle_mode = true
 text = "🐞 Debug"
 
-[node name="Body" type="VBoxContainer" parent="Root"]
+[node name="Body" type="VBoxContainer" parent="Root" unique_id=609864107]
 visible = false
+layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="TierLabel" type="Label" parent="Root/Body"]
+[node name="TierLabel" type="Label" parent="Root/Body" unique_id=1569776432]
+layout_mode = 2
 theme_type_variation = &"Caption"
 text = "Festung-Stufe"
 
-[node name="TierRow" type="HBoxContainer" parent="Root/Body"]
+[node name="TierRow" type="HBoxContainer" parent="Root/Body" unique_id=1269493344]
+layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="Tier0" type="Button" parent="Root/Body/TierRow"]
+[node name="Tier0" type="Button" parent="Root/Body/TierRow" unique_id=781729710]
+layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"DebugButton"
 text = "0"
 
-[node name="Tier1" type="Button" parent="Root/Body/TierRow"]
+[node name="Tier1" type="Button" parent="Root/Body/TierRow" unique_id=313073419]
+layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"DebugButton"
 text = "1"
 
-[node name="Tier2" type="Button" parent="Root/Body/TierRow"]
+[node name="Tier2" type="Button" parent="Root/Body/TierRow" unique_id=1770339349]
+layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"DebugButton"
 text = "2"
 
-[node name="Tier3" type="Button" parent="Root/Body/TierRow"]
+[node name="Tier3" type="Button" parent="Root/Body/TierRow" unique_id=2010619772]
+layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"DebugButton"
 text = "3"
 
-[node name="Tier4" type="Button" parent="Root/Body/TierRow"]
+[node name="Tier4" type="Button" parent="Root/Body/TierRow" unique_id=1237755204]
+layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"DebugButton"
 text = "4"
 
-[node name="CelebrateLabel" type="Label" parent="Root/Body"]
+[node name="CelebrateLabel" type="Label" parent="Root/Body" unique_id=256627105]
+layout_mode = 2
 theme_type_variation = &"Caption"
 text = "Feier"
 
-[node name="CelebrateRow" type="HBoxContainer" parent="Root/Body"]
+[node name="CelebrateRow" type="HBoxContainer" parent="Root/Body" unique_id=1167522623]
+layout_mode = 2
 theme_type_variation = &"Tight"
 
-[node name="Task" type="Button" parent="Root/Body/CelebrateRow"]
+[node name="Task" type="Button" parent="Root/Body/CelebrateRow" unique_id=887414403]
+layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"DebugButton"
 text = "Aufgabe"
 
-[node name="Word" type="Button" parent="Root/Body/CelebrateRow"]
+[node name="Word" type="Button" parent="Root/Body/CelebrateRow" unique_id=228614184]
+layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"DebugButton"
 text = "Wort"
 
-[node name="Level" type="Button" parent="Root/Body/CelebrateRow"]
+[node name="Level" type="Button" parent="Root/Body/CelebrateRow" unique_id=1235933109]
+layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"DebugButton"
 text = "Level"
 
-[node name="Badge" type="Button" parent="Root/Body/CelebrateRow"]
+[node name="Badge" type="Button" parent="Root/Body/CelebrateRow" unique_id=781682902]
+layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"DebugButton"
 text = "Plakette"
 
-[node name="PicksLabel" type="Label" parent="Root/Body"]
+[node name="PicksLabel" type="Label" parent="Root/Body" unique_id=1254023697]
+layout_mode = 2
 theme_type_variation = &"Caption"
 text = "Letzte Spawns — warum dieses Wort"
 
-[node name="Picks" type="Label" parent="Root/Body"]
+[node name="Picks" type="Label" parent="Root/Body" unique_id=608982042]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(440, 0)
+layout_mode = 2
 theme_type_variation = &"Caption"
 text = "noch keiner"
 autowrap_mode = 3

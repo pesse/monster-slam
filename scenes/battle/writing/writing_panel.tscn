@@ -1,125 +1,124 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://da2g5cjqe623o"]
 
-[node name="WritingPanel" type="HBoxContainer"]
-theme_type_variation = &"ScreenStack"
-anchors_preset = 15
+[node name="WritingPanel" type="HBoxContainer" unique_id=573536340]
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+theme_type_variation = &"ScreenStack"
 
-[node name="Source" type="PanelContainer" parent="."]
-theme_type_variation = &"BossBubble"
+[node name="Source" type="PanelContainer" parent="." unique_id=1531528670]
 custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
+theme_type_variation = &"BossBubble"
 
-[node name="SourceStack" type="VBoxContainer" parent="Source"]
-theme_type_variation = &"Tight"
+[node name="SourceStack" type="VBoxContainer" parent="Source" unique_id=1281551402]
 layout_mode = 2
+theme_type_variation = &"Tight"
 
-[node name="SourceTitle" type="Label" parent="Source/SourceStack"]
+[node name="SourceTitle" type="Label" parent="Source/SourceStack" unique_id=96973767]
 unique_name_in_owner = true
-theme_type_variation = &"BubbleAccent"
 custom_minimum_size = Vector2(240, 0)
 layout_mode = 2
-autowrap_mode = 3
+theme_type_variation = &"BubbleAccent"
 text = "—"
+autowrap_mode = 3
 
-[node name="SourceScroll" type="ScrollContainer" parent="Source/SourceStack"]
+[node name="SourceScroll" type="ScrollContainer" parent="Source/SourceStack" unique_id=1216948728]
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="Gutter" type="MarginContainer" parent="Source/SourceStack/SourceScroll"]
-theme_type_variation = &"ScrollGutter"
+[node name="Gutter" type="MarginContainer" parent="Source/SourceStack/SourceScroll" unique_id=1017963231]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"ScrollGutter"
 
-[node name="SourceText" type="Label" parent="Source/SourceStack/SourceScroll/Gutter"]
+[node name="SourceText" type="Label" parent="Source/SourceStack/SourceScroll/Gutter" unique_id=707250438]
 unique_name_in_owner = true
-theme_type_variation = &"BubbleText"
 custom_minimum_size = Vector2(240, 0)
 layout_mode = 2
+theme_type_variation = &"BubbleText"
 autowrap_mode = 3
 
-[node name="Editor" type="PanelContainer" parent="."]
-theme_type_variation = &"PlayerBubble"
+[node name="Editor" type="PanelContainer" parent="." unique_id=1030574474]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"PlayerBubble"
 
-[node name="EditorStack" type="VBoxContainer" parent="Editor"]
-theme_type_variation = &"Tight"
+[node name="EditorStack" type="VBoxContainer" parent="Editor" unique_id=244003980]
 layout_mode = 2
+theme_type_variation = &"Tight"
 
-[node name="EditorTitle" type="Label" parent="Editor/EditorStack"]
+[node name="EditorTitle" type="Label" parent="Editor/EditorStack" unique_id=560212915]
 unique_name_in_owner = true
-theme_type_variation = &"BubbleAccent"
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-autowrap_mode = 3
+theme_type_variation = &"BubbleAccent"
 text = "Deine Summary"
+autowrap_mode = 3
 
-[node name="TextEdit" type="TextEdit" parent="Editor/EditorStack"]
+[node name="TextEdit" type="TextEdit" parent="Editor/EditorStack" unique_id=426608874]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 placeholder_text = "In the short story „…“ by …, …"
 wrap_mode = 1
 
-[node name="Sidebar" type="PanelContainer" parent="."]
-theme_type_variation = &"HudPanel"
+[node name="Sidebar" type="PanelContainer" parent="." unique_id=125563834]
 custom_minimum_size = Vector2(240, 0)
 layout_mode = 2
+theme_type_variation = &"HudPanel"
 
-[node name="SideStack" type="VBoxContainer" parent="Sidebar"]
+[node name="SideStack" type="VBoxContainer" parent="Sidebar" unique_id=680379678]
+layout_mode = 2
 theme_type_variation = &"Tight"
-layout_mode = 2
 
-[node name="Words" type="Label" parent="Sidebar/SideStack"]
+[node name="Words" type="Label" parent="Sidebar/SideStack" unique_id=1477549964]
 unique_name_in_owner = true
-theme_type_variation = &"SectionTitle"
 layout_mode = 2
+theme_type_variation = &"SectionTitle"
 text = "0 Wörter"
 
-[node name="Target" type="Label" parent="Sidebar/SideStack"]
+[node name="Target" type="Label" parent="Sidebar/SideStack" unique_id=1410253404]
 unique_name_in_owner = true
-theme_type_variation = &"Hint"
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-autowrap_mode = 3
+theme_type_variation = &"Hint"
 text = "Ziel: —"
+autowrap_mode = 3
 
-[node name="Rule" type="HSeparator" parent="Sidebar/SideStack"]
+[node name="Rule" type="HSeparator" parent="Sidebar/SideStack" unique_id=1745295217]
+layout_mode = 2
 theme_type_variation = &"StatRule"
-layout_mode = 2
 
-[node name="Checks" type="VBoxContainer" parent="Sidebar/SideStack"]
+[node name="Checks" type="VBoxContainer" parent="Sidebar/SideStack" unique_id=2014477337]
 unique_name_in_owner = true
-theme_type_variation = &"Tight"
 layout_mode = 2
+theme_type_variation = &"Tight"
 
-[node name="Space" type="Control" parent="Sidebar/SideStack"]
+[node name="Space" type="Control" parent="Sidebar/SideStack" unique_id=1512278986]
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
 
-[node name="ReadButton" type="Button" parent="Sidebar/SideStack"]
+[node name="ReadButton" type="Button" parent="Sidebar/SideStack" unique_id=2014878991]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"WindowButton"
 text = "📖 Geschichte groß"
 
-[node name="SubmitButton" type="Button" parent="Sidebar/SideStack"]
+[node name="SubmitButton" type="Button" parent="Sidebar/SideStack" unique_id=121087101]
 unique_name_in_owner = true
-theme_type_variation = &"ActionButton"
 layout_mode = 2
+theme_type_variation = &"ActionButton"
 text = "⚔ Abgeben"
 
-[node name="SubmitNote" type="Label" parent="Sidebar/SideStack"]
+[node name="SubmitNote" type="Label" parent="Sidebar/SideStack" unique_id=17119953]
 unique_name_in_owner = true
-theme_type_variation = &"Caption"
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-autowrap_mode = 3
+theme_type_variation = &"Caption"
 text = "Strg+Enter gibt ab."
+autowrap_mode = 3

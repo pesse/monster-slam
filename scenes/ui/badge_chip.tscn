@@ -1,26 +1,27 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://bkw0m8ubuy6mg"]
 
-[ext_resource type="Script" path="res://src/ui/badge_chip.gd" id="1_chip"]
-[ext_resource type="PackedScene" path="res://scenes/ui/badge_plate.tscn" id="2_plate"]
+[ext_resource type="Script" uid="uid://dxk5c177v8s6y" path="res://src/ui/badge_chip.gd" id="1_chip"]
+[ext_resource type="PackedScene" uid="uid://bjrisbkmsjf8i" path="res://scenes/ui/badge_plate.tscn" id="2_plate"]
 
-[node name="BadgeChip" type="VBoxContainer"]
+[node name="BadgeChip" type="VBoxContainer" unique_id=105644061]
 custom_minimum_size = Vector2(56, 0)
 focus_mode = 2
 theme_type_variation = &"Tight"
 script = ExtResource("1_chip")
 
-[node name="Holder" type="Control" parent="."]
+[node name="Holder" type="Control" parent="." unique_id=852810051]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(48, 60)
 layout_mode = 2
 size_flags_horizontal = 4
 mouse_filter = 2
 
-[node name="Plate" parent="Holder" instance=ExtResource("2_plate")]
+[node name="Plate" parent="Holder" unique_id=599321900 instance=ExtResource("2_plate")]
 unique_name_in_owner = true
+layout_mode = 0
 scale = Vector2(0.375, 0.375)
 
-[node name="Caption" type="Label" parent="."]
+[node name="Caption" type="Label" parent="." unique_id=1044074070]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"Caption"

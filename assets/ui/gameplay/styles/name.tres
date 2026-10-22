@@ -1,14 +1,14 @@
-[gd_resource type="StyleBoxTexture" load_steps=2 format=3]
+[gd_resource type="StyleBoxTexture" format=3 uid="uid://bfw13pns7o5lo"]
 
-[ext_resource type="Texture2D" path="res://assets/ui/gameplay/frames/name.webp" id="1"]
+[ext_resource type="Texture2D" uid="uid://bnu0o8rjubc23" path="res://assets/ui/gameplay/frames/name.webp" id="1"]
 
 [resource]
+content_margin_left = 32.0
+content_margin_top = 12.0
+content_margin_right = 32.0
+content_margin_bottom = 12.0
 texture = ExtResource("1")
 texture_margin_left = 40.0
 texture_margin_top = 12.0
 texture_margin_right = 40.0
 texture_margin_bottom = 12.0
-content_margin_left = 32.0
-content_margin_top = 12.0
-content_margin_right = 32.0
-content_margin_bottom = 12.0

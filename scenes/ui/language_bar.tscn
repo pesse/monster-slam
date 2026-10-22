@@ -1,12 +1,11 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://dvsymnbv8dh23"]
 
-[ext_resource type="Script" path="res://src/ui/language_bar.gd" id="1_language_bar"]
+[ext_resource type="Script" uid="uid://con2622acuxuy" path="res://src/ui/language_bar.gd" id="1_language_bar"]
 
-[node name="LanguageBar" type="HBoxContainer"]
+[node name="LanguageBar" type="HBoxContainer" unique_id=1538885398]
 script = ExtResource("1_language_bar")
 
-[node name="Caption" type="Label" parent="."]
+[node name="Caption" type="Label" parent="." unique_id=1528678220]
 layout_mode = 2
-size_flags_vertical = 4
 theme_type_variation = &"Hint"
 text = "Sprache:"

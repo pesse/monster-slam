@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://dpknk5ekk21c1"]
 
-[ext_resource type="Texture2D" path="res://assets/ui/gameplay/icons/fast_forward.webp" id="1_icon"]
+[ext_resource type="Texture2D" uid="uid://dah2oj1wsvbdl" path="res://assets/ui/gameplay/icons/fast_forward.webp" id="1_icon"]
 
-[node name="FastResolveButton" type="Button" groups=["word_plate_keep_clear"]]
+[node name="FastResolveButton" type="Button" unique_id=143666871 groups=["word_plate_keep_clear"]]
 texture_filter = 4
 custom_minimum_size = Vector2(58, 58)
 anchor_left = 0.5

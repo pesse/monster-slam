@@ -1,21 +1,21 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dljwgd7edjker"]
 
-[node name="Item" type="HBoxContainer"]
+[node name="Item" type="HBoxContainer" unique_id=204451502]
 size_flags_horizontal = 3
 
-[node name="Indent" type="Control" parent="."]
+[node name="Indent" type="Control" parent="." unique_id=1161217408]
 visible = false
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Marker" type="Label" parent="."]
+[node name="Marker" type="Label" parent="." unique_id=1481958824]
 custom_minimum_size = Vector2(32, 0)
 layout_mode = 2
 size_flags_vertical = 0
 theme_type_variation = &"HandbookMarker"
 horizontal_alignment = 2
 
-[node name="Text" type="RichTextLabel" parent="."]
+[node name="Text" type="RichTextLabel" parent="." unique_id=411019831]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
@@ -23,4 +23,3 @@ theme_type_variation = &"HandbookText"
 bbcode_enabled = true
 fit_content = true
 scroll_active = false
-autowrap_mode = 3

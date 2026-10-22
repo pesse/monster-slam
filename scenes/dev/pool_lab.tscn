@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://b57tvq7h1jn6c"]
 
-[ext_resource type="Script" path="res://src/dev/pool_lab.gd" id="1_lab"]
+[ext_resource type="Script" uid="uid://d10ayc7gsoa4k" path="res://src/dev/pool_lab.gd" id="1_lab"]
 
-[node name="PoolLab" type="Control"]
+[node name="PoolLab" type="Control" unique_id=1394007347]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,7 +11,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_lab")
 
-[node name="Margin" type="MarginContainer" parent="."]
+[node name="Margin" type="MarginContainer" parent="." unique_id=1673238294]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -20,131 +20,131 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_type_variation = &"ScreenMargin"
 
-[node name="Root" type="VBoxContainer" parent="Margin"]
+[node name="Root" type="VBoxContainer" parent="Margin" unique_id=508401366]
 layout_mode = 2
 theme_type_variation = &"ScreenStack"
 
-[node name="Title" type="Label" parent="Margin/Root"]
+[node name="Title" type="Label" parent="Margin/Root" unique_id=2113183607]
 layout_mode = 2
 theme_type_variation = &"Display"
 text = "Pool-Werkbank"
 
-[node name="Hint" type="Label" parent="Margin/Root"]
+[node name="Hint" type="Label" parent="Margin/Root" unique_id=1520876352]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Was der Wellenkampf als Nächstes wählen würde — aus dem Lernstand des aktiven Profils, mit verstellbarer Uhr. Hier wird nichts gespeichert."
 autowrap_mode = 3
 
-[node name="Controls" type="HBoxContainer" parent="Margin/Root"]
+[node name="Controls" type="HBoxContainer" parent="Margin/Root" unique_id=1195945562]
 layout_mode = 2
 
-[node name="ScopeSelect" type="OptionButton" parent="Margin/Root/Controls"]
+[node name="ScopeSelect" type="OptionButton" parent="Margin/Root/Controls" unique_id=1829987377]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
 
-[node name="Plus10Min" type="Button" parent="Margin/Root/Controls"]
+[node name="Plus10Min" type="Button" parent="Margin/Root/Controls" unique_id=1776193090]
 unique_name_in_owner = true
 layout_mode = 2
 text = "+10 min"
 
-[node name="Plus1Hour" type="Button" parent="Margin/Root/Controls"]
+[node name="Plus1Hour" type="Button" parent="Margin/Root/Controls" unique_id=646587058]
 unique_name_in_owner = true
 layout_mode = 2
 text = "+1 h"
 
-[node name="Plus1Day" type="Button" parent="Margin/Root/Controls"]
+[node name="Plus1Day" type="Button" parent="Margin/Root/Controls" unique_id=995293513]
 unique_name_in_owner = true
 layout_mode = 2
 text = "+1 Tag"
 
-[node name="Now" type="Button" parent="Margin/Root/Controls"]
+[node name="Now" type="Button" parent="Margin/Root/Controls" unique_id=200294885]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Jetzt"
 
-[node name="Clock" type="Label" parent="Margin/Root/Controls"]
+[node name="Clock" type="Label" parent="Margin/Root/Controls" unique_id=13822878]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(180, 0)
 layout_mode = 2
 theme_type_variation = &"Caption"
 
-[node name="SimCount" type="SpinBox" parent="Margin/Root/Controls"]
+[node name="SimCount" type="SpinBox" parent="Margin/Root/Controls" unique_id=106331321]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 1.0
 max_value = 60.0
 value = 10.0
 
-[node name="Simulate" type="Button" parent="Margin/Root/Controls"]
+[node name="Simulate" type="Button" parent="Margin/Root/Controls" unique_id=129173937]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Spawns simulieren"
 
-[node name="Summary" type="Label" parent="Margin/Root"]
+[node name="Summary" type="Label" parent="Margin/Root" unique_id=323020304]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"Caption"
 autowrap_mode = 3
 
-[node name="Columns" type="HBoxContainer" parent="Margin/Root"]
+[node name="Columns" type="HBoxContainer" parent="Margin/Root" unique_id=1409392522]
 layout_mode = 2
 size_flags_vertical = 3
 theme_type_variation = &"SectionStack"
 
-[node name="Order" type="VBoxContainer" parent="Margin/Root/Columns"]
+[node name="Order" type="VBoxContainer" parent="Margin/Root/Columns" unique_id=1201594556]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 1.4
 
-[node name="OrderTitle" type="Label" parent="Margin/Root/Columns/Order"]
+[node name="OrderTitle" type="Label" parent="Margin/Root/Columns/Order" unique_id=1597318593]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SectionTitle"
 text = "Reihenfolge der Kandidaten"
 
-[node name="Scroll" type="ScrollContainer" parent="Margin/Root/Columns/Order"]
+[node name="Scroll" type="ScrollContainer" parent="Margin/Root/Columns/Order" unique_id=1765492947]
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="Gutter" type="MarginContainer" parent="Margin/Root/Columns/Order/Scroll"]
+[node name="Gutter" type="MarginContainer" parent="Margin/Root/Columns/Order/Scroll" unique_id=1518560973]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"ScrollGutter"
 
-[node name="OrderList" type="VBoxContainer" parent="Margin/Root/Columns/Order/Scroll/Gutter"]
+[node name="OrderList" type="VBoxContainer" parent="Margin/Root/Columns/Order/Scroll/Gutter" unique_id=842753207]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"Tight"
 
-[node name="Sim" type="VBoxContainer" parent="Margin/Root/Columns"]
+[node name="Sim" type="VBoxContainer" parent="Margin/Root/Columns" unique_id=362403806]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="SimTitle" type="Label" parent="Margin/Root/Columns/Sim"]
+[node name="SimTitle" type="Label" parent="Margin/Root/Columns/Sim" unique_id=2053017370]
 layout_mode = 2
 theme_type_variation = &"SectionTitle"
 text = "Simulierte Welle"
 
-[node name="Scroll" type="ScrollContainer" parent="Margin/Root/Columns/Sim"]
+[node name="Scroll" type="ScrollContainer" parent="Margin/Root/Columns/Sim" unique_id=285091571]
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="Gutter" type="MarginContainer" parent="Margin/Root/Columns/Sim/Scroll"]
+[node name="Gutter" type="MarginContainer" parent="Margin/Root/Columns/Sim/Scroll" unique_id=1883871309]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"ScrollGutter"
 
-[node name="SimList" type="VBoxContainer" parent="Margin/Root/Columns/Sim/Scroll/Gutter"]
+[node name="SimList" type="VBoxContainer" parent="Margin/Root/Columns/Sim/Scroll/Gutter" unique_id=197348295]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"Tight"
 
-[node name="BackButton" type="Button" parent="Margin/Root"]
+[node name="BackButton" type="Button" parent="Margin/Root" unique_id=1257798869]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 0

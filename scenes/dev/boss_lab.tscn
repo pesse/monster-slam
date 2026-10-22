@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://d33n4imrvusri"]
 
-[ext_resource type="Script" path="res://src/dev/boss_lab.gd" id="1_lab"]
+[ext_resource type="Script" uid="uid://phweha1pa2lo" path="res://src/dev/boss_lab.gd" id="1_lab"]
 
-[node name="BossLab" type="Control"]
+[node name="BossLab" type="Control" unique_id=1006418286]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,174 +11,212 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_lab")
 
-[node name="Margin" type="MarginContainer" parent="."]
-theme_type_variation = &"ScreenMargin"
+[node name="Margin" type="MarginContainer" parent="." unique_id=1037477986]
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_type_variation = &"ScreenMargin"
 
-[node name="Root" type="VBoxContainer" parent="Margin"]
+[node name="Root" type="VBoxContainer" parent="Margin" unique_id=722550737]
+layout_mode = 2
 theme_type_variation = &"ScreenStack"
 
-[node name="Title" type="Label" parent="Margin/Root"]
+[node name="Title" type="Label" parent="Margin/Root" unique_id=1385940641]
+layout_mode = 2
 theme_type_variation = &"Display"
 text = "Satz-Werkbank"
 
-[node name="Hint" type="Label" parent="Margin/Root"]
+[node name="Hint" type="Label" parent="Margin/Root" unique_id=704185874]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Sätze bewerten, ohne ein Modell auszuliefern (ADR 0004). Hier wird nichts gespeichert und nichts gelernt."
 
-[node name="Columns" type="HBoxContainer" parent="Margin/Root"]
+[node name="Columns" type="HBoxContainer" parent="Margin/Root" unique_id=862831039]
+layout_mode = 2
+size_flags_vertical = 3
 theme_type_variation = &"SectionStack"
-size_flags_vertical = 3
 
-[node name="Choice" type="VBoxContainer" parent="Margin/Root/Columns"]
+[node name="Choice" type="VBoxContainer" parent="Margin/Root/Columns" unique_id=830128736]
 custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
 size_flags_vertical = 3
 
-[node name="ChoiceTitle" type="Label" parent="Margin/Root/Columns/Choice"]
+[node name="ChoiceTitle" type="Label" parent="Margin/Root/Columns/Choice" unique_id=619918779]
+layout_mode = 2
 theme_type_variation = &"SectionTitle"
 text = "Auswahl"
 
-[node name="BossCaption" type="Label" parent="Margin/Root/Columns/Choice"]
+[node name="BossCaption" type="Label" parent="Margin/Root/Columns/Choice" unique_id=428151526]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Auswahlregel eines Bosses"
 
-[node name="BossSelect" type="OptionButton" parent="Margin/Root/Columns/Choice"]
+[node name="BossSelect" type="OptionButton" parent="Margin/Root/Columns/Choice" unique_id=1389240697]
 unique_name_in_owner = true
+layout_mode = 2
 
-[node name="UseProfile" type="CheckButton" parent="Margin/Root/Columns/Choice"]
+[node name="UseProfile" type="CheckButton" parent="Margin/Root/Columns/Choice" unique_id=1919125818]
 unique_name_in_owner = true
+layout_mode = 2
 text = "Auswahl des Profils beachten"
 
-[node name="OnlyKeyed" type="CheckButton" parent="Margin/Root/Columns/Choice"]
+[node name="OnlyKeyed" type="CheckButton" parent="Margin/Root/Columns/Choice" unique_id=51249374]
 unique_name_in_owner = true
+layout_mode = 2
 button_pressed = true
 text = "Nur Sätze mit Schlüssel"
 
-[node name="PoolInfo" type="Label" parent="Margin/Root/Columns/Choice"]
-theme_type_variation = &"Hint"
+[node name="PoolInfo" type="Label" parent="Margin/Root/Columns/Choice" unique_id=30458115]
 unique_name_in_owner = true
-autowrap_mode = 3
+layout_mode = 2
+theme_type_variation = &"Hint"
 text = "—"
+autowrap_mode = 3
 
-[node name="SentenceCaption" type="Label" parent="Margin/Root/Columns/Choice"]
+[node name="SentenceCaption" type="Label" parent="Margin/Root/Columns/Choice" unique_id=366116072]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Satz (schwerster zuerst)"
 
-[node name="SentenceSelect" type="OptionButton" parent="Margin/Root/Columns/Choice"]
+[node name="SentenceSelect" type="OptionButton" parent="Margin/Root/Columns/Choice" unique_id=357268067]
 unique_name_in_owner = true
+layout_mode = 2
 clip_text = true
 
-[node name="RollButton" type="Button" parent="Margin/Root/Columns/Choice"]
+[node name="RollButton" type="Button" parent="Margin/Root/Columns/Choice" unique_id=550409549]
 unique_name_in_owner = true
+layout_mode = 2
 text = "Satz ziehen wie im Spiel"
 
-[node name="Task" type="VBoxContainer" parent="Margin/Root/Columns"]
+[node name="Task" type="VBoxContainer" parent="Margin/Root/Columns" unique_id=936713327]
+layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="TaskTitle" type="Label" parent="Margin/Root/Columns/Task"]
+[node name="TaskTitle" type="Label" parent="Margin/Root/Columns/Task" unique_id=309749294]
+layout_mode = 2
 theme_type_variation = &"SectionTitle"
 text = "Aufgabe"
 
-[node name="SourceText" type="Label" parent="Margin/Root/Columns/Task"]
+[node name="SourceText" type="Label" parent="Margin/Root/Columns/Task" unique_id=1538950566]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
 theme_type_variation = &"Title"
+text = "—"
+autowrap_mode = 3
+
+[node name="SentenceInfo" type="Label" parent="Margin/Root/Columns/Task" unique_id=1368420594]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(320, 0)
-autowrap_mode = 3
-text = "—"
-
-[node name="SentenceInfo" type="Label" parent="Margin/Root/Columns/Task"]
+layout_mode = 2
 theme_type_variation = &"Hint"
-unique_name_in_owner = true
-custom_minimum_size = Vector2(320, 0)
-autowrap_mode = 3
 text = "—"
+autowrap_mode = 3
 
-[node name="KeyCaption" type="Label" parent="Margin/Root/Columns/Task"]
+[node name="KeyCaption" type="Label" parent="Margin/Root/Columns/Task" unique_id=245711515]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Lösungsschlüssel — hier änderbar, nicht gespeichert"
 
-[node name="KeyEdit" type="TextEdit" parent="Margin/Root/Columns/Task"]
+[node name="KeyEdit" type="TextEdit" parent="Margin/Root/Columns/Task" unique_id=1174932384]
 unique_name_in_owner = true
-size_flags_vertical = 3
 custom_minimum_size = Vector2(320, 160)
+layout_mode = 2
+size_flags_vertical = 3
 
-[node name="KeyStatus" type="Label" parent="Margin/Root/Columns/Task"]
-theme_type_variation = &"Caption"
+[node name="KeyStatus" type="Label" parent="Margin/Root/Columns/Task" unique_id=11952676]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
+theme_type_variation = &"Caption"
 autowrap_mode = 3
 
-[node name="AnswerCaption" type="Label" parent="Margin/Root/Columns/Task"]
+[node name="AnswerCaption" type="Label" parent="Margin/Root/Columns/Task" unique_id=303609564]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Antwort der Spielerin"
 
-[node name="AnswerEdit" type="LineEdit" parent="Margin/Root/Columns/Task"]
+[node name="AnswerEdit" type="LineEdit" parent="Margin/Root/Columns/Task" unique_id=2028177610]
 unique_name_in_owner = true
+layout_mode = 2
 placeholder_text = "Übersetzung tippen und Enter"
 
-[node name="JudgeButton" type="Button" parent="Margin/Root/Columns/Task"]
+[node name="JudgeButton" type="Button" parent="Margin/Root/Columns/Task" unique_id=867591130]
 unique_name_in_owner = true
+layout_mode = 2
 text = "Bewerten"
 
-[node name="Verdict" type="VBoxContainer" parent="Margin/Root/Columns"]
+[node name="Verdict" type="VBoxContainer" parent="Margin/Root/Columns" unique_id=1916398458]
 custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
 size_flags_vertical = 3
 
-[node name="VerdictTitle" type="Label" parent="Margin/Root/Columns/Verdict"]
+[node name="VerdictTitle" type="Label" parent="Margin/Root/Columns/Verdict" unique_id=1354056664]
+layout_mode = 2
 theme_type_variation = &"SectionTitle"
 text = "Urteil"
 
-[node name="CardCaption" type="Label" parent="Margin/Root/Columns/Verdict"]
+[node name="CardCaption" type="Label" parent="Margin/Root/Columns/Verdict" unique_id=1939042088]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Stufe 0 — Prüfkarte (immer da)"
 
-[node name="CardResult" type="Label" parent="Margin/Root/Columns/Verdict"]
-theme_type_variation = &"Accent"
+[node name="CardResult" type="Label" parent="Margin/Root/Columns/Verdict" unique_id=458265842]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(280, 0)
-autowrap_mode = 3
+layout_mode = 2
+theme_type_variation = &"Accent"
 text = "—"
+autowrap_mode = 3
 
-[node name="ModelCaption" type="Label" parent="Margin/Root/Columns/Verdict"]
+[node name="ModelCaption" type="Label" parent="Margin/Root/Columns/Verdict" unique_id=293551194]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Stufe 1 — lokaler Dienst (optional)"
 
-[node name="ServeButton" type="Button" parent="Margin/Root/Columns/Verdict"]
+[node name="ServeButton" type="Button" parent="Margin/Root/Columns/Verdict" unique_id=628647230]
 unique_name_in_owner = true
+layout_mode = 2
 text = "Dienst starten"
 
-[node name="ServeStatus" type="Label" parent="Margin/Root/Columns/Verdict"]
-theme_type_variation = &"Hint"
+[node name="ServeStatus" type="Label" parent="Margin/Root/Columns/Verdict" unique_id=1019261133]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+theme_type_variation = &"Hint"
 autowrap_mode = 3
 
-[node name="ModelToggle" type="CheckButton" parent="Margin/Root/Columns/Verdict"]
+[node name="ModelToggle" type="CheckButton" parent="Margin/Root/Columns/Verdict" unique_id=1368905751]
 unique_name_in_owner = true
+layout_mode = 2
 text = "Stufe 1 benutzen"
 
-[node name="ModelUrl" type="LineEdit" parent="Margin/Root/Columns/Verdict"]
+[node name="ModelUrl" type="LineEdit" parent="Margin/Root/Columns/Verdict" unique_id=690824596]
 unique_name_in_owner = true
+layout_mode = 2
 
-[node name="ModelScroll" type="ScrollContainer" parent="Margin/Root/Columns/Verdict"]
+[node name="ModelScroll" type="ScrollContainer" parent="Margin/Root/Columns/Verdict" unique_id=195979813]
 custom_minimum_size = Vector2(280, 120)
+layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="Gutter" type="MarginContainer" parent="Margin/Root/Columns/Verdict/ModelScroll"]
-theme_type_variation = &"ScrollGutter"
+[node name="Gutter" type="MarginContainer" parent="Margin/Root/Columns/Verdict/ModelScroll" unique_id=201938880]
+layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"ScrollGutter"
 
-[node name="ModelResult" type="Label" parent="Margin/Root/Columns/Verdict/ModelScroll/Gutter"]
+[node name="ModelResult" type="Label" parent="Margin/Root/Columns/Verdict/ModelScroll/Gutter" unique_id=101393756]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(260, 0)
-autowrap_mode = 3
+layout_mode = 2
 text = "—"
+autowrap_mode = 3
 
-[node name="BackButton" type="Button" parent="Margin/Root"]
+[node name="BackButton" type="Button" parent="Margin/Root" unique_id=723881981]
 unique_name_in_owner = true
+layout_mode = 2
 text = "⟵ Zurück zum Menü"

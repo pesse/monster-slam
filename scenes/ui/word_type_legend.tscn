@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://dntdq6q04av16"]
 
-[ext_resource type="Script" path="res://src/ui/word_type_legend.gd" id="1_legend"]
+[ext_resource type="Script" uid="uid://d4m3rn2vd5rjv" path="res://src/ui/word_type_legend.gd" id="1_legend"]
 
-[node name="WordTypeLegend" type="PanelContainer" groups=["word_plate_keep_clear"]]
+[node name="WordTypeLegend" type="PanelContainer" unique_id=1236580361 groups=["word_plate_keep_clear"]]
 texture_filter = 4
 anchor_left = 0.5
 anchor_top = 1.0
@@ -18,7 +18,7 @@ mouse_filter = 2
 theme_type_variation = &"HudLegend"
 script = ExtResource("1_legend")
 
-[node name="Entries" type="HBoxContainer" parent="."]
+[node name="Entries" type="HBoxContainer" parent="." unique_id=1003548063]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2

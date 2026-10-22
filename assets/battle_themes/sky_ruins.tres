@@ -1,28 +1,25 @@
-[gd_resource type="Resource" script_class="BattleTheme" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="BattleTheme" format=3 uid="uid://blrvphngbilng"]
 
-[ext_resource type="Script" path="res://src/battle/battle_theme.gd" id="1_theme"]
+[ext_resource type="Script" uid="uid://c6bpe22eo7xiw" path="res://src/battle/battle_theme.gd" id="1_theme"]
 
 [resource]
 script = ExtResource("1_theme")
-ground_patch = Color(0.5, 0.56, 0.32, 1)
-ground_patch_amount = 0.3
-path = "cobble"
-path_color = Color(0.6, 0.56, 0.52, 1)
-ground_texture = "flagstone"
-ground_texture_strength = 0.7
 ground_low = Color(0.68, 0.6, 0.42, 1)
 ground_high = Color(0.78, 0.68, 0.48, 1)
 hill = Color(0.54, 0.5, 0.52, 1)
+ground_patch = Color(0.5, 0.56, 0.32, 1)
+path = "cobble"
+path_color = Color(0.6, 0.56, 0.52, 1)
+bush_color = Color(0.36, 0.42, 0.22, 1)
+bushes = 0.3
+ground_texture = "flagstone"
+ground_texture_strength = 0.7
 background = Color(0.05, 0.08, 0.2, 1)
 ambient = Color(0.56, 0.6, 0.76, 1)
-ambient_energy = 1.0
-sun_color = Color(1.0, 0.9, 0.76, 1)
+sun_color = Color(1, 0.9, 0.76, 1)
 sun_energy = 1.05
 trees = Array[String](["forge/cypress.glb", "forge/cypress.glb", "forge/olive.glb", "forge/floating_rock.glb"])
 rocks = Array[String](["forge/sky_boulder.glb"])
 grass = Array[String](["forge/dry_grass.glb"])
 props = Array[String]([])
 landmarks = Array[String](["forge/ruin_column.glb", "forge/marble_column.glb", "forge/aqueduct.glb", "forge/floating_rock.glb"])
-cover = 1.0
-bush_color = Color(0.36, 0.42, 0.22, 1)
-bushes = 0.3

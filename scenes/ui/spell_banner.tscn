@@ -1,8 +1,8 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dembpyqo8n7c3"]
 
-[ext_resource type="Script" path="res://src/ui/spell_banner.gd" id="1_banner"]
+[ext_resource type="Script" uid="uid://c31j8dlyefeo2" path="res://src/ui/spell_banner.gd" id="1_banner"]
 
-[node name="SpellBanner" type="Control"]
+[node name="SpellBanner" type="Control" unique_id=120410742]
 visible = false
 layout_mode = 3
 anchors_preset = 15
@@ -13,7 +13,7 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1_banner")
 
-[node name="Box" type="VBoxContainer" parent="."]
+[node name="Box" type="VBoxContainer" parent="." unique_id=1355103573]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 5
@@ -28,7 +28,7 @@ mouse_filter = 2
 theme_type_variation = &"Tight"
 alignment = 1
 
-[node name="Picture" type="TextureRect" parent="Box"]
+[node name="Picture" type="TextureRect" parent="Box" unique_id=1288899987]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(112, 112)
 layout_mode = 2
@@ -37,13 +37,13 @@ mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Glyph" type="Label" parent="Box"]
+[node name="Glyph" type="Label" parent="Box" unique_id=482833398]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SpellTileIcon"
 horizontal_alignment = 1
 
-[node name="Name" type="Label" parent="Box"]
+[node name="Name" type="Label" parent="Box" unique_id=433580311]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"CelebrateDetail"

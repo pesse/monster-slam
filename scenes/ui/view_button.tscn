@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://4x478mex264u"]
 
-[ext_resource type="Texture2D" path="res://assets/ui/skill_tree/icons/scout_eye.webp" id="1_icon"]
+[ext_resource type="Texture2D" uid="uid://cokdtox5mxmj2" path="res://assets/ui/skill_tree/icons/scout_eye.webp" id="1_icon"]
 
-[node name="ViewButton" type="Button" groups=["word_plate_keep_clear"]]
+[node name="ViewButton" type="Button" unique_id=1345323471 groups=["word_plate_keep_clear"]]
 visible = false
 texture_filter = 4
 custom_minimum_size = Vector2(40, 40)

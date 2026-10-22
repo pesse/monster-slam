@@ -1,27 +1,25 @@
-[gd_resource type="Resource" script_class="BattleTheme" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="BattleTheme" format=3 uid="uid://dpso1rvpha2h3"]
 
-[ext_resource type="Script" path="res://src/battle/battle_theme.gd" id="1_theme"]
+[ext_resource type="Script" uid="uid://c6bpe22eo7xiw" path="res://src/battle/battle_theme.gd" id="1_theme"]
 
 [resource]
 script = ExtResource("1_theme")
-ground_patch = Color(1.0, 0.92, 0.66, 1)
-ground_patch_amount = 0.3
-path = "trail"
-path_color = Color(0.82, 0.64, 0.38, 1)
-ground_texture = "sand"
 ground_low = Color(0.96, 0.8, 0.44, 1)
-ground_high = Color(1.0, 0.88, 0.56, 1)
+ground_high = Color(1, 0.88, 0.56, 1)
 hill = Color(0.88, 0.6, 0.36, 1)
+ground_patch = Color(1, 0.92, 0.66, 1)
+path_color = Color(0.82, 0.64, 0.38, 1)
+cover = 0.2
+cover_color = Color(0.72, 0.66, 0.38, 1)
+bushes = 0.0
+ground_texture = "sand"
 background = Color(0.2, 0.12, 0.08, 1)
 ambient = Color(0.72, 0.66, 0.56, 1)
 ambient_energy = 1.15
-sun_color = Color(1.0, 0.93, 0.78, 1)
+sun_color = Color(1, 0.93, 0.78, 1)
 sun_energy = 1.3
+tumbleweeds = true
 trees = Array[String](["forge/palm.glb", "forge/cactus.glb"])
 rocks = Array[String](["forge/sandstone_rock.glb"])
 grass = Array[String](["forge/dry_grass.glb"])
 landmarks = Array[String](["forge/ruin_column.glb"])
-cover = 0.2
-cover_color = Color(0.72, 0.66, 0.38, 1)
-bushes = 0.0
-tumbleweeds = true

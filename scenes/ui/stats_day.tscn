@@ -1,26 +1,27 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene format=3 uid="uid://c8qb50c1jk4ya"]
 
-[ext_resource type="Script" path="res://src/ui/stats_day.gd" id="1_day"]
-[ext_resource type="Texture2D" path="res://assets/ui/skill_tree/medallions/locked.webp" id="2_base"]
-[ext_resource type="Texture2D" path="res://assets/ui/statistics/icons/activity_coin.webp" id="3_coin"]
-[ext_resource type="Texture2D" path="res://assets/ui/skill_tree/medallions/focus_ring.webp" id="4_ring"]
-[ext_resource type="Texture2D" path="res://assets/ui/badges/gold.webp" id="5_badge"]
+[ext_resource type="Script" uid="uid://dsrxgeuoe5pwx" path="res://src/ui/stats_day.gd" id="1_day"]
+[ext_resource type="Texture2D" uid="uid://h07em7nyo3uy" path="res://assets/ui/skill_tree/medallions/locked.webp" id="2_base"]
+[ext_resource type="Texture2D" uid="uid://cgokhpawwisgr" path="res://assets/ui/statistics/icons/activity_coin.webp" id="3_coin"]
+[ext_resource type="Texture2D" uid="uid://ceqmh472odg3t" path="res://assets/ui/skill_tree/medallions/focus_ring.webp" id="4_ring"]
+[ext_resource type="Texture2D" uid="uid://bcbrkyfnipyff" path="res://assets/ui/badges/gold.webp" id="5_badge"]
 
-[node name="StatsDay" type="VBoxContainer"]
+[node name="StatsDay" type="VBoxContainer" unique_id=1420638266]
 custom_minimum_size = Vector2(28, 0)
 size_flags_horizontal = 3
 focus_mode = 2
 theme_type_variation = &"Tight"
 script = ExtResource("1_day")
 
-[node name="Medal" type="Control" parent="."]
+[node name="Medal" type="Control" parent="." unique_id=1615816734]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(28, 28)
 layout_mode = 2
 size_flags_horizontal = 4
 mouse_filter = 2
 
-[node name="Base" type="TextureRect" parent="Medal"]
+[node name="Base" type="TextureRect" parent="Medal" unique_id=704742038]
+texture_filter = 4
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -28,14 +29,14 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-texture_filter = 4
 texture = ExtResource("2_base")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Coin" type="TextureRect" parent="Medal"]
+[node name="Coin" type="TextureRect" parent="Medal" unique_id=1391380067]
 unique_name_in_owner = true
 visible = false
+texture_filter = 4
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -47,14 +48,14 @@ offset_bottom = -2.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-texture_filter = 4
 texture = ExtResource("3_coin")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Ring" type="TextureRect" parent="Medal"]
+[node name="Ring" type="TextureRect" parent="Medal" unique_id=94052818]
 unique_name_in_owner = true
 visible = false
+texture_filter = 4
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -66,14 +67,14 @@ offset_bottom = 4.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-texture_filter = 4
 texture = ExtResource("4_ring")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Badge" type="TextureRect" parent="Medal"]
+[node name="Badge" type="TextureRect" parent="Medal" unique_id=2081070476]
 unique_name_in_owner = true
 visible = false
+texture_filter = 4
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
@@ -87,12 +88,11 @@ offset_bottom = 1.0
 grow_horizontal = 0
 grow_vertical = 0
 mouse_filter = 2
-texture_filter = 4
 texture = ExtResource("5_badge")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Day" type="Label" parent="."]
+[node name="Day" type="Label" parent="." unique_id=240333415]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"DayNumber"

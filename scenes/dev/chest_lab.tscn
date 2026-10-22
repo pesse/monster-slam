@@ -1,9 +1,9 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://gyd0s7eoxkyb"]
 
-[ext_resource type="Script" path="res://src/dev/chest_lab.gd" id="1_lab"]
-[ext_resource type="PackedScene" path="res://scenes/ui/treasure_chest.tscn" id="2_chest"]
+[ext_resource type="Script" uid="uid://c0qqtubu2acb5" path="res://src/dev/chest_lab.gd" id="1_lab"]
+[ext_resource type="PackedScene" uid="uid://bov6uw7f5ifgt" path="res://scenes/ui/treasure_chest.tscn" id="2_chest"]
 
-[node name="ChestLab" type="Control"]
+[node name="ChestLab" type="Control" unique_id=1463902304]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -12,157 +12,192 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_lab")
 
-[node name="Margin" type="MarginContainer" parent="."]
-theme_type_variation = &"ScreenMargin"
+[node name="Margin" type="MarginContainer" parent="." unique_id=824599073]
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_type_variation = &"ScreenMargin"
 
-[node name="Root" type="VBoxContainer" parent="Margin"]
+[node name="Root" type="VBoxContainer" parent="Margin" unique_id=861253697]
+layout_mode = 2
 theme_type_variation = &"ScreenStack"
 
-[node name="Title" type="Label" parent="Margin/Root"]
+[node name="Title" type="Label" parent="Margin/Root" unique_id=1335960153]
+layout_mode = 2
 theme_type_variation = &"Display"
 text = "Schatzkisten-Werkbank"
 
-[node name="Hint" type="Label" parent="Margin/Root"]
+[node name="Hint" type="Label" parent="Margin/Root" unique_id=1105830971]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Die Kiste ohne Spiel ausprobieren. Hier wird kein Gold verbucht."
 
-[node name="Columns" type="HBoxContainer" parent="Margin/Root"]
-theme_type_variation = &"SectionStack"
+[node name="Columns" type="HBoxContainer" parent="Margin/Root" unique_id=917746855]
+layout_mode = 2
 size_flags_vertical = 3
+theme_type_variation = &"SectionStack"
 
-[node name="Settings" type="VBoxContainer" parent="Margin/Root/Columns"]
+[node name="Settings" type="VBoxContainer" parent="Margin/Root/Columns" unique_id=2011692920]
 custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
 size_flags_vertical = 0
 
-[node name="TierCaption" type="Label" parent="Margin/Root/Columns/Settings"]
+[node name="TierCaption" type="Label" parent="Margin/Root/Columns/Settings" unique_id=1709577830]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Güte der Kiste"
 
-[node name="TierSelect" type="OptionButton" parent="Margin/Root/Columns/Settings"]
+[node name="TierSelect" type="OptionButton" parent="Margin/Root/Columns/Settings" unique_id=1356673615]
 unique_name_in_owner = true
+layout_mode = 2
 
-[node name="GoldCaption" type="Label" parent="Margin/Root/Columns/Settings"]
+[node name="GoldCaption" type="Label" parent="Margin/Root/Columns/Settings" unique_id=2009011737]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Gold in der Kiste"
 
-[node name="GoldSpin" type="SpinBox" parent="Margin/Root/Columns/Settings"]
+[node name="GoldSpin" type="SpinBox" parent="Margin/Root/Columns/Settings" unique_id=1150946815]
 unique_name_in_owner = true
+layout_mode = 2
 max_value = 999.0
 value = 12.0
 
-[node name="CoinCaption" type="Label" parent="Margin/Root/Columns/Settings"]
+[node name="CoinCaption" type="Label" parent="Margin/Root/Columns/Settings" unique_id=1265729745]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Münzen (0 = aus dem Gold rechnen)"
 autowrap_mode = 3
 
-[node name="CoinSpin" type="SpinBox" parent="Margin/Root/Columns/Settings"]
+[node name="CoinSpin" type="SpinBox" parent="Margin/Root/Columns/Settings" unique_id=1666654611]
 unique_name_in_owner = true
+layout_mode = 2
 max_value = 999.0
 
-[node name="HoldLabel" type="Label" parent="Margin/Root/Columns/Settings"]
-theme_type_variation = &"Hint"
+[node name="HoldLabel" type="Label" parent="Margin/Root/Columns/Settings" unique_id=1746842303]
 unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Hint"
 text = "Haltezeit: 2,0 s"
 
-[node name="HoldSlider" type="HSlider" parent="Margin/Root/Columns/Settings"]
+[node name="HoldSlider" type="HSlider" parent="Margin/Root/Columns/Settings" unique_id=1935670574]
 unique_name_in_owner = true
+layout_mode = 2
 min_value = 0.2
 max_value = 5.0
 step = 0.1
 value = 2.0
 
-[node name="LookCaption" type="Label" parent="Margin/Root/Columns/Settings"]
+[node name="LookCaption" type="Label" parent="Margin/Root/Columns/Settings" unique_id=1347428017]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Darstellung"
 
-[node name="ModelToggle" type="CheckButton" parent="Margin/Root/Columns/Settings"]
+[node name="ModelToggle" type="CheckButton" parent="Margin/Root/Columns/Settings" unique_id=702271181]
 unique_name_in_owner = true
+layout_mode = 2
 button_pressed = true
 text = "Modell (aus: gezeichnet)"
 
-[node name="PresentButton" type="Button" parent="Margin/Root/Columns/Settings"]
+[node name="PresentButton" type="Button" parent="Margin/Root/Columns/Settings" unique_id=1944069559]
 unique_name_in_owner = true
+layout_mode = 2
 text = "Neue Kiste hinstellen"
 
-[node name="OpenButton" type="Button" parent="Margin/Root/Columns/Settings"]
+[node name="OpenButton" type="Button" parent="Margin/Root/Columns/Settings" unique_id=709164958]
 unique_name_in_owner = true
+layout_mode = 2
 text = "Sofort aufspringen lassen"
 
-[node name="Stage" type="VBoxContainer" parent="Margin/Root/Columns"]
+[node name="Stage" type="VBoxContainer" parent="Margin/Root/Columns" unique_id=2135976117]
+layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="ChestTitle" type="Label" parent="Margin/Root/Columns/Stage"]
-theme_type_variation = &"SectionTitle"
+[node name="ChestTitle" type="Label" parent="Margin/Root/Columns/Stage" unique_id=690069540]
 unique_name_in_owner = true
-horizontal_alignment = 1
+layout_mode = 2
+theme_type_variation = &"SectionTitle"
 text = "Silberkiste"
+horizontal_alignment = 1
 
-[node name="ChestRow" type="CenterContainer" parent="Margin/Root/Columns/Stage"]
+[node name="ChestRow" type="CenterContainer" parent="Margin/Root/Columns/Stage" unique_id=1699817096]
+layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Chest" parent="Margin/Root/Columns/Stage/ChestRow" instance=ExtResource("2_chest")]
+[node name="Chest" parent="Margin/Root/Columns/Stage/ChestRow" unique_id=1089011282 instance=ExtResource("2_chest")]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(340, 260)
+layout_mode = 2
 
-[node name="Status" type="Label" parent="Margin/Root/Columns/Stage"]
-theme_type_variation = &"Accent"
+[node name="Status" type="Label" parent="Margin/Root/Columns/Stage" unique_id=1697468854]
 unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Accent"
+text = "Zu."
 horizontal_alignment = 1
 autowrap_mode = 3
-text = "Zu."
 
-[node name="Wave" type="VBoxContainer" parent="Margin/Root/Columns"]
+[node name="Wave" type="VBoxContainer" parent="Margin/Root/Columns" unique_id=1420903405]
 custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
 size_flags_vertical = 0
 
-[node name="WaveTitle" type="Label" parent="Margin/Root/Columns/Wave"]
+[node name="WaveTitle" type="Label" parent="Margin/Root/Columns/Wave" unique_id=1518254181]
+layout_mode = 2
 theme_type_variation = &"SectionTitle"
 text = "Welle simulieren"
 
-[node name="WaveHint" type="Label" parent="Margin/Root/Columns/Wave"]
+[node name="WaveHint" type="Label" parent="Margin/Root/Columns/Wave" unique_id=287957273]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Dieselbe Rechnung wie im Spiel (ChestReward)."
 autowrap_mode = 3
 
-[node name="ScoreCaption" type="Label" parent="Margin/Root/Columns/Wave"]
+[node name="ScoreCaption" type="Label" parent="Margin/Root/Columns/Wave" unique_id=2074775451]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Punkte der Welle"
 
-[node name="ScoreSpin" type="SpinBox" parent="Margin/Root/Columns/Wave"]
+[node name="ScoreSpin" type="SpinBox" parent="Margin/Root/Columns/Wave" unique_id=818371217]
 unique_name_in_owner = true
+layout_mode = 2
 max_value = 2000.0
 value = 60.0
 
-[node name="CorrectCaption" type="Label" parent="Margin/Root/Columns/Wave"]
+[node name="CorrectCaption" type="Label" parent="Margin/Root/Columns/Wave" unique_id=499673835]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Richtig besiegt"
 
-[node name="CorrectSpin" type="SpinBox" parent="Margin/Root/Columns/Wave"]
+[node name="CorrectSpin" type="SpinBox" parent="Margin/Root/Columns/Wave" unique_id=2010228136]
 unique_name_in_owner = true
+layout_mode = 2
 max_value = 99.0
 value = 5.0
 
-[node name="LeakedCaption" type="Label" parent="Margin/Root/Columns/Wave"]
+[node name="LeakedCaption" type="Label" parent="Margin/Root/Columns/Wave" unique_id=1975913664]
+layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Durchgelassen"
 
-[node name="LeakedSpin" type="SpinBox" parent="Margin/Root/Columns/Wave"]
+[node name="LeakedSpin" type="SpinBox" parent="Margin/Root/Columns/Wave" unique_id=159897130]
 unique_name_in_owner = true
+layout_mode = 2
 max_value = 99.0
 
-[node name="WaveButton" type="Button" parent="Margin/Root/Columns/Wave"]
+[node name="WaveButton" type="Button" parent="Margin/Root/Columns/Wave" unique_id=998058292]
 unique_name_in_owner = true
+layout_mode = 2
 text = "Belohnung berechnen"
 
-[node name="WaveResult" type="Label" parent="Margin/Root/Columns/Wave"]
-theme_type_variation = &"Accent"
+[node name="WaveResult" type="Label" parent="Margin/Root/Columns/Wave" unique_id=858432700]
 unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Accent"
 autowrap_mode = 3
 
-[node name="BackButton" type="Button" parent="Margin/Root"]
+[node name="BackButton" type="Button" parent="Margin/Root" unique_id=409510830]
 unique_name_in_owner = true
+layout_mode = 2
 text = "⟵ Zurück zum Menü"

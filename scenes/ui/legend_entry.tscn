@@ -1,14 +1,14 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://ciaanmhis5p02"]
 
-[ext_resource type="Script" path="res://src/ui/legend_entry.gd" id="1_entry"]
-[ext_resource type="Script" path="res://src/ui/diamond.gd" id="2_diamond"]
+[ext_resource type="Script" uid="uid://d4niwqk6rc71i" path="res://src/ui/legend_entry.gd" id="1_entry"]
+[ext_resource type="Script" uid="uid://cpr10a3ul1hbw" path="res://src/ui/diamond.gd" id="2_diamond"]
 
-[node name="LegendEntry" type="HBoxContainer"]
+[node name="LegendEntry" type="HBoxContainer" unique_id=1395038158]
 mouse_filter = 2
 theme_type_variation = &"Tight"
 script = ExtResource("1_entry")
 
-[node name="Swatch" type="Control" parent="."]
+[node name="Swatch" type="Control" parent="." unique_id=1330176428]
 custom_minimum_size = Vector2(14, 14)
 layout_mode = 2
 size_flags_vertical = 4
@@ -16,7 +16,7 @@ mouse_filter = 2
 script = ExtResource("2_diamond")
 color = Color(0.8, 0.8, 0.8, 1)
 
-[node name="Label" type="Label" parent="."]
+[node name="Label" type="Label" parent="." unique_id=576961798]
 layout_mode = 2
 theme_type_variation = &"HudText"
 text = "Wortart"

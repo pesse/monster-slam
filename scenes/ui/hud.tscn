@@ -11,9 +11,9 @@
 [ext_resource type="Texture2D" uid="uid://ch2bvhnkbq10p" path="res://assets/ui/gameplay/icons/level_badge.webp" id="9_badge"]
 [ext_resource type="Texture2D" uid="uid://cn4jymil5rgtl" path="res://assets/ui/player_badge/menu/avatar.webp" id="10_avatar"]
 [ext_resource type="Script" uid="uid://b3x2gxkloyfmm" path="res://src/ui/xp_ring.gd" id="11_xp"]
-[ext_resource type="PackedScene" path="res://scenes/ui/level_flare.tscn" id="12_flare"]
+[ext_resource type="PackedScene" uid="uid://donl33feadxrh" path="res://scenes/ui/level_flare.tscn" id="12_flare"]
 [ext_resource type="Shader" uid="uid://cd2rlsgmacy34" path="res://assets/shaders/gold_glow.gdshader" id="13_gold"]
-[ext_resource type="Texture2D" path="res://assets/ui/statistics/icons/gold_coins.webp" id="14_coins"]
+[ext_resource type="Texture2D" uid="uid://bovj4j8gew6q6" path="res://assets/ui/statistics/icons/gold_coins.webp" id="14_coins"]
 
 [sub_resource type="ShaderMaterial" id="badge_glow"]
 shader = ExtResource("13_gold")

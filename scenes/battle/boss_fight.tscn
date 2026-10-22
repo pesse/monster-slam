@@ -1,11 +1,11 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene format=3 uid="uid://b0haxs87brueg"]
 
-[ext_resource type="Script" path="res://src/battle/boss_fight.gd" id="1_boss"]
-[ext_resource type="PackedScene" path="res://scenes/battle/boss_stage.tscn" id="2_stage"]
-[ext_resource type="Script" path="res://src/ui/speech_bubble.gd" id="3_bubble"]
-[ext_resource type="PackedScene" path="res://scenes/ui/scene_zoom.tscn" id="20_zoom"]
+[ext_resource type="Script" uid="uid://co6glhq3rshgl" path="res://src/battle/boss_fight.gd" id="1_boss"]
+[ext_resource type="PackedScene" uid="uid://bbxyvek2revq7" path="res://scenes/battle/boss_stage.tscn" id="2_stage"]
+[ext_resource type="Script" uid="uid://dkphjuyqlpubu" path="res://src/ui/speech_bubble.gd" id="3_bubble"]
+[ext_resource type="PackedScene" uid="uid://cw22emvppdi21" path="res://scenes/ui/scene_zoom.tscn" id="20_zoom"]
 
-[node name="BossFight" type="Control"]
+[node name="BossFight" type="Control" unique_id=1202301006]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -14,10 +14,10 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_boss")
 
-[node name="Stage" parent="." instance=ExtResource("2_stage")]
+[node name="Stage" parent="." unique_id=1737662968 instance=ExtResource("2_stage")]
 unique_name_in_owner = true
 
-[node name="Flash" type="ColorRect" parent="."]
+[node name="Flash" type="ColorRect" parent="." unique_id=1741954546]
 unique_name_in_owner = true
 modulate = Color(1, 1, 1, 0)
 layout_mode = 1
@@ -29,8 +29,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(1, 0.85, 0.4, 0.3)
 
-[node name="Margin" type="MarginContainer" parent="."]
-theme_type_variation = &"ScreenMargin"
+[node name="Margin" type="MarginContainer" parent="." unique_id=405957310]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -38,209 +37,207 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+theme_type_variation = &"ScreenMargin"
 
-[node name="Root" type="VBoxContainer" parent="Margin"]
+[node name="Root" type="VBoxContainer" parent="Margin" unique_id=32649379]
+layout_mode = 2
+mouse_filter = 2
 theme_type_variation = &"ScreenStack"
+
+[node name="Header" type="HBoxContainer" parent="Margin/Root" unique_id=1597954830]
 layout_mode = 2
 mouse_filter = 2
-
-[node name="Header" type="HBoxContainer" parent="Margin/Root"]
 theme_type_variation = &"SectionStack"
-layout_mode = 2
-mouse_filter = 2
 
-[node name="BackButton" type="Button" parent="Margin/Root/Header"]
+[node name="BackButton" type="Button" parent="Margin/Root/Header" unique_id=266626738]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-theme_type_variation = &"WindowButton"
 size_flags_vertical = 4
+theme_type_variation = &"WindowButton"
 text = "← Zurück"
 
-[node name="LeftSpace" type="Control" parent="Margin/Root/Header"]
+[node name="LeftSpace" type="Control" parent="Margin/Root/Header" unique_id=811781396]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="BossPlate" type="PanelContainer" parent="Margin/Root/Header"]
-theme_type_variation = &"HudPanel"
+[node name="BossPlate" type="PanelContainer" parent="Margin/Root/Header" unique_id=2036574360]
 custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
+theme_type_variation = &"HudPanel"
 
-[node name="PlateStack" type="VBoxContainer" parent="Margin/Root/Header/BossPlate"]
+[node name="PlateStack" type="VBoxContainer" parent="Margin/Root/Header/BossPlate" unique_id=276677791]
+layout_mode = 2
 theme_type_variation = &"Tight"
-layout_mode = 2
 
-[node name="PlateTop" type="HBoxContainer" parent="Margin/Root/Header/BossPlate/PlateStack"]
+[node name="PlateTop" type="HBoxContainer" parent="Margin/Root/Header/BossPlate/PlateStack" unique_id=347830825]
+layout_mode = 2
 theme_type_variation = &"ScreenStack"
-layout_mode = 2
 
-[node name="BossName" type="Label" parent="Margin/Root/Header/BossPlate/PlateStack/PlateTop"]
+[node name="BossName" type="Label" parent="Margin/Root/Header/BossPlate/PlateStack/PlateTop" unique_id=1907725602]
 unique_name_in_owner = true
-theme_type_variation = &"SectionTitle"
 layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"SectionTitle"
 text = "Der Satzmeister"
 
-[node name="HpLabel" type="Label" parent="Margin/Root/Header/BossPlate/PlateStack/PlateTop"]
+[node name="HpLabel" type="Label" parent="Margin/Root/Header/BossPlate/PlateStack/PlateTop" unique_id=142024982]
 unique_name_in_owner = true
-theme_type_variation = &"SectionTitle"
 layout_mode = 2
+theme_type_variation = &"SectionTitle"
 text = "❤ 3/3"
 
-[node name="HpBar" type="ProgressBar" parent="Margin/Root/Header/BossPlate/PlateStack"]
+[node name="HpBar" type="ProgressBar" parent="Margin/Root/Header/BossPlate/PlateStack" unique_id=1883109374]
 unique_name_in_owner = true
-theme_type_variation = &"BossHp"
 custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
+theme_type_variation = &"BossHp"
 max_value = 3.0
-step = 0.01
 value = 3.0
 show_percentage = false
 
-[node name="RightSpace" type="Control" parent="Margin/Root/Header"]
+[node name="RightSpace" type="Control" parent="Margin/Root/Header" unique_id=367115080]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="RoundPlate" type="PanelContainer" parent="Margin/Root/Header"]
-theme_type_variation = &"HudPanel"
+[node name="RoundPlate" type="PanelContainer" parent="Margin/Root/Header" unique_id=723799881]
 custom_minimum_size = Vector2(260, 0)
 layout_mode = 2
 size_flags_vertical = 4
+theme_type_variation = &"HudPanel"
 
-[node name="RoundLabel" type="Label" parent="Margin/Root/Header/RoundPlate"]
+[node name="RoundLabel" type="Label" parent="Margin/Root/Header/RoundPlate" unique_id=939976409]
 unique_name_in_owner = true
-theme_type_variation = &"SectionTitle"
 layout_mode = 2
-horizontal_alignment = 1
+theme_type_variation = &"SectionTitle"
 text = "Satz 1 von 5"
+horizontal_alignment = 1
 
-[node name="BossBubble" type="PanelContainer" parent="Margin/Root"]
+[node name="BossBubble" type="PanelContainer" parent="Margin/Root" unique_id=1434585577]
 unique_name_in_owner = true
-theme_type_variation = &"BossBubble"
 custom_minimum_size = Vector2(720, 0)
 layout_mode = 2
 size_flags_horizontal = 4
+theme_type_variation = &"BossBubble"
 script = ExtResource("3_bubble")
 
-[node name="BossSays" type="VBoxContainer" parent="Margin/Root/BossBubble"]
-theme_type_variation = &"Tight"
+[node name="BossSays" type="VBoxContainer" parent="Margin/Root/BossBubble" unique_id=2026200914]
 layout_mode = 2
+theme_type_variation = &"Tight"
 
-[node name="GolemLine" type="Label" parent="Margin/Root/BossBubble/BossSays"]
+[node name="GolemLine" type="Label" parent="Margin/Root/BossBubble/BossSays" unique_id=547139712]
 unique_name_in_owner = true
-theme_type_variation = &"BubbleAccent"
 custom_minimum_size = Vector2(600, 0)
 layout_mode = 2
-autowrap_mode = 3
+theme_type_variation = &"BubbleAccent"
 text = "Übersetze, wenn du kannst!"
+autowrap_mode = 3
 
-[node name="SourceText" type="Label" parent="Margin/Root/BossBubble/BossSays"]
+[node name="SourceText" type="Label" parent="Margin/Root/BossBubble/BossSays" unique_id=347213030]
 unique_name_in_owner = true
-theme_type_variation = &"BubbleTitle"
 custom_minimum_size = Vector2(600, 80)
 layout_mode = 2
-autowrap_mode = 3
+theme_type_variation = &"BubbleTitle"
 text = "—"
+autowrap_mode = 3
 
-[node name="Middle" type="HBoxContainer" parent="Margin/Root"]
-theme_type_variation = &"SectionStack"
+[node name="Middle" type="HBoxContainer" parent="Margin/Root" unique_id=845964849]
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
+theme_type_variation = &"SectionStack"
 
-[node name="BossSpace" type="Control" parent="Margin/Root/Middle"]
+[node name="BossSpace" type="Control" parent="Margin/Root/Middle" unique_id=1960293107]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="ResultBubble" type="PanelContainer" parent="Margin/Root/Middle"]
+[node name="ResultBubble" type="PanelContainer" parent="Margin/Root/Middle" unique_id=1362777744]
 unique_name_in_owner = true
 modulate = Color(1, 1, 1, 0)
-theme_type_variation = &"BossBubble"
 custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
-tail_direction = Vector2(-1, 0)
+theme_type_variation = &"BossBubble"
 script = ExtResource("3_bubble")
 
-[node name="ResultScroll" type="ScrollContainer" parent="Margin/Root/Middle/ResultBubble"]
+[node name="ResultScroll" type="ScrollContainer" parent="Margin/Root/Middle/ResultBubble" unique_id=1077695593]
 custom_minimum_size = Vector2(0, 120)
 layout_mode = 2
 horizontal_scroll_mode = 0
 
-[node name="Gutter" type="MarginContainer" parent="Margin/Root/Middle/ResultBubble/ResultScroll"]
-theme_type_variation = &"ScrollGutter"
+[node name="Gutter" type="MarginContainer" parent="Margin/Root/Middle/ResultBubble/ResultScroll" unique_id=393435705]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"ScrollGutter"
 
-[node name="ResultBox" type="VBoxContainer" parent="Margin/Root/Middle/ResultBubble/ResultScroll/Gutter"]
+[node name="ResultBox" type="VBoxContainer" parent="Margin/Root/Middle/ResultBubble/ResultScroll/Gutter" unique_id=1141415248]
+layout_mode = 2
 theme_type_variation = &"Tight"
-layout_mode = 2
 
-[node name="VerdictLabel" type="Label" parent="Margin/Root/Middle/ResultBubble/ResultScroll/Gutter/ResultBox"]
+[node name="VerdictLabel" type="Label" parent="Margin/Root/Middle/ResultBubble/ResultScroll/Gutter/ResultBox" unique_id=1524624355]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
 theme_type_variation = &"BubbleAccent"
-custom_minimum_size = Vector2(320, 0)
-layout_mode = 2
 autowrap_mode = 3
 
-[node name="ExplanationLabel" type="Label" parent="Margin/Root/Middle/ResultBubble/ResultScroll/Gutter/ResultBox"]
+[node name="ExplanationLabel" type="Label" parent="Margin/Root/Middle/ResultBubble/ResultScroll/Gutter/ResultBox" unique_id=282722630]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
 theme_type_variation = &"BubbleText"
-custom_minimum_size = Vector2(320, 0)
-layout_mode = 2
 autowrap_mode = 3
 
-[node name="ReferenceLabel" type="Label" parent="Margin/Root/Middle/ResultBubble/ResultScroll/Gutter/ResultBox"]
+[node name="ReferenceLabel" type="Label" parent="Margin/Root/Middle/ResultBubble/ResultScroll/Gutter/ResultBox" unique_id=1119278182]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
 theme_type_variation = &"BubbleHint"
-custom_minimum_size = Vector2(320, 0)
-layout_mode = 2
 autowrap_mode = 3
 
-[node name="PlayerBubble" type="PanelContainer" parent="Margin/Root"]
+[node name="PlayerBubble" type="PanelContainer" parent="Margin/Root" unique_id=352325372]
 unique_name_in_owner = true
-theme_type_variation = &"PlayerBubble"
 layout_mode = 2
+theme_type_variation = &"PlayerBubble"
 script = ExtResource("3_bubble")
 
-[node name="AnswerRow" type="HBoxContainer" parent="Margin/Root/PlayerBubble"]
-theme_type_variation = &"ScreenStack"
+[node name="AnswerRow" type="HBoxContainer" parent="Margin/Root/PlayerBubble" unique_id=414420438]
 layout_mode = 2
+theme_type_variation = &"ScreenStack"
 
-[node name="AnswerEdit" type="LineEdit" parent="Margin/Root/PlayerBubble/AnswerRow"]
+[node name="AnswerEdit" type="LineEdit" parent="Margin/Root/PlayerBubble/AnswerRow" unique_id=1601654721]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "Deine Übersetzung — Enter zum Angreifen"
 
-[node name="SubmitButton" type="Button" parent="Margin/Root/PlayerBubble/AnswerRow"]
+[node name="SubmitButton" type="Button" parent="Margin/Root/PlayerBubble/AnswerRow" unique_id=119235665]
 unique_name_in_owner = true
-theme_type_variation = &"ActionButton"
 custom_minimum_size = Vector2(240, 0)
 layout_mode = 2
+theme_type_variation = &"ActionButton"
 text = "⚔ Angreifen"
 
-[node name="NextButton" type="Button" parent="Margin/Root/PlayerBubble/AnswerRow"]
+[node name="NextButton" type="Button" parent="Margin/Root/PlayerBubble/AnswerRow" unique_id=1338729300]
 unique_name_in_owner = true
-theme_type_variation = &"ActionButton"
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
+theme_type_variation = &"ActionButton"
 disabled = true
 text = "Weiter ▶"
 
-[node name="ModelNote" type="Label" parent="Margin/Root"]
+[node name="ModelNote" type="Label" parent="Margin/Root" unique_id=2132700834]
 unique_name_in_owner = true
-theme_type_variation = &"Caption"
 custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
+theme_type_variation = &"Caption"
 autowrap_mode = 3
 
-[node name="Shout" type="Label" parent="."]
+[node name="Shout" type="Label" parent="." unique_id=1159076459]
 unique_name_in_owner = true
 modulate = Color(1, 1, 1, 0)
-theme_type_variation = &"Shout"
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -253,8 +250,8 @@ offset_right = 300.0
 offset_bottom = 60.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 2
+theme_type_variation = &"Shout"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="SceneZoom" parent="." instance=ExtResource("20_zoom")]
+[node name="SceneZoom" parent="." unique_id=1841661418 instance=ExtResource("20_zoom")]
