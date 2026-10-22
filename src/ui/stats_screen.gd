@@ -52,6 +52,8 @@ signal closed()
 @onready var _accuracy_label: Label = %AccuracyLabel
 @onready var _accuracy_which: Label = %AccuracyWhich
 @onready var _accuracy_trend: Label = %AccuracyTrend
+@onready var _battle_label: Label = %BattleLabel
+@onready var _battle_note: Label = %BattleNote
 @onready var _total_lines: VBoxContainer = %TotalLines
 @onready var _record_list: VBoxContainer = %RecordList
 @onready var _curve: StatsChart = %Curve
@@ -201,6 +203,7 @@ func _refresh() -> void:
 	_battle_by_day = SessionLog.battle_ms_by_day()
 	_refresh_streak()
 	_refresh_accuracy()
+	_refresh_battle()
 	_refresh_numbers()
 	_refresh_totals()
 	_refresh_records()
@@ -388,19 +391,35 @@ func _refresh_accuracy() -> void:
 	_accuracy_trend.text = str(lines["detail"])
 
 
+## Die Kampfzeit-Karte oben: alles zusammen, darunter der heutige Tag.
+func _refresh_battle() -> void:
+	var lines := battle_lines(SessionLog.battle_ms_total(), int(_battle_by_day.get(
+			SessionLog.local_day(int(Time.get_unix_time_from_system())), 0)))
+	_battle_label.text = str(lines["title"])
+	_battle_note.text = str(lines["detail"])
+	Hints.attach(%BattleCard as Control, "Kampfzeit",
+			"So lange liefen deine Wellen und Bosskämpfe wirklich — ohne Pause, ohne Feiern "
+			+ "und ohne die Zeit zwischen den Wellen. Wie viel auf einen Tag fällt, zeigt "
+			+ "die Monatsreihe.")
+
+
+## Kopfzahl und Unterzeile der Kampfzeit-Karte aus Gesamt- und heutiger Zeit (ms).
+static func battle_lines(total_ms: int, today_ms: int) -> Dictionary:
+	if total_ms <= 0:
+		return {"title": "Noch kein Kampf",
+				"detail": "Nach der ersten Welle steht hier, wie lange du gekämpft hast."}
+	return {
+		"title": CoinStrip.duration_text(total_ms),
+		"detail": "Heute %s" % CoinStrip.duration_text(today_ms) if today_ms > 0
+				else "Heute noch nicht gekämpft",
+	}
+
+
 func _refresh_totals() -> void:
 	_clear(_total_lines)
 	var days := SessionLog.played_day_count()
 	_add_line(_total_lines, "Geübt an %d Tag%s%s" % [days, "" if days == 1 else "en",
 			"" if _filter.is_empty() else " (alle Sprachen)"])
-	var battle := _add_line(_total_lines, "Kampfzeit: %s%s" % [
-			CoinStrip.duration_text(SessionLog.battle_ms_total()),
-			"" if _filter.is_empty() else " (alle Sprachen)"])
-	_attach_hint(battle, "Kampfzeit",
-			"So lange liefen deine Wellen und Bosskämpfe wirklich — ohne Pause, ohne Feiern "
-			+ "und ohne die Zeit zwischen den Wellen. Wie viel auf einen Tag fällt, zeigt "
-			+ "die Monatsreihe.", battle_note(SessionLog.sessions(),
-					SessionLog.battle_measured_since()))
 	_add_line(_total_lines, "Gesamt-Genauigkeit: %d %%" % int(round(
 			PlayerProgress.overall_accuracy(_filter) * 100.0)))
 	_add_line(_total_lines, "Gesehene Wörter: %d    Versuche: %d" % [
@@ -411,16 +430,6 @@ func _refresh_totals() -> void:
 			+ "am besten Wort gemessen, über alle Sitzungen und Tage hinweg. Ein Fehler "
 			+ "bei genau diesem Wort setzt seine Serie auf 0.",
 			"Nicht die Tages-Serie oben und nicht die Serie ohne Durchlass bei den Rekorden.")
-
-
-## Der Nachsatz zur Kampfzeit: gab es Sitzungen vor `measured_since`, ist ihre Zeit aus
-## dem Protokoll geschätzt; leer sonst.
-static func battle_note(sessions: Array, measured_since: int) -> String:
-	if sessions.is_empty() or measured_since <= 0 \
-			or int((sessions[0] as Dictionary).get("started_at", 0)) >= measured_since:
-		return ""
-	return ("Bis zum %s ist sie aus dem Protokoll geschätzt; Pausen standen dort nicht drin, "
-			+ "deshalb kann sie etwas zu hoch sein.") % short_date(measured_since)
 
 
 ## Kopfzahl, Unterzeile und Trendzeile aus SessionLog.accuracy_trend():

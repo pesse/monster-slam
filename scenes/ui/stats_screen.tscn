@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3]
+[gd_scene load_steps=22 format=3]
 
 [ext_resource type="Script" path="res://src/ui/stats_screen.gd" id="1_r"]
 [ext_resource type="Script" path="res://src/ui/stats_chart.gd" id="2_r"]
@@ -13,6 +13,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/statistics/icons/records_trophy.webp" id="11_r"]
 [ext_resource type="Texture2D" path="res://assets/ui/statistics/icons/streak_flame.webp" id="12_r"]
 [ext_resource type="Texture2D" path="res://assets/ui/statistics/icons/correct_check.webp" id="13_r"]
+[ext_resource type="Texture2D" path="res://assets/ui/statistics/icons/battle_time.webp" id="battle_icon"]
 [ext_resource type="Texture2D" path="res://assets/ui/skill_tree/icons/skill_point.webp" id="14_r"]
 [ext_resource type="Texture2D" path="res://assets/ui/statistics/icons/gold_coins.webp" id="15_r"]
 [ext_resource type="Texture2D" path="res://assets/ui/statistics/icons/treasure_chest.webp" id="16_r"]
@@ -359,6 +360,76 @@ theme_type_variation = &"StatSubline"
 text = "Letzte Sitzung"
 
 [node name="AccuracyTrend" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TopRow/AccuracyCard/AccuracyText"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Hint"
+text = ""
+autowrap_mode = 3
+
+[node name="BattleDivider" type="VSeparator" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TopRow"]
+layout_mode = 2
+theme_type_variation = &"StatDivider"
+
+[node name="BattleCard" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TopRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ScreenStack"
+
+[node name="BattleMedal" type="Control" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TopRow/BattleCard"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+
+[node name="Base" type="TextureRect" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TopRow/BattleCard/BattleMedal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("10_r")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Icon" type="TextureRect" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TopRow/BattleCard/BattleMedal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 14.0
+offset_top = 14.0
+offset_right = -14.0
+offset_bottom = -14.0
+mouse_filter = 2
+texture_filter = 4
+texture = ExtResource("battle_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="BattleText" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TopRow/BattleCard"]
+layout_mode = 2
+theme_type_variation = &"Tight"
+size_flags_horizontal = 3
+size_flags_vertical = 4
+
+[node name="BattleLabel" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TopRow/BattleCard/BattleText"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatHeadline"
+text = "Noch kein Kampf"
+
+[node name="BattleSub" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TopRow/BattleCard/BattleText"]
+layout_mode = 2
+theme_type_variation = &"StatSubline"
+text = "Kampfzeit"
+
+[node name="BattleNote" type="Label" parent="Window/Layout/Content/Body/Pages/OverviewPage/Gutter/Overview/TopRow/BattleCard/BattleText"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"Hint"

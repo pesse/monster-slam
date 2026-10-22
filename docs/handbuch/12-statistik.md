@@ -26,6 +26,11 @@ Sitzung (dort steht dann „alle Sprachen“). Die Wahl bleibt, bis du das Spiel
   dabei ist. Der laufende Tag reißt die Serie nicht, erst ein ganzer Tag ohne Lauf.
 - **Haken: „… % richtig“** – wie viele Antworten in der letzten Sitzung gesessen haben,
   verglichen mit den Tagen davor.
+- **Sanduhr: „Kampfzeit“** – wie lange deine Wellen und Bosskämpfe zusammen wirklich
+  liefen, darunter, wie lange heute. Die Pause, Feiern und die Zeit zwischen den Wellen
+  zählen nicht mit. Ein Tag bekommt die Zeit der Läufe, die an ihm begonnen haben. Für
+  Läufe, die vor dieser Anzeige gespielt wurden, ist die Zeit aus dem Protokoll geschätzt.
+  Dort stehen keine Pausen drin, deshalb kann sie etwas zu hoch sein.
 - **Die Monatsreihe**: ein Medaillon für jeden Tag des Monats. Auf einem Tag, an dem du
   geübt hast, liegt eine goldene Münze, und seine Zahl ist golden. Der heutige Tag hat
   einen leisen Ring, die Tage danach sind blasser. **Diese Münzen sind kein Gold**, sie
@@ -52,11 +57,6 @@ Sitzung (dort steht dann „alle Sprachen“). Die Wahl bleibt, bis du das Spiel
 - **„Insgesamt“** – alles seit dem ersten Lauf, auch an wie vielen Tagen du geübt hast.
   Diese Genauigkeit sinkt, wenn du schwere Wörter übst. Das ist gewollt und kein
   Rückschritt.
-- **„Kampfzeit“** (unter „Insgesamt“) – wie lange deine Wellen und Bosskämpfe wirklich
-  liefen. Die Pause, Feiern und die Zeit zwischen den Wellen zählen nicht mit. Ein Tag
-  bekommt die Zeit der Läufe, die an ihm begonnen haben. Für Läufe, die vor dieser
-  Anzeige gespielt wurden, ist die Zeit aus dem Protokoll geschätzt. Dort stehen keine
-  Pausen drin, deshalb kann sie etwas zu hoch sein.
 
 ## Reiter „Fortschritt“: gezählt werden Wörter
 
