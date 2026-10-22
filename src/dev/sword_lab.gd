@@ -53,8 +53,8 @@ func _ready() -> void:
 	_view_select.item_selected.connect(func(_i: int) -> void: _place_camera())
 	_dist.value_changed.connect(func(_v: float) -> void: _place_camera())
 	_influence.value_changed.connect(func(_v: float) -> void: _apply())
-	for spin in _spins():
-		spin.value_changed.connect(func(_v: float) -> void: _apply())
+	for slider in _sliders():
+		slider.value_changed.connect(func(_v: float) -> void: _apply())
 	(%CopyButton as Button).pressed.connect(_copy)
 	(%ResetButton as Button).pressed.connect(_reset)
 	_reset()
@@ -106,24 +106,24 @@ func _unhandled_input(event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()
 
 
-func _spins() -> Array[SpinBox]:
-	var spins: Array[SpinBox] = []
+func _sliders() -> Array[LabSlider]:
+	var sliders: Array[LabSlider] = []
 	for key in ["Arm", "Wrist", "Grip"]:
 		for axis in ["X", "Y", "Z"]:
-			spins.append(get_node("%" + key + axis) as SpinBox)
-	return spins
+			sliders.append(get_node("%" + key + axis) as LabSlider)
+	return sliders
 
 
 func _set_row(key: String, radians: Vector3) -> void:
 	var deg := Vector3(rad_to_deg(radians.x), rad_to_deg(radians.y), rad_to_deg(radians.z))
 	for i in 3:
-		(get_node("%" + key + "XYZ"[i]) as SpinBox).set_value_no_signal(snappedf(deg[i], 0.1))
+		(get_node("%" + key + "XYZ"[i]) as LabSlider).set_value_no_signal(snappedf(deg[i], 0.1))
 
 
 func _row(key: String) -> Vector3:
 	var deg := Vector3.ZERO
 	for i in 3:
-		deg[i] = (get_node("%" + key + "XYZ"[i]) as SpinBox).value
+		deg[i] = (get_node("%" + key + "XYZ"[i]) as LabSlider).value
 	return deg * PI / 180.0
 
 

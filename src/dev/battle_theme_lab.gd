@@ -263,42 +263,44 @@ func _fill_controls() -> void:
 	%SpawnButton.pressed.connect(_spawn_monster)
 	%CatapultButton.pressed.connect(_throw_at_lane)
 	%TumbleweedButton.pressed.connect(_roll_tumbleweed)
-	%GoalSpin.value = _goal_z
-	%SpawnSpin.value = _spawn_z
-	%ViewSpin.value = _view_z
-	%LaneSpin.value = _lane_half
-	%ScaleSpin.value = _fortress_scale
-	%SpeedSpin.value = _monster_speed
-	%SizeSpin.value = _cam_size
-	%PitchSpin.value = _pitch
+	%GoalSlider.value = _goal_z
+	%SpawnSlider.value = _spawn_z
+	%ViewSlider.value = _view_z
+	%LaneSlider.value = _lane_half
+	%ScaleSlider.value = _fortress_scale
+	%SpeedSlider.value = _monster_speed
+	%SizeSlider.value = _cam_size
+	%PitchSlider.value = _pitch
 	# Das Tempo wirkt erst auf das nächste Monster.
-	%SpeedSpin.value_changed.connect(func(v: float) -> void: _monster_speed = v)
-	for spin: SpinBox in [%GoalSpin, %SpawnSpin, %ViewSpin, %LaneSpin, %ScaleSpin, %SizeSpin, %PitchSpin]:
-		spin.value_changed.connect(_on_layout_changed)
-	%ShadowDistanceSpin.value = _shadow_distance
-	%ShadowBiasSpin.value = _shadow_bias
-	%NormalBiasSpin.value = _normal_bias
-	%ShadowBlurSpin.value = _shadow_blur
-	%SunTimeSpin.value = SunCycle.hour_of(_sun_cycle.phase)
+	%SpeedSlider.value_changed.connect(func(v: float) -> void: _monster_speed = v)
+	for slider: LabSlider in [%GoalSlider, %SpawnSlider, %ViewSlider, %LaneSlider, %ScaleSlider,
+			%SizeSlider, %PitchSlider]:
+		slider.value_changed.connect(_on_layout_changed)
+	%ShadowDistanceSlider.value = _shadow_distance
+	%ShadowBiasSlider.value = _shadow_bias
+	%NormalBiasSlider.value = _normal_bias
+	%ShadowBlurSlider.value = _shadow_blur
+	%SunTimeSlider.value = SunCycle.hour_of(_sun_cycle.phase)
 	# Steht auf jetzt; verstellt zeigt sie die Sonne des Spiels zu dieser Stunde.
-	%RealTimeSpin.set_value_no_signal(_real_hour_now())
-	%RealTimeSpin.value_changed.connect(func(hour: float) -> void:
+	%RealTimeSlider.set_value_no_signal(_real_hour_now())
+	%RealTimeSlider.value_changed.connect(func(hour: float) -> void:
 		_sun_cycle.phase = SunCycle.clock_phase(hour * 3600.0)
-		%SunTimeSpin.set_value_no_signal(SunCycle.hour_of(_sun_cycle.phase))
+		%SunTimeSlider.set_value_no_signal(SunCycle.hour_of(_sun_cycle.phase))
 		_apply_light())
-	%SunSpeedSpin.value = _sun_speed
-	%SunLowSpin.value = _sun_cycle.low
-	%SunHighSpin.value = _sun_cycle.high
-	%SunSweepSpin.value = _sun_cycle.sweep
-	%SunYawSpin.value = _sun_cycle.noon_yaw
-	for spin: SpinBox in [%ShadowDistanceSpin, %ShadowBiasSpin, %NormalBiasSpin, %ShadowBlurSpin,
-			%SunTimeSpin, %SunSpeedSpin, %SunLowSpin, %SunHighSpin, %SunSweepSpin, %SunYawSpin]:
-		spin.value_changed.connect(_on_light_changed)
+	%SunSpeedSlider.value = _sun_speed
+	%SunLowSlider.value = _sun_cycle.low
+	%SunHighSlider.value = _sun_cycle.high
+	%SunSweepSlider.value = _sun_cycle.sweep
+	%SunYawSlider.value = _sun_cycle.noon_yaw
+	for slider: LabSlider in [%ShadowDistanceSlider, %ShadowBiasSlider, %NormalBiasSlider,
+			%ShadowBlurSlider, %SunTimeSlider, %SunSpeedSlider, %SunLowSlider, %SunHighSlider,
+			%SunSweepSlider, %SunYawSlider]:
+		slider.value_changed.connect(_on_light_changed)
 	%ClockCheck.toggled.connect(func(on: bool) -> void:
 		_sun_cycle.follow_clock = on
-		%SunTimeSpin.editable = not on
-		%RealTimeSpin.editable = not on
-		%SunSpeedSpin.editable = not on)
+		%SunTimeSlider.editable = not on
+		%RealTimeSlider.editable = not on
+		%SunSpeedSlider.editable = not on)
 	%CopyButton.pressed.connect(_copy_layout)
 	_fill_cover_controls()
 	_fill_grading_controls()
@@ -308,9 +310,9 @@ func _fill_controls() -> void:
 	%LevelUpButton.pressed.connect(_level_up)
 	%KillsSpin.value_changed.connect(func(_v: float) -> void: _show_tally())
 	%MasteredSpin.value_changed.connect(func(_v: float) -> void: _show_tally())
-	for spin: SpinBox in [%WaveNumberSpin, %WaveResolvedSpin, %WaveTotalSpin, %HpSpin,
-			%HpMaxSpin, %ArmorSpin, %ArmorMaxSpin, %XpSpin]:
-		spin.value_changed.connect(func(_v: float) -> void: _show_tally())
+	for knob: Range in [%WaveNumberSpin, %WaveResolvedSpin, %WaveTotalSpin, %HpSpin,
+			%HpMaxSpin, %ArmorSpin, %ArmorMaxSpin, %XpSlider]:
+		knob.value_changed.connect(func(_v: float) -> void: _show_tally())
 	%MenuToggle.toggled.connect(func(on: bool) -> void:
 		%Menu.visible = on
 		%MenuToggle.text = "Regler ▾" if on else "Regler ▸")
@@ -323,13 +325,13 @@ func _fill_controls() -> void:
 ## `light_from` zeigt die Werte seiner Quelle.
 func _fill_grading_controls() -> void:
 	var knobs := {
-		%HazeSpin: func(v: float) -> void: _theme.haze = v,
-		%BrightnessSpin: func(v: float) -> void: _theme.brightness = v,
-		%SaturationSpin: func(v: float) -> void: _theme.saturation = v,
+		%HazeSlider: func(v: float) -> void: _theme.haze = v,
+		%BrightnessSlider: func(v: float) -> void: _theme.brightness = v,
+		%SaturationSlider: func(v: float) -> void: _theme.saturation = v,
 	}
-	for spin: SpinBox in knobs:
-		var apply: Callable = knobs[spin]
-		spin.value_changed.connect(func(v: float) -> void:
+	for slider: LabSlider in knobs:
+		var apply: Callable = knobs[slider]
+		slider.value_changed.connect(func(v: float) -> void:
 			apply.call(v)
 			_apply_grading())
 
@@ -342,34 +344,34 @@ func _apply_grading() -> void:
 
 
 ## Reiter Bewuchs: drei Werte des Themas, der Rest sind die Konstanten von GroundCover.
-## Jede Änderung baut die Deko neu (gleicher Samen, also dieselben Bäume).
+## Jeder losgelassene Wert baut die Deko neu (gleicher Samen, also dieselben Bäume).
 func _fill_cover_controls() -> void:
 	var knobs := {
-		%CoverSpin: func(v: float) -> void: _theme.cover = v,
-		%FlowersSpin: func(v: float) -> void: _theme.cover_flower_amount = v,
-		%BushesSpin: func(v: float) -> void: _theme.bushes = v,
-		%TuftDensitySpin: func(v: float) -> void: _tuning.tuft_density = v,
-		%ClumpFromSpin: func(v: float) -> void: _tuning.clump_from = v,
-		%ClumpFullSpin: func(v: float) -> void: _tuning.clump_full = v,
-		%TuftLiftSpin: func(v: float) -> void: _tuning.tuft_lift = v,
-		%TuftSizeMinSpin: func(v: float) -> void: _tuning.tuft_scale.x = v,
-		%TuftSizeMaxSpin: func(v: float) -> void: _tuning.tuft_scale.y = v,
-		%BushesPerTreeSpin: func(v: float) -> void: _tuning.bushes_per_tree = int(v),
-		%BushRingSpin: func(v: float) -> void: _tuning.bush_ring = v,
-		%BushScaleSpin: func(v: float) -> void: _tuning.bush_scale = v,
+		%CoverSlider: func(v: float) -> void: _theme.cover = v,
+		%FlowersSlider: func(v: float) -> void: _theme.cover_flower_amount = v,
+		%BushesSlider: func(v: float) -> void: _theme.bushes = v,
+		%TuftDensitySlider: func(v: float) -> void: _tuning.tuft_density = v,
+		%ClumpFromSlider: func(v: float) -> void: _tuning.clump_from = v,
+		%ClumpFullSlider: func(v: float) -> void: _tuning.clump_full = v,
+		%TuftLiftSlider: func(v: float) -> void: _tuning.tuft_lift = v,
+		%TuftSizeMinSlider: func(v: float) -> void: _tuning.tuft_scale.x = v,
+		%TuftSizeMaxSlider: func(v: float) -> void: _tuning.tuft_scale.y = v,
+		%BushesPerTreeSlider: func(v: float) -> void: _tuning.bushes_per_tree = int(v),
+		%BushRingSlider: func(v: float) -> void: _tuning.bush_ring = v,
+		%BushScaleSlider: func(v: float) -> void: _tuning.bush_scale = v,
 	}
-	%TuftDensitySpin.value = _tuning.tuft_density
-	%ClumpFromSpin.value = _tuning.clump_from
-	%ClumpFullSpin.value = _tuning.clump_full
-	%TuftLiftSpin.value = _tuning.tuft_lift
-	%TuftSizeMinSpin.value = _tuning.tuft_scale.x
-	%TuftSizeMaxSpin.value = _tuning.tuft_scale.y
-	%BushesPerTreeSpin.value = _tuning.bushes_per_tree
-	%BushRingSpin.value = _tuning.bush_ring
-	%BushScaleSpin.value = _tuning.bush_scale
-	for spin: SpinBox in knobs:
-		var apply: Callable = knobs[spin]
-		spin.value_changed.connect(func(v: float) -> void:
+	%TuftDensitySlider.value = _tuning.tuft_density
+	%ClumpFromSlider.value = _tuning.clump_from
+	%ClumpFullSlider.value = _tuning.clump_full
+	%TuftLiftSlider.value = _tuning.tuft_lift
+	%TuftSizeMinSlider.value = _tuning.tuft_scale.x
+	%TuftSizeMaxSlider.value = _tuning.tuft_scale.y
+	%BushesPerTreeSlider.value = _tuning.bushes_per_tree
+	%BushRingSlider.value = _tuning.bush_ring
+	%BushScaleSlider.value = _tuning.bush_scale
+	for slider: LabSlider in knobs:
+		var apply: Callable = knobs[slider]
+		slider.settled.connect(func(v: float) -> void:
 			apply.call(v)
 			_build_decor(_noise, _theme))
 
@@ -532,9 +534,9 @@ func _run_sun(delta: float) -> void:
 		_sun_cycle.phase = fposmod(_sun_cycle.phase + _sun_speed * delta / day, 1.0)
 		_sun_cycle.apply()
 	if _sun_cycle.follow_clock or _sun_speed > 0.0:
-		%SunTimeSpin.set_value_no_signal(SunCycle.hour_of(_sun_cycle.phase))
+		%SunTimeSlider.set_value_no_signal(SunCycle.hour_of(_sun_cycle.phase))
 	if _sun_cycle.follow_clock:
-		%RealTimeSpin.set_value_no_signal(_real_hour_now())
+		%RealTimeSlider.set_value_no_signal(_real_hour_now())
 
 
 ## Stunde der echten Uhr dieses Rechners, mit Minuten als Bruch.
@@ -559,28 +561,28 @@ func _goal() -> float:
 
 
 func _on_layout_changed(_value: float) -> void:
-	_goal_z = %GoalSpin.value
-	_spawn_z = %SpawnSpin.value
-	_view_z = %ViewSpin.value
-	_lane_half = %LaneSpin.value
-	_fortress_scale = %ScaleSpin.value
-	_cam_size = %SizeSpin.value
-	_pitch = %PitchSpin.value
+	_goal_z = %GoalSlider.value
+	_spawn_z = %SpawnSlider.value
+	_view_z = %ViewSlider.value
+	_lane_half = %LaneSlider.value
+	_fortress_scale = %ScaleSlider.value
+	_cam_size = %SizeSlider.value
+	_pitch = %PitchSlider.value
 	_show(_index)
 
 
 func _on_light_changed(_value: float) -> void:
-	_shadow_distance = %ShadowDistanceSpin.value
-	_shadow_bias = %ShadowBiasSpin.value
-	_normal_bias = %NormalBiasSpin.value
-	_shadow_blur = %ShadowBlurSpin.value
-	_sun_speed = %SunSpeedSpin.value
-	_sun_cycle.low = %SunLowSpin.value
-	_sun_cycle.high = %SunHighSpin.value
-	_sun_cycle.sweep = %SunSweepSpin.value
-	_sun_cycle.noon_yaw = %SunYawSpin.value
+	_shadow_distance = %ShadowDistanceSlider.value
+	_shadow_bias = %ShadowBiasSlider.value
+	_normal_bias = %NormalBiasSlider.value
+	_shadow_blur = %ShadowBlurSlider.value
+	_sun_speed = %SunSpeedSlider.value
+	_sun_cycle.low = %SunLowSlider.value
+	_sun_cycle.high = %SunHighSlider.value
+	_sun_cycle.sweep = %SunSweepSlider.value
+	_sun_cycle.noon_yaw = %SunYawSlider.value
 	if not _sun_cycle.follow_clock:
-		_sun_cycle.phase = SunCycle.phase_of(%SunTimeSpin.value)
+		_sun_cycle.phase = SunCycle.phase_of(%SunTimeSlider.value)
 	_apply_light()
 
 
@@ -685,12 +687,12 @@ func _update_label() -> void:
 		var missing := not ResourceLoader.exists(_theme.ground_texture_path())
 		_label.text += "  · %s%s" % [_theme.ground_texture, " (fehlt)" if missing else ""]
 	_theme_select.select(_index)
-	%CoverSpin.set_value_no_signal(_theme.cover)
-	%FlowersSpin.set_value_no_signal(_theme.cover_flower_amount)
-	%BushesSpin.set_value_no_signal(_theme.bushes)
-	%HazeSpin.set_value_no_signal(_theme.haze)
-	%BrightnessSpin.set_value_no_signal(_theme.brightness)
-	%SaturationSpin.set_value_no_signal(_theme.saturation)
+	%CoverSlider.set_value_no_signal(_theme.cover)
+	%FlowersSlider.set_value_no_signal(_theme.cover_flower_amount)
+	%BushesSlider.set_value_no_signal(_theme.bushes)
+	%HazeSlider.set_value_no_signal(_theme.haze)
+	%BrightnessSlider.set_value_no_signal(_theme.brightness)
+	%SaturationSlider.set_value_no_signal(_theme.saturation)
 	_tier_select.select(_tier)
 	_view_select.select(1 if _fp != null else 0)
 	%LaneLength.text = "Bahn %.1f m" % (_goal_z - _spawn_z)
@@ -1142,7 +1144,7 @@ func _show_tally() -> void:
 	(_hud.get_node("%Book") as Control).visible = mastered > 0
 	(_hud.get_node("%Mastered") as Control).visible = mastered > 0
 	(_hud.get_node("%Mastered") as Label).text = str(mastered)
-	(_hud.get_node("%XpRing") as XpRing).ratio = %XpSpin.value / 100.0
+	(_hud.get_node("%XpRing") as XpRing).ratio = %XpSlider.value / 100.0
 
 
 ## Ein Aufstieg wie auf PlayerLevel.leveled_up, ohne Erfahrung zu verbuchen.
@@ -1150,7 +1152,7 @@ func _level_up() -> void:
 	_show_hud(true)
 	_shown_level += 1
 	(_hud.get_node("%LevelText") as Label).text = str(_shown_level)
-	%XpSpin.value = 5
+	%XpSlider.value = 5
 	(_hud.get("level_flare") as LevelFlare).play()
 
 

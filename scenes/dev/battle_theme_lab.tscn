@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://djc1lgrnhtvkd" path="res://src/dev/battle_theme_lab.gd" id="1_lab"]
 [ext_resource type="PackedScene" uid="uid://dembpyqo8n7c3" path="res://scenes/ui/spell_banner.tscn" id="2_banner"]
+[ext_resource type="Script" uid="uid://tnc8x5xo4loy" path="res://src/dev/lab_slider.gd" id="lab_slider"]
 
 [node name="BattleThemeLab" type="Node3D" unique_id=898791088]
 script = ExtResource("1_lab")
@@ -126,42 +127,84 @@ layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Bildmitte z"
 
-[node name="ViewSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Ansicht" unique_id=1869468042]
-unique_name_in_owner = true
+[node name="ViewRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Ansicht" unique_id=852427213]
 layout_mode = 2
+
+[node name="ViewSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Ansicht/ViewRow" unique_id=1869468042 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 min_value = -80.0
 max_value = 40.0
 step = 0.5
 allow_greater = true
 allow_lesser = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Ansicht/ViewRow" unique_id=1083318105]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="SizeCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Ansicht" unique_id=1829763600]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Ausschnitt"
 
-[node name="SizeSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Ansicht" unique_id=1876862994]
-unique_name_in_owner = true
+[node name="SizeRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Ansicht" unique_id=52941352]
 layout_mode = 2
+
+[node name="SizeSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Ansicht/SizeRow" unique_id=1876862994 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 min_value = 10.0
 max_value = 80.0
 value = 10.0
 allow_greater = true
 allow_lesser = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Ansicht/SizeRow" unique_id=281997963]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="PitchCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Ansicht" unique_id=10070932]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Neigung °"
 
-[node name="PitchSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Ansicht" unique_id=73402336]
-unique_name_in_owner = true
+[node name="PitchRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Ansicht" unique_id=701240675]
 layout_mode = 2
+
+[node name="PitchSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Ansicht/PitchRow" unique_id=73402336 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 min_value = 10.0
 max_value = 89.0
 value = 10.0
 allow_greater = true
 allow_lesser = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Ansicht/PitchRow" unique_id=920769743]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="Bahn" type="GridContainer" parent="UI/Margin/Root/Menu/Items/Tabs" unique_id=1844412974]
 visible = false
@@ -174,72 +217,142 @@ layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Festungsgröße"
 
-[node name="ScaleSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn" unique_id=2069520409]
-unique_name_in_owner = true
+[node name="ScaleRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn" unique_id=873438949]
 layout_mode = 2
+
+[node name="ScaleSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn/ScaleRow" unique_id=2069520409 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 min_value = 1.0
 max_value = 10.0
 step = 0.25
 value = 1.0
 allow_greater = true
 allow_lesser = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn/ScaleRow" unique_id=570851138]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="GoalCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn" unique_id=520738572]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Festungsfront z"
 
-[node name="GoalSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn" unique_id=1577474641]
-unique_name_in_owner = true
+[node name="GoalRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn" unique_id=705775647]
 layout_mode = 2
+
+[node name="GoalSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn/GoalRow" unique_id=1577474641 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 min_value = -40.0
 max_value = 60.0
 step = 0.5
 allow_greater = true
 allow_lesser = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn/GoalRow" unique_id=1978578453]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="SpawnCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn" unique_id=1671139390]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Spawn z"
 
-[node name="SpawnSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn" unique_id=2048168133]
-unique_name_in_owner = true
+[node name="SpawnRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn" unique_id=1364001383]
 layout_mode = 2
+
+[node name="SpawnSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn/SpawnRow" unique_id=2048168133 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 min_value = -120.0
 max_value = 0.0
 step = 0.5
 allow_greater = true
 allow_lesser = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn/SpawnRow" unique_id=316157989]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="LaneCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn" unique_id=417840919]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Bahnbreite ±x"
 
-[node name="LaneSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn" unique_id=397591350]
-unique_name_in_owner = true
+[node name="LaneRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn" unique_id=1523095789]
 layout_mode = 2
+
+[node name="LaneSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn/LaneRow" unique_id=397591350 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 min_value = 1.0
 max_value = 30.0
 step = 0.5
 value = 1.0
 allow_greater = true
 allow_lesser = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn/LaneRow" unique_id=919576357]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="SpeedCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn" unique_id=933393103]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Monstertempo"
 
-[node name="SpeedSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn" unique_id=278629955]
-unique_name_in_owner = true
+[node name="SpeedRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn" unique_id=1509616523]
 layout_mode = 2
+
+[node name="SpeedSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn/SpeedRow" unique_id=278629955 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 min_value = 5.0
 max_value = 150.0
 value = 5.0
 allow_greater = true
 allow_lesser = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn/SpeedRow" unique_id=1577783819]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="LaneLength" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bahn" unique_id=1320899174]
 unique_name_in_owner = true
@@ -257,82 +370,166 @@ layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Schattentiefe m"
 
-[node name="ShadowDistanceSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=193405819]
-unique_name_in_owner = true
+[node name="ShadowDistanceRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=343276458]
 layout_mode = 2
+
+[node name="ShadowDistanceSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/ShadowDistanceRow" unique_id=193405819 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 min_value = 50.0
 max_value = 2000.0
 step = 10.0
 value = 50.0
 allow_greater = true
 allow_lesser = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/ShadowDistanceRow" unique_id=387777207]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="ShadowBiasCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=1435852039]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Bias"
 
-[node name="ShadowBiasSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=990206152]
-unique_name_in_owner = true
+[node name="ShadowBiasRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=42039509]
 layout_mode = 2
+
+[node name="ShadowBiasSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/ShadowBiasRow" unique_id=990206152 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 max_value = 2.0
 step = 0.02
 allow_greater = true
 allow_lesser = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/ShadowBiasRow" unique_id=783220896]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="NormalBiasCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=1886715558]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Normal-Bias"
 
-[node name="NormalBiasSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=1209650353]
-unique_name_in_owner = true
+[node name="NormalBiasRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=1604991469]
 layout_mode = 2
+
+[node name="NormalBiasSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/NormalBiasRow" unique_id=1209650353 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 max_value = 4.0
 step = 0.1
 allow_greater = true
 allow_lesser = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/NormalBiasRow" unique_id=1063023426]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="ShadowBlurCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=738016081]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Weichheit"
 
-[node name="ShadowBlurSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=1502035412]
-unique_name_in_owner = true
+[node name="ShadowBlurRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=24115994]
 layout_mode = 2
+
+[node name="ShadowBlurSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/ShadowBlurRow" unique_id=1502035412 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 max_value = 5.0
 step = 0.1
 allow_greater = true
 allow_lesser = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/ShadowBlurRow" unique_id=1402669798]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="SunTimeCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=1805385326]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Tageszeit h"
 
-[node name="SunTimeSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=1995449288]
-unique_name_in_owner = true
+[node name="SunTimeRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=1793140609]
 layout_mode = 2
+
+[node name="SunTimeSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/SunTimeRow" unique_id=1995449288 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 min_value = 6.0
 max_value = 18.0
 step = 0.25
 value = 6.0
 allow_greater = true
 allow_lesser = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/SunTimeRow" unique_id=1823604016]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="RealTimeCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=1985456700]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Echte Uhrzeit h"
 
-[node name="RealTimeSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=54756296]
-unique_name_in_owner = true
+[node name="RealTimeRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=1150837271]
 layout_mode = 2
+
+[node name="RealTimeSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/RealTimeRow" unique_id=54756296 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 max_value = 24.0
 step = 0.25
 allow_greater = true
 allow_lesser = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/RealTimeRow" unique_id=211028750]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="ClockCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=759551993]
 layout_mode = 2
@@ -350,102 +547,214 @@ layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Zeitraffer h/s"
 
-[node name="SunSpeedSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=996670012]
-unique_name_in_owner = true
+[node name="SunSpeedRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=828815557]
 layout_mode = 2
+
+[node name="SunSpeedSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/SunSpeedRow" unique_id=996670012 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 max_value = 6.0
 step = 0.25
 allow_greater = true
 allow_lesser = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/SunSpeedRow" unique_id=106742317]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="SunLowCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=1071110777]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Höhe morgens °"
 
-[node name="SunLowSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=1818581402]
-unique_name_in_owner = true
+[node name="SunLowRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=1008368254]
 layout_mode = 2
+
+[node name="SunLowSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/SunLowRow" unique_id=1818581402 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 max_value = 90.0
 allow_greater = true
 allow_lesser = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/SunLowRow" unique_id=124748755]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="SunHighCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=454403871]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Höhe mittags °"
 
-[node name="SunHighSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=1679813945]
-unique_name_in_owner = true
+[node name="SunHighRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=1220145190]
 layout_mode = 2
+
+[node name="SunHighSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/SunHighRow" unique_id=1679813945 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 max_value = 90.0
 allow_greater = true
 allow_lesser = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/SunHighRow" unique_id=1733065484]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="SunSweepCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=186805262]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Wanderung °"
 
-[node name="SunSweepSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=1785965276]
-unique_name_in_owner = true
+[node name="SunSweepRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=1768792477]
 layout_mode = 2
+
+[node name="SunSweepSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/SunSweepRow" unique_id=1785965276 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 max_value = 360.0
 step = 5.0
 allow_greater = true
 allow_lesser = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/SunSweepRow" unique_id=1852562268]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="SunYawCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=1858776830]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Mittagsrichtung °"
 
-[node name="SunYawSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=476694193]
-unique_name_in_owner = true
+[node name="SunYawRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=1767467155]
 layout_mode = 2
+
+[node name="SunYawSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/SunYawRow" unique_id=476694193 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 min_value = -180.0
 max_value = 180.0
 step = 5.0
 allow_greater = true
 allow_lesser = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/SunYawRow" unique_id=238774393]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="HazeCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=1620499921]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Thema: Dunst"
 
-[node name="HazeSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=1287376234]
-unique_name_in_owner = true
+[node name="HazeRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=151875664]
 layout_mode = 2
+
+[node name="HazeSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/HazeRow" unique_id=1287376234 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 max_value = 0.03
 step = 0.0005
 allow_greater = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/HazeRow" unique_id=996333192]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="BrightnessCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=1121592858]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Thema: Helligkeit"
 
-[node name="BrightnessSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=456027650]
-unique_name_in_owner = true
+[node name="BrightnessRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=1366548983]
 layout_mode = 2
+
+[node name="BrightnessSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/BrightnessRow" unique_id=456027650 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 min_value = 0.5
 max_value = 1.5
 step = 0.02
 value = 0.5
 allow_greater = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/BrightnessRow" unique_id=2031871752]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="SaturationCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=322077001]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Thema: Sättigung"
 
-[node name="SaturationSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=441001535]
-unique_name_in_owner = true
+[node name="SaturationRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Licht" unique_id=1548312839]
 layout_mode = 2
+
+[node name="SaturationSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/SaturationRow" unique_id=441001535 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 max_value = 2.0
 step = 0.02
 allow_greater = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Licht/SaturationRow" unique_id=315681572]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="HUD" type="GridContainer" parent="UI/Margin/Root/Menu/Items/Tabs" unique_id=1873525535]
 visible = false
@@ -470,10 +779,24 @@ layout_mode = 2
 theme_type_variation = &"Hint"
 text = "XP %"
 
-[node name="XpSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/HUD" unique_id=2135955711]
-unique_name_in_owner = true
+[node name="XpRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/HUD" unique_id=602885556]
 layout_mode = 2
+
+[node name="XpSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/HUD/XpRow" unique_id=2135955711 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 value = 60.0
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/HUD/XpRow" unique_id=852956326]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="KillsCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/HUD" unique_id=15441387]
 layout_mode = 2
@@ -592,155 +915,323 @@ layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Thema: Büschel"
 
-[node name="CoverSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=1470697187]
-unique_name_in_owner = true
+[node name="CoverRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=1418570315]
 layout_mode = 2
+
+[node name="CoverSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs/CoverRow" unique_id=1470697187 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 max_value = 1.5
 step = 0.05
 allow_greater = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs/CoverRow" unique_id=1676024555]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="FlowersCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=766561122]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Thema: Blüten"
 
-[node name="FlowersSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=2058553242]
-unique_name_in_owner = true
+[node name="FlowersRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=461280414]
 layout_mode = 2
+
+[node name="FlowersSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs/FlowersRow" unique_id=2058553242 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 max_value = 0.5
 step = 0.01
 allow_greater = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs/FlowersRow" unique_id=1352444433]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="BushesCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=1947667127]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Thema: Sträucher"
 
-[node name="BushesSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=553638456]
-unique_name_in_owner = true
+[node name="BushesRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=534180529]
 layout_mode = 2
+
+[node name="BushesSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs/BushesRow" unique_id=553638456 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 max_value = 1.0
 step = 0.05
 allow_greater = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs/BushesRow" unique_id=2129359802]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="TuftDensityCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=1683253221]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Büschel je m²"
 
-[node name="TuftDensitySpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=2067411890]
-unique_name_in_owner = true
+[node name="TuftDensityRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=922289381]
 layout_mode = 2
+
+[node name="TuftDensitySlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs/TuftDensityRow" unique_id=2067411890 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 max_value = 3.0
 step = 0.05
 allow_greater = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs/TuftDensityRow" unique_id=408701384]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="ClumpFromCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=1841100544]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Klumpen ab"
 
-[node name="ClumpFromSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=40886878]
-unique_name_in_owner = true
+[node name="ClumpFromRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=2008451265]
 layout_mode = 2
+
+[node name="ClumpFromSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs/ClumpFromRow" unique_id=40886878 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 min_value = -1.0
 max_value = 1.0
 step = 0.05
 allow_greater = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs/ClumpFromRow" unique_id=759801817]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="ClumpFullCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=104330006]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Klumpen voll"
 
-[node name="ClumpFullSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=865986596]
-unique_name_in_owner = true
+[node name="ClumpFullRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=460998358]
 layout_mode = 2
+
+[node name="ClumpFullSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs/ClumpFullRow" unique_id=865986596 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 min_value = -1.0
 max_value = 1.0
 step = 0.05
 allow_greater = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs/ClumpFullRow" unique_id=838701528]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="TuftLiftCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=330779411]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Helligkeit"
 
-[node name="TuftLiftSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=787439415]
-unique_name_in_owner = true
+[node name="TuftLiftRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=262892637]
 layout_mode = 2
+
+[node name="TuftLiftSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs/TuftLiftRow" unique_id=787439415 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 min_value = 0.5
 max_value = 2.5
 step = 0.05
 value = 0.5
 allow_greater = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs/TuftLiftRow" unique_id=1865104088]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="TuftSizeMinCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=34017463]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Größe von"
 
-[node name="TuftSizeMinSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=1698736841]
-unique_name_in_owner = true
+[node name="TuftSizeMinRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=1147652241]
 layout_mode = 2
+
+[node name="TuftSizeMinSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs/TuftSizeMinRow" unique_id=1698736841 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 min_value = 0.3
 max_value = 4.0
 step = 0.1
 value = 0.3
 allow_greater = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs/TuftSizeMinRow" unique_id=1408620316]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="TuftSizeMaxCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=31119773]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Größe bis"
 
-[node name="TuftSizeMaxSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=2030906423]
-unique_name_in_owner = true
+[node name="TuftSizeMaxRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=1979296633]
 layout_mode = 2
+
+[node name="TuftSizeMaxSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs/TuftSizeMaxRow" unique_id=2030906423 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 min_value = 0.3
 max_value = 4.0
 step = 0.1
 value = 0.3
 allow_greater = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs/TuftSizeMaxRow" unique_id=1767740004]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="BushesPerTreeCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=1693723030]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Sträucher je Baum"
 
-[node name="BushesPerTreeSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=1333386525]
-unique_name_in_owner = true
+[node name="BushesPerTreeRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=683073667]
 layout_mode = 2
+
+[node name="BushesPerTreeSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs/BushesPerTreeRow" unique_id=1333386525 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 max_value = 8.0
 allow_greater = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs/BushesPerTreeRow" unique_id=1811025790]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="BushRingCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=183361645]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Strauchring bis m"
 
-[node name="BushRingSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=1778475328]
-unique_name_in_owner = true
+[node name="BushRingRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=1168665747]
 layout_mode = 2
+
+[node name="BushRingSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs/BushRingRow" unique_id=1778475328 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 min_value = 2.5
 max_value = 10.0
 step = 0.25
 value = 2.5
 allow_greater = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs/BushRingRow" unique_id=1760461105]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="BushScaleCaption" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=61620717]
 layout_mode = 2
 theme_type_variation = &"Hint"
 text = "Strauchgröße bis"
 
-[node name="BushScaleSpin" type="SpinBox" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=570924950]
-unique_name_in_owner = true
+[node name="BushScaleRow" type="HBoxContainer" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=1378213674]
 layout_mode = 2
+
+[node name="BushScaleSlider" type="HSlider" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs/BushScaleRow" unique_id=570924950 node_paths=PackedStringArray("readout")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+focus_mode = 0
 min_value = 1.0
 max_value = 4.0
 step = 0.1
 value = 1.0
 allow_greater = true
+script = ExtResource("lab_slider")
+readout = NodePath("../Value")
+
+[node name="Value" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs/BushScaleRow" unique_id=1336044129]
+custom_minimum_size = Vector2(48, 0)
+layout_mode = 2
+horizontal_alignment = 2
 
 [node name="CoverCount" type="Label" parent="UI/Margin/Root/Menu/Items/Tabs/Bewuchs" unique_id=245581637]
 unique_name_in_owner = true
