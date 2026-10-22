@@ -49,6 +49,7 @@ func _ready() -> void:
 	EventBus.boss_answer_explained.connect(note_boss_explained)
 	EventBus.boss_ended.connect(note_boss_end)
 	EventBus.boss_won.connect(note_boss_won)
+	EventBus.battle_timed.connect(func(kind, _started_at, ms): note_battle_time(kind, ms))
 	EventBus.writing_submitted.connect(note_writing_submit)
 	EventBus.save_refused.connect(note_save_refused)
 	EventBus.save_restored.connect(note_save_restored)
@@ -120,6 +121,12 @@ func note_boss_end(boss_id: String, won: bool) -> void:
 
 func note_boss_won(boss_id: String, unit_key: String) -> void:
 	_write({"e": "boss_won", "boss": boss_id, "unit": unit_key})
+
+
+## Kampfzeit einer Welle oder eines Bosskampfs (BattleClock), `dur` in ms; `kind` ist "wave" oder
+## die Id des Bosses.
+func note_battle_time(kind: String, ms: int) -> void:
+	_write({"e": "battle_time", "kind": kind, "dur": ms})
 
 
 ## Eine Abgabe beim Schreib-Boss (ADR 0023, §7): Verbrauch und Ergebnis, kein Text. Nur
@@ -294,12 +301,20 @@ func switch_to(id: String) -> void:
 
 
 func path() -> String:
-	return "%s/%s_trace.jsonl" % [LOG_DIR, player_id]
+	return path_for(player_id)
 
 
 ## Die vorige Generation; mehr als zwei gibt es nicht.
 func previous_path() -> String:
-	return "%s/%s_trace.1.jsonl" % [LOG_DIR, player_id]
+	return previous_path_for(player_id)
+
+
+static func path_for(id: String) -> String:
+	return "%s/%s_trace.jsonl" % [LOG_DIR, id]
+
+
+static func previous_path_for(id: String) -> String:
+	return "%s/%s_trace.1.jsonl" % [LOG_DIR, id]
 
 
 ## Bytes, die das Protokoll dieses Profils belegt (beide Generationen).

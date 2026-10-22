@@ -209,6 +209,8 @@ var _asked_at := 0
 var _ticket := 0
 var _card: Dictionary = {}
 var _warming := false
+## Kampfzeit (SessionLog), von `begin` bis zum Sieg oder Verlassen.
+var _battle_clock := BattleClock.new()
 var _shout_tween: Tween
 var _bar_tween: Tween
 var _check_rows: Dictionary = {}
@@ -247,6 +249,8 @@ func _ready() -> void:
 		_cloud = CloudModelBackend.new()
 		add_child(_cloud)
 
+	add_child(_battle_clock)
+	_battle_clock.hold(true)
 	var chosen := ContentRegistry.get_entry("bosses", BOSS_ID)
 	begin(chosen, pick_task(chosen))
 	# Erst im Dunkeln vorwärmen (FxWarmup-Prinzip), dann aus dem Dunkel heran (SceneZoom).
@@ -254,6 +258,7 @@ func _ready() -> void:
 	await _warm_up()
 	if not is_inside_tree():
 		return
+	_battle_clock.hold(false)
 	_scene_zoom.reveal(func(k: float) -> void: _scale_to(lerpf(SceneZoom.FROM, 1.0, k)))
 
 
@@ -463,6 +468,9 @@ func begin(the_boss: Dictionary, the_task: Dictionary) -> void:
 		return
 	if emit_events:
 		EventBus.boss_started.emit(str(boss.get("id", BOSS_ID)))
+	_battle_clock.kind = str(boss.get("id", BOSS_ID))
+	_battle_clock.emit_events = emit_events
+	_battle_clock.start()
 	goto(Phase.ENCOUNTER)
 
 
@@ -934,6 +942,7 @@ func _win() -> void:
 	_act(&"fall")
 	_cheer(WON_SHOUT, HIT_SHOUT_TINT)
 	Sfx.play(&"wave_cleared")
+	_battle_clock.stop()
 	if emit_events:
 		EventBus.boss_ended.emit(str(boss.get("id", BOSS_ID)), true)
 	_record_win()

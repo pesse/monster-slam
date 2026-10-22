@@ -8,7 +8,7 @@ Nachfrage.
 ## Was gesendet wird
 
 - **Nach jedem Lauf und jedem Bosskampf** der Spielstand des Profils: Sitzungen (wann, wie
-  lange, wie viele Wellen und Antworten), Gold, Erfahrung, gelernte Fähigkeiten,
+  lange, wie lange davon gekämpft, wie viele Wellen und Antworten), Gold, Erfahrung, gelernte Fähigkeiten,
   Boss-Siege, Zauber im Vorrat und die eingestellte Schwierigkeit.
 - **Der Lernstand je Wort**, als Kennung des Worts: wie oft gefragt, wie oft richtig, wie
   sicher es sitzt.

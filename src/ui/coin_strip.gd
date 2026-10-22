@@ -19,6 +19,8 @@ signal day_selected(day_index: int)
 
 ## Tagesindizes mit Plaketten (Index -> true); sie tragen die kleine Plakette.
 var badge_days: Dictionary = {}
+## Kampfzeit (ms) je Tagesindex (SessionLog.battle_ms_by_day), für die Karte am Zeiger.
+var battle_ms: Dictionary = {}
 ## Der gewählte Tag; -1 vor dem ersten `refresh`.
 var selected_day := -1
 ## Wie viele Monate vor dem laufenden gezeigt werden.
@@ -76,7 +78,8 @@ func refresh() -> int:
 		var is_today := day_index == today_index
 		var with_badges := badge_days.has(day_index)
 		day.setup(day_state, is_today, i + 1, date_label(day_index),
-				state_text(day_state, is_today, with_badges), with_badges)
+				state_text(day_state, is_today, with_badges, int(battle_ms.get(day_index, 0))),
+				with_badges)
 		day.selected = day_index == selected_day
 		if day_state != DayCoin.State.FUTURE:
 			day.chosen.connect(select.bind(day_index))
@@ -167,8 +170,24 @@ static func date_label(day_index: int) -> String:
 			MONTH_NAMES[int(d["month"]) - 1]]
 
 
+## „12 Min.“, „1 Std. 5 Min.“ aus Millisekunden; unter einer Minute „unter 1 Min.“.
+static func duration_text(ms: int) -> String:
+	if ms <= 0:
+		return "0 Min."
+	var minutes := floori(ms / 60000.0)
+	if minutes == 0:
+		return "unter 1 Min."
+	if minutes < 60:
+		return "%d Min." % minutes
+	if minutes % 60 == 0:
+		return "%d Std." % floori(minutes / 60.0)
+	return "%d Std. %d Min." % [floori(minutes / 60.0), minutes % 60]
+
+
 ## Der Stand eines Tages in Worten, ohne Datum (das ist die Überschrift der Hinweiskarte).
-static func state_text(day_state: DayCoin.State, today := false, badges := false) -> String:
+## `battle` ist die Kampfzeit des Tages (ms).
+static func state_text(day_state: DayCoin.State, today := false, badges := false,
+		battle := 0) -> String:
 	var text: String
 	match day_state:
 		DayCoin.State.EARNED:
@@ -181,4 +200,6 @@ static func state_text(day_state: DayCoin.State, today := false, badges := false
 			text = "Nicht geübt"
 	if badges:
 		text += "  •  mit Plaketten"
+	if battle > 0:
+		text += "  •  %s im Kampf" % duration_text(battle)
 	return text + "  •  Heute" if today else text

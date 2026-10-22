@@ -10,7 +10,7 @@ const MONOTONIC := {
 	"": ["#records"],
 	"_level": ["total_xp"],
 	"_wallet": ["total_earned", "chests_opened"],
-	"_sessions": ["#sessions"],
+	"_sessions": ["#sessions", "#battles"],
 	"_bosses": ["#wins"],
 	"_badges": ["#days"],
 	"_writing": ["#submissions"],

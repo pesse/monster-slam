@@ -26,7 +26,14 @@ const ACCURACY_WINDOW_DAYS := 7
 ##   aborted: bool               — nur bei hart beendeten Läufen (siehe load_sessions)
 ##   suspended: bool             — nur bei begonnenen Läufen (ADR 0020)
 ##   continues: int              — nur bei fortgesetzten: started_at der ersten Sitzung des Laufs
+##   battle_ms: int              — Kampfzeit der Wellen (BattleClock); fehlt = 0
 var _sessions: Array = []
+## Kampfzeit außerhalb eines Laufs (Bosskämpfe), älteste zuerst: kind (Id des Bosses),
+## started_at (unix), battle_ms.
+var _battles: Array = []
+## Ab hier (unix) misst BattleClock; die Kampfzeit davor ist aus der Spur geschätzt
+## (BattleBackfill). 0 = noch nicht nachgetragen.
+var _measured_since := 0
 ## Die laufende Sitzung; leer = gerade kein Lauf.
 var _current: Dictionary = {}
 var player_id: String = "default"
@@ -45,6 +52,7 @@ func _ready() -> void:
 	EventBus.run_resumed.connect(func(_next_wave, started_at, _added): note_resumed(started_at))
 	EventBus.wave_cleared.connect(func(_wave_id): note_wave_cleared())
 	EventBus.item_reviewed.connect(func(_id, correct, response_time_ms): note_answer(correct, response_time_ms))
+	EventBus.battle_timed.connect(note_battle_time)
 
 
 # --- Erfassung ----------------------------------------------------------------
@@ -62,6 +70,7 @@ func begin() -> void:
 		"answers": 0, "correct": 0, "newly_mastered": 0,
 		"response_time_sum_ms": 0, "timed_answers": 0, "fast_answers": 0,
 		"monsters_defeated": 0, "monsters_leaked": 0, "best_no_leak_streak": 0,
+		"battle_ms": 0,
 		# Unbekannt bis end(); sonst trüge eine abgebrochene Sitzung einen makellosen Lauf.
 		"min_fortress_health": -1,
 	}
@@ -94,6 +103,18 @@ func note_answer(correct: bool, response_time_ms: int = 0) -> void:
 		if response_time_ms < FAST_ANSWER_MS:
 			_current["fast_answers"] = int(_current["fast_answers"]) + 1
 	_touch()
+
+
+## Verbucht eine Kampfzeit (EventBus.battle_timed): eine Welle in die laufende Sitzung,
+## alles andere als eigener Eintrag.
+func note_battle_time(kind: String, started_at: int, ms: int) -> void:
+	if ms <= 0:
+		return
+	if kind == "wave" and not _current.is_empty():
+		_current["battle_ms"] = int(_current.get("battle_ms", 0)) + ms
+	else:
+		_battles.append({"kind": kind, "started_at": started_at, "battle_ms": ms})
+	_save()
 
 
 ## Verbucht eine geräumte Welle und speichert die laufende Sitzung mit, damit sie einen
@@ -226,6 +247,30 @@ func played_day_count() -> int:
 	return days.size()
 
 
+## Kampfzeit (ms) je lokalem Tagesindex, laufende Sitzung und Bosskämpfe eingeschlossen.
+## Wie bei `correct_by_day` zählt eine Sitzung zu ihrem Anfangstag.
+func battle_ms_by_day() -> Dictionary:
+	var out := {}
+	for entry in _all_entries() + _battles:
+		var ms := int(entry.get("battle_ms", 0))
+		if ms > 0:
+			var day := local_day(int(entry.get("started_at", 0)))
+			out[day] = int(out.get(day, 0)) + ms
+	return out
+
+
+func battle_ms_total() -> int:
+	var total := 0
+	for ms: int in battle_ms_by_day().values():
+		total += ms
+	return total
+
+
+## Ab wann die Kampfzeit gemessen statt geschätzt ist (unix); 0 = noch gar nicht.
+func battle_measured_since() -> int:
+	return _measured_since
+
+
 ## Bestwerte über alle Sitzungen. `min_fortress_health` ist der tiefste HP-Stand je,
 ## `best_fortress_floor` der höchste der lauf-eigenen Tiefstände; beide -1 = unbekannt.
 func records() -> Dictionary:
@@ -313,6 +358,7 @@ func switch_to(id: String) -> void:
 	end()
 	player_id = id
 	_sessions.clear()
+	_battles.clear()
 	_current = {}
 	load_sessions()
 
@@ -330,7 +376,8 @@ func save_suffix() -> String:
 
 
 func save_payload() -> Dictionary:
-	return {"player_id": player_id, "sessions": _sessions, "current": _current}
+	return {"player_id": player_id, "sessions": _sessions, "current": _current,
+			"battles": _battles, "battle_measured_since": _measured_since}
 
 
 func reload() -> void:
@@ -342,12 +389,16 @@ func _save() -> void:
 
 
 ## Lädt das Log. Eine offen liegende Sitzung (hart beendeter Lauf) wird mit Ende = letzte
-## Aktivität geschlossen und als `aborted` markiert.
+## Aktivität geschlossen und als `aborted` markiert. Fehlt die Kampfzeit noch, wird sie
+## einmal aus der Spur nachgetragen (BattleBackfill).
 func load_sessions() -> void:
 	_sessions.clear()
+	_battles.clear()
 	_current = {}
+	_measured_since = 0
 	var read := SaveStore.read(_save_path())
 	if int(read["status"]) == SaveStore.Status.MISSING:
+		_measured_since = int(Time.get_unix_time_from_system())
 		return
 	if int(read["status"]) != SaveStore.Status.OK:
 		push_warning("SessionLog: ungültige Sitzungsdatei '%s'" % _save_path())
@@ -356,6 +407,10 @@ func load_sessions() -> void:
 	var loaded: Variant = payload.get("sessions", [])
 	if loaded is Array:
 		_sessions = loaded
+	var battles: Variant = payload.get("battles", [])
+	if battles is Array:
+		_battles = battles
+	_measured_since = int(payload.get("battle_measured_since", 0))
 	var open: Variant = payload.get("current", {})
 	if open is Dictionary and not (open as Dictionary).is_empty():
 		var entry: Dictionary = open
@@ -365,3 +420,13 @@ func load_sessions() -> void:
 		if int(entry.get("answers", 0)) > 0 or int(entry.get("waves_cleared", 0)) > 0:
 			_sessions.append(entry)
 		_save()
+	if _measured_since == 0:
+		backfill_battle_time(BattleBackfill.read_trace(player_id))
+
+
+## Trägt die Kampfzeit aus der Spur `trace_lines` nach und misst ab jetzt. Gespeichert
+## wird mit dem nächsten Speichern; bis dahin wiederholt jedes Laden dasselbe.
+func backfill_battle_time(trace_lines: Array) -> void:
+	_battles.append_array(BattleBackfill.apply(_sessions, BattleBackfill.segments(trace_lines)))
+	_battles.sort_custom(func(a, b): return int(a["started_at"]) < int(b["started_at"]))
+	_measured_since = int(Time.get_unix_time_from_system())

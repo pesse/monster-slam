@@ -433,6 +433,15 @@ Erspielte.
   Tagen — zwei Dinge, die „Goldstück" heißen, wären eines zu viel. `DayCoin` ist nur noch
   die gezeichnete Münze, die aus der Schatzkiste fliegt; ihr `State` bleibt das Maß für
   beide.
+- **Kampfzeit ist Echtzeit, in der ein Kampf wirklich lief.** `BattleClock` (Kind von
+  `WaveRunner`, `BossFight`, `WritingBoss`) misst von Wellen- bzw. Kampfbeginn bis Ende,
+  Niederlage oder Verlassen und lässt den angehaltenen Baum (Pause, Feier, Rückfrage) und
+  das Vorwärmen aus; die Zeitlupe zählt voll. Gemeldet wird über `battle_timed`.
+  Gespeichert wird nur dieser Ursprungswert: `battle_ms` an der Sitzung (Wellen) bzw. ein
+  Eintrag in `battles` (Bosse, die keine Sitzung haben); Summe und Tage rechnet
+  `SessionLog.battle_ms_by_day`. Für Sitzungen von davor schätzt `BattleBackfill` einmal
+  je Profil aus der Spur (ohne Pausen, Lücken gekappt); ab `battle_measured_since` ist
+  gemessen.
 - **Die Statistik ist ein Fenster wie die Fähigkeiten** (`stats_screen.tscn`): dieselben
   Schichten (Rahmen `GameWindow`, gekachelte Fläche, Titelband, Gelenke), dasselbe
   Schließen-X, `closed` an `profile_menu._open_window`, das den Fokus an den Knopf

@@ -30,6 +30,11 @@
       "path": "res://assets/ui/statistics/icons/activity_coin.webp",
       "width": 256,
       "height": 256
+    },
+    "battle_time": {
+      "path": "res://assets/ui/statistics/icons/battle_time.webp",
+      "width": 256,
+      "height": 256
     }
   },
   "reuse": {

@@ -17,8 +17,8 @@ Fahndungsliste, die Wortwerte unter „Insgesamt“, die Reiter „Fortschritt�
 „Aufgaben“ und die Meilensteine im Reiter „Plaketten“. Diese Überschriften tragen dann die Namen der Sprachen („Lernkurve · Latein“).
 
 Für alle Sprachen zusammen zählen weiter: Level, XP, Gold, Schatzkisten, Skillpunkte,
-Rekorde, die Tages-Serie, die Monatsreihe und die Genauigkeit der letzten Sitzung (dort
-steht dann „alle Sprachen“). Die Wahl bleibt, bis du das Spiel schließt.
+Rekorde, die Tages-Serie, die Monatsreihe, die Kampfzeit und die Genauigkeit der letzten
+Sitzung (dort steht dann „alle Sprachen“). Die Wahl bleibt, bis du das Spiel schließt.
 
 ## Reiter „Überblick“
 
@@ -26,16 +26,23 @@ steht dann „alle Sprachen“). Die Wahl bleibt, bis du das Spiel schließt.
   dabei ist. Der laufende Tag reißt die Serie nicht, erst ein ganzer Tag ohne Lauf.
 - **Haken: „… % richtig“** – wie viele Antworten in der letzten Sitzung gesessen haben,
   verglichen mit den Tagen davor.
+- **Sanduhr: „Kampfzeit“** – wie lange deine Wellen und Bosskämpfe zusammen wirklich
+  liefen, darunter, wie lange heute. Die Pause, Feiern und die Zeit zwischen den Wellen
+  zählen nicht mit. Ein Tag bekommt die Zeit der Läufe, die an ihm begonnen haben. Für
+  Läufe, die vor dieser Anzeige gespielt wurden, ist die Zeit aus dem Protokoll geschätzt.
+  Dort stehen keine Pausen drin, deshalb kann sie etwas zu hoch sein.
 - **Die Monatsreihe**: ein Medaillon für jeden Tag des Monats. Auf einem Tag, an dem du
   geübt hast, liegt eine goldene Münze, und seine Zahl ist golden. Der heutige Tag hat
   einen leisen Ring, die Tage danach sind blasser. **Diese Münzen sind kein Gold**, sie
   zählen nur Tage, an denen du gespielt hast. Zeigt die Maus auf einen Tag (oder springst
-  du mit der Tastatur hin), siehst du Datum und Stand. Eine kleine Medaille am Tag heißt:
+  du mit der Tastatur hin), siehst du Datum, Stand und wie lange du an dem Tag gekämpft
+  hast („12 Min. im Kampf“). Eine kleine Medaille am Tag heißt:
   An diesem Tag gab es Plaketten. Mit **‹** und **›** neben dem Monatsnamen blätterst du
   zurück, bis zu dem Monat, in dem du angefangen hast.
 - **„Plaketten“** unter der Monatsreihe – die Plaketten eines Tages. Am Anfang ist es
   heute, ein Klick auf einen anderen Tag (oder **Enter**) zeigt seine. Gibt es eine
-  Plakette mehrmals am Tag (Revanche, Aufholjagd), steht „×2“, „×3“ … darunter.
+  Plakette mehrmals am Tag (Revanche, Aufholjagd), steht „×2“, „×3“ … darunter. Die
+  Überschrift nennt auch die Kampfzeit des Tages.
 - **„Dein Fortschritt“** – dein Level, der Balken bis zum nächsten Level und alle XP
   zusammen. Darunter Gold, geöffnete Schatzkisten und Skillpunkte, die du noch ausgeben
   kannst.

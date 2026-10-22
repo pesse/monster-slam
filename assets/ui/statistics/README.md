@@ -1,6 +1,6 @@
 # Statistik-Icons
 
-Sechs transparente, verlustfreie WebP-Einzeldateien in `icons/`, jeweils 256 × 256 px mit maximal 208 × 208 px Motiv. Alpha und Maße beim Export geprüft; Vorschau auf dunklem Hintergrund visuell geprüft.
+Sieben transparente, verlustfreie WebP-Einzeldateien in `icons/`, jeweils 256 × 256 px mit maximal 208 × 208 px Motiv. Alpha und Maße beim Export geprüft; Vorschau auf dunklem Hintergrund visuell geprüft.
 
 | Datei | Verwendung |
 | --- | --- |
@@ -10,6 +10,7 @@ Sechs transparente, verlustfreie WebP-Einzeldateien in `icons/`, jeweils 256 × 
 | gold_coins.webp | Goldbestand |
 | treasure_chest.webp | Geöffnete Schatzkisten |
 | activity_coin.webp | Tag mit Übung |
+| battle_time.webp | Kampfzeit (später nachbestellt, Prompt in `sources/battle_time-prompt.txt`, Rohbild `sources/battle_time-raw.png`) |
 
 `manifest.json` enthält alle res://-Pfade und Verweise auf wiederverwendete Skill-Tree-Assets: Stern, silbernes Medaillon, goldener Hover-Ring und Tooltip-Szene. Keine Duplikate dieser Assets nötig.
 

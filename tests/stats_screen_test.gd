@@ -232,6 +232,9 @@ func test_scene_builds_and_finds_its_lists() -> void:
 	# Vier Lebenszeitwerte füllt _refresh_totals — die Gesamt-Genauigkeit steht dort und
 	# nicht mehr oben (Issue #13).
 	assert_int(screen.get_node("%TotalLines").get_child_count()).is_equal(4)
+	assert_str(str(Hints.hint_of(screen.get_node("%BattleCard")).get("body", ""))) \
+			.contains("ohne Pause")
+	assert_str((screen.get_node("%BattleLabel") as Label).text).is_not_empty()
 	# Die Wort-Serie erklärt sich zusätzlich am Zeiger — ohne Karte verwechselt man sie mit der
 	# Tages-Serie und der Serie ohne Durchlass. Ohne MOUSE_FILTER_PASS käme die Karte nie.
 	var streak := screen.get_node("%TotalLines").get_child(3) as Label
@@ -428,3 +431,17 @@ func test_an_empty_day_says_why() -> void:
 	assert_str(STATS_SCREEN.day_empty_text(true, true)).contains("Heute")
 	assert_str(STATS_SCREEN.day_empty_text(false, true)).contains("keine Plakette")
 	assert_str(STATS_SCREEN.day_empty_text(false, false)).contains("nicht geübt")
+
+
+func test_the_day_title_names_the_battle_time() -> void:
+	assert_str(STATS_SCREEN.day_title(true, "Mi, 21. Oktober", 0)).is_equal("Plaketten · heute")
+	assert_str(STATS_SCREEN.day_title(false, "Mi, 21. Oktober", 25 * 60000)) \
+			.is_equal("Plaketten · Mi, 21. Oktober · 25 Min. im Kampf")
+
+
+func test_the_battle_card_names_total_and_today() -> void:
+	assert_str(str(STATS_SCREEN.battle_lines(0, 0)["title"])).is_equal("Noch kein Kampf")
+	var lines := STATS_SCREEN.battle_lines(125 * 60000, 12 * 60000)
+	assert_str(str(lines["title"])).is_equal("2 Std. 5 Min.")
+	assert_str(str(lines["detail"])).is_equal("Heute 12 Min.")
+	assert_str(str(STATS_SCREEN.battle_lines(60000, 0)["detail"])).contains("noch nicht")

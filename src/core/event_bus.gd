@@ -64,6 +64,10 @@ signal run_suspended(next_wave: int, remaining: int)
 ## Fortsetzung eines begonnenen Laufs, direkt nach `run_started`. `run_started_at` ist der
 ## Beginn des ursprünglichen Laufs, `added` die auf der Karte hinzugefügten Orte.
 signal run_resumed(next_wave: int, run_started_at: int, added: Array)
+## Eine Welle oder ein Bosskampf ist vorbei (BattleClock). `kind` ist "wave" oder die Id des
+## Bosses, `started_at` (unix) sein Beginn, `ms` die Zeit, in der er wirklich lief. Eine
+## Welle meldet sich vor `run_ended`.
+signal battle_timed(kind: String, started_at: int, ms: int)
 
 ## --- Learning / spaced repetition ---
 ## `response_time_ms` ist 0 ohne gemessene Zeit (durchgelassenes Monster).

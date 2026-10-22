@@ -52,6 +52,8 @@ signal closed()
 @onready var _accuracy_label: Label = %AccuracyLabel
 @onready var _accuracy_which: Label = %AccuracyWhich
 @onready var _accuracy_trend: Label = %AccuracyTrend
+@onready var _battle_label: Label = %BattleLabel
+@onready var _battle_note: Label = %BattleNote
 @onready var _total_lines: VBoxContainer = %TotalLines
 @onready var _record_list: VBoxContainer = %RecordList
 @onready var _curve: StatsChart = %Curve
@@ -68,6 +70,8 @@ signal closed()
 var _badges := Badges.new()
 ## SessionLog.correct_by_day(), je `_refresh` einmal.
 var _correct_by_day := {}
+## Kampfzeit (ms) je Tagesindex, für Monatsreihe und Tagesband.
+var _battle_by_day := {}
 ## Fächert die Aufgaben eines Wortes auf (learnables_of); spawnt nichts.
 var _generator := WaveGenerator.new()
 var _resolver := TaskResolver.new()
@@ -196,8 +200,10 @@ func _refresh() -> void:
 	for title: Label in _filtered_titles:
 		title.text = filtered_title(str(_filtered_titles[title]), _filter)
 	_correct_by_day = SessionLog.correct_by_day()
+	_battle_by_day = SessionLog.battle_ms_by_day()
 	_refresh_streak()
 	_refresh_accuracy()
+	_refresh_battle()
 	_refresh_numbers()
 	_refresh_totals()
 	_refresh_records()
@@ -220,6 +226,7 @@ static func filtered_title(title: String, languages: Array) -> String:
 func _refresh_streak() -> void:
 	var streak := SessionLog.current_streak()
 	_coin_strip.badge_days = badge_days(_badges.all_days(), _correct_by_day)
+	_coin_strip.battle_ms = _battle_by_day
 	_coin_strip.refresh()
 	_show_day(_coin_strip.selected_day)
 	_streak_label.text = "%d Tag%s" % [streak, "" if streak == 1 else "e"]
@@ -256,7 +263,8 @@ func _show_day(day: int) -> void:
 		_day_badge_empty.text = "Ein Klick auf einen Tag zeigt seine Plaketten."
 		_day_badge_empty.visible = true
 		return
-	_day_badge_title.text = "Plaketten · " + ("heute" if day == today else CoinStrip.date_label(day))
+	_day_badge_title.text = day_title(day == today, CoinStrip.date_label(day),
+			int(_battle_by_day.get(day, 0)))
 	var summary := Badges.day_summary(_badges.day_list(day), int(_correct_by_day.get(day, 0)))
 	for entry: Dictionary in summary:
 		var id := str(entry["id"])
@@ -267,6 +275,12 @@ func _show_day(day: int) -> void:
 				"%d-mal an diesem Tag" % count if count > 1 else "")
 	_day_badge_empty.visible = summary.is_empty()
 	_day_badge_empty.text = day_empty_text(day == today, _correct_by_day.has(day))
+
+
+## Überschrift des Tagesbands: „Plaketten · heute · 12 Min. im Kampf“.
+static func day_title(today: bool, date: String, battle_ms: int) -> String:
+	var text := "Plaketten · " + ("heute" if today else date)
+	return text + " · %s im Kampf" % CoinStrip.duration_text(battle_ms) if battle_ms > 0 else text
 
 
 ## Was das Band ohne Plakette sagt.
@@ -375,6 +389,30 @@ func _refresh_accuracy() -> void:
 	_accuracy_label.text = str(lines["title"])
 	_accuracy_which.text = str(lines["which"]) + ("" if _filter.is_empty() else " · alle Sprachen")
 	_accuracy_trend.text = str(lines["detail"])
+
+
+## Die Kampfzeit-Karte oben: alles zusammen, darunter der heutige Tag.
+func _refresh_battle() -> void:
+	var lines := battle_lines(SessionLog.battle_ms_total(), int(_battle_by_day.get(
+			SessionLog.local_day(int(Time.get_unix_time_from_system())), 0)))
+	_battle_label.text = str(lines["title"])
+	_battle_note.text = str(lines["detail"])
+	Hints.attach(%BattleCard as Control, "Kampfzeit",
+			"So lange liefen deine Wellen und Bosskämpfe wirklich — ohne Pause, ohne Feiern "
+			+ "und ohne die Zeit zwischen den Wellen. Wie viel auf einen Tag fällt, zeigt "
+			+ "die Monatsreihe.")
+
+
+## Kopfzahl und Unterzeile der Kampfzeit-Karte aus Gesamt- und heutiger Zeit (ms).
+static func battle_lines(total_ms: int, today_ms: int) -> Dictionary:
+	if total_ms <= 0:
+		return {"title": "Noch kein Kampf",
+				"detail": "Nach der ersten Welle steht hier, wie lange du gekämpft hast."}
+	return {
+		"title": CoinStrip.duration_text(total_ms),
+		"detail": "Heute %s" % CoinStrip.duration_text(today_ms) if today_ms > 0
+				else "Heute noch nicht gekämpft",
+	}
 
 
 func _refresh_totals() -> void:
