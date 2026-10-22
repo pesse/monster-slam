@@ -47,7 +47,9 @@ tools/report/php.sh server/melden/test_endpoint.php
 - **Nie eine Datei aus einer Sicherung pauschal nach `user://` zurückspielen.** Oft läuft
   parallel ein Spiel, die Spur ist offen und wird angehängt — ein `cp` hat schon eine
   laufende Sitzung überschrieben (NUL-Bytes in der Spur). Nur eigene Zeilen oder Dateien
-  gezielt entfernen, vorher prüfen, ob Godot läuft (`tasklist.exe | grep -i godot`).
+  gezielt entfernen, vorher prüfen, ob Godot läuft
+  (`/mnt/c/Windows/System32/tasklist.exe | grep -i godot`; ohne Pfad findet die WSL-Shell
+  es nicht, und `grep` verschluckt den Fehler).
 - **Löschen nur einzeln benannt**, nie mit Wildcard (`rm dir/*.png`).
 
 ## Was in welches Repo gehört

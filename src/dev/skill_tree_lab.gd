@@ -318,7 +318,7 @@ func _shoot(screen: Node) -> void:
 	if not _arg("card").is_empty() and not hint.is_empty():
 		# Auf Fensterpixel umrechnen: das Bild hat die Fenstergröße, die Karte Bezugsmaße.
 		var to_px := get_viewport().get_final_transform()
-		var rect := (to_px * Hints.card().get_global_rect()).grow(32.0 * to_px.get_scale().x)
+		var rect: Rect2 = (to_px * Hints.card().get_global_rect()).grow(32.0 * to_px.get_scale().x)
 		rect = rect.intersection(Rect2(Vector2.ZERO, img.get_size()))
 		img = img.get_region(Rect2i(rect))
 		var zoom := int(_arg("card"))
