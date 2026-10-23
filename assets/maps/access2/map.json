@@ -1148,6 +1148,47 @@
 			{
 				"kind": "falls"
 			}
+		],
+		"6": [
+			{
+				"kind": "mist",
+				"speed": 3.1,
+				"intensity": 1.45,
+				"density": 0.6,
+				"puff_size": 0.75,
+				"haze": 0.3
+			},
+			{
+				"kind": "falls"
+			},
+			{
+				"kind": "water"
+			},
+			{
+				"kind": "torch",
+				"x": 0.813,
+				"y": 0.127
+			},
+			{
+				"kind": "torch",
+				"x": 0.925,
+				"y": 0.149
+			},
+			{
+				"kind": "torch",
+				"x": 0.792,
+				"y": 0.085
+			},
+			{
+				"kind": "torch",
+				"x": 0.938,
+				"y": 0.075
+			},
+			{
+				"kind": "torch",
+				"x": 0.848,
+				"y": 0.038
+			}
 		]
 	}
 }
