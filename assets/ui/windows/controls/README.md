@@ -28,8 +28,8 @@ HUD-Ergänzung: neun weitere Texturen, insgesamt 28 Laufzeitdateien; neue Einbau
 | `hud_plate.webp` | 96 × 64 | 16 / 16 / 16 / 16 | Erhabene Kampfplatte; ruhige Mitte, Alpha 235 |
 | `bar_track.webp` | 64 × 16 | 8 / 6 / 8 / 6 | Vertiefte Metallrinne für Balken und HSlider |
 | `bar_fill.webp` | 64 × 16 | 8 / 6 / 8 / 6 | Neutral hellgraue, gewölbte Füllung; 2 px transparenter Rand bereits enthalten |
-| `slider_grabber.webp` | 24 × 24 | keine | Achteckiger Silberknopf mit goldenem Kern |
-| `slider_grabber_hover.webp` | 24 × 24 | keine | Hellerer Knopf; gleiche Geometrie und Alphamaske |
+| `slider_knob.svg` | 24 × 24 | keine | Runder Goldknopf mit silberblauem Ring (Vektor, siehe unten) |
+| `slider_knob_hover.svg` | 24 × 24 | keine | Hellerer Knopf, gleiche Geometrie |
 | `scroll_track.webp` | 12 × 48 | 0 / 6 / 0 / 6 | Senkrecht dehnbare vertiefte Bildlaufrinne |
 | `scroll_grabber.webp` | 12 × 48 | 0 / 6 / 0 / 6 | Erhabener stahlblauer Bildlaufgriff |
 | `scroll_grabber_hover.webp` | 12 × 48 | 0 / 6 / 0 / 6 | Heller silberblauer Bildlaufgriff |
@@ -156,3 +156,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $controlsDir 'sou
 ```
 
 Der HUD-Builder überschreibt bei Wiederholung ausschließlich die neun HUD-Dateien, ihre neun Roh-PNGs, `preview/hud-1152.png` und den HUD-Abschnitt in `checks.json`. Das Textskript direkt danach ausführen. Die manuelle Sichtprüfung wird beim Neuaufbau zunächst auf `pending` gesetzt und ist im gelieferten Bericht nach Prüfung der tatsächlichen Vorschau dokumentiert.
+
+## HSlider: Vektor statt Textur
+
+Rinne und Füllung des HSlider sind `StyleBoxFlat` im Theme (8 px hoch, Radius 4), der Knopf ist `slider_knob.svg` / `slider_knob_hover.svg` (24 × 24) in denselben Farben. Die gemalten 16-px-Texturen wirkten bei Skalierung schmutzig; `slider_grabber*.webp` sind entfernt und `build_hud.gd` erzeugt sie nicht mehr. `bar_track`/`bar_fill` bleiben für die Balken.

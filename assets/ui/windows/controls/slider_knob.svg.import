@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ds4sevnwp1ity"
-path="res://.godot/imported/slider_grabber.webp-869dc4a9d1c795f92a98d4c647b7c9b2.ctex"
+uid="uid://dc4w25vi8sshb"
+path="res://.godot/imported/slider_knob.svg-7ca85aab308016ec17f0e7b87655107a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/windows/controls/slider_grabber.webp"
-dest_files=["res://.godot/imported/slider_grabber.webp-869dc4a9d1c795f92a98d4c647b7c9b2.ctex"]
+source_file="res://assets/ui/windows/controls/slider_knob.svg"
+dest_files=["res://.godot/imported/slider_knob.svg-7ca85aab308016ec17f0e7b87655107a.ctex"]
 
 [params]
 
@@ -38,3 +38,6 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
+svg/scale=1.0
+editor/scale_with_editor_scale=false
+editor/convert_colors_with_editor_theme=false

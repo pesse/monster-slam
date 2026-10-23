@@ -82,6 +82,7 @@ const SPELLING_EXAMPLES := [
 var _names: Array[String] = []
 var _index := 0
 var _decor: Node3D
+var _decor_queued := false
 var _scene_env: Environment
 var _air: CPUParticles3D
 var _petals: CPUParticles3D
@@ -344,7 +345,7 @@ func _apply_grading() -> void:
 
 
 ## Reiter Bewuchs: drei Werte des Themas, der Rest sind die Konstanten von GroundCover.
-## Jeder losgelassene Wert baut die Deko neu (gleicher Samen, also dieselben Bäume).
+## Jede Änderung baut die Deko neu (gleicher Samen, also dieselben Bäume).
 func _fill_cover_controls() -> void:
 	var knobs := {
 		%CoverSlider: func(v: float) -> void: _theme.cover = v,
@@ -371,9 +372,19 @@ func _fill_cover_controls() -> void:
 	%BushScaleSlider.value = _tuning.bush_scale
 	for slider: LabSlider in knobs:
 		var apply: Callable = knobs[slider]
-		slider.settled.connect(func(v: float) -> void:
+		slider.value_changed.connect(func(v: float) -> void:
 			apply.call(v)
-			_build_decor(_noise, _theme))
+			_queue_decor())
+
+
+## Beim Ziehen kommen mehrere Werte je Bild; gebaut wird einmal am Bildende.
+func _queue_decor() -> void:
+	if _decor_queued:
+		return
+	_decor_queued = true
+	(func() -> void:
+		_decor_queued = false
+		_build_decor(_noise, _theme)).call_deferred()
 
 
 ## Reiter Schreibweise: ein Beispiel füllt beide Felder, jede Änderung zeigt sofort das Urteil.

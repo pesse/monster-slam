@@ -54,8 +54,8 @@
 [ext_resource type="Texture2D" uid="uid://se3he0jbdfst" path="res://assets/ui/windows/controls/seg_mid_normal.webp" id="seg_mid_normal_tex"]
 [ext_resource type="Texture2D" uid="uid://df7swsqjhq88e" path="res://assets/ui/windows/controls/seg_mid_selected.webp" id="seg_mid_selected_tex"]
 [ext_resource type="Texture2D" uid="uid://cep54v1ntb3oo" path="res://assets/ui/frames/silver_gold/frame@2x.webp" id="silver_gold_frame_tex"]
-[ext_resource type="Texture2D" uid="uid://cg8jxy3prfcxr" path="res://assets/ui/windows/controls/slider_grabber_hover.webp" id="slider_grab_hover_tex"]
-[ext_resource type="Texture2D" uid="uid://ds4sevnwp1ity" path="res://assets/ui/windows/controls/slider_grabber.webp" id="slider_grab_tex"]
+[ext_resource type="Texture2D" uid="uid://cpt7bwwtnclvk" path="res://assets/ui/windows/controls/slider_knob_hover.svg" id="slider_grab_hover_tex"]
+[ext_resource type="Texture2D" uid="uid://dc4w25vi8sshb" path="res://assets/ui/windows/controls/slider_knob.svg" id="slider_grab_tex"]
 [ext_resource type="Texture2D" uid="uid://dxiy42ufik5md" path="res://assets/ui/windows/folder_tabs/tab_selected.webp" id="tab_gold_tex"]
 [ext_resource type="Texture2D" uid="uid://c0fkic5tsjn43" path="res://assets/ui/windows/folder_tabs/tab_hover.webp" id="tab_hover_tex"]
 [ext_resource type="Texture2D" uid="uid://7fafc55tccfx" path="res://assets/ui/windows/folder_tabs/rail.webp" id="tab_rail_tex"]
@@ -356,24 +356,33 @@ texture_margin_top = 32.0
 texture_margin_right = 32.0
 texture_margin_bottom = 32.0
 
-[sub_resource type="StyleBoxTexture" id="slider_fill"]
-content_margin_top = 8.0
-content_margin_bottom = 8.0
-texture = ExtResource("bar_fill_tex")
-texture_margin_left = 8.0
-texture_margin_top = 6.0
-texture_margin_right = 8.0
-texture_margin_bottom = 6.0
-modulate_color = Color(1, 0.78, 0.25, 1)
+[sub_resource type="StyleBoxFlat" id="slider_fill"]
+content_margin_top = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.98, 0.76, 0.26, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.72, 0.5, 0.12, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
 
-[sub_resource type="StyleBoxTexture" id="slider_track"]
-content_margin_top = 8.0
-content_margin_bottom = 8.0
-texture = ExtResource("bar_track_tex")
-texture_margin_left = 8.0
-texture_margin_top = 6.0
-texture_margin_right = 8.0
-texture_margin_bottom = 6.0
+[sub_resource type="StyleBoxFlat" id="slider_track"]
+content_margin_top = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.03, 0.05, 0.1, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.42, 0.52, 0.72, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
 
 [sub_resource type="StyleBoxEmpty" id="handbook_heading"]
 content_margin_top = 16.0

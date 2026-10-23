@@ -10,8 +10,6 @@ const SPECS = {
 	"hud_plate": [[96, 64], [16, 16, 16, 16], "both"],
 	"bar_track": [[64, 16], [8, 6, 8, 6], "horizontal"],
 	"bar_fill": [[64, 16], [8, 6, 8, 6], "horizontal"],
-	"slider_grabber": [[24, 24], [], "none"],
-	"slider_grabber_hover": [[24, 24], [], "none"],
 	"scroll_track": [[12, 48], [0, 6, 0, 6], "vertical"],
 	"scroll_grabber": [[12, 48], [0, 6, 0, 6], "vertical"],
 	"scroll_grabber_hover": [[12, 48], [0, 6, 0, 6], "vertical"],
@@ -186,15 +184,6 @@ func make_bars():
 	fill.blit_rect(visible, Rect2i(Vector2i.ZERO, visible.get_size()), Vector2i(2, 2))
 	export_asset("bar_fill", fill)
 
-func make_slider():
-	var case_im = input("check_off")
-	case_im.resize(24, 24, Image.INTERPOLATE_LANCZOS)
-	var core = nine(closed("hover"), 16, 16, [16, 16, 16, 16], [6, 6, 6, 6], Image.INTERPOLATE_LANCZOS)
-	core = tone(neutral_metal(core), Color(1, .76, .20))
-	case_im.blend_rect(core, Rect2i(0, 0, 16, 16), Vector2i(4, 4))
-	export_asset("slider_grabber", case_im)
-	export_asset("slider_grabber_hover", tone(case_im, Color(1, 1, 1), 1.27))
-
 func make_scroll():
 	var src = input("field_normal")
 	var track = nine(src, 48, 12, [16, 16, 16, 16], [6, 4, 6, 4], Image.INTERPOLATE_LANCZOS)
@@ -242,7 +231,7 @@ func blend(out, im, x, y):
 
 func state_checks():
 	hud["state_checks"] = []
-	for pair in [["slider_grabber", "slider_grabber_hover"], ["scroll_grabber", "scroll_grabber_hover"]]:
+	for pair in [["scroll_grabber", "scroll_grabber_hover"]]:
 		var normal = assets[pair[0]].get_data()
 		var hover = assets[pair[1]].get_data()
 		var alpha_errors = 0
@@ -280,9 +269,7 @@ func make_preview():
 	draw_asset(out, "hud_plate", 48, 36, 1056, 124)
 	draw_bar(out, 144, 108, 912, .7, Color(1, .20, .23))
 	draw_asset(out, "hud_plate", 48, 184, 184, 44)
-	# Slider centered on 16px track; 24px grabber overhang is four pixels per side.
 	draw_bar(out, 48, 292, 720, .5, Color(1, .76, .19))
-	blend(out, assets.slider_grabber, 48 + 360 - 12, 288)
 	draw_bar(out, 48, 396, 720, .3, Color(1, .76, .19))
 	draw_asset(out, "hud_plate", 848, 228, 256, 372)
 	for i in range(3):
@@ -295,8 +282,6 @@ func make_preview():
 	draw_bar(out, 248, 526, 160, .75, Color(1, .82, .17))
 	draw_bar(out, 448, 526, 160, .75, Color(.25, .58, 1))
 	draw_bar(out, 696, 526, 16, 1, Color(.25, .58, 1))
-	blend(out, assets.slider_grabber, 48, 584)
-	blend(out, assets.slider_grabber_hover, 96, 584)
 	require(out.save_png(asset_dir + "preview/hud-1152.png") == OK, "HUD preview")
 	hud["preview"] = {"file": "preview/hud-1152.png", "canvas": [1152, 648], "background_rgb": [40, 36, 70], "boss_fraction": .7, "experience_fraction": .3, "slider_fraction": .5, "scroll_states": ["normal", "hover", "pressed"], "composition": "Decoded new runtime assets; only local Fira Sans labels and a heart placeholder are added by hud_preview_text.ps1."}
 
@@ -306,7 +291,6 @@ func _initialize():
 	require(old_report is Dictionary, "Existing checks JSON")
 	make_plate()
 	make_bars()
-	make_slider()
 	make_scroll()
 	test_stretch("hud_plate", [Vector2i(120, 44), Vector2i(400, 64), Vector2i(1100, 400)])
 	for name in ["bar_track", "bar_fill"]:
