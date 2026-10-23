@@ -69,7 +69,9 @@ dieses Repos, die Punkte setzt die Werkbank `scenes/dev/map_lab.tscn`.
 Der Stil folgt den Modellen des Kampfes: ein Low-Poly-Spielbrett aus Sechseck-Kacheln auf
 dem Dunkelblau der Oberfläche, keine gemalte Landschaft — die erste, gemalte Fassung sah
 weder nach Karte noch nach dem Spiel aus. Jedes Buch hat ein eigenes Thema (Landschaft,
-Jahreszeit, Stimmung).
+Jahreszeit, Stimmung). Die Bilder tragen keine Schrift und keine Vokabeln: Namen und
+Stand zeichnet `MapCanvas` darüber, so bleibt ein Bild für jede Sprache und jede
+Benennung des Buchs gültig, und im öffentlichen Repo liegt nichts aus dem Lehrbuch.
 Fehlt ein Bild oder ein Punkt, zeigt die Karte eine schlichte Fläche und legt die Orte
 selbst aus — eine Unit aus einem Content-Update ist so spielbar, bevor ihr Bild existiert.
 

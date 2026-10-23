@@ -52,8 +52,10 @@ Lernstand (`PlayerProgress.confidence`); Aufgaben-Schwierigkeit steht auf der `t
   Felder, gilt `PlayerProgress.DEFAULT_CONFIDENCE`.
 - `notes`: Freitext für Review/Zweifelsfälle (BE/AE-Hinweis, „warum draft"). Wird vom Spiel
   nicht gelesen, hilft aber bei generierten Sets.
-- Unregelmäßige Verben mit dem Tag `"irregular"` markieren (kein eigenes Feld) — so lässt sich
-  später eine „unregelmäßige Verben"-Welle über den Tag-Filter ziehen.
+- Unregelmäßige Verben tragen das Feld `irregular: true` (ADR 0009): es macht ihre
+  Formaufgaben zur Bedingung für die Meisterung und wird beim Erzeugen gesetzt, in jeder
+  Sprache. Der Tag `"irregular"` ist davon getrennt die Achse des Themenfilters (eine
+  „unregelmäßige Verben"-Welle); ein Verb mit dem Tag braucht auch das Feld (Datentest).
 
 **Weitere Sprache (Latein, Issue #31, ADR 0007).** Die Sprache steht im Feld `language`;
 ohne Feld ist ein Lexem englisch. Die fremde Seite heißt `lemma_<language>` /
@@ -280,20 +282,18 @@ der konkreten Aufgabe + der Wellen-Schwierigkeit (siehe `docs/ARCHITECTURE.md`,
 ## Boss hinzufügen → `data/bosses/…json`
 ```json
 {
-  "id": "boss.syntax_serpent",
-  "name": "Syntax-Schlange",
-  "hp": 5,
-  "sentences": [
-	{
-	  "prompt": "Sie liest jeden Abend ein Buch.",
-	  "reference": "She reads a book every evening.",
-	  "hints": { "tense": "Präsens" }
-	}
-  ]
+  "id": "boss.grammar_golem",
+  "name": "Der Satzmeister",
+  "hp": 3,
+  "sentence_rule": { "count": 5, "grammar_tags": ["past_simple"] }
 }
 ```
-Bosse verwenden ganze Sätze; die Bewertung erfolgt semantisch (siehe
-`src/learning/answer_evaluator.gd`).
+Ein Boss trägt seit ADR 0004 keine Sätze selbst, sondern eine `sentence_rule`: welche Sätze
+zu ihm passen (`grammar_tags`, optional `difficulty_max`) und wie viele er stellt. Der
+Vorrat kommt aus dem Bereich des Laufs (`SentenceSelector.pool_for_boss`), die Sätze liegen
+im Submodule, je Unit eine Datei unter `sentences/` und `sentence_lexemes/`, erzeugt nach
+einer nicht öffentlichen Generierungsvorgabe. Bewertet wird gegen den Schlüssel am Satz
+(`docs/ARCHITECTURE.md` „Sätze bewerten").
 
 ## Welle hinzufügen → `data/waves/…json`
 ```json
