@@ -34,12 +34,14 @@ Wallet="*res://src/economy/wallet.gd"
 PlayerLevel="*res://src/progression/player_level.gd"
 SkillBook="*res://src/progression/skill_book.gd"
 Inventory="*res://src/economy/inventory.gd"
+AchievementBook="*res://src/progression/achievement_book.gd"
 UpdateService="*res://src/update/update_service.gd"
 ContentService="*res://src/content/content_service.gd"
 ModelService="*res://src/content/model_service.gd"
 ReportService="*res://src/report/report_service.gd"
 StatsUploader="*res://src/stats/stats_uploader.gd"
 Hints="*res://scenes/ui/hints.tscn"
+AchievementToast="*res://scenes/ui/achievement_toast.tscn"
 
 [display]
 

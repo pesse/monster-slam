@@ -70,6 +70,40 @@
 [ext_resource type="Texture2D" uid="uid://djgdoxp4hpreu" path="res://assets/ui/main_menu/buttons/small/button_highlighted.webp" id="win_btn_gold_tex"]
 [ext_resource type="Texture2D" uid="uid://d3shf1enaqe34" path="res://assets/ui/main_menu/buttons/small/button_normal.webp" id="win_btn_tex"]
 
+[sub_resource type="StyleBoxFlat" id="achievement_card"]
+content_margin_left = 8.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+bg_color = Color(0.04, 0.07, 0.13, 0.65)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.36, 0.46, 0.66, 0.3)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="achievement_toast"]
+content_margin_left = 8.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+bg_color = Color(0.06, 0.08, 0.14, 0.96)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.42, 0.54, 0.8, 0.6)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+shadow_color = Color(0, 0, 0, 0.55)
+shadow_size = 8
+
 [sub_resource type="FontVariation" id="menu_font"]
 variation_embolden = 0.9
 
@@ -1438,6 +1472,10 @@ modulate_color = Color(1, 0.78, 0.25, 1)
 default_font_size = 18
 Accent/base_type = &"Label"
 Accent/colors/font_color = Color(1, 0.8, 0.35, 1)
+AchievementCard/base_type = &"PanelContainer"
+AchievementCard/styles/panel = SubResource("achievement_card")
+AchievementToast/base_type = &"PanelContainer"
+AchievementToast/styles/panel = SubResource("achievement_toast")
 ActionButton/base_type = &"WindowPrimary"
 BadgeAction/base_type = &"ProfileLink"
 BadgeAction/constants/icon_max_width = 40

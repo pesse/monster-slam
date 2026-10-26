@@ -47,4 +47,4 @@ Wo die Sicherungen liegen, steht in [Kapitel 19](19-daten.md).
 
 ---
 
-← [22. The Rambler](22-schreib-boss.md) · [Inhalt](README.md)
+← [22. The Rambler](22-schreib-boss.md) · [Inhalt](README.md) · [24. Erfolge](24-erfolge.md) →

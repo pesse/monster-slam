@@ -33,6 +33,7 @@ const KEEP := {
 	"mastered": ["id"],
 	"word_mastered": ["lex"],
 	"badge": ["id", "tier"],
+	"achievement": ["id"],
 	# Spielstand (ADR 0024): nur Endungen, Zeitpunkte und Werte, kein Profilname.
 	"save_refused": ["part", "reason"],
 	"save_restored": ["parts", "backup_at"],

@@ -1,7 +1,7 @@
 # 12. Die Statistik
 
 „Statistik“ im Hauptmenü öffnet ein Fenster über dem Menü. Oben rechts schließt „✕“ es
-wieder, oder du drückst **Esc**. Das Fenster hat vier Reiter. Kopf und Reiter bleiben
+wieder, oder du drückst **Esc**. Das Fenster hat fünf Reiter. Kopf und Reiter bleiben
 stehen, der Inhalt darunter lässt sich scrollen.
 
 ## Sprache wählen
@@ -13,12 +13,12 @@ auch zwei von drei wählen. Eine Flagge bleibt immer an. Ausgeschaltete Flaggen 
 
 Ist nicht jede Sprache an, zählt alles, was an Wörtern hängt, nur noch für die gewählten:
 gemeisterte und fällige Aufgaben, die Lernkurve, „Frisch gemeistert“, „Comeback“, die
-Fahndungsliste, die Wortwerte unter „Insgesamt“, die Reiter „Fortschritt“ und
-„Aufgaben“ und die Meilensteine im Reiter „Plaketten“. Diese Überschriften tragen dann die Namen der Sprachen („Lernkurve · Latein“).
+Fahndungsliste, die Wortwerte unter „Insgesamt“ und die Reiter „Fortschritt“ und
+„Aufgaben“. Diese Überschriften tragen dann die Namen der Sprachen („Lernkurve · Latein“).
 
 Für alle Sprachen zusammen zählen weiter: Level, XP, Gold, Schatzkisten, Skillpunkte,
-Rekorde, die Tages-Serie, die Monatsreihe, die Kampfzeit und die Genauigkeit der letzten
-Sitzung (dort steht dann „alle Sprachen“). Die Wahl bleibt, bis du das Spiel schließt.
+Rekorde, die Tages-Serie, die Monatsreihe, die Kampfzeit, Plaketten, Erfolge und die
+Genauigkeit der letzten Sitzung (dort steht dann „alle Sprachen“). Die Wahl bleibt, bis du das Spiel schließt.
 
 ## Reiter „Überblick“
 
@@ -101,14 +101,28 @@ Deine Sammlung der Plaketten aus dem Kampf ([Kapitel 5](05-kampf.md)). Hier steh
 was du schon geholt hast – was noch kommt, bleibt eine Überraschung. Zeigt die Maus auf
 eine Plakette, steht da, wofür es sie gab.
 
-- **„Meilensteine“** – je Sprache die Wort-Plaketten, die du erreicht hast. Sie folgen der
-  Sprachwahl.
 - **„Plaketten im Kampf“** – je Art, die du schon hattest, eine Zeile: an wie vielen Tagen
   du sie geholt hast und wann zuletzt. Bei Treffern und „Von gestern behalten“ steht unter jeder Stufe, an wie
   vielen Tagen du sie erreicht hast. Diese Zeilen zählen alle Sprachen zusammen.
 
 Plaketten für Treffer rechnet die Statistik aus deinen Antworten, auch für Tage, bevor es
 die Sammlung gab. Alle anderen Plaketten werden ab der Version mit diesem Reiter gezählt.
+Die Plaketten für viele Wörter einer Sprache sind jetzt Erfolge (nächster Reiter).
+
+## Reiter „Erfolge“
+
+Alles, was du einmal und für immer erreichst ([Kapitel 24](24-erfolge.md)). Oben steht,
+wie viele Erfolge du von allen hast, mit einem Balken.
+
+Jeder Erfolg ist eine Karte mit Bild, Name und Beschreibung.
+
+- **Freigeschaltet** – das Bild in Farbe, rechts Tag und Uhrzeit; der jüngste zuerst.
+- **Noch offen** – das Bild grau. Wo es sich zählen lässt, zeigt ein Balken unter der
+  Beschreibung, wie weit du bist („3 / 7“).
+- **Versteckt** – ganz unten nur eine Karte „4 versteckte Erfolge“. Was es dafür gibt,
+  siehst du erst, wenn du einen hast.
+
+Erfolge zählen alle Sprachen zusammen; die Wort-Erfolge stehen je Sprache einzeln da.
 
 ---
 

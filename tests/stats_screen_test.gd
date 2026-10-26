@@ -398,7 +398,7 @@ func test_the_day_band_keeps_its_height() -> void:
 	add_child(screen)
 	var band := screen.get_node("%DayBadgeRow") as Control
 	var strip := screen.get_node("%CoinStrip") as CoinStrip
-	assert_str((screen.get_node("%DayBadgeTitle") as Label).text).is_equal("Plaketten · heute")
+	assert_str((screen.get_node("%DayBadgeTitle") as Label).text).starts_with("Plaketten · heute")
 	var before := band.get_combined_minimum_size().y
 	strip.select(strip.selected_day - 1)
 	assert_str((screen.get_node("%DayBadgeTitle") as Label).text).is_not_equal("Plaketten · heute")
@@ -416,7 +416,7 @@ func test_the_badge_tab_shows_only_what_was_earned() -> void:
 	add_child(screen)
 	(screen.get_node("%BadgeTab") as Button).button_pressed = true
 	assert_bool((screen.get_node("%BadgePage") as Control).visible).is_true()
-	for list in ["%DailyList", "%MilestoneList"]:
+	for list in ["%DailyList"]:
 		var rows := screen.get_node(list).get_children()
 		assert_int(rows.size()).override_failure_message(list).is_greater(0)
 		for row in rows:
@@ -425,6 +425,35 @@ func test_the_badge_tab_shows_only_what_was_earned() -> void:
 			else:
 				assert_int(rows.size()).is_equal(1)
 	remove_child(screen)
+
+
+## Der Reiter „Erfolge“ öffnet und zählt den ganzen Katalog.
+func test_the_achievement_tab_counts_the_catalog() -> void:
+	var screen: Control = auto_free(STATS_SCENE.instantiate())
+	add_child(screen)
+	(screen.get_node("%AchievementTab") as Button).button_pressed = true
+	assert_bool((screen.get_node("%AchievementPage") as Control).visible).is_true()
+	var total := Achievements.catalog(Achievements.languages()).size()
+	assert_str((screen.get_node("%AchievementCount") as Label).text).ends_with(
+			"von %d Erfolgen" % total)
+	remove_child(screen)
+
+
+## Freigeschaltete zuerst (jüngste vorn, bei gleichem Zeitpunkt Katalogfolge), offene mit
+## Stand, versteckte nur gezählt.
+func test_achievement_rows_sort_and_hide() -> void:
+	var catalog := Achievements.catalog([])
+	var rows := STATS_SCREEN.achievement_rows(catalog,
+			{"level_5": 100, "level_10": 100, "streak_7": 200, "boss_flawless": 50},
+			{"level": 12, "best_streak": 3})
+	var ids: Array = rows["unlocked"].map(func(r: Dictionary) -> String: return r["entry"]["id"])
+	assert_array(ids).is_equal(["streak_7", "level_5", "level_10", "boss_flawless"])
+	var hidden := catalog.filter(func(e: Dictionary) -> bool: return bool(e.get("hidden", false)))
+	assert_int(int(rows["hidden"])).is_equal(hidden.size() - 1)
+	for row: Dictionary in rows["locked"]:
+		assert_bool(bool(row["entry"].get("hidden", false))).is_false()
+		if str(row["entry"]["id"]) == "streak_30":
+			assert_array(row["progress"]).is_equal([3, 30])
 
 
 func test_an_empty_day_says_why() -> void:

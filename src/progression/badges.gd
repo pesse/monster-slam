@@ -1,14 +1,14 @@
 class_name Badges
 extends RefCounted
-## Plaketten im Wellenkampf (Issue #63): kleine Erfolge unabhängig von der Meisterung; die
-## Arten stehen im Handbuch „Kampf“. Treffer und Wörter werden nicht mitgezählt, sondern aus
-## SessionLog und PlayerProgress abgelesen. Gespeichert wird je Tag, was verdient wurde (außer
-## Treffern und Wörtern, die sich rechnen lassen), und welche Aufgaben heute „behalten“ waren.
+## Plaketten im Wellenkampf (Issue #63): kleine Erfolge des Tages und der Welle, unabhängig
+## von der Meisterung; was für immer gilt, sind Erfolge (Achievements, Issue #74). Die Arten
+## stehen im Handbuch „Kampf“. Treffer werden nicht mitgezählt, sondern aus SessionLog
+## abgelesen. Gespeichert wird je Tag, was verdient wurde (außer den Treffern), und welche
+## Aufgaben heute „behalten“ waren.
 
 const SAVE_DIR := "user://progress"
 
 const HIT_STEPS := [10, 25, 50, 100]
-const WORD_STEPS := [50, 100, 500, 1000]
 const KEPT_STEPS := [1, 5, 10, 25]
 ## Confidence vor dem Treffer, unter der es eine Aufholjagd ist. Neue Aufgaben starten bei
 ## PlayerProgress.DEFAULT_CONFIDENCE, darunter kommt man nur über Fehler.
@@ -21,7 +21,6 @@ const LAST_SECOND := 1.0
 
 const TIER_NAMES := ["Bronze", "Silber", "Gold", "Diamant"]
 const TIER_PALETTES := [&"bronze", &"silver", &"gold", &"diamond"]
-const WORD_TITLES := ["Wortschnüffler", "Vokabeljäger", "Wörterdrache", "Sprachmonster"]
 ## Stufen, deren Plaketten den gemeinsamen Ton haben (sound_of).
 const COMMON_PALETTES := [&"bronze", &"silver"]
 
@@ -39,6 +38,8 @@ var _kept: Array = []
 ## Lokaler Tagesindex (als String, JSON) -> verdiente Plaketten [[id, tier], …].
 var _days: Dictionary = {}
 var _this_wave: Array = []
+## Treffer der laufenden Welle, die eine Revanche waren, auch ohne neue Plakette.
+var revenges_this_wave := 0
 
 
 func _init(id: String = PlayerProgress.player_id) -> void:
@@ -92,11 +93,6 @@ static func make(id: String, tier: int, detail_args: Dictionary = {}) -> Diction
 			badge["mark"] = str(HIT_STEPS[tier - 1])
 			badge["title"] = "%d Treffer heute!" % HIT_STEPS[tier - 1]
 			badge["detail"] = "%s-Plakette" % TIER_NAMES[tier - 1]
-		"words":
-			var language := Lexeme.language_name(str(detail_args.get("lang", "")))
-			badge["mark"] = str(WORD_STEPS[tier - 1])
-			badge["title"] = "%s-%s" % [language, WORD_TITLES[tier - 1]]
-			badge["detail"] = "%d %s-Vokabeln schon richtig gehabt" % [WORD_STEPS[tier - 1], language]
 		"kept":
 			badge["mark"] = str(KEPT_STEPS[tier - 1])
 			badge["title"] = "Von gestern behalten!"
@@ -124,7 +120,6 @@ static func make(id: String, tier: int, detail_args: Dictionary = {}) -> Diction
 
 static func samples() -> Array:
 	return [make("hits", 1), make("hits", 2), make("hits", 3), make("hits", 4),
-			make("words", 1, {"lang": "fr"}), make("words", 4, {"lang": "en"}),
 			make("kept", 1, {"word": "house → Haus"}), make("kept", 2),
 			make("revenge", 0, {"word": "receive → erhalten"}),
 			make("catch_up", 0, {"word": "Haus → house"}),
@@ -138,8 +133,6 @@ static func catalog() -> Array:
 	for tier in range(1, 5):
 		all.append(make("hits", tier))
 	for tier in range(1, 5):
-		all.append(make("words", tier, {"lang": "en"}))
-	for tier in range(1, 5):
 		all.append(make("kept", tier, {"word": "house → Haus"}))
 	all.append_array([make("revenge", 0, {"word": "receive → erhalten"}),
 			make("catch_up", 0, {"word": "Haus → house"}), make("comeback", 0),
@@ -149,7 +142,7 @@ static func catalog() -> Array:
 
 # --- Statistik ----------------------------------------------------------------
 
-## Höchste erreichte Stufe (0..4) bei `count`, für Treffer, Wörter und Behaltenes.
+## Höchste erreichte Stufe (0..4) bei `count`, für Treffer und Behaltenes.
 static func reached_tier(steps: Array, count: int) -> int:
 	var tier := 0
 	for step: int in steps:
@@ -205,16 +198,12 @@ static func tally(days: Dictionary, correct_by_day: Dictionary) -> Dictionary:
 
 ## Überschrift und Erklärung einer Plakette in der Statistik, ohne Bezug auf „heute“ und
 ## ohne das Wort, an dem sie hing.
-static func describe(id: String, tier: int, lang := "") -> Dictionary:
+static func describe(id: String, tier: int) -> Dictionary:
 	var tier_name: String = TIER_NAMES[tier - 1] if tier > 0 else ""
 	match id:
 		"hits":
 			return {"title": "%d Treffer an einem Tag" % HIT_STEPS[tier - 1],
 					"body": "%s-Plakette" % tier_name}
-		"words":
-			var language := Lexeme.language_name(lang)
-			return {"title": "%s-%s" % [language, WORD_TITLES[tier - 1]],
-					"body": "%d %s-Vokabeln schon einmal richtig übersetzt" % [WORD_STEPS[tier - 1], language]}
 		"kept":
 			return {"title": "Von gestern behalten",
 					"body": ("Ein Wort getroffen, das du an einem früheren Tag zuletzt richtig hattest"
@@ -254,21 +243,13 @@ func all_days() -> Dictionary:
 ## Eine neue Welle: Revanche und Aufholjagd gibt es wieder.
 func new_wave() -> void:
 	_this_wave.clear()
+	revenges_this_wave = 0
 
 
 ## Stand einer Aufgabe vor ihrem Treffer: vor PlayerProgress.record() holen und nach dem
 ## Verbuchen an after_hit() geben.
 func before_hit(task_id: String) -> Dictionary:
-	var rec := PlayerProgress.record_of(task_id)
-	var ctx := {"task": task_id, "rec": rec, "words": -1, "lang": ""}
-	var parts := task_id.split(":")
-	# Die Zahl der Wörter kann nur steigen, wenn diese Richtung noch nie richtig war.
-	if parts.size() == 3 and parts[0] == "translate" and int(rec.get("correct_total", 0)) == 0:
-		var lang := Lexeme.language_of_direction(parts[1])
-		if not lang.is_empty():
-			ctx["lang"] = lang
-			ctx["words"] = PlayerProgress.lexemes_answered(lang)
-	return ctx
+	return {"task": task_id, "rec": PlayerProgress.record_of(task_id)}
 
 
 ## Die Plaketten eines eben verbuchten Treffers (record() und item_reviewed sind durch).
@@ -278,13 +259,6 @@ func after_hit(ctx: Dictionary) -> Array:
 	var tier := step_tier(HIT_STEPS, SessionLog.correct_today())
 	if tier > 0:
 		out.append(make("hits", tier))
-	if int(ctx["words"]) >= 0:
-		var lang := str(ctx["lang"])
-		var now := PlayerProgress.lexemes_answered(lang)
-		if now > int(ctx["words"]):
-			tier = step_tier(WORD_STEPS, now)
-			if tier > 0:
-				out.append(make("words", tier, {"lang": lang}))
 	var task_id := str(ctx["task"])
 	var before: Dictionary = ctx["rec"]
 	var kind := answer_kind(before, SessionLog.local_day(int(before.get("last_seen_at", 0))), _day)
@@ -299,6 +273,8 @@ func after_hit(ctx: Dictionary) -> Array:
 					_note("kept", tier)
 					out.append(make("kept", tier, {"word": word}))
 		"revenge", "catch_up":
+			if kind == "revenge":
+				revenges_this_wave += 1
 			if not kind in _this_wave:
 				_this_wave.append(kind)
 				_note(kind, 0)

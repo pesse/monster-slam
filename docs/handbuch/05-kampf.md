@@ -208,9 +208,6 @@ Plakette steht, geht es ebenfalls weiter.
 
 - **Treffer heute:** 10, 25, 50 und 100 richtig besiegte Monster an einem Tag bringen eine
   Plakette aus Bronze, Silber, Gold und Diamant.
-- **Wörter einer Sprache:** Hast du 50, 100, 500 oder 1000 Wörter einer Sprache schon einmal
-  richtig übersetzt, egal in welche Richtung, wirst du Wortschnüffler, Vokabeljäger,
-  Wörterdrache und schließlich Sprachmonster. Diese Plaketten gibt es nur einmal.
 - **Von gestern behalten:** Du triffst ein Wort, das du an einem früheren Tag zuletzt
   richtig hattest. Eine Plakette gibt es beim ersten, fünften, zehnten und 25. Wort des Tages.
 - **Revanche:** Ein Wort, das dir zuletzt entwischt ist, triffst du jetzt.
@@ -224,7 +221,9 @@ Plakette steht, geht es ebenfalls weiter.
 
 Revanche und Aufholjagd gibt es höchstens einmal je Welle. Comeback, „In letzter Sekunde“
 und „Besser als sonst“ gibt es einmal am Tag, die übrigen Tagesplaketten fangen um Mitternacht von vorn an.
-Plaketten bringen keine Erfahrung und kein Gold.
+Plaketten bringen keine Erfahrung und kein Gold. Was es nur einmal gibt, etwa viele Wörter
+einer Sprache, ist ein **Erfolg**: Er erscheint klein unten rechts und hält das Spiel nicht
+an ([Kapitel 24](24-erfolge.md)).
 
 ## Festung, Schaden und Rüstung
 

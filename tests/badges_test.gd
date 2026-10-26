@@ -25,7 +25,6 @@ func test_step_tier_hits_exactly_the_steps() -> void:
 	assert_int(Badges.step_tier(Badges.HIT_STEPS, 10)).is_equal(1)
 	assert_int(Badges.step_tier(Badges.HIT_STEPS, 11)).is_equal(0)
 	assert_int(Badges.step_tier(Badges.HIT_STEPS, 100)).is_equal(4)
-	assert_int(Badges.step_tier(Badges.WORD_STEPS, 1000)).is_equal(4)
 
 
 func test_answer_kind_reads_the_state_before_the_hit() -> void:
@@ -53,10 +52,9 @@ func test_better_needs_both_values() -> void:
 	assert_bool(Badges.is_better({"accuracy": -1.0, "baseline": 0.5})).is_false()
 
 
-func test_make_names_language_milestones() -> void:
-	var badge := Badges.make("words", 1, {"lang": "fr"})
-	assert_str(str(badge["title"])).is_equal("Französisch-Wortschnüffler")
-	assert_str(str(badge["mark"])).is_equal("50")
+func test_make_picks_the_palette() -> void:
+	var badge := Badges.make("hits", 1)
+	assert_str(str(badge["mark"])).is_equal("10")
 	assert_str(str(badge["palette"])).is_equal("bronze")
 	assert_str(str(Badges.make("revenge", 0, {"word": "x"})["palette"])).is_equal("revenge")
 
@@ -210,7 +208,7 @@ func test_tally_counts_days_and_badges() -> void:
 ## Jede Plakette hat in der Statistik eine Überschrift ohne „heute“.
 func test_describe_names_every_badge() -> void:
 	for badge: Dictionary in Badges.catalog():
-		var text := Badges.describe(str(badge["id"]), int(badge["tier"]), "en")
+		var text := Badges.describe(str(badge["id"]), int(badge["tier"]))
 		assert_str(str(text["title"])).append_failure_message(str(badge["id"])).is_not_empty()
 		assert_str(str(text["title"])).not_contains("heute")
 		assert_str(str(text["body"])).is_not_empty()

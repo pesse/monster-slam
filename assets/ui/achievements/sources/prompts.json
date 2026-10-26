@@ -1,0 +1,172 @@
+{
+  "tool": "Built-in image_gen.imagegen",
+  "date": "2026-10-26",
+  "anchor": {
+    "prompt": "Use case: stylized-concept. Create ONE production achievement icon for Monster Slam, a friendly fantasy vocabulary game for children/teens. Style reference: the four supplied game assets (polished dimensional painted fantasy, rich colors, soft bevels, strong clean silhouette). Square 1024x1024 image. A magnificent compact stone castle with EXACTLY FOUR clearly visible towers with blue flags, bathed in a luminous protective aura. Castle large, centered, light warm stone against dark royal blue radial gradient, a few magic sparkles. Bright light upper left. Simplified bold forms readable at 56px. Steam achievement tile: background painted opaque all the way to a narrow beveled GOLD metal frame inset at the very outer perimeter, frame width about 4% of tile, rounded square corners radius 10% of width. Frame itself belongs to image, flush to canvas edges. Only outside rounded corners is transparent. No surrounding padding. No text, no lettering, no digits, no numbers, no watermark. Friendly premium game art, strong value separation for grayscale. Output actual transparent corner alpha.",
+    "file": "anchor_unit_tier_4.png",
+    "styleReferences": [
+      "ui/statistics/icons/treasure_chest.webp",
+      "ui/statistics/icons/streak_flame.webp",
+      "ui/badges/revenge.webp",
+      "ui/skill_tree/icons/bulwark_bastion.webp"
+    ]
+  },
+  "atlases": [
+    {
+      "file": "atlas_1.png",
+      "columns": 3,
+      "rows": 2,
+      "prompt": "Use case: stylized-concept. Production sprite ATLAS for Monster Slam Steam-like achievements. Landscape canvas exact 3:2 ratio, ideally 1536x1024 or 2304x1536. EXACTLY THREE COLUMNS and TWO ROWS of equally sized SQUARE cells, six icons, no gutters, no margins, no labels. Cell boundaries at x=0,1/3,2/3,1 and y=0,1/2,1. Each icon fills its cell edge to edge, its own opaque colored painted backdrop and narrow rounded square beveled metallic perimeter frame, consistent width 3.5% of cell and corner radius 10%. Transparency ONLY outside each frame's rounded corners, nowhere inside tiles. Use reference image ONLY as style/lighting/frame construction reference. Polished dimensional painted fantasy game icons, rich saturated colors, soft bevels, friendly for children/teens. Each tile ONE bold central motif fills ~75% of cell, large simple chunky silhouette. Upper left light; bright motif against darker background, readable at 56px and in grayscale. Fewer details than reference castle. Small background glow and restrained sparks. ABSOLUTELY NO text, letters, numerals, numbers, words, labels, watermarks, runes, fake writing or question marks anywhere including books and maps. Square tiles must stay separate, no objects cross cell boundaries. Order left to right across first row, then left to right across second row:\nCELL 1 (TOP LEFT): A cute little green monster with a LARGE round sniffing nose leans over an open blank book, two tiny pawprints; BRONZE frame, warm dark green background.\nCELL 2 (TOP CENTER): One bow and arrow, arrow piercing one flying blank book page; SILVER frame, sky blue background.\nCELL 3 (TOP RIGHT): Cute small orange dragon curled up on a hoard of chunky closed books; GOLD frame, ember red/orange background.\nCELL 4 (BOTTOM LEFT): Large friendly fierce purple monster roaring with several blank book pages swirling around; DIAMOND crystal frame, violet sparkle background.\nCELL 5 (BOTTOM CENTER): One little seedling growing out of an open blank book; BRONZE frame, spring green background.\nCELL 6 (BOTTOM RIGHT): Tall stack of thick colorful books with a large golden bookmark and shine; GOLD frame, deep blue background.",
+      "reference": "anchor_unit_tier_4.png",
+      "cells": [
+        {
+          "name": "words_50",
+          "motif": "A cute little green monster with a LARGE round sniffing nose leans over an open blank book, two tiny pawprints; BRONZE frame, warm dark green background."
+        },
+        {
+          "name": "words_100",
+          "motif": "One bow and arrow, arrow piercing one flying blank book page; SILVER frame, sky blue background."
+        },
+        {
+          "name": "words_500",
+          "motif": "Cute small orange dragon curled up on a hoard of chunky closed books; GOLD frame, ember red/orange background."
+        },
+        {
+          "name": "words_1000",
+          "motif": "Large friendly fierce purple monster roaring with several blank book pages swirling around; DIAMOND crystal frame, violet sparkle background."
+        },
+        {
+          "name": "mastered_first",
+          "motif": "One little seedling growing out of an open blank book; BRONZE frame, spring green background."
+        },
+        {
+          "name": "mastered_100",
+          "motif": "Tall stack of thick colorful books with a large golden bookmark and shine; GOLD frame, deep blue background."
+        }
+      ]
+    },
+    {
+      "file": "atlas_2.png",
+      "columns": 3,
+      "rows": 2,
+      "prompt": "Use case: stylized-concept. Production sprite ATLAS for Monster Slam Steam-like achievements. Landscape canvas exact 3:2 ratio, ideally 1536x1024 or 2304x1536. EXACTLY THREE COLUMNS and TWO ROWS of equally sized SQUARE cells, six icons, no gutters, no margins, no labels. Cell boundaries at x=0,1/3,2/3,1 and y=0,1/2,1. Each icon fills its cell edge to edge, its own opaque colored painted backdrop and narrow rounded square beveled metallic perimeter frame, consistent width 3.5% of cell and corner radius 10%. Transparency ONLY outside each frame's rounded corners, nowhere inside tiles. Use reference image ONLY as style/lighting/frame construction reference. Polished dimensional painted fantasy game icons, rich saturated colors, soft bevels, friendly for children/teens. Each tile ONE bold central motif fills ~75% of cell, large simple chunky silhouette. Upper left light; bright motif against darker background, readable at 56px and in grayscale. Fewer details than reference castle. Small background glow and restrained sparks. ABSOLUTELY NO text, letters, numerals, numbers, words, labels, watermarks, runes, fake writing or question marks anywhere including books and maps. Square tiles must stay separate, no objects cross cell boundaries. Order left to right across first row, then left to right across second row:\nCELL 1 (TOP LEFT): Repeat the reference castle with FOUR towers, blue flags, protective light aura; GOLD frame, royal blue background.\nCELL 2 (TOP CENTER): Partly rolled treasure map with tiny castle pictograms, route marks and compass rose, NO letters or digits; SILVER frame, parchment/turquoise background.\nCELL 3 (TOP RIGHT): Two crossed swords in front of a defeated hollow horned monster helmet, friendly game trophy without gore; SILVER frame, dark red background.\nCELL 4 (BOTTOM LEFT): One big golden crown resting on crossed swords, radiant halo; GOLD frame, purple background.\nCELL 5 (BOTTOM CENTER): One bright flame over one blank calendar leaf with binding rings and faint empty grid, NO digits or lettering; BRONZE frame, orange background.\nCELL 6 (BOTTOM RIGHT): One blazing comet with LONG flowing fire tail across night sky; GOLD frame, night blue/orange background.",
+      "reference": "anchor_unit_tier_4.png",
+      "cells": [
+        {
+          "name": "unit_tier_4",
+          "motif": "Repeat the reference castle with FOUR towers, blue flags, protective light aura; GOLD frame, royal blue background."
+        },
+        {
+          "name": "book_tier_2",
+          "motif": "Partly rolled treasure map with tiny castle pictograms, route marks and compass rose, NO letters or digits; SILVER frame, parchment/turquoise background."
+        },
+        {
+          "name": "boss_first",
+          "motif": "Two crossed swords in front of a defeated hollow horned monster helmet, friendly game trophy without gore; SILVER frame, dark red background."
+        },
+        {
+          "name": "boss_gold",
+          "motif": "One big golden crown resting on crossed swords, radiant halo; GOLD frame, purple background."
+        },
+        {
+          "name": "streak_7",
+          "motif": "One bright flame over one blank calendar leaf with binding rings and faint empty grid, NO digits or lettering; BRONZE frame, orange background."
+        },
+        {
+          "name": "streak_30",
+          "motif": "One blazing comet with LONG flowing fire tail across night sky; GOLD frame, night blue/orange background."
+        }
+      ]
+    },
+    {
+      "file": "atlas_3.png",
+      "columns": 3,
+      "rows": 2,
+      "prompt": "Use case: stylized-concept. Production sprite ATLAS for Monster Slam Steam-like achievements. Landscape canvas exact 3:2 ratio, ideally 1536x1024 or 2304x1536. EXACTLY THREE COLUMNS and TWO ROWS of equally sized SQUARE cells, six icons, no gutters, no margins, no labels. Cell boundaries at x=0,1/3,2/3,1 and y=0,1/2,1. Each icon fills its cell edge to edge, its own opaque colored painted backdrop and narrow rounded square beveled metallic perimeter frame, consistent width 3.5% of cell and corner radius 10%. Transparency ONLY outside each frame's rounded corners, nowhere inside tiles. Use reference image ONLY as style/lighting/frame construction reference. Polished dimensional painted fantasy game icons, rich saturated colors, soft bevels, friendly for children/teens. Each tile ONE bold central motif fills ~75% of cell, large simple chunky silhouette. Upper left light; bright motif against darker background, readable at 56px and in grayscale. Fewer details than reference castle. Small background glow and restrained sparks. ABSOLUTELY NO text, letters, numerals, numbers, words, labels, watermarks, runes, fake writing or question marks anywhere including books and maps. Square tiles must stay separate, no objects cross cell boundaries. Order left to right across first row, then left to right across second row:\nCELL 1 (TOP LEFT): EXACTLY ONE large gold star with one upward arrow; BRONZE frame, blue background.\nCELL 2 (TOP CENTER): EXACTLY TWO large gleaming gold stars; SILVER frame, turquoise background.\nCELL 3 (TOP RIGHT): EXACTLY THREE gleaming gold stars with a small crown above them and stardust; GOLD frame, violet background.\nCELL 4 (BOTTOM LEFT): One open chunky wooden gold-banded treasure chest pouring gold coins and warm light; GOLD frame, emerald background.\nCELL 5 (BOTTOM CENTER): One glowing fresh leaf and little branch with one bright spark; BRONZE frame, green background.\nCELL 6 (BOTTOM RIGHT): One mighty tree, broad canopy, several bright magical nodes on branches; GOLD frame, dark forest green background.",
+      "reference": "anchor_unit_tier_4.png",
+      "cells": [
+        {
+          "name": "level_5",
+          "motif": "EXACTLY ONE large gold star with one upward arrow; BRONZE frame, blue background."
+        },
+        {
+          "name": "level_10",
+          "motif": "EXACTLY TWO large gleaming gold stars; SILVER frame, turquoise background."
+        },
+        {
+          "name": "level_20",
+          "motif": "EXACTLY THREE gleaming gold stars with a small crown above them and stardust; GOLD frame, violet background."
+        },
+        {
+          "name": "chests_10",
+          "motif": "One open chunky wooden gold-banded treasure chest pouring gold coins and warm light; GOLD frame, emerald background."
+        },
+        {
+          "name": "skill_first",
+          "motif": "One glowing fresh leaf and little branch with one bright spark; BRONZE frame, green background."
+        },
+        {
+          "name": "skill_branch",
+          "motif": "One mighty tree, broad canopy, several bright magical nodes on branches; GOLD frame, dark forest green background."
+        }
+      ]
+    },
+    {
+      "file": "atlas_4.png",
+      "columns": 3,
+      "rows": 2,
+      "prompt": "Use case: stylized-concept. Production sprite ATLAS for Monster Slam Steam-like achievements. Landscape canvas exact 3:2 ratio, ideally 1536x1024 or 2304x1536. EXACTLY THREE COLUMNS and TWO ROWS of equally sized SQUARE cells, six icons, no gutters, no margins, no labels. Cell boundaries at x=0,1/3,2/3,1 and y=0,1/2,1. Each icon fills its cell edge to edge, its own opaque colored painted backdrop and narrow rounded square beveled metallic perimeter frame, consistent width 3.5% of cell and corner radius 10%. Transparency ONLY outside each frame's rounded corners, nowhere inside tiles. Use reference image ONLY as style/lighting/frame construction reference. Polished dimensional painted fantasy game icons, rich saturated colors, soft bevels, friendly for children/teens. Each tile ONE bold central motif fills ~75% of cell, large simple chunky silhouette. Upper left light; bright motif against darker background, readable at 56px and in grayscale. Fewer details than reference castle. Small background glow and restrained sparks. ABSOLUTELY NO text, letters, numerals, numbers, words, labels, watermarks, runes, fake writing or question marks anywhere including books and maps. Square tiles must stay separate, no objects cross cell boundaries. Order left to right across first row, then left to right across second row:\nCELL 1 (TOP LEFT): Fan of several small colorful circular fantasy medals with swallowtail ribbons, purple silver green and gold, raised symbolic sword/star relief only; GOLD frame, dark blue background. Match supplied purple revenge medal style.\nCELL 2 (TOP CENTER): A SINGLE thin glowing thread is visibly suspending a bright red heart-shaped fortress shield just above a dark chasm; RUBY metal frame, black red background. Taut thread attached above and to shield, dramatic peril.\nCELL 3 (TOP RIGHT): One pristine shining silver shield deflects incoming arrows, arrows visibly bouncing outward with tiny impact sparks; SILVER frame, ice blue background.\nCELL 4 (BOTTOM LEFT): One perfectly cut large sparkling diamond with strong light beams; DIAMOND crystal frame, cyan background.\nCELL 5 (BOTTOM CENTER): EXACTLY THREE bright lightning claw strikes hit one fleeing cute monster turned away, dramatic magical purple red action without gore; RUBY frame, violet/red background.\nCELL 6 (BOTTOM RIGHT): One dark mysterious veiled treasure chest with narrow magical light leaking from lid and wisps of mist, muted colors, no question mark or symbols; DARK IRON frame, slate blue background.",
+      "reference": "anchor_unit_tier_4.png",
+      "cells": [
+        {
+          "name": "badges_all",
+          "motif": "Fan of several small colorful circular fantasy medals with swallowtail ribbons, purple silver green and gold, raised symbolic sword/star relief only; GOLD frame, dark blue background. Match supplied purple revenge medal style."
+        },
+        {
+          "name": "wave_last_hp",
+          "motif": "A SINGLE thin glowing thread is visibly suspending a bright red heart-shaped fortress shield just above a dark chasm; RUBY metal frame, black red background. Taut thread attached above and to shield, dramatic peril."
+        },
+        {
+          "name": "run_untouched",
+          "motif": "One pristine shining silver shield deflects incoming arrows, arrows visibly bouncing outward with tiny impact sparks; SILVER frame, ice blue background."
+        },
+        {
+          "name": "boss_flawless",
+          "motif": "One perfectly cut large sparkling diamond with strong light beams; DIAMOND crystal frame, cyan background."
+        },
+        {
+          "name": "revenge_3",
+          "motif": "EXACTLY THREE bright lightning claw strikes hit one fleeing cute monster turned away, dramatic magical purple red action without gore; RUBY frame, violet/red background."
+        },
+        {
+          "name": "hidden",
+          "motif": "One dark mysterious veiled treasure chest with narrow magical light leaking from lid and wisps of mist, muted colors, no question mark or symbols; DARK IRON frame, slate blue background."
+        }
+      ]
+    },
+    {
+      "file": "atlas_corrections.png",
+      "columns": 3,
+      "rows": 1,
+      "prompt": "Use case: stylized-concept. Create a CORRECTION ATLAS of exactly THREE square achievement tiles in ONE horizontal row, aspect 3:1, no gutters, no margins, ideally 1536x512 or 2304x768. Reference image 1 (castle): match polished dimensional Monster Slam painting, upper left illumination, narrow beveled frame width 3.5%, rounded corners radius10%, background opaque to frame, transparency outside rounded corners only. Reference image2 purple medal: reference for medallion disks and downward swallowtail ribbons, not tile framing. NO text, NO letters, NO digits, NO numbers, NO pseudo writing anywhere. Large simple bright silhouette over darker saturated backgrounds, readable at56px.\nLEFT square: cute green little monster with a LARGE round nose leaning down to SNIFF an open BLANK book; include TWO plainly visible small golden PAW PRINTS in foreground beside book, bronze frame, warm dark green gradient, soft magical glow. Nose almost touches blank book.\nCENTER square: partly rolled parchment treasure map, SEVERAL little castle pictograms, winding dashed treasure route ending at a small RED DIAMOND SHAPED GEM pictogram, small compass rose with NO compass letters; SILVER frame, parchment and dark turquoise backdrop. Absolutely no X shape or cross marks, no writing or labels.\nRIGHT square: Fan of THREE round colorful fantasy MEDALS with purple, gold and silver disks, each disk has only an unmistakable raised emblem (TWO CROSSED SWORDS on center gold, FIVE POINTED STAR on silver, LEAF on purple). Swallowtail ribbons hang DOWN below the disks, like purple medal reference. Absolutely NO rank numbers or numerals, no upright isolated sword, no typography. GOLD rounded square perimeter frame, dark blue backdrop, restrained glints. All three framed tiles same exact dimensions, filled edge to edge.",
+      "references": [
+        "anchor_unit_tier_4.png",
+        "../../badges/revenge.webp"
+      ],
+      "cells": [
+        {
+          "name": "words_50",
+          "motif": "Schnüffelmonster am Buch mit zwei Pfotenabdrücken"
+        },
+        {
+          "name": "book_tier_2",
+          "motif": "Schatzkarte mit Burgsymbolen, Kompass und rotem Edelstein statt Kreuz"
+        },
+        {
+          "name": "badges_all",
+          "motif": "Drei Medaillen mit Blatt, gekreuzten Schwertern und Stern, Bänder nach unten"
+        }
+      ]
+    }
+  ]
+}

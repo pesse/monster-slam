@@ -6,7 +6,8 @@ extends Node
 ##         speichert reports/stats/stats_<breite>x<höhe>.png und beendet sich.
 ##     … -- --shoot --size=1920x1080   anderes Fenster (Bezugsgröße nach Menügröße, UiScale)
 ##     … -- --shoot --tab=1            zweiter Reiter (0 Überblick, 1 Fortschritt, 2 Aufgaben,
-##                                     3 Plaketten)
+##                                     3 Plaketten, 4 Erfolge)
+##     … -- --shoot --toast=level_5    dazu die Einblendung dieses Erfolgs, ohne ihn zu verdienen
 ##     … -- --shoot --day=29           Karte des Tages 29, als hätte er den Tastaturfokus
 ##     … -- --shoot --pick=5           Tag 5 der Monatsreihe gewählt (Plaketten-Band)
 ##     … -- --shoot --month=-1         Monatsreihe um so viele Monate geblättert
@@ -51,6 +52,9 @@ func _shoot(screen: Node) -> void:
 		var tabs := screen.get_node("%Tabs").get_children()
 		(tabs[int(_arg("tab"))] as Button).button_pressed = true
 		tag += "_tab" + _arg("tab")
+	if not _arg("toast").is_empty():
+		AchievementToast.announce(_arg("toast"))
+		tag += "_toast"
 	if not _arg("language").is_empty():
 		var languages := Array(_arg("language").split(","))
 		(screen.get_node("%LanguageBar") as LanguageBar).set_languages(languages)
@@ -67,7 +71,8 @@ func _shoot(screen: Node) -> void:
 		tag += "_pick" + _arg("pick")
 	if not _arg("scroll").is_empty():
 		for page: ScrollContainer in [screen.get_node("%OverviewPage"), screen.get_node("%ProgressPage"),
-				screen.get_node("%TaskPage"), screen.get_node("%BadgePage")]:
+				screen.get_node("%TaskPage"), screen.get_node("%BadgePage"),
+				screen.get_node("%AchievementPage")]:
 			if page.visible:
 				page.scroll_vertical = int(_arg("scroll"))
 		tag += "_scroll" + _arg("scroll")

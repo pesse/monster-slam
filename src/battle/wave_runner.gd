@@ -296,6 +296,7 @@ func _warm_up() -> void:
 	var at := FxWarmup.point_in_view(get_viewport().get_camera_3d(),
 			Vector3(0.0, 1.0, VIEW_CENTER_Z))
 	_celebration.warm_up()
+	AchievementToast.warm_up()
 	_spelling.warm_up()
 	_level_flare.warm_up()
 	var extras: Array[Node3D] = [xp]
@@ -325,6 +326,7 @@ func _warm_up() -> void:
 	extras.append_array(SpellFx.specimens(at))
 	await FxWarmup.run(self, at, FxWarmup.monster_defs(), extras, _fp != null)
 	_celebration.cool_down()
+	AchievementToast.cool_down()
 	_spelling.cool_down()
 	_level_flare.cool_down()
 
@@ -1606,6 +1608,8 @@ func _score_hit(monster: Monster, text: String = "", verdict: Dictionary = {}) -
 			EventBus.lexeme_mastered.emit(lexeme_id)
 	# Nach der Meisterung: ihre Feier geht vor.
 	_announce_badges(_badges.after_hit(badge_ctx))
+	if _badges.revenges_this_wave >= Achievements.REVENGES:
+		AchievementBook.unlock("revenge_3")
 	_finish_hit(monster)
 
 

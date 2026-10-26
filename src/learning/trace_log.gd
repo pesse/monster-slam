@@ -44,6 +44,7 @@ func _ready() -> void:
 	EventBus.task_mastered.connect(note_task_mastered)
 	EventBus.lexeme_mastered.connect(note_lexeme_mastered)
 	EventBus.badge_earned.connect(note_badge)
+	EventBus.achievement_unlocked.connect(note_achievement)
 	EventBus.boss_started.connect(note_boss_start)
 	EventBus.boss_answer_judged.connect(note_boss_answer)
 	EventBus.boss_answer_explained.connect(note_boss_explained)
@@ -258,6 +259,10 @@ func note_lexeme_mastered(lexeme_id: String) -> void:
 ## Eine Plakette ist verdient. Steht hinter der auslösenden answer-Zeile.
 func note_badge(id: String, tier: int) -> void:
 	_write({"e": "badge", "id": id, "tier": tier})
+
+
+func note_achievement(id: String) -> void:
+	_write({"e": "achievement", "id": id})
 
 
 ## Spielstand (ADR 0024). `part` ist die Endung der Datei („_level“), ohne den Profilnamen

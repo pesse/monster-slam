@@ -287,8 +287,10 @@ func _warm_up() -> void:
 	var shout_size := _shout.size
 	_shout.text = HIT_SHOUT + HOLD_SHOUT + WON_SHOUT
 	_shout.modulate.a = 1.0
+	AchievementToast.warm_up()
 	if stage != null and stage.has_method(&"warm_up"):
 		await stage.warm_up()
+	AchievementToast.cool_down()
 	_shout.modulate.a = 0.0
 	_shout.text = ""
 	_shout.size = shout_size

@@ -1,0 +1,67 @@
+[gd_scene format=3 uid="uid://c68iyu0ldnucc"]
+
+[ext_resource type="Script" uid="uid://b5krlvosd0np4" path="res://src/ui/achievement_toast.gd" id="1_toast"]
+
+[node name="AchievementToast" type="CanvasLayer" unique_id=1614060749]
+process_mode = 3
+layer = 100
+script = ExtResource("1_toast")
+
+[node name="Edge" type="MarginContainer" parent="." unique_id=191000316]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"ScreenMargin"
+
+[node name="Card" type="PanelContainer" parent="Edge" unique_id=274147920 groups=["word_plate_keep_clear"]]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(336, 0)
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 8
+mouse_filter = 2
+theme_type_variation = &"AchievementToast"
+
+[node name="Row" type="HBoxContainer" parent="Edge/Card" unique_id=722729210]
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"ScreenStack"
+
+[node name="Icon" type="TextureRect" parent="Edge/Card/Row" unique_id=276111142]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Text" type="VBoxContainer" parent="Edge/Card/Row" unique_id=1983985034]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+theme_type_variation = &"Tight"
+
+[node name="Caption" type="Label" parent="Edge/Card/Row/Text" unique_id=2083962695]
+layout_mode = 2
+theme_type_variation = &"Caption"
+text = "Erfolg freigeschaltet"
+
+[node name="Title" type="Label" parent="Edge/Card/Row/Text" unique_id=320397091]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatSubline"
+text = "Titel"
+
+[node name="Body" type="Label" parent="Edge/Card/Row/Text" unique_id=403437827]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+theme_type_variation = &"Hint"
+text = "Beschreibung"
+autowrap_mode = 3

@@ -1,6 +1,6 @@
 extends Control
 ## Statistik-Fenster über dem Hauptmenü (geöffnet von `ProfileBadge`); das Layout liegt in
-## stats_screen.tscn, hier wird nur befüllt. Vier Reiter, siehe Handbuch Kapitel 12:
+## stats_screen.tscn, hier wird nur befüllt. Fünf Reiter, siehe Handbuch Kapitel 12:
 ## „Fortschritt“ zählt Wörter (mastered_lexemes), „Aufgaben“ learnable_ids (mastered_count).
 ## Die Sprachwahl filtert alles, was an Wörtern hängt; Profilwerte und die Sitzung
 ## (SessionLog kennt keine Sprache) zählen immer alle Sprachen.
@@ -11,6 +11,7 @@ const RECORD_ROW_SCENE := preload("res://scenes/ui/record_row.tscn")
 const PROGRESS_ROW_SCENE := preload("res://scenes/ui/progress_row.tscn")
 const CHIP_SCENE := preload("res://scenes/ui/badge_chip.tscn")
 const BADGE_ROW_SCENE := preload("res://scenes/ui/badge_row.tscn")
+const ACHIEVEMENT_ROW_SCENE := preload("res://scenes/ui/achievement_row.tscn")
 ## Für Schwellen und Richtungen in den statischen Funktionen; der Autoload ist nicht statisch erreichbar.
 const PROGRESS := preload("res://src/learning/player_progress.gd")
 
@@ -39,8 +40,8 @@ static var _languages: Array = []
 
 const LANGUAGE_HINT := "Ein Klick schaltet die Sprache an oder aus, mehrere zugleich gehen. " \
 		+ "Gilt für alles, was an Wörtern hängt: gemeistert, fällig, Lernkurve, " \
-		+ "die Wortlisten, „Insgesamt“, „Fortschritt“, „Aufgaben“ und die Meilensteine. " \
-		+ "Level, Gold, Rekorde, Tages-Serie, Plaketten im Kampf und die Genauigkeit der " \
+		+ "die Wortlisten, „Insgesamt“, „Fortschritt“ und „Aufgaben“. " \
+		+ "Level, Gold, Rekorde, Tages-Serie, Plaketten, Erfolge und die Genauigkeit der " \
 		+ "Sitzung zählen immer alle Sprachen."
 
 ## Das Fenster will zu. Ohne Verbindung geht `close` selbst ins Startmenü.
@@ -64,7 +65,6 @@ signal closed()
 @onready var _day_badge_title: Label = %DayBadgeTitle
 @onready var _day_badge_row: HBoxContainer = %DayBadgeRow
 @onready var _day_badge_empty: Label = %DayBadgeEmpty
-@onready var _milestone_list: VBoxContainer = %MilestoneList
 @onready var _daily_list: VBoxContainer = %DailyList
 ## Nur gelesen; gespeichert wird im Kampf.
 var _badges := Badges.new()
@@ -83,7 +83,7 @@ var _resolver := TaskResolver.new()
 ## Überschrift -> Text ohne Sprache; diese Abschnitte folgen der Sprachwahl.
 @onready var _filtered_titles := {
 	%CurveTitle: "Lernkurve", %FreshTitle: "Frisch gemeistert", %ComebackTitle: "Comeback",
-	%WantedTitle: "Fahndungsliste", %TotalTitle: "Insgesamt", %MilestoneTitle: "Meilensteine",
+	%WantedTitle: "Fahndungsliste", %TotalTitle: "Insgesamt",
 }
 var _book_languages := {}
 ## Gefilterte Sprachen; leer, solange alle gewählt sind. Dann zählt auch, was keiner
@@ -96,12 +96,14 @@ var _language_choices: Array = []
 	%ProgressTab: "Reiter „Fortschritt“: gezählt werden Wörter",
 	%TaskTab: "Reiter „Aufgaben“: gezählt werden Aufgaben",
 	%BadgeTab: "Reiter „Plaketten“",
+	%AchievementTab: "Reiter „Erfolge“",
 }
 @onready var _pages := {
 	%OverviewTab: %OverviewPage,
 	%ProgressTab: %ProgressPage,
 	%TaskTab: %TaskPage,
 	%BadgeTab: %BadgePage,
+	%AchievementTab: %AchievementPage,
 }
 
 
@@ -213,6 +215,7 @@ func _refresh() -> void:
 	_refresh_progress()
 	_refresh_tasks()
 	_refresh_badges()
+	_refresh_achievements()
 
 
 ## „Lernkurve · Französisch, Latein“; ohne Filter ohne Namen.
@@ -298,25 +301,8 @@ func _add_chip(box: Container, badge: Dictionary, caption: String, title: String
 	return chip
 
 
-## Reiter „Plaketten“: Meilensteine je Sprache (folgen der Sprachwahl) und wie oft es jede
-## Plakette im Kampf schon gab.
+## Reiter „Plaketten“: wie oft es jede Plakette im Kampf schon gab.
 func _refresh_badges() -> void:
-	_clear(_milestone_list)
-	var languages: Array = _filter if not _filter.is_empty() else _language_choices
-	for lang: String in languages:
-		var count := PlayerProgress.lexemes_answered(lang)
-		var reached := Badges.reached_tier(Badges.WORD_STEPS, count)
-		if reached == 0:
-			continue
-		var row := _add_badge_row(_milestone_list, Lexeme.language_name(lang),
-				"%d %s richtig übersetzt" % [count, "Wort" if count == 1 else "Wörter"])
-		for tier in range(1, reached + 1):
-			var text := Badges.describe("words", tier, lang)
-			row.add_chip().setup(Badges.make("words", tier, {"lang": lang}), "",
-					str(text["title"]), str(text["body"]))
-	if _milestone_list.get_child_count() == 0:
-		_add_line(_milestone_list, "Noch kein Meilenstein.")
-
 	_clear(_daily_list)
 	var tally := Badges.tally(_badges.all_days(), _correct_by_day)
 	for id: String in Badges.DAY_ORDER:
@@ -334,6 +320,60 @@ func _refresh_badges() -> void:
 					str(text["body"]), ("an %d Tag%s" % [n, "" if n == 1 else "en"]) if tiered else "")
 	if _daily_list.get_child_count() == 0:
 		_add_line(_daily_list, "Noch keine Plakette – im Kampf gibt es welche.")
+
+
+## Reiter „Erfolge“: freigeschaltete (jüngste zuerst), offene mit Stand, versteckte nur gezählt.
+func _refresh_achievements() -> void:
+	var languages := Achievements.languages()
+	var catalog := Achievements.catalog(languages)
+	var sorted := achievement_rows(catalog, AchievementBook.unlocked(),
+			Achievements.live_facts(languages))
+	var done: Array = sorted["unlocked"]
+	(%AchievementCount as Label).text = "%d von %d Erfolgen" % [done.size(), catalog.size()]
+	(%AchievementBar as ProgressBar).value = float(done.size()) / float(maxi(1, catalog.size()))
+	_clear(%UnlockedList)
+	_clear(%LockedList)
+	for row: Dictionary in done:
+		_add_achievement(%UnlockedList, row["entry"], int(row["at"]))
+	if done.is_empty():
+		_add_line(%UnlockedList, "Noch kein Erfolg – im Kampf und beim Lernen kommen sie von selbst.")
+	for row: Dictionary in sorted["locked"]:
+		_add_achievement(%LockedList, row["entry"], 0, row["progress"])
+	var hidden := int(sorted["hidden"])
+	if hidden > 0:
+		_add_achievement(%LockedList, {"icon": Achievements.HIDDEN_ICON,
+				"title": "%d versteckte%s Erfolg%s" % [hidden, "r" if hidden == 1 else "",
+						"" if hidden == 1 else "e"],
+				"body": "Was es dafür gibt, verrät niemand – du merkst es, wenn es so weit ist."}, 0)
+	(%LockedRule as Control).visible = hidden > 0 or not (sorted["locked"] as Array).is_empty()
+
+
+func _add_achievement(box: VBoxContainer, entry: Dictionary, unlocked_at: int,
+		progress: Array = [0, 0]) -> void:
+	var row := ACHIEVEMENT_ROW_SCENE.instantiate() as AchievementRow
+	box.add_child(row)
+	row.setup(entry, unlocked_at, progress)
+
+
+## Ordnet den Katalog für den Reiter: {unlocked: [{entry, at}] jüngste zuerst, locked:
+## [{entry, progress}] in Katalogfolge, hidden: Zahl der noch versteckten}. `unlocked` wie
+## AchievementBook.unlocked, `facts` wie Achievements.live_facts.
+static func achievement_rows(catalog: Array, unlocked: Dictionary, facts: Dictionary) -> Dictionary:
+	var done: Array = []
+	var open: Array = []
+	var hidden := 0
+	for entry: Dictionary in catalog:
+		var id := str(entry["id"])
+		if unlocked.has(id):
+			done.append({"entry": entry, "at": int(unlocked[id]), "i": done.size()})
+		elif bool(entry.get("hidden", false)):
+			hidden += 1
+		else:
+			open.append({"entry": entry, "progress": Achievements.progress(entry, facts)})
+	# Nachgetragene tragen denselben Zeitpunkt; dann gilt die Katalogfolge.
+	done.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return int(a["at"]) > int(b["at"]) or (int(a["at"]) == int(b["at"]) and int(a["i"]) < int(b["i"])))
+	return {"unlocked": done, "locked": open, "hidden": hidden}
 
 
 func _add_badge_row(box: VBoxContainer, title: String, detail: String) -> BadgeRow:

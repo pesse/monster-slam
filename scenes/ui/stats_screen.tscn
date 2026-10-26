@@ -191,6 +191,15 @@ toggle_mode = true
 button_group = SubResource("tab_group")
 text = "Plaketten"
 
+[node name="AchievementTab" type="Button" parent="Window/Layout/Content/Body/Tabs" unique_id=350548559]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(144, 44)
+layout_mode = 2
+theme_type_variation = &"WindowTab"
+toggle_mode = true
+button_group = SubResource("tab_group")
+text = "Erfolge"
+
 [node name="TabRail" type="PanelContainer" parent="Window/Layout/Content/Body/Tabs" unique_id=240820004]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1060,35 +1069,6 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"SectionStack"
 
-[node name="MilestoneSection" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/BadgePage/Gutter/BadgeBook" unique_id=249098324]
-layout_mode = 2
-theme_type_variation = &"ScreenStack"
-
-[node name="MilestoneHead" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/BadgePage/Gutter/BadgeBook/MilestoneSection" unique_id=215198816]
-layout_mode = 2
-theme_type_variation = &"Tight"
-
-[node name="MilestoneTitle" type="Label" parent="Window/Layout/Content/Body/Pages/BadgePage/Gutter/BadgeBook/MilestoneSection/MilestoneHead" unique_id=1175401244]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"StatHeading"
-text = "Meilensteine"
-
-[node name="MilestoneHint" type="Label" parent="Window/Layout/Content/Body/Pages/BadgePage/Gutter/BadgeBook/MilestoneSection/MilestoneHead" unique_id=1634535101]
-layout_mode = 2
-theme_type_variation = &"Hint"
-text = "Diese Plaketten gibt es nur einmal: für viele Wörter einer Sprache, die du schon einmal richtig übersetzt hast. Wie viele es noch gibt, verrät niemand."
-autowrap_mode = 3
-
-[node name="MilestoneList" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/BadgePage/Gutter/BadgeBook/MilestoneSection" unique_id=445778867]
-unique_name_in_owner = true
-layout_mode = 2
-theme_type_variation = &"ScreenStack"
-
-[node name="DailyRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/BadgePage/Gutter/BadgeBook" unique_id=448983488]
-layout_mode = 2
-theme_type_variation = &"StatRule"
-
 [node name="DailySection" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/BadgePage/Gutter/BadgeBook" unique_id=1559125670]
 layout_mode = 2
 theme_type_variation = &"ScreenStack"
@@ -1112,6 +1092,67 @@ autowrap_mode = 3
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"ScreenStack"
+
+[node name="AchievementPage" type="ScrollContainer" parent="Window/Layout/Content/Body/Pages" unique_id=1054550112]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="Gutter" type="MarginContainer" parent="Window/Layout/Content/Body/Pages/AchievementPage" unique_id=883556865]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ScrollGutter"
+
+[node name="AchievementBook" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/AchievementPage/Gutter" unique_id=260298331]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"SectionStack"
+
+[node name="AchievementHead" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/AchievementPage/Gutter/AchievementBook" unique_id=941614084]
+layout_mode = 2
+theme_type_variation = &"Tight"
+
+[node name="AchievementCount" type="Label" parent="Window/Layout/Content/Body/Pages/AchievementPage/Gutter/AchievementBook/AchievementHead" unique_id=286027107]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatHeading"
+text = "0 von 0 Erfolgen"
+
+[node name="AchievementBar" type="ProgressBar" parent="Window/Layout/Content/Body/Pages/AchievementPage/Gutter/AchievementBook/AchievementHead" unique_id=1570801029]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+theme_type_variation = &"XpBar"
+max_value = 1.0
+step = 0.0
+show_percentage = false
+
+[node name="AchievementHint" type="Label" parent="Window/Layout/Content/Body/Pages/AchievementPage/Gutter/AchievementBook/AchievementHead" unique_id=919205452]
+layout_mode = 2
+theme_type_variation = &"Hint"
+text = "Erfolge gibt es einmal und für immer. Offene zeigen, wie weit du schon bist; versteckte verraten sich erst, wenn du sie hast."
+autowrap_mode = 3
+
+[node name="UnlockedList" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/AchievementPage/Gutter/AchievementBook" unique_id=991811759]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Tight"
+
+[node name="LockedRule" type="HSeparator" parent="Window/Layout/Content/Body/Pages/AchievementPage/Gutter/AchievementBook" unique_id=829786056]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatRule"
+
+[node name="LockedList" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/AchievementPage/Gutter/AchievementBook" unique_id=1608320878]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Tight"
 
 [node name="JointLeft" type="TextureRect" parent="Window" unique_id=2141774432]
 texture_filter = 4

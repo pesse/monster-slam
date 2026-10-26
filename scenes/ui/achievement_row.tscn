@@ -1,0 +1,71 @@
+[gd_scene format=3 uid="uid://bbq5gmdn2xxhn"]
+
+[ext_resource type="Script" uid="uid://cb2ds38vm6qi0" path="res://src/ui/achievement_row.gd" id="1_row"]
+[ext_resource type="Shader" uid="uid://7ncejj7ro7hr" path="res://assets/shaders/locked.gdshader" id="2_locked"]
+
+[sub_resource type="ShaderMaterial" id="locked"]
+shader = ExtResource("2_locked")
+
+[node name="AchievementRow" type="PanelContainer" unique_id=753674512]
+theme_type_variation = &"AchievementCard"
+script = ExtResource("1_row")
+locked_material = SubResource("locked")
+
+[node name="Row" type="HBoxContainer" parent="." unique_id=1258952707]
+layout_mode = 2
+theme_type_variation = &"ScreenStack"
+
+[node name="Icon" type="TextureRect" parent="Row" unique_id=1935010504]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+size_flags_vertical = 4
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Text" type="VBoxContainer" parent="Row" unique_id=1827755103]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_type_variation = &"Tight"
+
+[node name="Name" type="Label" parent="Row/Text" unique_id=161219038]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"StatSubline"
+text = "Erfolg"
+autowrap_mode = 3
+
+[node name="Detail" type="Label" parent="Row/Text" unique_id=321862909]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Hint"
+autowrap_mode = 3
+
+[node name="Progress" type="HBoxContainer" parent="Row/Text" unique_id=337984075]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Tight"
+
+[node name="Bar" type="ProgressBar" parent="Row/Text/Progress" unique_id=1639898502]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 8)
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"XpBar"
+max_value = 1.0
+step = 0.0
+show_percentage = false
+
+[node name="Count" type="Label" parent="Row/Text/Progress" unique_id=79858471]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Caption"
+
+[node name="State" type="Label" parent="Row" unique_id=1303116413]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(144, 0)
+layout_mode = 2
+theme_type_variation = &"Caption"
+horizontal_alignment = 2
