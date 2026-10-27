@@ -456,6 +456,13 @@ func test_achievement_rows_sort_and_hide() -> void:
 			assert_array(row["progress"]).is_equal([3, 30])
 
 
+func test_achievement_rows_reveal_hidden_for_the_workbench() -> void:
+	var catalog := Achievements.catalog([])
+	var rows := STATS_SCREEN.achievement_rows(catalog, {}, {}, true)
+	assert_int(int(rows["hidden"])).is_equal(0)
+	assert_int((rows["locked"] as Array).size()).is_equal(catalog.size())
+
+
 func test_an_empty_day_says_why() -> void:
 	assert_str(STATS_SCREEN.day_empty_text(true, true)).contains("Heute")
 	assert_str(STATS_SCREEN.day_empty_text(false, true)).contains("keine Plakette")

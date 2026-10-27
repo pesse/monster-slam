@@ -47,6 +47,9 @@ const LANGUAGE_HINT := "Ein Klick schaltet die Sprache an oder aus, mehrere zugl
 ## Das Fenster will zu. Ohne Verbindung geht `close` selbst ins Startmenü.
 signal closed()
 
+## Nur für die Werkbank: versteckte Erfolge als offene Karten mit Namen statt nur gezählt.
+var reveal_hidden := false
+
 @onready var _streak_label: Label = %StreakLabel
 @onready var _streak_note: Label = %StreakNote
 @onready var _coin_strip: CoinStrip = %CoinStrip
@@ -327,7 +330,7 @@ func _refresh_achievements() -> void:
 	var languages := Achievements.languages()
 	var catalog := Achievements.catalog(languages)
 	var sorted := achievement_rows(catalog, AchievementBook.unlocked(),
-			Achievements.live_facts(languages))
+			Achievements.live_facts(languages), reveal_hidden)
 	var done: Array = sorted["unlocked"]
 	(%AchievementCount as Label).text = "%d von %d Erfolgen" % [done.size(), catalog.size()]
 	(%AchievementBar as ProgressBar).value = float(done.size()) / float(maxi(1, catalog.size()))
@@ -357,8 +360,9 @@ func _add_achievement(box: VBoxContainer, entry: Dictionary, unlocked_at: int,
 
 ## Ordnet den Katalog für den Reiter: {unlocked: [{entry, at}] jüngste zuerst, locked:
 ## [{entry, progress}] in Katalogfolge, hidden: Zahl der noch versteckten}. `unlocked` wie
-## AchievementBook.unlocked, `facts` wie Achievements.live_facts.
-static func achievement_rows(catalog: Array, unlocked: Dictionary, facts: Dictionary) -> Dictionary:
+## AchievementBook.unlocked, `facts` wie Achievements.live_facts; `reveal` zählt keine als versteckt.
+static func achievement_rows(catalog: Array, unlocked: Dictionary, facts: Dictionary,
+		reveal := false) -> Dictionary:
 	var done: Array = []
 	var open: Array = []
 	var hidden := 0
@@ -366,7 +370,7 @@ static func achievement_rows(catalog: Array, unlocked: Dictionary, facts: Dictio
 		var id := str(entry["id"])
 		if unlocked.has(id):
 			done.append({"entry": entry, "at": int(unlocked[id]), "i": done.size()})
-		elif bool(entry.get("hidden", false)):
+		elif bool(entry.get("hidden", false)) and not reveal:
 			hidden += 1
 		else:
 			open.append({"entry": entry, "progress": Achievements.progress(entry, facts)})

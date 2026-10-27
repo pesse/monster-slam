@@ -13,6 +13,7 @@ extends Node
 ##     … -- --shoot --month=-1         Monatsreihe um so viele Monate geblättert
 ##     … -- --shoot --scroll=400       gezeigter Reiter um so viele Pixel nach unten geschoben
 ##     … -- --shoot --language=fr,la   Sprachwahl auf diese Sprachen gestellt (Issue #45)
+##     … -- --reveal                  versteckte Erfolge mit Namen (auch ohne --shoot, im Fenster)
 ##     … -- --sizes                    druckt die Mindestgrößen der Überblick-Abschnitte
 ## Zeigt den echten Stand des Entwicklungsprofils, schreibt nichts. Die Bilder tragen Wörter
 ## und bleiben unter reports/ (gitignored).
@@ -29,6 +30,7 @@ func _ready() -> void:
 		var parts := size.split("x")
 		get_window().size = Vector2i(int(parts[0]), int(parts[1]))
 	var screen := (load(SCREEN_SCENE) as PackedScene).instantiate()
+	screen.reveal_hidden = _has_arg("reveal")
 	add_child(screen)
 	if _has_arg("sizes"):
 		_print_sizes.call_deferred(screen.get_node("%OverviewPage"), 0)
@@ -52,6 +54,8 @@ func _shoot(screen: Node) -> void:
 		var tabs := screen.get_node("%Tabs").get_children()
 		(tabs[int(_arg("tab"))] as Button).button_pressed = true
 		tag += "_tab" + _arg("tab")
+	if _has_arg("reveal"):
+		tag += "_reveal"
 	if not _arg("toast").is_empty():
 		AchievementToast.announce(_arg("toast"))
 		tag += "_toast"
