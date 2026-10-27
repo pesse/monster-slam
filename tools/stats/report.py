@@ -6,11 +6,10 @@ Tages-Snapshots und der bereinigten Spur), und schreibt eine Übersicht:
 
     python3 tools/stats/report.py                       # stats-data/ms-stats -> stats-data/report.html
     python3 tools/stats/report.py --data DIR --out FILE
+    python3 tools/stats/report.py --serve [PORT]        # http://127.0.0.1:8765, bei jedem Laden neu
     python3 tools/stats/report.py --self-test           # ohne Daten, für die CI
 
-Lexem-Ids werden aus dem Submodule (data/language/lexemes) zu Wörtern aufgelöst. Die
-Seite enthält damit Wortlisten aus geschütztem Material: sie bleibt auf diesem Rechner,
-wie stats-data/ selbst (gitignored), und gehört in kein Repo und in keinen Report.
+Lexem-Ids werden aus dem Submodule (data/language/lexemes) zu Wörtern aufgelöst.
 
 Nur Standardbibliothek.
 """
@@ -22,12 +21,14 @@ import collections
 import datetime as dt
 import gzip
 import html
+import http.server
 import json
 import pathlib
 import re
 import statistics
 import sys
 import tempfile
+import webbrowser
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 
@@ -287,8 +288,7 @@ def render(profiles: list[dict], lemmas: dict[str, str], prices: dict | None = N
     answers = answer_profile(profiles)
     parts = [
         "<h1>Monster Slam – Spieldaten</h1>",
-        "<p class=note>Lokal erzeugt am %s aus %d Profilen. Enthält Wörter aus geschütztem "
-        "Material – nicht weitergeben.</p>" % (dt.datetime.now().strftime("%d.%m.%Y %H:%M"), len(profiles)),
+        "<p class=note>Lokal erzeugt am %s aus %d Profilen.</p>" % (dt.datetime.now().strftime("%d.%m.%Y %H:%M"), len(profiles)),
         "<h2>Profile</h2>",
         table(["Profil", "App", "zuletzt", "Sitzungen", "Tage", "Minuten", "Wellen", "Antworten",
                "Quote", "Gold gesamt", "XP", "gesehen", "gemeistert", "Schwierigkeit"],
@@ -397,23 +397,63 @@ def self_test() -> None:
     print("report.py: Selbsttest bestanden.")
 
 
+def build_page(data: pathlib.Path, language: pathlib.Path) -> str:
+    return render(load_profiles(data), load_lemmas(language))
+
+
+def serve(data: pathlib.Path, language: pathlib.Path, port: int) -> None:
+    class Handler(http.server.BaseHTTPRequestHandler):
+        def do_GET(self) -> None:
+            if self.path not in ("/", "/index.html"):
+                self.send_error(404)
+                return
+            if not data.is_dir():
+                status, page = 503, "<p>Keine Daten unter %s — erst tools/stats/fetch.sh.</p>" % html.escape(str(data))
+            else:
+                status, page = 200, build_page(data, language)
+            body = page.encode("utf-8")
+            self.send_response(status)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, *args) -> None:
+            pass
+
+    with http.server.ThreadingHTTPServer(("127.0.0.1", port), Handler) as server:
+        url = "http://127.0.0.1:%d/" % server.server_address[1]
+        print("Statistik unter %s (Strg+C beendet)" % url)
+        webbrowser.open(url)
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            pass
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--data", default=str(ROOT / "stats-data" / "ms-stats"))
     parser.add_argument("--out", default=str(ROOT / "stats-data" / "report.html"))
     parser.add_argument("--language", default=str(ROOT / "data" / "language"))
+    parser.add_argument("--serve", type=int, nargs="?", const=8765, metavar="PORT",
+                        help="Seite lokal ausliefern statt schreiben (Vorgabe 8765)")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
     if args.self_test:
         self_test()
         return 0
     data = pathlib.Path(args.data)
+    if args.serve is not None:
+        serve(data, pathlib.Path(args.language), args.serve)
+        return 0
     if not data.is_dir():
         print("Keine Daten unter %s — erst tools/stats/fetch.sh." % data, file=sys.stderr)
         return 1
-    profiles = load_profiles(data)
     out = pathlib.Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
+    profiles = load_profiles(data)
     out.write_text(render(profiles, load_lemmas(pathlib.Path(args.language))), encoding="utf-8")
     print("%d Profile -> %s" % (len(profiles), out))
     return 0
