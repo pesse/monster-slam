@@ -209,6 +209,18 @@ func test_a_long_queue_runs_faster() -> void:
 	remove_child(toast)
 
 
+func test_warm_up_card_stays_under_the_veil() -> void:
+	var toast: CanvasLayer = auto_free(TOAST.instantiate())
+	add_child(toast)
+	var veil: CanvasLayer = auto_free(preload("res://scenes/ui/scene_zoom.tscn").instantiate())
+	var top := toast.layer
+	toast.warm_up()
+	assert_int(toast.layer).is_less(veil.layer)
+	toast.cool_down()
+	assert_int(toast.layer).is_equal(top)
+	remove_child(toast)
+
+
 # --- Ansicht ------------------------------------------------------------------
 
 func test_every_achievement_has_a_picture() -> void:

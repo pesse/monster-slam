@@ -12,6 +12,9 @@ const FAST_FROM := 3
 const SLIDE_S := 0.25
 const FADE_S := 0.3
 const SLIDE_PX := 48.0
+## Ebene beim Vorwärmen: unter dem Schleier (SceneZoom, Ebene 100). Bei gleicher Ebene
+## entscheidet der Index unter dem jeweiligen Elternknoten, und der Autoload hängt woanders.
+const WARM_LAYER := 99
 
 ## Eine Einblendung beginnt (für Tests und Werkbänke).
 signal shown(id: String)
@@ -20,6 +23,7 @@ var _queue: Array[String] = []
 var _playing := false
 var _start_queued := false
 
+@onready var _top_layer := layer
 @onready var _card: Control = %Card
 @onready var _icon: TextureRect = %Icon
 @onready var _title: Label = %Title
@@ -56,11 +60,13 @@ func warm_up() -> void:
 	_icon.texture = Achievements.icon(Achievements.HIDDEN_ICON)
 	_title.text = FxWarmup.GLYPHS
 	_body.text = FxWarmup.GLYPHS
+	layer = WARM_LAYER
 	_card.modulate.a = 1.0
 	_card.visible = true
 
 
 func cool_down() -> void:
+	layer = _top_layer
 	if not is_busy():
 		_card.visible = false
 
