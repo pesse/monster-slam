@@ -53,6 +53,14 @@
 		"price": 75
 	},
 	{
+		"id": "spell.recall",
+		"name": "Bumerang",
+		"icon": "🪃",
+		"description": "Ein Windstoß trägt alle Monster auf dem Feld zurück an den Start.",
+		"effect": "recall",
+		"price": 100
+	},
+	{
 		"id": "spell.thunder",
 		"name": "Donnerschlag",
 		"icon": "⚡",

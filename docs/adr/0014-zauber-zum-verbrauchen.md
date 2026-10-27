@@ -58,6 +58,7 @@ werden. Deshalb gibt kein Zauber etwas, das beim Lernen zählt.
    |---|---|---|
    | `reveal_alts` | Das Schild am Monster zeigt zusätzlich die Alternativen der Aufgabe (`prompt_alt`). | `scope`: `field` oder `wave` |
    | `reveal_initial` | Das Schild zeigt den ersten Buchstaben der ersten Lösung („g…“, `AnswerEvaluator.initial`), nicht bei Monstern, deren ganze Lösung schon dasteht (ADR 0027). Nachtrag 2026-10-27, Issue #50. | — |
+   | `recall` | Ein Windstoß fährt von der Mauer zur Startlinie und trägt jedes Monster, das er erreicht, mit zurück (`Monster.send_back`); eines, das dort schon steht, nicht. Nachtrag 2026-10-27, Issue #50. | — |
    | `slow` | Die Monster laufen langsamer, über einen Faktor am Monster, nicht über `Engine.time_scale` (das gehört `SlowMotion` und bremste auch das Tippen). | `scope`, `factor` |
    | `freeze` | Die Monster auf dem Feld bleiben stehen. | `duration` (s) |
    | `strike` | Ein Blitz nimmt alle Monster vom Feld. | — |
@@ -73,7 +74,7 @@ werden. Deshalb gibt kein Zauber etwas, das beim Lernen zählt.
      Abzug. Ebenso mit sichtbarem ersten Buchstaben: der Rest des Worts ist Abruf. Die
      Spur vermerkt ihn (`hint` an `answer`), damit sich prüfen lässt, ob solche Treffer
      die Meisterung zu leicht machen.
-   - Einfrieren und Verlangsamen verschieben `spawned_at_ms` nicht.
+   - Einfrieren, Verlangsamen und Zurücktragen verschieben `spawned_at_ms` nicht.
    - Ein Blitz behandelt Monster wie das Wachkatapult: erledigt für den Wellenbalken,
      sonst nichts. Kein Lernstand, keine Erfahrung, keine Punkte, kein Gold, kein Eintrag
      in der Auflösung. Dafür gibt es ein eigenes Signal `monster_struck`, damit die Spur

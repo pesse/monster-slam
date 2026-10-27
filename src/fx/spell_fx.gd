@@ -15,6 +15,7 @@ const MARK_SHADER := preload("res://assets/shaders/ground_mark.gdshader")
 const COLORS := {
 	"reveal_alts": Color(0.72, 0.45, 1.0),
 	"reveal_initial": Color(1.0, 0.78, 0.35),
+	"recall": Color(0.3, 0.92, 0.85),
 	"slow": Color(0.55, 0.85, 0.2),
 	"freeze": Color(0.62, 0.86, 1.0),
 	"strike": Color(0.6, 0.78, 1.0),
@@ -32,6 +33,7 @@ const HAZE_DENSITY := [0.42, 0.36, 0.3, 0.24, 0.16, 0.09]
 const SOUNDS := {
 	"reveal_alts": &"spell_reveal",
 	"reveal_initial": &"spell_whisper",
+	"recall": &"spell_recall",
 	"slow": &"spell_slow",
 	"freeze": &"spell_freeze",
 	"strike": &"spell_thunder_windup",
@@ -55,6 +57,7 @@ const SCORCH_TIME := 5.0
 const SETTLE := {
 	"reveal_alts": SWEEP_TIME + 0.6,
 	"reveal_initial": SWEEP_TIME + 0.6,
+	"recall": SWEEP_TIME + 0.6,
 	"slow": 1.0,
 	"freeze": 1.2,
 	"heal": 1.5,
@@ -101,6 +104,12 @@ func play(spell: Dictionary, field: Array[Monster]) -> void:
 		"reveal_initial":
 			_whisper(color, field)
 			_veil(color, 0.14, 0.08, 0.1, 0.6)
+		"recall":
+			_sweep(color, false)
+			for monster in field:
+				_burst_at(monster, reveal_delay(monster), color)
+			_veil(color, 0.16, 0.06, 0.1, 0.7)
+			shake.call(0.2)
 		"slow":
 			for monster in field:
 				_splash(monster.position, color)
@@ -139,6 +148,11 @@ func _hold(seconds: float) -> void:
 ## Wann das Schild von `monster` aufgeht: wenn der Lichtvorhang es erreicht (s).
 func reveal_delay(monster: Monster) -> float:
 	return clampf(inverse_lerp(front_z, back_z, monster.position.z), 0.0, 1.0) * SWEEP_TIME
+
+
+## Wie schnell der Lichtvorhang übers Feld fährt (m/s); der Bumerang trägt die Monster mit.
+func sweep_speed() -> float:
+	return (front_z - back_z) / SWEEP_TIME
 
 
 ## Der `index`-te Blitz des Donnerschlags auf das schon angehaltene `monster`; `landed` wird
@@ -257,10 +271,11 @@ func _whisper(color: Color, field: Array[Monster]) -> void:
 	_ring(Vector3(0.0, 0.12, front_z), color, (front_z - back_z) * 2.0, SWEEP_TIME)
 	for monster in field:
 		if monster.can_show_initial():
-			_whisper_at(monster, reveal_delay(monster), color)
+			_burst_at(monster, reveal_delay(monster), color)
 
 
-func _whisper_at(monster: Monster, delay: float, color: Color) -> void:
+## Funken über dem Kopf von `monster`, wenn der Zauber es nach `delay` (s) erreicht.
+func _burst_at(monster: Monster, delay: float, color: Color) -> void:
 	await get_tree().create_timer(delay, false).timeout
 	if not is_instance_valid(monster):
 		return

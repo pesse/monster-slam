@@ -1013,7 +1013,8 @@ Ein Zauber ist ein Verbrauchsgegenstand: `price` in Gold, `effect` aus
 - **Am Monster**: Verlangsamen über `Monster.pace` (der kleinere Faktor gewinnt), nie über
   `Engine.time_scale`. Einfrieren zählt `_frozen_left` in Spielzeit herunter, Umriss
   eisblau, Animation steht. `Monster.velocity()` kennt beides, der Vorhalt des Katapults
-  also auch. Die Alternativen (`prompt_alt` der Aufgabe) zeigt das Wortschild als zweite
+  also auch. Der Bumerang (`send_back`) lässt es nach einer Wartezeit mit dem Windstoß zur
+  Startlinie fliegen (`velocity()` zeigt dann zurück). Die Alternativen (`prompt_alt` der Aufgabe) zeigt das Wortschild als zweite
   Zeile (`WordPlate.alt_line`, Signal `alts_revealed`), den ersten Buchstaben der Lösung
   in der Zeile der Lösung (`WordPlate.initial_line`, Signal `initial_revealed`).
 - **Donnerschlag** nimmt jedes Monster auf dem Feld über `WaveRunner._strike` sofort vom

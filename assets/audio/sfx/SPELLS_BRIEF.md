@@ -4,7 +4,7 @@ Die Zauber (ADR 0014) klingen bisher nach dem Bestand (`slow_mo_in`/`_out`, beim
 `fortress_hit` und `monster_kill`). Jede Wirkung soll ihren eigenen Ton bekommen, passend zum
 Bild in `SpellFx` (Werkbank: `battle_theme_lab`, Reiter „Zauber").
 
-**Stand 2026-10-27:** neu `spell_whisper` (Flüstermuschel), ElevenLabs, Prompt in
+**Stand 2026-10-27:** neu `spell_whisper` (Flüstermuschel) und `spell_recall` (Bumerang), ElevenLabs, Prompt in
 `../CREDITS.md`, Profil-Eintrag in `tools/sound_eval/profiles/monster_slam.yaml`.
 
 **Stand 2026-10-12:** `spell_reveal` und `spell_freeze` sind durch ElevenLabs-Generierungen

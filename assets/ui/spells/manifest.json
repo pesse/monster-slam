@@ -64,6 +64,13 @@
       "height": 256,
       "notes": "Isolated spell icon; centered <=208 px motif, genuine alpha. Source: sources/whisper.png; generated singly (Codex session 01a17dbf-2da8-7343-b671-a0b28822ef56).",
       "sha256": "6aa43d45bca49b1df73dbdb1ff1fa240460988712916079c894e3ea3377d1b2a"
+    },
+    "icons/recall": {
+      "path": "res://assets/ui/spells/icons/recall.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated spell icon; centered <=208 px motif, genuine alpha. Source: sources/recall.png; generated singly (Codex session 01a17e44-188c-7941-846d-86cc79a8d7b1).",
+      "sha256": "268d555494401fc34028f96b09cf41a7613fc66fe9eb560b19e0a37b5ef1b6d2"
     }
   }
 }

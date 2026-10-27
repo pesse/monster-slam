@@ -266,12 +266,14 @@ func _ready() -> void:
 	_spelling.finished.connect(_on_spelling_finished)
 	_spells.strike = _strike
 	_spells.reveal_delay = _spell_fx.reveal_delay
+	_spells.start_z = SPAWN_Z
 	_spell_fx.settled.connect(_check_end)
 	_spell_fx.veil = $UI/SpellVeil as ColorRect
 	_spell_fx.shake = _shake
 	_spell_fx.front_z = GOAL_Z
 	_spell_fx.back_z = SPAWN_Z
 	_spell_fx.half_width = LANE_HALF_WIDTH
+	_spells.back_speed = _spell_fx.sweep_speed()
 	_spell_fx.fortress = Vector3(0.0, 0.0, GOAL_Z + 2.0 * FORTRESS_GROW)
 	add_child(_spell_fx)
 	_difficulty = UserSettings.default_difficulty()

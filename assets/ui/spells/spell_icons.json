@@ -5,6 +5,7 @@
   "spell.mire": "res://assets/ui/spells/icons/mire.webp",
   "spell.lull": "res://assets/ui/spells/icons/lull.webp",
   "spell.frost": "res://assets/ui/spells/icons/frost.webp",
+  "spell.recall": "res://assets/ui/spells/icons/recall.webp",
   "spell.thunder": "res://assets/ui/spells/icons/thunder.webp",
   "spell.mend": "res://assets/ui/spells/icons/mend.webp",
   "spell.plate": "res://assets/ui/spells/icons/plate.webp"

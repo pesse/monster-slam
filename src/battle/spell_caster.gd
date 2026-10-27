@@ -6,13 +6,16 @@ extends RefCounted
 ## (`scope: wave`), bekommt jedes neue Monster über `on_spawn` bis `reset_wave`.
 
 ## Die Wirkungen, die es gibt — was in `effect` eines Zaubers stehen darf.
-const EFFECTS := ["reveal_alts", "reveal_initial", "slow", "freeze", "strike", "heal", "armor"]
+const EFFECTS := ["reveal_alts", "reveal_initial", "recall", "slow", "freeze", "strike", "heal", "armor"]
 
 ## Nimmt ein Monster per Blitz vom Feld (WaveRunner).
 var strike: Callable
-## Nach wie vielen Sekunden das Schild eines Monsters aufgeht (Alternativen, erster
-## Buchstabe). Ohne: sofort.
+## Wann die Welle des Zaubers ein Monster erreicht (s): das Schild geht auf (Alternativen,
+## erster Buchstabe), der Bumerang trägt es zurück. Ohne: sofort.
 var reveal_delay := func(_monster: Monster) -> float: return 0.0
+## Bumerang: wohin die Monster zurückfliegen (z der Startlinie) und wie schnell (m/s).
+var start_z := -24.0
+var back_speed := 40.0
 ## Tempo-Anteil für den Rest der Welle (1 = ungebremst).
 var wave_pace := 1.0
 ## Zeigen alle Monster dieser Welle ihre Alternativen?
@@ -52,6 +55,8 @@ func can_cast(spell: Dictionary, field: Array[Monster], to_come: int) -> bool:
 			return false
 		"reveal_initial":
 			return field.any(func(monster: Monster) -> bool: return monster.can_show_initial())
+		"recall":
+			return field.any(func(monster: Monster) -> bool: return monster.can_send_back(start_z))
 		"slow":
 			var factor := float(params.get("factor", 0.5))
 			if whole_wave and factor < wave_pace:
@@ -84,6 +89,9 @@ func cast(spell: Dictionary, field: Array[Monster], to_come: int) -> void:
 		"reveal_initial":
 			for monster in field:
 				monster.show_initial(reveal_delay.call(monster))
+		"recall":
+			for monster in field:
+				monster.send_back(start_z, reveal_delay.call(monster), back_speed)
 		"slow":
 			var factor := float(params.get("factor", 0.5))
 			if whole_wave:

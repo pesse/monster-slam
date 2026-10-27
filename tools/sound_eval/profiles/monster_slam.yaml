@@ -70,6 +70,15 @@ effects:
     files: [spell_whisper*]
     generation_prompt: >
       Magic whisper spell: a soft breathy airy whisper swirling out of a seashell, like a secret being told, no words, ending in a small warm golden chime sparkle, gentle and mysterious, fantasy game sound
+  spell_recall:
+    description: Bumerang – ein kräftiger Windstoß, der alles zurückwirft, mit dem Wirbeln eines Bumerangs, der umkehrt.
+    prompts:
+      - strong magical gust of wind sweeping away with a whirling boomerang spin
+      - whooshing wind blast that throws things back
+    duration: [0.8, 1.2]
+    files: [spell_recall*]
+    generation_prompt: >
+      Magic boomerang spell: a quick whirling boomerang spin whoosh turning around, followed by a strong gust of wind that sweeps everything back into the distance, playful and powerful, fantasy game sound
   spell_slow:
     description: Sumpf – schmatzender Schlamm, ein, zwei Blasen; eher komisch als eklig.
     prompts:

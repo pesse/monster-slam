@@ -1713,12 +1713,14 @@ func _cast_spell(spell: Dictionary, short_frost := false) -> void:
 	elif effect == "armor":
 		GameState.fortress_armor_max = maxi(GameState.fortress_armor_max, 50)
 		GameState.fortress_armor = 10
-	if _field().is_empty() and effect in ["reveal_alts", "reveal_initial", "slow", "freeze", "strike"]:
+	if _field().is_empty() and effect in ["reveal_alts", "reveal_initial", "recall", "slow", "freeze", "strike"]:
 		_fill_field()
 	_spell_fx.front_z = _goal()
 	_spell_fx.back_z = _spawn_z
 	_spell_fx.half_width = _lane_half
 	_spell_fx.fortress = Vector3(0.0, 0.0, _goal() + 2.0 * WaveRunnerScript.FORTRESS_GROW)
+	_caster.start_z = _spawn_z
+	_caster.back_speed = _spell_fx.sweep_speed()
 	var field := _field()
 	($UI/SpellBanner as SpellBanner).play(spell)
 	_spell_fx.play(spell, field)

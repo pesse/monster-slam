@@ -42,6 +42,12 @@ var alts_shown := false
 var initial_shown := false
 ## Wie lange es noch eingefroren ist (s Spielzeit).
 var _frozen_left := 0.0
+## Bumerang (`send_back`): Wartezeit bis zum Abflug (s), Restflugzeit (s), Ziel-z und
+## Fluggeschwindigkeit (m/s).
+var _back_wait := 0.0
+var _back_left := 0.0
+var _back_to := 0.0
+var _back_speed := 0.0
 ## Bild der Zauber am Monster, solange sie wirken.
 var _frost: FrostShell
 var _aura: SlowAura
@@ -144,6 +150,48 @@ func show_alts(delay := 0.0) -> bool:
 	return true
 
 
+## Mindestens so weit (m) muss ein Monster vor `to_z` stehen, damit der Bumerang es zurückholt.
+const SEND_BACK_MIN := 2.0
+## Der Flug zurück: so hoch hüpft es (m), einmal um die eigene Achse.
+const SEND_BACK_HOP := 1.2
+
+
+## Würde der Bumerang es zurück nach `to_z` holen? Nicht, wenn es schon fliegt oder dort steht.
+func can_send_back(to_z: float) -> bool:
+	return not _done and _back_wait <= 0.0 and _back_left <= 0.0 \
+			and position.z > to_z + SEND_BACK_MIN
+
+
+## Fliegt nach `wait` Sekunden mit `speed` (m/s) zurück nach `to_z`; bis dahin läuft es weiter.
+## False, wenn es nichts zurückzuholen gibt (`can_send_back`).
+func send_back(to_z: float, wait: float, speed: float) -> bool:
+	if not can_send_back(to_z) or speed <= 0.0:
+		return false
+	_back_to = to_z
+	_back_speed = speed
+	_back_wait = wait
+	if wait <= 0.0:
+		_fly_back()
+	return true
+
+
+func is_flying_back() -> bool:
+	return _back_left > 0.0
+
+
+func _fly_back() -> void:
+	_back_wait = 0.0
+	_back_left = maxf(0.0, position.z - _back_to) / _back_speed
+	if _back_left <= 0.0 or _body == null:
+		return
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(_body, "rotation:y", _body.rotation.y + TAU, _back_left)
+	tw.tween_property(self, "position:y", SEND_BACK_HOP, _back_left / 2.0) \
+			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.chain().tween_property(self, "position:y", 0.0, _back_left / 2.0) \
+			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+
+
 ## Bremst auf `factor` des eigenen Tempos; es gilt die stärkere Bremse. False, wenn es schon
 ## so langsam ist.
 func slow_to(factor: float) -> bool:
@@ -179,7 +227,8 @@ func is_frozen() -> bool:
 func seconds_left() -> float:
 	if _done or _speed * pace <= 0.0:
 		return INF
-	return maxf(0.0, _target_z - position.z) / (_speed * pace) + _frozen_left
+	var from := _back_to if is_flying_back() else position.z
+	return maxf(0.0, _target_z - from) / (_speed * pace) + _frozen_left + _back_left
 
 
 func _update_animation() -> void:
@@ -319,6 +368,8 @@ func body_box() -> AABB:
 
 ## Geschwindigkeit in m je Sekunde Spielzeit; null, wenn es steht.
 func velocity() -> Vector3:
+	if is_flying_back():
+		return Vector3(0.0, 0.0, -_back_speed)
 	return Vector3.ZERO if _done or is_frozen() else Vector3(0.0, 0.0, _speed * pace)
 
 
@@ -358,6 +409,15 @@ func _lean(rest: Transform3D, axis: Vector3, t: float) -> void:
 
 func _physics_process(delta: float) -> void:
 	if _done:
+		return
+	if _back_wait > 0.0:
+		_back_wait -= delta
+		if _back_wait <= 0.0:
+			_fly_back()
+	if is_flying_back():
+		var step := minf(delta, _back_left)
+		position.z -= _back_speed * step
+		_back_left -= step
 		return
 	if is_frozen():
 		_frozen_left = maxf(0.0, _frozen_left - delta)

@@ -54,7 +54,7 @@ func test_every_spell_in_the_data_is_complete() -> void:
 
 ## Auf leerem Feld wirkt kein Feld-Zauber — und wird deshalb nicht verbraucht.
 func test_field_spells_need_monsters() -> void:
-	for effect in ["freeze", "strike", "slow", "reveal_alts", "reveal_initial"]:
+	for effect in ["freeze", "strike", "slow", "reveal_alts", "reveal_initial", "recall"]:
 		assert_bool(_caster.can_cast(_spell(effect), _field([]), 0)) \
 				.append_failure_message(effect).is_false()
 
@@ -133,6 +133,36 @@ func test_the_first_letter_shows_where_the_answer_is_hidden() -> void:
 	assert_bool(blank.initial_shown).is_false()
 	assert_str(WordPlate.initial_line(plain.initial())).is_equal("g…")
 	assert_bool(_caster.can_cast(whisper, _field([plain, copied, blank]), 0)).is_false()
+
+
+## Der Bumerang trägt ein Monster zurück an die Startlinie, wenn der Wind es erreicht; eins,
+## das schon dort steht, bleibt, wo es ist.
+func test_the_boomerang_carries_monsters_back_to_the_start() -> void:
+	var near := _monster()
+	near.position.z = 10.0
+	var home := _monster()
+	home.position.z = -23.0
+	_caster.start_z = -24.0
+	_caster.back_speed = 20.0
+	_caster.reveal_delay = func(monster: Monster) -> float:
+		return 0.5 if monster == near else 0.0
+	var recall := _spell("recall")
+	assert_bool(_caster.can_cast(recall, _field([home]), 0)).is_false()
+	assert_bool(_caster.can_cast(recall, _field([home, near]), 0)).is_true()
+	_caster.cast(recall, _field([home, near]), 0)
+	assert_bool(home.is_flying_back()).is_false()
+	# Bis der Wind es erreicht, läuft es weiter auf die Festung zu.
+	near._physics_process(0.4)
+	assert_float(near.position.z).is_greater(10.0)
+	assert_bool(_caster.can_cast(recall, _field([home, near]), 0)).is_false()
+	near._physics_process(0.2)
+	assert_bool(near.is_flying_back()).is_true()
+	assert_float(near.velocity().z).is_less(0.0)
+	for i in 30:
+		if near.is_flying_back():
+			near._physics_process(0.1)
+	assert_bool(near.is_flying_back()).is_false()
+	assert_float(near.position.z).is_equal_approx(-24.0, 0.001)
 
 
 ## Der Donnerschlag gibt jedes Monster auf dem Feld an den WaveRunner (`strike`).

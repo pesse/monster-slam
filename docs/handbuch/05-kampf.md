@@ -117,6 +117,8 @@ Bosskampf gibt es keine Zauber.
   die ganze Welle, auch auf die, die erst noch kommen. Richtig ist richtig, auch mit Hilfe.
 - **Flüstermuschel** – die Monster auf dem Feld verraten den ersten Buchstaben ihrer
   Lösung („h…“). Bei einem neuen Wort, dessen Lösung schon dasteht, ändert sie nichts.
+- **Bumerang** – ein Windstoß trägt alle Monster auf dem Feld zurück an den Start. Sie
+  behalten ihr Wort und laufen von dort wieder los.
 - **Sumpf / Schwere Luft** – die Monster laufen halb so schnell, wieder auf dem Feld oder
   für die ganze Welle.
 - **Frost** – die Monster auf dem Feld frieren zehn Sekunden lang ein.

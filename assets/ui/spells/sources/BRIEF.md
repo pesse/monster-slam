@@ -16,6 +16,7 @@ werden acht gemalte Icons. Die Prompts stehen in `prompts.json`.
 | `spell.mend` | Lebensquell | +25 Leben | Rubinherz, aus dem Quellwasser perlt | `icons/mend.webp` |
 | `spell.plate` | Eisenhaut | +25 Rüstung | genieteter Stahlbrustpanzer mit Glanz | `icons/plate.webp` |
 | `spell.whisper` | Flüstermuschel | erster Buchstabe der Lösung, Feld | perlmuttene Tritonsmuschel, bernsteingoldenes Licht aus der Öffnung, Klangbögen (nachbestellt 2026-10-27, einzeln) | `icons/whisper.webp` |
+| `spell.recall` | Bumerang | alle Monster zurück an den Start | Holzbumerang mit türkis leuchtenden Rillen und Wendebogen (nachbestellt 2026-10-27, einzeln) | `icons/recall.webp` |
 
 ## Abgrenzung
 
