@@ -60,6 +60,7 @@ werden. Deshalb gibt kein Zauber etwas, das beim Lernen zählt.
    | `reveal_initial` | Das Schild zeigt den ersten Buchstaben der ersten Lösung („g…“, `AnswerEvaluator.initial`), nicht bei Monstern, deren ganze Lösung schon dasteht (ADR 0027). Nachtrag 2026-10-27, Issue #50. | — |
    | `recall` | Ein Windstoß fährt von der Mauer zur Startlinie und trägt jedes Monster, das er erreicht, mit zurück (`Monster.send_back`); eines, das dort schon steht, nicht. Nachtrag 2026-10-27, Issue #50. | — |
    | `weaken` | Für den Rest der Welle machen alle Monster den Anteil `share` ihres Schadens und schrumpfen sichtbar. Ein fester Anteil statt „Schaden einer früheren Welle“, weil dieser hinten in der flachen Schadenskurve kaum noch abzieht. Gold, Punkte und Tempo bleiben. Nachtrag 2026-10-27, Issue #50. | `share` |
+   | `block` | Die nächsten `count` besiegten Monster hinterlassen einen Knochenhaufen (`SpellCaster.leave_pile`). Wer dahinter hineinläuft, steht `duration` Sekunden (`Monster.hold`), einmal je Haufen, und klettert dann drüber. Die Haufen liegen bis zum Ende der Welle; beim Rasten kommen sie mit. Nachtrag 2026-10-27, Issue #50. | `count`, `duration` (s) |
    | `slow` | Die Monster laufen langsamer, über einen Faktor am Monster, nicht über `Engine.time_scale` (das gehört `SlowMotion` und bremste auch das Tippen). | `scope`, `factor` |
    | `freeze` | Die Monster auf dem Feld bleiben stehen. | `duration` (s) |
    | `strike` | Ein Blitz nimmt alle Monster vom Feld. | — |

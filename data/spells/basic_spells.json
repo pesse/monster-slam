@@ -70,6 +70,15 @@
 		"price": 70
 	},
 	{
+		"id": "spell.bones",
+		"name": "Knochenhaufen",
+		"icon": "💀",
+		"description": "Die nächsten drei Monster, die du besiegst, zerfallen zu Knochenhaufen. Wer hineinläuft, steckt fünf Sekunden fest.",
+		"effect": "block",
+		"params": { "count": 3, "duration": 5.0 },
+		"price": 80
+	},
+	{
 		"id": "spell.thunder",
 		"name": "Donnerschlag",
 		"icon": "⚡",

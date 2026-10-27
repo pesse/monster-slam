@@ -17,6 +17,7 @@ const COLORS := {
 	"reveal_initial": Color(1.0, 0.78, 0.35),
 	"recall": Color(0.3, 0.92, 0.85),
 	"weaken": Color(1.0, 0.4, 0.8),
+	"block": Color(0.95, 0.88, 0.62),
 	"slow": Color(0.55, 0.85, 0.2),
 	"freeze": Color(0.62, 0.86, 1.0),
 	"strike": Color(0.6, 0.78, 1.0),
@@ -36,6 +37,7 @@ const SOUNDS := {
 	"reveal_initial": &"spell_whisper",
 	"recall": &"spell_recall",
 	"weaken": &"spell_shrink",
+	"block": &"spell_bones",
 	"slow": &"spell_slow",
 	"freeze": &"spell_freeze",
 	"strike": &"spell_thunder_windup",
@@ -61,6 +63,7 @@ const SETTLE := {
 	"reveal_initial": SWEEP_TIME + 0.6,
 	"recall": SWEEP_TIME + 0.6,
 	"weaken": 1.0,
+	"block": 1.0,
 	"slow": 1.0,
 	"freeze": 1.2,
 	"heal": 1.5,
@@ -86,6 +89,8 @@ var _haze: Node3D
 var _haze_mats: Array[ShaderMaterial] = []
 var _busy := 0
 var _veil_tween: Tween
+## Die liegenden Knochenhaufen, in der Reihenfolge von `SpellCaster.piles`.
+var _piles: Array[BonePile] = []
 
 
 ## Der Moment des Zaubers auf `field`. Vor `SpellCaster.cast` rufen: der Donnerschlag braucht
@@ -118,6 +123,12 @@ func play(spell: Dictionary, field: Array[Monster]) -> void:
 				_burst_at(monster, 0.0, color)
 			_ring(Vector3(0.0, 0.1, (front_z + back_z) * 0.5), color, (front_z - back_z) * 1.4, 0.7)
 			_veil(color, 0.18, 0.06, 0.1, 0.7)
+		"block":
+			for monster in field:
+				_burst_at(monster, 0.0, color)
+			_ring(Vector3(0.0, 0.1, (front_z + back_z) * 0.5), color, (front_z - back_z) * 1.4, 0.7)
+			_veil(color, 0.16, 0.06, 0.1, 0.7)
+			shake.call(0.2)
 		"slow":
 			for monster in field:
 				_splash(monster.position, color)
@@ -198,6 +209,36 @@ func on_spawn(monster: Monster, effects: PackedStringArray) -> void:
 		Sfx.play(&"spell_shrink_spawn")
 
 
+## Ein Knochenhaufen springt bei `at` auf (`pop`), sonst liegt er gleich da (Rast).
+func pile(at: Vector3, pop := true) -> void:
+	var bones := BonePile.new()
+	bones.position = at
+	add_child(bones)
+	_piles.append(bones)
+	if pop:
+		bones.pop()
+		var p := _motes(COLORS["block"], 30, 0.9)
+		p.position = at + Vector3(0.0, 0.5, 0.0)
+		add_child(p)
+		_free_later(p, 1.4)
+		Sfx.play(&"spell_bones_pile")
+
+
+## Ein Monster ist in den `index`-ten Haufen gelaufen.
+func pile_hit(index: int) -> void:
+	if index < _piles.size() and is_instance_valid(_piles[index]):
+		_piles[index].rattle()
+		Sfx.play(&"spell_bones_hit")
+
+
+## Die Welle ist vorbei: alle Haufen sinken ein.
+func clear_piles() -> void:
+	for bones in _piles:
+		if is_instance_valid(bones):
+			bones.crumble()
+	_piles.clear()
+
+
 ## Schwere Luft: Dunst über dem Feld an (`on`) oder aus. Bleibt bis zum Ende der Welle.
 func haze(on: bool) -> void:
 	if on and _haze == null:
@@ -233,6 +274,7 @@ static func specimens(at: Vector3) -> Array[Node3D]:
 	var shell := FrostShell.new()
 	out.append(shell)
 	out.append(SlowAura.new())
+	out.append(BonePile.new())
 	var curtain := MeshInstance3D.new()
 	curtain.mesh = _curtain_quad(4.0, 4.0)
 	var curtain_mat := _curtain_material(COLORS["reveal_alts"], 1.0)

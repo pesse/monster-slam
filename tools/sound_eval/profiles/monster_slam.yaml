@@ -88,6 +88,24 @@ effects:
     files: [spell_shrink*]
     generation_prompt: >
       Magic shrinking spell: a playful cartoon whoop that slides quickly down in pitch with soft magical sparkles, ending in a tiny cute pop, fantasy game sound
+  spell_bones:
+    description: Knochenhaufen – ein schauriges, aber verspieltes Klappern von Knochen mit einem kleinen magischen Glitzern.
+    prompts:
+      - spooky cartoon skeleton bones rattling with a magic shimmer
+      - playful wooden bone clatter spell
+    duration: [0.8, 1.2]
+    files: [spell_bones.wav]
+    generation_prompt: >
+      Magic bone spell: a playful spooky cartoon rattle of hollow wooden skeleton bones shaking, with a short shimmering magical sparkle on top, fun not scary, fantasy game sound
+  spell_bones_pile:
+    description: Knochenhaufen springt auf – kurzes, trockenes Poltern einer Handvoll Knochen, die auf einen Haufen fallen.
+    prompts:
+      - a handful of hollow cartoon bones clattering onto a pile
+      - short dry wooden bone clatter
+    duration: [0.4, 0.7]
+    files: [spell_bones_pile*]
+    generation_prompt: >
+      A handful of hollow cartoon skeleton bones dropping and clattering onto a small heap, short dry wooden clacks, playful, game sound effect
   spell_slow:
     description: Sumpf – schmatzender Schlamm, ein, zwei Blasen; eher komisch als eklig.
     prompts:

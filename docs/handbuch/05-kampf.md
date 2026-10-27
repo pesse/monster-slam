@@ -122,6 +122,9 @@ Bosskampf gibt es keine Zauber.
 - **Schrumpfpilz** – alle Monster dieser Welle schrumpfen, auch die, die erst noch kommen.
   An der Festung machen sie nur noch halb so viel Schaden. Gold und Tempo bleiben, wie
   sie sind.
+- **Knochenhaufen** – die nächsten drei Monster, die du besiegst, zerfallen zu
+  Knochenhaufen. Ein Monster, das dahinter in einen Haufen läuft, steckt fünf Sekunden
+  fest und klettert dann drüber. Die Haufen bleiben bis zum Ende der Welle liegen.
 - **Sumpf / Schwere Luft** – die Monster laufen halb so schnell, wieder auf dem Feld oder
   für die ganze Welle.
 - **Frost** – die Monster auf dem Feld frieren zehn Sekunden lang ein.

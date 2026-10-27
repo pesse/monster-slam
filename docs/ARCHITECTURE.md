@@ -1016,7 +1016,10 @@ Ein Zauber ist ein Verbrauchsgegenstand: `price` in Gold, `effect` aus
   also auch. Der Bumerang (`send_back`) lässt es nach einer Wartezeit mit dem Windstoß zur
   Startlinie fliegen (`velocity()` zeigt dann zurück). Der Schrumpfpilz (`weaken`) setzt
   `damage` auf einen Anteil des vollen Schadens und schrumpft den Körper; für die Welle
-  merkt sich der SpellCaster den Anteil (`wave_damage`, beim Rasten im Wellenstand). Die Alternativen (`prompt_alt` der Aufgabe) zeigt das Wortschild als zweite
+  merkt sich der SpellCaster den Anteil (`wave_damage`, beim Rasten im Wellenstand). Der
+  Knochenhaufen (`block`) lässt `Monster.hold` zählen wie das Eis; welche Monster in einen
+  Haufen laufen, prüft `SpellCaster.block` je Physikschritt des WaveRunner, das Bild ist
+  `BonePile` (Modell aus `model_forge`). Die Alternativen (`prompt_alt` der Aufgabe) zeigt das Wortschild als zweite
   Zeile (`WordPlate.alt_line`, Signal `alts_revealed`), den ersten Buchstaben der Lösung
   in der Zeile der Lösung (`WordPlate.initial_line`, Signal `initial_revealed`).
 - **Donnerschlag** nimmt jedes Monster auf dem Feld über `WaveRunner._strike` sofort vom

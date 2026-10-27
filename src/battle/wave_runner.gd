@@ -856,6 +856,12 @@ static func setup_view(pivot: Node3D, camera: Camera3D, sun: DirectionalLight3D)
 	sun.shadow_normal_bias = 1.0
 
 
+## Knochenhaufen: wer hineinläuft, bleibt stehen.
+func _physics_process(_delta: float) -> void:
+	for hit: Array in _spells.block(_active):
+		_spell_fx.pile_hit(hit[1])
+
+
 func _process(delta: float) -> void:
 	if _cutscene:
 		return
@@ -1186,6 +1192,7 @@ func _start_next_wave() -> void:
 	_fast_resolve_button.disabled = false
 	_spells.reset_wave()
 	_spell_fx.haze(false)
+	_spell_fx.clear_piles()
 	_spell_slots.visible = true
 	_pause_button.visible = true
 	_pause_button.disabled = false
@@ -1241,6 +1248,13 @@ func _continue_wave(open: Dictionary, spawns: Array) -> void:
 	_spells.wave_pace = clampf(float(open.get("pace", 1.0)), 0.0, 1.0)
 	_spells.wave_alts = bool(open.get("alts", false))
 	_spells.wave_damage = clampf(float(open.get("damage", 1.0)), 0.0, 1.0)
+	_spells.bones_left = maxi(0, int(open.get("bones", 0)))
+	_spells.bones_hold = float(open.get("bones_hold", _spells.bones_hold))
+	for at in open.get("piles", []):
+		if at is Array and at.size() == 2:
+			var spot := Vector3(float(at[0]), 0.0, float(at[1]))
+			_spells.piles.append({"at": spot, "held": []})
+			_spell_fx.pile(spot, false)
 	if _spells.wave_pace < 1.0:
 		_spell_fx.haze(true)
 	for task in open.get("played", []):
@@ -1269,6 +1283,10 @@ func _open_wave_state() -> Dictionary:
 		"pace": _spells.wave_pace,
 		"alts": _spells.wave_alts,
 		"damage": _spells.wave_damage,
+		"bones": _spells.bones_left,
+		"bones_hold": _spells.bones_hold,
+		"piles": _spells.piles.map(func(pile: Dictionary) -> Array:
+			return [pile["at"].x, pile["at"].z]),
 		"played": played,
 	}
 
@@ -1941,6 +1959,8 @@ func _nearest_catapult(target: Vector3) -> Node3D:
 
 ## Was jeder Treffer nach seinem Knall tut: Klang, „+XP" und das Monster geht.
 func _leave(monster: Monster) -> void:
+	if _spells.leave_pile(monster.position):
+		_spell_fx.pile(Vector3(monster.position.x, 0.0, monster.position.z))
 	# Nicht in _spawn_explosion(): Festungsausbau und Aufschlag klingen anders.
 	Sfx.play(&"monster_kill")
 	# Erfahrung statt Punkte, in der Farbe ihres Rings im HUD.
@@ -2105,6 +2125,7 @@ func _finish_wave(won: bool) -> void:
 	_spell_slots.visible = false
 	_spells.reset_wave()
 	_spell_fx.haze(false)
+	_spell_fx.clear_piles()
 	_pause_button.visible = false
 	_view_button.visible = false
 	# Eine offene Rückfrage erledigt sich: nach dem Wellenende führt Stufe 2 weiter.

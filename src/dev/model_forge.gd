@@ -145,6 +145,8 @@ func _initialize() -> void:
 	_export("solar_panel", _solar_panel())
 	_export("wind_turbine", _wind_turbine(), 0.8)
 	_export("rice_tuft", _rice_tuft())
+	# Zauber
+	_export("bone_pile", _bone_pile())
 	quit()
 
 
@@ -3067,6 +3069,43 @@ func _wind_turbine() -> Forge:
 		var p0 := hub + d * 0.15
 		var p1 := hub + d * 3.4
 		f.leaf_quad(p0 - side * 0.12, p1, p1 + side * 0.05, p0 + side * 0.22, TURBINE_A)
+	return f
+
+
+const BONE_A := Color(0.90, 0.86, 0.74)
+const BONE_B := Color(0.78, 0.73, 0.60)
+const BONE_DARK := Color(0.20, 0.16, 0.13)
+
+
+## Knochenhaufen (Zauber, BonePile): gekreuzte Knochen, obenauf ein Schädel. Etwa 1.6 breit
+## und 0.8 hoch — ein Monster geht nicht einfach durch.
+func _bone_pile() -> Forge:
+	var f := Forge.new()
+	var rng := _rng(131)
+	var bones := [
+		[Vector3(-0.75, 0.10, -0.25), Vector3(0.65, 0.12, 0.30)],
+		[Vector3(-0.55, 0.12, 0.45), Vector3(0.60, 0.14, -0.35)],
+		[Vector3(-0.30, 0.10, -0.55), Vector3(0.10, 0.34, 0.50)],
+		[Vector3(0.70, 0.10, 0.45), Vector3(0.05, 0.38, -0.30)],
+		[Vector3(-0.70, 0.30, 0.05), Vector3(0.15, 0.26, 0.05)],
+	]
+	for k in bones.size():
+		var a: Vector3 = bones[k][0]
+		var b: Vector3 = bones[k][1]
+		var col := BONE_A if k % 2 == 0 else BONE_B
+		f.frustum(a, b, 0.075, 0.075, 6, col, rng.randf() * TAU)
+		var side := (b - a).cross(Vector3.UP).normalized() * 0.07
+		for end: Vector3 in [a, b]:
+			f.blob(end + side, 0.12, col, rng, 0.0)
+			f.blob(end - side, 0.12, col, rng, 0.0)
+	# Schädel: Kopf, Kiefer, Augenhöhlen nach +z, zur Festung und zur Kamera.
+	var skull := Vector3(-0.05, 0.62, 0.05)
+	f.lump(skull, Vector3(0.30, 0.27, 0.32), 5, 8, rng, 0.06,
+			func(_m: Vector3, n: Vector3) -> Color: return BONE_A if n.y > -0.2 else BONE_B)
+	f.box(skull + Vector3(0.0, -0.22, 0.14), Vector3(0.36, 0.14, 0.24), BONE_B, 0.0)
+	for x in [-0.11, 0.11]:
+		f.box(skull + Vector3(x, 0.02, 0.29), Vector3(0.11, 0.11, 0.06), BONE_DARK, 0.0)
+	f.box(skull + Vector3(0.0, -0.10, 0.31), Vector3(0.06, 0.07, 0.04), BONE_DARK, 0.0)
 	return f
 
 

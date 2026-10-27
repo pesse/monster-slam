@@ -1713,8 +1713,8 @@ func _cast_spell(spell: Dictionary, short_frost := false) -> void:
 	elif effect == "armor":
 		GameState.fortress_armor_max = maxi(GameState.fortress_armor_max, 50)
 		GameState.fortress_armor = 10
-	if _field().is_empty() and effect in ["reveal_alts", "reveal_initial", "recall", "weaken", "slow", "freeze",
-			"strike"]:
+	if _field().is_empty() and effect in ["reveal_alts", "reveal_initial", "recall", "weaken", "block", "slow",
+			"freeze", "strike"]:
 		_fill_field()
 	_spell_fx.front_z = _goal()
 	_spell_fx.back_z = _spawn_z
@@ -1728,8 +1728,27 @@ func _cast_spell(spell: Dictionary, short_frost := false) -> void:
 	_strike_index = 0
 	# Eine Welle ohne Ende: „für die ganze Welle“ gilt bis „Feld leeren“.
 	_caster.cast(spell, field, 1)
+	if effect == "block":
+		_defeat_front()
 	if _hud != null:
 		_show_tally()
+
+
+## Knochenhaufen: die vorderen Monster gelten als besiegt und hinterlassen ihre Haufen.
+func _defeat_front() -> void:
+	await get_tree().create_timer(BONES_DEFEAT_DELAY, false).timeout
+	var field := _field()
+	field.sort_custom(func(a: Monster, b: Monster) -> bool: return a.position.z > b.position.z)
+	for monster in field.slice(0, _caster.bones_left):
+		var at := Vector3(monster.position.x, 0.0, monster.position.z)
+		if _caster.leave_pile(at):
+			_spell_fx.pile(at)
+		monster.queue_free()
+
+
+func _physics_process(_delta: float) -> void:
+	for hit: Array in _caster.block(_field()):
+		_spell_fx.pile_hit(hit[1])
 
 
 ## Die Monster, die noch laufen: nicht freigegeben, nicht vom Donnerschlag getroffen.
@@ -1758,6 +1777,7 @@ func _clear_field() -> void:
 		for node in _walkers.get_children():
 			node.queue_free()
 	_spell_fx.haze(false)
+	_spell_fx.clear_piles()
 	_caster.reset_wave()
 
 
@@ -1780,6 +1800,10 @@ const SPELL_SHOTS := [150, 450, 1000]
 const FROST_THAW_SHOTS := [2300, 3080]
 ## Schwere Luft: der Nebel, wenn er ganz da ist.
 const HAZE_SHOTS := [3000, 4500]
+## Knochenhaufen: so lange nach dem Wirken (s) fallen die vorderen Monster; Bilder, wenn
+## die hinteren in den Haufen stecken.
+const BONES_DEFEAT_DELAY := 0.5
+const BONES_SHOTS := [2500, 5000]
 
 func _shoot_spells() -> void:
 	var dir := ProjectSettings.globalize_path(SHOT_DIR)
@@ -1796,6 +1820,8 @@ func _shoot_spells() -> void:
 		var steps: Array = SPELL_SHOTS.duplicate()
 		if str(spell.get("effect", "")) == "freeze":
 			steps.append_array(FROST_THAW_SHOTS)
+		if str(spell.get("effect", "")) == "block":
+			steps.append_array(BONES_SHOTS)
 		if str((spell.get("params", {}) as Dictionary).get("scope", "")) == "wave" \
 				and str(spell.get("effect", "")) == "slow":
 			steps.append_array(HAZE_SHOTS)

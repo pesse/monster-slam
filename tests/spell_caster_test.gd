@@ -54,7 +54,7 @@ func test_every_spell_in_the_data_is_complete() -> void:
 
 ## Auf leerem Feld wirkt kein Feld-Zauber — und wird deshalb nicht verbraucht.
 func test_field_spells_need_monsters() -> void:
-	for effect in ["freeze", "strike", "slow", "reveal_alts", "reveal_initial", "recall"]:
+	for effect in ["freeze", "strike", "slow", "reveal_alts", "reveal_initial", "recall", "block"]:
 		assert_bool(_caster.can_cast(_spell(effect), _field([]), 0)) \
 				.append_failure_message(effect).is_false()
 
@@ -251,3 +251,42 @@ func test_digits_pick_a_slot() -> void:
 	key.keycode = KEY_2
 	key.echo = true
 	assert_int(WaveRunner.spell_key(key)).is_equal(-1)
+
+
+## Der Knochenhaufen: die nächsten drei besiegten Monster hinterlassen einen Haufen; wer
+## dahinter hineinläuft, steht fünf Sekunden und nur einmal je Haufen.
+func test_bone_piles_hold_monsters_that_walk_into_them() -> void:
+	var bones := _spell("block", {"count": 3, "duration": 5.0})
+	assert_bool(_caster.can_cast(bones, _field([]), 0)).is_false()
+	assert_bool(_caster.leave_pile(Vector3.ZERO)).is_false()
+	assert_bool(_caster.can_cast(bones, _field([]), 4)).is_true()
+	_caster.cast(bones, _field([]), 4)
+	assert_bool(_caster.can_cast(bones, _field([]), 4)).is_false()
+	for i in 3:
+		assert_bool(_caster.leave_pile(Vector3(0.0, 0.0, 5.0 * i))).is_true()
+	assert_bool(_caster.leave_pile(Vector3(0.0, 0.0, 20.0))).is_false()
+	assert_int(_caster.piles.size()).is_equal(3)
+
+	var walker := _monster()
+	walker.position = Vector3(0.5, 0.0, -0.5)
+	var aside := _monster()
+	aside.position = Vector3(SpellCaster.PILE_REACH + 0.5, 0.0, -0.5)
+	var past := _monster()
+	past.position = Vector3(0.0, 0.0, 0.5)
+	var hits := _caster.block(_field([walker, aside, past]))
+	assert_int(hits.size()).is_equal(1)
+	assert_object(hits[0][0]).is_same(walker)
+	assert_int(hits[0][1]).is_equal(0)
+	assert_bool(walker.is_held()).is_true()
+	assert_bool(aside.is_held() or past.is_held()).is_false()
+	assert_vector(walker.velocity()).is_equal(Vector3.ZERO)
+	assert_float(walker.seconds_left()).is_greater(5.0)
+
+	walker._physics_process(5.0)
+	assert_bool(walker.is_held()).is_false()
+	# Derselbe Haufen hält es kein zweites Mal.
+	assert_array(_caster.block(_field([walker]))).is_empty()
+
+	_caster.reset_wave()
+	assert_array(_caster.piles).is_empty()
+	assert_int(_caster.bones_left).is_equal(0)

@@ -52,6 +52,8 @@ var _back_wait := 0.0
 var _back_left := 0.0
 var _back_to := 0.0
 var _back_speed := 0.0
+## Knochenhaufen: so lange (s) steht es noch davor.
+var _held_left := 0.0
 ## Bild der Zauber am Monster, solange sie wirken.
 var _frost: FrostShell
 var _aura: SlowAura
@@ -185,6 +187,8 @@ func is_flying_back() -> bool:
 
 func _fly_back() -> void:
 	_back_wait = 0.0
+	_held_left = 0.0
+	_update_animation()
 	_back_left = maxf(0.0, position.z - _back_to) / _back_speed
 	if _back_left <= 0.0 or _body == null:
 		return
@@ -222,6 +226,34 @@ func _shrink() -> void:
 			SHRINK_TIME)
 
 
+## Vor einem Knochenhaufen: Hüpfhöhe (m) und Dauer (s), wenn es danach drüberklettert.
+const CLIMB_HOP := 0.7
+const CLIMB_TIME := 0.45
+
+
+## Bleibt `seconds` lang stehen und klettert dann über das Hindernis. False, wenn es schon
+## steht, fliegt oder angekommen ist.
+func hold(seconds: float) -> bool:
+	if _done or seconds <= 0.0 or is_held() or is_flying_back() or _back_wait > 0.0:
+		return false
+	_held_left = seconds
+	_update_animation()
+	return true
+
+
+func is_held() -> bool:
+	return _held_left > 0.0
+
+
+func _climb() -> void:
+	_update_animation()
+	var tw := create_tween()
+	tw.tween_property(self, "position:y", CLIMB_HOP, CLIMB_TIME * 0.5) \
+			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(self, "position:y", 0.0, CLIMB_TIME * 0.5) \
+			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+
+
 ## Bremst auf `factor` des eigenen Tempos; es gilt die stärkere Bremse. False, wenn es schon
 ## so langsam ist.
 func slow_to(factor: float) -> bool:
@@ -252,18 +284,18 @@ func is_frozen() -> bool:
 	return _frozen_left > 0.0
 
 
-## Spielzeit (s) bis zum Einschlag bei gleichbleibendem Tempo, Eis eingerechnet; INF, wenn
-## es steht oder schon angekommen ist.
+## Spielzeit (s) bis zum Einschlag bei gleichbleibendem Tempo, Eis und Knochenhaufen
+## eingerechnet; INF, wenn es steht oder schon angekommen ist.
 func seconds_left() -> float:
 	if _done or _speed * pace <= 0.0:
 		return INF
 	var from := _back_to if is_flying_back() else position.z
-	return maxf(0.0, _target_z - from) / (_speed * pace) + _frozen_left + _back_left
+	return maxf(0.0, _target_z - from) / (_speed * pace) + _frozen_left + _back_left + _held_left
 
 
 func _update_animation() -> void:
 	if _anim != null:
-		_anim.speed_scale = 0.0 if is_frozen() else pace
+		_anim.speed_scale = 0.0 if is_frozen() or is_held() else pace
 	if _outline != null:
 		_outline.set_shader_parameter("outline_color",
 				FROZEN_OUTLINE if is_frozen() else _outline_color)
@@ -400,7 +432,7 @@ func body_box() -> AABB:
 func velocity() -> Vector3:
 	if is_flying_back():
 		return Vector3(0.0, 0.0, -_back_speed)
-	return Vector3.ZERO if _done or is_frozen() else Vector3(0.0, 0.0, _speed * pace)
+	return Vector3.ZERO if _done or is_frozen() or is_held() else Vector3(0.0, 0.0, _speed * pace)
 
 
 ## Bleibt stehen und erreicht die Festung nicht mehr; das Platzen kommt später.
@@ -458,6 +490,11 @@ func _physics_process(delta: float) -> void:
 			if _frost != null:
 				_frost.shatter()
 				_frost = null
+		return
+	if is_held():
+		_held_left = maxf(0.0, _held_left - delta)
+		if not is_held():
+			_climb()
 		return
 	position.z += _speed * pace * delta
 	if position.z >= _target_z:

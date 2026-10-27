@@ -6,7 +6,7 @@ extends RefCounted
 ## (`scope: wave`), bekommt jedes neue Monster über `on_spawn` bis `reset_wave`.
 
 ## Die Wirkungen, die es gibt — was in `effect` eines Zaubers stehen darf.
-const EFFECTS := ["reveal_alts", "reveal_initial", "recall", "weaken", "slow", "freeze", "strike", "heal", "armor"]
+const EFFECTS := ["reveal_alts", "reveal_initial", "recall", "weaken", "block", "slow", "freeze", "strike", "heal", "armor"]
 
 ## Nimmt ein Monster per Blitz vom Feld (WaveRunner).
 var strike: Callable
@@ -22,6 +22,17 @@ var wave_pace := 1.0
 var wave_alts := false
 ## Anteil des Schadens für den Rest der Welle (Schrumpfpilz, 1 = voll).
 var wave_damage := 1.0
+## Knochenhaufen: so viele besiegte Monster hinterlassen noch einen, und so lange (s) hält
+## er jedes, das hineinläuft.
+var bones_left := 0
+var bones_hold := 5.0
+## Die liegenden Haufen: `at` (Position) und `held` (Instanz-Ids der schon aufgehaltenen).
+var piles: Array[Dictionary] = []
+
+## Ein Haufen hält ein Monster, das seitlich höchstens so weit (m) daneben läuft, so weit
+## (m) vor seiner Mitte an: halbe Breite (BonePile, 1.6 m × SIZE) plus halbes Monster.
+const PILE_REACH := 2.4
+const PILE_STOP := 1.9
 
 
 ## Die Welle ist vorbei oder beginnt neu: was für sie galt, gilt nicht mehr.
@@ -29,6 +40,8 @@ func reset_wave() -> void:
 	wave_pace = 1.0
 	wave_alts = false
 	wave_damage = 1.0
+	bones_left = 0
+	piles.clear()
 
 
 ## Ein Monster erscheint: es bekommt, was für die ganze Welle gewirkt wurde. Zurück kommen
@@ -65,6 +78,8 @@ func can_cast(spell: Dictionary, field: Array[Monster], to_come: int) -> bool:
 		"weaken":
 			return float(params.get("share", 0.5)) < wave_damage \
 					and (not field.is_empty() or to_come > 0)
+		"block":
+			return bones_left < int(params.get("count", 3)) and (not field.is_empty() or to_come > 0)
 		"slow":
 			var factor := float(params.get("factor", 0.5))
 			if whole_wave and factor < wave_pace:
@@ -104,6 +119,9 @@ func cast(spell: Dictionary, field: Array[Monster], to_come: int) -> void:
 			wave_damage = float(params.get("share", 0.5))
 			for monster in field:
 				monster.weaken(wave_damage)
+		"block":
+			bones_left = int(params.get("count", 3))
+			bones_hold = float(params.get("duration", 5.0))
 		"slow":
 			var factor := float(params.get("factor", 0.5))
 			if whole_wave:
@@ -122,3 +140,30 @@ func cast(spell: Dictionary, field: Array[Monster], to_come: int) -> void:
 		"armor":
 			GameState.restore_armor(int(params.get("amount", 25)))
 
+
+## Ein Monster ist bei `at` besiegt: hinterlässt es einen Knochenhaufen? Dann liegt er.
+func leave_pile(at: Vector3) -> bool:
+	if bones_left <= 0:
+		return false
+	bones_left -= 1
+	piles.append({"at": Vector3(at.x, 0.0, at.z), "held": []})
+	return true
+
+
+## Hält jedes Monster aus `field` an, das gerade in einen Haufen läuft, einmal je Haufen.
+## Zurück: je angehaltenem Monster `[monster, Index des Haufens]`, für Bild und Ton.
+func block(field: Array[Monster]) -> Array:
+	var stopped := []
+	for i in piles.size():
+		var pile := piles[i]
+		var at: Vector3 = pile["at"]
+		var held: Array = pile["held"]
+		for monster in field:
+			var dz := at.z - monster.position.z
+			if dz <= 0.0 or dz > PILE_STOP or absf(monster.position.x - at.x) > PILE_REACH:
+				continue
+			if held.has(monster.get_instance_id()) or not monster.hold(bones_hold):
+				continue
+			held.append(monster.get_instance_id())
+			stopped.append([monster, i])
+	return stopped
