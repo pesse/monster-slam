@@ -331,7 +331,7 @@ verwechseln mit den Skills des Fähigkeitsbaums weiter unten.
 `description` steht im Laden und spricht den Spieler an; `icon` ist ein Zeichen, das die
 Schrift kennt (im Laden prüfen: `menu_lab -- --shoot --spells`). Die Wirkungen und ihre
 `params` stehen im ADR: `reveal_alts` und `slow` mit `scope` (`field` oder `wave`), `slow`
-dazu `factor`, `reveal_initial` und `recall` ohne, `freeze` mit `duration`, `strike` ohne, `heal` und `armor` mit `amount`.
+dazu `factor`, `reveal_initial` und `recall` ohne, `weaken` mit `share`, `freeze` mit `duration`, `strike` ohne, `heal` und `armor` mit `amount`.
 Ein vorhandener Effekt braucht nur die JSON-Datei. Ein **neuer** `effect` kommt in
 `SpellCaster.EFFECTS` und bekommt je einen Zweig in `can_cast` (bewirkt er gerade etwas?)
 und `cast`; `tests/spell_caster_test.gd` prüft, dass jeder Zauber der Daten einen

@@ -1009,12 +1009,14 @@ Ein Zauber ist ein Verbrauchsgegenstand: `price` in Gold, `effect` aus
   würde, wird nicht verbraucht, der Platz zittert (`SpellSlots.refuse`). Dazwischen nimmt
   der WaveRunner den Zauber aus dem Vorrat und sendet `spell_activated`, damit er in der
   Spur vor seinen Folgen steht. `scope: wave` merkt sich der SpellCaster
-  (`wave_pace`, `wave_alts`) und gibt es über `on_spawn` jedem neuen Monster der Welle mit.
+  (`wave_pace`, `wave_alts`, `wave_damage`) und gibt es über `on_spawn` jedem neuen Monster der Welle mit.
 - **Am Monster**: Verlangsamen über `Monster.pace` (der kleinere Faktor gewinnt), nie über
   `Engine.time_scale`. Einfrieren zählt `_frozen_left` in Spielzeit herunter, Umriss
   eisblau, Animation steht. `Monster.velocity()` kennt beides, der Vorhalt des Katapults
   also auch. Der Bumerang (`send_back`) lässt es nach einer Wartezeit mit dem Windstoß zur
-  Startlinie fliegen (`velocity()` zeigt dann zurück). Die Alternativen (`prompt_alt` der Aufgabe) zeigt das Wortschild als zweite
+  Startlinie fliegen (`velocity()` zeigt dann zurück). Der Schrumpfpilz (`weaken`) setzt
+  `damage` auf einen Anteil des vollen Schadens und schrumpft den Körper; für die Welle
+  merkt sich der SpellCaster den Anteil (`wave_damage`, beim Rasten im Wellenstand). Die Alternativen (`prompt_alt` der Aufgabe) zeigt das Wortschild als zweite
   Zeile (`WordPlate.alt_line`, Signal `alts_revealed`), den ersten Buchstaben der Lösung
   in der Zeile der Lösung (`WordPlate.initial_line`, Signal `initial_revealed`).
 - **Donnerschlag** nimmt jedes Monster auf dem Feld über `WaveRunner._strike` sofort vom

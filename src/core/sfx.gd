@@ -37,6 +37,9 @@ const SOUNDS := {
 	&"spell_reveal": {"file": "spell_reveal.wav", "db": -2.1},
 	&"spell_whisper": {"file": "spell_whisper.wav", "db": -2.1},
 	&"spell_recall": {"file": "spell_recall.wav", "db": -2.1},
+	&"spell_shrink": {"file": "spell_shrink.wav", "db": -2.1},
+	# Dieselbe Datei je neu erscheinendem Monster, daher deutlich leiser.
+	&"spell_shrink_spawn": {"file": "spell_shrink.wav", "db": -9.0},
 	&"spell_slow": {"file": "spell_slow.wav", "db": -2.5},
 	# Dieselbe Datei je neu erscheinendem Monster, daher deutlich leiser.
 	&"spell_slow_spawn": {"file": "spell_slow.wav", "db": -9.0},

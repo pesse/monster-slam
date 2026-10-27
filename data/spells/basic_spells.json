@@ -61,6 +61,15 @@
 		"price": 100
 	},
 	{
+		"id": "spell.shrink",
+		"name": "Schrumpfpilz",
+		"icon": "🍄",
+		"description": "Alle Monster dieser Welle schrumpfen, auch die, die erst noch kommen. An der Festung machen sie nur noch halb so viel Schaden.",
+		"effect": "weaken",
+		"params": { "share": 0.5 },
+		"price": 70
+	},
+	{
 		"id": "spell.thunder",
 		"name": "Donnerschlag",
 		"icon": "⚡",

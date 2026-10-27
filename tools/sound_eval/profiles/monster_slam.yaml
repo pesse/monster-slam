@@ -79,6 +79,15 @@ effects:
     files: [spell_recall*]
     generation_prompt: >
       Magic boomerang spell: a quick whirling boomerang spin whoosh turning around, followed by a strong gust of wind that sweeps everything back into the distance, playful and powerful, fantasy game sound
+  spell_shrink:
+    description: Schrumpfpilz – ein verspieltes, magisches Schrumpfen, Ton fällt nach unten, endet mit einem kleinen „plopp“.
+    prompts:
+      - cartoon magical shrinking sound, descending pitch whoop with sparkles
+      - playful shrink spell ending in a tiny pop
+    duration: [0.7, 1.1]
+    files: [spell_shrink*]
+    generation_prompt: >
+      Magic shrinking spell: a playful cartoon whoop that slides quickly down in pitch with soft magical sparkles, ending in a tiny cute pop, fantasy game sound
   spell_slow:
     description: Sumpf – schmatzender Schlamm, ein, zwei Blasen; eher komisch als eklig.
     prompts:

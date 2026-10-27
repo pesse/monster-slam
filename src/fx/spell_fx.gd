@@ -16,6 +16,7 @@ const COLORS := {
 	"reveal_alts": Color(0.72, 0.45, 1.0),
 	"reveal_initial": Color(1.0, 0.78, 0.35),
 	"recall": Color(0.3, 0.92, 0.85),
+	"weaken": Color(1.0, 0.4, 0.8),
 	"slow": Color(0.55, 0.85, 0.2),
 	"freeze": Color(0.62, 0.86, 1.0),
 	"strike": Color(0.6, 0.78, 1.0),
@@ -34,6 +35,7 @@ const SOUNDS := {
 	"reveal_alts": &"spell_reveal",
 	"reveal_initial": &"spell_whisper",
 	"recall": &"spell_recall",
+	"weaken": &"spell_shrink",
 	"slow": &"spell_slow",
 	"freeze": &"spell_freeze",
 	"strike": &"spell_thunder_windup",
@@ -58,6 +60,7 @@ const SETTLE := {
 	"reveal_alts": SWEEP_TIME + 0.6,
 	"reveal_initial": SWEEP_TIME + 0.6,
 	"recall": SWEEP_TIME + 0.6,
+	"weaken": 1.0,
 	"slow": 1.0,
 	"freeze": 1.2,
 	"heal": 1.5,
@@ -110,6 +113,11 @@ func play(spell: Dictionary, field: Array[Monster]) -> void:
 				_burst_at(monster, reveal_delay(monster), color)
 			_veil(color, 0.16, 0.06, 0.1, 0.7)
 			shake.call(0.2)
+		"weaken":
+			for monster in field:
+				_burst_at(monster, 0.0, color)
+			_ring(Vector3(0.0, 0.1, (front_z + back_z) * 0.5), color, (front_z - back_z) * 1.4, 0.7)
+			_veil(color, 0.18, 0.06, 0.1, 0.7)
 		"slow":
 			for monster in field:
 				_splash(monster.position, color)
@@ -185,6 +193,9 @@ func on_spawn(monster: Monster, effects: PackedStringArray) -> void:
 	if effects.has("slow"):
 		_splash(monster.position, COLORS["slow"])
 		Sfx.play(&"spell_slow_spawn")
+	if effects.has("weaken"):
+		_burst_at(monster, 0.0, COLORS["weaken"])
+		Sfx.play(&"spell_shrink_spawn")
 
 
 ## Schwere Luft: Dunst über dem Feld an (`on`) oder aus. Bleibt bis zum Ende der Welle.

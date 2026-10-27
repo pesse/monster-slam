@@ -165,6 +165,28 @@ func test_the_boomerang_carries_monsters_back_to_the_start() -> void:
 	assert_float(near.position.z).is_equal_approx(-24.0, 0.001)
 
 
+## Der Schrumpfpilz halbiert den Schaden für das Feld und jedes neue Monster der Welle.
+func test_the_mushroom_halves_damage_for_the_wave() -> void:
+	var share := 0.5
+	var shrink := _spell("weaken", {"share": share})
+	var monster := _monster()
+	monster.damage = 20
+	assert_bool(_caster.can_cast(shrink, _field([]), 0)).is_false()
+	assert_bool(_caster.can_cast(shrink, _field([]), 5)).is_true()
+	_caster.cast(shrink, _field([monster]), 5)
+	assert_int(monster.damage).is_equal(roundi(20 * share))
+	assert_bool(_caster.can_cast(shrink, _field([monster]), 5)).is_false()
+	var later := _monster()
+	later.damage = 20
+	assert_array(Array(_caster.on_spawn(later))).contains(["weaken"])
+	assert_int(later.damage).is_equal(roundi(20 * share))
+	# Ein zweites Mal rechnet vom vollen Schaden, nicht vom schon verringerten.
+	assert_bool(monster.weaken(share)).is_false()
+	assert_int(monster.damage).is_equal(roundi(20 * share))
+	_caster.reset_wave()
+	assert_array(Array(_caster.on_spawn(_monster()))).not_contains(["weaken"])
+
+
 ## Der Donnerschlag gibt jedes Monster auf dem Feld an den WaveRunner (`strike`).
 func test_the_strike_hands_over_every_monster() -> void:
 	var struck: Array = []

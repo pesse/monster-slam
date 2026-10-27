@@ -14,8 +14,12 @@ signal initial_revealed(delay: float)
 var monster_def: Dictionary = {}
 var task: Dictionary = {}
 
-## Aus der monster_task_rule abgeleitet, vom WaveGenerator gesetzt.
+## Aus der monster_task_rule abgeleitet, vom WaveGenerator gesetzt; nach dem Schrumpfpilz
+## schon mit `damage_share` gerechnet.
 var damage: int = 10
+## Anteil des vollen Schadens nach dem Schrumpfpilz (`weaken`).
+var damage_share := 1.0
+var _full_damage := -1
 var reward: int = 10
 ## Erfahrung für dieses Monster, beim Spawn festgelegt (Experience.for_monster): nach dem
 ## Treffer ist die Confidence schon angehoben.
@@ -190,6 +194,32 @@ func _fly_back() -> void:
 			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tw.chain().tween_property(self, "position:y", 0.0, _back_left / 2.0) \
 			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+
+
+## Geschrumpft (`weaken`): Körper und Schildhöhe, als Anteil; Dauer des Schrumpfens (s).
+const SHRUNK_SCALE := 0.75
+const SHRINK_TIME := 0.5
+
+
+## Macht nur noch `share` des vollen Schadens und schrumpft; es gilt der kleinere Anteil.
+## False, wenn es schon so schwach ist.
+func weaken(share: float) -> bool:
+	if _done or share >= damage_share:
+		return false
+	if _full_damage < 0:
+		_full_damage = damage
+		_shrink()
+	damage_share = share
+	damage = maxi(1, roundi(_full_damage * share))
+	return true
+
+
+func _shrink() -> void:
+	var tw := create_tween().set_parallel(true).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	if _body != null:
+		tw.tween_property(_body, "scale", _body.scale * SHRUNK_SCALE, SHRINK_TIME)
+	tw.tween_property(_plate_anchor, "position:y", _plate_anchor.position.y * SHRUNK_SCALE,
+			SHRINK_TIME)
 
 
 ## Bremst auf `factor` des eigenen Tempos; es gilt die stärkere Bremse. False, wenn es schon

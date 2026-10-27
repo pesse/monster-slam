@@ -119,6 +119,9 @@ Bosskampf gibt es keine Zauber.
   Lösung („h…“). Bei einem neuen Wort, dessen Lösung schon dasteht, ändert sie nichts.
 - **Bumerang** – ein Windstoß trägt alle Monster auf dem Feld zurück an den Start. Sie
   behalten ihr Wort und laufen von dort wieder los.
+- **Schrumpfpilz** – alle Monster dieser Welle schrumpfen, auch die, die erst noch kommen.
+  An der Festung machen sie nur noch halb so viel Schaden. Gold und Tempo bleiben, wie
+  sie sind.
 - **Sumpf / Schwere Luft** – die Monster laufen halb so schnell, wieder auf dem Feld oder
   für die ganze Welle.
 - **Frost** – die Monster auf dem Feld frieren zehn Sekunden lang ein.

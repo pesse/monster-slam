@@ -1240,6 +1240,7 @@ func _continue_wave(open: Dictionary, spawns: Array) -> void:
 	_wave_low_hp = mini(_wave_low_hp, int(open.get("low_hp", _wave_low_hp)))
 	_spells.wave_pace = clampf(float(open.get("pace", 1.0)), 0.0, 1.0)
 	_spells.wave_alts = bool(open.get("alts", false))
+	_spells.wave_damage = clampf(float(open.get("damage", 1.0)), 0.0, 1.0)
 	if _spells.wave_pace < 1.0:
 		_spell_fx.haze(true)
 	for task in open.get("played", []):
@@ -1267,6 +1268,7 @@ func _open_wave_state() -> Dictionary:
 		"fortress_tier": _fortress_tier,
 		"pace": _spells.wave_pace,
 		"alts": _spells.wave_alts,
+		"damage": _spells.wave_damage,
 		"played": played,
 	}
 

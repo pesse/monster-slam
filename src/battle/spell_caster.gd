@@ -6,7 +6,7 @@ extends RefCounted
 ## (`scope: wave`), bekommt jedes neue Monster über `on_spawn` bis `reset_wave`.
 
 ## Die Wirkungen, die es gibt — was in `effect` eines Zaubers stehen darf.
-const EFFECTS := ["reveal_alts", "reveal_initial", "recall", "slow", "freeze", "strike", "heal", "armor"]
+const EFFECTS := ["reveal_alts", "reveal_initial", "recall", "weaken", "slow", "freeze", "strike", "heal", "armor"]
 
 ## Nimmt ein Monster per Blitz vom Feld (WaveRunner).
 var strike: Callable
@@ -20,12 +20,15 @@ var back_speed := 40.0
 var wave_pace := 1.0
 ## Zeigen alle Monster dieser Welle ihre Alternativen?
 var wave_alts := false
+## Anteil des Schadens für den Rest der Welle (Schrumpfpilz, 1 = voll).
+var wave_damage := 1.0
 
 
 ## Die Welle ist vorbei oder beginnt neu: was für sie galt, gilt nicht mehr.
 func reset_wave() -> void:
 	wave_pace = 1.0
 	wave_alts = false
+	wave_damage = 1.0
 
 
 ## Ein Monster erscheint: es bekommt, was für die ganze Welle gewirkt wurde. Zurück kommen
@@ -37,6 +40,8 @@ func on_spawn(monster: Monster) -> PackedStringArray:
 	if wave_alts:
 		monster.show_alts()
 		got.append("reveal_alts")
+	if wave_damage < 1.0 and monster.weaken(wave_damage):
+		got.append("weaken")
 	return got
 
 
@@ -57,6 +62,9 @@ func can_cast(spell: Dictionary, field: Array[Monster], to_come: int) -> bool:
 			return field.any(func(monster: Monster) -> bool: return monster.can_show_initial())
 		"recall":
 			return field.any(func(monster: Monster) -> bool: return monster.can_send_back(start_z))
+		"weaken":
+			return float(params.get("share", 0.5)) < wave_damage \
+					and (not field.is_empty() or to_come > 0)
 		"slow":
 			var factor := float(params.get("factor", 0.5))
 			if whole_wave and factor < wave_pace:
@@ -92,6 +100,10 @@ func cast(spell: Dictionary, field: Array[Monster], to_come: int) -> void:
 		"recall":
 			for monster in field:
 				monster.send_back(start_z, reveal_delay.call(monster), back_speed)
+		"weaken":
+			wave_damage = float(params.get("share", 0.5))
+			for monster in field:
+				monster.weaken(wave_damage)
 		"slow":
 			var factor := float(params.get("factor", 0.5))
 			if whole_wave:
@@ -109,3 +121,4 @@ func cast(spell: Dictionary, field: Array[Monster], to_come: int) -> void:
 			GameState.heal(int(params.get("amount", 25)))
 		"armor":
 			GameState.restore_armor(int(params.get("amount", 25)))
+
