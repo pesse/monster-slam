@@ -133,15 +133,35 @@ func test_a_lost_wave_still_has_its_chest() -> void:
 
 
 ## Die nächste Welle wird erst aus der zweiten Stufe gerufen, und die Wahl ist relativ.
-func test_the_next_wave_is_requested_with_a_relative_choice() -> void:
-	var deltas: Array = []
-	_stats.next_wave_requested.connect(func(delta: int) -> void: deltas.append(delta))
+func test_the_next_wave_is_requested_with_the_chosen_level() -> void:
+	var levels: Array = []
+	_stats.next_wave_requested.connect(func(level: int) -> void: levels.append(level))
 	_stats.show_stats(_wave_data({"chest": {}}))
 	_button("ResultContinue").pressed.emit()
 	var row := _stats.get_node("%ChoiceRow") as HBoxContainer
 	(row.get_child(4) as Button).pressed.emit()
 	_button("StartButton").pressed.emit()
-	assert_array(deltas).is_equal([2])
+	assert_array(levels).is_equal([5])
+
+
+## Der Laden öffnet nicht der Screen selbst, er meldet nur — den Laden zeigt WaveRunner.
+func test_the_shop_is_requested_from_the_choice() -> void:
+	var asked := [0]
+	_stats.shop_requested.connect(func() -> void: asked[0] += 1)
+	_stats.show_stats(_wave_data({"chest": {}}))
+	_button("ResultContinue").pressed.emit()
+	_button("ShopButton").pressed.emit()
+	assert_int(asked[0]).is_equal(1)
+
+
+## Die Wahl zeigt feste Stufen; vorgewählt ist die der eben gespielten Welle.
+func test_the_choice_starts_at_the_level_just_played() -> void:
+	var levels: Array = []
+	_stats.next_wave_requested.connect(func(level: int) -> void: levels.append(level))
+	_stats.show_stats(_wave_data({"chest": {}, "difficulty": 4}))
+	_button("ResultContinue").pressed.emit()
+	_button("StartButton").pressed.emit()
+	assert_array(levels).is_equal([4])
 
 
 ## Eine neu gezeigte Welle beginnt wieder beim Ergebnis — sonst stünde nach dem
@@ -246,8 +266,8 @@ func test_back_and_forward_share_one_row() -> void:
 ## Zwischen den Stufen geht es hin und her (Issue #52): von der Wahl zurück zum Ergebnis,
 ## und dort steht noch alles — die Kiste offen, die Wahl gewählt.
 func test_the_choice_leads_back_to_the_result() -> void:
-	var deltas: Array = []
-	_stats.next_wave_requested.connect(func(delta: int) -> void: deltas.append(delta))
+	var levels: Array = []
+	_stats.next_wave_requested.connect(func(level: int) -> void: levels.append(level))
 	_stats.show_stats(_wave_data())
 	assert_bool(_button("StageBack").disabled).is_true()
 	var chest := _stats.get_node("%Chest") as TreasureChest
@@ -263,7 +283,7 @@ func test_the_choice_leads_back_to_the_result() -> void:
 	assert_bool(_button("ResultContinue").disabled).is_false()
 	_button("ResultContinue").pressed.emit()
 	_button("StartButton").pressed.emit()
-	assert_array(deltas).is_equal([-1])
+	assert_array(levels).is_equal([2])
 
 
 ## Vom Ergebnis geht es zurück zu den Antworten (Issue #52) — auch an einer noch
@@ -312,8 +332,8 @@ func _press_enter() -> void:
 ## Enter geht weiter wie der rechte Knopf der Fußzeile — aber nicht an einer
 ## ungeöffneten Kiste vorbei.
 func test_enter_goes_on_once_the_chest_is_open() -> void:
-	var deltas: Array = []
-	_stats.next_wave_requested.connect(func(delta: int) -> void: deltas.append(delta))
+	var levels: Array = []
+	_stats.next_wave_requested.connect(func(level: int) -> void: levels.append(level))
 	_stats.enter_grace_ms = 0
 	_stats.show_stats(_wave_data())
 	_press_enter()
@@ -324,7 +344,7 @@ func test_enter_goes_on_once_the_chest_is_open() -> void:
 	_press_enter()
 	assert_bool(_visible("NextPage")).is_true()
 	_press_enter()
-	assert_array(deltas).is_equal([0])
+	assert_array(levels).is_equal([3])
 
 
 ## Direkt nach dem Stufenwechsel zählt Enter noch nicht: das Enter der letzten Antwort

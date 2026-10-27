@@ -29,6 +29,8 @@ func test_defeat_hides_next_wave_controls() -> void:
 	# Statt der Wahl steht da, dass der Lauf zu Ende ist — eine leere Stufe wäre eine
 	# Sackgasse ohne Begründung.
 	assert_bool((stats.get_node("%DefeatLabel") as Label).visible).is_true()
+	# Zauber für eine Welle, die nicht mehr kommt, gibt es hier nicht zu kaufen.
+	assert_bool((stats.get_node("%ShopRow") as Control).visible).is_false()
 
 
 ## Der Weg ins Menü bleibt — sonst gäbe es aus dem Screen keinen Ausgang.
@@ -43,6 +45,7 @@ func test_victory_offers_next_wave() -> void:
 	assert_bool((stats.get_node("%ChoiceRow") as HBoxContainer).visible).is_true()
 	assert_bool((stats.get_node("%DiffLabel") as Label).visible).is_true()
 	assert_bool((stats.get_node("%DefeatLabel") as Label).visible).is_false()
+	assert_bool((stats.get_node("%ShopRow") as Control).visible).is_true()
 
 
 ## Ein Sieg nach einer Niederlage im selben Screen-Objekt zeigt die Wahl wieder — die
@@ -101,6 +104,26 @@ func test_the_consolation_screen_fits_into_the_base_resolution() -> void:
 			"leaked": 6, "total": 6, "accuracy": 0.0, "score_gained": 0,
 			"score_total": 120, "fortress_health": 0, "mastered": 3, "fortress_tier": 0,
 			"chest": ChestReward.for_wave(0, 0, 6), "session": _long_balance()})
+	for i in 5:
+		await get_tree().process_frame
+	var base := Vector2(
+			float(ProjectSettings.get_setting("display/window/size/viewport_width", 1152)),
+			float(ProjectSettings.get_setting("display/window/size/viewport_height", 648)))
+	var min_size := stats.get_combined_minimum_size()
+	assert_float(min_size.x).is_less_equal(base.x)
+	assert_float(min_size.y).is_less_equal(base.y)
+
+
+## Nach einem Sieg trägt Stufe 2 zusätzlich Ladenknopf und Wahl: auch das passt hinein.
+func test_the_victory_screen_fits_into_the_base_resolution() -> void:
+	var layer: CanvasLayer = auto_free(CanvasLayer.new())
+	add_child(layer)
+	var stats := auto_free(STATS_SCENE.instantiate()) as PanelContainer
+	layer.add_child(stats)
+	stats.show_stats({"won": true, "wave_number": 3, "difficulty": 3, "correct": 6,
+			"leaked": 0, "total": 6, "accuracy": 100.0, "fortress_health": 100,
+			"mastered": 3, "fortress_tier": 0, "levels_gained": 1,
+			"chest": ChestReward.for_wave(60, 6, 0), "session": _long_balance()})
 	for i in 5:
 		await get_tree().process_frame
 	var base := Vector2(

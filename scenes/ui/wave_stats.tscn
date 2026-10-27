@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://db2ap8k5hl8vk" path="res://src/ui/window_chrome.gd" id="4_chrome"]
 [ext_resource type="Texture2D" uid="uid://c23n78atueopp" path="res://assets/ui/main_menu/icons/play.webp" id="5_play"]
 [ext_resource type="Material" uid="uid://dxo2j2mfichtf" path="res://scenes/ui/title_metal.tres" id="title_metal"]
+[ext_resource type="Texture2D" uid="uid://cdb173u0tkb0e" path="res://assets/ui/main_menu/icons/content.webp" id="6_spells"]
 
 [sub_resource type="ButtonGroup" id="choice_group"]
 
@@ -157,6 +158,20 @@ text = "Die Festung ist gefallen — dieser Lauf ist zu Ende. Das Gold bleibt di
 horizontal_alignment = 1
 autowrap_mode = 3
 
+[node name="ShopRow" type="CenterContainer" parent="Layout/Content/Root/Pages/NextPage/Decision" unique_id=1648203517]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="ShopButton" type="Button" parent="Layout/Content/Root/Pages/NextPage/Decision/ShopRow" unique_id=702913846]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(112, 112)
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"SpellTile"
+icon = ExtResource("6_spells")
+icon_alignment = 1
+expand_icon = true
+
 [node name="DiffLabel" type="Label" parent="Layout/Content/Root/Pages/NextPage/Decision" unique_id=163874224]
 unique_name_in_owner = true
 layout_mode = 2
@@ -171,49 +186,49 @@ theme_type_variation = &"SegmentRow"
 alignment = 1
 
 [node name="Choice0" type="Button" parent="Layout/Content/Root/Pages/NextPage/Decision/ChoiceRow" unique_id=866862317]
-custom_minimum_size = Vector2(0, 44)
+custom_minimum_size = Vector2(72, 44)
 layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"SegmentFirst"
 toggle_mode = true
 button_group = SubResource("choice_group")
-text = "Viel leichter"
+text = "1"
 
 [node name="Choice1" type="Button" parent="Layout/Content/Root/Pages/NextPage/Decision/ChoiceRow" unique_id=959042795]
-custom_minimum_size = Vector2(0, 44)
+custom_minimum_size = Vector2(72, 44)
 layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"SegmentMid"
 toggle_mode = true
 button_group = SubResource("choice_group")
-text = "Leichter"
+text = "2"
 
 [node name="Choice2" type="Button" parent="Layout/Content/Root/Pages/NextPage/Decision/ChoiceRow" unique_id=1902071290]
-custom_minimum_size = Vector2(0, 44)
+custom_minimum_size = Vector2(72, 44)
 layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"SegmentMid"
 toggle_mode = true
 button_group = SubResource("choice_group")
-text = "Gleich"
+text = "3"
 
 [node name="Choice3" type="Button" parent="Layout/Content/Root/Pages/NextPage/Decision/ChoiceRow" unique_id=897409992]
-custom_minimum_size = Vector2(0, 44)
+custom_minimum_size = Vector2(72, 44)
 layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"SegmentMid"
 toggle_mode = true
 button_group = SubResource("choice_group")
-text = "Schwieriger"
+text = "4"
 
 [node name="Choice4" type="Button" parent="Layout/Content/Root/Pages/NextPage/Decision/ChoiceRow" unique_id=1980302946]
-custom_minimum_size = Vector2(0, 44)
+custom_minimum_size = Vector2(72, 44)
 layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"SegmentLast"
 toggle_mode = true
 button_group = SubResource("choice_group")
-text = "Viel schwieriger"
+text = "5"
 
 [node name="Footer" type="HBoxContainer" parent="Layout/Content/Root" unique_id=424265695]
 layout_mode = 2

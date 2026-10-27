@@ -240,6 +240,8 @@ func _ready() -> void:
 		_stats.back_to_menu_requested.connect(_on_back_to_menu)
 	if _stats.has_signal("review_requested"):
 		_stats.review_requested.connect(_on_review_requested)
+	if _stats.has_signal("shop_requested"):
+		_stats.shop_requested.connect(_on_shop_requested)
 	if _stats.has_signal("reward_collected"):
 		_stats.reward_collected.connect(_on_reward_collected)
 	if _stats.has_signal("consolation_collected"):
@@ -2186,6 +2188,18 @@ func _on_review_requested() -> void:
 	_stats.resume()
 
 
+## Der Zauberladen zwischen zwei Wellen (ADR 0014): der Screen tritt zur Seite, bis der
+## Laden zu ist; Käufe werden an dieser Wellengrenze gleich gespeichert.
+func _on_shop_requested() -> void:
+	_stats.hide_stats()
+	var shop := (load(ProfileBadge.SHOP_SCENE) as PackedScene).instantiate() as SpellShop
+	shop.closed.connect(func() -> void:
+		shop.queue_free()
+		SaveCoordinator.commit("shop")
+		_stats.resume())
+	$UI.add_child(shop)
+
+
 ## Die Schatzkiste ist offen: Gold ins Wallet, sofort gespeichert, damit ein Absturz die
 ## Kiste nicht rückgängig macht.
 func _on_reward_collected(gold: int) -> void:
@@ -2193,12 +2207,12 @@ func _on_reward_collected(gold: int) -> void:
 	SaveCoordinator.commit("chest")
 
 
-## Die nächste Welle: `delta` (-2..+2) verschiebt die Schwierigkeit relativ, begrenzt auf 1..5.
-func _on_next_wave_requested(delta: int) -> void:
+## Die nächste Welle mit der gewählten Stufe `difficulty` (1..5).
+func _on_next_wave_requested(difficulty: int) -> void:
 	# Eine gefallene Festung beendet den Lauf, auch wenn der Knopf schon fehlt.
 	if not _last_won:
 		return
-	_difficulty = clampi(_difficulty + delta, 1, 5)
+	_difficulty = clampi(difficulty, 1, 5)
 	_wave_number += 1
 	_start_next_wave()
 

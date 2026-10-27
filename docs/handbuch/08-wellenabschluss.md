@@ -73,9 +73,12 @@ wie viele Antworten du gegeben hast und wie viele davon richtig waren, und welch
 Aufgaben du im Lauf neu gemeistert hast. Mit „↺“ markierte Wörter hast du
 „zurückerobert“: sie waren dir vorher schon ein paar Mal entwischt.
 
-Darunter wählst du die **Schwierigkeit der nächsten Welle**, im Vergleich zu der eben
-gespielten: „Viel leichter“, „Leichter“, „Gleich“, „Schwieriger“, „Viel schwieriger“.
-Vorausgewählt ist „Gleich“. Mit „Nächste Welle“ (oder Enter) geht es weiter.
+Mit dem **Zauberknopf** (die Truhe) öffnest du den Zauberladen und kannst dir vor der nächsten
+Welle noch Zauber kaufen. Schließt du ihn, bist du wieder hier.
+
+Darunter wählst du die **Schwierigkeit der nächsten Welle**: Stufe 1 bis 5, von leicht
+bis schwer. Vorausgewählt ist die Stufe der eben gespielten Welle. Mit „Nächste Welle“
+(oder Enter) geht es weiter.
 
 Links unten steht der Weg zurück:
 

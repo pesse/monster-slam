@@ -5,9 +5,8 @@ extends PanelContainer
 ## Enter und Rücktaste drücken auf den Knopf rechts bzw. „◂ Zurück“, erst nach
 ## `enter_grace_ms`; die Knöpfe haben `FOCUS_NONE`, sonst holt das Antwortfeld den Klick.
 
-## Der Spieler hat die nächste Welle gestartet; `difficulty_delta` ist relativ zur
-## aktuellen Schwierigkeit (-2..+2).
-signal next_wave_requested(difficulty_delta: int)
+## Der Spieler hat die nächste Welle gestartet, mit der gewählten Stufe `difficulty` (1..5).
+signal next_wave_requested(difficulty: int)
 
 ## Der Spieler will zurück ins Menü, auf die Karte oder zur Liste (verlässt die Partie).
 signal back_to_menu_requested
@@ -15,20 +14,19 @@ signal back_to_menu_requested
 ## Der Spieler will die Antworten der Welle noch einmal sehen; zurück geht es mit `resume()`.
 signal review_requested
 
+## Der Spieler will vor der nächsten Welle Zauber kaufen; zurück geht es mit `resume()`.
+signal shop_requested
+
 ## Die Schatzkiste ist offen; `gold` verbucht der Empfänger, nicht der Screen.
 signal reward_collected(gold: int)
 ## Das Trostgold einer Welle ohne Kiste; keine geöffnete Kiste.
 signal consolation_collected(gold: int)
 
 const LINE_SCENE := preload("res://scenes/ui/record_row.tscn")
-## Deltas der Schwierigkeitswahl, in Reihenfolge der Buttons in ChoiceRow (wave_stats.tscn).
-const CHOICE_DELTAS := [-2, -1, 0, 1, 2]
 ## So viele Aufgaben nennt die Sitzungsbilanz beim Namen; der Rest steht als Zahl da.
 const BALANCE_WORDS := 4
 ## Der Rückweg eines Laufs von der Karte, der gerastet wird.
 const REST_TEXT := "⟵ Rasten"
-## Index der Standardauswahl ("Gleich").
-const DEFAULT_CHOICE := 2
 ## Aufforderung an der Kiste, solange sie zu ist.
 const CHEST_HINT := "2 Sekunden auf die Kiste drücken\n(oder Leertaste halten)"
 ## Steht statt des Kistennamens, wenn kein Monster besiegt wurde; der Titel bricht nicht um.
@@ -62,10 +60,12 @@ enum Stage {
 @onready var _choice_row: HBoxContainer = %ChoiceRow
 @onready var _start_button: Button = %StartButton
 @onready var _menu_button: Button = %MenuButton
+@onready var _shop_row: Control = %ShopRow
 @onready var _choice_buttons: Array = %ChoiceRow.get_children()
 
 var _stage: Stage = Stage.RESULT
-var _selected_choice: int = DEFAULT_CHOICE
+## Index in ChoiceRow; die Knöpfe stehen für die Stufen 1..5.
+var _selected_choice: int = 2
 var _won: bool = true
 var _wave_number: int = 0
 var _chest_gold: int = 0
@@ -85,6 +85,8 @@ func _ready() -> void:
 		_menu_button.text = "⟵ Zurück zur Liste"
 	_result_continue.pressed.connect(func(): _goto_stage(Stage.NEXT))
 	_stage_back.pressed.connect(_on_stage_back)
+	(%ShopButton as Button).pressed.connect(func(): shop_requested.emit())
+	Hints.attach(%ShopButton as Control, "Zauberladen", "kaufen mit Gold, bevor die Welle kommt")
 	_chest.opened.connect(_on_chest_opened)
 	_update_choice_highlight()
 
@@ -146,12 +148,13 @@ func show_stats(data: Dictionary) -> void:
 	# Gefallene Festung = Ende des Laufs: keine Schwierigkeitswahl, nur der Weg zurück.
 	_diff_label.visible = _won
 	_choice_row.visible = _won
+	_shop_row.visible = _won
 	_defeat_label.visible = not _won
 	_label_menu_button()
 	_show_balance(data.get("session", {}))
 
-	# Die Wahl ist relativ zur eben gespielten Welle und startet bei „Gleich“.
-	_selected_choice = DEFAULT_CHOICE
+	# Vorgewählt ist die Stufe der eben gespielten Welle.
+	_selected_choice = clampi(int(data.get("difficulty", 3)), 1, _choice_buttons.size()) - 1
 	_update_choice_highlight()
 	_goto_stage(Stage.RESULT)
 	visible = true
@@ -344,4 +347,4 @@ func _update_choice_highlight() -> void:
 
 
 func _on_start_pressed() -> void:
-	next_wave_requested.emit(CHOICE_DELTAS[_selected_choice])
+	next_wave_requested.emit(_selected_choice + 1)
