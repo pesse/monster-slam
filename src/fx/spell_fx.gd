@@ -14,6 +14,7 @@ const MARK_SHADER := preload("res://assets/shaders/ground_mark.gdshader")
 ## Die Farbe je Wirkung — dieselbe wie der Schein im Icon (assets/ui/spells/).
 const COLORS := {
 	"reveal_alts": Color(0.72, 0.45, 1.0),
+	"reveal_initial": Color(1.0, 0.78, 0.35),
 	"slow": Color(0.55, 0.85, 0.2),
 	"freeze": Color(0.62, 0.86, 1.0),
 	"strike": Color(0.6, 0.78, 1.0),
@@ -30,6 +31,7 @@ const HAZE_DENSITY := [0.42, 0.36, 0.3, 0.24, 0.16, 0.09]
 ## Den Donner spielt der erste Blitz (`bolt`).
 const SOUNDS := {
 	"reveal_alts": &"spell_reveal",
+	"reveal_initial": &"spell_whisper",
 	"slow": &"spell_slow",
 	"freeze": &"spell_freeze",
 	"strike": &"spell_thunder_windup",
@@ -52,6 +54,7 @@ const SCORCH_TIME := 5.0
 ## dem letzten Einschlag. Brandfleck und Nebel zählen nicht.
 const SETTLE := {
 	"reveal_alts": SWEEP_TIME + 0.6,
+	"reveal_initial": SWEEP_TIME + 0.6,
 	"slow": 1.0,
 	"freeze": 1.2,
 	"heal": 1.5,
@@ -95,6 +98,9 @@ func play(spell: Dictionary, field: Array[Monster]) -> void:
 		"reveal_alts":
 			_sweep(color, whole_wave)
 			_veil(color, 0.18, 0.08, 0.1, 0.6)
+		"reveal_initial":
+			_whisper(color, field)
+			_veil(color, 0.14, 0.08, 0.1, 0.6)
 		"slow":
 			for monster in field:
 				_splash(monster.position, color)
@@ -243,6 +249,25 @@ func _sweep(color: Color, whole_wave: bool) -> void:
 	p.one_shot = true
 	add_child(p)
 	_free_later(p, 2.6)
+
+
+## Flüstermuschel: ein Ring läuft in der Zeit des Lichtvorhangs von der Mauer übers Feld;
+## wo er ein Monster erreicht, steigen über dessen Kopf Funken auf.
+func _whisper(color: Color, field: Array[Monster]) -> void:
+	_ring(Vector3(0.0, 0.12, front_z), color, (front_z - back_z) * 2.0, SWEEP_TIME)
+	for monster in field:
+		if monster.can_show_initial():
+			_whisper_at(monster, reveal_delay(monster), color)
+
+
+func _whisper_at(monster: Monster, delay: float, color: Color) -> void:
+	await get_tree().create_timer(delay, false).timeout
+	if not is_instance_valid(monster):
+		return
+	var p := _motes(color, 24, 0.9)
+	p.position = monster.position + Vector3(0.0, monster.head_height(), 0.0)
+	add_child(p)
+	_free_later(p, 1.4)
 
 
 ## Sumpf: der Schlamm spritzt unter dem Monster auf.

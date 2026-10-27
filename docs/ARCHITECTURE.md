@@ -1014,7 +1014,8 @@ Ein Zauber ist ein Verbrauchsgegenstand: `price` in Gold, `effect` aus
   `Engine.time_scale`. Einfrieren zählt `_frozen_left` in Spielzeit herunter, Umriss
   eisblau, Animation steht. `Monster.velocity()` kennt beides, der Vorhalt des Katapults
   also auch. Die Alternativen (`prompt_alt` der Aufgabe) zeigt das Wortschild als zweite
-  Zeile (`WordPlate.alt_line`, Signal `alts_revealed`).
+  Zeile (`WordPlate.alt_line`, Signal `alts_revealed`), den ersten Buchstaben der Lösung
+  in der Zeile der Lösung (`WordPlate.initial_line`, Signal `initial_revealed`).
 - **Donnerschlag** nimmt jedes Monster auf dem Feld über `WaveRunner._strike` sofort vom
   Feld (aus `_active`, angehalten) und sendet `monster_struck`; das Bild geht erst, wenn
   sein Blitz einschlägt (`SpellFx.bolt`), bis dahin hält `_underway` das Wellenende auf.

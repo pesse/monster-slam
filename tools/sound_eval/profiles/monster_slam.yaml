@@ -61,6 +61,15 @@ effects:
     generation_prompt: >
       Magic reveal spell: a soft shimmering sweep rising upward like a curtain of light passing over, airy glassy chimes and warm sparkle, mystical and calm, fantasy game sound
     references: [../../../assets/audio/sfx/spell_reveal.wav]
+  spell_whisper:
+    description: Flüstermuschel – ein geheimnisvolles Flüstern aus einer Muschel, das in einem warmen, kleinen Glanz endet.
+    prompts:
+      - soft breathy magical whisper from a seashell with a warm sparkle
+      - airy secretive hush with a tiny golden chime
+    duration: [0.6, 1.0]
+    files: [spell_whisper*]
+    generation_prompt: >
+      Magic whisper spell: a soft breathy airy whisper swirling out of a seashell, like a secret being told, no words, ending in a small warm golden chime sparkle, gentle and mysterious, fantasy game sound
   spell_slow:
     description: Sumpf – schmatzender Schlamm, ein, zwei Blasen; eher komisch als eklig.
     prompts:

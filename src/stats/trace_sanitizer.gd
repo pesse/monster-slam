@@ -25,7 +25,7 @@ const KEEP := {
 	"wave_clear": ["wave", "hp"],
 	"fast_resolve": ["wave", "unspawned", "on_field"],
 	"spawn": ["id", "lex", "type", "dir", "conf", "diff", "help"],
-	"answer": ["hit", "full", "id", "rt", "field", "conf", "exact", "unseen", "help"],
+	"answer": ["hit", "full", "id", "rt", "field", "conf", "exact", "unseen", "help", "hint"],
 	"leak": ["id", "lex", "dmg"],
 	"catapult": ["id", "lex", "conf"],
 	"struck": ["id", "lex"],

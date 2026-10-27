@@ -16,10 +16,11 @@ func after_test() -> void:
 	GameState.reset()
 
 
-func _monster(alts: Array = []) -> Monster:
+func _monster(alts: Array = [], task := {}) -> Monster:
 	var monster := MONSTER_SCENE.instantiate() as Monster
-	monster.setup({}, {"prompt": "gehen", "prompt_alt": alts, "learnable_id": "zz.task"},
-			1000.0, 20.0)
+	var data := {"prompt": "gehen", "prompt_alt": alts, "learnable_id": "zz.task"}
+	data.merge(task, true)
+	monster.setup({}, data, 1000.0, 20.0)
 	add_child(monster)
 	auto_free(monster)
 	return monster
@@ -53,7 +54,7 @@ func test_every_spell_in_the_data_is_complete() -> void:
 
 ## Auf leerem Feld wirkt kein Feld-Zauber — und wird deshalb nicht verbraucht.
 func test_field_spells_need_monsters() -> void:
-	for effect in ["freeze", "strike", "slow", "reveal_alts"]:
+	for effect in ["freeze", "strike", "slow", "reveal_alts", "reveal_initial"]:
 		assert_bool(_caster.can_cast(_spell(effect), _field([]), 0)) \
 				.append_failure_message(effect).is_false()
 
@@ -115,6 +116,23 @@ func test_alternatives_show_only_where_there_are_some() -> void:
 	assert_bool(plain.alts_shown).is_false()
 	assert_bool(_caster.can_cast(reveal, _field([plain, rich]), 0)).is_false()
 	assert_str(WordPlate.alt_line(rich.alts())).is_equal("auch: walk, run")
+
+
+## Die Flüstermuschel deckt nur auf, wo eine Lösung fehlt: nicht ohne Lösung, nicht neben der
+## ganzen Lösung einer neuen Aufgabe (ADR 0027), nicht zweimal.
+func test_the_first_letter_shows_where_the_answer_is_hidden() -> void:
+	var plain := _monster([], {"accepted_answers": ["(to) go", "walk"]})
+	var copied := _monster([], {"accepted_answers": ["go"], "help": true})
+	var blank := _monster()
+	var whisper := _spell("reveal_initial")
+	assert_bool(_caster.can_cast(whisper, _field([copied, blank]), 0)).is_false()
+	assert_bool(_caster.can_cast(whisper, _field([plain, copied, blank]), 0)).is_true()
+	_caster.cast(whisper, _field([plain, copied, blank]), 0)
+	assert_bool(plain.initial_shown).is_true()
+	assert_bool(copied.initial_shown).is_false()
+	assert_bool(blank.initial_shown).is_false()
+	assert_str(WordPlate.initial_line(plain.initial())).is_equal("g…")
+	assert_bool(_caster.can_cast(whisper, _field([plain, copied, blank]), 0)).is_false()
 
 
 ## Der Donnerschlag gibt jedes Monster auf dem Feld an den WaveRunner (`strike`).

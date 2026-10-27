@@ -57,6 +57,13 @@
       "height": 256,
       "notes": "Isolated spell icon; centered <=208 px motif, genuine alpha. Source: sources/plate.png; extracted from sources/spells_atlas.png.",
       "sha256": "1dd8a03ad6a1a42b0e2b2ce6f1e10d5baed1e78edb80f046ae8f5008271895d7"
+    },
+    "icons/whisper": {
+      "path": "res://assets/ui/spells/icons/whisper.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated spell icon; centered <=208 px motif, genuine alpha. Source: sources/whisper.png; generated singly (Codex session 01a17dbf-2da8-7343-b671-a0b28822ef56).",
+      "sha256": "6aa43d45bca49b1df73dbdb1ff1fa240460988712916079c894e3ea3377d1b2a"
     }
   }
 }

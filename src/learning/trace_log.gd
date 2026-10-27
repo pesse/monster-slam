@@ -200,6 +200,9 @@ func note_answer(text: String, verdict: Dictionary) -> void:
 	# Abgetippt (ADR 0027): kein Lernstand-Eintrag, `conf` ist unverändert.
 	if bool(verdict.get("help", false)):
 		line["help"] = true
+	# Mit dem ersten Buchstaben auf dem Schild (Flüstermuschel); zählt wie jede Antwort.
+	if bool(verdict.get("hint", false)):
+		line["hint"] = true
 	var canonical := str(verdict.get("canonical", ""))
 	if not canonical.is_empty():
 		line["canonical"] = canonical

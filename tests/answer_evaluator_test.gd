@@ -324,3 +324,14 @@ func test_comma_is_lenient_spelling() -> void:
 
 func test_missing_comma_is_marked() -> void:
 	assert_array(Array(AnswerEvaluator.spelling_marks("yes, please", "yes please"))).contains_exactly([3])
+
+
+## Der erste Buchstabe der Flüstermuschel ist der erste, den man tippen muss.
+func test_the_initial_skips_what_may_be_left_out() -> void:
+	assert_str(AnswerEvaluator.initial("(to) go")).is_equal("g")
+	assert_str(AnswerEvaluator.initial("to go")).is_equal("g")
+	assert_str(AnswerEvaluator.initial("der Hund")).is_equal("H")
+	assert_str(AnswerEvaluator.initial("The (big) dog")).is_equal("d")
+	assert_str(AnswerEvaluator.initial("ōrātiō")).is_equal("ō")
+	assert_str(AnswerEvaluator.initial("the")).is_equal("t")
+	assert_str(AnswerEvaluator.initial("")).is_empty()

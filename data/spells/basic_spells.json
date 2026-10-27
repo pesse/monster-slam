@@ -18,6 +18,14 @@
 		"price": 75
 	},
 	{
+		"id": "spell.whisper",
+		"name": "Flüstermuschel",
+		"icon": "🐚",
+		"description": "Die Monster auf dem Feld verraten den ersten Buchstaben ihrer Lösung.",
+		"effect": "reveal_initial",
+		"price": 50
+	},
+	{
 		"id": "spell.mire",
 		"name": "Sumpf",
 		"icon": "🐌",

@@ -1599,6 +1599,7 @@ func _score_hit(monster: Monster, text: String = "", verdict: Dictionary = {}) -
 		"matched": true, "complete": complete, "exact": exact, "learnable_id": task_id,
 		"source_id": str(monster.task.get("source_id", "")), "response_time_ms": rt,
 		"canonical": full_form, "candidates": _active_learnable_ids(),
+		"hint": monster.initial_shown,
 	})
 	# Nach answer_judged, damit die Spur erst die Antwort und dann die Meisterung zeigt.
 	if newly_mastered:

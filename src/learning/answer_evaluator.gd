@@ -151,6 +151,26 @@ static func _align(canonical: String, typed: String) -> Dictionary:
 	return {"marked": marked, "typed_against": typed_against}
 
 
+## Der erste Buchstabe, den man von `answer` tippen muss, in der Schreibweise der Lösung:
+## vor ihm stehen höchstens Klammergruppen und wegkürzbare Anlaute ("(to) go" -> "g",
+## "der Hund" -> "H"). Leer für eine leere Lösung.
+static func initial(answer: String) -> String:
+	var rest := answer.strip_edges()
+	var stripped := true
+	while stripped:
+		stripped = false
+		if rest.begins_with("(") and rest.find(")") > 0:
+			rest = rest.substr(rest.find(")") + 1).strip_edges()
+			stripped = true
+		for prefix: String in _OPTIONAL_PREFIXES:
+			if rest.to_lower().begins_with(prefix):
+				rest = rest.substr(prefix.length()).strip_edges()
+				stripped = true
+	if rest.is_empty():
+		rest = answer.strip_edges()
+	return rest.left(1)
+
+
 ## Die Indizes in `canonical`, an denen `typed` von der Schreibweise abwich: Diakritika und
 ## Ligaturen, die ohne getippt wurden, und Verbinder, die fehlten oder als Leerzeichen kamen
 ## (ADR 0008). Was weggelassen werden durfte, bleibt unmarkiert.

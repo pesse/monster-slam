@@ -511,8 +511,10 @@ func _spawn_monster() -> void:
 		_walkers = Node3D.new()
 		add_child(_walkers)
 	var monster := FxWarmup.MONSTER_SCENE.instantiate() as Monster
-	# Mit Alternativen, damit „Drittes Auge" etwas aufzudecken hat (Reiter Zauber).
-	monster.setup(defs.pick_random(), {"prompt": "house", "prompt_alt": ["home", "building"],
+	# Mit Alternativen und Lösung, damit „Drittes Auge" und „Flüstermuschel" etwas
+	# aufzudecken haben (Reiter Zauber).
+	monster.setup(defs.pick_random(), {"prompt": "Haus", "prompt_alt": ["Heim", "Gebäude"],
+			"accepted_answers": ["house"],
 			"lexeme_type": WordTypePalette.COLORS.keys().pick_random()}, _goal() + 1000.0,
 			_monster_speed)
 	monster.screen_sized_label = _fp != null
@@ -828,7 +830,8 @@ func _shoot_plates() -> void:
 			var monster := FxWarmup.MONSTER_SCENE.instantiate() as Monster
 			var types := WordTypePalette.COLORS.keys()
 			# Jedes dritte zeigt Alternativen wie nach dem Zauber „Drittes Auge", jedes zweite
-			# die Lösung einer neuen Aufgabe (ADR 0027).
+			# die Lösung einer neuen Aufgabe (ADR 0027), die übrigen ihren ersten Buchstaben
+			# wie nach der „Flüstermuschel".
 			var alts := ["Alternative", "noch eine"] if i % 3 == 0 else []
 			monster.setup(defs[i % defs.size()], {"prompt": prompts[i], "prompt_alt": alts,
 					"help": i % 2 == 0, "accepted_answers": ["Lösung"],
@@ -838,6 +841,7 @@ func _shoot_plates() -> void:
 			group.add_child(monster)
 			monster.halt()
 			monster.show_alts()
+			monster.show_initial()
 		# Die Schilder gleiten an ihren Platz; eine halbe Sekunde reicht.
 		for i in 30:
 			await get_tree().process_frame
@@ -1709,7 +1713,7 @@ func _cast_spell(spell: Dictionary, short_frost := false) -> void:
 	elif effect == "armor":
 		GameState.fortress_armor_max = maxi(GameState.fortress_armor_max, 50)
 		GameState.fortress_armor = 10
-	if _field().is_empty() and effect in ["reveal_alts", "slow", "freeze", "strike"]:
+	if _field().is_empty() and effect in ["reveal_alts", "reveal_initial", "slow", "freeze", "strike"]:
 		_fill_field()
 	_spell_fx.front_z = _goal()
 	_spell_fx.back_z = _spawn_z

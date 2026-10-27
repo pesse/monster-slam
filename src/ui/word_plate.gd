@@ -27,8 +27,12 @@ const BADGE_OVERHANG := Vector2(0.25, 0.55)
 const WRAP_CHARS := 32
 const WRAP_WIDTH := 280.0
 const LARGE_WRAP_FACTOR := 1.5
-## So leuchtet ein Schild auf, das der Zauber aufdeckt (überhellt).
+## So leuchtet ein Schild auf, das der Zauber aufdeckt (überhellt): violett bei den
+## Alternativen, golden beim ersten Buchstaben (Farben wie SpellFx.COLORS).
 const REVEAL_GLOW := Color(1.6, 1.25, 2.0)
+const INITIAL_GLOW := Color(2.0, 1.6, 0.9)
+## Hinter dem ersten Buchstaben der Lösung.
+const INITIAL_TAIL := "…"
 ## Startgröße des Aufspringens und Dauer von Rückfedern und Ausleuchten, s.
 const REVEAL_SCALE := 1.35
 const REVEAL_SETTLE := 0.35
@@ -40,7 +44,8 @@ var push := Vector2.ZERO
 
 @onready var _frame: PanelContainer = $Frame
 @onready var _text: Label = %Text
-## Die Lösung einer neuen Aufgabe (ADR 0027), von Anfang an.
+## Die Lösung einer neuen Aufgabe (ADR 0027) von Anfang an, sonst nach dem Zauber ihr
+## erster Buchstabe.
 @onready var _help: Label = %Help
 @onready var _badge: TextureRect = $Badge
 ## Die Alternativen der Aufgabe in einer weiteren Zeile, erst nach dem Zauber (ADR 0014).
@@ -65,7 +70,11 @@ func setup(of: Monster, large: bool) -> void:
 	_help.text = of.help_answer()
 	_help.visible = not _help.text.is_empty()
 	_badge.visible = _help.visible
+	if of.initial_shown:
+		_help.text = initial_line(of.initial())
+		_help.visible = true
 	of.alts_revealed.connect(_on_alts_revealed)
+	of.initial_revealed.connect(_on_initial_revealed)
 	# Wortartfarbe in Rand und Schrift; die Schrift aufgehellt für die dunkle Fläche.
 	var color := of.word_color()
 	var rim := color
@@ -84,15 +93,24 @@ func setup(of: Monster, large: bool) -> void:
 ## Der Zauber deckt auf: nach `delay` (s) springt das Schild mit der zweiten Zeile auf und
 ## leuchtet kurz. Ohne Verzögerung steht die Zeile sofort da.
 func _on_alts_revealed(delay: float) -> void:
+	_reveal(_alt, delay, REVEAL_GLOW)
+
+
+func _on_initial_revealed(delay: float) -> void:
+	_help.text = initial_line(monster.initial())
+	_reveal(_help, delay, INITIAL_GLOW)
+
+
+func _reveal(line: Label, delay: float, glow: Color) -> void:
 	if delay > 0.0:
 		await get_tree().create_timer(delay, false).timeout
 		if not is_instance_valid(monster):
 			return
-	_alt.visible = true
+	line.visible = true
 	_fit()
 	pivot_offset = Vector2(size.x / 2.0, plate_size().y)
 	scale = Vector2.ONE * REVEAL_SCALE
-	modulate = REVEAL_GLOW
+	modulate = glow
 	var tw := create_tween().set_parallel(true)
 	tw.tween_property(self, "scale", Vector2.ONE, REVEAL_SETTLE).set_trans(Tween.TRANS_BACK) \
 			.set_ease(Tween.EASE_OUT)
@@ -102,6 +120,11 @@ func _on_alts_revealed(delay: float) -> void:
 ## Die zweite Zeile: „auch: walk, run“, beim Buchsatz „Wort: victim“.
 static func alt_line(alts: Array, label := "auch") -> String:
 	return "%s: %s" % [label, ", ".join(alts.map(func(a: Variant) -> String: return str(a)))]
+
+
+## Die Zeile nach der Flüstermuschel: „g…“.
+static func initial_line(initial: String) -> String:
+	return initial + INITIAL_TAIL
 
 
 ## Plakette und Zipfel zusammen; der Zipfel hängt unten über den Rand hinaus.

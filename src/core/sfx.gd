@@ -35,6 +35,7 @@ const SOUNDS := {
 	&"badge_last_second": {"file": "badge_last_second.wav", "db": -0.8},
 	# Zauber: um die Wellen-Fanfare.
 	&"spell_reveal": {"file": "spell_reveal.wav", "db": -2.1},
+	&"spell_whisper": {"file": "spell_whisper.wav", "db": -2.1},
 	&"spell_slow": {"file": "spell_slow.wav", "db": -2.5},
 	# Dieselbe Datei je neu erscheinendem Monster, daher deutlich leiser.
 	&"spell_slow_spawn": {"file": "spell_slow.wav", "db": -9.0},
