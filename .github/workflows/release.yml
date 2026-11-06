@@ -1,7 +1,7 @@
 name: Release
 
-# Baut, signiert und veröffentlicht eine Windows- und eine macOS-Fassung; Auslöser ist ein
-# in GitHub publiziertes Release. Die Release-Beschreibung landet als `notes` in latest.json, die der
+# Baut, signiert und veröffentlicht eine Windows-, eine macOS- und eine Linux-Fassung;
+# Auslöser ist ein in GitHub publiziertes Release. Die Release-Beschreibung landet als `notes` in latest.json, die der
 # letzten 7 Tage (mindestens 3 Releases) als `history` — der Update-Dialog zeigt alle, die
 # neuer sind als die installierte Fassung. Deshalb Release-Notes kurz halten.
 #
@@ -24,6 +24,8 @@ env:
   # fragt beim ersten Start nach. Exportiert wird auf dem Windows-Runner mit — Godot packt
   # und signiert das Bundle selbst, dafür braucht es keinen Mac.
   PRESET_MACOS: "macOS"
+  # x86_64, PCK eingebettet; wie macOS auf dem Windows-Runner exportiert (ADR 0030).
+  PRESET_LINUX: "Linux"
 
 jobs:
   build:
@@ -32,6 +34,7 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       exe: ${{ steps.version.outputs.exe }}
       mac: ${{ steps.version.outputs.mac }}
+      linux: ${{ steps.version.outputs.linux }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -48,10 +51,12 @@ jobs:
           VERSION="${TAG#v}"
           EXE="exports/MonsterSlam-${VERSION}.exe"
           MAC="exports/MonsterSlam-${VERSION}-macos.zip"
-          bash tools/release/set_version.sh "$VERSION" "$EXE" "$MAC"
+          LINUX="exports/MonsterSlam-${VERSION}-linux.x86_64"
+          bash tools/release/set_version.sh "$VERSION" "$EXE" "$MAC" "$LINUX"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "exe=$EXE" >> "$GITHUB_OUTPUT"
           echo "mac=$MAC" >> "$GITHUB_OUTPUT"
+          echo "linux=$LINUX" >> "$GITHUB_OUTPUT"
         env:
           TAG: ${{ github.event.release.tag_name }}
 
@@ -119,6 +124,9 @@ jobs:
           "$GODOT" --headless --export-release "$PRESET_MACOS" "${{ steps.version.outputs.mac }}" 2>&1 \
             | tr -d '\r' | grep -iE "error|warn|template|codesign|\[ done \]" || true
           test -f "${{ steps.version.outputs.mac }}"
+          "$GODOT" --headless --export-release "$PRESET_LINUX" "${{ steps.version.outputs.linux }}" 2>&1 \
+            | tr -d '\r' | grep -iE "error|warn|template|\[ done \]" || true
+          test -f "${{ steps.version.outputs.linux }}"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -126,6 +134,7 @@ jobs:
           path: |
             ${{ steps.version.outputs.exe }}
             ${{ steps.version.outputs.mac }}
+            ${{ steps.version.outputs.linux }}
           retention-days: 1
 
   # Signieren und Manifest auf Linux, weil openssl und jq dort verlässlich vorliegen.
@@ -154,6 +163,7 @@ jobs:
           VERSION: ${{ needs.build.outputs.version }}
           EXE: ${{ needs.build.outputs.exe }}
           MAC: ${{ needs.build.outputs.mac }}
+          LINUX: ${{ needs.build.outputs.linux }}
         run: |
           set -euo pipefail
           if [ -z "${SIGNING_KEY}" ]; then
@@ -170,7 +180,8 @@ jobs:
           BASE="${{ github.server_url }}/${{ github.repository }}/releases/download/${TAG}"
           bash tools/release/make_latest_json.sh "$VERSION" notes.md "$KEY" latest.json history.json \
             windows-x86_64 "$EXE" "${BASE}/$(basename "$EXE")" \
-            macos-universal "$MAC" "${BASE}/$(basename "$MAC")"
+            macos-universal "$MAC" "${BASE}/$(basename "$MAC")" \
+            linux-x86_64 "$LINUX" "${BASE}/$(basename "$LINUX")"
 
       - name: An das Release hängen
         shell: bash
@@ -178,7 +189,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release upload "${{ github.event.release.tag_name }}" \
-            "${{ needs.build.outputs.exe }}" "${{ needs.build.outputs.mac }}" latest.json --clobber
+            "${{ needs.build.outputs.exe }}" "${{ needs.build.outputs.mac }}" \
+            "${{ needs.build.outputs.linux }}" latest.json --clobber
 
   # Schreibt die freigegebene Version in den Default-Branch zurück, damit der committete
   # Stand nicht hinter den Releases zurückbleibt — die Versionsschranke der Content-Packs

@@ -6,7 +6,7 @@
 # Skript hält sie synchron, damit lokaler Build und CI nicht auseinanderlaufen.
 #
 # Nutzung:
-#   set_version.sh <version> [<ausgabe-exe>] [<ausgabe-macos-zip>]
+#   set_version.sh <version> [<ausgabe-exe>] [<ausgabe-macos-zip>] [<ausgabe-linux>]
 set -euo pipefail
 
 cd "$(dirname "$0")/../.."
@@ -14,6 +14,7 @@ cd "$(dirname "$0")/../.."
 VERSION="${1:?Version fehlt}"
 OUT="${2:-}"
 OUT_MACOS="${3:-}"
+OUT_LINUX="${4:-}"
 
 if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-].+)?$ ]]; then
 	echo "FEHLER: '$VERSION' ist keine gültige Version." >&2
@@ -45,6 +46,10 @@ if [[ -f export_presets.cfg ]]; then
 		sed -i -e "/^name=\"macOS\"/,/^export_path=/ s|^export_path=.*|export_path=\"${OUT_MACOS}\"|" \
 			export_presets.cfg
 	fi
+	if [[ -n "$OUT_LINUX" ]]; then
+		sed -i -e "/^name=\"Linux\"/,/^export_path=/ s|^export_path=.*|export_path=\"${OUT_LINUX}\"|" \
+			export_presets.cfg
+	fi
 fi
 
-echo ">> Version $VERSION (PE ${PE_VERSION}${OUT:+, Ziel $OUT}${OUT_MACOS:+, $OUT_MACOS})"
+echo ">> Version $VERSION (PE ${PE_VERSION}${OUT:+, Ziel $OUT}${OUT_MACOS:+, $OUT_MACOS}${OUT_LINUX:+, $OUT_LINUX})"

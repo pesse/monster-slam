@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
-# Baut Monster Slam als Windows-EXE (self-contained, PCK eingebettet) und als macOS-App
-# (universal, ad hoc signiert, als ZIP).
+# Baut Monster Slam als Windows-EXE (self-contained, PCK eingebettet), als macOS-App
+# (universal, ad hoc signiert, als ZIP) und als Linux-Programm (x86_64, PCK eingebettet).
 #
 # Einzige Versionsquelle ist project.godot (config/version). Das Skript liest
 # die Version dort aus, synchronisiert die Metadaten-Felder in
 # export_presets.cfg und schreibt
 #   exports/MonsterSlam-<version>.exe
 #   exports/MonsterSlam-<version>-macos.zip
+#   exports/MonsterSlam-<version>-linux.x86_64
 #
 # Nutzung:
-#   ./build.sh            # beide
+#   ./build.sh            # alle drei
 #   ./build.sh windows    # nur die EXE
 #   ./build.sh macos      # nur die macOS-App
+#   ./build.sh linux      # nur das Linux-Programm
 #
 # Godot-Pfad bei Bedarf per Umgebungsvariable überschreiben:
 #   GODOT="/pfad/zu/Godot_console.exe" ./build.sh
@@ -22,9 +24,9 @@ cd "$(dirname "$0")"
 
 TARGET="${1:-all}"
 case "$TARGET" in
-	all | windows | macos) ;;
+	all | windows | macos | linux) ;;
 	*)
-		echo "FEHLER: unbekanntes Ziel '$TARGET' (all, windows, macos)." >&2
+		echo "FEHLER: unbekanntes Ziel '$TARGET' (all, windows, macos, linux)." >&2
 		exit 2
 		;;
 esac
@@ -38,9 +40,10 @@ fi
 
 OUT_WINDOWS="exports/MonsterSlam-${VERSION}.exe"
 OUT_MACOS="exports/MonsterSlam-${VERSION}-macos.zip"
+OUT_LINUX="exports/MonsterSlam-${VERSION}-linux.x86_64"
 
 # Version an alle abgeleiteten Stellen schreiben (idempotent, dasselbe Skript nutzt die CI).
-bash tools/release/set_version.sh "$VERSION" "$OUT_WINDOWS" "$OUT_MACOS"
+bash tools/release/set_version.sh "$VERSION" "$OUT_WINDOWS" "$OUT_MACOS" "$OUT_LINUX"
 
 mkdir -p exports
 
@@ -67,9 +70,12 @@ export_preset() {
 	echo ">> Fertig: $out ($(du -h "$out" | cut -f1))"
 }
 
-if [[ "$TARGET" != macos ]]; then
+if [[ "$TARGET" == all || "$TARGET" == windows ]]; then
 	export_preset "Windows Desktop" "$OUT_WINDOWS"
 fi
-if [[ "$TARGET" != windows ]]; then
+if [[ "$TARGET" == all || "$TARGET" == macos ]]; then
 	export_preset "macOS" "$OUT_MACOS"
+fi
+if [[ "$TARGET" == all || "$TARGET" == linux ]]; then
+	export_preset "Linux" "$OUT_LINUX"
 fi

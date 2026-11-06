@@ -28,9 +28,9 @@ tools/sound_eval/sound-eval rank kandidaten/ --effect spell_freeze
 tools/report/php.sh server/melden/test_endpoint.php
 
 # Windows-EXE → exports/MonsterSlam-<version>.exe, macOS → exports/MonsterSlam-<version>-macos.zip
-# (ADR 0015); die Version steht nur in project.godot (config/version), build.sh gleicht
-# export_presets.cfg daran an:
-./build.sh            # beide; ./build.sh windows | macos für eins
+# (ADR 0015), Linux → exports/MonsterSlam-<version>-linux.x86_64 (ADR 0030); die Version steht
+# nur in project.godot (config/version), build.sh gleicht export_presets.cfg daran an:
+./build.sh            # alle; ./build.sh windows | macos | linux für eins
 ```
 
 - Der Wrapper braucht den **Konsolen**-Build (`GODOT=… tools/godot.sh` überschreibt den
