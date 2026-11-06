@@ -21,6 +21,13 @@ const MANIFEST_URL := "https://github.com/pesse/monster-slam/releases/latest/dow
 ## Schlüssel der Plattform-Blöcke in latest.json.
 const PLATFORM_WINDOWS := "windows-x86_64"
 const PLATFORM_MACOS := "macos-universal"
+const PLATFORM_LINUX := "linux-x86_64"
+
+## Rechte der ersetzten Programmdatei unter Linux: rwxr-xr-x.
+const EXECUTABLE_MODE := FileAccess.UNIX_READ_OWNER | FileAccess.UNIX_WRITE_OWNER \
+		| FileAccess.UNIX_EXECUTE_OWNER | FileAccess.UNIX_READ_GROUP \
+		| FileAccess.UNIX_EXECUTE_GROUP | FileAccess.UNIX_READ_OTHER \
+		| FileAccess.UNIX_EXECUTE_OTHER
 
 const DOWNLOAD_DIR := "user://updates"
 
@@ -125,13 +132,15 @@ static func platform() -> String:
 		return PLATFORM_WINDOWS
 	if OS.has_feature("macos"):
 		return PLATFORM_MACOS
+	if OS.has_feature("linuxbsd") and OS.has_feature("x86_64"):
+		return PLATFORM_LINUX
 	return ""
 
 
-## Ob das Spiel sich selbst ersetzen kann. Nur unter Windows: im signierten macOS-Bundle
-## bräche eine getauschte Programmdatei die Signatur.
+## Ob das Spiel sich selbst ersetzen kann: unter Windows und Linux. Im signierten
+## macOS-Bundle bräche eine getauschte Programmdatei die Signatur (ADR 0015).
 static func can_self_install() -> bool:
-	return OS.has_feature("windows")
+	return OS.has_feature("windows") or platform() == PLATFORM_LINUX
 
 
 ## Öffnet die angebotene Fassung im Browser — der Weg auf Plattformen ohne Selbstersetzen.
@@ -149,7 +158,8 @@ func download() -> void:
 	if DirAccess.make_dir_recursive_absolute(DOWNLOAD_DIR) != OK:
 		_fail("Download-Verzeichnis nicht anlegbar.")
 		return
-	var target := "%s/MonsterSlam-%s.exe" % [DOWNLOAD_DIR, version]
+	var suffix := ".exe" if OS.has_feature("windows") else ".x86_64"
+	var target := "%s/MonsterSlam-%s%s" % [DOWNLOAD_DIR, version, suffix]
 	progress = -1.0
 	_set_state(State.DOWNLOADING)
 	_http.download_file = target
@@ -187,7 +197,8 @@ func _on_download(result: int, code: int, _headers: PackedStringArray, _body: Pa
 
 
 ## Ersetzt die laufende Programmdatei durch die geprüfte Fassung und startet neu. Erst
-## umbenennen (unter Windows auch laufend erlaubt), dann schreiben, sonst zurückrollen.
+## umbenennen (unter Windows und Linux auch laufend erlaubt), dann schreiben, sonst
+## zurückrollen.
 func install() -> void:
 	if state != State.READY or not can_self_install():
 		return
@@ -224,6 +235,9 @@ func _swap() -> String:
 	if moved != OK:
 		DirAccess.rename_absolute(backup, current)
 		return "Ersetzen fehlgeschlagen, alter Stand wiederhergestellt. Neue Fassung: %s" % fresh
+	# Download und Kopie kommen ohne Ausführungsrecht an.
+	if not OS.has_feature("windows"):
+		FileAccess.set_unix_permissions(current, EXECUTABLE_MODE)
 
 	if OS.create_process(current, []) == -1:
 		# Ersetzt ist ersetzt; ein Rückroll wäre hier schlimmer als ein Handstart.
