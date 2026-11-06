@@ -309,7 +309,7 @@ effects:
 
 # Optional: Generierung über ElevenLabs (sound-eval generate). Credit-Sätze sind Schätzungen.
 elevenlabs:
-  credits_per_second: 10     # gemessen 2026-10-12: 3 × 1,1 s = 33 Credits
+  credits_per_second: 10     # gemessen 2026-10-12 mit v2: 3 × 1,1 s = 33 Credits
   credits_auto_duration: 100
   max_credits_per_run: 300
   max_credits_total: 3000

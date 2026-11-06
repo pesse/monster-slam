@@ -22,13 +22,13 @@ from .clap import cache_dir
 
 API_URL = "https://api.elevenlabs.io/v1/sound-generation"
 DEFAULTS = {
-    "credits_per_second": 10,  # bei fester Dauer; gemessen 2026-10-12 (3 × 1,1 s = 33 Credits)
+    "credits_per_second": 10,  # bei fester Dauer; gemessen 2026-10-12 mit v2 (3 × 1,1 s = 33 Credits)
     "credits_auto_duration": 100,  # ohne Dauer (das Modell wählt)
     "max_credits_per_run": 500,
     "max_credits_total": 5000,
     "prompt_influence": 0.5,
     "output_format": "mp3_44100_128",
-    "model_id": "eleven_text_to_sound_v2",
+    "model_id": "eleven_text_to_sound_v3",
 }
 
 
