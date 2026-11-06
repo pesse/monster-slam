@@ -70,7 +70,8 @@ Spielernummer oder irgendetwas aus der Spur.
   ([Kapitel 15](15-vokabel-packs.md)). Dabei muss man bestätigen, dass die Texte den
   Rechner verlassen; ohne diese Bestätigung wird der Schlüssel nicht gespeichert.
 - Der Schlüssel wird verschlüsselt gespeichert. Lesen kann ihn nur dein Benutzerkonto auf
-  diesem Rechner; eine kopierte Datei nützt niemandem.
+  diesem Rechner; eine kopierte Datei nützt niemandem. Unter Linux braucht das Spiel dafür
+  `secret-tool` (Paket `libsecret-tools`); ohne das Paket lässt sich kein Schlüssel eintragen.
 - Jede Abgabe kostet den Inhaber des Schlüssels ein wenig Geld. Das Spiel schreibt den
   Verbrauch je Abgabe mit, aber nie den Text und nie den Schlüssel.
 - Der Satzmeister ([Kapitel 20](20-bosskampf.md)) bleibt davon unberührt und läuft auf

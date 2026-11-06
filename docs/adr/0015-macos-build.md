@@ -1,6 +1,6 @@
 # ADR 0015 — macOS-Build: universal, ad hoc signiert, Update über den Browser
 
-Status: **angenommen** · Datum: 2026-10-05 · ergänzt ADR 0001 (App-Kanal)
+Status: **angenommen** · Datum: 2026-10-05 · ergänzt ADR 0001 (App-Kanal) · Linux: ADR 0030
 
 ## Kontext
 

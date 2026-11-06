@@ -14,6 +14,10 @@ nachsehen kannst du mit **„Auf Updates prüfen“** rechts unten im Hauptmenü
 „Im Browser laden“: Der Browser lädt die neue Fassung als ZIP. Beende das Spiel, pack
 die ZIP aus und ersetze die alte „Monster Slam“-App im Programme-Ordner durch die neue.
 
+**Unter Linux** läuft es wie unter Windows. Der Ordner mit der Spieldatei muss dafür
+beschreibbar sein, etwa im eigenen Home-Ordner. Liegt das Spiel woanders, nennt die
+Meldung, wo die neue Fassung liegt.
+
 Dein Fortschritt bleibt dabei erhalten; er liegt nicht im Spiel selbst ([Kapitel 19](19-daten.md)).
 
 ---

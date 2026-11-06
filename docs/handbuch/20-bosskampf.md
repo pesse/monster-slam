@@ -28,7 +28,7 @@ falschen nicht stimmt, beurteilt ein Sprachmodell, das **auf diesem Rechner** l�
 kommt nicht mit dem Spiel, sondern wird einmal über „Inhalte“ geholt („Sprachmodell für
 Bosskämpfe“, rund 4,6 GB). Beim Betreten des Bosskampfs startet es; bis es geladen ist,
 steht dort „Er erwacht …“. Nichts, was getippt wird, verlässt den Rechner. Das
-Sprachmodell gibt es bisher nur unter Windows. Auf dem Mac wird es unter „Inhalte“ gar
+Sprachmodell gibt es unter Windows und Linux. Auf dem Mac wird es unter „Inhalte“ gar
 nicht erst angeboten.
 
 **Oder in der Cloud.** Wer für The Rambler einen eigenen API-Schlüssel eingetragen hat

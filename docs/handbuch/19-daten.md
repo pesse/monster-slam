@@ -4,7 +4,8 @@ Alles, was ein Profil sich erspielt (Lernstand, Gold, Erfahrung, Fähigkeiten, B
 Einstellungen, Meldungen und Protokoll), liegt im Benutzer-Datenordner des Spiels auf
 diesem Rechner, nicht im Spielordner. Deshalb überlebt es auch ein Update. Unter Windows
 ist das in der Regel `%APPDATA%\Godot\app_userdata\Monster Slam\`, auf dem Mac
-`~/Library/Application Support/Godot/app_userdata/Monster Slam/`. Den genauen Pfad der
+`~/Library/Application Support/Godot/app_userdata/Monster Slam/`, unter Linux
+`~/.local/share/godot/app_userdata/Monster Slam/`. Den genauen Pfad der
 Protokolldatei zeigt der Reiter „Protokoll“ in den Einstellungen, und „Ordner öffnen“
 führt direkt dorthin.
 

@@ -12,6 +12,11 @@ deshalb, die App lasse sich nicht überprüfen. Unter *Systemeinstellungen → D
 Sicherheit* steht dann unten „Monster Slam“ mit **„Trotzdem öffnen“**. Einmal bestätigt,
 startet das Spiel danach normal. Nach jedem Update fragt macOS noch einmal.
 
+**Unter Linux** ist das Spiel eine einzelne Datei (`MonsterSlam-…-linux.x86_64`). Nach dem
+Herunterladen ist sie noch nicht ausführbar. Im Dateimanager unter *Eigenschaften → Rechte*
+„Als Programm ausführen“ anhaken, oder im Terminal `chmod +x MonsterSlam-*-linux.x86_64`
+eingeben. Danach startet sie per Doppelklick. Updates bringen das Recht selbst mit.
+
 **Die wichtigste Mechanik** — wann ein Wort gemeistert ist, wann es wiederkommt und welches
 als Nächstes drankommt — steht in [Kapitel 18: Wie das Spiel lernt](18-wie-das-spiel-lernt.md).
 
