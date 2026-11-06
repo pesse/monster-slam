@@ -1,7 +1,7 @@
 extends GdUnitTestSuite
 ## Der echte Schlüsselspeicher (SecretVault), nur unter Windows: DPAPI braucht keinen
-## Dienst und hinterlässt nichts — der Block bleibt in diesem Test. Den macOS-Schlüsselbund
-## fasst kein Test an, er gehört dem Konto.
+## Dienst und hinterlässt nichts — der Block bleibt in diesem Test. Den Schlüsselbund unter
+## macOS und Linux fasst kein Test an, er gehört dem Konto.
 
 const SECRET := "sk-ant-zz-vault-test-0123456789"
 

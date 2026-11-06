@@ -9,12 +9,15 @@ extends RefCounted
 ##   Datei oder eine Sicherung nützt also niemandem.
 ## - **macOS: Schlüsselbund** über `/usr/bin/security`. Der Eintrag liegt im Schlüsselbund
 ##   des Anmeldekontos; zurückgegeben wird nur eine Marke, kein Geheimnis.
+## - **Linux: Secret Service** (GNOME-Schlüsselbund, KWallet) über `secret-tool` aus
+##   libsecret. Fehlt das Programm, gilt Linux als nicht unterstützt. Auch hier bleibt nur
+##   eine Marke beim Aufrufer.
 ## - Sonst: nicht unterstützt — dann wird nichts gespeichert. Einen Klartext-Notbehelf gibt
 ##   es mit Absicht nicht.
 ##
 ## Das Geheimnis reist **nie in der Kommandozeile** (die sieht jeder in der Prozessliste):
-## unter Windows über eine Umgebungsvariable nur für diesen einen Aufruf, unter macOS über
-## die Standardeingabe von `security -i`.
+## unter Windows über eine Umgebungsvariable nur für diesen einen Aufruf, unter macOS und
+## Linux über die Standardeingabe.
 ##
 ## Grenze: Ein Programm, das unter demselben Konto läuft, kommt trotzdem heran — das Spiel
 ## muss den Schlüssel ja selbst benutzen können. Geschützt ist die Datei, nicht das Konto.
@@ -24,20 +27,25 @@ extends RefCounted
 ##
 ## Tests ersetzen die Instanz in `ApiKeys.vault` durch eine Unterklasse ohne Prozesse.
 
-## Unter diesem Namen steht das Geheimnis im Schlüsselbund (macOS).
+## Unter diesem Namen steht das Geheimnis im Schlüsselbund (macOS, Linux).
 const SERVICE := "Monster Slam"
 ## Zusätzliche Entropie für DPAPI: ein Block aus einem anderen Programm desselben Kontos
 ## lässt sich damit nicht einfach hier hineinkopieren.
 const ENTROPY := "monster-slam"
 ## Die Umgebungsvariable, über die das Geheimnis zu PowerShell reist.
 const ENV := "MONSTER_SLAM_VAULT_IN"
-## Die Marke, die unter macOS statt eines Blocks abgelegt wird.
+## Die Marke, die unter macOS und Linux statt eines Blocks abgelegt wird.
 const KEYCHAIN_MARK := "keychain"
 
 
 ## Gibt es auf diesem System einen Schlüsselspeicher?
 func supported() -> bool:
-	return OS.get_name() in ["Windows", "macOS"]
+	match OS.get_name():
+		"Windows", "macOS":
+			return true
+		"Linux":
+			return not _secret_tool().is_empty()
+	return false
 
 
 ## Legt `secret` unter `name` ab. Zurück kommt, was der Aufrufer speichern soll (Block oder
@@ -49,7 +57,11 @@ func protect(name: String, secret: String) -> String:
 		"macOS":
 			var command := "add-generic-password -U -a \"%s\" -s \"%s\" -w \"%s\"\n" \
 					% [name, SERVICE, secret]
-			return KEYCHAIN_MARK if _security_stdin(command) else ""
+			return KEYCHAIN_MARK if _stdin("/usr/bin/security", ["-i"], command + "quit\n") \
+					else ""
+		"Linux":
+			var args := ["store", "--label=%s" % SERVICE] + _attributes(name)
+			return KEYCHAIN_MARK if _stdin(_secret_tool(), args, secret) else ""
 	return ""
 
 
@@ -65,14 +77,24 @@ func reveal(name: String, stored: String) -> String:
 			var code := OS.execute("/usr/bin/security",
 					["find-generic-password", "-a", name, "-s", SERVICE, "-w"], output)
 			return str(output[0]).strip_edges() if code == 0 and not output.is_empty() else ""
+		"Linux":
+			var output: Array = []
+			var code := OS.execute(_secret_tool(),
+					PackedStringArray(["lookup"] + _attributes(name)), output)
+			return str(output[0]).strip_edges() if code == 0 and not output.is_empty() else ""
 	return ""
 
 
 ## Entfernt das Geheimnis aus dem Speicher (unter Windows gibt es nichts zu tun: der Block
 ## liegt beim Aufrufer).
 func forget(name: String, stored: String) -> void:
-	if OS.get_name() == "macOS" and stored == KEYCHAIN_MARK:
-		OS.execute("/usr/bin/security", ["delete-generic-password", "-a", name, "-s", SERVICE])
+	if stored != KEYCHAIN_MARK:
+		return
+	match OS.get_name():
+		"macOS":
+			OS.execute("/usr/bin/security", ["delete-generic-password", "-a", name, "-s", SERVICE])
+		"Linux":
+			OS.execute(_secret_tool(), PackedStringArray(["clear"] + _attributes(name)))
 
 
 # --- Windows ------------------------------------------------------------------
@@ -101,20 +123,39 @@ func _powershell(script: String, input: String) -> String:
 	return str(output[0]).strip_edges()
 
 
-# --- macOS --------------------------------------------------------------------
+# --- macOS und Linux ----------------------------------------------------------
 
-## Schickt einen Befehl über die Standardeingabe an `security -i` und wartet auf das Ende.
-func _security_stdin(command: String) -> bool:
-	var pipe := OS.execute_with_pipe("/usr/bin/security", ["-i"])
+## Wartezeit auf das Ende eines Schlüsselbund-Aufrufs (ms).
+const STDIN_TIMEOUT_MS := 5000
+
+
+## Startet `exe` mit `args`, schreibt `input` in die Standardeingabe und wartet auf das Ende.
+func _stdin(exe: String, args: Array, input: String) -> bool:
+	if exe.is_empty():
+		return false
+	var pipe := OS.execute_with_pipe(exe, PackedStringArray(args))
 	if pipe.is_empty():
 		return false
 	var stdio: FileAccess = pipe["stdio"]
-	stdio.store_string(command)
-	stdio.store_string("quit\n")
+	stdio.store_string(input)
 	stdio.close()
 	var pid := int(pipe["pid"])
 	var waited := 0
-	while OS.is_process_running(pid) and waited < 5000:
+	while OS.is_process_running(pid) and waited < STDIN_TIMEOUT_MS:
 		OS.delay_msec(20)
 		waited += 20
 	return OS.get_process_exit_code(pid) == 0
+
+
+## Die Attribute, unter denen `secret-tool` den Eintrag findet.
+func _attributes(name: String) -> Array:
+	return ["service", SERVICE, "account", name]
+
+
+## Der Pfad zu `secret-tool` aus dem PATH, "" wenn es fehlt.
+func _secret_tool() -> String:
+	for folder in OS.get_environment("PATH").split(":", false):
+		var candidate := folder.path_join("secret-tool")
+		if FileAccess.file_exists(candidate):
+			return candidate
+	return ""

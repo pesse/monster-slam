@@ -10,9 +10,9 @@ extends RefCounted
 ## - **Gerätweit, nicht je Profil**: der Schlüssel gehört dem, der zahlt, nicht dem Kind,
 ##   das spielt. Die Kosten zeigt `WritingLog` dagegen je Profil.
 ## - **Nicht im Klartext**: der Schlüssel liegt im Schlüsselspeicher des Betriebssystems
-##   (`SecretVault`: DPAPI unter Windows, Schlüsselbund unter macOS). In
+##   (`SecretVault`: DPAPI unter Windows, Schlüsselbund unter macOS und Linux). In
 ##   `user://api_keys.cfg` stehen nur Bestätigung, der verschlüsselte Block (bzw. unter
-##   macOS eine Marke) und die verdeckte Anzeigeform. Wo es keinen Schlüsselspeicher gibt,
+##   macOS und Linux eine Marke) und die verdeckte Anzeigeform. Wo es keinen Schlüsselspeicher gibt,
 ##   wird nichts gespeichert. Ein Klartext-Schlüssel aus einer älteren Fassung (Feld `key`)
 ##   wird beim ersten Zugriff in den Speicher übernommen und aus der Datei gelöscht.
 ## - Der Schlüssel erscheint nie in Spur, Log, Statistik oder Meldung. Angezeigt wird nur
