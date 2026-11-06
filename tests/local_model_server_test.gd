@@ -60,9 +60,9 @@ func test_both_addresses_share_the_port() -> void:
 func test_a_missing_model_is_an_answer_and_not_a_crash() -> void:
 	_server.dir = "user://zz-gibt-es-nicht"
 	var missing := _server.missing_files()
-	assert_array(missing).contains([LocalModelServer.EXE_NAME, LocalModelServer.WEIGHTS_NAME])
+	assert_array(missing).contains([LocalModelServer.exe_name(), LocalModelServer.WEIGHTS_NAME])
 	assert_bool(await _server.start()).is_false()
-	assert_str(_server.last_note).contains(LocalModelServer.EXE_NAME)
+	assert_str(_server.last_note).contains(LocalModelServer.exe_name())
 	assert_str(_server.last_note).contains(LocalModelServer.WEIGHTS_NAME)
 	assert_bool(_server.running()).is_false()
 

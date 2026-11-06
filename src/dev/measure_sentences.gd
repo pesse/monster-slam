@@ -382,7 +382,7 @@ func _start_server() -> bool:
 		print("\n  Für den Durchstich gehören zwei Dateien nach %s:"
 				% ProjectSettings.globalize_path(_model_dir))
 		print("    %s   aus einem llama.cpp-Release (ggml-org/llama.cpp)"
-				% LocalModelServer.EXE_NAME)
+				% LocalModelServer.exe_name())
 		print("    %s         eine GGUF-Datei, z. B. ein 1–3-B-Instruct-Modell in Q4"
 				% LocalModelServer.WEIGHTS_NAME)
 		return false

@@ -1,13 +1,13 @@
 class_name LocalModelServer
 extends Node
-## Startet den lokalen Modelldienst `llama-server.exe` (llama.cpp) aus
-## `user://model/` (`llama-server.exe` und `model.gguf`; ADR 0004, Nachtrag „Stufe 1 auf
-## eigenen Beinen“). Fehlt etwas, gibt `start()` false zurück und nennt den Grund in
+## Startet den lokalen Modelldienst `llama-server` (llama.cpp) aus `user://model/`
+## (`exe_name()` und `model.gguf`; ADR 0004, Nachtrag „Stufe 1 auf eigenen Beinen“). Fehlt etwas, gibt `start()` false zurück und nennt den Grund in
 ## `last_note`; das Spiel bleibt bei Stufe 0. `--host 127.0.0.1` steht ausdrücklich in den
 ## Argumenten: Kindertexte verlassen den Rechner nicht.
 
 ## Wo Programm und Gewichte liegen.
 const DEFAULT_DIR := "user://model"
+## Das Programm unter Windows; sonst ohne Endung (`exe_name()`).
 const EXE_NAME := "llama-server.exe"
 const WEIGHTS_NAME := "model.gguf"
 
@@ -50,8 +50,13 @@ func _exit_tree() -> void:
 	stop()
 
 
+## Der Dateiname des Programms auf diesem System.
+static func exe_name() -> String:
+	return EXE_NAME if OS.has_feature("windows") else EXE_NAME.get_basename()
+
+
 func exe_path() -> String:
-	return dir.path_join(EXE_NAME)
+	return dir.path_join(exe_name())
 
 
 func weights_path() -> String:
@@ -76,8 +81,8 @@ func missing_files() -> PackedStringArray:
 ## Dasselbe ohne Instanz.
 static func missing_in(dir: String) -> PackedStringArray:
 	var missing := PackedStringArray()
-	if not FileAccess.file_exists(dir.path_join(EXE_NAME)):
-		missing.append(EXE_NAME)
+	if not FileAccess.file_exists(dir.path_join(exe_name())):
+		missing.append(exe_name())
 	if not FileAccess.file_exists(dir.path_join(WEIGHTS_NAME)):
 		missing.append(WEIGHTS_NAME)
 	return missing

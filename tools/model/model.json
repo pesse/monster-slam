@@ -16,5 +16,22 @@
       "bytes": 4590807392
     }
   ],
-  "note": "Gemma 4 E4B Instruct (Q4_0, Apache 2.0) mit llama.cpp b11002, CPU-Build für Windows x64 (ADR 0005)."
+  "platforms": {
+    "linux-x86_64": [
+      {
+        "file": "llama-server",
+        "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11002/llama-b11002-bin-ubuntu-x64.tar.gz",
+        "sha256": "8fc1332517299b2ca2a7aef5b43c5bf07203f23cb9445f0d4bc4e5a9ffb99147",
+        "bytes": 16852047,
+        "unzip": true
+      },
+      {
+        "file": "model.gguf",
+        "url": "https://huggingface.co/ggml-org/gemma-4-E4B-it-GGUF/resolve/b8093469224f83f5c38f691eb906c380e9e63114/gemma-4-E4B-it-Q4_0.gguf",
+        "sha256": "a555b900214b477d8880e7832e0b8925e139b0159640036b09fe472b6f2097f2",
+        "bytes": 4590807392
+      }
+    ]
+  },
+  "note": "Gemma 4 E4B Instruct (Q4_0, Apache 2.0) mit llama.cpp b11002, CPU-Build für Windows x64 und Linux x64 (ADR 0005, ADR 0030)."
 }

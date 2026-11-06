@@ -40,8 +40,11 @@ var error := ""
 var activity := ""
 var message := ""
 
-## Der Inhalt des letzten Manifests: name, note, min_app_version, parts.
+## Der Inhalt des letzten Manifests: name, note, min_app_version, parts (Windows) und
+## platforms (je Schlüssel aus `UpdateService.PLATFORM_*` eine eigene Liste, ADR 0030).
 var manifest: Dictionary = {}
+## Welcher Block des Manifests gilt; Tests stellen ihn um.
+var platform := ""
 ## Fortschritt über alle Teile, 0 bis 1.
 var progress := 0.0
 ## Index des Teils, der gerade läuft (-1: keiner), seine Phase und seine geladenen Bytes.
@@ -66,6 +69,7 @@ func _ready() -> void:
 	_http.use_threads = false
 	_http.download_chunk_size = DOWNLOAD_CHUNK
 	add_child(_http)
+	platform = UpdateService.platform()
 
 
 ## Ist der Zusatz einsatzbereit? Fragt dieselben Dateien ab wie LocalModelServer.
@@ -86,7 +90,18 @@ func total_bytes() -> int:
 
 
 func parts() -> Array:
-	return Array(manifest.get("parts", []))
+	return parts_for(manifest, platform)
+
+
+## Die Teile für `platform_key`. `parts` ohne Plattform ist der Windows-Block, den auch
+## Fassungen vor ADR 0030 lesen.
+static func parts_for(data: Dictionary, platform_key: String) -> Array:
+	var blocks: Dictionary = data.get("platforms", {})
+	if blocks.has(platform_key):
+		return Array(blocks[platform_key])
+	if platform_key == UpdateService.PLATFORM_WINDOWS:
+		return Array(data.get("parts", []))
+	return []
 
 
 ## Der Name, unter dem der Zusatz in der Oberfläche steht.
@@ -103,11 +118,6 @@ func available() -> bool:
 ## Warnung ins Log (ADR 0004).
 func refresh() -> void:
 	if _busy:
-		return
-	# Das Manifest nennt ein Windows-Programm; anderswo gibt es den Zusatz noch nicht.
-	if not OS.has_feature("windows"):
-		manifest = {}
-		_set_state(State.READY)
 		return
 	_busy = true
 	message = ""
@@ -126,6 +136,11 @@ func refresh() -> void:
 	var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
 	if not (parsed is Dictionary) or not (parsed as Dictionary).has("parts"):
 		_no_offer("Modell-Manifest unlesbar.")
+		return
+	if parts_for(parsed, platform).is_empty():
+		# Für diese Plattform gibt es den Zusatz (noch) nicht — kein Fehler.
+		manifest = {}
+		_set_state(State.READY)
 		return
 	manifest = parsed
 	_set_state(State.READY)
@@ -330,8 +345,8 @@ static func stalled(receiving: bool, idle_seconds: float) -> bool:
 	return idle_seconds > (STALL_TIMEOUT if receiving else CONNECT_TIMEOUT)
 
 
-## Legt einen geladenen Teil an seinen Platz: ein ZIP wird ausgepackt, alles andere
-## umbenannt. Gibt "" zurück, wenn es geklappt hat, sonst den Grund. Aus dem ZIP wird nur der
+## Legt einen geladenen Teil an seinen Platz: ein ZIP oder `.tar.gz` wird ausgepackt, alles
+## andere umbenannt. Gibt "" zurück, wenn es geklappt hat, sonst den Grund. Aus dem ZIP wird nur der
 ## Dateiname übernommen, nie der Pfad darin (Sicherheitsregel, ADR 0004).
 func _place(raw: String, name: String, unzip: bool) -> String:
 	var target_dir := dir
@@ -344,37 +359,52 @@ func _place(raw: String, name: String, unzip: bool) -> String:
 			return "nicht ablegbar."
 		return ""
 
-	var reader := ZIPReader.new()
-	if reader.open(raw) != OK:
-		return "kein gültiges ZIP."
+	var entries := {}
+	if TarGz.is_gzip(raw):
+		entries = TarGz.read_files(raw)
+		if entries.is_empty():
+			return "kein gültiges tar.gz."
+	else:
+		var reader := ZIPReader.new()
+		if reader.open(raw) != OK:
+			return "kein gültiges ZIP."
+		for entry in reader.get_files():
+			var rel := str(entry)
+			if not rel.ends_with("/") and _is_wanted(rel.get_file()):
+				entries[rel] = reader.read_file(rel)
+		reader.close()
+
+	var server := LocalModelServer.exe_name()
 	var has_server := false
-	for entry in reader.get_files():
-		var rel := str(entry)
-		if rel.ends_with("/"):
-			continue
-		var file_name := rel.get_file()
+	for rel in entries:
+		var file_name := str(rel).get_file()
 		if not _is_wanted(file_name):
 			continue
-		var out := FileAccess.open(target_dir.path_join(file_name), FileAccess.WRITE)
+		var target := target_dir.path_join(file_name)
+		var out := FileAccess.open(target, FileAccess.WRITE)
 		if out == null:
-			reader.close()
 			return "%s nicht schreibbar." % file_name
-		out.store_buffer(reader.read_file(rel))
+		out.store_buffer(entries[rel])
 		out.close()
-		has_server = has_server or file_name == LocalModelServer.EXE_NAME
-	reader.close()
+		if file_name == server:
+			has_server = true
+			if not OS.has_feature("windows"):
+				FileAccess.set_unix_permissions(ProjectSettings.globalize_path(target),
+						UpdateService.EXECUTABLE_MODE)
 	if not has_server:
-		return "ZIP enthält %s nicht." % LocalModelServer.EXE_NAME
+		return "Archiv enthält %s nicht." % server
 	return ""
 
 
-## Was aus einem Archiv übernommen wird: der Server, alle DLLs (welche `ggml-cpu-*.dll` er
-## braucht, entscheidet er beim Start) und die Lizenztexte. Andere Programme bleiben draußen.
+## Was aus einem Archiv übernommen wird: der Server, alle Bibliotheken (welche
+## `ggml-cpu-*` er braucht, entscheidet er beim Start; `.so.0` sind die Namen, unter denen
+## Linux sie sucht) und die Lizenztexte. Andere Programme bleiben draußen.
 static func _is_wanted(file_name: String) -> bool:
 	var lower := file_name.to_lower()
-	if lower.ends_with(".dll") or lower.begins_with("license"):
+	if lower.ends_with(".dll") or lower.ends_with(".so") or lower.contains(".so.") \
+			or lower.begins_with("license"):
 		return true
-	return file_name == LocalModelServer.EXE_NAME
+	return file_name == LocalModelServer.exe_name()
 
 
 ## Ein Download mit Fortschritt, gepollt statt auf das Signal gewartet, damit ein Stillstand

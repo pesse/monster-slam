@@ -30,6 +30,7 @@ func before_test() -> void:
 	add_child(_service)
 	_service.dir = DIR
 	_service.manifest = MANIFEST.duplicate(true)
+	_service.platform = UpdateService.PLATFORM_WINDOWS
 	DirAccess.make_dir_recursive_absolute(DIR)
 
 
@@ -56,7 +57,7 @@ func test_the_manifest_tells_name_and_total_size() -> void:
 func test_only_the_server_its_libraries_and_the_licences_are_unpacked() -> void:
 	var zip := "%s/bin.zip" % DIR
 	_zip(zip, {
-		"llama-server.exe": "PROGRAMM",
+		LocalModelServer.exe_name(): "PROGRAMM",
 		"ggml-cpu-haswell.dll": "BIBLIOTHEK",
 		"LICENSE-LLVM-OpenMP": "Lizenz",
 		"llama-cli.exe": "brauchen wir nicht",
@@ -64,8 +65,8 @@ func test_only_the_server_its_libraries_and_the_licences_are_unpacked() -> void:
 		"README.md": "Anleitung",
 		"include/llama.h": "Kopfdatei",
 	})
-	assert_str(_service._place(zip, "llama-server.exe", true)).is_empty()
-	assert_bool(FileAccess.file_exists("%s/llama-server.exe" % DIR)).is_true()
+	assert_str(_service._place(zip, LocalModelServer.exe_name(), true)).is_empty()
+	assert_bool(FileAccess.file_exists(DIR.path_join(LocalModelServer.exe_name()))).is_true()
 	assert_bool(FileAccess.file_exists("%s/ggml-cpu-haswell.dll" % DIR)).is_true()
 	assert_bool(FileAccess.file_exists("%s/LICENSE-LLVM-OpenMP" % DIR)).is_true()
 	assert_bool(FileAccess.file_exists("%s/llama-cli.exe" % DIR)).is_false()
@@ -78,8 +79,8 @@ func test_only_the_server_its_libraries_and_the_licences_are_unpacked() -> void:
 ## Zielverzeichnis hinausführen will, landet damit trotzdem darin — und nicht im Autostart.
 func test_a_path_inside_the_archive_cannot_escape() -> void:
 	var zip := "%s/böse.zip" % DIR
-	_zip(zip, {"../../../böse.dll": "BÖSE", "llama-server.exe": "PROGRAMM"})
-	assert_str(_service._place(zip, "llama-server.exe", true)).is_empty()
+	_zip(zip, {"../../../böse.dll": "BÖSE", LocalModelServer.exe_name(): "PROGRAMM"})
+	assert_str(_service._place(zip, LocalModelServer.exe_name(), true)).is_empty()
 	assert_bool(FileAccess.file_exists("%s/böse.dll" % DIR)).is_true()
 	assert_bool(FileAccess.file_exists("%s/../../../böse.dll" % DIR)).is_false()
 
@@ -91,11 +92,52 @@ func test_a_path_inside_the_archive_cannot_escape() -> void:
 func test_an_archive_without_the_server_is_refused() -> void:
 	var zip := "%s/leer.zip" % DIR
 	_zip(zip, {"README.md": "nichts drin"})
-	assert_str(_service._place(zip, "llama-server.exe", true)).is_not_empty()
+	assert_str(_service._place(zip, LocalModelServer.exe_name(), true)).is_not_empty()
 
 	var only_libs := "%s/nur-dlls.zip" % DIR
 	_zip(only_libs, {"ggml.dll": "BIBLIOTHEK"})
-	assert_str(_service._place(only_libs, "llama-server.exe", true)).is_not_empty()
+	assert_str(_service._place(only_libs, LocalModelServer.exe_name(), true)).is_not_empty()
+
+
+## Linux bekommt llama.cpp als `.tar.gz`, und die Bibliotheken liegen dort als Kette von
+## Links (`libllama.so.0 -> libllama.so.0.4.1`). Gesucht werden sie unter dem Linknamen,
+## also muss der als echte Datei ankommen — Godot legt selbst keine Links an.
+func test_a_tar_gz_is_unpacked_with_its_links_as_files() -> void:
+	var server := LocalModelServer.exe_name()
+	var archive := "%s/bin.tar.gz" % DIR
+	var tar := TarBuilder.tar([
+		TarBuilder.entry("llama-b1/" + server, "PROGRAMM"),
+		TarBuilder.entry("llama-b1/libllama.so.0.4.1", "BIBLIOTHEK"),
+		TarBuilder.link("llama-b1/libllama.so.0", "libllama.so.0.4.1"),
+		TarBuilder.link("llama-b1/libllama.so", "libllama.so.0"),
+		TarBuilder.entry("llama-b1/llama-cli", "brauchen wir nicht"),
+		TarBuilder.entry("llama-b1/LICENSE", "Lizenz"),
+	])
+	var file := FileAccess.open(archive, FileAccess.WRITE)
+	file.store_buffer(tar.compress(FileAccess.COMPRESSION_GZIP))
+	file.close()
+	assert_str(_service._place(archive, server, true)).is_empty()
+	assert_str(FileAccess.get_file_as_string(DIR.path_join(server))).is_equal("PROGRAMM")
+	assert_str(FileAccess.get_file_as_string("%s/libllama.so.0" % DIR)).is_equal("BIBLIOTHEK")
+	assert_str(FileAccess.get_file_as_string("%s/libllama.so" % DIR)).is_equal("BIBLIOTHEK")
+	assert_bool(FileAccess.file_exists("%s/LICENSE" % DIR)).is_true()
+	assert_bool(FileAccess.file_exists("%s/llama-cli" % DIR)).is_false()
+
+
+## Ein Manifest nennt je Plattform ein anderes Programm. `parts` ohne Plattform ist
+## Windows — so lesen es auch Fassungen, die `platforms` noch nicht kennen. Wer keinen
+## eigenen Block hat, bekommt nichts angeboten statt eines Programms, das er nicht starten
+## kann.
+func test_each_platform_gets_its_own_program() -> void:
+	var linux_part := {"file": "llama-server", "url": "https://example.invalid/bin.tar.gz"}
+	var manifest := MANIFEST.duplicate(true)
+	manifest["platforms"] = {UpdateService.PLATFORM_LINUX: [linux_part]}
+	var windows: Array = _service.parts_for(manifest, UpdateService.PLATFORM_WINDOWS)
+	assert_str(str(windows[0]["file"])).is_equal("llama-server.exe")
+	var linux: Array = _service.parts_for(manifest, UpdateService.PLATFORM_LINUX)
+	assert_str(str(linux[0]["file"])).is_equal("llama-server")
+	assert_array(_service.parts_for(manifest, UpdateService.PLATFORM_MACOS)).is_empty()
+	assert_array(_service.parts_for(MANIFEST, UpdateService.PLATFORM_LINUX)).is_empty()
 
 
 ## Die Gewichte sind kein Archiv: sie werden unter ihrem Namen abgelegt.
@@ -113,7 +155,7 @@ func test_plain_weights_are_just_moved_into_place() -> void:
 ## Dienst nichts findet.
 func test_installed_means_what_the_service_needs() -> void:
 	assert_bool(_service.installed()).is_false()
-	for name in [LocalModelServer.EXE_NAME, LocalModelServer.WEIGHTS_NAME]:
+	for name in [LocalModelServer.exe_name(), LocalModelServer.WEIGHTS_NAME]:
 		var file := FileAccess.open(DIR.path_join(name), FileAccess.WRITE)
 		file.store_string("x")
 		file.close()
@@ -124,7 +166,7 @@ func test_installed_means_what_the_service_needs() -> void:
 ## Ein Gigabyte muss man auch wieder loswerden können, sonst ist der Knopf eine
 ## Einbahnstraße.
 func test_what_was_installed_can_be_removed_again() -> void:
-	for name in [LocalModelServer.EXE_NAME, LocalModelServer.WEIGHTS_NAME]:
+	for name in [LocalModelServer.exe_name(), LocalModelServer.WEIGHTS_NAME]:
 		var file := FileAccess.open(DIR.path_join(name), FileAccess.WRITE)
 		file.store_string("x")
 		file.close()
