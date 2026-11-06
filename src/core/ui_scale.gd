@@ -44,12 +44,12 @@ static func base_size(window_size: Vector2i, factor: float, least := game_size()
 	return Vector2i(base).max(least)
 
 
-## Skalierung des Betriebssystems für den Bildschirm des Fensters: unter Windows die
-## wirksame DPI ÷ 96, unter macOS der Retina-Faktor.
+## Skalierung des Betriebssystems für den Bildschirm des Fensters: unter Windows und X11 die
+## wirksame DPI ÷ 96, unter macOS und Wayland der Faktor des Systems.
 static func os_scale(window: Window) -> float:
 	var screen := window.current_screen if window != null else DisplayServer.SCREEN_OF_MAIN_WINDOW
 	var os := DisplayServer.screen_get_scale(screen)
-	if OS.get_name() != "macOS":
+	if OS.get_name() != "macOS" and DisplayServer.get_name() != "Wayland":
 		os = DisplayServer.screen_get_dpi(screen) / 96.0   # 96 DPI = 100 %
 	return clampf(os, OS_SCALE_MIN, OS_SCALE_MAX)
 
