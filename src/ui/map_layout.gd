@@ -1,8 +1,10 @@
 class_name MapLayout
 extends RefCounted
-## Bilder und Punkte der Karten unter assets/maps/<book>/ (ADR 0006): `book.webp`,
-## `unit<n>.webp`, Masken `unit<n>_<mask>.webp` und `map.json` (Punkte in Anteilen 0..1,
-## gesetzt in scenes/dev/map_lab.tscn). Aufbau von `map.json`:
+## Bilder und Punkte der Karten eines Buchs (ADR 0006, 0031): `book.webp`, `unit<n>.webp`,
+## Masken `unit<n>_<mask>.webp` und `map.json` (Punkte in Anteilen 0..1, gesetzt in
+## scenes/dev/map_lab.tscn). Gelesen aus dem Karten-Pack des Buchs, sonst aus
+## assets/maps/<book>/ (nur im Editor-Lauf, der Export trägt keine Karten).
+## Aufbau von `map.json`:
 ##
 ##     { "units": { "2": {"x": 0.41, "y": 0.62}, …, "path": [{x, y}, …] },
 ##       "areas": { "2": { "t1": {x, y}, …, "all": {x, y}, "boss": {x, y}, "path": […] } },
@@ -12,8 +14,9 @@ extends RefCounted
 ##
 ## Zu `ambience` siehe docs/ARCHITECTURE.md „Karte und Laufanfrage“.
 
+## Die Quelle der Karten im Repo; aus ihr baut der Karten-Pack.
 const ROOT := "res://assets/maps"
-## WebP zuerst: die PNGs daneben sind die Quellen und gehen nicht in den Export.
+## WebP zuerst: die PNGs daneben sind die Quellen und gehen in keinen Pack.
 const EXTENSIONS := ["webp", "png", "jpg"]
 ## Bewegte Flächen der Gebietskarte, je eine Maske. Die Maske von "birds" bleibt unsichtbar:
 ## dort fliegen auf einen Klick Vögel auf (MapBirds), die Intensität ist die Größe des Schwarms.
@@ -52,23 +55,43 @@ const PARAMS := {
 ## Breite einer Maske (px); die Höhe folgt dem Seitenverhältnis des Bildes.
 const MASK_WIDTH := 1024
 
+## Nur aus ROOT lesen, nie aus einem Pack: für die Werkbänke, die dorthin schreiben.
+static var bundled_only := false
+
 ## Geladene Bilder, über den Szenenwechsel hinaus gehalten: Godots Ressourcen-Cache vergisst
 ## ein Bild, sobald niemand es mehr hält.
 static var _cache := {}
-## Pfade, die im Hintergrund laden (ResourceLoader.load_threaded_request).
+## Pfade, die im Hintergrund laden: res:// -> true (ResourceLoader.load_threaded_request),
+## user:// -> Task-Id im WorkerThreadPool.
 static var _pending := {}
+## Ergebnisse der Hintergrund-Tasks für user://, Pfad -> Image.
+static var _loaded_images := {}
+static var _images_lock := Mutex.new()
+## ContentRegistry.generation beim letzten Zugriff; ändert sie sich, gilt der Cache nicht mehr.
+static var _generation := -1
 
 
+## Der Ordner im Repo; Werkbänke und Tests schreiben und listen dort.
 static func dir_of(book: String) -> String:
 	return "%s/%s" % [ROOT, book]
 
 
+## Der Ordner, aus dem das Spiel liest: der Karten-Pack des Buchs, sonst `dir_of`.
+static func source_of(book: String) -> String:
+	if not bundled_only:
+		var installed := ContentRegistry.asset_dir(PackInstaller.MAPS, book)
+		if not installed.is_empty():
+			return installed
+	return dir_of(book)
+
+
+## Das map.json im Repo (`dir_of`).
 static func json_path(book: String) -> String:
 	return "%s/map.json" % dir_of(book)
 
 
 static func data(book: String) -> Dictionary:
-	var text := FileAccess.get_file_as_string(json_path(book))
+	var text := FileAccess.get_file_as_string("%s/map.json" % source_of(book))
 	if text.is_empty():
 		return {}
 	var parsed: Variant = JSON.parse_string(text)
@@ -88,34 +111,87 @@ static func save(book: String, content: Dictionary) -> Error:
 
 ## Das Bild `name` (ohne Endung) eines Buchs, oder null.
 static func texture(book: String, name: String) -> Texture2D:
+	_check_generation()
 	var path := texture_path(book, name)
 	if path.is_empty():
 		return null
 	if not _cache.has(path):
-		# Läuft das Bild schon im Hintergrund, wartet `load_threaded_get` nur den Rest ab.
-		var loaded: Resource = ResourceLoader.load_threaded_get(path) if _pending.has(path) else load(path)
-		_pending.erase(path)
-		_cache[path] = loaded as Texture2D
+		_cache[path] = _imported(path) if path.begins_with("res://") else _unimported(path)
 	return _cache[path]
+
+
+## Ein importiertes Bild aus res://. Läuft es schon im Hintergrund, wartet
+## `load_threaded_get` nur den Rest ab.
+static func _imported(path: String) -> Texture2D:
+	var loaded: Resource = ResourceLoader.load_threaded_get(path) if _pending.has(path) else load(path)
+	_pending.erase(path)
+	return loaded as Texture2D
+
+
+## Ein Bild aus einem Pack: ohne Import, die Textur entsteht hier im Hauptthread.
+static func _unimported(path: String) -> Texture2D:
+	var image: Image = null
+	if _pending.has(path):
+		WorkerThreadPool.wait_for_task_completion(int(_pending[path]))
+		_pending.erase(path)
+		_images_lock.lock()
+		image = _loaded_images.get(path)
+		_loaded_images.erase(path)
+		_images_lock.unlock()
+	else:
+		image = _read_image(path)
+	return ImageTexture.create_from_image(image) if image != null else null
+
+
+static func _read_image(path: String) -> Image:
+	var image := Image.load_from_file(path)
+	return image if image != null and not image.is_empty() else null
+
+
+static func _load_in_background(path: String) -> void:
+	var image := _read_image(path)
+	_images_lock.lock()
+	_loaded_images[path] = image
+	_images_lock.unlock()
 
 
 ## Der Pfad des Bildes `name`, oder "" ohne Bild.
 static func texture_path(book: String, name: String) -> String:
+	var dir := source_of(book)
+	var imported := dir.begins_with("res://")
 	for ext in EXTENSIONS:
-		var path := "%s/%s.%s" % [dir_of(book), name, ext]
-		if ResourceLoader.exists(path):
+		var path := "%s/%s.%s" % [dir, name, ext]
+		if ResourceLoader.exists(path) if imported else FileAccess.file_exists(path):
 			return path
 	return ""
 
 
 ## Stößt das Laden der Gebietskarten im Hintergrund an; `texture` holt sie später ab.
 static func preload_unit_textures(book: String, units: Array) -> void:
+	_check_generation()
 	for unit in units:
 		var path := texture_path(book, "unit%d" % int(unit))
 		if path.is_empty() or _cache.has(path) or _pending.has(path):
 			continue
-		if ResourceLoader.load_threaded_request(path) == OK:
+		if not path.begins_with("res://"):
+			_pending[path] = WorkerThreadPool.add_task(_load_in_background.bind(path))
+		elif ResourceLoader.load_threaded_request(path) == OK:
 			_pending[path] = true
+
+
+## Nach einer Pack-Installation können dieselben Pfade neue Bilder tragen.
+static func _check_generation() -> void:
+	if _generation == ContentRegistry.generation:
+		return
+	_generation = ContentRegistry.generation
+	for path in _pending:
+		if not str(path).begins_with("res://"):
+			WorkerThreadPool.wait_for_task_completion(int(_pending[path]))
+		else:
+			ResourceLoader.load_threaded_get(str(path))
+	_pending.clear()
+	_loaded_images.clear()
+	_cache.clear()
 
 
 static func book_texture(book: String) -> Texture2D:
@@ -227,6 +303,7 @@ static func mask_name(unit: int, mask: String) -> String:
 	return "unit%d_%s" % [unit, mask]
 
 
+## Die Maske im Repo (`dir_of`), für die Werkbank.
 static func mask_path(book: String, unit: int, mask: String) -> String:
 	return "%s/%s.webp" % [dir_of(book), mask_name(unit, mask)]
 

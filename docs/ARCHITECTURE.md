@@ -556,7 +556,7 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
 | `BossRecord` | `src/progression/boss_record.gd` | Boss-Siege je Unit (Ursprungswert), Medaille bei 1/3/5 Siegen |
 | `RunSave` | `src/progression/run_save.gd` | begonnene Läufe von der Karte, ein Platz je Unit (ADR 0020 mit Nachtrag) |
 | `MapSelection` | `src/ui/map_selection.gd` | welches Buch, welche Unit gerade offen ist (überdauert den Szenenwechsel) |
-| `MapLayout` | `src/ui/map_layout.gd` | Bild und Punkte unter `assets/maps/<book>/` (`book.png`, `unit<n>.png`, `map.json`) |
+| `MapLayout` | `src/ui/map_layout.gd` | Bild und Punkte eines Buchs (`book.webp`, `unit<n>.webp`, `map.json`) aus dem Karten-Pack, im Editor-Lauf sonst aus `assets/maps/<book>/` (ADR 0031) |
 | `BookNaming` | `src/core/book_naming.gd` | Wie das Buch sich und seine Ebenen nennt („Dossier 2 · Partie A", „Abschnitt 2 · Lektion 10"); unter `naming` in `map.json`, ohne Eintrag „Unit"/„Teil" |
 | `MapCanvas` | `src/ui/map_canvas.gd` | zeichnet eine Karte: Bild letterboxed in 16:9, Weg, Orte mit Fortschrittsring, Bonus-Sternen, Medaille |
 | Screens | `book_select` (die Bibliothek), `book_map`, `area_map` (`src/ui/` + `scenes/ui/`) | die drei Ebenen; die Bibliothek ist kein eigener Screen, sondern die dritte Seite von `profile_menu.tscn` |
@@ -633,8 +633,9 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
   die Zähler der angefangenen Welle (`RunSave.open_wave`), und `WaveRunner._continue_wave`
   setzt sie fort, statt eine neue zu beginnen. Die Buchkarte zeigt jeden begonnenen Lauf
   als 🔥 an seiner Unit (`BookMap.add_runs`), ihr Knopf führt zum zuletzt gerasteten.
-- **Bilder liegen in der EXE**, nicht im Pack (`export_presets.cfg` nimmt
-  `assets/maps/*.json` mit). Punkte stehen in Anteilen des Bildes (0..1). Fehlt Bild oder
+- **Karten kommen als Pack je Buch** (`maps-<book>`, ADR 0031), Begleiter des Sprach-Packs;
+  die EXE trägt keine. Quelle ist `assets/maps/`, dort schreibt `map_lab`.
+  Punkte stehen in Anteilen des Bildes (0..1). Fehlt Bild oder
   ein Punkt, zeichnet `MapCanvas` eine schlichte Fläche und legt ALLE Orte selbst aus
   (`default_positions`) — eine neue Unit ist so spielbar, bevor ihr Bild existiert.
   Die Bilder entstehen außerhalb dieses Repos.
@@ -645,7 +646,7 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
     (`unit<n>_<mask>.webp`, `MapLayout.mask_path`; `mask` fehlt beim ersten einer Art und
     heißt sonst `<kind>2` …, so bleibt jedes Feld mit eigenen Einstellungen); Form und Intensität stehen im Eintrag
     in `map.json`. Quellen sind Punkte. Beides setzt man in `map_lab`, Flächen mit dem
-    Pinsel. WebP verlustfrei, weil die PNGs unter `assets/maps` nicht exportiert werden.
+    Pinsel. WebP verlustfrei, weil nur die WebPs in den Karten-Pack gehen.
   - Die Ebene liegt wie das Bild hinter der Zeichnung von `MapCanvas` (`show_behind_parent`):
     Bild, dann Bewegung, dann Weg und Orte, dann `_fx`.
   - Bewegt wird nur im Shader (`TIME`, `assets/shaders/map_*.gdshader`). Neu gezeichnet
@@ -774,8 +775,7 @@ Start-Screen (`🌳 Fähigkeiten`), nicht am Kampf: gelernt wird zwischen den L�
   Knoten oder Baumnamen in der Werkbank `skill_tree_lab` („Knoten verschieben",
   „Speichern") und schreibt so die Datei. Jeder Knoten ohne Eintrag bleibt gerechnet, auch
   ein neuer aus einem Pack. Ein Baumname ohne Eintrag rückt hinter den äußersten Knoten
-  seines Baums. Die Datei liegt in der EXE wie die Kartenpunkte: Sie ist Bild, nicht
-  Inhalt. Die gesetzten Plätze der ausgelieferten Bäume halten dieselbe Regel wie die
+  seines Baums. Die Datei liegt in der EXE: Sie ist Bild, nicht Inhalt. Die gesetzten Plätze der ausgelieferten Bäume halten dieselbe Regel wie die
   Rechnung (kein Knoten berührt einen anderen, `skill_graph_layout_test`).
 - **Gezeichnet statt gebaut** (`SkillGraph`, `_draw()`): drei Bäume mal vier Zuständen
   wären zwölf Theme-Variationen, und die Farbe eines Baums soll aus seiner JSON kommen
@@ -1226,7 +1226,8 @@ Zuordnung in `packs.yaml` (im privaten Content-Repo, weil sie entscheidet, was g
 bleibt) — fail-closed: eine Datei ohne eindeutige Zuordnung bricht den Build ab. Drei
 unabhängige Sicherungen halten geschütztes Material aus offenen Packs heraus: die
 Pfadregeln, ein Blick in die Lexeme (`protected_books`) und
-`tools/packs/check_open_packs.py` am fertigen ZIP. Es gibt genau ein `index.json`, also
+`tools/packs/check_open_packs.py` am fertigen ZIP. Die Karten-Packs bauen aus `assets/maps/`
+des Hauptrepos und stehen als Begleiter im Index unter `companions` (ADR 0031). Es gibt genau ein `index.json`, also
 auch nur einen Veröffentlicher: der Workflow im Content-Repo, den eine Änderung an
 `data/**` im Hauptrepo per `repository_dispatch` mit anstößt.
 

@@ -1,9 +1,10 @@
 name: Content-Packs anstossen
 
-# Die Spielkonfiguration (data/monsters, data/waves, ...) wird hier gepflegt, ausgeliefert
-# wird sie aber als `game`-Pack aus dem privaten Content-Repo — dort liegt packs.yaml, und es
-# gibt nur ein index.json, also nur einen Veroeffentlicher. Damit eine Aenderung hier nicht
-# liegen bleibt, bis dort zufaellig jemand pusht, loest dieser Job den Pack-Build drueben aus.
+# Die Spielkonfiguration (data/monsters, data/waves, ...) und die Karten (assets/maps/) werden
+# hier gepflegt, ausgeliefert werden sie aber als Packs aus dem privaten Content-Repo — dort
+# liegt packs.yaml, und es gibt nur ein index.json, also nur einen Veroeffentlicher. Damit eine
+# Aenderung hier nicht liegen bleibt, bis dort zufaellig jemand pusht, loest dieser Job den
+# Pack-Build drueben aus.
 #
 # Braucht das Secret CONTENT_DISPATCH_TOKEN (Fine-grained PAT auf
 # pesse/monster-slam-content mit "Contents: write" — das verlangt der Dispatch-Endpunkt).
@@ -16,6 +17,9 @@ on:
     paths:
       - "data/**"
       - "tools/packs/**"
+      # Die Karten-Packs (ADR 0031) bauen aus map.json und den WebPs.
+      - "assets/maps/*/map.json"
+      - "assets/maps/*/*.webp"
   workflow_dispatch:
 
 jobs:

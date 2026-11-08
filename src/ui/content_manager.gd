@@ -109,18 +109,19 @@ func _render() -> void:
 	_install.disabled = busy
 	_adopt.visible = not busy and not ContentService.needs_adopt.is_empty()
 
-	if not _preselected and not ContentService.packs.is_empty():
+	var rows := ContentService.listed()
+	if not _preselected and not rows.is_empty():
 		_preselected = true
-		for pack in ContentService.packs:
+		for pack in rows:
 			# Was Aufmerksamkeit verlangt, ist vorgewählt, auch „Inhalt veraltet“.
 			_selected[pack.id] = pack.wants_attention() \
 				or pack.install == PackStatus.Install.AVAILABLE
 
 	for child in _packs.get_children():
 		child.queue_free()
-	for pack in ContentService.packs:
+	for pack in rows:
 		# Die alten Zeilen sind erst am Frame-Ende weg — gezählt wird deshalb die Liste.
-		if pack != ContentService.packs[0]:
+		if pack != rows[0]:
 			var rule := HSeparator.new()
 			rule.theme_type_variation = &"StatRule"
 			_packs.add_child(rule)
@@ -131,7 +132,7 @@ func _render() -> void:
 		row.redeem_requested.connect(func(code): ContentService.redeem(code))
 		row.forget_requested.connect(ContentService.forget_code.bind(pack.id))
 
-	_install.visible = not ContentService.packs.is_empty()
+	_install.visible = not rows.is_empty()
 
 
 func _on_row_selection(row: Node) -> void:

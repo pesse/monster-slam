@@ -26,6 +26,14 @@ const LANGUAGE_CATEGORIES: Array[String] = [
 	"writing",
 ]
 
+## Kategorien installierter Packs, die Dateien statt Einträge tragen: je Name ein Ordner
+## `<kategorie>/<name>/` (ADR 0031). Liest `asset_dir`, nicht der Katalog.
+const ASSET_CATEGORIES: Array[String] = ["maps"]
+
+## Zählt jedes `reload()`; wer aus Pack-Dateien etwas zwischenspeichert, verwirft es, wenn sich
+## die Zahl ändert.
+var generation := 0
+
 ## Per-category catalogs (id -> entry), filled by reload(); model in docs/ARCHITECTURE.md,
 ## writing in ADR 0023.
 var lexemes: Dictionary = {}
@@ -50,6 +58,9 @@ var waves: Dictionary = {}
 var _by_category: Dictionary = {}
 
 var _source_files: Dictionary = {}
+
+## "<kategorie>/<name>" -> Ordner im zuletzt sortierten Pack, der ihn trägt (ASSET_CATEGORIES).
+var _asset_dirs: Dictionary = {}
 
 ## "<category>|<id>" -> Root, aus dem der Eintrag stammt. Eine doppelte id ist nur
 ## innerhalb desselben Roots ein Fehler.
@@ -120,6 +131,23 @@ func reload() -> void:
 	_index_bonuses()
 	_index_form_requirements()
 	_apply_flags()
+	_index_asset_dirs()
+	generation += 1
+
+
+## Ein Ordner pro Name je Dateikategorie; wie bei den Einträgen gewinnt der letzte Pack.
+func _index_asset_dirs() -> void:
+	_asset_dirs.clear()
+	for pack_path in _pack_roots():
+		for category in ASSET_CATEGORIES:
+			var base := "%s/%s" % [pack_path, category]
+			for name in DirAccess.get_directories_at(base):
+				_asset_dirs["%s/%s" % [category, name]] = "%s/%s" % [base, name]
+
+
+## Der Ordner `<kategorie>/<name>` aus einem installierten Pack, "" ohne.
+func asset_dir(category: String, name: String) -> String:
+	return str(_asset_dirs.get("%s/%s" % [category, name], ""))
 
 
 ## Teilt jede Unit nach Bestandsreihenfolge in PART_COUNT Teile, Rest nach vorn; mit Feld
@@ -465,7 +493,7 @@ func _pack_roots() -> Array:
 
 ## Alle bekannten Kategorien; stehen an vier Stellen (CONVENTIONS „Packs“).
 func categories() -> Array:
-	return _by_category.keys()
+	return _by_category.keys() + Array(ASSET_CATEGORIES)
 
 
 ## Returns all entries of a category as an Array of Dictionaries.

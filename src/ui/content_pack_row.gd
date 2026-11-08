@@ -41,8 +41,10 @@ func setup(pack: PackStatus, preselected: bool) -> void:
 		parts.append(pack.description)
 	if pack.file_count > 0:
 		parts.append("%d Datei(en)" % pack.file_count)
-	if pack.size > 0:
-		parts.append("%d KiB" % maxi(1, roundi(pack.size / 1024.0)))
+	if not pack.companions.is_empty():
+		parts.append("mit Karten")
+	if pack.total_size() > 0:
+		parts.append(_size_text(pack.total_size()))
 	if pack.block == PackStatus.Block.APP_OUTDATED:
 		parts.append("verlangt Version %s" % pack.min_version)
 	(%Info as Label).text = " · ".join(parts)
@@ -72,7 +74,16 @@ func _state_label(pack: PackStatus) -> String:
 		return str(BLOCK_LABEL[pack.block])
 	if pack.content_outdated:
 		return "Inhalt veraltet"
+	if pack.companion_pending():
+		return str(INSTALL_LABEL[PackStatus.Install.UPDATE])
 	return str(INSTALL_LABEL[pack.install])
+
+
+## Ab einem MiB in MiB, darunter in KiB.
+static func _size_text(bytes: int) -> String:
+	if bytes >= 1024 * 1024:
+		return "%.1f MiB" % (bytes / 1048576.0)
+	return "%d KiB" % maxi(1, roundi(bytes / 1024.0))
 
 
 func _on_redeem() -> void:

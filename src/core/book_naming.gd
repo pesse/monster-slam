@@ -1,7 +1,7 @@
 class_name BookNaming
 extends RefCounted
 ## Wie ein Buch sich und seine Ebenen nennt („Dossier 2 · Partie A“), aus `naming` in
-## assets/maps/<book>/map.json (ADR 0008). Alle Felder optional: `title`, `unit`, `part`,
+## der map.json des Buchs (MapLayout.data, ADR 0008). Alle Felder optional: `title`, `unit`, `part`,
 ## `part_glyph` ("letter" zählt A, B, C), `parts_per_unit` (> 0 zählt die Teile über das
 ## Buch durch), `color` (Einband, "#rrggbb"). Nur die Anzeige; intern bleiben Unit und Teil
 ## Zahlen.
@@ -10,10 +10,15 @@ const UNIT_WORD := "Unit"
 const PART_WORD := "Teil"
 
 static var _cache := {}
+## ContentRegistry.generation, zu der `_cache` gehört: ein Karten-Pack bringt `naming` mit.
+static var _generation := -1
 
 
 ## Das `naming` eines Buchs, {} ohne Eintrag.
 static func of(book: String) -> Dictionary:
+	if _generation != ContentRegistry.generation:
+		_generation = ContentRegistry.generation
+		_cache.clear()
 	if not _cache.has(book):
 		var naming: Variant = MapLayout.data(book).get("naming", {}) if not book.is_empty() else {}
 		_cache[book] = naming if naming is Dictionary else {}

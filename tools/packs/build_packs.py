@@ -13,7 +13,8 @@ Ebenso fail-closed ist die Abgeschlossenheit: jede Id, auf die ein Objekt zeigt,
 selben Pack liegen (`check_references`).
 
 Nutzung:
-    build_packs.py --config packs.yaml --source language=. --source game=../monster-slam/data --out dist
+    build_packs.py --config packs.yaml --source language=. --source game=../monster-slam/data \
+        --source maps=../monster-slam/assets --out dist
     build_packs.py --config packs.yaml --source ... --dry-run    # nur pruefen, ohne Secrets
 """
 
@@ -54,11 +55,12 @@ LABEL_ENC = b"monster-slam:enc"
 LABEL_MAC = b"monster-slam:mac"
 LABEL_VERIFY = b"monster-slam:verify"
 
-# `schemaVersion` 2 = Eintraege tragen `minVersion`. Rein additiv.
-INDEX_SCHEMA_VERSION = 2
+# `schemaVersion` 2 = Eintraege tragen `minVersion`. 3 = Begleit-Packs stehen unter
+# `companions` (ADR 0031). Rein additiv.
+INDEX_SCHEMA_VERSION = 3
 
-# Verzeichnisse, in die ein Pack schreiben darf — muss mit _by_category in
-# src/core/content_registry.gd und CATEGORIES in src/content/pack_installer.gd
+# Verzeichnisse, in die ein Pack schreiben darf — muss mit ContentRegistry.categories()
+# (src/core/content_registry.gd) und CATEGORIES in src/content/pack_installer.gd
 # uebereinstimmen. `check_categories_match_installer()` prueft das gegen den Quelltext,
 # damit die Liste nicht auseinanderlaeuft: was hier steht und dort nicht, liefert der Pack
 # aus und der Installer verwirft es stillschweigend.
@@ -76,6 +78,7 @@ CATEGORIES = {
     "spells",
     "skills",
     "waves",
+    "maps",
 }
 
 
@@ -92,6 +95,9 @@ def load_config(path: Path) -> dict:
         if key not in cfg:
             raise BuildError(f"{path}: '{key}' fehlt.")
     check_version("min_app_version", cfg["min_app_version"])
+    for root, spec in cfg["roots"].items():
+        if isinstance(spec, dict) and not spec.get("scan"):
+            raise BuildError(f"Root '{root}': 'scan' fehlt oder ist leer.")
     for pack_id, pack in cfg["packs"].items():
         if "min_app_version" in pack:
             check_version(f"Pack '{pack_id}': min_app_version", pack["min_app_version"])
@@ -109,6 +115,15 @@ def load_config(path: Path) -> dict:
             )
         if pack["distribution"] == "protected" and "password_env" not in pack:
             raise BuildError(f"Pack '{pack_id}': geschuetzt, aber ohne password_env.")
+        companion_of = pack.get("companion_of")
+        if companion_of is not None:
+            host = cfg["packs"].get(companion_of)
+            if host is None:
+                raise BuildError(f"Pack '{pack_id}': companion_of '{companion_of}' gibt es nicht.")
+            if "companion_of" in host:
+                raise BuildError(
+                    f"Pack '{pack_id}': '{companion_of}' ist selbst ein Begleit-Pack."
+                )
     return cfg
 
 
@@ -126,10 +141,16 @@ def min_app_version(cfg: dict, pack: dict) -> str:
 # --- Zuordnung Datei -> Pack -----------------------------------------------------------
 
 
-def scan_root(base: Path, subdirs: list[str]) -> set[str]:
-    """Alle JSON-Dateien eines Roots als root-relative Posix-Pfade."""
+def scan_root(base: Path, spec) -> set[str]:
+    """Die Dateien eines Roots als root-relative Posix-Pfade.
+
+    `spec` ist eine Liste von Verzeichnissen (darin jede JSON-Datei) oder `{scan: [Globs]}`
+    fuer einen Root, der auch Bilder ausliefert und Arbeitsdateien daneben liegen hat.
+    """
+    if isinstance(spec, dict):
+        return match_pack(base, spec["scan"])
     found: set[str] = set()
-    for subdir in subdirs:
+    for subdir in spec:
         directory = base / subdir
         if not directory.is_dir():
             # Fehlt ein Verzeichnis, ist das kein Fehler: nicht jede Kategorie ist gefuellt.
@@ -163,16 +184,17 @@ def assign(cfg: dict, sources: dict[str, Path]) -> dict[str, list[str]]:
             claims[root].setdefault(rel, []).append(pack_id)
 
     problems: list[str] = []
-    for root, subdirs in cfg["roots"].items():
-        present = scan_root(sources[root], subdirs)
+    for root, spec in cfg["roots"].items():
+        present = scan_root(sources[root], spec)
         claimed = set(claims[root])
+        declared = ", ".join(spec["scan"] if isinstance(spec, dict) else spec)
         for rel in sorted(present - claimed):
             problems.append(f"  {root}/{rel} — passt auf keinen Pack")
         for rel in sorted(claimed - present):
             owners = ", ".join(claims[root][rel])
             problems.append(
                 f"  {root}/{rel} — von {owners} erfasst, liegt aber ausserhalb der "
-                f"deklarierten Verzeichnisse ({', '.join(subdirs)})"
+                f"deklarierten Verzeichnisse ({declared})"
             )
         for rel, owners in sorted(claims[root].items()):
             if len(owners) > 1:
@@ -277,6 +299,8 @@ def reference_problems(pack_id: str, base: Path, files: list[str]) -> list[str]:
     ids: dict[str, set[str]] = {}
     by_category: dict[str, list[tuple[str, list]]] = {}
     for rel in files:
+        if not rel.endswith(".json"):
+            continue
         category = rel.split("/")[0]
         entries = load_entries(base, rel)
         by_category.setdefault(category, []).append((rel, entries))
@@ -417,7 +441,9 @@ def main() -> int:
         check_categories_match_installer()
         per_pack = assign(cfg, sources)
         check_references(cfg, sources, per_pack)
-        index = {"schemaVersion": INDEX_SCHEMA_VERSION, "packs": []}
+        # Begleit-Packs in eigener Liste: eine App vor ADR 0031 liest nur `packs` und zeigte
+        # sie sonst als gesperrte Zeilen.
+        index = {"schemaVersion": INDEX_SCHEMA_VERSION, "packs": [], "companions": []}
 
         for pack_id, pack in cfg["packs"].items():
             base = sources[pack["root"]]
@@ -440,11 +466,15 @@ def main() -> int:
                 "fileCount": len(files),
                 "minVersion": min_app_version(cfg, pack),
             }
+            listing = "packs"
+            if "companion_of" in pack:
+                entry["companionOf"] = pack["companion_of"]
+                listing = "companions"
 
             if args.dry_run:
                 print(f"  {pack_id:18s} {len(files):4d} Datei(en)  {version}  "
                       f"{'geschuetzt' if protected else 'offen'}")
-                index["packs"].append(entry)
+                index[listing].append(entry)
                 continue
 
             blob = build_zip(base, files)
@@ -465,17 +495,19 @@ def main() -> int:
             entry["keyVersion"] = int(pack.get("key_version", 1)) if protected else None
             if entry["keyVersion"] is None:
                 del entry["keyVersion"]
-            index["packs"].append(entry)
+            index[listing].append(entry)
             print(f"  {name:22s} {len(files):4d} Datei(en)  {len(blob)/1024:7.1f} KiB  {version}")
 
         if args.dry_run:
-            print(f"\nZuordnung eindeutig, {len(index['packs'])} Pack(s).")
+            total = len(index["packs"]) + len(index["companions"])
+            print(f"\nZuordnung eindeutig, {total} Pack(s).")
             return 0
 
         (args.out / "index.json").write_text(
             json.dumps(index, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
         )
-        print(f"  index.json             {len(index['packs'])} Pack(s)")
+        print(f"  index.json             {len(index['packs'])} Pack(s), "
+              f"{len(index['companions'])} Begleit-Pack(s)")
         return 0
     except BuildError as err:
         print(f"FEHLER: {err}", file=sys.stderr)

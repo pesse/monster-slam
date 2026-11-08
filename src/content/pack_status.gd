@@ -20,6 +20,10 @@ var size := 0
 var file_count := 0
 var min_version := ""
 var key_version := 1
+## Id des Packs, den dieser begleitet (ADR 0031), "" für einen eigenständigen.
+var companion_of := ""
+## Die Begleit-Packs dieses Packs; füllt ContentService.rebuild.
+var companions: Array[PackStatus] = []
 
 var install: Install = Install.AVAILABLE
 var block: Block = Block.NONE
@@ -45,6 +49,7 @@ static func evaluate(
 	status.file_count = int(entry.get("fileCount", 0))
 	status.min_version = str(entry.get("minVersion", ""))
 	status.key_version = int(entry.get("keyVersion", 1))
+	status.companion_of = str(entry.get("companionOf", ""))
 	status.installed_version = str(installed.get("version", ""))
 
 	# Installationen ohne `minVersion` erzeugen keine Schranke.
@@ -70,13 +75,34 @@ static func evaluate(
 	return status
 
 
-## Darf dieser Pack jetzt geholt werden?
+## Darf dieser Pack jetzt geholt werden — er selbst oder einer seiner Begleiter?
 func installable() -> bool:
+	return own_installable() or companion_pending()
+
+
+## Darf dieser Pack selbst jetzt geholt werden?
+func own_installable() -> bool:
 	return block == Block.NONE and (install != Install.INSTALLED or content_outdated)
+
+
+## Ist der Pack schon da und wartet nur ein Begleiter? Ohne ihn selbst ist ein Begleiter nichts
+## wert: gesperrt oder nie geholt zählt keiner.
+func companion_pending() -> bool:
+	if block != Block.NONE or install == Install.AVAILABLE:
+		return false
+	return companions.any(func(c: PackStatus): return c.own_installable())
 
 
 ## Gibt es einen Grund, den Nutzer darauf hinzuweisen? Trägt das Abzeichen im Startmenü.
 func wants_attention() -> bool:
 	if block == Block.APP_OUTDATED:
 		return false
-	return install == Install.UPDATE or content_outdated
+	return install == Install.UPDATE or content_outdated or companion_pending()
+
+
+## Bytes zum Herunterladen, Begleiter eingeschlossen.
+func total_size() -> int:
+	var total := size
+	for companion in companions:
+		total += companion.size
+	return total

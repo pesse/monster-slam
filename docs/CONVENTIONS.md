@@ -18,7 +18,7 @@ GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/battle_theme_lab.tscn -- --shoot 
 
 # Pack-Zuordnung prüfen (nach jeder neuen Datei unter data/):
 python3 tools/packs/build_packs.py --config data/language/packs.yaml \
-  --source language=data/language --source game=data --dry-run
+  --source language=data/language --source game=data --source maps=assets --dry-run
 
 # Soundeffekte gegen das Setting-Profil bewerten (lokal, LAION-CLAP; tools/sound_eval/README.md):
 tools/sound_eval/sound-eval batch assets/audio/sfx
@@ -61,7 +61,7 @@ urheberrechtlich geschütztem Lehrbuchmaterial und liegen im privaten Submodule
 - Sprachdaten (`lexemes`, `lexeme_forms`, `lexeme_relations`, `sentences`,
   `sentence_lexemes`) → im Submodule committen und pushen, danach den Pointer im Hauptrepo.
 - Spielkonfiguration (`monsters`, `bosses`, `waves`, `skills`, `spells`,
-  `task_definitions`, `monster_task_rules`) → Hauptrepo.
+  `task_definitions`, `monster_task_rules`) und Karten (`assets/maps/`) → Hauptrepo.
 - `raw/` (Buchscans) gehört in **kein** Repo.
 - **Vor jedem Commit im Hauptrepo:** keine Wortlisten, Lexem- oder Satzdaten in Code,
   Docs, Tests oder Reports. Einzelne Vokabeln sind urheberrechtlich frei — Beispiele,
@@ -160,8 +160,10 @@ Einheit, einen Vertrag, eine Engine-Falle.
   `UserSettings` — sonst spielt ein Level mit alten Expertenmodus-Filtern.
 - Kein gespeicherter Level-Abschluss und keine Sperre: die Stufe eines Levels kommt aus
   `FortressTier.part_tiers`/`unit_tiers`. Gespeichert werden nur Boss-Siege (`BossRecord`).
-- Kartenbilder und Punkte liegen unter `assets/maps/<book>/` in der EXE (kein Pack);
-  gezeichnet wird nur in `MapCanvas`, Punkte setzt `scenes/dev/map_lab.tscn`. Bilder ohne
+- Karten kommen als offener Pack je Buch (`maps-<book>`, Begleiter des Sprach-Packs,
+  ADR 0031), die EXE trägt keine; Quelle ist `assets/maps/<book>/` (`map.json` und die
+  WebPs). Gezeichnet wird nur in `MapCanvas`, Punkte setzt `scenes/dev/map_lab.tscn`.
+  Ein neues Buch mit Karte bekommt einen `maps-<book>`-Eintrag in `packs.yaml`. Bilder ohne
   Schrift und ohne Vokabeln; Low-Poly-Hex-Brett wie die Kampfmodelle, je Buch ein eigenes
   Thema. Die Bilder entstehen außerhalb dieses Repos.
 - Es gibt keinen Grundwortschatz mehr: jedes Lexem trägt `book` und `unit`.

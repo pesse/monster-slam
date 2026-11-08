@@ -21,6 +21,16 @@ Bauen (`check_paths`) und noch einmal beim Auspacken
 Das ZIP ist deterministisch: sortierte Namen, fester Zeitstempel. Damit hängt die
 Pack-Version allein am Inhalt und nicht an der Uhrzeit des Builds.
 
+Die Kategorie `maps` trägt Dateien statt Einträge (ADR 0031): je Buch `maps/<book>/` mit
+`map.json` und WebPs, genau eine Ebene tief, andere Endungen weist der Installer ab. Sie
+fallen aus der Referenzprüfung heraus.
+
+## Begleit-Packs im Index
+
+Ein Pack mit `companion_of: <pack-id>` in `packs.yaml` steht im `index.json` nicht unter
+`packs`, sondern unter `companions` (Schema 3) und trägt `companionOf`. Eine ältere App
+liest nur `packs` und sieht ihn nicht; die aktuelle holt ihn mit dem Pack, den er begleitet.
+
 ## Ein Pack ist referenz-abgeschlossen
 
 Jede Id, auf die ein Objekt zeigt, liegt **im selben Pack**. Wer nur „Access 2" installiert,

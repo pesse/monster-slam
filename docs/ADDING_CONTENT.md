@@ -448,7 +448,7 @@ Der Weg einer neuen Datei:
    mit dem festen Tag `packs` im Transport-Repo. Eine Änderung unter `data/` im Hauptrepo
    stößt denselben Workflow per `repository_dispatch` an; lokal prüfen:
    `python3 tools/packs/build_packs.py --config data/language/packs.yaml \
-   --source language=data/language --source game=data --dry-run` (die beiden
+   --source language=data/language --source game=data --source maps=assets --dry-run` (die
    `--source` sind die `roots` der Konfiguration; ohne sie bricht der Lauf ab).
 4. **Holen** — der Spieler sieht den Pack unter „Inhalte" mit Version und Größe,
    geschützte Packs erst nach Eingabe des Zugangscodes.

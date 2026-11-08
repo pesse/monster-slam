@@ -84,7 +84,10 @@ func refresh(loud := false) -> void:
 		return
 
 	_entries.clear()
-	for entry in (parsed as Dictionary)["packs"]:
+	var listed: Array = (parsed as Dictionary)["packs"]
+	# Begleit-Packs (ADR 0031) stehen eigens, damit eine ältere App sie übergeht.
+	var companions: Variant = (parsed as Dictionary).get("companions", [])
+	for entry in listed + (companions if companions is Array else []):
 		if entry is Dictionary and not str(entry.get("id", "")).is_empty():
 			_entries[str(entry["id"])] = entry
 	_retire_missing()
@@ -117,16 +120,55 @@ func rebuild() -> void:
 			app_version,
 			AccessCodes.get_code(id),
 		))
+	link_companions(packs)
 	changed.emit()
+
+
+## Hängt jeden Begleit-Pack an den Pack, den er begleitet. Ein Begleiter ohne diesen bleibt
+## für sich stehen.
+static func link_companions(all: Array[PackStatus]) -> void:
+	var by_id := {}
+	for pack in all:
+		by_id[pack.id] = pack
+		pack.companions.clear()
+	for pack in all:
+		if by_id.has(pack.companion_of):
+			(by_id[pack.companion_of] as PackStatus).companions.append(pack)
+
+
+## Die Packs, die eine eigene Zeile bekommen: alle außer verbundenen Begleitern.
+func listed() -> Array[PackStatus]:
+	var ids := {}
+	for pack in packs:
+		ids[pack.id] = true
+	return packs.filter(func(p: PackStatus): return not ids.has(p.companion_of))
 
 
 ## Anzahl Packs, die sich jetzt aktualisieren lassen. Gesperrte zählen nicht.
 func update_count() -> int:
 	var count := 0
-	for pack in packs:
+	for pack in listed():
 		if pack.wants_attention() and pack.installable():
 			count += 1
 	return count
+
+
+## Die Ids, die `install_many` holt: zu jedem Pack seine fälligen Begleiter, den Pack selbst
+## nur, wenn er fällig ist oder keine Begleiter hat. Beim Übernehmen genau die genannten.
+func install_order(ids: Array, adopt: bool) -> Array:
+	if adopt:
+		return ids
+	var out: Array = []
+	for id in ids:
+		var pack := find(str(id))
+		if pack == null:
+			continue
+		if (pack.own_installable() or pack.companions.is_empty()) and pack.id not in out:
+			out.append(pack.id)
+		for companion in pack.companions:
+			if companion.own_installable() and companion.id not in out:
+				out.append(companion.id)
+	return out
 
 
 func find(pack_id: String) -> PackStatus:
@@ -150,7 +192,7 @@ func install_many(ids: Array, adopt := false) -> void:
 	var skipped := 0
 	var adopt_wanted := 0
 	needs_adopt.clear()
-	for id in ids:
+	for id in install_order(ids, adopt):
 		var pack := find(str(id))
 		if pack == null:
 			continue

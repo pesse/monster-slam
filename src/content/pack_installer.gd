@@ -24,7 +24,13 @@ const CATEGORIES: Array[String] = [
 	"spells",
 	"skills",
 	"waves",
+	"maps",
 ]
+
+## Die Kategorie der Karten (ADR 0031): je Buch ein Ordner `maps/<book>/` mit `map.json` und
+## Bildern, keine Einträge für die ContentRegistry.
+const MAPS := "maps"
+const MAP_EXTENSIONS: Array[String] = ["json", "webp"]
 
 
 ## Ergebnis einer Installation. `error` gesetzt heißt: es wurde nichts geschrieben.
@@ -95,6 +101,8 @@ static func is_allowed_entry(name: String) -> bool:
 	for segment in segments:
 		if segment.is_empty() or segment == "." or segment == "..":
 			return false
+	if segments[0] == MAPS:
+		return segments.size() == 3 and name.get_extension() in MAP_EXTENSIONS
 	return not segments[segments.size() - 1].is_empty()
 
 
@@ -236,9 +244,16 @@ static func uninstall(pack_id: String) -> Summary:
 	return summary
 
 
-## Räumt leere Verzeichnisse eines entfernten Packs weg; `remove_absolute` scheitert an nicht
-## leeren still, und das ist gewollt.
+## Räumt leere Verzeichnisse eines entfernten Packs weg, von innen nach außen (Karten liegen
+## eine Ebene tiefer, `maps/<book>/`); `remove_absolute` scheitert an nicht leeren still, und
+## das ist gewollt.
 static func _prune_empty_dirs(pack_path: String) -> void:
 	for category in CATEGORIES:
-		DirAccess.remove_absolute("%s/%s" % [pack_path, category])
+		_prune_tree("%s/%s" % [pack_path, category])
 	DirAccess.remove_absolute(pack_path)
+
+
+static func _prune_tree(path: String) -> void:
+	for sub in DirAccess.get_directories_at(path):
+		_prune_tree(path.path_join(sub))
+	DirAccess.remove_absolute(path)

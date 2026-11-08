@@ -28,5 +28,8 @@ jobs:
       - name: Abhaengigkeiten
         run: python3 -m pip install --quiet pyyaml
 
+      - name: Karten-Packs und Begleiter
+        run: python3 tests/tools/pack_maps_test.py -v
+
       - name: Abgeschlossenheit der Packs
         run: python3 tests/tools/pack_references_test.py -v

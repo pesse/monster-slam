@@ -42,6 +42,8 @@ var _levels: Array = []
 
 
 func _ready() -> void:
+	# Gezeigt wird, was hier gespeichert wird, nie ein installierter Karten-Pack.
+	MapLayout.bundled_only = true
 	_room = get_window()
 	LabRoom.enlarge(_room)
 	(%BackButton as Button).pressed.connect(func(): get_tree().change_scene_to_file(MENU_SCENE))
@@ -66,6 +68,7 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+	MapLayout.bundled_only = false
 	LabRoom.restore(_room)
 
 

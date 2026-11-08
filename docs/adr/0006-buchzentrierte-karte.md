@@ -62,6 +62,8 @@ Aufgaben- und Wortarten seines Bereichs und filtert nicht nach Themen.
 
 ### 5. Kartenbilder liegen in der EXE, nicht im Pack
 
+*Abgelöst durch ADR 0031: Karten kommen als Pack je Buch, die EXE trägt keine mehr.*
+
 `assets/maps/<book>/book.png`, `unit<n>.png` und `map.json` (Punkte in Anteilen des Bildes).
 Bild und Punkte gehören zusammen; ein Pack trägt nur JSON und hätte eine neue Kategorie an
 vier Stellen gebraucht. Die Bilder entstehen mit einem Bild-KI-Tool außerhalb

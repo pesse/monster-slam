@@ -19,6 +19,10 @@ from pathlib import Path
 
 import yaml
 
+# Kategorie der Kartenbilder und ihrer Punkte (ADR 0031) und was darin liegen darf.
+MAP_PREFIX = "maps/"
+MAP_SUFFIXES = ("/map.json", ".webp")
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -36,6 +40,10 @@ def main() -> int:
     for path in args.packs:
         with zipfile.ZipFile(path) as archive:
             for name in archive.namelist():
+                # Karten tragen den Buchnamen im Pfad, aber weder Schrift noch Vokabeln
+                # (ADR 0031); als Bild oder Punkte liest sie die App nie als Sprachdaten.
+                if name.startswith(MAP_PREFIX) and name.endswith(MAP_SUFFIXES):
+                    continue
                 # Erstens am Namen: die Dateien sind nach ihrer Herkunft benannt.
                 if any(book in name for book in books):
                     problems.append(f"{path.name}: Dateiname '{name}'")
