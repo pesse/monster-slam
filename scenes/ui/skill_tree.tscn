@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://bn1h30stfsqik" path="res://src/ui/skill_tree.gd" id="1_skills"]
 [ext_resource type="Script" uid="uid://bel7rp03lcqon" path="res://src/ui/skill_graph.gd" id="2_graph"]
 [ext_resource type="PackedScene" uid="uid://f0ojpbs2lx7v" path="res://scenes/ui/confirm_dialog.tscn" id="3_confirm"]
-[ext_resource type="Texture2D" uid="uid://bcxql8oegbj53" path="res://assets/ui/main_menu/icons/skills.webp" id="4_book"]
+[ext_resource type="Texture2D" uid="uid://d2h0hhr01eura" path="res://assets/ui/main_menu/icons/skills_tree.webp" id="4_tree"]
 [ext_resource type="Texture2D" uid="uid://bcjedub76c2qe" path="res://assets/ui/skill_tree/icons/skill_point.webp" id="5_star"]
 [ext_resource type="Texture2D" uid="uid://i7hedlhdultu" path="res://assets/ui/skill_tree/status/check.webp" id="6_check"]
 [ext_resource type="Texture2D" uid="uid://dfbnmuofmyjr7" path="res://assets/ui/skill_tree/medallions/available.webp" id="7_ring"]
@@ -96,7 +96,7 @@ theme_type_variation = &"ScreenStack"
 texture_filter = 4
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
-texture = ExtResource("4_book")
+texture = ExtResource("4_tree")
 expand_mode = 1
 stretch_mode = 5
 

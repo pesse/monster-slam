@@ -5,8 +5,8 @@
 [ext_resource type="Script" uid="uid://b60006jleuv3e" path="res://src/ui/page_stack.gd" id="3_pages"]
 [ext_resource type="Script" uid="uid://db2ap8k5hl8vk" path="res://src/ui/window_chrome.gd" id="4_chrome"]
 [ext_resource type="Texture2D" uid="uid://c23n78atueopp" path="res://assets/ui/main_menu/icons/play.webp" id="5_play"]
+[ext_resource type="Texture2D" uid="uid://cmj4ocrrnbtpe" path="res://assets/ui/main_menu/icons/spells.webp" id="6_spells"]
 [ext_resource type="Material" uid="uid://dxo2j2mfichtf" path="res://scenes/ui/title_metal.tres" id="title_metal"]
-[ext_resource type="Texture2D" uid="uid://cdb173u0tkb0e" path="res://assets/ui/main_menu/icons/content.webp" id="6_spells"]
 
 [sub_resource type="ButtonGroup" id="choice_group"]
 

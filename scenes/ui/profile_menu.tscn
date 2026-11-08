@@ -5,9 +5,10 @@
 [ext_resource type="PackedScene" uid="uid://ck1yk1vmu4b64" path="res://scenes/ui/menu_backdrop.tscn" id="3_backdrop"]
 [ext_resource type="Texture2D" uid="uid://dtre3fqhb2u4" path="res://assets/ui/main_menu/logo.webp" id="4_logo"]
 [ext_resource type="Texture2D" uid="uid://c23n78atueopp" path="res://assets/ui/main_menu/icons/play.webp" id="5_play"]
-[ext_resource type="Texture2D" uid="uid://bcxql8oegbj53" path="res://assets/ui/main_menu/icons/skills.webp" id="6_skills"]
+[ext_resource type="Texture2D" uid="uid://d2h0hhr01eura" path="res://assets/ui/main_menu/icons/skills_tree.webp" id="6_skills"]
 [ext_resource type="Texture2D" uid="uid://c5ry4fipkydc1" path="res://assets/ui/main_menu/icons/statistics.webp" id="7_stats"]
 [ext_resource type="Texture2D" uid="uid://cdb173u0tkb0e" path="res://assets/ui/main_menu/icons/content.webp" id="8_content"]
+[ext_resource type="Texture2D" uid="uid://cmj4ocrrnbtpe" path="res://assets/ui/main_menu/icons/spells.webp" id="8_spells"]
 [ext_resource type="Texture2D" uid="uid://c6bla1olobelu" path="res://assets/ui/main_menu/icons/settings.webp" id="9_settings"]
 [ext_resource type="Texture2D" uid="uid://bapqhe5e8j8t8" path="res://assets/ui/main_menu/icons/expert.webp" id="10_expert"]
 [ext_resource type="Texture2D" uid="uid://13ruuj6noi1u" path="res://assets/ui/main_menu/icons/update_check.svg" id="10_update_check"]
@@ -133,7 +134,7 @@ custom_minimum_size = Vector2(352, 56)
 layout_mode = 2
 theme_type_variation = &"MainMenuButton"
 text = "ZAUBER"
-icon = ExtResource("8_content")
+icon = ExtResource("8_spells")
 alignment = 0
 expand_icon = true
 

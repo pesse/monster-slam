@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bcxql8oegbj53"
-path="res://.godot/imported/skills.webp-bdf3b523cbfd058febe9dea9c7ae44a7.ctex"
+uid="uid://d2h0hhr01eura"
+path="res://.godot/imported/skills_tree.webp-902edcb93dbe7b54f63ffe0fe4e52511.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/main_menu/icons/skills.webp"
-dest_files=["res://.godot/imported/skills.webp-bdf3b523cbfd058febe9dea9c7ae44a7.ctex"]
+source_file="res://assets/ui/main_menu/icons/skills_tree.webp"
+dest_files=["res://.godot/imported/skills_tree.webp-902edcb93dbe7b54f63ffe0fe4e52511.ctex"]
 
 [params]
 
@@ -23,7 +23,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=true
+mipmaps/generate=false
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""

@@ -7,7 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://bamnug1qht4ei" path="res://assets/ui/windows/close_pressed.webp" id="5_close_pressed"]
 [ext_resource type="Texture2D" uid="uid://b1apvpq0dh1yo" path="res://assets/ui/windows/title_joint_left.webp" id="6_joint_left"]
 [ext_resource type="Texture2D" uid="uid://btp63ud2mimw5" path="res://assets/ui/windows/title_joint_right.webp" id="7_joint_right"]
-[ext_resource type="Texture2D" uid="uid://cdb173u0tkb0e" path="res://assets/ui/main_menu/icons/content.webp" id="8_icon"]
+[ext_resource type="Texture2D" uid="uid://cmj4ocrrnbtpe" path="res://assets/ui/main_menu/icons/spells.webp" id="8_icon"]
 [ext_resource type="Texture2D" uid="uid://bovj4j8gew6q6" path="res://assets/ui/statistics/icons/gold_coins.webp" id="gold_icon"]
 [ext_resource type="PackedScene" uid="uid://badeio0oospuy" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
 [ext_resource type="Material" uid="uid://dxo2j2mfichtf" path="res://scenes/ui/title_metal.tres" id="title_metal"]

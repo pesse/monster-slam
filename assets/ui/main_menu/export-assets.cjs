@@ -54,16 +54,17 @@ async function save(name, pipeline, notes) {
     await save(key==='logo'?'logo':'panels/profile_panel',sharp(file).extract(await bounds(file)).resize({width}).extend({top:8,bottom:8,left:8,right:8,background:transparent}),key==='logo'?'Logo mit transparenter Umgebung.':'Leere Profilplakette mit Tab rechts unten; Inhalt separat zeichnen.');
   }
   const atlas=path.join(src,'icons.png'),meta=await sharp(atlas).metadata();
-  const names=['play','skills','statistics','content','settings','expert','profile','switch_profile'];
+  // Das Buch des Atlas ist seit dem Baum das Zauber-Icon.
+  const names=['play','spells','statistics','content','settings','expert','profile','switch_profile'];
   for(let i=0;i<names.length;i++) {
     const col=i%4,row=Math.floor(i/4),left=Math.round(col*meta.width/4),top=Math.round(row*meta.height/2);
     const cell=await sharp(atlas).extract({left,top,width:Math.round((col+1)*meta.width/4)-left,height:Math.round((row+1)*meta.height/2)-top}).png().toBuffer();
     await save('icons/'+names[i],sharp(cell).extract(await bounds(cell)).resize(224,224,{fit:'contain',background:transparent}).extend({top:16,bottom:16,left:16,right:16,background:transparent}),'256×256, zentriert, für Anzeige mit 40–64 px.');
   }
   // Einzeln erzeugte Icons (nicht im Atlas): dieselbe Behandlung. Ohne sharp: src/dev/trim_icon.gd.
-  for(const name of ['handbook']) {
-    const file=path.join(src,name+'.webp');
-    if(fs.existsSync(file)) await save('icons/'+name,sharp(file).extract(await bounds(file)).resize(224,224,{fit:'contain',background:transparent}).extend({top:16,bottom:16,left:16,right:16,background:transparent}),'256×256, zentriert, für Anzeige mit 24–40 px. Quelle sources/'+name+'.webp.');
+  for(const [name,source] of [['handbook','handbook.webp'],['skills_tree','skills_tree_raw.png']]) {
+    const file=path.join(src,source);
+    if(fs.existsSync(file)) await save('icons/'+name,sharp(file).extract(await bounds(file)).resize(224,224,{fit:'contain',background:transparent}).extend({top:16,bottom:16,left:16,right:16,background:transparent}),'256×256, zentriert, für Anzeige mit 24–40 px. Quelle sources/'+source+'.');
   }
   fs.writeFileSync(path.join(root,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');
   console.log(JSON.stringify(manifest,null,2));

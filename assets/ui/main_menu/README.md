@@ -11,7 +11,7 @@ Freistellung, Entfernen der Beschriftungen und goldener Highlight-Zustand mit de
 | `buttons/button_normal.webp` | 1040 × 192 | Leere dunkelblaue Button-Fläche |
 | `buttons/button_highlighted.webp` | 1040 × 192 | Goldener Hover-/Fokus-/Auswahlzustand |
 | `panels/profile_panel.webp` | 1016 × 253 | Leere Profilplakette mit unterem rechten Tab |
-| `icons/*.webp` | je 256 × 256 | play, skills, statistics, content, settings, expert, profile, switch_profile |
+| `icons/*.webp` | je 256 × 256 | play, spells (Buch), statistics, content, settings, expert, profile, switch_profile aus dem Atlas; handbook und skills_tree (Baum) einzeln erzeugt |
 
 Alle zwölf Laufzeitbilder sind verlustfreie RGBA-WebP-Dateien mit echter Transparenz. Details stehen in `manifest.json`. Die Quelldateien und verwendeten Prompts liegen unter `sources/`; diese werden durch `.gdignore` vom Godot-Import ausgeschlossen. `preview/` enthält eine Kontaktübersicht auf heller und dunkler Fläche.
 
