@@ -215,8 +215,8 @@ func test_spot_rects_sit_on_their_source() -> void:
 # --- Spielzeuge der Gebietskarte (MapAmbience.poke) ---------------------------
 
 ## Eine Karte 1920 × 1080 auf 1104 × 540 (das Bild steht in x 72..1032), links Wasser, mit
-## einer Fackel rechts.
-func _toy_canvas() -> MapCanvas:
+## einer Fackel rechts und den Quellen aus `extra`.
+func _toy_canvas(extra: Array = []) -> MapCanvas:
 	var canvas: MapCanvas = auto_free(MapCanvas.new())
 	add_child(canvas)
 	canvas.size = Vector2(1104, 540)
@@ -229,7 +229,7 @@ func _toy_canvas() -> MapCanvas:
 	canvas.set_ambience([
 		{"kind": "water", "mask": "water", "intensity": 1.0, "style": "field"},
 		{"kind": "torch", "at": Vector2(0.8, 0.5), "size": 1.0, "intensity": 1.0},
-	], {"water": ImageTexture.create_from_image(water)})
+	] + extra, {"water": ImageTexture.create_from_image(water)})
 	return canvas
 
 
@@ -296,6 +296,136 @@ func test_a_click_on_a_torch_stirs_it_for_a_while() -> void:
 	assert_bool(ambience.is_busy()).is_true()
 	ambience.now_override = 10.01 + MapAmbience.STIR_TIME["torch"]
 	assert_float(ambience.stir_of(1)).is_equal(0.0)
+	assert_bool(ambience.is_busy()).is_false()
+
+
+## Lange gedrückt geht die Fackel aus; solange facht ein Klick sie nicht an, danach brennt sie
+## von selbst wieder.
+func test_a_long_press_blows_a_torch_out() -> void:
+	var canvas := _toy_canvas()
+	var ambience := canvas.ambience_layer()
+	var found: Array = []
+	var note := func(id: String) -> void: found.append(id)
+	EventBus.secret_found.connect(note)
+	var torch := canvas.to_local_point(Vector2(0.8, 0.5)) + Vector2(0, -5)
+	assert_bool(ambience.poke(torch, true)).is_true()
+	ambience.now_override = 11.0
+	assert_float(ambience.snuff_of(1)).is_greater(0.0)
+	assert_bool(ambience.poke(torch)).is_true()
+	assert_float(ambience.stir_of(1)).is_equal(0.0)
+	EventBus.secret_found.disconnect(note)
+	assert_array(found).is_equal(["torch_out"])
+	ambience.now_override = 10.01 + MapAmbience.SNUFF_TIME
+	assert_float(ambience.snuff_of(1)).is_equal(0.0)
+	assert_bool(ambience.is_busy()).is_false()
+
+
+## Fünf schnelle Klicks reizen den Vulkan zum Riesenausbruch; langsame nicht.
+func test_quick_clicks_drive_a_volcano_to_rage() -> void:
+	var canvas := _toy_canvas([{"kind": "volcano", "at": Vector2(0.9, 0.85), "size": 1.0, "intensity": 1.0}])
+	var ambience := canvas.ambience_layer()
+	var volcano := canvas.to_local_point(Vector2(0.9, 0.8))
+	assert_int(ambience.spot_at(volcano)).is_equal(2)
+	var found: Array = []
+	var note := func(id: String) -> void:
+		if id == "volcano_rage":
+			found.append(id)
+	EventBus.secret_found.connect(note)
+	# Zu langsam: jeder Klick ein gewöhnlicher Ausbruch.
+	for k in MapAmbience.RAGE_CLICKS:
+		ambience.now_override = 10.0 + k * MapAmbience.RAGE_WINDOW
+		ambience.poke(volcano)
+	assert_float(ambience.rage_of(2)).is_equal(0.0)
+	assert_float(ambience.stir_of(2)).is_greater(0.0)
+	for k in MapAmbience.RAGE_CLICKS:
+		ambience.now_override = 30.0 + k * 0.3
+		ambience.poke(volcano)
+	assert_float(ambience.rage_of(2)).is_greater(0.0)
+	assert_float(ambience.stir_of(2)).is_equal(0.0)
+	# Im Riesenausbruch zählt kein Klick mehr.
+	ambience.poke(volcano)
+	EventBus.secret_found.disconnect(note)
+	assert_array(found).is_equal(["volcano_rage"])
+	ambience.now_override = 31.3 + MapAmbience.RAGE_TIME
+	assert_bool(ambience.is_busy()).is_false()
+
+
+## Ein Klick ans Ufer wirft einen Stein, der nur auf Wasser aufsetzt; weit vom Wasser und auf
+## dem Wasser selbst nicht.
+func test_a_stone_skips_from_the_shore_over_the_water() -> void:
+	var canvas := _toy_canvas()
+	var ambience := canvas.ambience_layer()
+	var stones := ambience.stone_layer()
+	var rect := MapCanvas.map_rect(canvas.size, canvas.aspect())
+	var aspect := rect.size.x / rect.size.y
+	assert_bool(stones.throw_at(Vector2(200, 270))).is_false()
+	assert_bool(stones.throw_at(Vector2(800, 400))).is_false()
+	for i in 3:
+		stones.stones().clear()
+		assert_bool(ambience.poke(Vector2(570, 270))).is_true()
+		assert_int(ambience.fish_layer()._fish.size()).is_equal(0)
+		var stone: Dictionary = stones.stones()[0]
+		assert_int(int(stone["skips"])).is_between(1, MapStones.MAX_SKIPS)
+		for k in range(1, int(stone["skips"]) + 1):
+			assert_bool(ambience.fish_layer().water_at(MapStones.landing_point(stone, k, aspect))).is_true()
+
+
+## Der Glückswurf meldet sich, wenn der Stein zum siebten Mal aufsetzt, und nur einmal.
+func test_a_seventh_skip_is_told_once() -> void:
+	var canvas := _toy_canvas()
+	var ambience := canvas.ambience_layer()
+	var stones := ambience.stone_layer()
+	assert_bool(stones.throw_at(Vector2(570, 270))).is_true()
+	stones.stones()[0]["skips"] = MapStones.LUCKY
+	var found: Array = []
+	var note := func(id: String) -> void: found.append(id)
+	EventBus.secret_found.connect(note)
+	ambience.now_override = 10.0 + MapStones.arrival(MapStones.LUCKY) - 0.05
+	assert_bool(ambience.is_busy()).is_true()
+	assert_array(found).is_empty()
+	ambience.now_override = 10.0 + MapStones.arrival(MapStones.LUCKY) + 0.05
+	ambience.is_busy()
+	ambience.is_busy()
+	EventBus.secret_found.disconnect(note)
+	assert_array(found).is_equal(["stone7"])
+	ambience.now_override = 10.1 + MapStones.arrival(MapStones.LUCKY) + MapStones.RIPPLE_TIME
+	assert_bool(ambience.is_busy()).is_false()
+
+
+## Ein Klick auf eine Vogelfläche scheucht einen Schwarm auf, der nach oben davonfliegt; die
+## Fläche selbst zeichnet nichts.
+func test_a_click_on_birds_scares_a_flock_up() -> void:
+	var canvas: MapCanvas = auto_free(MapCanvas.new())
+	add_child(canvas)
+	canvas.size = Vector2(1104, 540)
+	var image := PlaceholderTexture2D.new()
+	image.size = Vector2(1920, 1080)
+	canvas.setup(image, [], [], func(_n: Dictionary) -> Dictionary: return {})
+	# Rechte Hälfte, untere Hälfte: Bäume.
+	var trees := Image.create(64, 36, false, Image.FORMAT_L8)
+	trees.fill_rect(Rect2i(32, 18, 32, 18), Color.WHITE)
+	var ambience := canvas.ambience_layer()
+	ambience.now_override = 10.0
+	canvas.set_ambience([{"kind": "birds", "mask": "birds", "intensity": 2.0, "style": ""}],
+			{"birds": ImageTexture.create_from_image(trees)})
+	assert_int(ambience.layer_count()).is_equal(0)
+	var birds := ambience.bird_layer()
+	var found: Array = []
+	var note := func(id: String) -> void: found.append(id)
+	EventBus.secret_found.connect(note)
+	assert_bool(ambience.poke(Vector2(300, 100))).is_false()
+	assert_bool(ambience.poke(Vector2(800, 400))).is_true()
+	EventBus.secret_found.disconnect(note)
+	assert_array(found).is_equal(["birds"])
+	var flock: Array = birds.flocks()[0]["birds"]
+	assert_int(flock.size()).is_equal(MapBirds.BIRDS * 2)
+	var rect := MapCanvas.map_rect(canvas.size, canvas.aspect())
+	for bird: Dictionary in flock:
+		var start := MapBirds.bird_point(bird, 0.0, rect)
+		assert_float(MapBirds.bird_point(bird, 1.0, rect).y).is_less(start.y - 40.0)
+	ambience.now_override = 10.0 + MapBirds.STAGGER + MapBirds.FLY_TIME * 0.5
+	assert_bool(ambience.is_busy()).is_true()
+	ambience.now_override = 10.01 + MapBirds.STAGGER + MapBirds.FLY_TIME
 	assert_bool(ambience.is_busy()).is_false()
 
 

@@ -7,7 +7,8 @@ shader_type canvas_item;
 //
 // Das Rechteck steht so auf der Quelle, dass sie auf BASE liegt (MapAmbience.spot_rect).
 // Alle Fackeln teilen ein Material: COLOR.r trägt den Versatz, COLOR.g die Stärke (Anteil
-// von MapLayout.INTENSITY_MAX), COLOR.a das Ausblenden der Karte.
+// von MapLayout.INTENSITY_MAX), COLOR.b das Auspusten (0 = brennt, sonst sein Verlauf 0..1,
+// MapAmbience.snuff_of), COLOR.a das Ausblenden der Karte.
 render_mode blend_premul_alpha;
 
 #include "res://assets/shaders/map_ambience.gdshaderinc"
@@ -16,6 +17,7 @@ uniform vec3 core_color : source_color = vec3(1.0, 0.93, 0.62);
 uniform vec3 mid_color : source_color = vec3(1.0, 0.56, 0.12);
 uniform vec3 tip_color : source_color = vec3(0.85, 0.2, 0.04);
 uniform vec3 glow_color : source_color = vec3(1.0, 0.55, 0.18);
+uniform vec3 smoke_color : source_color = vec3(0.62, 0.6, 0.58);
 uniform float glow = 0.45;
 uniform float speed = 1.8;
 // Wo die Quelle im Rechteck liegt (von oben) und wie hoch die Flamme ist (Anteil der Höhe).
@@ -28,10 +30,19 @@ void fragment() {
 	float seed = COLOR.r * 50.0;
 	float strength = COLOR.g * 2.0;
 	float t = TIME * speed + seed;
+	// Ausgepustet: die Flamme schrumpft weg, ein Rauchfaden steigt vom glimmenden Docht, zum
+	// Schluss lodert sie kurz über ihr Maß wieder auf.
+	float snuff = COLOR.b;
+	float lit = 1.0;
+	float flare = 0.0;
+	if (snuff > 0.0) {
+		lit = max(1.0 - smoothstep(0.0, 0.06, snuff), smoothstep(0.8, 0.9, snuff));
+		flare = smoothstep(0.8, 0.88, snuff) * (1.0 - smoothstep(0.88, 1.0, snuff));
+	}
 	// p.x quer, p.y von der Quelle (0) bis zur Spitze (1), beide in Flammenhöhen.
 	vec2 p = vec2((UV.x - 0.5) * rect_aspect, BASE - UV.y) / FLAME;
 	// Die Flamme atmet: mal höher, mal niedriger.
-	float tall = 0.85 + 0.25 * noise(vec2(t * 2.3, seed));
+	float tall = (0.85 + 0.25 * noise(vec2(t * 2.3, seed))) * mix(0.15, 1.0, lit) * (1.0 + 0.5 * flare);
 	p.y /= tall;
 	float bend = (fbm(vec2(p.y * 2.0 - t * 0.7, seed)) - 0.5) * 0.4 * p.y;
 	float x = p.x + bend;
@@ -43,15 +54,28 @@ void fragment() {
 	float heat = flame * (1.0 - smoothstep(0.0, 0.9, p.y)) * (1.0 - abs(x) / max(width, 0.001) * 0.6);
 	vec3 col = mix(tip_color, mid_color, smoothstep(0.1, 0.45, heat));
 	col = mix(col, core_color, smoothstep(0.45, 0.8, heat));
-	float a = flame * smoothstep(0.0, 0.25, flame + heat) * clamp(strength, 0.0, 1.0);
+	float a = flame * smoothstep(0.0, 0.25, flame + heat) * clamp(strength, 0.0, 1.0) * lit;
 	// Schein um die Mitte der Flamme, im Rechteck rund gemessen.
 	vec2 g = vec2((UV.x - 0.5) * rect_aspect, BASE - FLAME * 0.3 - UV.y);
 	float flick = 0.7 + 0.3 * noise(vec2(t * 4.0, seed + 3.0));
-	vec3 light = glow_color * exp(-dot(g, g) * 40.0) * glow * flick * strength;
+	vec3 light = glow_color * exp(-dot(g, g) * 40.0) * glow * flick * strength * lit * (1.0 + 1.5 * flare);
 	// Ein Funke, der aufsteigt und verglimmt.
 	float life = fract(TIME * 0.6 + hash(vec2(seed, 1.0)));
 	vec2 spark = vec2(p.x - (hash(vec2(seed, floor(TIME * 0.6 + hash(vec2(seed, 1.0))))) - 0.5) * 0.2
 			- sin(life * 6.0) * 0.05, p.y * tall - 0.6 - life * 0.6);
-	light += core_color * exp(-dot(spark, spark) * 2500.0) * (1.0 - life) * strength;
+	light += core_color * exp(-dot(spark, spark) * 2500.0) * (1.0 - life) * strength * lit;
+	if (snuff > 0.0 && lit < 1.0) {
+		// w: Alter des Rauchfadens 0..1; o: von der Quelle aus in Rechteckhöhen.
+		float w = clamp((snuff - 0.03) / 0.77, 0.0, 1.0);
+		vec2 o = vec2((UV.x - 0.5) * rect_aspect, BASE - UV.y);
+		float sx = o.x - sin(o.y * 24.0 - TIME * 4.0 + seed) * 0.035 * o.y / BASE;
+		float wide = 0.012 + 0.05 * o.y;
+		float wisp = (1.0 - smoothstep(wide * 0.3, wide, abs(sx))) * smoothstep(0.0, 0.05, o.y)
+				* (1.0 - smoothstep(min(w * 3.0, 1.0) * BASE * 0.6, min(w * 3.0, 1.0) * BASE, o.y))
+				* (1.0 - smoothstep(0.55, 1.0, w)) * 0.75 * (1.0 - lit);
+		col = mix(col, smoke_color, wisp * (1.0 - a));
+		a = a + wisp * (1.0 - a);
+		light += mid_color * exp(-dot(o, o) * 2500.0) * (1.0 - lit) * (1.0 - w) * 0.9;
+	}
 	COLOR = vec4(col * a + light * (1.0 - a), a) * COLOR.a;
 }

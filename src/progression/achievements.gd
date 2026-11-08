@@ -19,7 +19,7 @@ const UNTOUCHED_WAVES := 3
 const REVENGES := 3
 ## Spielzeuge der Gebietskarte (EventBus.secret_found), die AchievementBook zählt; jedes ist
 ## ein Fakt gleichen Namens.
-const SECRETS := ["fish"]
+const SECRETS := ["fish", "stone7", "volcano_rage", "torch_out", "birds"]
 
 ## Ein Erfolg: id, fact (Schlüssel in den Fakten, leer bei `moment`), need, title, body,
 ## hidden, dazu `icon`, wo das Bild nicht wie die Id heißt. Die Wort-Erfolge je Sprache
@@ -65,6 +65,14 @@ const FIXED := [
 			"title": "Dreifache Revanche", "body": "Drei Wörter in einer Welle getroffen, die dir zuletzt entwischt sind."},
 	{"id": "fish_10", "fact": "fish", "need": 10, "hidden": true,
 			"title": "Petri Heil", "body": "10 Fische auf der Karte gefangen."},
+	{"id": "stone_7", "fact": "stone7", "need": 1, "hidden": true,
+			"title": "Sieben Hüpfer", "body": "Einen Stein siebenmal über das Wasser der Karte hüpfen lassen."},
+	{"id": "volcano_rage", "fact": "volcano_rage", "need": 1, "hidden": true,
+			"title": "Unruhestifter", "body": "Einen Vulkan auf der Karte zum Riesenausbruch gereizt."},
+	{"id": "torch_out", "fact": "torch_out", "need": 1, "hidden": true,
+			"title": "Ausgepustet", "body": "Eine Fackel auf der Karte ausgepustet."},
+	{"id": "birds_20", "fact": "birds", "need": 20, "hidden": true,
+			"title": "Vogelscheuche", "body": "20 Vogelschwärme auf der Karte aufgescheucht."},
 ]
 
 

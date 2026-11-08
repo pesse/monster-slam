@@ -149,6 +149,14 @@ func test_caught_fish_are_counted_and_kept() -> void:
 	assert_array(again.check({"fish": again.secret_count("fish")}, [])).contains(["fish_10"])
 
 
+
+## Jedes Spielzeug der Karte führt zu einem versteckten Erfolg, der es zählt.
+func test_every_secret_feeds_a_hidden_achievement() -> void:
+	for secret: String in Achievements.SECRETS:
+		var fed: Array = Achievements.FIXED.filter(func(entry: Dictionary) -> bool:
+			return entry.get("fact") == secret and bool(entry.get("hidden", false)))
+		assert_array(fed).override_failure_message("%s ohne versteckten Erfolg" % secret).is_not_empty()
+
 # --- Moment-Erfolge -----------------------------------------------------------
 
 func test_a_wave_won_on_a_thread() -> void:

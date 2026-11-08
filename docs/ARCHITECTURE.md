@@ -655,11 +655,15 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
     Grauwerte schwächen die Bewegung, ein weich gemalter Rand läuft weich aus.
   - Fehlt `ambience`, steht das Bild still da.
   - Versteckte Spielzeuge (`MapAmbience.poke`): ein Klick neben die Orte facht eine Quelle
-    an (Fackel und Rauch wachsen, ein Vulkan bricht aus) oder lässt aus dem Wasser einen
-    Fisch springen (`MapFish`, Wasser ist, was die Maske hell malt); ein zweiter Klick im
-    Sprung fängt ihn. Gemeldet wird über `EventBus.secret_found`; `AchievementBook` zählt,
-    was `Achievements.SECRETS` nennt, für versteckte Erfolge. Solange etwas angefacht ist
-    oder springt, läuft `MapCanvas._process`, damit die Ebene neu gezeichnet wird.
+    an (Fackel und Rauch wachsen, ein Vulkan bricht aus, fünf schnelle Klicks reizen ihn zum
+    Riesenausbruch mit Ascheregen), lange gedrückt pustet er eine Fackel aus. Aus dem Wasser
+    springt ein Fisch (`MapFish`, Wasser ist, was die Maske hell malt), ein zweiter Klick im
+    Sprung fängt ihn; vom Ufer hüpft ein Stein übers Wasser (`MapStones`). Auf einer Fläche
+    der Art `birds` (unsichtbare Maske über Bäumen oder Wiese) fliegt ein Schwarm auf
+    (`MapBirds`, die Intensität ist seine Größe). Gemeldet wird über
+    `EventBus.secret_found`; `AchievementBook` zählt, was `Achievements.SECRETS` nennt, für
+    versteckte Erfolge. Solange etwas angefacht ist oder fliegt, läuft `MapCanvas._process`,
+    damit die Ebene neu gezeichnet wird.
 - **Der Kampf steht in der Landschaft seiner Gebietskarte** (`BattleTheme`). Ein Thema
   färbt Boden, Hügel, Kuppen und Flecken (Schnee), Hintergrund, Umgebungslicht und
   Sonne und wählt die Deko: je Platz (`trees`, `rocks`, `grass`, `props`, `landmarks`)

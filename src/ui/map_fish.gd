@@ -21,8 +21,6 @@ const CATCH_TO := 0.9
 ## mindestens MIN_HIT px.
 const HIT := 0.25
 const MIN_HIT := 10.0
-## So hell ist Wasser in der Maske mindestens (0..1).
-const WATER := 0.5
 ## Mehr Fische auf einmal springen nicht.
 const MAX_FISH := 3
 ## Wie der Shader den Fangzeitpunkt aus COLOR.b liest (siehe `_draw`).
@@ -49,18 +47,12 @@ func _init(canvas: MapCanvas, mask: Texture2D) -> void:
 	mat.set_shader_parameter("margin", MARGIN)
 	mat.set_shader_parameter("jump_share", JUMP_TIME / (JUMP_TIME + AFTER_TIME))
 	material = mat
-	_mask = mask.get_image() if mask != null else null
-	if _mask != null and _mask.is_compressed():
-		_mask.decompress()
+	_mask = MapAmbience.mask_image(mask)
 
 
 ## Ist an `at` (Anteil des Bildes) Wasser?
 func water_at(at: Vector2) -> bool:
-	if _mask == null or at.x < 0.0 or at.y < 0.0 or at.x > 1.0 or at.y > 1.0:
-		return false
-	var px := Vector2i(mini(int(at.x * _mask.get_width()), _mask.get_width() - 1),
-			mini(int(at.y * _mask.get_height()), _mask.get_height() - 1))
-	return _mask.get_pixelv(px).r >= WATER
+	return MapAmbience.mask_at(_mask, at)
 
 
 ## Fängt einen Fisch in der Luft unter `local` (Koordinaten des Canvas). True, wenn ja.

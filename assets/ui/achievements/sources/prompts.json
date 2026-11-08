@@ -180,6 +180,50 @@
         "chests_10.webp"
       ],
       "prompt": "Create one square Monster Slam achievement icon, stylized-concept painted fantasy mobile-game art. Reference images: unit_tier_4 is the primary style anchor for rich painterly detail, dimensional forms, polish, saturation and upper-left lighting; run_untouched is the exact silver frame reference; chests_10 supports series consistency. Motif for the hidden achievement 'Petri Heil': one cheerful fish leaping in a clear curved arc out of water above concentric ripples and a few crisp water splashes, with a small landing net beside it. Make the fish dominant with a clear friendly face and silhouette, and keep the net secondary but recognizable. Turquoise/lake-blue painted background fills the tile all the way to the narrow beveled silver metal frame. Match the reference series' square framing, rounded corners, frame thickness, perspective, bright upper-left highlights and vivid magical painterly finish. Full-bleed tile: frame touches all four canvas edges, no outer margin or shadow beyond it. Opaque painted interior, transparency only outside the rounded outer corners; corner radius 10% of image width (25.6 px at final 256 px). Composition must remain immediately readable at 56 and 64 px. No text, letters, numbers, labels or watermark. Single icon only, square canvas, suitable for final 256 x 256 px lossless RGBA WebP export."
+    },
+    {
+      "file": "stone_7_raw.png",
+      "output": "stone_7.webp",
+      "date": "2026-11-08",
+      "references": [
+        "unit_tier_4.webp",
+        "fish_10.webp",
+        "run_untouched.webp"
+      ],
+      "prompt": "Use case: stylized-concept. Create ONE square Monster Slam achievement icon. Reference images: unit_tier_4 is the exact anchor for richly painted fine detail, sculptural volume, saturated colors and warm directional light from upper left; fish_10 and run_untouched establish the thin beveled metal border and consistent series style. Match these references closely. A fully painted opaque scene fills the tile right up to its narrow beveled metal frame. The frame touches all four canvas edges, no padding or outer shadow, rounded outer corners with radius exactly 10% of image width. Only outside the rounded corners is transparent, no transparency anywhere inside. Bold clear silhouette and simple hierarchy instantly readable at 56 and 64 pixels. No text, letters, numerals, watermark or UI labels. One icon only, square composition, no sheet. Subject: stone_7, a flat smooth gray skipping pebble flying just above a tranquil blue-green lake, large and unmistakable in the foreground. Behind it a single receding chain of seven separate water-ring impact sites becomes smaller into the distance, showing its successive skips; small delicate splashes, calm water otherwise. Warm orange sunset sky over teal lake. Silver metallic frame. Painterly tactile stone, luminous ripples, upper-left lighting; clear readable pebble and receding ring trail."
+    },
+    {
+      "file": "volcano_rage_raw.png",
+      "output": "volcano_rage.webp",
+      "date": "2026-11-08",
+      "references": [
+        "unit_tier_4.webp",
+        "fish_10.webp",
+        "run_untouched.webp"
+      ],
+      "prompt": "Use case: stylized-concept. Create ONE square Monster Slam achievement icon. Reference images: unit_tier_4 is the exact anchor for richly painted fine detail, sculptural volume, saturated colors and warm directional light from upper left; fish_10 and run_untouched establish the thin beveled metal border and consistent series style. Match these references closely. A fully painted opaque scene fills the tile right up to its narrow beveled metal frame. The frame touches all four canvas edges, no padding or outer shadow, rounded outer corners with radius exactly 10% of image width. Only outside the rounded corners is transparent, no transparency anywhere inside. Bold clear silhouette and simple hierarchy instantly readable at 56 and 64 pixels. No text, letters, numerals, watermark or UI labels. One icon only, square composition, no sheet. Subject: volcano_rage, a small friendly-angry volcano erupting with enormous force. A chunky faceted low-poly-like volcanic cone rendered with the same rich painterly material detail as the castle reference, subtle friendly angry eyes and furrowed brows on its face. Large glowing crater, forceful orange lava fountain and several big lava rocks flying in arcs, thick dark ash cloud. Cone silhouette and eruption immediately recognizable at tiny icon size. Ruby-red beveled metallic frame. Ember-red and black-brown background, glowing orange lava against dark ash, upper-left highlights. Fill the tile with one dominant volcano and eruption."
+    },
+    {
+      "file": "torch_out_raw.png",
+      "output": "torch_out.webp",
+      "date": "2026-11-08",
+      "references": [
+        "unit_tier_4.webp",
+        "fish_10.webp",
+        "run_untouched.webp"
+      ],
+      "prompt": "Use case: stylized-concept. Create ONE square Monster Slam achievement icon. Reference images: unit_tier_4 is the exact anchor for richly painted fine detail, sculptural volume, saturated colors and warm directional light from upper left; fish_10 and run_untouched establish the thin beveled metal border and consistent series style. Match these references closely. A fully painted opaque scene fills the tile right up to its narrow beveled metal frame. The frame touches all four canvas edges, no padding or outer shadow, rounded outer corners with radius exactly 10% of image width. Only outside the rounded corners is transparent, no transparency anywhere inside. Bold clear silhouette and simple hierarchy instantly readable at 56 and 64 pixels. No text, letters, numerals, watermark or UI labels. One icon only, square composition, no sheet. Subject: torch_out, a wooden and iron wall-mounted torch whose flame has just been blown out. One large diagonal wooden handle fixed in a dark iron wall bracket, iron bands and a charred wick at its top. Absolutely no flame: only a tiny dull orange smoldering ember in the blackened wick. A thin clearly visible pale curled smoke thread rises from it against dusky stone-blue masonry, and one small soft curling wind gust beside the wick explains the extinguishing. Bronze beveled metal frame. Rich painterly wood grain and iron volume, warm upper-left light, cool dim blue stone background. Strong uncluttered silhouette, smoke and wind curl readable at small sizes, extinguished state unmistakable."
+    },
+    {
+      "file": "birds_20_raw.png",
+      "output": "birds_20.webp",
+      "date": "2026-11-08",
+      "references": [
+        "unit_tier_4.webp",
+        "stone_7.webp",
+        "fish_10.webp"
+      ],
+      "prompt": "Create one square Monster Slam achievement icon, birds_20, hidden achievement 'Vogelscheuche'. Reference images: unit_tier_4 is the primary style anchor for richly painted detail, dimensional volume, strong saturation and upper-left light; stone_7 and fish_10 define the same series framing. Match this exact polished painterly fantasy-game style. Subject: exactly six dark birds bursting upward from a round bushy green tree crown in the lower third, a few swirling leaves. Birds dominate the upper two thirds, with spread wings, large clear individually separated silhouettes, no overlap, immediately recognizable at 56 and 64 pixels. Use subtle warm feather highlights for painted volume while retaining dark silhouettes. Background: warm morning sky in peach and light blue. Narrow beveled bronze metal frame, same series proportions as references, flush to all four canvas edges with no outer margin; painted scene fills all the way to the frame. Rounded outer corners radius exactly 10% of width (25.6 px at final 256px); only the area outside rounded corners transparent, entire interior opaque. Upper-left sunlight, vivid colors, sculptural light, fine painterly texture. No scarecrow figure. No text, letters, numbers, watermark or extra border. Deliver a single square icon."
     }
   ]
 }

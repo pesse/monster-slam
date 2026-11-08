@@ -15,8 +15,9 @@ extends RefCounted
 const ROOT := "res://assets/maps"
 ## WebP zuerst: die PNGs daneben sind die Quellen und gehen nicht in den Export.
 const EXTENSIONS := ["webp", "png", "jpg"]
-## Bewegte Flächen der Gebietskarte, je eine Maske.
-const AREA_KINDS := ["water", "falls", "mist"]
+## Bewegte Flächen der Gebietskarte, je eine Maske. Die Maske von "birds" bleibt unsichtbar:
+## dort fliegen auf einen Klick Vögel auf (MapBirds), die Intensität ist die Größe des Schwarms.
+const AREA_KINDS := ["water", "falls", "mist", "birds"]
 ## Bewegte Quellen, je ein Punkt.
 const SPOT_KINDS := ["smoke", "ember", "torch", "volcano"]
 ## Formen je Art, die erste ist die ohne Angabe.

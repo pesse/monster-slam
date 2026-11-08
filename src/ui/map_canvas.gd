@@ -17,6 +17,8 @@ const AREA_NODE_RADIUS := 11.0
 const HOVER_TIME := 0.12
 ## Kleinster Trefferradius (px).
 const MIN_HIT_RADIUS := 16.0
+## Ab so langem Drücken (s) gilt ein Klick neben die Orte als gehalten (MapAmbience.poke).
+const HOLD_TIME := 0.5
 ## Zoom in die nächste Karte: Faktor und Dauer (s).
 const ZOOM_IN := 4.0
 const ZOOM_IN_TIME := 0.35
@@ -103,6 +105,8 @@ var _nodes: Array = []
 var _path: Array = []
 var _centers: Array = []
 var _hovered := -1
+## Wann die linke Taste gedrückt wurde (s), -1 ohne Druck.
+var _pressed_at := -1.0
 ## Die markierten Orte (Schlüssel → true): sie bleiben groß, ein Pfeil wippt über ihnen.
 var _selected := {}
 ## Je Ort, wie weit er zur Hover-Größe gewachsen ist (0..1).
@@ -425,13 +429,17 @@ func _gui_input(event: InputEvent) -> void:
 		_set_hovered(index_at(motion.position))
 		return
 	var button := event as InputEventMouseButton
-	if button != null and button.button_index == MOUSE_BUTTON_LEFT and not button.pressed:
+	if button != null and button.button_index == MOUSE_BUTTON_LEFT and button.pressed:
+		_pressed_at = Time.get_ticks_msec() / 1000.0
+	elif button != null and button.button_index == MOUSE_BUTTON_LEFT:
+		var held := _pressed_at >= 0.0 and Time.get_ticks_msec() / 1000.0 - _pressed_at >= HOLD_TIME
+		_pressed_at = -1.0
 		var i := index_at(button.position)
 		if i >= 0:
 			if not bool(_nodes[i].get("disabled", false)):
 				node_selected.emit(str(_nodes[i]["key"]))
 				accept_event()
-		elif _ambience.poke(button.position):
+		elif _ambience.poke(button.position, held):
 			set_process(true)
 			accept_event()
 

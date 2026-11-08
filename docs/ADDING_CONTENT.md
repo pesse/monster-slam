@@ -389,13 +389,13 @@ Einzelne Stufen dürfen einen einzigen Knoten tragen.
 
 ## Bewegung auf einer Gebietskarte → `assets/maps/<buch>/map.json` (`ambience`)
 
-Wasser, Wasserfälle, Nebel, Rauch, Glut, Fackeln und Vulkane einer Gebietskarte
-(`docs/ARCHITECTURE.md` „Karte und Laufanfrage“).
+Wasser, Wasserfälle, Nebel, Rauch, Glut, Fackeln und Vulkane einer Gebietskarte, dazu
+Vogelflächen (`docs/ARCHITECTURE.md` „Karte und Laufanfrage“).
 
 **Setzen:** in `scenes/dev/map_lab.tscn`, in der Leiste rechts.
 - Oben einen Effekt wählen, oder Art wählen und „+ Effekt“ drücken. Jedes „+ Effekt“ legt
   einen neuen Eintrag an — auch zwei Nebelfelder mit eigener Dichte, Richtung usw.
-- Eine Fläche (`water`, `falls`, `mist`) malt man in ihre Maske
+- Eine Fläche (`water`, `falls`, `mist`, `birds`) malt man in ihre Maske
   (`assets/maps/<buch>/unit<n>_<art>.webp`, die weiteren einer Art `<art>2`, `<art>3` …;
   der Eintrag trägt dann `"mask": "mist2"`): links malt, rechts radiert, „Rückgängig“
   (Strg+Z) nimmt den letzten Strich zurück. Pinselgröße, Härte des Randes und Stärke stehen
@@ -414,8 +414,10 @@ Wasser, Wasserfälle, Nebel, Rauch, Glut, Fackeln und Vulkane einer Gebietskarte
 **Prüfen:**
 ```bash
 GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/map_lab.tscn -- --shoot --book=<buch> --unit=<n> [--outline] [--crop=x,y,w] [--later] [--select=N] [--style=rings]
-# Klick ins Bild als Bildfolge (…_poke<n>.png), mit Probe-Quelle und Fang:
-GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/map_lab.tscn -- --shoot --book=<buch> --unit=<n> --poke=x,y [--catch] [--spot=volcano,x,y,size]
+# Klick ins Bild als Bildfolge (…_poke<n>.png), mit Probe-Quelle und Fang, lange gedrückt
+# (--hold), mehrfach (--pokes=5 reizt den Vulkan), zu eigenen Zeitpunkten (--shots=s,s,…)
+# und mit einer Probe-Fläche als Kreis (--area=birds,x,y,r, r in Bildhöhen):
+GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/map_lab.tscn -- --shoot --book=<buch> --unit=<n> --poke=x,y [--catch] [--spot=volcano,x,y,size] [--area=birds,x,y,r] [--hold] [--pokes=N] [--shots=0.5,2]
 ```
 Ein ungültiger Eintrag fällt im Spiel weg, `tests/map_screens_test.gd` meldet ihn, ebenso
 eine Fläche ohne Maske und eine Maske ohne Eintrag.

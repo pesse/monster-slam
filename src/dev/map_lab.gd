@@ -7,9 +7,11 @@ extends Control
 ##         Bild nach reports/map_ambience/<book>_unit<n>.png. Dazu: --outline (Umrisse),
 ##         --crop=x,y,w (Ausschnitt, doppelt groß), --later (zweites Bild 0.5 s später),
 ##         --select=N (Effekt N in der Leiste), --style=rings (Form probieren, ohne Speichern),
-##         --spot=volcano,x,y[,size] (Quelle probieren, ohne Speichern), --poke=x,y (Klick
+##         --spot=volcano,x,y[,size] (Quelle probieren, ohne Speichern), --area=birds,x,y,r
+##         (Fläche als Kreis mit Radius r in Bildhöhen probieren, ohne Speichern), --poke=x,y (Klick
 ##         aufs Spielzeug, MapAmbience.poke; Bilder nach POKE_SHOTS), --catch (den Fisch fangen),
-##         --again=x,y (statt dessen ein zweiter Klick nach CATCH_AT).
+##         --again=x,y (statt dessen ein zweiter Klick nach CATCH_AT), --hold (lange gedrückt),
+##         --pokes=N (N Klicks im Abstand POKE_GAP), --shots=s,s,… (Zeitpunkte statt POKE_SHOTS).
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 const PARAM_SCENE := preload("res://scenes/dev/map_lab_param.tscn")
@@ -18,11 +20,13 @@ const SHOT_DIR := "res://reports/map_ambience"
 ## Bilder nach `--poke`: so lange danach (s); mit `--catch` wird nach CATCH_AT gefangen.
 const POKE_SHOTS := [0.15, 0.35, 0.6, 1.0, 1.8, 3.0]
 const CATCH_AT := 0.3
+## Abstand der Klicks nach `--pokes` (s).
+const POKE_GAP := 0.2
 ## So lange läuft die Bewegung, bevor das Bild für `--shoot` entsteht.
 const SETTLE := 1.5
 ## Die Arten in der Auswahl, mit Namen für die Werkbank.
 const KIND_LABELS := {"water": "Wasser", "falls": "Wasserfall", "mist": "Nebel",
-		"smoke": "Rauch", "ember": "Glut", "torch": "Fackel", "volcano": "Vulkan"}
+		"smoke": "Rauch", "ember": "Glut", "torch": "Fackel", "volcano": "Vulkan", "birds": "Vögel"}
 ## So nah (px) muss ein Klick an einem Punkt liegen, um ihn zu treffen.
 const HIT := 10.0
 const HANDLE_COLOR := Color(1.0, 0.95, 0.75, 0.9)
@@ -532,6 +536,15 @@ func _shoot() -> void:
 		_ambience_list().append({"kind": spot[0], "x": float(spot[1]), "y": float(spot[2]),
 				"size": float(spot[3]) if spot.size() > 3 else 1.0})
 		_redraw()
+	var area := _arg("area").split(",")
+	if area.size() == 4 and area[0] in MapLayout.AREA_KINDS:
+		var data := _mask_of(area[0])
+		var size: Vector2i = data["size"]
+		data["bytes"] = stamp(data["bytes"], size, Vector2(float(area[1]), float(area[2])) * Vector2(size),
+				float(area[3]) * size.y, 0.8, 1.0, false)
+		_show_mask(area[0])
+		_ambience_list().append({"kind": area[0], "mask": area[0]})
+		_redraw()
 	await get_tree().create_timer(SETTLE).timeout
 	var poke := _arg("poke").split_floats(",")
 	if poke.size() == 2:
@@ -553,15 +566,20 @@ func _shoot() -> void:
 ## Klickt an `at` (Anteil des Bildes) und hält die Folge in Bildern fest.
 func _shoot_poke(at: Vector2) -> void:
 	var ambience := _canvas.ambience_layer()
-	print("map_lab: poke ", ambience.poke(_canvas.to_local_point(at)))
+	var pokes := maxi(1, int(_arg("pokes")))
+	for k in pokes:
+		if k > 0:
+			await get_tree().create_timer(POKE_GAP).timeout
+		print("map_lab: poke ", ambience.poke(_canvas.to_local_point(at), _has_arg("hold")))
 	_canvas.set_process(true)
+	var shots: Array = Array(_arg("shots").split_floats(",")) if not _arg("shots").is_empty() else POKE_SHOTS
 	var dir := ProjectSettings.globalize_path(SHOT_DIR)
 	DirAccess.make_dir_recursive_absolute(dir)
 	var waited := 0.0
 	var again := _arg("again").split_floats(",")
 	var caught := not _has_arg("catch") and again.size() != 2
-	for i in POKE_SHOTS.size():
-		var next := float(POKE_SHOTS[i])
+	for i in shots.size():
+		var next := float(shots[i])
 		if not caught and next > CATCH_AT:
 			await get_tree().create_timer(CATCH_AT - waited).timeout
 			waited = CATCH_AT
