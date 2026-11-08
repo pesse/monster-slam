@@ -52,7 +52,8 @@ var _busy := false
 
 func _ready() -> void:
 	_http = HTTPRequest.new()
-	_http.use_threads = true
+	# Ohne Thread: sonst friert eine stumme Verbindung beim Timeout das Spiel ein (CONVENTIONS, Fallen).
+	_http.use_threads = false
 	_http.timeout = TIMEOUT_SECONDS
 	_http.body_size_limit = MAX_RESPONSE_BYTES
 	add_child(_http)

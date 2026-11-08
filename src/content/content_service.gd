@@ -39,7 +39,10 @@ var _entries: Dictionary = {}
 
 func _ready() -> void:
 	_http = HTTPRequest.new()
-	_http.use_threads = true
+	# Ohne Thread (CONVENTIONS, Fallen); ein Stillstand endet über HttpWait als Fehler.
+	_http.use_threads = false
+	_http.download_chunk_size = 1 << 20   # 1 MiB je Frame
+	_http.process_mode = Node.PROCESS_MODE_ALWAYS   # HttpWait zählt auch in der Pause
 	add_child(_http)
 	if OS.is_debug_build():
 		var override := OS.get_environment("MONSTER_SLAM_PACKS_BASE")
@@ -278,8 +281,10 @@ func _fetch(url: String, headers := PackedStringArray(), download_to := "") -> D
 	var err := _http.request(url, headers)
 	if err != OK:
 		return {"error": "Anfrage nicht startbar (Fehler %d)." % err, "body": PackedByteArray()}
-	var result: Array = await _http.request_completed
+	var result: Array = await HttpWait.completed(_http)
 	_http.download_file = ""
+	if int(result[0]) == HTTPRequest.RESULT_TIMEOUT:
+		return {"error": "Server antwortet nicht mehr.", "body": PackedByteArray()}
 	if int(result[0]) != HTTPRequest.RESULT_SUCCESS:
 		return {"error": "Server nicht erreichbar.", "body": PackedByteArray()}
 	var code := int(result[1])

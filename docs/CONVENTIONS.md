@@ -267,3 +267,6 @@ Einheit, einen Vertrag, eine Engine-Falle.
   dafür gibt es `Hints.probe`.
 - **Ein Autoload läuft nach `_initialize()` eines `-s`-Skripts** — eine dort gesetzte
   Test-Id (z. B. `Wallet.player_id`) ist danach wieder überschrieben.
+- **`HTTPRequest` mit `use_threads` liest blockierend**, und `cancel_request()` — auch der
+  eigene `timeout` — wartet auf den Thread. Eine stumme Verbindung friert dann das ganze
+  Spiel ein. Was während des Spiels oder mit `timeout` sendet, läuft ohne Thread.

@@ -52,9 +52,10 @@ var _loud := false
 
 func _ready() -> void:
 	_http = HTTPRequest.new()
-	# Ohne Thread blockiert das Schreiben der 120-MB-Datei den Renderer.
-	_http.use_threads = true
-	_http.download_chunk_size = 1 << 20   # 1 MiB
+	# Ohne Thread (CONVENTIONS, Fallen); ein Stillstand endet über HttpWait als Fehler.
+	_http.use_threads = false
+	_http.download_chunk_size = 1 << 20   # 1 MiB je Frame
+	_http.process_mode = Node.PROCESS_MODE_ALWAYS   # HttpWait zählt auch in der Pause
 	add_child(_http)
 	_cleanup_leftovers()
 	_cleanup_old_executable()
@@ -81,15 +82,17 @@ func check(loud := false) -> void:
 		return
 	_loud = loud
 	_set_state(State.CHECKING)
-	# Erst anfragen, dann verbinden: so muss kein Fehlerpfad das Signal wieder lösen.
 	var err := _http.request(MANIFEST_URL)
 	if err != OK:
 		_fail("Update-Prüfung nicht möglich (Fehler %d)." % err)
 		return
-	_http.request_completed.connect(_on_manifest, CONNECT_ONE_SHOT)
+	_on_manifest.callv(await HttpWait.completed(_http))
 
 
 func _on_manifest(result: int, code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+	if result == HTTPRequest.RESULT_TIMEOUT:
+		_fail("Update-Server antwortet nicht.")
+		return
 	if result != HTTPRequest.RESULT_SUCCESS:
 		_fail("Update-Server nicht erreichbar.")
 		return
@@ -168,11 +171,15 @@ func download() -> void:
 		_http.download_file = ""
 		_fail("Download nicht startbar (Fehler %d)." % err)
 		return
-	_http.request_completed.connect(_on_download.bind(target), CONNECT_ONE_SHOT)
+	_on_download.callv(await HttpWait.completed(_http) + [target])
 
 
 func _on_download(result: int, code: int, _headers: PackedStringArray, _body: PackedByteArray, target: String) -> void:
 	_http.download_file = ""
+	if result == HTTPRequest.RESULT_TIMEOUT:
+		_discard(target)
+		_fail("Download hängt: Es kommt nichts mehr an. Später noch einmal versuchen.")
+		return
 	if result != HTTPRequest.RESULT_SUCCESS or code != 200:
 		_discard(target)
 		_fail("Download fehlgeschlagen (HTTP %d)." % code)
