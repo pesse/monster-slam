@@ -52,6 +52,7 @@ const ELLIPSIS_PATTERN := "…|\\.{2,}"
 static var _group_re: RegEx = RegEx.create_from_string(GROUP_PATTERN)
 static var _placeholder_re: RegEx = RegEx.create_from_string(PLACEHOLDER_PATTERN)
 static var _ellipsis_re: RegEx = RegEx.create_from_string(ELLIPSIS_PATTERN)
+static var _letter_re: RegEx = RegEx.create_from_string("[\\p{L}\\p{N}]")
 
 
 ## Wertet `answer` gegen alle hinterlegten Antworten aus.
@@ -151,24 +152,31 @@ static func _align(canonical: String, typed: String) -> Dictionary:
 	return {"marked": marked, "typed_against": typed_against}
 
 
-## Der erste Buchstabe, den man von `answer` tippen muss, in der Schreibweise der Lösung:
-## vor ihm stehen höchstens Klammergruppen und wegkürzbare Anlaute ("(to) go" -> "g",
-## "der Hund" -> "H"). Leer für eine leere Lösung.
-static func initial(answer: String) -> String:
-	var rest := answer.strip_edges()
-	var stripped := true
-	while stripped:
-		stripped = false
-		if rest.begins_with("(") and rest.find(")") > 0:
-			rest = rest.substr(rest.find(")") + 1).strip_edges()
-			stripped = true
-		for prefix: String in _OPTIONAL_PREFIXES:
-			if rest.to_lower().begins_with(prefix):
-				rest = rest.substr(prefix.length()).strip_edges()
-				stripped = true
-	if rest.is_empty():
-		rest = answer.strip_edges()
-	return rest.left(1)
+## Je Wort, das man von `answer` tippen muss, sein erster Buchstabe in der Schreibweise der
+## Lösung. Was wegbleiben darf, zählt nicht: Klammergruppen, Platzhalter, Auslassungspunkte
+## und wegkürzbare Anlaute ("etwas bestellen" -> ["b"], "sich Sorgen machen" -> ["s", "S", "m"]).
+## Bleibt nichts übrig ("the"), der erste Buchstabe der ganzen Lösung; leer für eine leere.
+static func initials(answer: String) -> PackedStringArray:
+	var rest := _ellipsis_re.sub(_group_re.sub(answer, " ", true), " ", true)
+	# Der Platzhalter-Ausdruck ist für Kleinschreibung gebaut; to_lower behält die Positionen.
+	var kept := ""
+	var cursor := 0
+	for m in _placeholder_re.search_all(rest.to_lower()):
+		kept += rest.substr(cursor, m.get_start() - cursor) + " "
+		cursor = m.get_end()
+	var words := (kept + rest.substr(cursor)).split(" ", false)
+	while not words.is_empty() and (words[0].to_lower() + " ") in _OPTIONAL_PREFIXES:
+		words.remove_at(0)
+	var out := PackedStringArray()
+	for word in words:
+		var letter := _letter_re.search(word)
+		if letter != null:
+			out.append(letter.get_string())
+	if out.is_empty():
+		var letter := _letter_re.search(answer)
+		if letter != null:
+			out.append(letter.get_string())
+	return out
 
 
 ## Die Indizes in `canonical`, an denen `typed` von der Schreibweise abwich: Diakritika und

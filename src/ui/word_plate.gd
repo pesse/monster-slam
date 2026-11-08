@@ -28,10 +28,10 @@ const WRAP_CHARS := 32
 const WRAP_WIDTH := 280.0
 const LARGE_WRAP_FACTOR := 1.5
 ## So leuchtet ein Schild auf, das der Zauber aufdeckt (überhellt): violett bei den
-## Alternativen, golden beim ersten Buchstaben (Farben wie SpellFx.COLORS).
+## Alternativen, golden bei den Anfangsbuchstaben (Farben wie SpellFx.COLORS).
 const REVEAL_GLOW := Color(1.6, 1.25, 2.0)
 const INITIAL_GLOW := Color(2.0, 1.6, 0.9)
-## Hinter dem ersten Buchstaben der Lösung.
+## Hinter jedem Anfangsbuchstaben der Lösung.
 const INITIAL_TAIL := "…"
 ## Startgröße des Aufspringens und Dauer von Rückfedern und Ausleuchten, s.
 const REVEAL_SCALE := 1.35
@@ -71,7 +71,7 @@ func setup(of: Monster, large: bool) -> void:
 	_help.visible = not _help.text.is_empty()
 	_badge.visible = _help.visible
 	if of.initial_shown:
-		_help.text = initial_line(of.initial())
+		_help.text = initial_line(of.initials())
 		_help.visible = true
 	of.alts_revealed.connect(_on_alts_revealed)
 	of.initial_revealed.connect(_on_initial_revealed)
@@ -97,7 +97,7 @@ func _on_alts_revealed(delay: float) -> void:
 
 
 func _on_initial_revealed(delay: float) -> void:
-	_help.text = initial_line(monster.initial())
+	_help.text = initial_line(monster.initials())
 	_reveal(_help, delay, INITIAL_GLOW)
 
 
@@ -122,9 +122,9 @@ static func alt_line(alts: Array, label := "auch") -> String:
 	return "%s: %s" % [label, ", ".join(alts.map(func(a: Variant) -> String: return str(a)))]
 
 
-## Die Zeile nach der Flüstermuschel: „g…“.
-static func initial_line(initial: String) -> String:
-	return initial + INITIAL_TAIL
+## Die Zeile nach der Flüstermuschel: „g…“, bei einer Wendung „s… S… m…“.
+static func initial_line(initials: PackedStringArray) -> String:
+	return " ".join(Array(initials).map(func(i: String) -> String: return i + INITIAL_TAIL))
 
 
 ## Plakette und Zipfel zusammen; der Zipfel hängt unten über den Rand hinaus.

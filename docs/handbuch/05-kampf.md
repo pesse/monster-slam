@@ -115,8 +115,10 @@ Bosskampf gibt es keine Zauber.
 - **Drittes Auge / Orakelblick** – die Monster zeigen unter ihrem Wort auch die anderen
   Bedeutungen („auch: …“). Drittes Auge wirkt auf die Monster auf dem Feld, Orakelblick auf
   die ganze Welle, auch auf die, die erst noch kommen. Richtig ist richtig, auch mit Hilfe.
-- **Flüstermuschel** – die Monster auf dem Feld verraten den ersten Buchstaben ihrer
-  Lösung („h…“). Bei einem neuen Wort, dessen Lösung schon dasteht, ändert sie nichts.
+- **Flüstermuschel** – die Monster auf dem Feld verraten die Anfangsbuchstaben ihrer
+  Lösung („h…“), bei einer Wendung von jedem Wort, das du tippen musst („s… S… m…“).
+  Was du weglassen darfst, wie „etwas“ oder „jdn“, bekommt keinen Buchstaben. Bei einem
+  neuen Wort, dessen Lösung schon dasteht, ändert sie nichts.
 - **Bumerang** – ein Windstoß trägt alle Monster auf dem Feld zurück an den Start. Sie
   behalten ihr Wort und laufen von dort wieder los.
 - **Schrumpfpilz** – alle Monster dieser Welle schrumpfen, auch die, die erst noch kommen.

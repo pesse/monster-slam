@@ -131,7 +131,7 @@ func test_the_first_letter_shows_where_the_answer_is_hidden() -> void:
 	assert_bool(plain.initial_shown).is_true()
 	assert_bool(copied.initial_shown).is_false()
 	assert_bool(blank.initial_shown).is_false()
-	assert_str(WordPlate.initial_line(plain.initial())).is_equal("g…")
+	assert_str(WordPlate.initial_line(plain.initials())).is_equal("g…")
 	assert_bool(_caster.can_cast(whisper, _field([plain, copied, blank]), 0)).is_false()
 
 

@@ -8,7 +8,7 @@ extends Node3D
 signal reached_goal(monster: Monster)
 ## Das Schild soll die Alternativen der Aufgabe zeigen (ADR 0014), nach `delay` Sekunden.
 signal alts_revealed(delay: float)
-## Das Schild soll den ersten Buchstaben der Lösung zeigen, nach `delay` Sekunden.
+## Das Schild soll die Anfangsbuchstaben der Lösung zeigen, nach `delay` Sekunden.
 signal initial_revealed(delay: float)
 
 var monster_def: Dictionary = {}
@@ -42,7 +42,7 @@ var _speed: float = 2.0
 var pace := 1.0
 ## Zeigt das Schild die Alternativen der Aufgabe (`show_alts`)?
 var alts_shown := false
-## Zeigt das Schild den ersten Buchstaben der Lösung (`show_initial`)?
+## Zeigt das Schild die Anfangsbuchstaben der Lösung (`show_initial`)?
 var initial_shown := false
 ## Wie lange es noch eingefroren ist (s Spielzeit).
 var _frozen_left := 0.0
@@ -120,19 +120,19 @@ func help_answer() -> String:
 	return str(answers[0]) if not answers.is_empty() else ""
 
 
-## Der erste Buchstabe der ersten Lösung (AnswerEvaluator.initial), leer ohne Lösung.
-func initial() -> String:
+## Die Anfangsbuchstaben der ersten Lösung (AnswerEvaluator.initials), leer ohne Lösung.
+func initials() -> PackedStringArray:
 	var answers: Array = task.get("accepted_answers", [])
-	return AnswerEvaluator.initial(str(answers[0])) if not answers.is_empty() else ""
+	return AnswerEvaluator.initials(str(answers[0])) if not answers.is_empty() else PackedStringArray()
 
 
-## Hätte das Schild einen ersten Buchstaben aufzudecken? Nicht, wenn er schon steht, es keine
+## Hätte das Schild Anfangsbuchstaben aufzudecken? Nicht, wenn sie schon stehen, es keine
 ## Lösung gibt oder die ganze Lösung auf dem Schild steht (ADR 0027).
 func can_show_initial() -> bool:
-	return not initial_shown and not initial().is_empty() and help_answer().is_empty()
+	return not initial_shown and not initials().is_empty() and help_answer().is_empty()
 
 
-## Zeigt den ersten Buchstaben der Lösung nach `delay` Sekunden. False, wenn es nichts
+## Zeigt die Anfangsbuchstaben der Lösung nach `delay` Sekunden. False, wenn es nichts
 ## aufzudecken gibt (`can_show_initial`).
 func show_initial(delay := 0.0) -> bool:
 	if not can_show_initial():

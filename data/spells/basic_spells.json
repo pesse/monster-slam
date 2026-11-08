@@ -21,9 +21,9 @@
 		"id": "spell.whisper",
 		"name": "Flüstermuschel",
 		"icon": "🐚",
-		"description": "Die Monster auf dem Feld verraten den ersten Buchstaben ihrer Lösung.",
+		"description": "Die Monster auf dem Feld verraten die Anfangsbuchstaben ihrer Lösung, bei einer Wendung von jedem Wort.",
 		"effect": "reveal_initial",
-		"price": 50
+		"price": 80
 	},
 	{
 		"id": "spell.mire",

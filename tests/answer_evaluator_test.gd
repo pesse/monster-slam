@@ -326,12 +326,27 @@ func test_missing_comma_is_marked() -> void:
 	assert_array(Array(AnswerEvaluator.spelling_marks("yes, please", "yes please"))).contains_exactly([3])
 
 
-## Der erste Buchstabe der Flüstermuschel ist der erste, den man tippen muss.
-func test_the_initial_skips_what_may_be_left_out() -> void:
-	assert_str(AnswerEvaluator.initial("(to) go")).is_equal("g")
-	assert_str(AnswerEvaluator.initial("to go")).is_equal("g")
-	assert_str(AnswerEvaluator.initial("der Hund")).is_equal("H")
-	assert_str(AnswerEvaluator.initial("The (big) dog")).is_equal("d")
-	assert_str(AnswerEvaluator.initial("ōrātiō")).is_equal("ō")
-	assert_str(AnswerEvaluator.initial("the")).is_equal("t")
-	assert_str(AnswerEvaluator.initial("")).is_empty()
+## Die Flüstermuschel zeigt je Wort, das man tippen muss, den ersten Buchstaben.
+func test_the_initials_skip_what_may_be_left_out() -> void:
+	var cases := {
+		"(to) go": ["g"],
+		"to go": ["g"],
+		"der Hund": ["H"],
+		"The (big) dog": ["d"],
+		"ōrātiō": ["ō"],
+		"the": ["t"],
+		"etwas bestellen": ["b"],
+		"etw. (vor jdm) verstecken": ["v"],
+		"jdn/etw. definieren": ["d"],
+		"sich (in jn.) verlieben": ["s", "v"],
+		"sich Sorgen machen": ["s", "S", "m"],
+		"to look forward to sth.": ["l", "f", "t"],
+		"either … or": ["e", "o"],
+		"yes, please": ["y", "p"],
+		"l'école": ["l"],
+		"etwas": ["e"],
+		"": [],
+	}
+	for answer: String in cases:
+		assert_array(Array(AnswerEvaluator.initials(answer))).override_failure_message(answer) \
+				.contains_exactly(cases[answer])
