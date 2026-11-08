@@ -18,7 +18,7 @@ const EXTENSIONS := ["webp", "png", "jpg"]
 ## Bewegte Flächen der Gebietskarte, je eine Maske.
 const AREA_KINDS := ["water", "falls", "mist"]
 ## Bewegte Quellen, je ein Punkt.
-const SPOT_KINDS := ["smoke", "ember", "torch"]
+const SPOT_KINDS := ["smoke", "ember", "torch", "volcano"]
 ## Formen je Art, die erste ist die ohne Angabe.
 const STYLES := {"water": ["field", "rings"]}
 ## Höchste Intensität eines Effekts (1 ist normal).

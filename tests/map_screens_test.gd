@@ -212,6 +212,99 @@ func test_spot_rects_sit_on_their_source() -> void:
 	assert_float(ember.size.y).is_equal_approx(MapAmbience.SPOT_SIZE["ember"].y * 2.0 * 900.0, 0.01)
 
 
+# --- Spielzeuge der Gebietskarte (MapAmbience.poke) ---------------------------
+
+## Eine Karte 1920 × 1080 auf 1104 × 540 (das Bild steht in x 72..1032), links Wasser, mit
+## einer Fackel rechts.
+func _toy_canvas() -> MapCanvas:
+	var canvas: MapCanvas = auto_free(MapCanvas.new())
+	add_child(canvas)
+	canvas.size = Vector2(1104, 540)
+	var image := PlaceholderTexture2D.new()
+	image.size = Vector2(1920, 1080)
+	canvas.setup(image, [], [], func(_n: Dictionary) -> Dictionary: return {})
+	var water := Image.create(64, 36, false, Image.FORMAT_L8)
+	water.fill_rect(Rect2i(0, 0, 32, 36), Color.WHITE)
+	canvas.ambience_layer().now_override = 10.0
+	canvas.set_ambience([
+		{"kind": "water", "mask": "water", "intensity": 1.0, "style": "field"},
+		{"kind": "torch", "at": Vector2(0.8, 0.5), "size": 1.0, "intensity": 1.0},
+	], {"water": ImageTexture.create_from_image(water)})
+	return canvas
+
+
+func test_a_fish_jumps_only_from_water_and_is_caught_in_the_air() -> void:
+	var canvas := _toy_canvas()
+	var ambience := canvas.ambience_layer()
+	var fish := ambience.fish_layer()
+	var found: Array = []
+	var note := func(id: String) -> void: found.append(id)
+	EventBus.secret_found.connect(note)
+	# Rechts ist kein Wasser (und die Fackel steht woanders).
+	assert_bool(ambience.poke(Vector2(800, 100))).is_false()
+	assert_bool(ambience.poke(Vector2(200, 270))).is_true()
+	assert_bool(ambience.is_busy()).is_true()
+	var jump: Dictionary = fish._fish[0]
+	# Halb im Sprung: ein Klick daneben fängt nicht, einer auf ihn schon.
+	ambience.now_override = 10.0 + MapFish.JUMP_TIME * 0.5
+	var rect := MapCanvas.map_rect(canvas.size, canvas.aspect())
+	var at := MapFish.fish_point(jump, 0.5, rect)
+	assert_bool(fish.catch_at(at + Vector2(0, 60))).is_false()
+	assert_bool(ambience.poke(at)).is_true()
+	assert_float(float(jump["caught"])).is_greater_equal(0.0)
+	# Gefangen ist gefangen.
+	assert_bool(fish.catch_at(at)).is_false()
+	EventBus.secret_found.disconnect(note)
+	assert_array(found).is_equal(["fish"])
+	ambience.now_override = 20.0
+	assert_bool(ambience.is_busy()).is_false()
+
+
+## Ein zweiter Klick auf dieselbe Stelle lässt einen zweiten Fisch springen und fängt den
+## ersten nicht, der gerade erst auftaucht.
+func test_a_second_click_on_the_spot_sends_a_second_fish() -> void:
+	var canvas := _toy_canvas()
+	var ambience := canvas.ambience_layer()
+	var fish := ambience.fish_layer()
+	assert_bool(ambience.poke(Vector2(200, 270))).is_true()
+	for t in [0.1, 0.2]:
+		ambience.now_override = 10.0 + MapFish.JUMP_TIME * t
+		assert_bool(fish.catch_at(Vector2(200, 270))).is_false()
+	assert_bool(ambience.poke(Vector2(200, 270))).is_true()
+	assert_int(fish._fish.size()).is_equal(2)
+	assert_float(float(fish._fish[0]["caught"])).is_less(0.0)
+
+
+func test_a_fish_jumps_toward_water() -> void:
+	var canvas := _toy_canvas()
+	var fish := canvas.ambience_layer().fish_layer()
+	# Am rechten Rand des Wassers springt er nach links.
+	for i in 3:
+		fish._fish.clear()
+		assert_bool(fish.jump_at(Vector2(72 + 480 - 8, 270))).is_true()
+		assert_float(float(fish._fish[0]["dir"])).is_equal(-1.0)
+
+
+func test_a_click_on_a_torch_stirs_it_for_a_while() -> void:
+	var canvas := _toy_canvas()
+	var ambience := canvas.ambience_layer()
+	var torch := canvas.to_local_point(Vector2(0.8, 0.5)) + Vector2(0, -5)
+	assert_int(ambience.spot_at(torch)).is_equal(1)
+	assert_bool(ambience.poke(torch)).is_true()
+	ambience.now_override = 10.0 + 0.3
+	assert_float(ambience.stir_of(1)).is_greater(0.5)
+	assert_bool(ambience.is_busy()).is_true()
+	ambience.now_override = 10.01 + MapAmbience.STIR_TIME["torch"]
+	assert_float(ambience.stir_of(1)).is_equal(0.0)
+	assert_bool(ambience.is_busy()).is_false()
+
+
+## Ein Klick neben Orte und Spielzeug wählt nichts und bleibt beim Screen.
+func test_a_click_beside_everything_does_nothing() -> void:
+	var canvas := _toy_canvas()
+	assert_bool(canvas.ambience_layer().poke(Vector2(900, 500))).is_false()
+
+
 ## Die Buchkarte hat ihren Weg unter "units" — er ist kein Punkt einer Unit.
 func test_layout_reads_the_book_path_apart_from_the_units() -> void:
 	var content := {"units": {"1": {"x": 0.2, "y": 0.3},

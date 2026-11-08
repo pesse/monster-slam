@@ -14,6 +14,8 @@ var player_id: String = "default"
 
 ## Erfolgs-Id -> Zeitpunkt der Freischaltung (unix).
 var _unlocked: Dictionary = {}
+## Gefundene Spielzeuge der Karte (Achievements.SECRETS): Id -> Anzahl.
+var _secrets: Dictionary = {}
 ## Unlesbare Datei: dann wird nichts freigeschaltet, sonst käme alles noch einmal.
 var _readable := true
 ## Fakten, die am Frame-Ende geprüft werden (Schlüssel wie in Achievements.FIXED).
@@ -61,6 +63,7 @@ func _connect_triggers() -> void:
 	EventBus.boss_started.connect(on_boss_started)
 	EventBus.boss_answer_judged.connect(on_boss_answer)
 	EventBus.boss_won.connect(on_boss_won)
+	EventBus.secret_found.connect(on_secret_found)
 
 
 ## Prüft am Frame-Ende die Erfolge des Fakts `key` („words“ steht für alle Sprachen).
@@ -148,6 +151,20 @@ func on_boss_won(_boss_id: String, _unit_key: String) -> void:
 		unlock("boss_flawless")
 
 
+## Ein Spielzeug der Karte; gezählt wird nur, was in Achievements.SECRETS steht.
+func on_secret_found(id: String) -> void:
+	if not id in Achievements.SECRETS or not _readable or _in_workbench():
+		return
+	_secrets[id] = secret_count(id) + 1
+	_save()
+	if not _under_test():
+		request(id)
+
+
+func secret_count(id: String) -> int:
+	return int(_secrets.get(id, 0))
+
+
 func _stamp(id: String) -> void:
 	_unlocked[id] = int(Time.get_unix_time_from_system())
 	_save()
@@ -195,7 +212,7 @@ func save_suffix() -> String:
 
 
 func save_payload() -> Dictionary:
-	return {"player_id": player_id, "unlocked": _unlocked.duplicate()}
+	return {"player_id": player_id, "unlocked": _unlocked.duplicate(), "secrets": _secrets.duplicate()}
 
 
 func _save() -> void:
@@ -204,6 +221,7 @@ func _save() -> void:
 
 func _load() -> void:
 	_unlocked = {}
+	_secrets = {}
 	_readable = true
 	var read := SaveStore.read(_save_path())
 	match int(read["status"]):
@@ -214,6 +232,10 @@ func _load() -> void:
 			if stored is Dictionary:
 				for id: String in stored:
 					_unlocked[id] = int(stored[id])
+			var found: Variant = (read["data"] as Dictionary).get("secrets", {})
+			if found is Dictionary:
+				for id: String in found:
+					_secrets[id] = int(found[id])
 		_:
 			_readable = false
 			push_warning("AchievementBook: ungültige Datei '%s'" % _save_path())

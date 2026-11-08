@@ -136,6 +136,19 @@ func test_unreadable_file_unlocks_nothing() -> void:
 	assert_bool(book.unlock("boss_flawless")).is_false()
 
 
+func test_caught_fish_are_counted_and_kept() -> void:
+	var book := _book()
+	for i in 10:
+		book.on_secret_found("fish")
+	# Was nicht in SECRETS steht, zählt nicht.
+	book.on_secret_found("torch")
+	assert_int(book.secret_count("fish")).is_equal(10)
+	assert_int(book.secret_count("torch")).is_equal(0)
+	var again := _book()
+	assert_int(again.secret_count("fish")).is_equal(10)
+	assert_array(again.check({"fish": again.secret_count("fish")}, [])).contains(["fish_10"])
+
+
 # --- Moment-Erfolge -----------------------------------------------------------
 
 func test_a_wave_won_on_a_thread() -> void:

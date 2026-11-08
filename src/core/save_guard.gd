@@ -5,7 +5,7 @@ extends RefCounted
 ## gemeldet. Sinken darf er nur mit `allow_drop`.
 
 ## Monotone Werte je Datei-Endung. `#feld` zählt die Einträge einer Liste oder eines
-## Dictionaries.
+## Dictionaries, `+feld` summiert die Zahlen eines Dictionaries.
 const MONOTONIC := {
 	"": ["#records"],
 	"_level": ["total_xp"],
@@ -13,7 +13,7 @@ const MONOTONIC := {
 	"_sessions": ["#sessions", "#battles"],
 	"_bosses": ["#wins"],
 	"_badges": ["#days"],
-	"_achievements": ["#unlocked"],
+	"_achievements": ["#unlocked", "+secrets"],
 	"_writing": ["#submissions"],
 }
 
@@ -26,6 +26,13 @@ static func metrics(suffix: String, data: Dictionary) -> Dictionary:
 			var value: Variant = data.get(field.substr(1))
 			out[field] = (value as Array).size() if value is Array \
 					else ((value as Dictionary).size() if value is Dictionary else 0)
+		elif field.begins_with("+"):
+			var sum := 0
+			var counts: Variant = data.get(field.substr(1))
+			if counts is Dictionary:
+				for key in counts:
+					sum += int(counts[key])
+			out[field] = sum
 		else:
 			out[field] = int(data.get(field, 0))
 	return out

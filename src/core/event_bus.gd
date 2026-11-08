@@ -81,6 +81,9 @@ signal lexeme_mastered(lexeme_id: String)
 signal badge_earned(id: String, tier: int)
 ## Erfolg freigeschaltet (Issue #74), `id` wie in Achievements; auch nachgetragene.
 signal achievement_unlocked(id: String)
+## Ein verstecktes Spielzeug der Gebietskarte (MapAmbience.poke): "fish" für einen
+## gefangenen Fisch, sonst die Art der angefachten Quelle ("torch", "volcano", …).
+signal secret_found(id: String)
 ## Das Wachkatapult hat ein gemeistertes Monster abgeschossen: erledigt, aber nicht
 ## beantwortet (kein Lernstand, keine Erfahrung, keine Punkte).
 signal monster_catapulted(task: Dictionary)

@@ -389,7 +389,7 @@ Einzelne Stufen dürfen einen einzigen Knoten tragen.
 
 ## Bewegung auf einer Gebietskarte → `assets/maps/<buch>/map.json` (`ambience`)
 
-Wasser, Wasserfälle, Nebel, Rauch, Glut und Fackeln einer Gebietskarte
+Wasser, Wasserfälle, Nebel, Rauch, Glut, Fackeln und Vulkane einer Gebietskarte
 (`docs/ARCHITECTURE.md` „Karte und Laufanfrage“).
 
 **Setzen:** in `scenes/dev/map_lab.tscn`, in der Leiste rechts.
@@ -401,7 +401,8 @@ Wasser, Wasserfälle, Nebel, Rauch, Glut und Fackeln einer Gebietskarte
   (Strg+Z) nimmt den letzten Strich zurück. Pinselgröße, Härte des Randes und Stärke stehen
   in der Leiste; halbe Stärke heißt halbe Bewegung. Einen weichen Rand ruhig etwas ins Ufer
   laufen lassen.
-- Eine Quelle (`smoke`, `ember`, `torch`) setzt die rechte Maustaste. Die linke wählt eine
+- Eine Quelle (`smoke`, `ember`, `torch`, `volcano`) setzt die rechte Maustaste. Ein Vulkan
+  sitzt mit dem Punkt im Krater; er glimmt und raucht und bricht auf einen Klick im Spiel aus. Die linke wählt eine
   Quelle, einen Ort oder einen Wegpunkt, Ziehen verschiebt, Entf löscht.
 - Die Leiste zeigt nur, was zum Effekt passt: die Karte mit Maske oder den Ausschnitt um die
   Quelle, Art und Intensität (`intensity`, 0–2), bei Wasser die Form (`style`, Feld oder
@@ -413,6 +414,8 @@ Wasser, Wasserfälle, Nebel, Rauch, Glut und Fackeln einer Gebietskarte
 **Prüfen:**
 ```bash
 GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/map_lab.tscn -- --shoot --book=<buch> --unit=<n> [--outline] [--crop=x,y,w] [--later] [--select=N] [--style=rings]
+# Klick ins Bild als Bildfolge (…_poke<n>.png), mit Probe-Quelle und Fang:
+GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/map_lab.tscn -- --shoot --book=<buch> --unit=<n> --poke=x,y [--catch] [--spot=volcano,x,y,size]
 ```
 Ein ungültiger Eintrag fällt im Spiel weg, `tests/map_screens_test.gd` meldet ihn, ebenso
 eine Fläche ohne Maske und eine Maske ohne Eintrag.

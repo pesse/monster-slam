@@ -17,6 +17,9 @@ const THREAD_HP := 5
 const UNTOUCHED_WAVES := 3
 ## „Dreifache Revanche“: so viele Revanchen in einer Welle (Badges.revenges_this_wave).
 const REVENGES := 3
+## Spielzeuge der Gebietskarte (EventBus.secret_found), die AchievementBook zählt; jedes ist
+## ein Fakt gleichen Namens.
+const SECRETS := ["fish"]
 
 ## Ein Erfolg: id, fact (Schlüssel in den Fakten, leer bei `moment`), need, title, body,
 ## hidden, dazu `icon`, wo das Bild nicht wie die Id heißt. Die Wort-Erfolge je Sprache
@@ -60,6 +63,8 @@ const FIXED := [
 			"title": "Kein einziger Fehler", "body": "Einen Boss ohne falsche Antwort besiegt."},
 	{"id": "revenge_3", "moment": true, "hidden": true,
 			"title": "Dreifache Revanche", "body": "Drei Wörter in einer Welle getroffen, die dir zuletzt entwischt sind."},
+	{"id": "fish_10", "fact": "fish", "need": 10, "hidden": true,
+			"title": "Petri Heil", "body": "10 Fische auf der Karte gefangen."},
 ]
 
 
@@ -219,4 +224,6 @@ static func live_facts(languages: Array) -> Dictionary:
 	}
 	for lang: String in languages:
 		facts["words_" + lang] = func() -> int: return PlayerProgress.lexemes_answered(lang)
+	for secret: String in SECRETS:
+		facts[secret] = AchievementBook.secret_count(secret)
 	return facts

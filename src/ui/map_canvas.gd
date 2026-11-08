@@ -427,8 +427,12 @@ func _gui_input(event: InputEvent) -> void:
 	var button := event as InputEventMouseButton
 	if button != null and button.button_index == MOUSE_BUTTON_LEFT and not button.pressed:
 		var i := index_at(button.position)
-		if i >= 0 and not bool(_nodes[i].get("disabled", false)):
-			node_selected.emit(str(_nodes[i]["key"]))
+		if i >= 0:
+			if not bool(_nodes[i].get("disabled", false)):
+				node_selected.emit(str(_nodes[i]["key"]))
+				accept_event()
+		elif _ambience.poke(button.position):
+			set_process(true)
 			accept_event()
 
 
@@ -446,7 +450,7 @@ func _process(delta: float) -> void:
 	_time += delta
 	if not _zoom_run.is_empty():
 		_step_zoom(delta)
-	var moving := _zooming
+	var moving := _zooming or _ambience.is_busy()
 	if _appear_t >= 0.0:
 		_appear_t += minf(delta, MAX_ZOOM_STEP)
 		if _appear_t >= APPEAR_TIME + APPEAR_STAGGER * float(maxi(_centers.size() - 1, 0)):

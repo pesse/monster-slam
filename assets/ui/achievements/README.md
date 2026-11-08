@@ -1,6 +1,6 @@
 # Monster-Slam-Erfolgs-Icons
 
-24 Icons mit 256 × 256 Pixeln als verlustfreie RGBA-WebP-Dateien in `icons/`. Die bemalten Kacheln reichen bis zum schmalen Metallrahmen. Außerhalb der abgerundeten Ecken (Radius 25,6 px) transparent, innen deckend; geglättete Alphakante. Licht von oben links, keine Schrift oder Zahlen. Für 64 px in der Statistik und 56 px in der Erfolgseinblendung.
+25 Icons mit 256 × 256 Pixeln als verlustfreie RGBA-WebP-Dateien in `icons/`. Die bemalten Kacheln reichen bis zum schmalen Metallrahmen. Außerhalb der abgerundeten Ecken (Radius 25,6 px) transparent, innen deckend; geglättete Alphakante. Licht von oben links, keine Schrift oder Zahlen. Für 64 px in der Statistik und 56 px in der Erfolgseinblendung.
 
 | Datei unter icons/ | Motiv | Rahmen / Hintergrund |
 | --- | --- | --- |
@@ -27,9 +27,10 @@
 | run_untouched.webp | Makelloser Schild mit abprallenden Pfeilen | Silber / Eisblau |
 | boss_flawless.webp | Perfekt geschliffener funkelnder Diamant | Diamant / Cyan |
 | revenge_3.webp | Drei magische Krallenblitze treffen fliehendes Monster | Rubin / Violett und Rot |
+| fish_10.webp | Springender Fisch über Wasserringen, kleiner Kescher | Silber / Türkis und Seeblau |
 | hidden.webp | Verhüllte Truhe mit Lichtspalt und Nebel | Dunkles Eisen / Schieferblau |
 
-Herkunft: am 26.10.2026 mit dem integrierten OpenAI-ImageGen-Werkzeug für diesen Auftrag erstellt. Stilvorlagen waren die vom Nutzer angehängten Monster-Slam-Assets Schatzkiste, Flamme, violette Schwertmedaille und Festungsturm. Zuerst entstand `unit_tier_4` als Stilanker; er diente als Bildvorlage für vier Atlanten mit je sechs quadratischen Zellen und einen Korrektur-Atlas. Die Burg verwendet den ursprünglichen Stilanker.
+Herkunft: am 26.10.2026 mit dem integrierten OpenAI-ImageGen-Werkzeug für diesen Auftrag erstellt. Stilvorlagen waren die vom Nutzer angehängten Monster-Slam-Assets Schatzkiste, Flamme, violette Schwertmedaille und Festungsturm. Zuerst entstand `unit_tier_4` als Stilanker; er diente als Bildvorlage für vier Atlanten mit je sechs quadratischen Zellen und einen Korrektur-Atlas. Die Burg verwendet den ursprünglichen Stilanker. `fish_10` entstand am 06.11.2026 einzeln mit den Vorlagen `unit_tier_4`, `run_untouched` und `chests_10` (Prompt unter `singles` in `prompts.json`, Rohbild `sources/fish_10_raw.png`); `build.cjs` und `preview/` kennen es nicht.
 
 `sources/` enthält unveränderte PNG-Rohbilder, vollständige Prompts und Zellzuordnung in `prompts.json`, das Exportskript `build.cjs` sowie `validation.json`. Der Export mit Sharp/Lanczos verkleinert die Zellen, vereinheitlicht ausschließlich die äußere Rundung und kodiert verlustfrei. Reproduktion: `node sources/build.cjs`; bei Bedarf Sharp-Modulpfad über `ACHIEVEMENTS_SHARP` setzen.
 

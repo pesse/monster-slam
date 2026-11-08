@@ -6,17 +6,23 @@ extends Control
 ##     GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/map_lab.tscn -- --shoot --book=<id> --unit=<n>
 ##         Bild nach reports/map_ambience/<book>_unit<n>.png. Dazu: --outline (Umrisse),
 ##         --crop=x,y,w (Ausschnitt, doppelt groß), --later (zweites Bild 0.5 s später),
-##         --select=N (Effekt N in der Leiste), --style=rings (Form probieren, ohne Speichern).
+##         --select=N (Effekt N in der Leiste), --style=rings (Form probieren, ohne Speichern),
+##         --spot=volcano,x,y[,size] (Quelle probieren, ohne Speichern), --poke=x,y (Klick
+##         aufs Spielzeug, MapAmbience.poke; Bilder nach POKE_SHOTS), --catch (den Fisch fangen),
+##         --again=x,y (statt dessen ein zweiter Klick nach CATCH_AT).
 
 const MENU_SCENE := "res://scenes/ui/profile_menu.tscn"
 const PARAM_SCENE := preload("res://scenes/dev/map_lab_param.tscn")
 const PATH_KEY := "path"
 const SHOT_DIR := "res://reports/map_ambience"
+## Bilder nach `--poke`: so lange danach (s); mit `--catch` wird nach CATCH_AT gefangen.
+const POKE_SHOTS := [0.15, 0.35, 0.6, 1.0, 1.8, 3.0]
+const CATCH_AT := 0.3
 ## So lange läuft die Bewegung, bevor das Bild für `--shoot` entsteht.
 const SETTLE := 1.5
 ## Die Arten in der Auswahl, mit Namen für die Werkbank.
 const KIND_LABELS := {"water": "Wasser", "falls": "Wasserfall", "mist": "Nebel",
-		"smoke": "Rauch", "ember": "Glut", "torch": "Fackel"}
+		"smoke": "Rauch", "ember": "Glut", "torch": "Fackel", "volcano": "Vulkan"}
 ## So nah (px) muss ein Klick an einem Punkt liegen, um ihn zu treffen.
 const HIT := 10.0
 const HANDLE_COLOR := Color(1.0, 0.95, 0.75, 0.9)
@@ -521,7 +527,17 @@ func _shoot() -> void:
 	var styles: Array = MapLayout.STYLES.get(str(_selected_ambience().get("kind", "")), [])
 	if _arg("style") in styles:
 		_on_style_edited(styles.find(_arg("style")))
+	var spot := _arg("spot").split(",")
+	if spot.size() >= 3:
+		_ambience_list().append({"kind": spot[0], "x": float(spot[1]), "y": float(spot[2]),
+				"size": float(spot[3]) if spot.size() > 3 else 1.0})
+		_redraw()
 	await get_tree().create_timer(SETTLE).timeout
+	var poke := _arg("poke").split_floats(",")
+	if poke.size() == 2:
+		await _shoot_poke(Vector2(poke[0], poke[1]))
+		get_tree().quit()
+		return
 	await RenderingServer.frame_post_draw
 	var dir := ProjectSettings.globalize_path(SHOT_DIR)
 	DirAccess.make_dir_recursive_absolute(dir)
@@ -532,6 +548,36 @@ func _shoot() -> void:
 		await RenderingServer.frame_post_draw
 		_save_shot(tag + "_later.png")
 	get_tree().quit()
+
+
+## Klickt an `at` (Anteil des Bildes) und hält die Folge in Bildern fest.
+func _shoot_poke(at: Vector2) -> void:
+	var ambience := _canvas.ambience_layer()
+	print("map_lab: poke ", ambience.poke(_canvas.to_local_point(at)))
+	_canvas.set_process(true)
+	var dir := ProjectSettings.globalize_path(SHOT_DIR)
+	DirAccess.make_dir_recursive_absolute(dir)
+	var waited := 0.0
+	var again := _arg("again").split_floats(",")
+	var caught := not _has_arg("catch") and again.size() != 2
+	for i in POKE_SHOTS.size():
+		var next := float(POKE_SHOTS[i])
+		if not caught and next > CATCH_AT:
+			await get_tree().create_timer(CATCH_AT - waited).timeout
+			waited = CATCH_AT
+			var fish := ambience.fish_layer()
+			var rect := MapCanvas.map_rect(_canvas.size, _canvas.aspect(), _canvas.cover)
+			if again.size() == 2:
+				print("map_lab: again ", ambience.poke(_canvas.to_local_point(Vector2(again[0], again[1]))))
+			elif fish != null and not fish._fish.is_empty():
+				var jump: Dictionary = fish._fish[0]
+				var t := (Time.get_ticks_msec() / 1000.0 - float(jump["start"])) / MapFish.JUMP_TIME
+				print("map_lab: catch ", fish.catch_at(MapFish.fish_point(jump, t, rect)))
+			caught = true
+		await get_tree().create_timer(next - waited).timeout
+		waited = next
+		await RenderingServer.frame_post_draw
+		_save_shot("%s/%s_unit%d_poke%d.png" % [dir, _book(), _map_select.get_selected_id(), i])
 
 
 func _save_shot(file: String) -> void:

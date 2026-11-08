@@ -168,5 +168,18 @@
         }
       ]
     }
+  ],
+  "singles": [
+    {
+      "file": "fish_10_raw.png",
+      "output": "fish_10.webp",
+      "date": "2026-11-06",
+      "references": [
+        "unit_tier_4.webp",
+        "run_untouched.webp",
+        "chests_10.webp"
+      ],
+      "prompt": "Create one square Monster Slam achievement icon, stylized-concept painted fantasy mobile-game art. Reference images: unit_tier_4 is the primary style anchor for rich painterly detail, dimensional forms, polish, saturation and upper-left lighting; run_untouched is the exact silver frame reference; chests_10 supports series consistency. Motif for the hidden achievement 'Petri Heil': one cheerful fish leaping in a clear curved arc out of water above concentric ripples and a few crisp water splashes, with a small landing net beside it. Make the fish dominant with a clear friendly face and silhouette, and keep the net secondary but recognizable. Turquoise/lake-blue painted background fills the tile all the way to the narrow beveled silver metal frame. Match the reference series' square framing, rounded corners, frame thickness, perspective, bright upper-left highlights and vivid magical painterly finish. Full-bleed tile: frame touches all four canvas edges, no outer margin or shadow beyond it. Opaque painted interior, transparency only outside the rounded outer corners; corner radius 10% of image width (25.6 px at final 256 px). Composition must remain immediately readable at 56 and 64 px. No text, letters, numbers, labels or watermark. Single icon only, square canvas, suitable for final 256 x 256 px lossless RGBA WebP export."
+    }
   ]
 }

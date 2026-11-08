@@ -180,3 +180,6 @@ func test_guard_watches_each_monotonic_value() -> void:
 	assert_array(SaveGuard.drops("_sessions", {"sessions": [1, 2]}, {"sessions": [1]})).has_size(1)
 	assert_array(SaveGuard.drops("_bosses", {"wins": [1]}, {"wins": []})).has_size(1)
 	assert_array(SaveGuard.drops("_skills", {"unlocked": ["a"]}, {"unlocked": []})).is_empty()
+	assert_array(SaveGuard.drops("_achievements", {"secrets": {"fish": 4}},
+			{"secrets": {"fish": 3}})).has_size(1)
+	assert_array(SaveGuard.drops("_achievements", {"unlocked": {}}, {"secrets": {"fish": 1}})).is_empty()
