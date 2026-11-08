@@ -13,6 +13,8 @@ const KEPT_STEPS := [1, 5, 10, 25]
 ## Confidence vor dem Treffer, unter der es eine Aufholjagd ist. Neue Aufgaben starten bei
 ## PlayerProgress.DEFAULT_CONFIDENCE, darunter kommt man nur über Fehler.
 const CATCH_UP_BELOW := 0.10
+## Elefantengedächtnis: so viele Tage lag die letzte Antwort mindestens zurück.
+const ELEPHANT_DAYS := 30
 ## Rote Zone des Lebensbalkens (Anteil), dieselbe wie im HUD.
 const COMEBACK_RATIO := preload("res://src/ui/hud.gd").HP_WARN
 ## Höchstens so viel Spielzeit (s) hätte das letzte Monster der Welle noch bis zur Festung
@@ -25,12 +27,13 @@ const TIER_PALETTES := [&"bronze", &"silver", &"gold", &"diamond"]
 const COMMON_PALETTES := [&"bronze", &"silver"]
 
 ## Plaketten, die es je Tag einmal gibt (Stufen zählen als eigene).
-const DAILY := ["comeback", "better", "last_second"]
+const DAILY := ["comeback", "better", "last_second", "elephant"]
 ## Plaketten, die es je Welle einmal gibt.
 const PER_WAVE := ["revenge", "catch_up"]
 ## Plaketten eines Tages in der Reihenfolge der Statistik. Die Treffer rechnet `day_summary`
 ## aus den richtigen Antworten des Tages, alle übrigen stehen in der Datei.
-const DAY_ORDER := ["hits", "kept", "comeback", "better", "last_second", "revenge", "catch_up"]
+const DAY_ORDER := ["hits", "kept", "elephant", "comeback", "better", "last_second", "revenge",
+		"catch_up"]
 
 var player_id: String
 var _day := -1
@@ -67,6 +70,13 @@ static func answer_kind(before: Dictionary, last_day: int, today: int) -> String
 	if last_day < today:
 		return "kept"
 	return ""
+
+
+## Elefantengedächtnis: die Aufgabe war schon dran und ihre letzte Antwort liegt mindestens
+## ELEPHANT_DAYS Tage zurück. Unabhängig von `answer_kind`.
+static func is_elephant(before: Dictionary, last_day: int, today: int) -> bool:
+	return int(before.get("attempts", 0)) > 0 and int(before.get("last_seen_at", 0)) > 0 \
+			and today - last_day >= ELEPHANT_DAYS
 
 
 ## Der Ton einer Plakette: Bronze und Silber teilen sich `badge_earned`, die übrigen heißen
@@ -110,6 +120,10 @@ static func make(id: String, tier: int, detail_args: Dictionary = {}) -> Diction
 		"last_second":
 			badge["title"] = "In letzter Sekunde!"
 			badge["detail"] = "Das letzte Monster stand schon vor der Mauer."
+		"elephant":
+			badge["title"] = "Elefantengedächtnis!"
+			badge["detail"] = "%s – nach %d Tagen noch gewusst" % [str(detail_args.get("word", "")),
+					int(detail_args.get("days", ELEPHANT_DAYS))]
 		"better":
 			badge["title"] = "Besser als sonst!"
 			badge["detail"] = "Heute %d %% richtig, sonst %d %%" % [
@@ -124,7 +138,8 @@ static func samples() -> Array:
 			make("revenge", 0, {"word": "receive → erhalten"}),
 			make("catch_up", 0, {"word": "Haus → house"}),
 			make("comeback", 0), make("last_second", 0),
-			make("better", 0, {"accuracy": 0.92, "baseline": 0.81})]
+			make("better", 0, {"accuracy": 0.92, "baseline": 0.81}),
+			make("elephant", 0, {"word": "bridge → Brücke", "days": 41})]
 
 
 
@@ -136,7 +151,8 @@ static func catalog() -> Array:
 		all.append(make("kept", tier, {"word": "house → Haus"}))
 	all.append_array([make("revenge", 0, {"word": "receive → erhalten"}),
 			make("catch_up", 0, {"word": "Haus → house"}), make("comeback", 0),
-			make("last_second", 0), make("better", 0, {"accuracy": 0.92, "baseline": 0.81})])
+			make("last_second", 0), make("better", 0, {"accuracy": 0.92, "baseline": 0.81}),
+			make("elephant", 0, {"word": "bridge → Brücke", "days": 41})])
 	return all
 
 
@@ -219,6 +235,10 @@ static func describe(id: String, tier: int) -> Dictionary:
 		"last_second":
 			return {"title": "In letzter Sekunde!",
 					"body": "Das letzte Monster stand schon vor der Mauer."}
+		"elephant":
+			return {"title": "Elefantengedächtnis!",
+					"body": "Ein Wort gewusst, das du %d Tage oder länger nicht gesehen hattest." \
+					% ELEPHANT_DAYS}
 		"better":
 			return {"title": "Besser als sonst!",
 					"body": "Mehr Antworten richtig als in den Tagen davor."}
@@ -261,8 +281,11 @@ func after_hit(ctx: Dictionary) -> Array:
 		out.append(make("hits", tier))
 	var task_id := str(ctx["task"])
 	var before: Dictionary = ctx["rec"]
-	var kind := answer_kind(before, SessionLog.local_day(int(before.get("last_seen_at", 0))), _day)
+	var last_day := SessionLog.local_day(int(before.get("last_seen_at", 0)))
+	var kind := answer_kind(before, last_day, _day)
 	var word := TaskResolver.new().describe_learnable(task_id)
+	if is_elephant(before, last_day, _day) and _earn("elephant"):
+		out.append(make("elephant", 0, {"word": word, "days": _day - last_day}))
 	match kind:
 		"kept":
 			if not task_id in _kept:

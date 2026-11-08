@@ -45,13 +45,20 @@ func _connect_triggers() -> void:
 	EventBus.item_reviewed.connect(func(_id, _correct, _ms) -> void: request("words"))
 	EventBus.lexeme_mastered.connect(func(_id) -> void:
 		request("mastered")
+		request("irregular_units")
 		request("best_unit_tier")
 		request("best_book_tier"))
 	EventBus.boss_won.connect(func(_boss, _unit) -> void:
 		request("boss_wins")
-		request("best_medal"))
-	EventBus.run_started.connect(func() -> void: request("best_streak"))
-	EventBus.badge_earned.connect(func(_id, _tier) -> void: request("badge_kinds"))
+		request("best_medal")
+		request("boss_books")
+		request("boss_books_gold"))
+	EventBus.run_started.connect(func() -> void:
+		request("best_streak")
+		request("play_days"))
+	EventBus.badge_earned.connect(func(_id, _tier) -> void:
+		request("badge_kinds")
+		request("elephant"))
 	PlayerLevel.changed.connect(func(_xp, _level) -> void: request("level"))
 	Wallet.changed.connect(func(_gold) -> void: request("chests"))
 	SkillBook.changed.connect(func() -> void:

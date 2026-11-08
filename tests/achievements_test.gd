@@ -61,6 +61,39 @@ func test_unit_facts_take_the_best_unit_and_the_best_whole_book() -> void:
 	assert_dict(Achievements.unit_facts({})).is_equal({"best_unit_tier": 0, "best_book_tier": 0})
 
 
+
+func test_boss_books_need_every_unit_of_a_book() -> void:
+	var units := {
+		"a/1": {"book": "a"}, "a/2": {"book": "a"},
+		"b/1": {"book": "b"}, "b/2": {"book": "b"},
+	}
+	var wins := {"a/1": 5, "a/2": 1, "b/1": 7}
+	assert_int(Achievements.boss_books(units, wins, 1)).is_equal(1)
+	assert_int(Achievements.boss_books(units, wins, 5)).is_equal(0)
+	wins["a/2"] = 5
+	assert_int(Achievements.boss_books(units, wins, 5)).is_equal(1)
+	assert_int(Achievements.boss_books({}, wins, 1)).is_equal(0)
+
+
+## Nur Units mit unregelmäßigen Verben zählen, und dort alle; Bonus-Wörter gehören zu keiner.
+func test_irregular_units_need_all_irregular_verbs() -> void:
+	var lexemes := [
+		{"id": "go", "book": "x", "unit": 1, "irregular": true},
+		{"id": "see", "book": "x", "unit": 1, "irregular": true},
+		{"id": "play", "book": "x", "unit": 1},
+		{"id": "eat", "book": "x", "unit": 2, "irregular": true},
+		{"id": "house", "book": "x", "unit": 3},
+	]
+	assert_int(Achievements.irregular_units(lexemes, {"go": true, "eat": true})).is_equal(1)
+	assert_int(Achievements.irregular_units(lexemes, {"go": true, "see": true, "eat": true,
+			"house": true})).is_equal(2)
+	assert_int(Achievements.irregular_units(lexemes, {"play": true, "house": true})).is_equal(0)
+
+
+func test_levels_come_every_ten() -> void:
+	for level in range(10, 101, 10):
+		assert_int(int(Achievements.find([], "level_%d" % level).get("need", 0))).is_equal(level)
+
 func test_finished_branch_is_a_learned_leaf_beyond_the_root() -> void:
 	var entries := [
 		{"id": "tree.t", "kind": "tree"},
@@ -103,7 +136,7 @@ func test_unlocked_facts_are_not_computed_again() -> void:
 	var calls := [0]
 	var chests := func() -> int:
 		calls[0] += 1
-		return 10
+		return 1000
 	book.check({"chests": chests}, [], ["chests"])
 	assert_int(calls[0]).is_equal(1)
 	book.check({"chests": chests}, [], ["chests"])

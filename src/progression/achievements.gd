@@ -29,6 +29,18 @@ const FIXED := [
 			"title": "Das erste Wort sitzt", "body": "Ein Wort in allen Richtungen gemeistert."},
 	{"id": "mastered_100", "fact": "mastered", "need": 100,
 			"title": "Hundert sitzen", "body": "100 Wörter gemeistert."},
+	{"id": "mastered_250", "fact": "mastered", "need": 250,
+			"title": "Zweihundertfünfzig sitzen", "body": "250 Wörter gemeistert."},
+	{"id": "mastered_500", "fact": "mastered", "need": 500,
+			"title": "Fünfhundert sitzen", "body": "500 Wörter gemeistert."},
+	{"id": "mastered_1000", "fact": "mastered", "need": 1000,
+			"title": "Tausend sitzen", "body": "1000 Wörter gemeistert."},
+	{"id": "elephant", "fact": "elephant", "need": 1,
+			"title": "Elefantengedächtnis",
+			"body": "Ein Wort richtig gewusst, das du 30 Tage nicht mehr gesehen hattest."},
+	{"id": "irregular_unit", "fact": "irregular_units", "need": 1,
+			"title": "Unregelmäßig? Na und!",
+			"body": "Alle unregelmäßigen Verben einer Unit samt ihren Formen gemeistert."},
 	{"id": "unit_tier_4", "fact": "best_unit_tier", "need": 4,
 			"title": "Uneinnehmbar", "body": "Eine Unit auf Festungsstufe 4."},
 	{"id": "book_tier_2", "fact": "best_book_tier", "need": 2,
@@ -37,23 +49,57 @@ const FIXED := [
 			"title": "Bossbezwinger", "body": "Einen Boss besiegt."},
 	{"id": "boss_gold", "fact": "best_medal", "need": 3,
 			"title": "Goldener Bezwinger", "body": "Einen Boss so oft besiegt, dass es Gold gibt."},
+	{"id": "boss_5", "fact": "boss_wins", "need": 5,
+			"title": "Bossjäger", "body": "5 Bosskämpfe gewonnen."},
+	{"id": "boss_10", "fact": "boss_wins", "need": 10,
+			"title": "Bossschreck", "body": "10 Bosskämpfe gewonnen."},
+	{"id": "boss_book", "fact": "boss_books", "need": 1,
+			"title": "Kein Boss mehr übrig", "body": "Jeden Boss eines Buchs besiegt."},
+	{"id": "boss_book_gold", "fact": "boss_books_gold", "need": 1,
+			"title": "Goldenes Buch", "body": "Jeden Boss eines Buchs so oft besiegt, dass es Gold gibt."},
 	{"id": "streak_7", "fact": "best_streak", "need": 7,
 			"title": "Eine Woche dabei", "body": "7 Tage in Folge gespielt."},
 	{"id": "streak_30", "fact": "best_streak", "need": 30,
 			"title": "Ein Monat dabei", "body": "30 Tage in Folge gespielt."},
+	{"id": "days_50", "fact": "play_days", "need": 50,
+			"title": "Stammgast", "body": "An 50 Tagen gespielt, egal ob in Folge."},
+	{"id": "days_100", "fact": "play_days", "need": 100,
+			"title": "Hundert Spieltage", "body": "An 100 Tagen gespielt, egal ob in Folge."},
+	{"id": "days_200", "fact": "play_days", "need": 200,
+			"title": "Festungsurgestein", "body": "An 200 Tagen gespielt, egal ob in Folge."},
 	{"id": "level_5", "fact": "level", "need": 5,
 			"title": "Level 5", "body": "Level 5 erreicht."},
 	{"id": "level_10", "fact": "level", "need": 10,
 			"title": "Level 10", "body": "Level 10 erreicht."},
 	{"id": "level_20", "fact": "level", "need": 20,
 			"title": "Level 20", "body": "Level 20 erreicht."},
+	{"id": "level_30", "fact": "level", "need": 30,
+			"title": "Level 30", "body": "Level 30 erreicht."},
+	{"id": "level_40", "fact": "level", "need": 40,
+			"title": "Level 40", "body": "Level 40 erreicht."},
+	{"id": "level_50", "fact": "level", "need": 50,
+			"title": "Level 50", "body": "Level 50 erreicht."},
+	{"id": "level_60", "fact": "level", "need": 60,
+			"title": "Level 60", "body": "Level 60 erreicht."},
+	{"id": "level_70", "fact": "level", "need": 70,
+			"title": "Level 70", "body": "Level 70 erreicht."},
+	{"id": "level_80", "fact": "level", "need": 80,
+			"title": "Level 80", "body": "Level 80 erreicht."},
+	{"id": "level_90", "fact": "level", "need": 90,
+			"title": "Level 90", "body": "Level 90 erreicht."},
+	{"id": "level_100", "fact": "level", "need": 100,
+			"title": "Level 100", "body": "Level 100 erreicht."},
 	{"id": "chests_10", "fact": "chests", "need": 10,
 			"title": "Schatzsucher", "body": "10 Schatzkisten geöffnet."},
+	{"id": "chests_100", "fact": "chests", "need": 100,
+			"title": "Schatzjäger", "body": "100 Schatzkisten geöffnet."},
+	{"id": "chests_1000", "fact": "chests", "need": 1000,
+			"title": "Drachenhort", "body": "1000 Schatzkisten geöffnet."},
 	{"id": "skill_first", "fact": "skills", "need": 1,
 			"title": "Erste Fähigkeit", "body": "Eine Fähigkeit gelernt."},
 	{"id": "skill_branch", "fact": "branches", "need": 1,
 			"title": "Ast ausgebaut", "body": "Einen Ast eines Fähigkeitsbaums bis ans Ende gelernt."},
-	{"id": "badges_all", "fact": "badge_kinds", "need": 7,
+	{"id": "badges_all", "fact": "badge_kinds", "need": 8,
 			"title": "Plakettensammler", "body": "Jede Plakette des Tages mindestens einmal verdient."},
 	{"id": "wave_last_hp", "moment": true, "hidden": true,
 			"title": "Am seidenen Faden", "body": "Eine Welle gewonnen, als die Festung nur noch 5 HP oder weniger hatte."},
@@ -165,6 +211,30 @@ static func unit_facts(units: Dictionary) -> Dictionary:
 	return {"best_unit_tier": best_unit, "best_book_tier": best_book}
 
 
+## Bücher, in denen jede Unit aus `units` (wie FortressTier.unit_tiers) mindestens
+## `min_wins` Boss-Siege hat. `wins` wie BossRecord.wins.
+static func boss_books(units: Dictionary, wins: Dictionary, min_wins: int) -> int:
+	var complete := {}
+	for key: String in units:
+		var book := str((units[key] as Dictionary)["book"])
+		complete[book] = bool(complete.get(book, true)) and int(wins.get(key, 0)) >= min_wins
+	return complete.values().count(true)
+
+
+## Units, deren unregelmäßige Verben (`irregular: true`) alle in `mastered` stehen; Units
+## ohne solche zählen nicht. `mastered` wie PlayerProgress.mastered_lexemes, das die
+## Formaufgaben schon verlangt (ADR 0009).
+static func irregular_units(lexemes: Array, mastered: Dictionary) -> int:
+	var complete := {}
+	for entry: Dictionary in lexemes:
+		var key := FortressTier.unit_key(entry)
+		if key.is_empty() or not bool(entry.get("irregular", false)) \
+				or not PlayerProgress.masterable(entry):
+			continue
+		complete[key] = bool(complete.get(key, true)) and mastered.has(str(entry.get("id", "")))
+	return complete.values().count(true)
+
+
 ## Gelernte Knoten, an denen nichts mehr hängt, ab Stufe 2: ein Ast bis ans Ende.
 static func finished_branches(entries: Array, unlocked: PackedStringArray) -> int:
 	var required := {}
@@ -206,11 +276,21 @@ static func live_facts(languages: Array) -> Dictionary:
 	var units := {}
 	var unit_stats := func() -> Dictionary:
 		if units.is_empty():
-			units.merge(unit_facts(FortressTier.unit_tiers(ContentRegistry.lexemes.values(),
-					PlayerProgress.mastered_lexemes(), FortressTier.drop_of(SkillBook.bonuses()))))
+			var tiers := FortressTier.unit_tiers(ContentRegistry.lexemes.values(),
+					PlayerProgress.mastered_lexemes(), FortressTier.drop_of(SkillBook.bonuses()))
+			units.merge(unit_facts(tiers))
+			units["units"] = tiers
 		return units
+	var tally := {}
+	var badge_tally := func() -> Dictionary:
+		if tally.is_empty():
+			tally.merge(Badges.tally(Badges.new(PlayerProgress.player_id).all_days(),
+					SessionLog.correct_by_day()))
+		return tally
 	var facts := {
 		"mastered": func() -> int: return PlayerProgress.mastered_lexemes().size(),
+		"irregular_units": func() -> int:
+			return irregular_units(ContentRegistry.lexemes.values(), PlayerProgress.mastered_lexemes()),
 		"best_unit_tier": func() -> int: return int(unit_stats.call()["best_unit_tier"]),
 		"best_book_tier": func() -> int: return int(unit_stats.call()["best_book_tier"]),
 		"boss_wins": func() -> int: return BossRecord.entries(PlayerProgress.player_id).size(),
@@ -219,16 +299,24 @@ static func live_facts(languages: Array) -> Dictionary:
 			for count: int in BossRecord.wins(PlayerProgress.player_id).values():
 				best = maxi(best, BossRecord.medal(count))
 			return best,
+		"boss_books": func() -> int:
+			return boss_books(unit_stats.call()["units"], BossRecord.wins(PlayerProgress.player_id),
+					BossRecord.MEDAL_WINS[0]),
+		"boss_books_gold": func() -> int:
+			return boss_books(unit_stats.call()["units"], BossRecord.wins(PlayerProgress.player_id),
+					BossRecord.MEDAL_WINS[-1]),
 		"best_streak": func() -> int:
 			return longest_run(SessionLog.played_days(0, int(Time.get_unix_time_from_system()))),
+		"play_days": func() -> int:
+			return SessionLog.played_days(0, int(Time.get_unix_time_from_system())).size(),
 		"level": func() -> int: return PlayerLevel.level,
 		"chests": func() -> int: return Wallet.chests_opened,
 		"skills": func() -> int: return SkillBook.unlocked.size(),
 		"branches": func() -> int:
 			return finished_branches(ContentRegistry.skills.values(), SkillBook.unlocked),
-		"badge_kinds": func() -> int:
-			return badge_kinds(Badges.tally(Badges.new(PlayerProgress.player_id).all_days(),
-					SessionLog.correct_by_day())),
+		"badge_kinds": func() -> int: return badge_kinds(badge_tally.call()),
+		"elephant": func() -> int:
+			return int((badge_tally.call()["elephant"] as Dictionary)["days"]),
 	}
 	for lang: String in languages:
 		facts["words_" + lang] = func() -> int: return PlayerProgress.lexemes_answered(lang)

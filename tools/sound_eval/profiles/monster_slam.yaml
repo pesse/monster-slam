@@ -230,6 +230,15 @@ effects:
     files: [badge_last_second*]
     generation_prompt: >
       Close call sting: three quick tense clock ticks accelerating, then a bright relieved bell chime with a small sparkle, just made it in the last second, fantasy game reward sound
+  badge_elephant:
+    description: Elefantengedächtnis – ein freundlicher kleiner Elefanten-Tröt, der in einem warmen Erinnerungs-Glockenton landet.
+    prompts:
+      - small friendly cartoon elephant trumpet followed by a warm chime
+      - cute elephant toot reward sound
+    duration: [0.6, 1.2]
+    files: [badge_elephant*]
+    generation_prompt: >
+      Short cute cartoon baby elephant trumpet toot, playful and friendly, followed by a warm soft bell chime with a gentle sparkle, remembering something, casual fantasy game reward sound
   badge_better:
     description: Besser als sonst – zwei, drei freundliche Töne nach oben, sanft.
     prompts:

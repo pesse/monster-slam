@@ -224,6 +224,8 @@ Plakette steht, geht es ebenfalls weiter.
   richtig hattest. Eine Plakette gibt es beim ersten, fünften, zehnten und 25. Wort des Tages.
 - **Revanche:** Ein Wort, das dir zuletzt entwischt ist, triffst du jetzt.
 - **Aufholjagd:** Du triffst ein Wort, das fast schon vergessen war.
+- **Elefantengedächtnis:** Du triffst ein Wort, das du 30 Tage oder länger nicht mehr gesehen
+  hattest.
 - **Comeback des Tages:** Die Festung stand im roten Bereich, und du hast die Welle trotzdem
   gewonnen.
 - **In letzter Sekunde:** Das letzte Monster der Welle stand schon fast an der Mauer, als du
@@ -231,8 +233,8 @@ Plakette steht, geht es ebenfalls weiter.
 - **Besser als sonst:** Am Ende einer gewonnenen Welle liegt deine Genauigkeit in dieser
   Sitzung über der der letzten Tage.
 
-Revanche und Aufholjagd gibt es höchstens einmal je Welle. Comeback, „In letzter Sekunde“
-und „Besser als sonst“ gibt es einmal am Tag, die übrigen Tagesplaketten fangen um Mitternacht von vorn an.
+Revanche und Aufholjagd gibt es höchstens einmal je Welle. Elefantengedächtnis, Comeback,
+„In letzter Sekunde“ und „Besser als sonst“ gibt es einmal am Tag, die übrigen Tagesplaketten fangen um Mitternacht von vorn an.
 Plaketten bringen keine Erfahrung und kein Gold. Was es nur einmal gibt, etwa viele Wörter
 einer Sprache, ist ein **Erfolg**: Er erscheint klein unten rechts und hält das Spiel nicht
 an ([Kapitel 24](24-erfolge.md)).

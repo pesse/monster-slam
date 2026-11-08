@@ -1,6 +1,6 @@
 # Monster-Slam-Erfolgs-Icons
 
-29 Icons mit 256 × 256 Pixeln als verlustfreie RGBA-WebP-Dateien in `icons/`. Die bemalten Kacheln reichen bis zum schmalen Metallrahmen. Außerhalb der abgerundeten Ecken (Radius 25,6 px) transparent, innen deckend; geglättete Alphakante. Licht von oben links, keine Schrift oder Zahlen. Für 64 px in der Statistik und 56 px in der Erfolgseinblendung.
+51 Icons mit 256 × 256 Pixeln als verlustfreie RGBA-WebP-Dateien in `icons/`. Die bemalten Kacheln reichen bis zum schmalen Metallrahmen. Außerhalb der abgerundeten Ecken (Radius 25,6 px) transparent, innen deckend; geglättete Alphakante. Licht von oben links, keine Schrift oder Zahlen. Für 64 px in der Statistik und 56 px in der Erfolgseinblendung.
 
 | Datei unter icons/ | Motiv | Rahmen / Hintergrund |
 | --- | --- | --- |
@@ -32,9 +32,31 @@
 | volcano_rage.webp | Wütend-freundlicher Vulkan im Riesenausbruch | Rubin / Glutrot und Schwarzbraun |
 | torch_out.webp | Erloschene Wandfackel mit Rauchfaden und Windhauch | Bronze / Dämmriges Steinblau |
 | birds_20.webp | Vogelschwarm fliegt aus einer Baumkrone auf | Bronze / Morgenhimmel in Pfirsich und Hellblau |
+| level_30.webp | Vier Sterne im Bogen über einer Krone | Gold / Rosé und Magenta |
+| level_40.webp | Krone mit Sternenkranz auf Samtkissen | Gold / Smaragd |
+| level_50.webp | Große Krone mit leuchtenden Edelsteinen, kreisende Sterne | Rubin / Glutrot |
+| level_60.webp | Krone unter einem Sternbild | Rubin / Nachtblau |
+| level_70.webp | Facettierter Kristallstern mit Krone | Diamant / Eisblau |
+| level_80.webp | Sternenzepter mit Krone und Funkenregen | Diamant / Violett |
+| level_90.webp | Krone unter Polarlicht-Bändern | Diamant / Grün-Violett |
+| level_100.webp | Strahlende Sonne mit Krone im Sternenring | Regenbogen-Kristall / Gold-Violett |
+| mastered_250.webp | Bücherturm mit kleiner Eule | Gold / Petrol |
+| mastered_500.webp | Bibliothekstor mit leuchtenden Buchrücken | Rubin / Dunkelgrün |
+| mastered_1000.webp | Offenes Buch, aus dem eine Sternengalaxie steigt | Diamant / Kosmos-Violett |
+| elephant.webp | Kleiner Elefant mit Erinnerungsknoten, Kalenderblätter | Silber / Lavendel |
+| irregular_unit.webp | Verknotete Wegweiser-Pfeile entwirren sich zu einem | Gold / Türkis |
+| days_50.webp | Festungstür mit Kranz und Laterne | Bronze / warmes Orange-Braun |
+| days_100.webp | Verschnürte Kalenderblätter mit Haken | Silber / Moosgrün |
+| days_200.webp | Uralter Baum, verwachsen mit Festungsturm | Gold / Herbstrot |
+| chests_100.webp | Gestapelte überquellende Kisten mit Edelsteinen | Rubin / Dunkelrot |
+| chests_1000.webp | Goldberg mit Kisten, Kelchen und Kronen | Diamant / Purpur |
+| boss_5.webp | Schild mit Reihe kleiner Hornhelm-Trophäen | Gold / Weinrot |
+| boss_10.webp | Zerbrochener Bosshelm, Schwert davor, Funken | Rubin / Schwarzrot |
+| boss_book.webp | Geschlossenes Buch mit Siegel und gekreuzten Schwertern | Silber / Mitternachtsblau |
+| boss_book_gold.webp | Goldenes Buch mit Krone und Lorbeer | Diamant / Gold und Purpur |
 | hidden.webp | Verhüllte Truhe mit Lichtspalt und Nebel | Dunkles Eisen / Schieferblau |
 
-Herkunft: am 26.10.2026 mit dem integrierten OpenAI-ImageGen-Werkzeug für diesen Auftrag erstellt. Stilvorlagen waren die vom Nutzer angehängten Monster-Slam-Assets Schatzkiste, Flamme, violette Schwertmedaille und Festungsturm. Zuerst entstand `unit_tier_4` als Stilanker; er diente als Bildvorlage für vier Atlanten mit je sechs quadratischen Zellen und einen Korrektur-Atlas. Die Burg verwendet den ursprünglichen Stilanker. `fish_10` entstand am 06.11.2026 einzeln mit den Vorlagen `unit_tier_4`, `run_untouched` und `chests_10` (Prompt unter `singles` in `prompts.json`, Rohbild `sources/fish_10_raw.png`); `build.cjs` und `preview/` kennen es nicht. Ebenso entstanden am 08.11.2026 `stone_7`, `volcano_rage` und `torch_out` in einem Lauf mit den Vorlagen `unit_tier_4`, `fish_10` und `run_untouched`. `birds_20` folgte am selben Tag einzeln mit `unit_tier_4`, `stone_7` und `fish_10`.
+Herkunft: am 26.10.2026 mit dem integrierten OpenAI-ImageGen-Werkzeug für diesen Auftrag erstellt. Stilvorlagen waren die vom Nutzer angehängten Monster-Slam-Assets Schatzkiste, Flamme, violette Schwertmedaille und Festungsturm. Zuerst entstand `unit_tier_4` als Stilanker; er diente als Bildvorlage für vier Atlanten mit je sechs quadratischen Zellen und einen Korrektur-Atlas. Die Burg verwendet den ursprünglichen Stilanker. `fish_10` entstand am 06.11.2026 einzeln mit den Vorlagen `unit_tier_4`, `run_untouched` und `chests_10` (Prompt unter `singles` in `prompts.json`, Rohbild `sources/fish_10_raw.png`); `build.cjs` und `preview/` kennen es nicht. Ebenso entstanden am 08.11.2026 `stone_7`, `volcano_rage` und `torch_out` in einem Lauf mit den Vorlagen `unit_tier_4`, `fish_10` und `run_untouched`. `birds_20` folgte am selben Tag einzeln mit `unit_tier_4`, `stone_7` und `fish_10`. Die 22 Meilenstein-Icons von `level_30` bis `boss_book_gold` entstanden ebenfalls am 08.11.2026 einzeln (je ein Rohbild) mit den Vorlagen `unit_tier_4`, `level_20` und `chests_10`; Prompts unter `singles`.
 
 `sources/` enthält unveränderte PNG-Rohbilder, vollständige Prompts und Zellzuordnung in `prompts.json`, das Exportskript `build.cjs` sowie `validation.json`. Der Export mit Sharp/Lanczos verkleinert die Zellen, vereinheitlicht ausschließlich die äußere Rundung und kodiert verlustfrei. Reproduktion: `node sources/build.cjs`; bei Bedarf Sharp-Modulpfad über `ACHIEVEMENTS_SHARP` setzen.
 

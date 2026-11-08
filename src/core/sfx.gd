@@ -33,6 +33,7 @@ const SOUNDS := {
 	&"badge_comeback": {"file": "badge_comeback.wav", "db": -0.6},
 	&"badge_better": {"file": "badge_better.wav", "db": -0.7},
 	&"badge_last_second": {"file": "badge_last_second.wav", "db": -0.8},
+	&"badge_elephant": {"file": "badge_elephant.wav", "db": -0.8},
 	# Zauber: um die Wellen-Fanfare.
 	&"spell_reveal": {"file": "spell_reveal.wav", "db": -2.1},
 	&"spell_whisper": {"file": "spell_whisper.wav", "db": -2.1},

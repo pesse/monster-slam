@@ -45,6 +45,17 @@ func test_answer_kind_reads_the_state_before_the_hit() -> void:
 			today, today)).is_empty()
 
 
+
+## Elefantengedächtnis: schon einmal gesehen und mindestens ELEPHANT_DAYS Tage her, egal
+## wie die letzte Antwort ausging.
+func test_elephant_needs_a_long_pause() -> void:
+	var today := 20000
+	var seen := {"attempts": 3, "last_seen_at": 1, "last_correct": false}
+	assert_bool(Badges.is_elephant(seen, today - Badges.ELEPHANT_DAYS, today)).is_true()
+	assert_bool(Badges.is_elephant(seen, today - Badges.ELEPHANT_DAYS + 1, today)).is_false()
+	assert_bool(Badges.is_elephant({}, 0, today)).is_false()
+	assert_bool(Badges.is_elephant({"attempts": 3}, 0, today)).is_false()
+
 func test_better_needs_both_values() -> void:
 	assert_bool(Badges.is_better({"accuracy": 0.9, "baseline": 0.8})).is_true()
 	assert_bool(Badges.is_better({"accuracy": 0.8, "baseline": 0.8})).is_false()

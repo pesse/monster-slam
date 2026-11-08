@@ -224,6 +224,248 @@
         "fish_10.webp"
       ],
       "prompt": "Create one square Monster Slam achievement icon, birds_20, hidden achievement 'Vogelscheuche'. Reference images: unit_tier_4 is the primary style anchor for richly painted detail, dimensional volume, strong saturation and upper-left light; stone_7 and fish_10 define the same series framing. Match this exact polished painterly fantasy-game style. Subject: exactly six dark birds bursting upward from a round bushy green tree crown in the lower third, a few swirling leaves. Birds dominate the upper two thirds, with spread wings, large clear individually separated silhouettes, no overlap, immediately recognizable at 56 and 64 pixels. Use subtle warm feather highlights for painted volume while retaining dark silhouettes. Background: warm morning sky in peach and light blue. Narrow beveled bronze metal frame, same series proportions as references, flush to all four canvas edges with no outer margin; painted scene fills all the way to the frame. Rounded outer corners radius exactly 10% of width (25.6 px at final 256px); only the area outside rounded corners transparent, entire interior opaque. Upper-left sunlight, vivid colors, sculptural light, fine painterly texture. No scarecrow figure. No text, letters, numbers, watermark or extra border. Deliver a single square icon."
+    },
+    {
+      "file": "level_30_raw.png",
+      "output": "level_30.webp",
+      "date": "2026-11-08",
+      "references": [
+        "unit_tier_4.webp",
+        "level_20.webp",
+        "chests_10.webp"
+      ],
+      "prompt": "Use case: stylized-concept. Create one square Monster Slam achievement icon for a children's friendly fantasy vocabulary game. The reference images are STYLE REFERENCES ONLY: match their polished richly painted 3D fantasy rendering, bold readable silhouette, saturated luminous colors and upper-left lighting. One central dominant motif, readable at 64 and 56 px. Edge-to-edge painted tile with narrow rounded beveled METAL frame exactly like the references; frame outer edges touch all four canvas edges, corner radius 10% of side. Opaque colored interior, only outside rounded corners transparent. No text, letters, digits, logos or watermark. Progression: bronze restrained, silver brighter, gold luxurious, ruby more splendid, diamond/crystal most magical. Subject: Four golden stars in an arc above a royal crown. Frame material: Gold. Background palette: rose and magenta."
+    },
+    {
+      "file": "level_40_raw.png",
+      "output": "level_40.webp",
+      "date": "2026-11-08",
+      "references": [
+        "unit_tier_4.webp",
+        "level_20.webp",
+        "chests_10.webp"
+      ],
+      "prompt": "Use case: stylized-concept. Create one square Monster Slam achievement icon for a children's friendly fantasy vocabulary game. The reference images are STYLE REFERENCES ONLY: match their polished richly painted 3D fantasy rendering, bold readable silhouette, saturated luminous colors and upper-left lighting. One central dominant motif, readable at 64 and 56 px. Edge-to-edge painted tile with narrow rounded beveled METAL frame exactly like the references; frame outer edges touch all four canvas edges, corner radius 10% of side. Opaque colored interior, only outside rounded corners transparent. No text, letters, digits, logos or watermark. Progression: bronze restrained, silver brighter, gold luxurious, ruby more splendid, diamond/crystal most magical. Subject: A crown encircled by a wreath of stars resting on a velvet cushion. Frame material: Gold. Background palette: emerald."
+    },
+    {
+      "file": "level_50_raw.png",
+      "output": "level_50.webp",
+      "date": "2026-11-08",
+      "references": [
+        "unit_tier_4.webp",
+        "level_20.webp",
+        "chests_10.webp"
+      ],
+      "prompt": "Use case: stylized-concept. Create one square Monster Slam achievement icon for a children's friendly fantasy vocabulary game. The reference images are STYLE REFERENCES ONLY: match their polished richly painted 3D fantasy rendering, bold readable silhouette, saturated luminous colors and upper-left lighting. One central dominant motif, readable at 64 and 56 px. Edge-to-edge painted tile with narrow rounded beveled METAL frame exactly like the references; frame outer edges touch all four canvas edges, corner radius 10% of side. Opaque colored interior, only outside rounded corners transparent. No text, letters, digits, logos or watermark. Progression: bronze restrained, silver brighter, gold luxurious, ruby more splendid, diamond/crystal most magical. Subject: A large royal crown with brilliantly glowing gemstones and stars orbiting it. Frame material: Ruby. Background palette: ember red."
+    },
+    {
+      "file": "level_60_raw.png",
+      "output": "level_60.webp",
+      "date": "2026-11-08",
+      "references": [
+        "unit_tier_4.webp",
+        "level_20.webp",
+        "chests_10.webp"
+      ],
+      "prompt": "Use case: stylized-concept. Create one square Monster Slam achievement icon for a children's friendly fantasy vocabulary game. The reference images are STYLE REFERENCES ONLY: match their polished richly painted 3D fantasy rendering, bold readable silhouette, saturated luminous colors and upper-left lighting. One central dominant motif, readable at 64 and 56 px. Edge-to-edge painted tile with narrow rounded beveled METAL frame exactly like the references; frame outer edges touch all four canvas edges, corner radius 10% of side. Opaque colored interior, only outside rounded corners transparent. No text, letters, digits, logos or watermark. Progression: bronze restrained, silver brighter, gold luxurious, ruby more splendid, diamond/crystal most magical. Subject: A royal crown beneath a constellation of connected luminous points. Frame material: Ruby. Background palette: night blue."
+    },
+    {
+      "file": "level_70_raw.png",
+      "output": "level_70.webp",
+      "date": "2026-11-08",
+      "references": [
+        "unit_tier_4.webp",
+        "level_20.webp",
+        "chests_10.webp"
+      ],
+      "prompt": "Use case: stylized-concept. Create one square Monster Slam achievement icon for a children's friendly fantasy vocabulary game. The reference images are STYLE REFERENCES ONLY: match their polished richly painted 3D fantasy rendering, bold readable silhouette, saturated luminous colors and upper-left lighting. One central dominant motif, readable at 64 and 56 px. Edge-to-edge painted tile with narrow rounded beveled METAL frame exactly like the references; frame outer edges touch all four canvas edges, corner radius 10% of side. Opaque colored interior, only outside rounded corners transparent. No text, letters, digits, logos or watermark. Progression: bronze restrained, silver brighter, gold luxurious, ruby more splendid, diamond/crystal most magical. Subject: A large faceted crystal star wearing a crown. Frame material: Diamond. Background palette: ice blue."
+    },
+    {
+      "file": "level_80_raw.png",
+      "output": "level_80.webp",
+      "date": "2026-11-08",
+      "references": [
+        "unit_tier_4.webp",
+        "level_20.webp",
+        "chests_10.webp"
+      ],
+      "prompt": "Use case: stylized-concept. Create one square Monster Slam achievement icon for a children's friendly fantasy vocabulary game. The reference images are STYLE REFERENCES ONLY: match their polished richly painted 3D fantasy rendering, bold readable silhouette, saturated luminous colors and upper-left lighting. One central dominant motif, readable at 64 and 56 px. Edge-to-edge painted tile with narrow rounded beveled METAL frame exactly like the references; frame outer edges touch all four canvas edges, corner radius 10% of side. Opaque colored interior, only outside rounded corners transparent. No text, letters, digits, logos or watermark. Progression: bronze restrained, silver brighter, gold luxurious, ruby more splendid, diamond/crystal most magical. Subject: A star-tipped royal scepter with a crown and a shower of sparks. Frame material: Diamond. Background palette: violet."
+    },
+    {
+      "file": "level_90_raw.png",
+      "output": "level_90.webp",
+      "date": "2026-11-08",
+      "references": [
+        "unit_tier_4.webp",
+        "level_20.webp",
+        "chests_10.webp"
+      ],
+      "prompt": "Use case: stylized-concept. Create one square Monster Slam achievement icon for a children's friendly fantasy vocabulary game. The reference images are STYLE REFERENCES ONLY: match their polished richly painted 3D fantasy rendering, bold readable silhouette, saturated luminous colors and upper-left lighting. One central dominant motif, readable at 64 and 56 px. Edge-to-edge painted tile with narrow rounded beveled METAL frame exactly like the references; frame outer edges touch all four canvas edges, corner radius 10% of side. Opaque colored interior, only outside rounded corners transparent. No text, letters, digits, logos or watermark. Progression: bronze restrained, silver brighter, gold luxurious, ruby more splendid, diamond/crystal most magical. Subject: A royal crown under sweeping aurora ribbons. Frame material: Diamond. Background palette: aurora green and violet."
+    },
+    {
+      "file": "level_100_raw.png",
+      "output": "level_100.webp",
+      "date": "2026-11-08",
+      "references": [
+        "unit_tier_4.webp",
+        "level_20.webp",
+        "chests_10.webp"
+      ],
+      "prompt": "Use case: stylized-concept. Create one square Monster Slam achievement icon for a children's friendly fantasy vocabulary game. The reference images are STYLE REFERENCES ONLY: match their polished richly painted 3D fantasy rendering, bold readable silhouette, saturated luminous colors and upper-left lighting. One central dominant motif, readable at 64 and 56 px. Edge-to-edge painted tile with narrow rounded beveled METAL frame exactly like the references; frame outer edges touch all four canvas edges, corner radius 10% of side. Opaque colored interior, only outside rounded corners transparent. No text, letters, digits, logos or watermark. Progression: bronze restrained, silver brighter, gold luxurious, ruby more splendid, diamond/crystal most magical. Subject: A radiant sun wearing a crown surrounded by a ring of many stars; the most magnificent culminating icon. Frame material: Rainbow-shimmering crystal. Background palette: gold and violet."
+    },
+    {
+      "file": "mastered_250_raw.png",
+      "output": "mastered_250.webp",
+      "date": "2026-11-08",
+      "references": [
+        "unit_tier_4.webp",
+        "level_20.webp",
+        "chests_10.webp"
+      ],
+      "prompt": "Use case: stylized-concept. Create one square Monster Slam achievement icon for a children's friendly fantasy vocabulary game. The reference images are STYLE REFERENCES ONLY: match their polished richly painted 3D fantasy rendering, bold readable silhouette, saturated luminous colors and upper-left lighting. One central dominant motif, readable at 64 and 56 px. Edge-to-edge painted tile with narrow rounded beveled METAL frame exactly like the references; frame outer edges touch all four canvas edges, corner radius 10% of side. Opaque colored interior, only outside rounded corners transparent. No text, letters, digits, logos or watermark. Progression: bronze restrained, silver brighter, gold luxurious, ruby more splendid, diamond/crystal most magical. Subject: A tall tower of stacked books with a small friendly owl perched on top. Frame material: Gold. Background palette: teal."
+    },
+    {
+      "file": "mastered_500_raw.png",
+      "output": "mastered_500.webp",
+      "date": "2026-11-08",
+      "references": [
+        "unit_tier_4.webp",
+        "level_20.webp",
+        "chests_10.webp"
+      ],
+      "prompt": "Use case: stylized-concept. Create one square Monster Slam achievement icon for a children's friendly fantasy vocabulary game. The reference images are STYLE REFERENCES ONLY: match their polished richly painted 3D fantasy rendering, bold readable silhouette, saturated luminous colors and upper-left lighting. One central dominant motif, readable at 64 and 56 px. Edge-to-edge painted tile with narrow rounded beveled METAL frame exactly like the references; frame outer edges touch all four canvas edges, corner radius 10% of side. Opaque colored interior, only outside rounded corners transparent. No text, letters, digits, logos or watermark. Progression: bronze restrained, silver brighter, gold luxurious, ruby more splendid, diamond/crystal most magical. Subject: An imposing library gateway filled with glowing book spines. Frame material: Ruby. Background palette: dark green."
+    },
+    {
+      "file": "mastered_1000_raw.png",
+      "output": "mastered_1000.webp",
+      "date": "2026-11-08",
+      "references": [
+        "unit_tier_4.webp",
+        "level_20.webp",
+        "chests_10.webp"
+      ],
+      "prompt": "Use case: stylized-concept. Create one square Monster Slam achievement icon for a children's friendly fantasy vocabulary game. The reference images are STYLE REFERENCES ONLY: match their polished richly painted 3D fantasy rendering, bold readable silhouette, saturated luminous colors and upper-left lighting. One central dominant motif, readable at 64 and 56 px. Edge-to-edge painted tile with narrow rounded beveled METAL frame exactly like the references; frame outer edges touch all four canvas edges, corner radius 10% of side. Opaque colored interior, only outside rounded corners transparent. No text, letters, digits, logos or watermark. Progression: bronze restrained, silver brighter, gold luxurious, ruby more splendid, diamond/crystal most magical. Subject: An open book releasing an ascending galaxy of stars. Frame material: Diamond. Background palette: cosmic violet."
+    },
+    {
+      "file": "elephant_raw.png",
+      "output": "elephant.webp",
+      "date": "2026-11-08",
+      "references": [
+        "unit_tier_4.webp",
+        "level_20.webp",
+        "chests_10.webp"
+      ],
+      "prompt": "Use case: stylized-concept. Create one square Monster Slam achievement icon for a children's friendly fantasy vocabulary game. The reference images are STYLE REFERENCES ONLY: match their polished richly painted 3D fantasy rendering, bold readable silhouette, saturated luminous colors and upper-left lighting. One central dominant motif, readable at 64 and 56 px. Edge-to-edge painted tile with narrow rounded beveled METAL frame exactly like the references; frame outer edges touch all four canvas edges, corner radius 10% of side. Opaque colored interior, only outside rounded corners transparent. No text, letters, digits, logos or watermark. Progression: bronze restrained, silver brighter, gold luxurious, ruby more splendid, diamond/crystal most magical. Subject: A friendly small elephant holding a reminder ribbon with a knot in its trunk, old blank calendar sheets fluttering past. Frame material: Silver. Background palette: lavender."
+    },
+    {
+      "file": "irregular_unit_raw.png",
+      "output": "irregular_unit.webp",
+      "date": "2026-11-08",
+      "references": [
+        "unit_tier_4.webp",
+        "level_20.webp",
+        "chests_10.webp"
+      ],
+      "prompt": "Use case: stylized-concept. Create one square Monster Slam achievement icon for a children's friendly fantasy vocabulary game. The reference images are STYLE REFERENCES ONLY: match their polished richly painted 3D fantasy rendering, bold readable silhouette, saturated luminous colors and upper-left lighting. One central dominant motif, readable at 64 and 56 px. Edge-to-edge painted tile with narrow rounded beveled METAL frame exactly like the references; frame outer edges touch all four canvas edges, corner radius 10% of side. Opaque colored interior, only outside rounded corners transparent. No text, letters, digits, logos or watermark. Progression: bronze restrained, silver brighter, gold luxurious, ruby more splendid, diamond/crystal most magical. Subject: Knotted intertwined signpost arrows visibly untangling into one smooth luminous arrow. Frame material: Gold. Background palette: turquoise."
+    },
+    {
+      "file": "days_50_raw.png",
+      "output": "days_50.webp",
+      "date": "2026-11-08",
+      "references": [
+        "unit_tier_4.webp",
+        "level_20.webp",
+        "chests_10.webp"
+      ],
+      "prompt": "Use case: stylized-concept. Create one square Monster Slam achievement icon for a children's friendly fantasy vocabulary game. The reference images are STYLE REFERENCES ONLY: match their polished richly painted 3D fantasy rendering, bold readable silhouette, saturated luminous colors and upper-left lighting. One central dominant motif, readable at 64 and 56 px. Edge-to-edge painted tile with narrow rounded beveled METAL frame exactly like the references; frame outer edges touch all four canvas edges, corner radius 10% of side. Opaque colored interior, only outside rounded corners transparent. No text, letters, digits, logos or watermark. Progression: bronze restrained, silver brighter, gold luxurious, ruby more splendid, diamond/crystal most magical. Subject: A cozy fortress door decorated with a wreath and a glowing lantern. Frame material: Bronze. Background palette: warm orange brown."
+    },
+    {
+      "file": "days_100_raw.png",
+      "output": "days_100.webp",
+      "date": "2026-11-08",
+      "references": [
+        "unit_tier_4.webp",
+        "level_20.webp",
+        "chests_10.webp"
+      ],
+      "prompt": "Use case: stylized-concept. Create one square Monster Slam achievement icon for a children's friendly fantasy vocabulary game. The reference images are STYLE REFERENCES ONLY: match their polished richly painted 3D fantasy rendering, bold readable silhouette, saturated luminous colors and upper-left lighting. One central dominant motif, readable at 64 and 56 px. Edge-to-edge painted tile with narrow rounded beveled METAL frame exactly like the references; frame outer edges touch all four canvas edges, corner radius 10% of side. Opaque colored interior, only outside rounded corners transparent. No text, letters, digits, logos or watermark. Progression: bronze restrained, silver brighter, gold luxurious, ruby more splendid, diamond/crystal most magical. Subject: A stack of calendar sheets showing glowing check marks, tied together with a ribbon; no numbers or letters. Frame material: Silver. Background palette: moss green."
+    },
+    {
+      "file": "days_200_raw.png",
+      "output": "days_200.webp",
+      "date": "2026-11-08",
+      "references": [
+        "unit_tier_4.webp",
+        "level_20.webp",
+        "chests_10.webp"
+      ],
+      "prompt": "Use case: stylized-concept. Create one square Monster Slam achievement icon for a children's friendly fantasy vocabulary game. The reference images are STYLE REFERENCES ONLY: match their polished richly painted 3D fantasy rendering, bold readable silhouette, saturated luminous colors and upper-left lighting. One central dominant motif, readable at 64 and 56 px. Edge-to-edge painted tile with narrow rounded beveled METAL frame exactly like the references; frame outer edges touch all four canvas edges, corner radius 10% of side. Opaque colored interior, only outside rounded corners transparent. No text, letters, digits, logos or watermark. Progression: bronze restrained, silver brighter, gold luxurious, ruby more splendid, diamond/crystal most magical. Subject: An ancient gnarled tree grown together with a small fortress tower. Frame material: Gold. Background palette: autumn red."
+    },
+    {
+      "file": "chests_100_raw.png",
+      "output": "chests_100.webp",
+      "date": "2026-11-08",
+      "references": [
+        "unit_tier_4.webp",
+        "level_20.webp",
+        "chests_10.webp"
+      ],
+      "prompt": "Use case: stylized-concept. Create one square Monster Slam achievement icon for a children's friendly fantasy vocabulary game. The reference images are STYLE REFERENCES ONLY: match their polished richly painted 3D fantasy rendering, bold readable silhouette, saturated luminous colors and upper-left lighting. One central dominant motif, readable at 64 and 56 px. Edge-to-edge painted tile with narrow rounded beveled METAL frame exactly like the references; frame outer edges touch all four canvas edges, corner radius 10% of side. Opaque colored interior, only outside rounded corners transparent. No text, letters, digits, logos or watermark. Progression: bronze restrained, silver brighter, gold luxurious, ruby more splendid, diamond/crystal most magical. Subject: Stacked overflowing treasure chests filled with gemstones. Frame material: Ruby. Background palette: dark red."
+    },
+    {
+      "file": "chests_1000_raw.png",
+      "output": "chests_1000.webp",
+      "date": "2026-11-08",
+      "references": [
+        "unit_tier_4.webp",
+        "level_20.webp",
+        "chests_10.webp"
+      ],
+      "prompt": "Use case: stylized-concept. Create one square Monster Slam achievement icon for a children's friendly fantasy vocabulary game. The reference images are STYLE REFERENCES ONLY: match their polished richly painted 3D fantasy rendering, bold readable silhouette, saturated luminous colors and upper-left lighting. One central dominant motif, readable at 64 and 56 px. Edge-to-edge painted tile with narrow rounded beveled METAL frame exactly like the references; frame outer edges touch all four canvas edges, corner radius 10% of side. Opaque colored interior, only outside rounded corners transparent. No text, letters, digits, logos or watermark. Progression: bronze restrained, silver brighter, gold luxurious, ruby more splendid, diamond/crystal most magical. Subject: A huge mountain of gold coins with treasure chests, goblets and crowns. Frame material: Diamond. Background palette: purple."
+    },
+    {
+      "file": "boss_5_raw.png",
+      "output": "boss_5.webp",
+      "date": "2026-11-08",
+      "references": [
+        "unit_tier_4.webp",
+        "level_20.webp",
+        "chests_10.webp"
+      ],
+      "prompt": "Use case: stylized-concept. Create one square Monster Slam achievement icon for a children's friendly fantasy vocabulary game. The reference images are STYLE REFERENCES ONLY: match their polished richly painted 3D fantasy rendering, bold readable silhouette, saturated luminous colors and upper-left lighting. One central dominant motif, readable at 64 and 56 px. Edge-to-edge painted tile with narrow rounded beveled METAL frame exactly like the references; frame outer edges touch all four canvas edges, corner radius 10% of side. Opaque colored interior, only outside rounded corners transparent. No text, letters, digits, logos or watermark. Progression: bronze restrained, silver brighter, gold luxurious, ruby more splendid, diamond/crystal most magical. Subject: A shield displaying a row of small horned-helmet trophies. Frame material: Gold. Background palette: wine red."
+    },
+    {
+      "file": "boss_10_raw.png",
+      "output": "boss_10.webp",
+      "date": "2026-11-08",
+      "references": [
+        "unit_tier_4.webp",
+        "level_20.webp",
+        "chests_10.webp"
+      ],
+      "prompt": "Use case: stylized-concept. Create one square Monster Slam achievement icon for a children's friendly fantasy vocabulary game. The reference images are STYLE REFERENCES ONLY: match their polished richly painted 3D fantasy rendering, bold readable silhouette, saturated luminous colors and upper-left lighting. One central dominant motif, readable at 64 and 56 px. Edge-to-edge painted tile with narrow rounded beveled METAL frame exactly like the references; frame outer edges touch all four canvas edges, corner radius 10% of side. Opaque colored interior, only outside rounded corners transparent. No text, letters, digits, logos or watermark. Progression: bronze restrained, silver brighter, gold luxurious, ruby more splendid, diamond/crystal most magical. Subject: An enormous shattered boss helmet with a sword planted in front and flying sparks; child friendly. Frame material: Ruby. Background palette: black red."
+    },
+    {
+      "file": "boss_book_raw.png",
+      "output": "boss_book.webp",
+      "date": "2026-11-08",
+      "references": [
+        "unit_tier_4.webp",
+        "level_20.webp",
+        "chests_10.webp"
+      ],
+      "prompt": "Use case: stylized-concept. Create one square Monster Slam achievement icon for a children's friendly fantasy vocabulary game. The reference images are STYLE REFERENCES ONLY: match their polished richly painted 3D fantasy rendering, bold readable silhouette, saturated luminous colors and upper-left lighting. One central dominant motif, readable at 64 and 56 px. Edge-to-edge painted tile with narrow rounded beveled METAL frame exactly like the references; frame outer edges touch all four canvas edges, corner radius 10% of side. Opaque colored interior, only outside rounded corners transparent. No text, letters, digits, logos or watermark. Progression: bronze restrained, silver brighter, gold luxurious, ruby more splendid, diamond/crystal most magical. Subject: A closed book with a wax seal, crossed swords on its cover. Frame material: Silver. Background palette: midnight blue."
+    },
+    {
+      "file": "boss_book_gold_raw.png",
+      "output": "boss_book_gold.webp",
+      "date": "2026-11-08",
+      "references": [
+        "unit_tier_4.webp",
+        "level_20.webp",
+        "chests_10.webp"
+      ],
+      "prompt": "Use case: stylized-concept. Create one square Monster Slam achievement icon for a children's friendly fantasy vocabulary game. The reference images are STYLE REFERENCES ONLY: match their polished richly painted 3D fantasy rendering, bold readable silhouette, saturated luminous colors and upper-left lighting. One central dominant motif, readable at 64 and 56 px. Edge-to-edge painted tile with narrow rounded beveled METAL frame exactly like the references; frame outer edges touch all four canvas edges, corner radius 10% of side. Opaque colored interior, only outside rounded corners transparent. No text, letters, digits, logos or watermark. Progression: bronze restrained, silver brighter, gold luxurious, ruby more splendid, diamond/crystal most magical. Subject: A golden book with a crown and a laurel wreath. Frame material: Diamond. Background palette: gold and purple."
     }
   ]
 }
