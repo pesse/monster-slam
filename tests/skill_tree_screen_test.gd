@@ -501,6 +501,18 @@ func test_fitting_brings_the_whole_net_back() -> void:
 				).is_true()
 
 
+## Beim Öffnen steht die Nabe — der Hof um die Anfangsknoten — in der Mitte, auch wenn
+## das Netz nur nach einer Seite ausgreift (der Prüfbaum steht allein oben) (#77).
+func test_the_hub_opens_in_the_middle() -> void:
+	var screen := _screen()
+	await get_tree().process_frame
+	var graph := _graph(screen)
+	var hub: Vector2 = graph.get("_origin")
+	assert_float(hub.distance_to(graph.size * 0.5)).is_less(0.5)
+	var title := graph.screen_position("tree.t")
+	assert_bool(Rect2(Vector2.ZERO, graph.size).has_point(title)).is_true()
+
+
 ## Ein Kauf verschiebt den Ausschnitt NICHT: wer hineingezoomt hat, um einen Ast zu lesen,
 ## soll nach dem Klick noch denselben Ast sehen.
 func test_learning_leaves_the_viewport_alone() -> void:

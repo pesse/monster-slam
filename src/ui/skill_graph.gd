@@ -24,6 +24,8 @@ const DRAG_SLOP := 4.0
 
 ## Rand zwischen Netz und Kante beim Einpassen (px).
 const FIT_PAD := 24.0
+## Nachmessungen beim Einpassen; die Schrift ändert sich mit dem Zoom nur noch wenig.
+const FIT_PASSES := 3
 
 ## Strichstärken der Verbindungen (px bei Zoom 1).
 const EDGE_WIDTH := 2.0
@@ -163,13 +165,50 @@ func fit() -> void:
 		queue_redraw()
 		view_changed.emit()
 		return
-	var room := size - Vector2.ONE * FIT_PAD * 2.0
-	_zoom = clampf(minf(room.x / box.size.x, room.y / box.size.y), MIN_ZOOM, MAX_ZOOM)
+	# Die Nabe steht in der Mitte; eingepasst wird die weiter ausgreifende Seite je Achse.
+	var half_room := size * 0.5 - Vector2.ONE * FIT_PAD
+	var half := Vector2(maxf(-box.position.x, box.end.x), maxf(-box.position.y, box.end.y))
+	_zoom = clampf(minf(half_room.x / half.x, half_room.y / half.y), MIN_ZOOM, MAX_ZOOM)
+	_origin = size * 0.5
+	# Schrift wächst nicht linear mit dem Zoom (`MIN_LABEL_SCALE`), daher nachmessen.
+	for i in FIT_PASSES:
+		var reach := _drawn_reach()
+		if reach.x <= 0.0 or reach.y <= 0.0:
+			break
+		_zoom = clampf(_zoom * minf(half_room.x / reach.x, half_room.y / reach.y),
+				MIN_ZOOM, MAX_ZOOM)
 	_fit_zoom = _zoom
-	# `box` liegt nicht symmetrisch um den Ursprung, sobald ein Baum mehr Stufen hat.
-	_origin = size * 0.5 - box.get_center() * _zoom
 	queue_redraw()
 	view_changed.emit()
+
+
+## Wie weit das Gezeichnete — Knoten mit Namen, Baumnamen, Hof — je Achse höchstens von
+## der Nabe absteht (px beim jetzigen Zoom).
+func _drawn_reach() -> Vector2:
+	var box := Rect2(_origin, Vector2.ZERO)
+	var halo := SkillTree.root_halo_size() * _zoom
+	box = box.merge(Rect2(_origin - halo, halo * 2.0))
+	var font := get_theme_default_font()
+	var name_size := int(get_theme_font_size("font_size", "Hint") * _label_scale())
+	var radius := SkillTree.NODE_RADIUS * _zoom
+	for entry in _entries:
+		var node := entry as Dictionary
+		var id := str(node.get("id", ""))
+		if not _places.has(id):
+			continue
+		if str(node.get("kind", "")) == "tree":
+			box = box.merge(_title_rect(node))
+			continue
+		var at := _to_screen(_places[id])
+		box = box.merge(Rect2(at - Vector2.ONE * radius, Vector2.ONE * radius * 2.0))
+		var width := font.get_string_size(str(node.get("name", "")),
+				HORIZONTAL_ALIGNMENT_CENTER, -1, name_size).x
+		# Der Name steht unter dem Kreis (`_draw_name`), 1.4 Schriftgrößen samt Unterlänge.
+		box = box.merge(Rect2(at + Vector2(-width * 0.5, radius),
+				Vector2(width, name_size * 1.4)))
+	var from := box.position - _origin
+	var to := box.end - _origin
+	return Vector2(maxf(-from.x, to.x), maxf(-from.y, to.y))
 
 
 func zoom_by(factor: float) -> void:
