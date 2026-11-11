@@ -466,6 +466,17 @@
         "chests_10.webp"
       ],
       "prompt": "Use case: stylized-concept. Create one square Monster Slam achievement icon for a children's friendly fantasy vocabulary game. The reference images are STYLE REFERENCES ONLY: match their polished richly painted 3D fantasy rendering, bold readable silhouette, saturated luminous colors and upper-left lighting. One central dominant motif, readable at 64 and 56 px. Edge-to-edge painted tile with narrow rounded beveled METAL frame exactly like the references; frame outer edges touch all four canvas edges, corner radius 10% of side. Opaque colored interior, only outside rounded corners transparent. No text, letters, digits, logos or watermark. Progression: bronze restrained, silver brighter, gold luxurious, ruby more splendid, diamond/crystal most magical. Subject: A golden book with a crown and a laurel wreath. Frame material: Diamond. Background palette: gold and purple."
+    },
+    {
+      "file": "dust_devil_5_raw.png",
+      "output": "dust_devil_5.webp",
+      "date": "2026-11-11",
+      "references": [
+        "unit_tier_4.webp",
+        "birds_20.webp",
+        "torch_out.webp"
+      ],
+      "prompt": "Create one square Monster Slam achievement icon, matching the supplied series exactly. unit_tier_4: saturated painterly, sculptural fantasy style. birds_20 and torch_out: narrow rounded bronze frame. One large sand-colored dust devil over a desert dune, bursting apart through its middle. Strong spiral sand bands; upper funnel disintegrating into curling sand plumes, grains and a few pebbles. Clear break above the still-standing lower funnel foot and ground dust cloud. Bold silhouette readable at 56 and 64 px. Hot ochre and pale turquoise desert sky, simple dunes, upper-left lighting, rich shadows and painted volume. Centered motif, full-bleed opaque painting inside a slim bronze frame, rounded outer corners of 10% width, transparent outside with antialiased edges. No text, numbers, symbols, watermark, figures, hands or cursor."
     }
   ]
 }

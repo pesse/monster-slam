@@ -19,7 +19,7 @@ const UNTOUCHED_WAVES := 3
 const REVENGES := 3
 ## Spielzeuge der Gebietskarte (EventBus.secret_found), die AchievementBook zählt; jedes ist
 ## ein Fakt gleichen Namens.
-const SECRETS := ["fish", "stone7", "volcano_rage", "torch_out", "birds"]
+const SECRETS := ["fish", "stone7", "volcano_rage", "torch_out", "birds", "dust_devil"]
 
 ## Ein Erfolg: id, fact (Schlüssel in den Fakten, leer bei `moment`), need, title, body,
 ## hidden, dazu `icon`, wo das Bild nicht wie die Id heißt. Die Wort-Erfolge je Sprache
@@ -119,6 +119,8 @@ const FIXED := [
 			"title": "Ausgepustet", "body": "Eine Fackel auf der Karte ausgepustet."},
 	{"id": "birds_20", "fact": "birds", "need": 20, "hidden": true,
 			"title": "Vogelscheuche", "body": "20 Vogelschwärme auf der Karte aufgescheucht."},
+	{"id": "dust_devil_5", "fact": "dust_devil", "need": 5, "hidden": true,
+			"title": "Wirbelbrecher", "body": "5 Staubteufel auf der Karte zerstieben lassen."},
 ]
 
 
