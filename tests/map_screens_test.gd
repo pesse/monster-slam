@@ -233,9 +233,9 @@ func test_spot_rects_sit_on_their_source() -> void:
 
 # --- Spielzeuge der Gebietskarte (MapAmbience.poke) ---------------------------
 
-## Eine Karte 1920 × 1080 auf 1104 × 540 (das Bild steht in x 72..1032), links Wasser, mit
-## einer Fackel rechts und den Quellen aus `extra`.
-func _toy_canvas(extra: Array = []) -> MapCanvas:
+## Eine Karte 1920 × 1080 auf 1104 × 540 (das Bild steht in x 72..1032), links Wasser (oder
+## `pond` in Pixeln der Maske 64 × 36), mit einer Fackel rechts und den Quellen aus `extra`.
+func _toy_canvas(extra: Array = [], pond := Rect2i(0, 0, 32, 36)) -> MapCanvas:
 	var canvas: MapCanvas = auto_free(MapCanvas.new())
 	add_child(canvas)
 	canvas.size = Vector2(1104, 540)
@@ -243,7 +243,7 @@ func _toy_canvas(extra: Array = []) -> MapCanvas:
 	image.size = Vector2(1920, 1080)
 	canvas.setup(image, [], [], func(_n: Dictionary) -> Dictionary: return {})
 	var water := Image.create(64, 36, false, Image.FORMAT_L8)
-	water.fill_rect(Rect2i(0, 0, 32, 36), Color.WHITE)
+	water.fill_rect(pond, Color.WHITE)
 	canvas.ambience_layer().now_override = 10.0
 	canvas.set_ambience([
 		{"kind": "water", "mask": "water", "intensity": 1.0, "style": "field"},
@@ -302,6 +302,17 @@ func test_a_fish_jumps_toward_water() -> void:
 		fish._fish.clear()
 		assert_bool(fish.jump_at(Vector2(72 + 480 - 8, 270))).is_true()
 		assert_float(float(fish._fish[0]["dir"])).is_equal(-1.0)
+
+
+## Ein Tümpel schmaler als ein Sprung: kein Fisch, der an Land landen würde.
+func test_a_fish_does_not_jump_out_of_a_narrow_pond() -> void:
+	var canvas := _toy_canvas([], Rect2i(30, 0, 2, 36))
+	var fish := canvas.ambience_layer().fish_layer()
+	var middle := Vector2(72 + 960 * 31.0 / 64.0, 270)
+	assert_bool(fish.water_at(Vector2(31.0 / 64.0, 0.5))).is_true()
+	for i in 5:
+		assert_bool(fish.jump_at(middle)).is_false()
+	assert_int(fish._fish.size()).is_equal(0)
 
 
 func test_a_click_on_a_torch_stirs_it_for_a_while() -> void:

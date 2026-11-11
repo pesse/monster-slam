@@ -76,7 +76,8 @@ func catch_at(local: Vector2) -> bool:
 	return false
 
 
-## Lässt einen Fisch an `local` springen, wenn dort Wasser ist. True, wenn er springt.
+## Lässt einen Fisch an `local` springen, wenn dort und eine Sprungweite daneben Wasser ist.
+## True, wenn er springt.
 func jump_at(local: Vector2) -> bool:
 	var rect := _map_rect()
 	if rect.size.x <= 0.0:
@@ -84,11 +85,13 @@ func jump_at(local: Vector2) -> bool:
 	var at := (_canvas.view_transform().affine_inverse() * local - rect.position) / rect.size
 	if not water_at(at) or _fish.size() >= MAX_FISH:
 		return false
-	# Springt dorthin, wo auch Wasser ist; lieber in die Richtung, die der Zufall nennt.
+	# Landet nur im Wasser; gehen beide Richtungen, entscheidet der Zufall.
 	var dir := 1.0 if randf() < 0.5 else -1.0
 	var reach := Vector2(SPAN * rect.size.y / rect.size.x, 0.0)
-	if not water_at(at + reach * dir) and water_at(at - reach * dir):
+	if not water_at(at + reach * dir):
 		dir = -dir
+		if not water_at(at + reach * dir):
+			return false
 	_fish.append({"at": at, "dir": dir, "start": _now(), "caught": -1.0, "caught_t": 0.0})
 	queue_redraw()
 	return true
