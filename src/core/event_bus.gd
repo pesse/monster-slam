@@ -30,6 +30,9 @@ signal typing_started()
 signal slow_motion_changed(intensity: float)
 signal monster_defeated(monster: Dictionary, was_correct: bool)
 signal fortress_damaged(amount: int)
+## Der Hauptthread hat gestockt (`StallMeter`): `ms` Echtzeit bis zu diesem Frame. Kommt im
+## ersten Physiktakt danach, vor den Spielknoten.
+signal frame_stalled(ms: int)
 
 ## --- Boss fights ---
 signal boss_started(boss_id: String)

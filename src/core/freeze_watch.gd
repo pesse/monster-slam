@@ -2,7 +2,9 @@ extends Node
 ## Autoload `FreezeWatch`: schreibt ins Log, wenn der Hauptthread länger als `limit_ms` keinen
 ## Frame schafft, und wann er wieder läuft. Ein eigener Thread prüft den Herzschlag aus
 ## `_process`; die Meldung nennt die letzten Kampfereignisse. `printerr` leert das Log sofort,
-## damit die Zeilen auch ein danach abgeschossenes Spiel überstehen.
+## damit die Zeilen auch ein danach abgeschossenes Spiel überstehen. Den ersten Physiktakt
+## nach einem Stocken (`StallMeter`) meldet es über `EventBus.frame_stalled`, bevor ein
+## Spielknoten ihn verarbeitet.
 
 ## Ab dieser Stillstandsdauer wird gemeldet (Millisekunden).
 const LIMIT_MS := 5000
@@ -22,16 +24,24 @@ var _beat_ms := 0
 var _beat_frame := 0
 var _crumbs := PackedStringArray()
 var _scene: Node = null
+var _stalls := StallMeter.new()
+## Frame des zuletzt gemessenen Physiktakts; weitere Takte desselben Frames holen nur nach.
+var _stall_frame := -1
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS   # auch in der Pause schlägt das Herz
-	# Kopflos (Tests, Werkzeuge) und am Haltepunkt des Debuggers steht der Thread gewollt.
-	if DisplayServer.get_name() == "headless" or EngineDebugger.is_active():
+	# Vor allen Spielknoten, damit eine Pause auf frame_stalled diesen Takt schon anhält.
+	process_physics_priority = -1000
+	# Kopflos (Tests, Werkzeuge) läuft die Physik nach Wanduhr und stockt ständig.
+	if DisplayServer.get_name() == "headless":
 		set_process(false)
+		set_physics_process(false)
 		return
 	_listen()
-	start()
+	# Am Haltepunkt des Debuggers steht der Hauptthread gewollt.
+	if not EngineDebugger.is_active():
+		start()
 
 
 func _process(_delta: float) -> void:
@@ -40,6 +50,17 @@ func _process(_delta: float) -> void:
 	if scene != _scene:
 		_scene = scene
 		note("Szene %s" % (scene.scene_file_path.get_file() if scene != null else "-"))
+
+
+func _physics_process(_delta: float) -> void:
+	var frame := Engine.get_process_frames()
+	if frame == _stall_frame:
+		return
+	_stall_frame = frame
+	var stalled := _stalls.frame(Time.get_ticks_msec())
+	if stalled > 0:
+		note("Stocken %d ms" % stalled)
+		EventBus.frame_stalled.emit(stalled)
 
 
 func _exit_tree() -> void:

@@ -14,6 +14,7 @@ const KEYS := "P: weiter · Esc: Kampf beenden"
 
 @onready var _dim: ColorRect = %Dim
 @onready var _keys: Label = %Keys
+@onready var _note: Label = %Note
 
 
 func _ready() -> void:
@@ -24,7 +25,10 @@ func is_shown() -> bool:
 	return _dim.visible
 
 
-func show_pause() -> void:
+## `note`: ein Satz über den Tasten, warum pausiert ist; leer ohne.
+func show_pause(note := "") -> void:
+	_note.text = note
+	_note.visible = not note.is_empty()
 	_keys.text = KEYS
 	_dim.visible = true
 

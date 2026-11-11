@@ -28,6 +28,8 @@ das P ein Buchstabe deiner Antwort.
   nicht zum Nachdenken über die Wörter auf dem Feld.
 - Weiter geht es mit derselben Taste oder dem Knopf. **Esc** beendet den Kampf, auf der Karte fragt es, ob du rasten willst ([Kapitel 7](07-abbrechen.md)).
 - Die Pause zählt nicht als Bedenkzeit.
+- Stockt das Spiel (das Bild steht ein paar Sekunden oder ruckelt stark), hält es selbst an,
+  damit die Welle nicht ohne dich weiterläuft. Weiter geht es wie nach jeder Pause.
 
 ---
 

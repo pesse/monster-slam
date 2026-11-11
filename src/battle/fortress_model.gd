@@ -101,7 +101,7 @@ static func fire(turret: Node3D, target: Vector3) -> Vector3:
 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT).set_delay(CATAPULT_HOLD_TIME)
 	var tree := turret.get_tree()
 	var release := turret.global_position + Vector3.UP * CATAPULT_BUCKET.length()
-	await tree.create_timer(CATAPULT_TURN_TIME + CATAPULT_SWING_TIME, false).timeout
+	await tree.create_timer(CATAPULT_TURN_TIME + CATAPULT_SWING_TIME, false, true).timeout
 	if is_instance_valid(arm) and arm.is_inside_tree():
 		release = arm.global_transform * CATAPULT_BUCKET
 	return release

@@ -7,6 +7,8 @@ const FIRST_PERSON_SCENE := preload("res://scenes/battle/first_person_view.tscn"
 const GOAL_Z := 16.5          # Festungsfront (Monster-Ziel)
 const SPAWN_Z := -24.0        # Spawn am hinteren Ende der Bahn (längerer Anmarsch)
 const LANE_HALF_WIDTH := 8.0
+## Hinweis in der Pause, die ein Stocken des Spiels auslöst (FreezeWatch).
+const STALL_NOTE := "Das Spiel hat gestockt – weiter, wenn du bereit bist."
 const TYPING_POLL := 0.1       # s, so oft prüft der Spawn, ob die lange Antwort erledigt ist
 ## Bildmitte auf der Bahn (z); der Boden richtet sich danach. Eingestellt in battle_theme_lab.
 const VIEW_CENTER_Z := -3.5
@@ -225,6 +227,7 @@ func _ready() -> void:
 	# Der Lauf beginnt hier, nicht mit der ersten Welle.
 	EventBus.run_started.emit()
 	EventBus.answer_submitted.connect(_on_answer_submitted)
+	EventBus.frame_stalled.connect(_on_frame_stalled)
 	var debug_panel := $UI/DebugPanel
 	if debug_panel.has_signal("fortress_tier_selected"):
 		debug_panel.fortress_tier_selected.connect(_on_debug_tier_selected)
@@ -1074,9 +1077,18 @@ func _on_pause_key(bare: bool) -> void:
 		_pause_overlay.consume()
 
 
+## Das Spiel hat gestockt: pausieren wie mit P, mit Hinweis. Die gestockte Zeit zählt nicht
+## als Bedenk- und Kampfzeit.
+func _on_frame_stalled(ms: int) -> void:
+	if _paused_since_ms >= 0 or _abort_confirm.visible or not _toggle_pause(STALL_NOTE):
+		return
+	_paused_since_ms -= ms
+	_battle_clock.forget(ms)
+
+
 ## Pausiert oder setzt fort; false, wenn gerade keine Pause möglich ist. Die Pausenzeit
-## zählt nicht als Bedenkzeit der Monster.
-func _toggle_pause() -> bool:
+## zählt nicht als Bedenkzeit der Monster. `note` steht in der Pause über den Tasten.
+func _toggle_pause(note := "") -> bool:
 	if _paused_since_ms >= 0:
 		var duration := Time.get_ticks_msec() - _paused_since_ms
 		_paused_since_ms = -1
@@ -1099,7 +1111,7 @@ func _toggle_pause() -> bool:
 	_fast_resolve_button.disabled = true
 	_view_button.disabled = true
 	_set_view_active(false)
-	_pause_overlay.show_pause()
+	_pause_overlay.show_pause(note)
 	return true
 
 
@@ -1374,11 +1386,12 @@ func _run_spawn_batch(entry: Dictionary, gen: int) -> void:
 	var interval := float(entry.get("interval", 2.0))
 	var gap := 0.0
 	for i in count:
-		# process_always = false: in der Baum-Pause läuft der Timer nicht weiter.
-		await get_tree().create_timer(interval, false).timeout
+		# In der Baum-Pause steht der Timer; im Physiktakt holt er nach einem Stocken nur so
+		# viel nach wie die Monster (max_physics_steps_per_frame).
+		await get_tree().create_timer(interval, false, true).timeout
 		var waited := interval
 		while waited < gap and _typing_monster in _active:
-			await get_tree().create_timer(TYPING_POLL, false).timeout
+			await get_tree().create_timer(TYPING_POLL, false, true).timeout
 			waited += TYPING_POLL
 		if _finished or not is_inside_tree() or gen != _wave_gen:
 			return
@@ -1898,7 +1911,8 @@ func _blast_at(monster: Monster) -> void:
 ## (monster_catapulted statt monster_defeated).
 func _catapult_later(monster: Monster, gen: int) -> void:
 	# process_always = false: in der Meister-Feier wartet auch das Katapult.
-	await get_tree().create_timer(randf_range(CATAPULT_DELAY_MIN, CATAPULT_DELAY_MAX), false).timeout
+	var delay := randf_range(CATAPULT_DELAY_MIN, CATAPULT_DELAY_MAX)
+	await get_tree().create_timer(delay, false, true).timeout
 	if _finished or gen != _wave_gen or not is_instance_valid(monster) or not _active.has(monster):
 		return
 	var turret := _nearest_catapult(monster.global_position)
@@ -2044,7 +2058,7 @@ func _spawn_explosion(pos: Vector3, color: Color, scale: float) -> void:
 ## Hält das Wellenende `seconds` lang auf (Spielzeit) und fragt danach erneut.
 func _settle(seconds: float) -> void:
 	_settling += 1
-	await get_tree().create_timer(seconds, false).timeout
+	await get_tree().create_timer(seconds, false, true).timeout
 	_settling -= 1
 	_check_end()
 

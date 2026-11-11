@@ -60,6 +60,11 @@ func hold(on: bool) -> void:
 		_open()
 
 
+## Zieht `ms` von der gemessenen Zeit ab (gestockter Hauptthread).
+func forget(ms: int) -> void:
+	_ms = maxi(0, _ms - ms)
+
+
 func is_running() -> bool:
 	return _running
 
