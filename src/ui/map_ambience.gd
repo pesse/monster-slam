@@ -1,8 +1,8 @@
 class_name MapAmbience
 extends Control
 ## Was sich auf einer Gebietskarte bewegt (MapLayout.ambience, ARCHITECTURE „Karte und
-## Laufanfrage“). Je Fläche ein Kind mit eigenem Material (Maske als Uniform); die Quellen einer
-## Art teilen eins, Versatz und Stärke stecken in der Farbe ihres Rechtecks (r, g).
+## Laufanfrage“). Je Fläche und je Wetter ein Kind mit eigenem Material (Maske als Uniform); die
+## Quellen einer Art teilen eins, Versatz und Stärke stecken in der Farbe ihres Rechtecks (r, g).
 
 const SHADERS := {
 	"water": preload("res://assets/shaders/map_water.gdshader"),
@@ -12,20 +12,27 @@ const SHADERS := {
 	"ember": preload("res://assets/shaders/map_ember.gdshader"),
 	"torch": preload("res://assets/shaders/map_torch.gdshader"),
 	"volcano": preload("res://assets/shaders/map_volcano.gdshader"),
+	"drift": preload("res://assets/shaders/map_drift.gdshader"),
+	"dust_devil": preload("res://assets/shaders/map_dust_devil.gdshader"),
+	"clouds": preload("res://assets/shaders/map_clouds.gdshader"),
+	"gust": preload("res://assets/shaders/map_gust.gdshader"),
 }
 const OVERLAY_SHADER := preload("res://assets/shaders/map_mask_overlay.gdshader")
 const ASH_SHADER := preload("res://assets/shaders/map_ashfall.gdshader")
 ## Größe einer Quelle bei `size` 1, in Bildhöhen (Breite, Höhe). TORCH_BASE: Lage der Quelle
 ## im Rechteck der Fackel von oben (Anteil), wie BASE in map_torch.gdshader.
 const SPOT_SIZE := {"smoke": Vector2(0.07, 0.2), "ember": Vector2(0.05, 0.05),
-		"torch": Vector2(0.03, 0.06), "volcano": Vector2(0.2, 0.36)}
+		"torch": Vector2(0.03, 0.06), "volcano": Vector2(0.2, 0.36), "dust_devil": Vector2(0.12, 0.2)}
 const TORCH_BASE := 0.8
 ## Lage des Kraters im Rechteck des Vulkans von oben, wie BASE in map_volcano.gdshader.
 const VOLCANO_BASE := 0.9
 ## Ein Klick auf eine Quelle facht sie an (`stir`): so lange (s) …
-const STIR_TIME := {"smoke": 2.5, "ember": 1.6, "torch": 1.6, "volcano": 4.5}
-## … und so viel größer (Faktor bei voller Stärke); der Vulkan bricht stattdessen aus.
-const STIR_GROW := {"smoke": 1.0, "ember": 0.8, "torch": 0.9, "volcano": 0.0}
+const STIR_TIME := {"smoke": 2.5, "ember": 1.6, "torch": 1.6, "volcano": 4.5, "dust_devil": 2.4}
+## … und so viel größer (Faktor bei voller Stärke); der Vulkan bricht stattdessen aus, der
+## Staubteufel zerstiebt und baut sich neu auf.
+const STIR_GROW := {"smoke": 1.0, "ember": 0.8, "torch": 0.9, "volcano": 0.0, "dust_devil": 0.0}
+## Bei diesen Quellen ist das Anfachen ein Ablauf von 0 bis 1 statt ein Aufwallen.
+const STIR_RUNS := ["volcano", "dust_devil"]
 ## Wer einen Vulkan RAGE_CLICKS-mal binnen RAGE_WINDOW s anklickt, reizt ihn zum Riesenausbruch:
 ## RAGE_TIME s lang, RAGE_GROW-mal so groß, mit Ascheregen über der Karte.
 const RAGE_CLICKS := 5
@@ -41,7 +48,8 @@ const STIR_HIT := 6.0
 const OUTLINE_COLOR := Color(0.4, 0.9, 1.0, 0.9)
 ## Wie die Werkbank die Masken tönt.
 const MASK_TINT := {"water": Color(0.2, 0.75, 1.0, 0.45), "falls": Color(0.9, 1.0, 1.0, 0.55),
-		"mist": Color(0.85, 0.5, 1.0, 0.4), "birds": Color(1.0, 0.85, 0.3, 0.4)}
+		"mist": Color(0.85, 0.5, 1.0, 0.4), "birds": Color(1.0, 0.85, 0.3, 0.4),
+		"drift": Color(1.0, 0.55, 0.15, 0.45)}
 ## Ab dieser Helligkeit (0..1) zählt ein Punkt der Maske für die Spielzeuge (Fisch, Vögel).
 const MASK_HIT := 0.5
 
@@ -107,6 +115,7 @@ func setup(entries: Array, texture: Texture2D, masks: Dictionary = {}) -> void:
 	_birds = null
 	_ash = null
 	var spots := {}
+	var sky := {}
 	for entry: Dictionary in entries:
 		var kind := str(entry["kind"])
 		if kind in MapLayout.AREA_KINDS:
@@ -121,14 +130,22 @@ func setup(entries: Array, texture: Texture2D, masks: Dictionary = {}) -> void:
 				if kind == "water" and _fish == null:
 					_fish = MapFish.new(_canvas, masks[entry["mask"]])
 					_fish.now_override = now_override
+		elif kind in MapLayout.SKY_KINDS:
+			if texture != null:
+				sky[kind] = entry
 		else:
 			if not spots.has(kind):
 				spots[kind] = []
 			(spots[kind] as Array).append(entry)
+	# Wolkenschatten fallen aufs Land, nicht auf Flammen; die Böe zieht über alles.
+	if sky.has("clouds"):
+		_add_layer(_area_material(sky["clouds"]), [sky["clouds"]])
 	# Rauch über der Glut, aus der er steigt.
-	for kind in ["ember", "torch", "smoke", "volcano"]:
+	for kind in ["ember", "torch", "smoke", "volcano", "dust_devil"]:
 		if spots.has(kind):
 			_add_layer(_spot_material(kind), spots[kind])
+	if sky.has("gust"):
+		_add_layer(_area_material(sky["gust"]), [sky["gust"]])
 	if _fish != null:
 		add_child(_fish)
 		_stones = MapStones.new(_canvas, _fish)
@@ -199,7 +216,7 @@ func spot_at(local: Vector2) -> int:
 	var best_d := INF
 	for i in _entries.size():
 		var entry: Dictionary = _entries[i]
-		if str(entry["kind"]) in MapLayout.AREA_KINDS:
+		if not str(entry["kind"]) in MapLayout.SPOT_KINDS:
 			continue
 		var box := spot_rect(entry, rect)
 		if not box.grow(STIR_HIT).has_point(point):
@@ -217,6 +234,9 @@ func stir(i: int) -> void:
 	if _snuffed.has(i) or _raging.has(i):
 		return
 	var kind := str(_entries[i]["kind"])
+	# Ein zerstiebender Staubteufel ist nicht da, bis er sich neu aufgebaut hat.
+	if kind == "dust_devil" and _stirred.has(i):
+		return
 	var now := _now()
 	EventBus.secret_found.emit(kind)
 	if kind == "volcano":
@@ -256,7 +276,7 @@ func snuff_of(i: int) -> float:
 
 
 ## Wie weit die Quelle `i` gerade angefacht ist (0..1, 0 = ruhig): schnell hoch, langsam
-## zurück. Für den Vulkan der Verlauf des Ausbruchs.
+## zurück. Für STIR_RUNS der Verlauf (Ausbruch, Zerstieben).
 func stir_of(i: int) -> float:
 	if not _stirred.has(i):
 		return 0.0
@@ -264,7 +284,7 @@ func stir_of(i: int) -> float:
 	var t := (_now() - float(_stirred[i])) / float(STIR_TIME[kind])
 	if t >= 1.0:
 		return 0.0
-	if kind == "volcano":
+	if kind in STIR_RUNS:
 		return maxf(t, 0.001)
 	return smoothstep(0.0, 0.12, t) * (1.0 - smoothstep(0.35, 1.0, t))
 
@@ -343,7 +363,8 @@ func _area_material(entry: Dictionary) -> ShaderMaterial:
 	var kind := str(entry["kind"])
 	var mat := ShaderMaterial.new()
 	mat.shader = SHADERS[kind]
-	mat.set_shader_parameter("mask", _masks[entry["mask"]])
+	if entry.has("mask"):
+		mat.set_shader_parameter("mask", _masks[entry["mask"]])
 	mat.set_shader_parameter("aspect", _canvas.aspect())
 	mat.set_shader_parameter("intensity", float(entry.get("intensity", 1.0)))
 	for param: Dictionary in MapLayout.PARAMS.get(kind, []):
@@ -356,8 +377,10 @@ func _area_material(entry: Dictionary) -> ShaderMaterial:
 func _spot_material(kind: String) -> ShaderMaterial:
 	var mat := ShaderMaterial.new()
 	mat.shader = SHADERS[kind]
-	if kind in ["torch", "volcano"]:
+	if kind in ["torch", "volcano", "dust_devil"]:
 		mat.set_shader_parameter("rect_aspect", SPOT_SIZE[kind].x / SPOT_SIZE[kind].y)
+	if kind == "dust_devil":
+		mat.set_shader_parameter("burst_time", STIR_TIME[kind])
 	return mat
 
 
@@ -368,11 +391,11 @@ func _draw_layer(layer: Control) -> void:
 	layer.draw_set_transform_matrix(_canvas.view_transform())
 	for entry: Dictionary in _layer_entries[layer]:
 		var kind := str(entry["kind"])
-		if kind in MapLayout.AREA_KINDS:
+		if not kind in MapLayout.SPOT_KINDS:
 			layer.draw_texture_rect(_texture, rect, false)
 			continue
 		# Angefacht: größer und so stark wie möglich. Der Vulkan liest den Ausbruch aus b
-		# (ERUPT_SCALE), die Fackel das Auspusten.
+		# (ERUPT_SCALE), der Staubteufel das Zerstieben, die Fackel das Auspusten.
 		var i := _entries.find(entry)
 		var stir := stir_of(i)
 		var grow := 1.0 + stir * float(STIR_GROW[kind])
@@ -385,6 +408,8 @@ func _draw_layer(layer: Control) -> void:
 				b = 0.5 + rage * ERUPT_SCALE
 			else:
 				b = stir * ERUPT_SCALE
+		elif kind == "dust_devil":
+			b = stir
 		else:
 			strength = lerpf(strength, 1.0, stir)
 			if kind == "torch":
@@ -411,8 +436,8 @@ static func spot_rect(entry: Dictionary, rect: Rect2, grow := 1.0) -> Rect2:
 	var kind := str(entry["kind"])
 	var extent: Vector2 = SPOT_SIZE[kind] * float(entry.get("size", 1.0)) * grow * rect.size.y
 	var at: Vector2 = rect.position + (entry["at"] as Vector2) * rect.size
-	# Rauch, Flamme und Ausbruch steigen aus der Quelle auf; die Glut leuchtet um sie herum.
-	var top: float = at.y - extent.y * float({"smoke": 1.0, "torch": TORCH_BASE,
+	# Rauch, Flamme, Ausbruch und Wirbel steigen aus der Quelle auf; die Glut leuchtet um sie herum.
+	var top: float = at.y - extent.y * float({"smoke": 1.0, "dust_devil": 1.0, "torch": TORCH_BASE,
 			"volcano": VOLCANO_BASE}.get(kind, 0.5))
 	return Rect2(Vector2(at.x - extent.x * 0.5, top), extent)
 
@@ -432,6 +457,6 @@ func _draw_outline() -> void:
 		if kind in MapLayout.AREA_KINDS:
 			if _masks.has(entry.get("mask")):
 				_outline.draw_texture_rect(_masks[entry["mask"]], rect, false, MASK_TINT[kind])
-		else:
+		elif kind in MapLayout.SPOT_KINDS:
 			_outline.draw_rect(spot_rect(entry, rect), OUTLINE_COLOR, false, 1.0)
 			_outline.draw_circle(rect.position + (entry["at"] as Vector2) * rect.size, 4.0, OUTLINE_COLOR)

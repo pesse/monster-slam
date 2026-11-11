@@ -8,7 +8,8 @@ extends Control
 ##         --crop=x,y,w (Ausschnitt, doppelt groß), --later (zweites Bild 0.5 s später),
 ##         --select=N (Effekt N in der Leiste), --style=rings (Form probieren, ohne Speichern),
 ##         --spot=volcano,x,y[,size] (Quelle probieren, ohne Speichern), --area=birds,x,y,r
-##         (Fläche als Kreis mit Radius r in Bildhöhen probieren, ohne Speichern), --poke=x,y (Klick
+##         (Fläche als Kreis mit Radius r in Bildhöhen probieren, ohne Speichern),
+##         --sky=gust[,every:8,…] (Wetter mit Reglern probieren, ohne Speichern), --poke=x,y (Klick
 ##         aufs Spielzeug, MapAmbience.poke; Bilder nach POKE_SHOTS), --catch (den Fisch fangen),
 ##         --again=x,y (statt dessen ein zweiter Klick nach CATCH_AT), --hold (lange gedrückt),
 ##         --pokes=N (N Klicks im Abstand POKE_GAP), --shots=s,s,… (Zeitpunkte statt POKE_SHOTS).
@@ -26,7 +27,8 @@ const POKE_GAP := 0.2
 const SETTLE := 1.5
 ## Die Arten in der Auswahl, mit Namen für die Werkbank.
 const KIND_LABELS := {"water": "Wasser", "falls": "Wasserfall", "mist": "Nebel",
-		"smoke": "Rauch", "ember": "Glut", "torch": "Fackel", "volcano": "Vulkan", "birds": "Vögel"}
+		"smoke": "Rauch", "ember": "Glut", "torch": "Fackel", "volcano": "Vulkan", "birds": "Vögel",
+		"drift": "Flugsand", "dust_devil": "Staubteufel", "clouds": "Wolkenschatten", "gust": "Sandböe"}
 ## So nah (px) muss ein Klick an einem Punkt liegen, um ihn zu treffen.
 const HIT := 10.0
 const HANDLE_COLOR := Color(1.0, 0.95, 0.75, 0.9)
@@ -258,6 +260,8 @@ func _add_at(local: Vector2) -> Dictionary:
 	var at := MapLayout.to_json_point(_canvas.to_map_point(local))
 	var effect := _selected_ambience()
 	if not effect.is_empty():
+		if not str(effect["kind"]) in MapLayout.SPOT_KINDS:
+			return {}
 		effect["x"] = at["x"]
 		effect["y"] = at["y"]
 		return {"type": "spot", "entry": _ambience_select.selected - 1}
@@ -502,6 +506,15 @@ func _add_ambience() -> void:
 		var entry := {"kind": kind}
 		list.append(entry)
 		_mask_of(_name_mask(entry, kind))
+	elif kind in MapLayout.SKY_KINDS:
+		var have := list.find_custom(func(e): return e is Dictionary and e.get("kind") == kind)
+		if have >= 0:
+			_status.text = "%s gibt es auf dieser Karte schon." % KIND_LABELS[kind]
+			_fill_ambience_select(have + 1)
+			_redraw()
+			return
+		list.append({"kind": kind})
+		_status.text = "%s liegt über der ganzen Karte." % KIND_LABELS[kind]
 	else:
 		list.append({"kind": kind, "x": 0.5, "y": 0.5})
 		_status.text = "%s steht in der Mitte — die rechte Maustaste setzt sie, wohin sie gehört." % KIND_LABELS[kind]
@@ -538,6 +551,13 @@ func _shoot() -> void:
 	if spot.size() >= 3:
 		_ambience_list().append({"kind": spot[0], "x": float(spot[1]), "y": float(spot[2]),
 				"size": float(spot[3]) if spot.size() > 3 else 1.0})
+		_redraw()
+	var sky := _arg("sky").split(",")
+	if sky[0] in MapLayout.SKY_KINDS:
+		var entry := {"kind": sky[0]}
+		for pair in sky.slice(1):
+			entry[pair.get_slice(":", 0)] = float(pair.get_slice(":", 1))
+		_ambience_list().append(entry)
 		_redraw()
 	var area := _arg("area").split(",")
 	if area.size() == 4 and area[0] in MapLayout.AREA_KINDS:
@@ -637,6 +657,8 @@ func _fill_inspector() -> void:
 		_inspector_info.text = "Einen Effekt wählen oder anlegen. Eine Quelle wählt auch ein Klick auf sie."
 	elif area:
 		_inspector_info.text = "Links malen, rechts radieren."
+	elif kind in MapLayout.SKY_KINDS:
+		_inspector_info.text = "Liegt über der ganzen Karte, nur die Regler stellen es ein."
 	else:
 		_inspector_info.text = "Quelle bei %.3f, %.3f — links ziehen, rechts versetzen." \
 				% [float(effect.get("x", 0.0)), float(effect.get("y", 0.0))]
@@ -644,11 +666,11 @@ func _fill_inspector() -> void:
 	var styles: Array = MapLayout.STYLES.get(kind, [])
 	_effect_group.visible = on
 	_style_group.visible = not styles.is_empty()
-	_size_group.visible = on and not area
+	_size_group.visible = kind in MapLayout.SPOT_KINDS
 	_brush_group.visible = area
 	_kind_edit.clear()
 	if on:
-		var kinds: Array = MapLayout.AREA_KINDS if area else MapLayout.SPOT_KINDS
+		var kinds := _kinds_like(kind)
 		for k in kinds:
 			_kind_edit.add_item(KIND_LABELS[k])
 		_kind_edit.select(kinds.find(kind))
@@ -694,8 +716,7 @@ func _on_kind_edited(index: int) -> void:
 		return
 	var old := str(effect["kind"])
 	var area := old in MapLayout.AREA_KINDS
-	var kinds: Array = MapLayout.AREA_KINDS if area else MapLayout.SPOT_KINDS
-	var kind: String = kinds[index]
+	var kind: String = _kinds_like(old)[index]
 	if kind == old:
 		return
 	if area:
@@ -713,14 +734,21 @@ func _on_kind_edited(index: int) -> void:
 	_redraw()
 
 
+## Die Arten, gegen die `kind` in der Leiste getauscht werden kann: Flächen, Quellen oder Wetter.
+func _kinds_like(kind: String) -> Array:
+	if kind in MapLayout.AREA_KINDS:
+		return MapLayout.AREA_KINDS
+	return MapLayout.SKY_KINDS if kind in MapLayout.SKY_KINDS else MapLayout.SPOT_KINDS
+
+
 func _on_style_edited(index: int) -> void:
 	var styles: Array = MapLayout.STYLES.get(str(_selected_ambience().get("kind", "")), [])
 	if index < styles.size():
 		_edit("style", styles[index], styles[0])
 
 
-## Für eine Fläche die ganze Karte (die Maske tönt `_draw_shape_mask` darüber), für eine
-## Quelle der Ausschnitt um sie, mit ihrem Punkt.
+## Für eine Fläche oder ein Wetter die ganze Karte (die Maske tönt `_draw_shape_mask`
+## darüber), für eine Quelle der Ausschnitt um sie, mit ihrem Punkt.
 func _draw_shape() -> void:
 	var effect := _selected_ambience()
 	var texture := MapLayout.unit_texture(_book(), _unit) if _unit > 0 else null
@@ -730,7 +758,7 @@ func _draw_shape() -> void:
 	var room := _shape_preview.size
 	if room.x <= 0.0 or room.y <= 0.0:
 		return
-	if str(effect["kind"]) in MapLayout.AREA_KINDS:
+	if not str(effect["kind"]) in MapLayout.SPOT_KINDS:
 		_shape_preview.draw_texture_rect(texture, _preview_rect(image), false)
 		return
 	var at := MapLayout.point(effect)

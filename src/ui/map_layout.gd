@@ -20,14 +20,16 @@ const ROOT := "res://assets/maps"
 const EXTENSIONS := ["webp", "png", "jpg"]
 ## Bewegte Flächen der Gebietskarte, je eine Maske. Die Maske von "birds" bleibt unsichtbar:
 ## dort fliegen auf einen Klick Vögel auf (MapBirds), die Intensität ist die Größe des Schwarms.
-const AREA_KINDS := ["water", "falls", "mist", "birds"]
+const AREA_KINDS := ["water", "falls", "mist", "birds", "drift"]
 ## Bewegte Quellen, je ein Punkt.
-const SPOT_KINDS := ["smoke", "ember", "torch", "volcano"]
+const SPOT_KINDS := ["smoke", "ember", "torch", "volcano", "dust_devil"]
+## Wetter über der ganzen Karte, ohne Maske und Punkt; je Art gilt der erste Eintrag.
+const SKY_KINDS := ["clouds", "gust"]
 ## Formen je Art, die erste ist die ohne Angabe.
 const STYLES := {"water": ["field", "rings"]}
 ## Höchste Intensität eines Effekts (1 ist normal).
 const INTENSITY_MAX := 2.0
-## Weitere Einstellungen je Flächen-Art: `key` ist das Uniform des Shaders, `default` sein
+## Weitere Einstellungen je Flächen- und Wetter-Art: `key` ist das Uniform des Shaders, `default` sein
 ## Wert dort, `style` beschränkt den Regler auf eine Form. Die Werkbank baut daraus ihre Regler.
 const PARAMS := {
 	"water": [
@@ -50,6 +52,25 @@ const PARAMS := {
 		{"key": "puff_size", "label": "Schwadengröße", "min": 0.3, "max": 3.0, "step": 0.05, "default": 1.0},
 		{"key": "speed", "label": "Zug", "min": 0.0, "max": 4.0, "step": 0.05, "default": 1.0},
 		{"key": "direction", "label": "Richtung (°)", "min": -180.0, "max": 180.0, "step": 5.0, "default": 14.0},
+	],
+	"drift": [
+		{"key": "density", "label": "Dichte der Fahnen", "min": 0.0, "max": 1.0, "step": 0.05, "default": 0.6},
+		{"key": "streak", "label": "Fahnenlänge", "min": 0.3, "max": 3.0, "step": 0.05, "default": 1.0},
+		{"key": "speed", "label": "Tempo", "min": 0.0, "max": 3.0, "step": 0.05, "default": 1.0},
+		{"key": "direction", "label": "Richtung (°)", "min": -180.0, "max": 180.0, "step": 5.0, "default": 0.0},
+	],
+	"clouds": [
+		{"key": "cover", "label": "Bedeckung", "min": 0.0, "max": 1.0, "step": 0.05, "default": 0.5},
+		{"key": "darkness", "label": "Schattentiefe", "min": 0.0, "max": 1.0, "step": 0.05, "default": 0.45},
+		{"key": "cloud_size", "label": "Wolkengröße", "min": 0.3, "max": 3.0, "step": 0.05, "default": 1.0},
+		{"key": "speed", "label": "Zug", "min": 0.0, "max": 4.0, "step": 0.05, "default": 1.0},
+		{"key": "direction", "label": "Richtung (°)", "min": -180.0, "max": 180.0, "step": 5.0, "default": 20.0},
+	],
+	"gust": [
+		{"key": "every", "label": "Alle … s", "min": 8.0, "max": 240.0, "step": 1.0, "default": 70.0},
+		{"key": "span", "label": "Dauer (s)", "min": 3.0, "max": 15.0, "step": 0.5, "default": 7.0},
+		{"key": "density", "label": "Dichte", "min": 0.0, "max": 1.0, "step": 0.05, "default": 0.6},
+		{"key": "direction", "label": "Richtung (°)", "min": -180.0, "max": 180.0, "step": 5.0, "default": 0.0},
 	],
 }
 ## Breite einer Maske (px); die Höhe folgt dem Seitenverhältnis des Bildes.
@@ -244,8 +265,9 @@ static func area_path(content: Dictionary, unit: int) -> Array:
 
 
 ## Was sich auf der Gebietskarte einer Unit bewegt: { kind, mask, intensity, style } und die
-## Werte aus `PARAMS` für eine Fläche, { kind, at: Vector2, size, intensity } für eine Quelle.
-## Was nicht passt, fällt weg; von zwei Flächen mit derselben Maske gilt die erste.
+## Werte aus `PARAMS` für eine Fläche, { kind, at: Vector2, size, intensity } für eine Quelle,
+## { kind, intensity } und die Werte aus `PARAMS` für Wetter. Was nicht passt, fällt weg; von
+## zwei Flächen mit derselben Maske und von zweimal demselben Wetter gilt das erste.
 static func ambience(content: Dictionary, unit: int) -> Array:
 	var all: Variant = content.get("ambience", {})
 	if not all is Dictionary:
@@ -254,13 +276,17 @@ static func ambience(content: Dictionary, unit: int) -> Array:
 	var out: Array = []
 	if not raw is Array:
 		return out
-	var areas := {}
+	var taken := {}
 	for entry in raw:
 		var parsed := ambience_entry(entry)
-		if parsed.is_empty() or areas.has(parsed.get("mask")):
+		if parsed.is_empty():
 			continue
-		if parsed.has("mask"):
-			areas[parsed["mask"]] = true
+		# Masken-Namen tragen kein Leerzeichen, so trifft ein Wetter nie eine Maske.
+		var key: Variant = "sky " + str(parsed["kind"]) if parsed["kind"] in SKY_KINDS else parsed.get("mask")
+		if key != null:
+			if taken.has(key):
+				continue
+			taken[key] = true
 		out.append(parsed)
 	return out
 
@@ -277,12 +303,10 @@ static func ambience_entry(entry: Variant) -> Dictionary:
 		var mask := str(entry.get("mask", kind))
 		if not is_mask_of(mask, kind):
 			return {}
-		var out := {"kind": kind, "mask": mask, "intensity": intensity,
-				"style": style if style in styles else styles[0]}
-		for param: Dictionary in PARAMS.get(kind, []):
-			out[param["key"]] = clampf(float(entry.get(param["key"], param["default"])),
-					param["min"], param["max"])
-		return out
+		return _with_params({"kind": kind, "mask": mask, "intensity": intensity,
+				"style": style if style in styles else styles[0]}, entry)
+	if kind in SKY_KINDS:
+		return _with_params({"kind": kind, "intensity": intensity}, entry)
 	if kind in SPOT_KINDS:
 		var at := point(entry)
 		if not _inside(at):
@@ -290,6 +314,14 @@ static func ambience_entry(entry: Variant) -> Dictionary:
 		return {"kind": kind, "at": at, "size": clampf(float(entry.get("size", 1.0)), 0.2, 4.0),
 				"intensity": intensity}
 	return {}
+
+
+## `out` mit den Werten aus `PARAMS` seiner Art, aus `entry` gelesen und begrenzt.
+static func _with_params(out: Dictionary, entry: Dictionary) -> Dictionary:
+	for param: Dictionary in PARAMS.get(out["kind"], []):
+		out[param["key"]] = clampf(float(entry.get(param["key"], param["default"])),
+				param["min"], param["max"])
+	return out
 
 
 ## Ob `mask` ein Name für eine Maske der Art `kind` ist: die Art selbst oder mit Nummer.

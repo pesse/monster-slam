@@ -640,8 +640,13 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
   (`default_positions`) — eine neue Unit ist so spielbar, bevor ihr Bild existiert.
   Die Bilder entstehen außerhalb dieses Repos.
 - **Auf der Gebietskarte bewegt sich das Bild** (`MapAmbience`, `map.json` `ambience`):
-  - Wasser schlägt Wellen (Feld) oder Ringe, Wasserfälle laufen, Nebel zieht, aus Glut
-    steigt Rauch, Fackeln flackern; jeder Effekt hat eine Intensität.
+  - Wasser schlägt Wellen (Feld) oder Ringe, Wasserfälle laufen, Nebel zieht, Flugsand weht
+    über Dünen, aus Glut steigt Rauch, Fackeln flackern, Staubteufel wandern; jeder Effekt hat
+    eine Intensität.
+  - Wetter (`MapLayout.SKY_KINDS`: Wolkenschatten, Sandböe) hat weder Maske noch Punkt und liegt
+    über der ganzen Karte, je Art einmal. Wolkenschatten erkennen das Land am Farbabstand zur
+    Bildecke (der Hintergrund der Karten ist einfarbig), die Böe kommt in festen Abständen nur
+    aus `TIME`.
   - Flächen sind gemalte Graustufen-Masken, je Eintrag eine
     (`unit<n>_<mask>.webp`, `MapLayout.mask_path`; `mask` fehlt beim ersten einer Art und
     heißt sonst `<kind>2` …, so bleibt jedes Feld mit eigenen Einstellungen); Form und Intensität stehen im Eintrag
@@ -657,7 +662,8 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
   - Fehlt `ambience`, steht das Bild still da.
   - Versteckte Spielzeuge (`MapAmbience.poke`): ein Klick neben die Orte facht eine Quelle
     an (Fackel und Rauch wachsen, ein Vulkan bricht aus, fünf schnelle Klicks reizen ihn zum
-    Riesenausbruch mit Ascheregen), lange gedrückt pustet er eine Fackel aus. Aus dem Wasser
+    Riesenausbruch mit Ascheregen, ein Staubteufel zerstiebt und baut sich neu auf), lange
+    gedrückt pustet er eine Fackel aus. Aus dem Wasser
     springt ein Fisch (`MapFish`, Wasser ist, was die Maske hell malt), ein zweiter Klick im
     Sprung fängt ihn; vom Ufer hüpft ein Stein übers Wasser (`MapStones`). Auf einer Fläche
     der Art `birds` (unsichtbare Maske über Bäumen oder Wiese) fliegt ein Schwarm auf

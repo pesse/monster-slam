@@ -96,6 +96,25 @@ func test_layout_reads_ambience_and_drops_what_does_not_fit() -> void:
 	assert_array(MapLayout.ambience({}, 2)).is_empty()
 
 
+
+## Wetter braucht weder Maske noch Punkt; je Art gilt das erste, mit seinen Reglern.
+func test_layout_reads_weather_once_per_kind() -> void:
+	var content := {"ambience": {"2": [
+		{"kind": "clouds", "cover": 0.7},
+		{"kind": "gust", "every": 3.0},
+		{"kind": "clouds", "cover": 0.2},
+		{"kind": "dust_devil", "x": 0.4, "y": 0.6},
+	]}}
+	var entries := MapLayout.ambience(content, 2)
+	assert_array(entries.map(func(e): return e["kind"])).is_equal(["clouds", "gust", "dust_devil"])
+	assert_float(float(entries[0]["cover"])).is_equal(0.7)
+	assert_bool(entries[0].has("mask")).is_false()
+	# Unter dem kleinsten Abstand bliebe von der Böe nur noch Sand.
+	assert_float(float(entries[1]["every"])).is_equal(8.0)
+	assert_float(float(entries[1]["span"])).is_equal(7.0)
+	assert_vector(entries[2]["at"]).is_equal(Vector2(0.4, 0.6))
+
+
 func test_layout_reads_intensity_and_style_with_defaults() -> void:
 	var read := func(entry: Dictionary) -> Dictionary: return MapLayout.ambience_entry(entry)
 	assert_float(float(read.call({"kind": "water"})["intensity"])).is_equal(1.0)
@@ -348,6 +367,40 @@ func test_quick_clicks_drive_a_volcano_to_rage() -> void:
 	assert_array(found).is_equal(["volcano_rage"])
 	ambience.now_override = 31.3 + MapAmbience.RAGE_TIME
 	assert_bool(ambience.is_busy()).is_false()
+
+
+## Ein Klick lässt den Staubteufel zerstieben; bis er sich neu aufgebaut hat, zählt kein Klick.
+func test_a_dust_devil_bursts_and_rebuilds() -> void:
+	var canvas := _toy_canvas([{"kind": "dust_devil", "at": Vector2(0.6, 0.8), "size": 1.0, "intensity": 1.0}])
+	var ambience := canvas.ambience_layer()
+	var devil := canvas.to_local_point(Vector2(0.6, 0.75))
+	assert_int(ambience.spot_at(devil)).is_equal(2)
+	var found: Array = []
+	var note := func(id: String) -> void: found.append(id)
+	EventBus.secret_found.connect(note)
+	assert_bool(ambience.poke(devil)).is_true()
+	ambience.now_override = 11.0
+	var half := ambience.stir_of(2)
+	assert_float(half).is_equal_approx(1.0 / MapAmbience.STIR_TIME["dust_devil"], 0.001)
+	ambience.poke(devil)
+	assert_float(ambience.stir_of(2)).is_equal(half)
+	EventBus.secret_found.disconnect(note)
+	assert_array(found).is_equal(["dust_devil"])
+	ambience.now_override = 10.01 + MapAmbience.STIR_TIME["dust_devil"]
+	assert_bool(ambience.is_busy()).is_false()
+
+
+## Wetter liegt als eigene Ebene über der Karte, ohne Maske; ohne Bild gibt es keins.
+func test_weather_gets_a_layer_without_a_mask() -> void:
+	var canvas := _toy_canvas([{"kind": "clouds", "intensity": 1.0, "cover": 0.5},
+			{"kind": "gust", "intensity": 1.0}])
+	var ambience := canvas.ambience_layer()
+	# Wasser, Fackeln, Wolken und Böe.
+	assert_int(ambience.layer_count()).is_equal(4)
+	# Ein Klick auf Wetter facht nichts an.
+	assert_int(ambience.spot_at(canvas.to_local_point(Vector2(0.3, 0.2)))).is_equal(-1)
+	ambience.setup([{"kind": "clouds", "intensity": 1.0}], null)
+	assert_int(ambience.layer_count()).is_equal(0)
 
 
 ## Ein Klick ans Ufer wirft einen Stein, der nur auf Wasser aufsetzt; weit vom Wasser und auf

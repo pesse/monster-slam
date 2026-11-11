@@ -235,3 +235,19 @@ func test_water_params_follow_the_style_and_write_only_what_differs() -> void:
 	style.select(1)
 	style.item_selected.emit(1)
 	assert_object(_param_slider("ring_rate")).is_not_null()
+
+
+## Wetter liegt über der ganzen Karte: es gibt es einmal je Art, ohne Pinsel, Größe und Punkt.
+func test_weather_is_added_once_and_takes_no_point() -> void:
+	var kinds := _lab.get_node("%KindSelect") as OptionButton
+	kinds.select(_lab.KIND_LABELS.keys().find("clouds"))
+	_lab._add_ambience()
+	_lab._add_ambience()
+	var clouds := _entries().filter(func(e): return e["kind"] == "clouds")
+	assert_int(clouds.size()).is_equal(1)
+	assert_int((_lab.get_node("%AmbienceSelect") as OptionButton).selected).is_equal(3)
+	assert_bool((_lab.get_node("%BrushGroup") as Control).visible).is_false()
+	assert_bool((_lab.get_node("%SizeGroup") as Control).visible).is_false()
+	assert_bool((_lab.get_node("%ParamGroup") as Control).visible).is_true()
+	_press(_canvas.to_local_point(Vector2(0.4, 0.4)), true, MOUSE_BUTTON_RIGHT)
+	assert_bool(clouds[0].has("x")).is_false()

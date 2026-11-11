@@ -389,21 +389,27 @@ Einzelne Stufen dürfen einen einzigen Knoten tragen.
 
 ## Bewegung auf einer Gebietskarte → `assets/maps/<buch>/map.json` (`ambience`)
 
-Wasser, Wasserfälle, Nebel, Rauch, Glut, Fackeln und Vulkane einer Gebietskarte, dazu
-Vogelflächen (`docs/ARCHITECTURE.md` „Karte und Laufanfrage“).
+Wasser, Wasserfälle, Nebel, Flugsand, Rauch, Glut, Fackeln, Vulkane und Staubteufel einer
+Gebietskarte, dazu Vogelflächen und Wetter (`docs/ARCHITECTURE.md` „Karte und Laufanfrage“).
 
 **Setzen:** in `scenes/dev/map_lab.tscn`, in der Leiste rechts.
 - Oben einen Effekt wählen, oder Art wählen und „+ Effekt“ drücken. Jedes „+ Effekt“ legt
   einen neuen Eintrag an — auch zwei Nebelfelder mit eigener Dichte, Richtung usw.
-- Eine Fläche (`water`, `falls`, `mist`, `birds`) malt man in ihre Maske
+- Eine Fläche (`water`, `falls`, `mist`, `birds`, `drift`) malt man in ihre Maske
   (`assets/maps/<buch>/unit<n>_<art>.webp`, die weiteren einer Art `<art>2`, `<art>3` …;
   der Eintrag trägt dann `"mask": "mist2"`): links malt, rechts radiert, „Rückgängig“
   (Strg+Z) nimmt den letzten Strich zurück. Pinselgröße, Härte des Randes und Stärke stehen
   in der Leiste; halbe Stärke heißt halbe Bewegung. Einen weichen Rand ruhig etwas ins Ufer
   laufen lassen.
-- Eine Quelle (`smoke`, `ember`, `torch`, `volcano`) setzt die rechte Maustaste. Ein Vulkan
-  sitzt mit dem Punkt im Krater; er glimmt und raucht und bricht auf einen Klick im Spiel aus. Die linke wählt eine
-  Quelle, einen Ort oder einen Wegpunkt, Ziehen verschiebt, Entf löscht.
+- Eine Quelle (`smoke`, `ember`, `torch`, `volcano`, `dust_devil`) setzt die rechte Maustaste. Ein Vulkan
+  sitzt mit dem Punkt im Krater; er glimmt und raucht und bricht auf einen Klick im Spiel aus. Ein
+  Staubteufel steht mit dem Punkt am Fuß auf offenem Sand; er wandert ein Stück hin und her und
+  zerstiebt auf einen Klick. Die linke wählt eine Quelle, einen Ort oder einen Wegpunkt, Ziehen
+  verschiebt, Entf löscht.
+- Wetter (`clouds` Wolkenschatten, `gust` Sandböe) liegt über der ganzen Karte, ohne Maske und
+  Punkt, je Art einmal; eingestellt wird es nur mit den Reglern. Wolkenschatten fallen nur aufs
+  Land: frei bleibt, was die Farbe der linken oberen Bildecke hat. Die Böe zieht alle `every`
+  Sekunden für `span` Sekunden über die Karte.
 - Die Leiste zeigt nur, was zum Effekt passt: die Karte mit Maske oder den Ausschnitt um die
   Quelle, Art und Intensität (`intensity`, 0–2), bei Wasser die Form (`style`, Feld oder
   Ringe), bei Quellen die Größe (`size`), bei Flächen den Pinsel. Gewohnte Werte schreibt
@@ -416,8 +422,9 @@ Vogelflächen (`docs/ARCHITECTURE.md` „Karte und Laufanfrage“).
 GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/map_lab.tscn -- --shoot --book=<buch> --unit=<n> [--outline] [--crop=x,y,w] [--later] [--select=N] [--style=rings]
 # Klick ins Bild als Bildfolge (…_poke<n>.png), mit Probe-Quelle und Fang, lange gedrückt
 # (--hold), mehrfach (--pokes=5 reizt den Vulkan), zu eigenen Zeitpunkten (--shots=s,s,…)
-# und mit einer Probe-Fläche als Kreis (--area=birds,x,y,r, r in Bildhöhen):
-GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/map_lab.tscn -- --shoot --book=<buch> --unit=<n> --poke=x,y [--catch] [--spot=volcano,x,y,size] [--area=birds,x,y,r] [--hold] [--pokes=N] [--shots=0.5,2]
+# mit einer Probe-Fläche als Kreis (--area=birds,x,y,r, r in Bildhöhen) und mit Probe-Wetter
+# samt Reglern (--sky=gust,every:8,span:6):
+GODOT_WINDOW=1 tools/godot.sh res://scenes/dev/map_lab.tscn -- --shoot --book=<buch> --unit=<n> --poke=x,y [--catch] [--spot=volcano,x,y,size] [--area=birds,x,y,r] [--sky=clouds] [--hold] [--pokes=N] [--shots=0.5,2]
 ```
 Ein ungültiger Eintrag fällt im Spiel weg, `tests/map_screens_test.gd` meldet ihn, ebenso
 eine Fläche ohne Maske und eine Maske ohne Eintrag.
