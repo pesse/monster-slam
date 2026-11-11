@@ -6,7 +6,7 @@ extends RefCounted
 ## (`scope: wave`), bekommt jedes neue Monster über `on_spawn` bis `reset_wave`.
 
 ## Die Wirkungen, die es gibt — was in `effect` eines Zaubers stehen darf.
-const EFFECTS := ["reveal_alts", "reveal_initial", "recall", "weaken", "block", "slow", "freeze", "strike", "heal", "armor"]
+const EFFECTS := ["reveal_alts", "reveal_initial", "recall", "weaken", "block", "slow", "freeze", "strike", "heal", "armor", "frenzy"]
 
 ## Nimmt ein Monster per Blitz vom Feld (WaveRunner).
 var strike: Callable
@@ -22,6 +22,8 @@ var wave_pace := 1.0
 var wave_alts := false
 ## Anteil des Schadens für den Rest der Welle (Schrumpfpilz, 1 = voll).
 var wave_damage := 1.0
+## Vielfaches von Tempo, Erfahrung und Gold für den Rest der Welle (Feuerpfeffer, 1 = ohne).
+var wave_rush := 1.0
 ## Knochenhaufen: so viele besiegte Monster hinterlassen noch einen, und so lange (s) hält
 ## er jedes, das hineinläuft.
 var bones_left := 0
@@ -40,6 +42,7 @@ func reset_wave() -> void:
 	wave_pace = 1.0
 	wave_alts = false
 	wave_damage = 1.0
+	wave_rush = 1.0
 	bones_left = 0
 	piles.clear()
 
@@ -55,6 +58,8 @@ func on_spawn(monster: Monster) -> PackedStringArray:
 		got.append("reveal_alts")
 	if wave_damage < 1.0 and monster.weaken(wave_damage):
 		got.append("weaken")
+	if wave_rush > 1.0 and monster.frenzy(wave_rush):
+		got.append("frenzy")
 	return got
 
 
@@ -77,6 +82,9 @@ func can_cast(spell: Dictionary, field: Array[Monster], to_come: int) -> bool:
 			return field.any(func(monster: Monster) -> bool: return monster.can_send_back(start_z))
 		"weaken":
 			return float(params.get("share", 0.5)) < wave_damage \
+					and (not field.is_empty() or to_come > 0)
+		"frenzy":
+			return float(params.get("factor", 2.0)) > wave_rush \
 					and (not field.is_empty() or to_come > 0)
 		"block":
 			return bones_left < int(params.get("count", 3)) and (not field.is_empty() or to_come > 0)
@@ -119,6 +127,10 @@ func cast(spell: Dictionary, field: Array[Monster], to_come: int) -> void:
 			wave_damage = float(params.get("share", 0.5))
 			for monster in field:
 				monster.weaken(wave_damage)
+		"frenzy":
+			wave_rush = float(params.get("factor", 2.0))
+			for monster in field:
+				monster.frenzy(wave_rush)
 		"block":
 			bones_left = int(params.get("count", 3))
 			bones_hold = float(params.get("duration", 5.0))

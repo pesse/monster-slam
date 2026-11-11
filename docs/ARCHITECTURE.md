@@ -1033,6 +1033,8 @@ Ein Zauber ist ein Verbrauchsgegenstand: `price` in Gold, `effect` aus
   Startlinie fliegen (`velocity()` zeigt dann zurück). Der Schrumpfpilz (`weaken`) setzt
   `damage` auf einen Anteil des vollen Schadens und schrumpft den Körper; für die Welle
   merkt sich der SpellCaster den Anteil (`wave_damage`, beim Rasten im Wellenstand). Der
+  Feuerpfeffer (`frenzy`) multipliziert Tempo (`rush` neben `pace`), `xp` und `reward`
+  und lässt den Körper wachsen; für die Welle gilt `wave_rush`, ebenso im Wellenstand. Der
   Knochenhaufen (`block`) lässt `Monster.hold` zählen wie das Eis; welche Monster in einen
   Haufen laufen, prüft `SpellCaster.block` je Physikschritt des WaveRunner, das Bild ist
   `BonePile` (Modell aus `model_forge`). Die Alternativen (`prompt_alt` der Aufgabe) zeigt das Wortschild als zweite

@@ -187,6 +187,31 @@ func test_the_mushroom_halves_damage_for_the_wave() -> void:
 	assert_array(Array(_caster.on_spawn(_monster()))).not_contains(["weaken"])
 
 
+## Der Feuerpfeffer verdoppelt Tempo, Erfahrung und Gold für das Feld und jedes neue Monster
+## der Welle, einmal.
+func test_the_pepper_doubles_pace_and_rewards_for_the_wave() -> void:
+	var pepper := _spell("frenzy", {"factor": 2.0})
+	var monster := _monster()
+	monster.xp = 7
+	monster.reward = 10
+	var speed_before := monster.velocity().z
+	assert_bool(_caster.can_cast(pepper, _field([]), 0)).is_false()
+	assert_bool(_caster.can_cast(pepper, _field([monster]), 0)).is_true()
+	_caster.cast(pepper, _field([monster]), 5)
+	assert_int(monster.xp).is_equal(14)
+	assert_int(monster.reward).is_equal(20)
+	assert_float(monster.velocity().z).is_equal_approx(speed_before * 2.0, 0.001)
+	assert_bool(_caster.can_cast(pepper, _field([monster]), 5)).is_false()
+	assert_bool(monster.frenzy(2.0)).is_false()
+	assert_int(monster.xp).is_equal(14)
+	var later := _monster()
+	later.xp = 5
+	assert_array(Array(_caster.on_spawn(later))).contains(["frenzy"])
+	assert_int(later.xp).is_equal(10)
+	_caster.reset_wave()
+	assert_array(Array(_caster.on_spawn(_monster()))).not_contains(["frenzy"])
+
+
 ## Der Donnerschlag gibt jedes Monster auf dem Feld an den WaveRunner (`strike`).
 func test_the_strike_hands_over_every_monster() -> void:
 	var struck: Array = []

@@ -70,6 +70,15 @@
 		"price": 70
 	},
 	{
+		"id": "spell.pepper",
+		"name": "Feuerpfeffer",
+		"icon": "🌶",
+		"description": "Alle Monster dieser Welle werden groß und laufen doppelt so schnell, auch die, die erst noch kommen. Dafür bringen sie doppelte Erfahrung und doppeltes Gold.",
+		"effect": "frenzy",
+		"params": { "factor": 2.0 },
+		"price": 50
+	},
+	{
 		"id": "spell.bones",
 		"name": "Knochenhaufen",
 		"icon": "💀",

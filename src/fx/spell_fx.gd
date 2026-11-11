@@ -22,6 +22,7 @@ const COLORS := {
 	"freeze": Color(0.62, 0.86, 1.0),
 	"strike": Color(0.6, 0.78, 1.0),
 	"heal": Color(1.0, 0.35, 0.4),
+	"frenzy": Color(1.0, 0.45, 0.1),
 	"armor": Color(0.85, 0.9, 1.0),
 }
 ## Schwere Luft: blaugrauer Dunst.
@@ -43,6 +44,7 @@ const SOUNDS := {
 	"strike": &"spell_thunder_windup",
 	"heal": &"spell_heal",
 	"armor": &"spell_armor",
+	"frenzy": &"spell_frenzy",
 }
 const HAZE_SOUND := &"spell_haze"
 
@@ -63,6 +65,7 @@ const SETTLE := {
 	"reveal_initial": SWEEP_TIME + 0.6,
 	"recall": SWEEP_TIME + 0.6,
 	"weaken": 1.0,
+	"frenzy": 1.0,
 	"block": 1.0,
 	"slow": 1.0,
 	"freeze": 1.2,
@@ -123,6 +126,12 @@ func play(spell: Dictionary, field: Array[Monster]) -> void:
 				_burst_at(monster, 0.0, color)
 			_ring(Vector3(0.0, 0.1, (front_z + back_z) * 0.5), color, (front_z - back_z) * 1.4, 0.7)
 			_veil(color, 0.18, 0.06, 0.1, 0.7)
+		"frenzy":
+			for monster in field:
+				_burst_at(monster, 0.0, color)
+			_ring(Vector3(0.0, 0.1, (front_z + back_z) * 0.5), color, (front_z - back_z) * 1.4, 0.7)
+			_veil(color, 0.2, 0.06, 0.1, 0.7)
+			shake.call(0.15)
 		"block":
 			for monster in field:
 				_burst_at(monster, 0.0, color)
@@ -207,6 +216,9 @@ func on_spawn(monster: Monster, effects: PackedStringArray) -> void:
 	if effects.has("weaken"):
 		_burst_at(monster, 0.0, COLORS["weaken"])
 		Sfx.play(&"spell_shrink_spawn")
+	if effects.has("frenzy"):
+		_burst_at(monster, 0.0, COLORS["frenzy"])
+		Sfx.play(&"spell_frenzy_spawn")
 
 
 ## Ein Knochenhaufen springt bei `at` auf (`pop`), sonst liegt er gleich da (Rast).

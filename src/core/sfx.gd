@@ -41,6 +41,9 @@ const SOUNDS := {
 	&"spell_shrink": {"file": "spell_shrink.wav", "db": -2.1},
 	# Dieselbe Datei je neu erscheinendem Monster, daher deutlich leiser.
 	&"spell_shrink_spawn": {"file": "spell_shrink.wav", "db": -9.0},
+	&"spell_frenzy": {"file": "spell_frenzy.wav", "db": -0.5},
+	# Dieselbe Datei je neu erscheinendem Monster, daher deutlich leiser.
+	&"spell_frenzy_spawn": {"file": "spell_frenzy.wav", "db": -7.4},
 	&"spell_bones": {"file": "spell_bones.wav", "db": -2.1},
 	&"spell_bones_pile": {"file": "spell_bones_pile.wav", "db": -4.0},
 	# Dieselbe Datei je Monster, das in einen Haufen läuft, daher leiser.

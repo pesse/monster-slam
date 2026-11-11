@@ -40,6 +40,8 @@ const PLATE_GROUP := &"word_plate"
 var _speed: float = 2.0
 ## Anteil des eigenen Tempos, unter 1 nach einem Zauber (`slow_to`).
 var pace := 1.0
+## Vielfaches von Tempo, Erfahrung und Gold nach dem Feuerpfeffer (`frenzy`, 1 = ohne).
+var rush := 1.0
 ## Zeigt das Schild die Alternativen der Aufgabe (`show_alts`)?
 var alts_shown := false
 ## Zeigt das Schild die Anfangsbuchstaben der Lösung (`show_initial`)?
@@ -267,6 +269,38 @@ func slow_to(factor: float) -> bool:
 	return true
 
 
+## Feuerpfeffer: läuft `factor`-mal so schnell, bringt `factor`-mal Erfahrung und Gold und
+## wächst. Es gilt der größere Faktor. False, wenn es schon so schnell ist.
+func frenzy(factor: float) -> bool:
+	if _done or factor <= rush:
+		return false
+	var first := rush <= 1.0
+	xp = roundi(xp / rush * factor)
+	reward = roundi(reward / rush * factor)
+	rush = factor
+	_update_animation()
+	if first:
+		_grow()
+	return true
+
+
+## Gewachsen (`frenzy`): Körper und Schildhöhe, als Vielfaches.
+const RUSH_SCALE := 1.35
+
+
+func _grow() -> void:
+	var tw := create_tween().set_parallel(true).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	if _body != null:
+		tw.tween_property(_body, "scale", _body.scale * RUSH_SCALE, SHRINK_TIME * 1.6)
+	tw.tween_property(_plate_anchor, "position:y", _plate_anchor.position.y * RUSH_SCALE,
+			SHRINK_TIME * 1.6)
+
+
+## Tempo als Anteil des eigenen: Bremse mal Feuerpfeffer.
+func _tempo() -> float:
+	return pace * rush
+
+
 ## Friert `seconds` lang ein (Spielzeit). Ein zweites Einfrieren verlängert nur bis zum
 ## längeren der beiden.
 func freeze(seconds: float) -> void:
@@ -287,15 +321,15 @@ func is_frozen() -> bool:
 ## Spielzeit (s) bis zum Einschlag bei gleichbleibendem Tempo, Eis und Knochenhaufen
 ## eingerechnet; INF, wenn es steht oder schon angekommen ist.
 func seconds_left() -> float:
-	if _done or _speed * pace <= 0.0:
+	if _done or _speed * _tempo() <= 0.0:
 		return INF
 	var from := _back_to if is_flying_back() else position.z
-	return maxf(0.0, _target_z - from) / (_speed * pace) + _frozen_left + _back_left + _held_left
+	return maxf(0.0, _target_z - from) / (_speed * _tempo()) + _frozen_left + _back_left + _held_left
 
 
 func _update_animation() -> void:
 	if _anim != null:
-		_anim.speed_scale = 0.0 if is_frozen() or is_held() else pace
+		_anim.speed_scale = 0.0 if is_frozen() or is_held() else _tempo()
 	if _outline != null:
 		_outline.set_shader_parameter("outline_color",
 				FROZEN_OUTLINE if is_frozen() else _outline_color)
@@ -432,7 +466,7 @@ func body_box() -> AABB:
 func velocity() -> Vector3:
 	if is_flying_back():
 		return Vector3(0.0, 0.0, -_back_speed)
-	return Vector3.ZERO if _done or is_frozen() or is_held() else Vector3(0.0, 0.0, _speed * pace)
+	return Vector3.ZERO if _done or is_frozen() or is_held() else Vector3(0.0, 0.0, _speed * _tempo())
 
 
 ## Bleibt stehen und erreicht die Festung nicht mehr; das Platzen kommt später.
@@ -496,7 +530,7 @@ func _physics_process(delta: float) -> void:
 		if not is_held():
 			_climb()
 		return
-	position.z += _speed * pace * delta
+	position.z += _speed * _tempo() * delta
 	if position.z >= _target_z:
 		_done = true
 		EventBus.monster_reached_fortress.emit(monster_def, task, damage)

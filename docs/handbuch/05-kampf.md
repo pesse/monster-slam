@@ -124,6 +124,8 @@ Bosskampf gibt es keine Zauber.
 - **Schrumpfpilz** – alle Monster dieser Welle schrumpfen, auch die, die erst noch kommen.
   An der Festung machen sie nur noch halb so viel Schaden. Gold und Tempo bleiben, wie
   sie sind.
+- **Feuerpfeffer** – alle Monster dieser Welle werden groß und laufen doppelt so schnell,
+  auch die, die erst noch kommen. Dafür bringen sie doppelte Erfahrung und doppeltes Gold.
 - **Knochenhaufen** – die nächsten drei Monster, die du besiegst, zerfallen zu
   Knochenhaufen. Ein Monster, das dahinter in einen Haufen läuft, steckt fünf Sekunden
   fest und klettert dann drüber. Die Haufen bleiben bis zum Ende der Welle liegen.

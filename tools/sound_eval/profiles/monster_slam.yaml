@@ -88,6 +88,15 @@ effects:
     files: [spell_shrink*]
     generation_prompt: >
       Magic shrinking spell: a playful cartoon whoop that slides quickly down in pitch with soft magical sparkles, ending in a tiny cute pop, fantasy game sound
+  spell_frenzy:
+    description: Feuerpfeffer – ein feuriges, zischendes „Fwoosh“, das in ein freches, comichaftes Aufpumpen mit steigender Tonhöhe übergeht; komisch, nicht bedrohlich.
+    prompts:
+      - cartoon fiery fwoosh with sizzle and a rising pitch power-up
+      - playful hot pepper spell, comic inflating swell
+    duration: [0.6, 1.0]
+    files: [spell_frenzy*]
+    generation_prompt: >
+      Magic hot pepper spell: an instant fiery fwoosh with crackling sizzle that turns into a quick excited cartoon inflating swell rising in pitch, cheeky and funny not scary, fantasy game sound
   spell_bones:
     description: Knochenhaufen – ein schauriges, aber verspieltes Klappern von Knochen mit einem kleinen magischen Glitzern.
     prompts:

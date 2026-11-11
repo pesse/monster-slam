@@ -1250,6 +1250,7 @@ func _continue_wave(open: Dictionary, spawns: Array) -> void:
 	_spells.wave_pace = clampf(float(open.get("pace", 1.0)), 0.0, 1.0)
 	_spells.wave_alts = bool(open.get("alts", false))
 	_spells.wave_damage = clampf(float(open.get("damage", 1.0)), 0.0, 1.0)
+	_spells.wave_rush = maxf(1.0, float(open.get("rush", 1.0)))
 	_spells.bones_left = maxi(0, int(open.get("bones", 0)))
 	_spells.bones_hold = float(open.get("bones_hold", _spells.bones_hold))
 	for at in open.get("piles", []):
@@ -1285,6 +1286,7 @@ func _open_wave_state() -> Dictionary:
 		"pace": _spells.wave_pace,
 		"alts": _spells.wave_alts,
 		"damage": _spells.wave_damage,
+		"rush": _spells.wave_rush,
 		"bones": _spells.bones_left,
 		"bones_hold": _spells.bones_hold,
 		"piles": _spells.piles.map(func(pile: Dictionary) -> Array:

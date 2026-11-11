@@ -85,6 +85,13 @@
       "height": 256,
       "notes": "Isolated spell icon; centered <=208 px motif, genuine alpha. Source: sources/bones.png; generated singly (Codex session 01a17ea3-b23a-7b32-9c3b-77427a8228e9).",
       "sha256": "dd3fb50e03269c2906c16bf1ce0e7168980d729d6fbdd53039eea8073adc07e3"
+    },
+    "icons/pepper": {
+      "path": "res://assets/ui/spells/icons/pepper.webp",
+      "width": 256,
+      "height": 256,
+      "notes": "Isolated spell icon; centered <=208 px motif, genuine alpha. Source: sources/pepper.png; generated singly (Codex session 01a1ca90-e732-7431-b4cf-d91444f8bb7d).",
+      "sha256": "aec44f38efa97c12e6f093875d58f23ca1bdc892c0b2b2b0c57affd2d2f499ad"
     }
   }
 }
