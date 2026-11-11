@@ -9,7 +9,7 @@ extends Node
 const SAVE_DIR := "user://progress"
 const BASE_SLOTS := 4
 
-## Der Vorrat hat sich geändert (Kauf, Einsatz, Profilwechsel).
+## Der Vorrat hat sich geändert (Kauf, Einsatz, Wegwerfen, Profilwechsel).
 signal changed()
 
 var player_id: String = "default"
@@ -97,6 +97,18 @@ func take(index: int) -> String:
 		return ""
 	var left := int(entry.get("count", 0)) - 1
 	slots[index] = {} if left <= 0 else {"id": entry["id"], "count": left}
+	_save()
+	changed.emit()
+	return str(entry["id"])
+
+
+## Wirft den ganzen Stapel auf Platz `index` weg, ohne Gold zurück, und gibt seine Id
+## zurück ("" bei leerem Platz). Der Platz bleibt, wo er ist, nur leer.
+func discard(index: int) -> String:
+	var entry := slot(index)
+	if entry.is_empty():
+		return ""
+	slots[index] = {}
 	_save()
 	changed.emit()
 	return str(entry["id"])

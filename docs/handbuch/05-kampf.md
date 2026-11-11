@@ -105,7 +105,8 @@ Gold, kein gemeistertes Wort. Er ist für den Moment, in dem eine Welle zu kippe
 Du hast **vier Plätze**, mit **Kräuterbeutel** und **Arzneischrank** aus dem
 Genesungs-Baum bis zu acht ([Kapitel 11](11-faehigkeiten.md)). Gleiche Zauber liegen auf
 einem Platz übereinander, beliebig viele; für einen anderen Zauber brauchst du einen
-freien Platz. Im Kampf stehen die Plätze links unten, mit Ziffer und Anzahl. **Drück die
+freien Platz. Brauchst du einen Platz für etwas anderes, klick im Laden auf ihn: Nach
+einer Rückfrage ist der ganze Stapel weg, Gold gibt es dafür nicht zurück. Im Kampf stehen die Plätze links unten, mit Ziffer und Anzahl. **Drück die
 Ziffer des Platzes (1 bis 4, mit mehr Plätzen bis 8), solange das Eingabefeld zu ist**,
 dann wirkt der Zauber. Ist das Feld offen, ist die Ziffer ein
 getipptes Zeichen. Würde ein Zauber gerade nichts bewirken (die Festung ist schon heil,

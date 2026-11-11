@@ -95,6 +95,21 @@ func test_an_emptied_slot_keeps_its_place() -> void:
 	assert_str(str(_inv.slot(0).get("id", ""))).is_equal("zz.spell.free")
 
 
+## Wegwerfen leert den ganzen Stapel, ohne Gold zurück; der Platz bleibt.
+func test_discarding_empties_the_slot_without_refund() -> void:
+	_inv.buy(FROST)
+	_inv.buy(FROST)
+	_inv.buy(MEND)
+	var gold: int = _wallet.gold
+	assert_str(_inv.discard(0)).is_equal(FROST["id"])
+	assert_dict(_inv.slot(0)).is_empty()
+	assert_int(_inv.count_of(FROST["id"])).is_equal(0)
+	assert_str(str(_inv.slot(1).get("id", ""))).is_equal(MEND["id"])
+	assert_int(_wallet.gold).is_equal(gold)
+	assert_str(_inv.discard(0)).is_empty()
+	assert_int(_inv.slot_for(_spell(9)["id"])).is_equal(0)
+
+
 func test_taking_counts_down() -> void:
 	_inv.buy(FROST)
 	_inv.buy(FROST)
