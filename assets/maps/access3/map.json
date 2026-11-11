@@ -840,6 +840,26 @@
 			},
 			{
 				"kind": "birds"
+			},
+			{
+				"kind": "dust_devil",
+				"x": 0.133,
+				"y": 0.417
+			},
+			{
+				"kind": "dust_devil",
+				"x": 0.774,
+				"y": 0.758
+			},
+			{
+				"kind": "clouds",
+				"intensity": 0.7,
+				"speed": 3.45,
+				"cloud_size": 0.75,
+				"cover": 0.45
+			},
+			{
+				"kind": "drift"
 			}
 		],
 		"3": [
