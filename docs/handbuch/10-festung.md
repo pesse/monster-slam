@@ -98,8 +98,9 @@ Festung.
 Vokabelverzeichnis ab, also die dritte Spalte. Dafür hat jede Unit einen Bonus „Sätze aus dem
 Buch“. Das Monster trägt einen deutschen Satz, und du tippst den ganzen Satz auf Englisch.
 Richtig ist er nur, wenn er genau passt – mit dem Wort aus der Vokabelliste, nicht mit einem
-anderen, das auch ginge. Groß- und Kleinschreibung, Kommas und der Punkt am Ende sind egal,
-„don't“ und „do not“ zählen beide. Weil ein Satz länger dauert, laufen diese Monster
+anderen, das auch ginge. Schreibst du an anderer Stelle ein Wort, das auch passt, zählt der
+Satz, und du siehst gleich danach, wie er im Buch steht. Groß- und Kleinschreibung, Kommas
+und der Punkt am Ende sind egal, „don't“ und „do not“ zählen beide. Weil ein Satz länger dauert, laufen diese Monster
 langsamer und kommen in größerem Abstand. Das Dritte Auge und der Orakelblick zeigen hier
 das gesuchte Wort. Nach der Welle siehst du den Satz, wie er im Buch steht. Bei „Gesamt“
 kommen die Sätze mit, solange der Schalter „…“ neben „Spielen“ an ist; aus fragt Gesamt nur

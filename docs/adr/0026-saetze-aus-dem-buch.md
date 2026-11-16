@@ -30,6 +30,9 @@ gar kein „~“.
      ohne Modell, ohne Nähe.
    - Jede Fassung enthält das Stichwort, ein anderes Wort dafür gilt nicht.
    - Kurz- und Langformen stehen als eigene Fassungen in den Daten.
+   - Trifft eine andere Fassung als der Buchsatz, zählt sie, aber das Standbild zeigt
+     danach den Buchsatz (ADR 0010, `TaskResolver.book_form`). Kurz- und Langformen und
+     Satzzeichen gelten dabei nicht als andere Fassung. Gefragt wird, was im Buch steht.
 3. **Ein Bonus je Unit, Thema `examples`, Teil 0**, abgeleitet aus den Daten wie ADR 0012:
    - Er zählt seine Aufgaben für sich und nicht zur Festung.
    - Er hat einen Punkt `bonus/0/examples` in `map.json`.

@@ -245,6 +245,42 @@ func _resolve_example(definition: Dictionary, source: Dictionary, extra: Diction
 	return task
 
 
+## Der Buchsatz, den das Standbild nach einem Treffer zeigt (ADR 0026, 0010): leer, wenn
+## `matched` der Buchsatz selbst ist oder nur in Kurz-/Langform und Satzzeichen abweicht.
+## Eine andere Fassung zählt, aber das Kind sieht danach, was im Buch steht.
+static func book_form(task: Dictionary, matched: String) -> String:
+	var answers: Array = task.get("accepted_answers", [])
+	if str(task.get("task_type", "")) != "example" or answers.is_empty() or matched.is_empty():
+		return ""
+	var book := str(answers[0])
+	return "" if _wording(book) == _wording(matched) else book
+
+
+## Ein Satz ohne Satzzeichen, Kurzformen ausgeschrieben, damit „don't“ und „do not“
+## gleich lauten. Fragen stellen das „not“ hinter das Pronomen („did you not“).
+static func _wording(s: String) -> String:
+	var out := s.to_lower().replace("’", "'")
+	for rule in _CONTRACTIONS:
+		out = (rule[0] as RegEx).sub(out, str(rule[1]), true)
+	out = _non_word_re.sub(out, " ", true)
+	return " ".join(out.replace("can not", "cannot").split(" ", false))
+
+
+static var _non_word_re := RegEx.create_from_string("[^a-z0-9' ]+|'(?![a-z])|(?<![a-z])'")
+static var _CONTRACTIONS: Array = [
+	[RegEx.create_from_string("\\b(\\w+)n't (i|you|he|she|it|we|they)\\b"), "$1 $2 not"],
+	[RegEx.create_from_string("\\bcan't\\b"), "cannot"],
+	[RegEx.create_from_string("\\bwon't\\b"), "will not"],
+	[RegEx.create_from_string("\\b(\\w+)n't\\b"), "$1 not"],
+	[RegEx.create_from_string("\\bi'm\\b"), "i am"],
+	[RegEx.create_from_string("\\b(\\w+)'re\\b"), "$1 are"],
+	[RegEx.create_from_string("\\b(\\w+)'ll\\b"), "$1 will"],
+	[RegEx.create_from_string("\\b(i|you|we|they)'ve\\b"), "$1 have"],
+	[RegEx.create_from_string("\\b(i|you|he|she|we|they)'d\\b"), "$1 would"],
+	[RegEx.create_from_string("\\b(it|that|what|where|he|she|there|who)'s\\b"), "$1 is"],
+]
+
+
 ## Die Bedeutung eines Lexems fürs Reveal („bully = schikanieren“), mit Alternativen.
 ## Leer, wenn eine der beiden Seiten fehlt.
 func _meaning_of(lex: Dictionary) -> String:

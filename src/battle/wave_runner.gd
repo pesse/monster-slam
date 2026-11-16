@@ -1616,6 +1616,9 @@ func _score_hit(monster: Monster, text: String = "", verdict: Dictionary = {}) -
 	var complete := bool(verdict.get("complete", true))
 	var exact := bool(verdict.get("exact", true))
 	var full_form := "" if complete and exact else str(verdict.get("canonical", ""))
+	var book := TaskResolver.book_form(monster.task, str(verdict.get("canonical", "")))
+	if not book.is_empty():
+		full_form = book
 	var rt := Time.get_ticks_msec() - monster.spawned_at_ms
 	var task_id := str(monster.task.get("learnable_id", ""))
 	if not full_form.is_empty():

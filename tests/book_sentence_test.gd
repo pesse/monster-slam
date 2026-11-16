@@ -138,3 +138,24 @@ func test_a_long_card_stays_longer_in_the_reveal() -> void:
 	var long := reveal.hold_time({"prompt": "Meine Oma arbeitet jeden Morgen in ihrem Garten.",
 			"answers": [SENTENCE, "Every morning my grandmother works in her garden."]})
 	assert_float(long).is_equal_approx(reveal.HOLD_TIME + (48 + 49 - 40) / 15.0, 0.01)
+
+
+func test_another_wording_counts_but_the_freeze_shows_the_book() -> void:
+	var task := {"task_type": "example", "accepted_answers": [SENTENCE,
+			"Every morning my grandmother works in her garden."]}
+	assert_str(TaskResolver.book_form(task, SENTENCE)).is_empty()
+	assert_str(TaskResolver.book_form(task, "Every morning my grandmother works in her garden.")) \
+			.is_equal(SENTENCE)
+	assert_str(TaskResolver.book_form({"task_type": "translation", "accepted_answers": ["a", "b"]}, "b")) \
+			.is_empty()
+
+
+func test_short_and_long_forms_and_punctuation_are_no_other_wording() -> void:
+	var question := {"task_type": "example", "accepted_answers": ["Why didn't you water the garden?"]}
+	assert_str(TaskResolver.book_form(question, "Why did you not water the garden?")).is_empty()
+	var two := {"task_type": "example", "accepted_answers": ["I don't like the garden. Can we go to the park?"]}
+	assert_str(TaskResolver.book_form(two, "I do not like the garden, can we go to the park")).is_empty()
+	var it := {"task_type": "example", "accepted_answers": ["It's sad that the garden can't stay."]}
+	assert_str(TaskResolver.book_form(it, "It is sad that the garden cannot stay.")).is_empty()
+	assert_str(TaskResolver.book_form(it, "It's sad the garden can't stay.")) \
+			.is_equal("It's sad that the garden can't stay.")
