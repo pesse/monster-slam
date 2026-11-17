@@ -16,6 +16,7 @@ extends RefCounted
 ##   opposite/synonym/confusables -> { "target_lexeme_id": String }
 ##   conjugation                  -> { "form_type": String }
 ##   example                      -> { "example_key": String }
+##   ending                       -> { "unit", "cell", "carrier_id" } (ADR 0032)
 ## Gibt {} zurück, wenn die Aufgabe nicht auflösbar ist (fehlende Daten oder ein
 ## nicht unterstützter task_type wie fill_gap/sentence).
 
@@ -39,6 +40,27 @@ const FORM_LABELS := {
 	"fr_pres_2pl": "Präsens, vous",
 	"fr_pres_3pl": "Präsens, ils/elles",
 	"fr_passe_compose": "Passé composé, je",
+	"la_dat_sg": "Dat. Sg.",
+	"la_acc_sg": "Akk. Sg.",
+	"la_abl_sg": "Abl. Sg.",
+	"la_nom_pl": "Nom. Pl.",
+	"la_gen_pl": "Gen. Pl.",
+	"la_dat_pl": "Dat. Pl.",
+	"la_acc_pl": "Akk. Pl.",
+	"la_abl_pl": "Abl. Pl.",
+	"la_pres_2sg": "2. Sg. Präsens",
+	"la_pres_3sg": "3. Sg. Präsens",
+	"la_pres_1pl": "1. Pl. Präsens",
+	"la_pres_2pl": "2. Pl. Präsens",
+	"la_pres_3pl": "3. Pl. Präsens",
+	"la_impf_1sg": "1. Sg. Imperfekt",
+	"la_impf_2sg": "2. Sg. Imperfekt",
+	"la_impf_3sg": "3. Sg. Imperfekt",
+	"la_impf_1pl": "1. Pl. Imperfekt",
+	"la_impf_2pl": "2. Pl. Imperfekt",
+	"la_impf_3pl": "3. Pl. Imperfekt",
+	"la_imp_sg": "Imperativ Sg.",
+	"la_imp_pl": "Imperativ Pl.",
 }
 
 ## Genus ist als Buchstabe hinterlegt (m/f/n); getippt werden darf auch das Wort dazu.
@@ -78,6 +100,8 @@ func resolve(definition: Dictionary, source: Dictionary, extra: Dictionary = {})
 			return _resolve_conjugation(definition, source, extra)
 		"example":
 			return _resolve_example(definition, source, extra)
+		Endings.TASK_TYPE:
+			return _resolve_ending(definition, source, extra)
 		"fill_gap", "sentence":
 			push_warning("TaskResolver: task_type '%s' noch nicht unterstützt (%s)" % [task_type, definition.get("id", "")])
 			return {}
@@ -92,6 +116,7 @@ func resolve(definition: Dictionary, source: Dictionary, extra: Dictionary = {})
 ##   synonym     -> "synonym:<source>:<target>"      (paar-basiert)
 ##   conjugation -> "conjugation:<source>:<form_type>"
 ##   example     -> "example:<source>:<example_key>"
+##   ending      -> "ending:<direction>:<unit>"         (ohne Lexem, ADR 0032)
 static func learnable_id(task_type: String, direction: String, source_id: String, extra: Dictionary = {}) -> String:
 	match task_type:
 		"translate":
@@ -102,6 +127,8 @@ static func learnable_id(task_type: String, direction: String, source_id: String
 			return "%s:%s:%s" % [task_type, source_id, str(extra.get("form_type", ""))]
 		"example":
 			return "example:%s:%s" % [source_id, str(extra.get("example_key", ""))]
+		Endings.TASK_TYPE:
+			return Endings.learnable_id(direction, str(extra.get("unit", "")))
 		_:
 			return "%s:%s:%s" % [task_type, direction, source_id]
 
@@ -139,6 +166,8 @@ func describe_learnable(id: String) -> String:
 			if lex.is_empty():
 				return id
 			return "%s (Buchsatz %s)" % [Lexeme.foreign(lex), parts[2]]
+		Endings.TASK_TYPE:
+			return "Endung " + LatinMorphology.unit_label(parts[2])
 		_:
 			return id
 
@@ -242,6 +271,22 @@ func _resolve_example(definition: Dictionary, source: Dictionary, extra: Diction
 	var task := _build(definition, source, str(example["de"]), answers, extra, _meaning_of(source),
 			[Lexeme.foreign(source)])
 	task["alt_label"] = "Wort"
+	return task
+
+
+## Endung (ADR 0032): Lexikonform des Trägerworts und die Zelle, getippt wird die Form.
+## `source` ist die Endung selbst (WaveGenerator), das Wort steht in `extra`.
+func _resolve_ending(definition: Dictionary, source: Dictionary, extra: Dictionary) -> Dictionary:
+	var carrier := _lexeme(extra.get("carrier_id", ""))
+	var cell := str(extra.get("cell", ""))
+	var form := Endings.form_of(carrier, cell)
+	if carrier.is_empty() or form.is_empty():
+		push_warning("TaskResolver: keine Endung '%s' an %s" % [cell, extra.get("carrier_id", "")])
+		return {}
+	var prompt := "%s → %s" % [Endings.head(carrier, cell.get_slice(".", 0), scope),
+			LatinMorphology.cell_label(cell)]
+	var task := _build(definition, source, prompt, [form], extra, _meaning_of(carrier))
+	task["carrier_id"] = str(carrier.get("id", ""))
 	return task
 
 

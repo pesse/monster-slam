@@ -158,6 +158,8 @@ static func task_pool() -> Dictionary:
 			"scope": scope(),
 			"tags": [],
 			"lexeme_ids": Array(_test.get("lexeme_ids", [])),
+			"ending_groups": Array(_test.get("ending_groups", [])),
+			"book": str(_test.get("book", "")),
 			"direction_mode": str(_test.get("direction", "")),
 		}
 	if not is_level():

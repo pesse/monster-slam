@@ -1,8 +1,8 @@
 class_name TestPrep
 extends Control
 ## „Für eine Arbeit üben“: Wörter eines Buchs auswählen, als Liste speichern und spielen.
-## Ausgewählt werden Wörter, keine Aufgaben; Form-Boni (ADR 0012) sind eigene Zeilen und
-## kommen nur markiert mit. Gespielt wird über `RunRequest.start_test`, die Reihenfolge
+## Ausgewählt werden Wörter, keine Aufgaben; Form-Boni (ADR 0012) und Endungsgruppen
+## (ADR 0032) sind eigene Zeilen und kommen nur markiert mit. Gespielt wird über `RunRequest.start_test`, die Reihenfolge
 ## entscheidet `TestPlaylist`.
 
 const BATTLE_SCENE := "res://scenes/battle/battle.tscn"
@@ -13,6 +13,9 @@ const STATE_ALL := 0
 const STATE_NEW := 1
 const STATE_UNSURE := 2
 const STATE_MASTERED := 3
+
+## Sortierschlüssel der Endungszeilen: hinter jeder Unit.
+const ENDING_ORDER := 1 << 20
 
 ## Die zuletzt offene Liste — der Rückweg aus dem Kampf öffnet sie wieder.
 static var open_id := ""
@@ -32,7 +35,7 @@ static var open_id := ""
 
 var _book := ""
 var _list: Dictionary = {}
-## Alle Zeilen des Buchs: { kind ("word" | "bonus"), id, unit, place, place_label, type,
+## Alle Zeilen des Buchs: { kind ("word" | "bonus" | "ending"), id, unit, place, place_label, type,
 ## foreign, german, order, state, state_label, item }.
 var _rows: Array = []
 var _marked: Dictionary = {}
@@ -73,8 +76,8 @@ func _ready() -> void:
 			"Sonst geht die Runde weiter, wo sie aufgehört hat — auch über mehrere Tage.")
 	Hints.attach(_direction_pick, "Richtung", "Welche Aufgaben die Liste abfragt.")
 	Hints.attach(_state_pick, "Stand", "Nach dem Lernstand der Wörter filtern.")
-	Hints.attach(_count, "Auswahl", "Markierte Wörter und Form-Boni; mit gespeicherter Liste "
-			+ "dazu, wie viele Wörter in der laufenden Runde schon richtig waren.")
+	Hints.attach(_count, "Auswahl", "Markierte Wörter, Form-Boni und Endungsgruppen; mit "
+			+ "gespeicherter Liste dazu, wie viele Wörter in der laufenden Runde schon richtig waren.")
 	_title_text()
 	_setup_tree()
 	_build_rows()
@@ -170,6 +173,39 @@ func _build_rows() -> void:
 				"state_label": "%d / %d" % [int(counted["done"]), int(counted["total"])],
 				"confidence": BonusLevel.share(counted),
 			})
+	_build_ending_rows(order)
+
+
+## Je Gruppe von Endungen eine Zeile, nur Gruppen mit einem Trägerwort im Buch. Die Gruppe
+## ist die Id; sie steht nach allen Units.
+func _build_ending_rows(order: int) -> void:
+	var present := {}
+	for entry in ContentRegistry.lexemes_scoped([_book], []):
+		for table in LatinMorphology.TABLES:
+			for cell in Endings.carrier_cells(entry, table, []):
+				present[cell["unit"]] = true
+	if present.is_empty():
+		return
+	var groups := LatinMorphology.all_groups()
+	for i in groups.size():
+		var group: String = groups[i]
+		var units := LatinMorphology.units_of_group(group).filter(func(u): return present.has(u))
+		if units.is_empty():
+			continue
+		var done := units.filter(func(u):
+			return PlayerProgress.is_mastered(Endings.learnable_id("la", u))).size()
+		var kind := "Deklination" if group.begins_with("decl.") else "Konjugation"
+		order += 1
+		_rows.append({
+			"kind": "ending", "id": group, "unit": 0, "place": "endings/" + kind,
+			"place_label": "Endungen · " + kind, "type": "",
+			"foreign": "◆ " + LatinMorphology.group_label(group),
+			"german": "%d Endungen" % units.size(),
+			"order": [ENDING_ORDER, 0, i, order],
+			"state": STATE_MASTERED if done == units.size() else STATE_UNSURE,
+			"state_label": "%d / %d" % [done, units.size()],
+			"confidence": float(done) / units.size(),
+		})
 
 
 ## Stand eines Wortes: gemeistert, neu (nie beantwortet) oder unsicher mit der mittleren
@@ -288,7 +324,9 @@ func _fill_places() -> void:
 	for row in rows:
 		var unit := int(row["unit"])
 		if not by_unit.has(unit):
-			by_unit[unit] = {"text": BookNaming.unit_label(_book, unit), "children": []}
+			var text := "Endungen" if str(row["kind"]) == "ending" \
+					else BookNaming.unit_label(_book, unit)
+			by_unit[unit] = {"text": text, "children": []}
 			groups.append(by_unit[unit])
 		if seen.has(row["place"]):
 			continue
@@ -373,23 +411,25 @@ func _mark_visible(on: bool) -> void:
 
 
 func _update_count() -> void:
-	var words := 0
-	var bonuses := 0
+	var marked := {"word": 0, "bonus": 0, "ending": 0}
 	for id in _marked:
-		if str(_marked[id]) == "bonus":
-			bonuses += 1
-		else:
-			words += 1
+		marked[str(_marked[id])] += 1
+	var words: int = marked["word"]
+	var bonuses: int = marked["bonus"]
+	var endings: int = marked["ending"]
 	# Markierte Zeilen, die gerade ein Filter verdeckt, werden extra genannt.
-	var hidden := {"word": 0, "bonus": 0}
+	var hidden := {"word": 0, "bonus": 0, "ending": 0}
 	for row in _rows:
 		var item: TreeItem = row.get("item")
 		if item != null and not item.visible and _marked.has(row["id"]):
-			hidden["bonus" if str(row["kind"]) == "bonus" else "word"] += 1
+			hidden[str(row["kind"])] += 1
 	var text := "%d %s" % [words, "Wort" if words == 1 else "Wörter"] + _hidden_text(hidden["word"])
 	if bonuses > 0:
 		text += (" · %d Bonus" % bonuses if bonuses == 1 else " · %d Boni" % bonuses) \
 				+ _hidden_text(hidden["bonus"])
+	if endings > 0:
+		text += " · %d %s" % [endings, "Endungsgruppe" if endings == 1 else "Endungsgruppen"] \
+				+ _hidden_text(hidden["ending"])
 	var missing := _missing_ids().size()
 	if missing > 0:
 		text += " · %d fehlen" % missing
@@ -397,7 +437,7 @@ func _update_count() -> void:
 	if not round.is_empty():
 		text += " · " + round
 	_count.text = text
-	_play.disabled = words == 0 and bonuses == 0
+	_play.disabled = words == 0 and bonuses == 0 and endings == 0
 	Hints.attach(_play, "Spielen",
 			"Jedes Wort kommt einmal, dann erst wieder — wie eine Zufalls-Playlist."
 			if not _play.disabled else "Erst Wörter markieren.",
@@ -422,6 +462,7 @@ func _round_text() -> String:
 	var list := _current_list()
 	if list["lexeme_ids"] != _list.get("lexeme_ids", []) \
 			or list["form_bonuses"] != _list.get("form_bonuses", []) \
+			or list["ending_groups"] != _list.get("ending_groups", []) \
 			or list["direction"] != _list.get("direction", ""):
 		return ""
 	return _round_label
@@ -443,6 +484,7 @@ func _words_of(list: Dictionary) -> Dictionary:
 		"task_types": [], "lexeme_types": [], "tags": [],
 		"scope": TestLists.run_scope(list, ContentRegistry.lexemes, ContentRegistry.narrowest_scope),
 		"lexeme_ids": list["lexeme_ids"], "direction_mode": list["direction"],
+		"ending_groups": list.get("ending_groups", []), "book": _book,
 	}
 	var words := {}
 	for c in _generator.candidates(pool):
@@ -493,6 +535,8 @@ func _open(list: Dictionary) -> void:
 			_marked[str(id)] = "word"
 	for key in list.get("form_bonuses", []):
 		_marked[str(key)] = "bonus"
+	for group in list.get("ending_groups", []):
+		_marked[str(group)] = "ending"
 	for i in _direction_pick.item_count:
 		if str(_direction_pick.get_item_metadata(i)) == str(list.get("direction", "")):
 			_direction_pick.select(i)
@@ -505,15 +549,15 @@ func _open(list: Dictionary) -> void:
 ## Die Auswahl im Screen als Liste (noch nicht gespeichert).
 func _current_list() -> Dictionary:
 	var list := _list.duplicate(true)
-	var words: Array = []
-	var bonuses: Array = []
+	var picked := {"word": [], "bonus": [], "ending": []}
 	# In Buchreihenfolge, damit die Datei lesbar bleibt.
 	var rows := _rows.filter(func(r): return _marked.has(r["id"]))
 	rows.sort_custom(func(a, b): return _order_less(a["order"], b["order"]))
 	for row in rows:
-		(bonuses if row["kind"] == "bonus" else words).append(str(row["id"]))
-	list["lexeme_ids"] = words
-	list["form_bonuses"] = bonuses
+		picked[str(row["kind"])].append(str(row["id"]))
+	list["lexeme_ids"] = picked["word"]
+	list["form_bonuses"] = picked["bonus"]
+	list["ending_groups"] = picked["ending"]
 	list["direction"] = str(_direction_pick.get_item_metadata(maxi(0, _direction_pick.selected)))
 	var name := _name_edit.text.strip_edges()
 	if name.is_empty():

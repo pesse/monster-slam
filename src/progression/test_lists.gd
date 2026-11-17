@@ -1,8 +1,10 @@
 class_name TestLists
 extends RefCounted
 ## Die Testlisten eines Profils: Wörter eines Buchs, die ein Kind gezielt für eine Arbeit übt.
-##     { id, name, book, lexeme_ids, form_bonuses, direction, round_started_at, created_at }
-## `form_bonuses` sind Scope-Schlüssel von Form-Boni (ADR 0012). `direction`: "" alle,
+##     { id, name, book, lexeme_ids, form_bonuses, ending_groups, direction, round_started_at,
+##       created_at }
+## `form_bonuses` sind Scope-Schlüssel von Form-Boni (ADR 0012), `ending_groups` Gruppen
+## von Endungen (LatinMorphology.group_of, ADR 0032). `direction`: "" alle,
 ## "from_de" Deutsch gefragt, "to_de" Fremdsprache gefragt. `round_started_at` ist der
 ## Beginn der laufenden Runde (TestPlaylist).
 ## Ablage: user://progress/<profil>_test_lists.json, statisch mit Profil-Argument.
@@ -43,6 +45,7 @@ static func find(id: String, profile: String) -> Dictionary:
 static func blank(book: String, name := "") -> Dictionary:
 	return {
 		"id": "", "name": name, "book": book, "lexeme_ids": [], "form_bonuses": [],
+		"ending_groups": [],
 		"direction": DIRECTION_ALL, "round_started_at": 0, "created_at": 0,
 	}
 

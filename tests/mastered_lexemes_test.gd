@@ -134,7 +134,7 @@ func test_the_word_row_of_an_irregular_verb_counts_its_forms() -> void:
 			.is_equal_approx(0.9, 0.001)
 
 
-## Die Daten: `irregular` steht nur an Verben, jedes davon hat Formaufgaben (sonst wäre das
+## Die Daten: `irregular` steht nur an Verben und lateinischen Nomen (ADR 0032), jedes davon hat Formaufgaben (sonst wäre das
 ## Feld wirkungslos; ausgenommen Formen, die alle in einem Bonus stehen), und jedes Verb mit dem Thementag „irregular" der Access-Bände trägt es.
 func test_irregular_verbs_in_the_catalog_have_form_tasks() -> void:
 	var requirements := ContentRegistry.form_requirements()
@@ -147,7 +147,9 @@ func test_irregular_verbs_in_the_catalog_have_form_tasks() -> void:
 		if not flagged:
 			assert_bool(requirements.has(id)).is_false()
 			continue
-		assert_str(str(entry.get("type", ""))).override_failure_message(str(id)).is_equal("verb")
+		assert_bool(str(entry.get("type", "")) == "verb" \
+				or (str(entry.get("type", "")) == "noun" and Lexeme.language(entry) == "la")) \
+				.override_failure_message(str(id)).is_true()
 		# Stehen alle seine Formen in einem Bonus (später gelehrt, ADR 0012), zählt keine zur
 		# Meisterung — dann muss es aber Formen haben.
 		var forms := ContentRegistry.forms_for(str(id))

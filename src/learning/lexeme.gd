@@ -84,6 +84,9 @@ static func language_of_learnable(id: String, lexemes: Dictionary, book_language
 	var parts := id.split(":")
 	if parts.size() != 3:
 		return ""
+	# Eine Endung trägt die Sprache selbst (ADR 0032).
+	if parts[0] == "ending":
+		return parts[1]
 	var lexeme_id := parts[1]
 	if parts[0] not in ["opposite", "synonym", "confusables", "conjugation", "tense", "forms"]:
 		var lang := language_of_direction(parts[1])

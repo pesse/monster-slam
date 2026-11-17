@@ -44,6 +44,10 @@ const URGENCY_CAP := 2.0
 ## das Wachkatapult nicht die ganze Welle abräumt.
 const OPEN_SHARE := 0.5
 
+## Höchstanteil der Monster einer Welle mit einer Endung (ADR 0032), laufend gezählt
+## (endings_allowed()); eine Testliste kennt keinen.
+const ENDING_SHARE := 0.25
+
 ## Neue Aufgaben (ADR 0027): so viele Einführungen je Welle, solange es in der Welle noch
 ## nicht gezeigte bekannte Aufgaben gibt; danach kommen erst die.
 const INTRODUCTIONS_PER_WAVE := 5
@@ -209,10 +213,17 @@ func has_playable(pool: Dictionary) -> bool:
 ## -> Spawn-Nummer): in dieser Welle gezeigte, sie kommen nach dem Rest. `order`: Playlist
 ## einer Testliste (TestPlaylist.wave_order). `open_first`: eine nicht gemeisterte Aufgabe
 ## vorziehen, wenn es eine gibt (open_due()). `intro`: die Einführungen des Laufs (ADR 0027),
-## eine fällige Wiederholung geht allem vor. Der Grund der Wahl steht in `task["pick"]`.
+## eine fällige Wiederholung geht allem vor. `endings`: darf eine Endung kommen
+## (endings_allowed()); ohne andere Aufgabe kommt sie trotzdem. Der Grund der Wahl steht in
+## `task["pick"]`.
 func pick(pool: Dictionary, exclude_sources: Dictionary = {}, shown_sources: Dictionary = {},
-		order: Array = [], open_first := false, intro: Introductions = null) -> Dictionary:
+		order: Array = [], open_first := false, intro: Introductions = null,
+		endings := true) -> Dictionary:
 	var candidates := listing(pool, shown_sources, -1, intro)
+	if not endings:
+		var others := candidates.filter(func(c): return not is_ending(c))
+		if not others.is_empty():
+			candidates = others
 	if not order.is_empty():
 		candidates = TestPlaylist.arrange(candidates, order)
 	if intro != null:
@@ -263,12 +274,12 @@ static func help_key(candidate: Dictionary) -> String:
 
 ## Steht die Lösung auf dem Schild? Ja für eine nie beantwortete Aufgabe, die im Lauf noch
 ## nicht eingeführt war; eine Übersetzung nur, wenn auch die Gegenrichtung nie dran war.
-## Eine Form nie: sie folgt meist aus dem Wort. Abtippen verbucht nichts, die Wiederholung
+## Eine Form oder Endung nie: sie folgt meist aus dem Wort. Abtippen verbucht nichts, die Wiederholung
 ## (RETEST_AFTER) ist die erste Antwort.
 static func needs_help(candidate: Dictionary, state: Callable, intro: Introductions) -> bool:
 	if intro == null or intro.keys.has(help_key(candidate)):
 		return false
-	if not str(candidate["definition"].get("requires_form", "")).is_empty():
+	if not str(candidate["definition"].get("requires_form", "")).is_empty() or is_ending(candidate):
 		return false
 	if not (state.call(candidate["learnable_id"]) as Dictionary).is_empty():
 		return false
@@ -286,6 +297,16 @@ static func reverse_translation(candidate: Dictionary) -> String:
 		return ""
 	return TaskResolver.learnable_id("translate", "%s_to_%s" % [sides[1], sides[0]],
 			str(candidate["source"].get("id", "")))
+
+
+## Darf der nächste Spawn eine Endung tragen? `endings` von `spawned` bisherigen Monstern
+## trugen eine. Bei 0,25: frühestens das vierte, dann höchstens jedes vierte.
+static func endings_allowed(endings: int, spawned: int) -> bool:
+	return endings < floori(ENDING_SHARE * (spawned + 1))
+
+
+static func is_ending(candidate: Dictionary) -> bool:
+	return str(candidate["definition"].get("task_type", "")) == Endings.TASK_TYPE
 
 
 ## Muss der nächste Spawn offen sein? `open` von `spawned` bisherigen Monstern waren es.
@@ -550,7 +571,10 @@ func _candidates(pool: Dictionary, limit: int = 0) -> Array:
 			continue
 		if not TestLists.direction_allows(direction_mode, str(definition.get("direction", ""))):
 			continue
-		_expand(definition, lexemes, result, limit, scope, bonus_only)
+		if str(definition.get("task_type", "")) == Endings.TASK_TYPE:
+			_expand_endings(definition, lexemes, result, pool, bonus_only)
+		else:
+			_expand(definition, lexemes, result, limit, scope, bonus_only)
 		if limit > 0 and result.size() >= limit:
 			break
 	return result
@@ -582,6 +606,57 @@ func _expand(definition: Dictionary, lexemes: Array, result: Array, limit: int =
 			result.append(_candidate(definition, source, extra))
 
 
+## Hängt je Endung der Tabelle `ending_table` einen Kandidaten an (ADR 0032), mit einem
+## zufälligen Trägerwort aus `lexemes`. Die Endung ist ihr eigenes Grundwort (`source`), so
+## zählen Sperre, Wellenwiederholung und Playlist sie wie ein Wort. Eine Testliste spielt
+## nur ihre `ending_groups` und nimmt Träger, die ihr fehlen, aus dem ganzen Buch (`book`).
+func _expand_endings(definition: Dictionary, lexemes: Array, result: Array, pool: Dictionary,
+		bonus_only: Dictionary) -> void:
+	var test := pool.has("lexeme_ids")
+	var groups: Array = pool.get("ending_groups", [])
+	if test and groups.is_empty():
+		return
+	var scope: Array = pool.get("scope", [])
+	var carriers := _ending_carriers(definition, lexemes, scope, bonus_only)
+	if test and not str(pool.get("book", "")).is_empty():
+		var book_scope := [str(pool["book"])]
+		var more := _ending_carriers(definition, ContentRegistry.lexemes_scoped(book_scope, []),
+				book_scope, {})
+		for unit in more:
+			if not carriers.has(unit):
+				carriers[unit] = more[unit]
+	for unit in carriers:
+		if test and not LatinMorphology.group_of(unit) in groups:
+			continue
+		var choice: Array = carriers[unit].pick_random()
+		var carrier: Dictionary = choice[0]
+		var extra := {"unit": unit, "cell": str(choice[1]), "carrier_id": str(carrier.get("id", ""))}
+		var lid := _resolver.learnable_id(Endings.TASK_TYPE, str(definition.get("direction", "")),
+				"", extra)
+		var source := {"id": lid, "language": Lexeme.language(definition),
+				"type": str(carrier.get("type", ""))}
+		result.append({"definition": definition, "source": source, "extra": extra,
+				"learnable_id": lid})
+
+
+## Endung -> [[Trägerwort, Zelle], …] für die Tabelle der Definition.
+func _ending_carriers(definition: Dictionary, lexemes: Array, scope: Array,
+		bonus_only: Dictionary) -> Dictionary:
+	var table := str(definition.get("ending_table", ""))
+	var out := {}
+	for source in lexemes:
+		if bonus_only.has(str(source.get("id", ""))) \
+				or Lexeme.language(definition) != Lexeme.language(source) \
+				or not _type_allowed(source, definition.get("allowed_types", ["*"])):
+			continue
+		for entry in Endings.carrier_cells(source, table, scope):
+			var unit := str(entry["unit"])
+			if not out.has(unit):
+				out[unit] = []
+			out[unit].append([source, str(entry["cell"])])
+	return out
+
+
 ## Ist die Definition für dieses Wort eine Bonus-Aufgabe — eine Formaufgabe, deren Form in
 ## `scope` als Bonus mitspielt, oder ein Buchsatz, dessen Bonus gewählt ist?
 func _bonus_task(definition: Dictionary, source: Dictionary, scope: Array) -> bool:
@@ -602,6 +677,9 @@ func _bonus_task(definition: Dictionary, source: Dictionary, scope: Array) -> bo
 ## `excluded_task_types` (docs/ADDING_CONTENT.md) und die Sprache (ohne Feld englisch).
 ## `scope` filtert Formen über ContentRegistry.form_task_in_scope, leer zählt jede.
 func _instances(definition: Dictionary, source: Dictionary, scope: Array = []) -> Array:
+	# Eine Endung gehört zu keinem Wort (_expand_endings).
+	if str(definition.get("task_type", "")) == Endings.TASK_TYPE:
+		return []
 	if Lexeme.language(definition) != Lexeme.language(source):
 		return []
 	if str(definition.get("task_type", "")) in source.get("excluded_task_types", []):
