@@ -44,6 +44,16 @@ static func carrier_cells(lexeme: Dictionary, table: String, scope: Array) -> Ar
 	return out
 
 
+## Die Lerneinheiten, für die eines der `lexemes` in `scope` ein Träger ist: { unit: true }.
+static func present_units(lexemes: Array, scope: Array) -> Dictionary:
+	var out := {}
+	for entry in lexemes:
+		for table in LatinMorphology.TABLES:
+			for cell in carrier_cells(entry, table, scope):
+				out[cell["unit"]] = true
+	return out
+
+
 ## Die Form einer Zelle an `lexeme`, leer, wenn es sie nach der Regel nicht trägt.
 static func form_of(lexeme: Dictionary, cell: String) -> String:
 	_ensure()

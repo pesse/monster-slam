@@ -74,7 +74,7 @@ const CLASS_LABELS := {
 	"3_in": "3. Deklination, i-Stamm, Neutrum", "u": "u-Deklination", "e": "e-Deklination",
 }
 const CONJ_LABELS := {"a": "a-Konjugation", "e": "e-Konjugation", "i": "i-Konjugation",
-		"cons": "konsonantische Konjugation", "mixed": "gemischte Konjugation"}
+		"cons": "kons. Konjugation", "mixed": "gemischte Konjugation"}
 const TABLE_LABELS := {"decl": "Deklination", "pres": "Präsens", "impf": "Imperfekt",
 		"imp": "Imperativ", "perf": "Perfekt"}
 const CELL_LABELS := {
@@ -291,6 +291,20 @@ static func unit_label(unit: String) -> String:
 	if bits.size() == 3 and bits[0] != "perf":
 		return "%s: %s" % [CONJ_LABELS.get(bits[1], bits[1]), cell_label(cell)]
 	return cell_label(cell)
+
+
+## Eine Einheit unter ihrer Gruppe (group_label): „Gen. Pl. (i-Stamm)", „2. Sg. Präsens",
+## beim Imperativ mit Konjugation.
+static func line_label(unit: String) -> String:
+	var bits := unit.split(".")
+	if bits.size() < 3 or not bits[0] in ["decl", "pres", "impf"]:
+		return unit_label(unit)
+	var label := cell_label("%s.%s" % [bits[0], bits[2]])
+	var family := str(DECL_FAMILY.get(bits[1], bits[1]))
+	if bits[0] != "decl" or family == bits[1]:
+		return label
+	var variant := str(CLASS_LABELS[bits[1]]).trim_prefix(str(CLASS_LABELS[family]) + ", ")
+	return "%s (%s)" % [label, variant]
 
 
 ## Alle Lerneinheiten einer Gruppe, in Tabellenreihenfolge.

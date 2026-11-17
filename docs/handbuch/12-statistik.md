@@ -85,6 +85,15 @@ Welche Units und Themen hier stehen, richtet sich nach der Auswahl bei „Büche
 aus „Runde vorbereiten“. Die Themen-Auswahl wird dabei bewusst nicht mitgerechnet: bei
 „Unit 6: 8 von 12“ sollen alle Wörter der Unit gezählt sein, nicht nur ein Teil davon.
 
+### Endungen
+
+Bei Latein steht unter den Units ein Abschnitt **„Endungen“**: je Deklination und
+Konjugation ein Balken, wie viele ihrer Endungen sitzen. Ein Klick zeigt jede Endung mit
+ihrem Stand, etwa „Gen. Pl. (i-Stamm) 80 %“. Endungen fragen die Monster zwischen den
+Vokabeln ab („rēx, rēgis m → Abl. Pl.“); sie zählen nicht zur Festung. Gezeigt werden nur
+Endungen, die ein Wort deiner Auswahl trägt, Perfekt-Endungen erst ab der Lektion mit dem
+Perfekt.
+
 ## Reiter „Aufgaben“: gezählt werden Aufgaben
 
 Hier steht jede einzelne Aufgabe in einer eigenen Zeile: beide Übersetzungsrichtungen

@@ -7,6 +7,7 @@ extends GdUnitTestSuite
 
 const BOOK := "zz-endbuch"
 const GENERATOR := preload("res://src/battle/wave_generator.gd")
+const STATS := preload("res://src/ui/stats_screen.gd")
 
 const LEXEMES := {
 	"zz-lex.la.end.rex": {"type": "noun", "unit": 1, "part": 1, "lemma_la": "rēx", "lemma_de": "der König"},
@@ -170,3 +171,19 @@ func test_every_latin_word_in_the_catalog_finds_its_class() -> void:
 			missing.append(Lexeme.foreign(entry))
 	assert_array(missing).override_failure_message("ohne Klasse: %s" % ", ".join(missing)) \
 			.is_empty()
+
+
+## Die Statistik zählt je Gruppe nur die Endungen, die ein Wort der Auswahl trägt.
+func test_the_statistics_count_endings_per_group() -> void:
+	var present := Endings.present_units(ContentRegistry.lexemes_scoped([BOOK + "/1/1"], []),
+			[BOOK + "/1/1"])
+	var mastered := Endings.learnable_id("la", "decl.3.gen_pl")
+	var rows := STATS.ending_rows(present, func(id): return id == mastered)
+	var by_key := {}
+	for row in rows:
+		by_key[row["key"]] = row
+	assert_bool(by_key.has("perf")).is_false()
+	assert_bool(by_key.has("decl.a")).is_false()
+	assert_int(int(by_key["decl.3"]["done"])).is_equal(1)
+	assert_int(int(by_key["decl.3"]["total"])).is_equal(8)
+	assert_array(by_key["decl.3"]["bonus"]["task_ids"]).contains([mastered])

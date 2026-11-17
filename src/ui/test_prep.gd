@@ -179,11 +179,7 @@ func _build_rows() -> void:
 ## Je Gruppe von Endungen eine Zeile, nur Gruppen mit einem Trägerwort im Buch. Die Gruppe
 ## ist die Id; sie steht nach allen Units.
 func _build_ending_rows(order: int) -> void:
-	var present := {}
-	for entry in ContentRegistry.lexemes_scoped([_book], []):
-		for table in LatinMorphology.TABLES:
-			for cell in Endings.carrier_cells(entry, table, []):
-				present[cell["unit"]] = true
+	var present := Endings.present_units(ContentRegistry.lexemes_scoped([_book], []), [])
 	if present.is_empty():
 		return
 	var groups := LatinMorphology.all_groups()

@@ -998,6 +998,40 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"Tight"
 
+[node name="EndingSection" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress" unique_id=1520543629]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"Tight"
+
+[node name="EndingHead" type="HBoxContainer" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress/EndingSection" unique_id=1080012364]
+layout_mode = 2
+theme_type_variation = &"Tight"
+
+[node name="EndingTitle" type="Label" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress/EndingSection/EndingHead" unique_id=362909865]
+layout_mode = 2
+theme_type_variation = &"StatHeading"
+text = "Endungen"
+
+[node name="EndingHelp" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress/EndingSection/EndingHead" unique_id=614196604 instance=ExtResource("handbook_link")]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+theme_type_variation = &"HandbookLinkSmall"
+chapter = "12-statistik.md"
+section = "Endungen"
+answers_f1 = false
+
+[node name="EndingHint" type="Label" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress/EndingSection" unique_id=130846753]
+layout_mode = 2
+theme_type_variation = &"Hint"
+text = "Je Deklination und Konjugation: wie viele ihrer Endungen sitzen. Ein Klick zeigt jede Endung."
+autowrap_mode = 3
+
+[node name="EndingList" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress/EndingSection" unique_id=44135141]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"Tight"
+
 [node name="TaskPage" type="ScrollContainer" parent="Window/Layout/Content/Body/Pages" unique_id=706392771]
 unique_name_in_owner = true
 visible = false
