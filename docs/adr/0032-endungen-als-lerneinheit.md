@@ -85,8 +85,10 @@ Nomen, Infinitiv, 1. Person und Perfekt beim Verb.
    Lernstand zu verlieren: Er hängt an der Endung, nicht an der Lektion.
 10. **Nicht zur Festung.** Die Festungsstufe misst weiter die Wörter (Issue #21), und
     Endungen bewegen den Ring der Karte nicht. Ihr Stand wird aus `PlayerProgress`
-    gerechnet, ohne eigenen Speicher. Die Statistik zeigt im Reiter „Fortschritt“ je Gruppe
-    einen Balken, aufgeklappt jede Endung (`StatsScreen.ending_rows`).
+    gerechnet, ohne eigenen Speicher. Die Statistik (Reiter „Fortschritt“) und die Buchkarte
+    (Knopf „Endungen“, Overlay `EndingSheet`) zeigen ihn als Tabelle (`EndingTable`):
+    Zeilen sind Zellen, Spalten Klassen, das Feld trägt die Endung und die Farbe des Stands.
+    Eine geteilte Endung steht in jeder ihrer Spalten. Die Karte zählt das ganze Buch.
 11. **„Für eine Arbeit üben“** (`TestLists`, `TestPlaylist`):
     - Neben Wörtern und Form-Boni hat das Buch Zeilen für Endungsgruppen, z. B.
       „3. Deklination“ oder „Imperfekt, a-Konjugation“, gefiltert nach der Zeitleiste. Eine
@@ -113,7 +115,7 @@ Nomen, Infinitiv, 1. Person und Perfekt beim Verb.
 - Die Spur bleibt, wie sie ist: `lex` ist die Endungs-Id (`ending:la:<zelle>`), kein
   Lehrbuchinhalt. Das Trägerwort steht nicht in der Spur; „Melden“ meldet es.
 - `Lexeme.language_of_learnable` kennt die neue Id ohne Lexem.
-- Handbuch: Endungen in der Statistik (Kapitel 12); im Kampf und bei „Für eine Arbeit
+- Handbuch: Endungen in der Statistik und auf der Karte (Kapitel 12); im Kampf und bei „Für eine Arbeit
   üben“ noch offen.
 
 ## Offen
@@ -121,8 +123,6 @@ Nomen, Infinitiv, 1. Person und Perfekt beim Verb.
 - Ob eine Endung beim ersten Auftritt die Lösung zeigt (ADR 0027 Punkt 1). Vorerst nein;
   wenn, dann nicht innerhalb von `INTRODUCTIONS_PER_WAVE`, sonst verdrängen am Anfang
   rund 100 neue Endungen jede neue Vokabel.
-- Eine Tabelle der Endungen (Zeilen Zellen, Spalten Klassen) statt der Balken, und ihr
-  Stand auf der Karte.
 - Wert von `ENDING_SHARE` nach den ersten Spuren.
 
 ## Nicht gebaut

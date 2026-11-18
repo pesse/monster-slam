@@ -157,6 +157,24 @@ icon = ExtResource("5_play")
 icon_alignment = 2
 expand_icon = true
 
+[node name="BottomLeft" type="HBoxContainer" parent="Hud/Corners" unique_id=2032643979]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="EndingsButton" type="Button" parent="Hud/Corners/BottomLeft" unique_id=326085573]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_vertical = 4
+focus_mode = 0
+theme_type_variation = &"WindowButton"
+text = "◆ Endungen · 0 / 0"
+
 [node name="ProfileBadge" parent="Hud/Corners" unique_id=1872368586 instance=ExtResource("4_badge")]
 unique_name_in_owner = true
 layout_mode = 1

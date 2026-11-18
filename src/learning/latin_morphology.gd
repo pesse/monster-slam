@@ -238,6 +238,26 @@ static func verb_cells(infinitive: String, present_1sg: String, perfect := "") -
 	return out
 
 
+## Die Lerneinheit von Klasse `cls` in Zelle `index` einer Tabelle; das Perfekt hat eine
+## für alle Klassen.
+static func unit_at(table: String, cls: String, index: int) -> String:
+	if table == "perf":
+		return "perf.%s" % CELLS["perf"][index]
+	return _unit(table, cls, index, DECL if table == "decl" else CONJ[table])
+
+
+## Die Endung von Klasse `cls` in Zelle `index`, wie die Tabelle sie zeigt: „-ārum", „= Nom.".
+static func ending_text(table: String, cls: String, index: int) -> String:
+	var ending: String
+	if table == "decl":
+		ending = DECL[cls][index]
+	elif table == "perf":
+		ending = CONJ["perf"]["all"][index]
+	else:
+		ending = CONJ[table][cls][index]
+	return "= Nom." if ending == NOM else "-" + ending
+
+
 ## Die Lerneinheit einer Zelle (SHARES_WITH).
 static func _unit(table: String, cls: String, index: int, endings: Dictionary) -> String:
 	var owner := cls
@@ -291,20 +311,6 @@ static func unit_label(unit: String) -> String:
 	if bits.size() == 3 and bits[0] != "perf":
 		return "%s: %s" % [CONJ_LABELS.get(bits[1], bits[1]), cell_label(cell)]
 	return cell_label(cell)
-
-
-## Eine Einheit unter ihrer Gruppe (group_label): „Gen. Pl. (i-Stamm)", „2. Sg. Präsens",
-## beim Imperativ mit Konjugation.
-static func line_label(unit: String) -> String:
-	var bits := unit.split(".")
-	if bits.size() < 3 or not bits[0] in ["decl", "pres", "impf"]:
-		return unit_label(unit)
-	var label := cell_label("%s.%s" % [bits[0], bits[2]])
-	var family := str(DECL_FAMILY.get(bits[1], bits[1]))
-	if bits[0] != "decl" or family == bits[1]:
-		return label
-	var variant := str(CLASS_LABELS[bits[1]]).trim_prefix(str(CLASS_LABELS[family]) + ", ")
-	return "%s (%s)" % [label, variant]
 
 
 ## Alle Lerneinheiten einer Gruppe, in Tabellenreihenfolge.

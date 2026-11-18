@@ -28,6 +28,7 @@ func _ready() -> void:
 		MapSelection.book = books[0]
 	_title.text = ContentRegistry.book_label(MapSelection.book)
 	_setup_resume()
+	_setup_endings()
 	_canvas.setup(MapLayout.book_texture(MapSelection.book), [], [], func(_n): return {})
 	# Nicht abgewartet: der Zoom soll nicht auf den Kopf warten.
 	_place_header()
@@ -58,6 +59,22 @@ func _setup_resume() -> void:
 			"Weitere begonnene Läufe tragen auf der Karte ein 🔥 an ihrer Unit.")
 	button.pressed.connect(func() -> void:
 		_on_unit_selected("%s/%d" % [MapSelection.book, int(level.get("unit", 0))]))
+
+
+## Der Stand der Endungen des Buchs (ADR 0032); nur, wenn Wörter des Buchs welche tragen.
+func _setup_endings() -> void:
+	var book := MapSelection.book
+	var present := Endings.present_units(ContentRegistry.lexemes_scoped([book], []), [book])
+	var button := %EndingsButton as Button
+	button.visible = not present.is_empty()
+	if present.is_empty():
+		return
+	var count := EndingTable.summary(present, PlayerProgress.is_mastered)
+	button.text = "◆ Endungen · %d / %d" % [count["done"], count["total"]]
+	Hints.attach(button, "Endungen",
+			"Deklination und Konjugation als Tabelle: welche Endungen schon sitzen.",
+			"Gezählt wird jede Endung einmal, auch wenn mehrere Klassen sie teilen.")
+	button.pressed.connect(func() -> void: EndingSheet.open(self, present))
 
 
 ## Der Kopf weicht den Orten aus, bevor er zu sehen ist — die Größen stehen erst nach

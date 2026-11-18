@@ -323,6 +323,17 @@ texture_margin_top = 16.0
 texture_margin_right = 16.0
 texture_margin_bottom = 16.0
 
+[sub_resource type="StyleBoxFlat" id="ending_cell"]
+content_margin_left = 4.0
+content_margin_top = 0.0
+content_margin_right = 4.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
 [sub_resource type="StyleBoxTexture" id="fortress_track"]
 content_margin_left = 0.0
 content_margin_top = 0.0
@@ -1600,6 +1611,11 @@ Display/base_type = &"Label"
 Display/font_sizes/font_size = 40
 DropPanel/base_type = &"PanelContainer"
 DropPanel/styles/panel = SubResource("drop_panel")
+EndingCell/base_type = &"PanelContainer"
+EndingCell/styles/panel = SubResource("ending_cell")
+EndingGrid/base_type = &"GridContainer"
+EndingGrid/constants/h_separation = 4
+EndingGrid/constants/v_separation = 4
 FlagChoice/base_type = &"ToolChoice"
 FlagChoice/colors/icon_hover_color = Color(1, 1, 1, 0.8)
 FlagChoice/colors/icon_hover_pressed_color = Color(1, 1, 1, 1)

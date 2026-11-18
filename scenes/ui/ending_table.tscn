@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://cn4exqwnvoqlb"]
+
+[ext_resource type="Script" uid="uid://bvdg8kjpjvh6l" path="res://src/ui/ending_table.gd" id="1_table"]
+
+[node name="EndingTable" type="VBoxContainer" unique_id=1504278081]
+theme_type_variation = &"Tight"
+script = ExtResource("1_table")
+
+[node name="Title" type="Label" parent="." unique_id=1998356372]
+layout_mode = 2
+theme_type_variation = &"StatSubline"
+text = "Deklination"
+
+[node name="Grid" type="GridContainer" parent="." unique_id=1926581228]
+layout_mode = 2
+theme_type_variation = &"EndingGrid"
+columns = 2

@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://b5xbyn06tgca"]
+
+[node name="EndingCell" type="PanelContainer" unique_id=834284663]
+custom_minimum_size = Vector2(84, 28)
+theme_type_variation = &"EndingCell"
+
+[node name="Text" type="Label" parent="." unique_id=734928857]
+layout_mode = 2
+horizontal_alignment = 1
+vertical_alignment = 1

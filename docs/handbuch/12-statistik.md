@@ -87,12 +87,19 @@ aus „Runde vorbereiten“. Die Themen-Auswahl wird dabei bewusst nicht mitgere
 
 ### Endungen
 
-Bei Latein steht unter den Units ein Abschnitt **„Endungen“**: je Deklination und
-Konjugation ein Balken, wie viele ihrer Endungen sitzen. Ein Klick zeigt jede Endung mit
-ihrem Stand, etwa „Gen. Pl. (i-Stamm) 80 %“. Endungen fragen die Monster zwischen den
-Vokabeln ab („rēx, rēgis m → Abl. Pl.“); sie zählen nicht zur Festung. Gezeigt werden nur
-Endungen, die ein Wort deiner Auswahl trägt, Perfekt-Endungen erst ab der Lektion mit dem
-Perfekt.
+Bei Latein stehen unter den Units zwei Tabellen, **Deklination** und **Konjugation**: Zeilen
+sind die Fälle bzw. Personen, Spalten die Klassen (a, o, 3. …), in jedem Feld die Endung.
+Die Farbe zeigt ihren Stand: **grün** sitzt, **rot bis gelb** wird gerade gelernt, **grau**
+noch nicht geübt. **Blass** ist, was nicht abgefragt wird: kein Wort deiner Auswahl trägt
+die Endung (Perfekt-Endungen erst ab der Lektion mit dem Perfekt), oder sie steht schon in
+der Aufgabe, wie der Genitiv. Zeigt die Maus auf ein Feld, steht der Stand in Prozent da.
+
+Bilden zwei Klassen eine Endung gleich (*-um* im Gen. Pl. der 3. Deklination, ob Neutrum
+oder nicht), ist das eine Endung: Sie steht in beiden Spalten mit demselben Stand.
+
+Endungen fragen die Monster zwischen den Vokabeln ab („rēx, rēgis m → Abl. Pl.“); sie
+zählen nicht zur Festung. Dieselben Tabellen öffnet auf der Buchkarte der Knopf
+**„◆ Endungen“** unten links, dort für das ganze Buch.
 
 ## Reiter „Aufgaben“: gezählt werden Aufgaben
 

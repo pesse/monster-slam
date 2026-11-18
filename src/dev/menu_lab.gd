@@ -14,6 +14,7 @@ extends Node
 ##     --handbook[=<datei>[#<anker>]]  Handbuch auf einem Kapitel
 ##     --hint=<knoten>, --badge-hint  Hinweiskarte an einem Knoten bzw. am Medaillon
 ##     --map=book|area [--book=<id>] [--unit=N]  Buch- oder Gebietskarte
+##     --map=book --endings   dazu die Endungstabelle des Buchs (Knopf unten links)
 ##     --updates              beide Update-Hinweise
 ##     --hour=<6..18>         Sonne fest auf diese Stunde
 ## --timelapse=<n>: die Sonne läuft n-mal so schnell wie nach der Uhr (dort ein Tag je Stunde).
@@ -106,6 +107,9 @@ func _ready() -> void:
 				if screen is ProfileMenu \
 				else screen.find_child("ProfileBadge", true, false).get_node("%SpellButton") as Button
 		get_tree().create_timer(0.5).timeout.connect(func(): spell_button.pressed.emit())
+	if _has_arg("endings"):
+		var endings := screen.get_node("%EndingsButton") as Button
+		get_tree().create_timer(0.5).timeout.connect(func(): endings.pressed.emit())
 	if screen is ProfileMenu and _has_arg("updates"):
 		_force_updates(screen)
 		# Nach dem Menü verbunden, läuft also nach dessen Abzeichen: die echte Prüfung
@@ -190,6 +194,8 @@ func _shoot() -> void:
 		what += "_slide" + _arg("slide")
 	if _has_arg("stats") or not _arg("stats").is_empty():
 		what += "_stats" + ("_closed" if _arg("stats") == "close" else "")
+	if _has_arg("endings"):
+		what += "_endings"
 	if _has_arg("badge-hint"):
 		what += "_badge_hint"
 	if not _arg("hint").is_empty():

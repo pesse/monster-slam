@@ -153,9 +153,11 @@ func test_form_types_of_written_out_cells() -> void:
 	assert_str(MORPH.form_type_of("imp.sg")).is_equal("la_imp_sg")
 
 
-func test_line_labels_under_their_group() -> void:
-	assert_str(MORPH.line_label("decl.3_i.gen_pl")).is_equal("Gen. Pl. (i-Stamm)")
-	assert_str(MORPH.line_label("decl.a.dat_sg")).is_equal("Dat. Sg.")
-	assert_str(MORPH.line_label("pres.a.2sg")).is_equal("2. Sg. Präsens")
-	assert_str(MORPH.line_label("imp.a.pl")).is_equal("a-Konjugation: Imperativ Pl.")
-	assert_str(MORPH.line_label("perf.3pl")).is_equal("3. Pl. Perfekt")
+
+func test_the_table_shows_shared_endings_in_every_column() -> void:
+	assert_str(MORPH.unit_at("decl", "3_i", 5)).is_equal("decl.3_i.gen_pl")
+	assert_str(MORPH.unit_at("decl", "3_n", 0)).is_equal("decl.3.gen_sg")
+	assert_str(MORPH.unit_at("perf", "a", 4)).is_equal("perf.3pl")
+	assert_str(MORPH.ending_text("decl", "a", 5)).is_equal("-ārum")
+	assert_str(MORPH.ending_text("decl", "o_n", 2)).is_equal("= Nom.")
+	assert_str(MORPH.ending_text("perf", "cons", 0)).is_equal("-istī")

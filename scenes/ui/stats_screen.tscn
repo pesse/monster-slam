@@ -19,6 +19,7 @@
 [ext_resource type="PackedScene" uid="uid://btiwbepa1pr4i" path="res://scenes/ui/sort_bar.tscn" id="17_r"]
 [ext_resource type="PackedScene" uid="uid://dvsymnbv8dh23" path="res://scenes/ui/language_bar.tscn" id="18_r"]
 [ext_resource type="Texture2D" uid="uid://bpovidlot2h25" path="res://assets/ui/statistics/icons/battle_time.webp" id="battle_icon"]
+[ext_resource type="PackedScene" uid="uid://cn4exqwnvoqlb" path="res://scenes/ui/ending_table.tscn" id="ending_table"]
 [ext_resource type="PackedScene" uid="uid://badeio0oospuy" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
 [ext_resource type="Material" uid="uid://dxo2j2mfichtf" path="res://scenes/ui/title_metal.tres" id="title_metal"]
 
@@ -1024,13 +1025,16 @@ answers_f1 = false
 [node name="EndingHint" type="Label" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress/EndingSection" unique_id=130846753]
 layout_mode = 2
 theme_type_variation = &"Hint"
-text = "Je Deklination und Konjugation: wie viele ihrer Endungen sitzen. Ein Klick zeigt jede Endung."
+text = "Grün sitzt, Rot wackelt, Grau ist noch nicht geübt. Blass ist, was hier nicht abgefragt wird: kein Wort deiner Auswahl trägt die Endung, oder sie steht schon in der Aufgabe wie der Genitiv. Zeigt die Maus auf ein Feld, steht der Stand da."
 autowrap_mode = 3
 
-[node name="EndingList" type="VBoxContainer" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress/EndingSection" unique_id=44135141]
+[node name="DeclTable" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress/EndingSection" unique_id=1680823828 instance=ExtResource("ending_table")]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"Tight"
+
+[node name="ConjTable" parent="Window/Layout/Content/Body/Pages/ProgressPage/Gutter/Progress/EndingSection" unique_id=1861008229 instance=ExtResource("ending_table")]
+unique_name_in_owner = true
+layout_mode = 2
 
 [node name="TaskPage" type="ScrollContainer" parent="Window/Layout/Content/Body/Pages" unique_id=706392771]
 unique_name_in_owner = true

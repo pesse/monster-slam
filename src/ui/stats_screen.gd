@@ -80,7 +80,6 @@ var _generator := WaveGenerator.new()
 var _resolver := TaskResolver.new()
 
 @onready var _unit_list: VBoxContainer = %UnitList
-@onready var _ending_list: VBoxContainer = %EndingList
 @onready var _task_list: VBoxContainer = %TaskList
 @onready var _sort_bars: Array[SortBar] = [%WordSort as SortBar, %TaskSort as SortBar]
 @onready var _language_bar: LanguageBar = %LanguageBar
@@ -699,10 +698,14 @@ func _refresh_progress() -> void:
 	units = with_bonus_rows(units, ContentRegistry.bonuses_of, PlayerProgress.is_mastered,
 			func(book): return MapLayout.data(str(book)))
 	_fill_progress(_unit_list, units, "Keine Units im gewählten Bereich.")
-	var endings := ending_rows(Endings.present_units(pool, UserSettings.selected_scope()),
-			PlayerProgress.is_mastered)
-	(%EndingSection as Control).visible = not endings.is_empty()
-	_fill_progress(_ending_list, endings, "")
+	var present := Endings.present_units(pool, UserSettings.selected_scope())
+	(%EndingSection as Control).visible = not present.is_empty()
+	for table: EndingTable in [%DeclTable, %ConjTable]:
+		var kind := "decl" if table == %DeclTable else "conj"
+		var sheet := EndingTable.sheet(kind, present, PlayerProgress.confidence.bind(-1.0),
+				PlayerProgress.is_mastered)
+		table.visible = EndingTable.has_present(sheet)
+		table.show_sheet(sheet)
 
 
 ## Fortschrittszeilen je Unit: { key, label, done, total, lexemes }, nach Buch und Unit
@@ -726,25 +729,6 @@ static func unit_rows(lexemes: Array, mastered: Dictionary, book_label: Callable
 					BookNaming.unit_label(str(group["book"]), int(group["unit"]))],
 			"done": int(group["done"]), "total": int(group["total"]),
 			"lexemes": group["lexemes"],
-		})
-	return rows
-
-
-## Je Gruppe von Endungen (ADR 0032) eine Zeile: { key, label, done, total, bonus }, nur
-## Einheiten aus `present` (Endings.present_units). `bonus.task_ids` sind die learnable_ids.
-static func ending_rows(present: Dictionary, is_mastered: Callable) -> Array:
-	var rows: Array = []
-	for group in LatinMorphology.all_groups():
-		var ids: Array = LatinMorphology.units_of_group(group) \
-				.filter(func(u): return present.has(u)) \
-				.map(func(u): return Endings.learnable_id("la", u))
-		if ids.is_empty():
-			continue
-		rows.append({
-			"key": group, "label": LatinMorphology.group_label(group),
-			"done": ids.filter(func(id): return is_mastered.call(id)).size(), "total": ids.size(),
-			"bonus": {"task_ids": ids},
-			"describe": func(id: String): return LatinMorphology.line_label(Endings.unit_of(id)),
 		})
 	return rows
 
@@ -919,10 +903,9 @@ func _fill_progress(box: VBoxContainer, rows: Array, empty_text: String) -> void
 		box.add_child(bar)
 		if row.has("bonus"):
 			var bonus: Dictionary = row["bonus"]
-			var describe: Callable = row.get("describe", _resolver.describe_learnable)
 			bar.setup(str(row["label"]), int(row["done"]), int(row["total"]),
 					func(): return bonus_lines(bonus, PlayerProgress.confidence.bind(-1.0),
-							describe), true)
+							_resolver.describe_learnable), true)
 			continue
 		var lexemes: Array = row.get("lexemes", [])
 		# Erst beim Aufklappen gerufen (ProgressRow).
