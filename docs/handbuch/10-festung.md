@@ -106,6 +106,14 @@ das gesuchte Wort. Nach der Welle siehst du den Satz, wie er im Buch steht. Bei 
 kommen die Sätze mit, solange der Schalter „…“ neben „Spielen“ an ist; aus fragt Gesamt nur
 die Wörter ab. Umschalten darfst du jederzeit, auch in einem begonnenen Lauf.
 
+**Latein: Grundformen und Endungen.** In Latein fragen manche Monster statt einer Vokabel eine
+Endung ab, etwa „rēx, rēgis m → Abl. Pl.“. Mit dem Knopf „Alles ▾“ über „Spielen“ wählst
+du, was ein Level abfragt: Grundformen (die Wörter mit Genitiv, Genus und Stammformen),
+Deklinationen, Konjugationen oder eine Mischung. Ohne Grundformen kommen nur Endungen. Auch
+das darfst du jederzeit umschalten. Unter „Für eine Arbeit üben“ stehen die Endungen ganz
+oben in der Liste, je Deklination und Konjugation eine Zeile; der Filter „Wortarten“ →
+„Endungen“ zeigt nur sie.
+
 **Boss-Medaillen.** Jeder Sieg über den Boss einer Unit wird gezählt. Ab 1 Sieg bekommt er
 einen bronzenen Ring und eine Krone, ab 3 einen silbernen, ab 5 einen goldenen. Die Zahl
 der Siege steht auch auf der Buchkarte. Gibt es zu einer Unit noch keine Sätze, ist ihr

@@ -18,6 +18,10 @@ static var _first_person_wanted := false
 ## begonnenen Lauf (RunSave): Umschalten ändert nur, was ab jetzt kommt.
 static var _examples_wanted := true
 
+## Was ein Level abfragt (WaveGenerator.CONTENT_ALL); wie `_examples_wanted` nur für das,
+## was ab jetzt kommt.
+static var _content: Array = WaveGenerator.CONTENT_ALL.duplicate()
+
 ## Die Testliste (TestLists) eines Testlaufs, sonst leer. Er spielt genau ihre Wörter.
 static var _test: Dictionary = {}
 ## Ihr Scope (TestLists.run_scope), beim Start einmal gerechnet.
@@ -80,6 +84,16 @@ static func want_examples(on: bool) -> void:
 
 static func wants_examples() -> bool:
 	return _examples_wanted
+
+
+## Leer heißt alles.
+static func want_content(content: Array) -> void:
+	_content = content.duplicate() if not content.is_empty() \
+			else WaveGenerator.CONTENT_ALL.duplicate()
+
+
+static func wanted_content() -> Array:
+	return _content.duplicate()
 
 
 ## Der Scope eines Levels; „Gesamt“ mit `examples` nimmt den Buchsatz-Bonus seiner Unit dazu.
@@ -149,7 +163,8 @@ static func tags() -> Array:
 	return Array(UserSettings.selected_tags())
 
 
-## Der Aufgaben-Pool des Wellenkampfs; ein Level spielt alle Aufgaben- und Wortarten.
+## Der Aufgaben-Pool des Wellenkampfs; ein Level spielt alle Aufgaben- und Wortarten, auf
+## Wunsch ohne Wörter oder ohne eine Art Endungen (want_content).
 static func task_pool() -> Dictionary:
 	if is_test():
 		return {
@@ -169,6 +184,7 @@ static func task_pool() -> Dictionary:
 		"lexeme_types": [],
 		"scope": scope(),
 		"tags": [],
+		"content": wanted_content(),
 	}
 
 

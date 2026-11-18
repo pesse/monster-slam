@@ -15,6 +15,9 @@ extends Node
 ##     --hint=<knoten>, --badge-hint  Hinweiskarte an einem Knoten bzw. am Medaillon
 ##     --map=book|area [--book=<id>] [--unit=N]  Buch- oder Gebietskarte
 ##     --map=book --endings   dazu die Endungstabelle des Buchs (Knopf unten links)
+##     --map=area --select=<key>[,<key>]  markiert Orte (t1, all, boss, …)
+##     --map=area --select=<key> --pick-content  öffnet dazu die Abfragewahl neben „Spielen“
+##     --prep[=end] [--book=<id>]  „Für eine Arbeit üben“; =end rollt ans Ende der Liste
 ##     --updates              beide Update-Hinweise
 ##     --hour=<6..18>         Sonne fest auf diese Stunde
 ## --timelapse=<n>: die Sonne läuft n-mal so schnell wie nach der Uhr (dort ein Tag je Stunde).
@@ -47,6 +50,11 @@ func _ready() -> void:
 				else (str(books[0]) if not books.is_empty() else "")
 		MapSelection.unit = int(_arg("unit")) if not _arg("unit").is_empty() else 1
 		path = MapSelection.AREA_SCENE if map == "area" else MapSelection.BOOK_SCENE
+	if _has_arg("prep") or not _arg("prep").is_empty():
+		var books := ContentRegistry.all_books()
+		MapSelection.book = _arg("book") if not _arg("book").is_empty() \
+				else (str(books[0]) if not books.is_empty() else "")
+		path = RunRequest.TEST_SCENE
 	if not _arg("name").is_empty():
 		# Nur im Speicher: ohne _save() bleibt settings.cfg, wie es ist.
 		UserSettings._config.set_value("names", UserSettings.active_profile(), _arg("name"))
@@ -107,6 +115,18 @@ func _ready() -> void:
 				if screen is ProfileMenu \
 				else screen.find_child("ProfileBadge", true, false).get_node("%SpellButton") as Button
 		get_tree().create_timer(0.5).timeout.connect(func(): spell_button.pressed.emit())
+	if not _arg("select").is_empty():
+		get_tree().create_timer(0.5).timeout.connect(func():
+			screen.call("_select", Array(_arg("select").split(","))))
+		if _has_arg("pick-content"):
+			var pick := screen.get_node("%ContentPick") as MenuButton
+			get_tree().create_timer(0.8).timeout.connect(func(): pick.show_popup())
+	if _arg("prep") == "end":
+		var tree := screen.get_node("%Words") as Tree
+		get_tree().create_timer(0.5).timeout.connect(func():
+			var items := tree.get_root().get_children()
+			if not items.is_empty():
+				tree.scroll_to_item(items.back()))
 	if _has_arg("endings"):
 		var endings := screen.get_node("%EndingsButton") as Button
 		get_tree().create_timer(0.5).timeout.connect(func(): endings.pressed.emit())
@@ -194,6 +214,12 @@ func _shoot() -> void:
 		what += "_slide" + _arg("slide")
 	if _has_arg("stats") or not _arg("stats").is_empty():
 		what += "_stats" + ("_closed" if _arg("stats") == "close" else "")
+	if _has_arg("prep") or not _arg("prep").is_empty():
+		what = "prep" + ("_end" if _arg("prep") == "end" else "")
+	if not _arg("select").is_empty():
+		what += "_" + _arg("select").replace(",", "+")
+	if _has_arg("pick-content"):
+		what += "_pick"
 	if _has_arg("endings"):
 		what += "_endings"
 	if _has_arg("badge-hint"):

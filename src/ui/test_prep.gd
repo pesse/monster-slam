@@ -14,8 +14,10 @@ const STATE_NEW := 1
 const STATE_UNSURE := 2
 const STATE_MASTERED := 3
 
-## Sortierschlüssel der Endungszeilen: hinter jeder Unit.
-const ENDING_ORDER := 1 << 20
+## Sortierschlüssel der Endungszeilen: vor der ersten Unit, sonst fände sie keiner.
+const ENDING_ORDER := -1
+## Wortart der Endungszeilen in Spalte und Filter.
+const ENDING_TYPE := "Endungen"
 
 ## Die zuletzt offene Liste — der Rückweg aus dem Kampf öffnet sie wieder.
 static var open_id := ""
@@ -177,7 +179,7 @@ func _build_rows() -> void:
 
 
 ## Je Gruppe von Endungen eine Zeile, nur Gruppen mit einem Trägerwort im Buch. Die Gruppe
-## ist die Id; sie steht nach allen Units.
+## ist die Id; sie steht vor allen Units.
 func _build_ending_rows(order: int) -> void:
 	var present := Endings.present_units(ContentRegistry.lexemes_scoped([_book], []), [])
 	if present.is_empty():
@@ -194,7 +196,7 @@ func _build_ending_rows(order: int) -> void:
 		order += 1
 		_rows.append({
 			"kind": "ending", "id": group, "unit": 0, "place": "endings/" + kind,
-			"place_label": "Endungen · " + kind, "type": "",
+			"place_label": "Endungen · " + kind, "type": ENDING_TYPE,
 			"foreign": "◆ " + LatinMorphology.group_label(group),
 			"german": "%d Endungen" % units.size(),
 			"order": [ENDING_ORDER, 0, i, order],

@@ -89,9 +89,15 @@ Nomen, Infinitiv, 1. Person und Perfekt beim Verb.
     (Knopf „Endungen“, Overlay `EndingSheet`) zeigen ihn als Tabelle (`EndingTable`):
     Zeilen sind Zellen, Spalten Klassen, das Feld trägt die Endung und die Farbe des Stands.
     Eine geteilte Endung steht in jeder ihrer Spalten. Die Karte zählt das ganze Buch.
+    Auf der Gebietskarte wählt „Alles ▾“ (`RunRequest.want_content`), was ein Level
+    abfragt: Grundformen, Deklinationen, Konjugationen. Ohne Grundformen bleiben nur
+    Endungen, die Obergrenze aus Punkt 8 greift dann nicht, weil sonst nichts da ist. Die
+    Wahl gehört wie der Satz-Schalter (ADR 0026) dem Lauf, nicht dem Profil, und steht nicht
+    in `RunSave`.
 11. **„Für eine Arbeit üben“** (`TestLists`, `TestPlaylist`):
     - Neben Wörtern und Form-Boni hat das Buch Zeilen für Endungsgruppen, z. B.
-      „3. Deklination“ oder „Imperfekt, a-Konjugation“, gefiltert nach der Zeitleiste. Eine
+      „3. Deklination“ oder „Imperfekt, a-Konjugation“, gefiltert nach der Zeitleiste. Sie
+      stehen vor der ersten Unit und haben die Wortart „Endungen“. Eine
       markierte Gruppe steht in der Liste unter dem neuen Feld `ending_groups`; ältere
       Listen ohne Feld haben keine.
     - Im Beutel der Runde ist jede Zelle einer markierten Gruppe ein Eintrag wie ein
@@ -115,8 +121,8 @@ Nomen, Infinitiv, 1. Person und Perfekt beim Verb.
 - Die Spur bleibt, wie sie ist: `lex` ist die Endungs-Id (`ending:la:<zelle>`), kein
   Lehrbuchinhalt. Das Trägerwort steht nicht in der Spur; „Melden“ meldet es.
 - `Lexeme.language_of_learnable` kennt die neue Id ohne Lexem.
-- Handbuch: Endungen in der Statistik und auf der Karte (Kapitel 12); im Kampf und bei „Für eine Arbeit
-  üben“ noch offen.
+- Handbuch: Endungen in der Statistik und auf der Karte (Kapitel 12), die Abfragewahl und
+  „Für eine Arbeit üben“ in Kapitel 10.
 
 ## Offen
 

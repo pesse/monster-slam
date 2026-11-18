@@ -26,6 +26,8 @@ const BossFight := preload("res://src/battle/boss_fight.gd")
 @onready var _discard_run: Button = %DiscardRunButton
 ## Bei „Gesamt“: ob die Sätze aus dem Buch mitkommen (RunRequest.want_examples, ADR 0026).
 @onready var _examples: Button = %ExamplesToggle
+## Was ein Level abfragt: Grundformen, Deklinationen, Konjugationen (RunRequest.want_content).
+@onready var _content: CheckMenu = %ContentPick
 ## Am Boss-Ort fragt „Spielen“, welcher Boss, wenn die Unit beide hergibt (ADR 0023).
 @onready var _boss_choice: BossChoice = %BossChoice
 @onready var _confirm: ConfirmDialog = %Confirm
@@ -65,6 +67,7 @@ func _ready() -> void:
 		RunRequest.want_examples(on)
 		_hint_examples())
 	_hint_examples()
+	_setup_content_pick()
 	# Kleine Orte, die unter dem Zeiger wachsen; den Weg zeigt das Bild selbst.
 	_canvas.node_radius = MapCanvas.AREA_NODE_RADIUS
 	_canvas.hover_radius = MapCanvas.NODE_RADIUS
@@ -124,6 +127,27 @@ func _hint_examples() -> void:
 					else "Gesamt fragt nur die Wörter ab.",
 			"Umschalten geht jederzeit, auch in einem begonnenen Lauf.")
 	Hints.refresh()
+
+
+func _setup_content_pick() -> void:
+	_content.set_options([
+		{"text": "Grundformen", "value": WaveGenerator.CONTENT_WORDS},
+		{"text": "Deklinationen", "value": WaveGenerator.CONTENT_DECL},
+		{"text": "Konjugationen", "value": WaveGenerator.CONTENT_CONJ},
+	])
+	_content.set_values(RunRequest.wanted_content())
+	_content.changed.connect(func() -> void: RunRequest.want_content(_content.values()))
+	Hints.attach(_content, "Was abgefragt wird",
+			"Grundformen sind die Wörter mit Genitiv, Genus und Stammformen, Deklinationen und "
+					+ "Konjugationen ihre Endungen.",
+			"Umschalten geht jederzeit, auch in einem begonnenen Lauf.")
+
+
+## Die Wahl steht nur, wo ein Wort des Levels Endungen trägt; nicht beim Boss.
+func _show_content_pick(level: Dictionary) -> void:
+	var scope := RunRequest.level_scope(level, false) if not level.is_empty() else []
+	_content.visible = not level.is_empty() and str(level["kind"]) != MapLevel.KIND_BOSS \
+			and not Endings.present_units(ContentRegistry.lexemes_scoped(scope, []), scope).is_empty()
 
 
 ## Der Schalter steht nur bei „Gesamt“ und nur, wenn die Unit Buchsätze hat.
@@ -389,6 +413,7 @@ func _select(keys: Array) -> void:
 	_play.disabled = level.is_empty() or (boss and not (_golem_ready or _rambler_ready))
 	_lock_first_person(boss)
 	_show_examples_toggle(level)
+	_show_content_pick(level)
 	var resumes := _resumes(keys)
 	_play.text = "Fortsetzen" if resumes else "Spielen"
 	_discard_run.visible = resumes

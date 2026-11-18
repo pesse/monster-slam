@@ -12,6 +12,7 @@
 [ext_resource type="PackedScene" uid="uid://u1ox5aaff65i" path="res://scenes/ui/profile_badge.tscn" id="12_badge"]
 [ext_resource type="PackedScene" uid="uid://f0ojpbs2lx7v" path="res://scenes/ui/confirm_dialog.tscn" id="13_confirm"]
 [ext_resource type="PackedScene" uid="uid://snht6xwu26bk" path="res://scenes/ui/boss_choice.tscn" id="14_choice"]
+[ext_resource type="Script" uid="uid://cyfdagiq8j4bp" path="res://src/ui/check_menu.gd" id="15_check"]
 [ext_resource type="PackedScene" uid="uid://badeio0oospuy" path="res://scenes/ui/handbook_link.tscn" id="handbook_link"]
 
 [sub_resource type="Gradient" id="shade_g"]
@@ -224,6 +225,32 @@ theme_type_variation = &"FortressLevel"
 text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="AboveRight" type="HBoxContainer" parent="Hud/Corners" unique_id=1904417625]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -56.0
+offset_bottom = -56.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="ContentPick" type="MenuButton" parent="Hud/Corners/AboveRight" unique_id=1582093317]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+size_flags_vertical = 4
+focus_mode = 0
+theme_type_variation = &"WindowButton"
+flat = false
+script = ExtResource("15_check")
+label = "Abfrage"
+all_label = "Alles"
 
 [node name="BottomRight" type="HBoxContainer" parent="Hud/Corners" unique_id=1441651679]
 unique_name_in_owner = true

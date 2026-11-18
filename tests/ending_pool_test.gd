@@ -189,3 +189,16 @@ func test_the_table_shows_the_state_of_each_ending() -> void:
 	assert_dict(EndingTable.summary(present, func(id): return id == mastered)) \
 			.contains_keys(["done", "total"])
 	assert_int(int(EndingTable.summary(present, func(id): return id == mastered)["done"])).is_equal(1)
+
+
+## Die Abfragewahl der Karte: ohne Grundformen nur Endungen, ohne Deklinationen keine Fälle.
+func test_a_level_asks_only_what_was_chosen() -> void:
+	var scope := [BOOK + "/1/1"]
+	var only_conj := _candidates({"scope": scope, "content": [WaveGenerator.CONTENT_CONJ]})
+	assert_array(only_conj).is_not_empty()
+	for c in only_conj:
+		assert_str(WaveGenerator.content_of(c["definition"])).is_equal(WaveGenerator.CONTENT_CONJ)
+	var no_decl := _units({"scope": scope,
+			"content": [WaveGenerator.CONTENT_WORDS, WaveGenerator.CONTENT_CONJ]})
+	assert_array(no_decl.filter(func(u): return str(u).begins_with("decl."))).is_empty()
+	assert_array(no_decl).contains(["pres.cons.3pl"])

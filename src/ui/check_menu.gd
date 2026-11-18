@@ -7,6 +7,8 @@ signal changed()
 
 ## Name des Filters, steht ohne Wahl auf dem Knopf.
 @export var label := ""
+## Steht, wenn gesetzt, auf dem Knopf, solange alles oder nichts gewählt ist.
+@export var all_label := ""
 
 ## [{ text, value }] in Anzeigereihenfolge.
 var _options: Array = []
@@ -42,6 +44,17 @@ func values() -> Array:
 	return _options.map(func(o): return o["value"]).filter(func(v): return _checked.has(v))
 
 
+## Wählt genau `chosen`, ohne `changed` zu senden.
+func set_values(chosen: Array) -> void:
+	_checked.clear()
+	for i in _options.size():
+		var on: bool = _options[i]["value"] in chosen
+		if on:
+			_checked[_options[i]["value"]] = true
+		get_popup().set_item_checked(i, on)
+	_render()
+
+
 func clear_checks() -> void:
 	_checked.clear()
 	for i in get_popup().item_count:
@@ -63,7 +76,9 @@ func _on_id_pressed(id: int) -> void:
 
 func _render() -> void:
 	var chosen := _options.filter(func(o): return _checked.has(o["value"]))
-	if chosen.is_empty():
+	if not all_label.is_empty() and (chosen.is_empty() or chosen.size() == _options.size()):
+		text = all_label + " ▾"
+	elif chosen.is_empty():
 		text = label + " ▾"
 	elif chosen.size() == 1:
 		text = str(chosen[0]["text"]) + " ▾"

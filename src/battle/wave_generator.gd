@@ -48,6 +48,13 @@ const OPEN_SHARE := 0.5
 ## (endings_allowed()); eine Testliste kennt keinen.
 const ENDING_SHARE := 0.25
 
+## Was ein Lauf abfragt (RunRequest.want_content): die Wörter samt ihren Grundformen, die
+## Endungen der Deklination, die der Konjugation. Ohne `content` im Pool kommt alles.
+const CONTENT_WORDS := "words"
+const CONTENT_DECL := "decl"
+const CONTENT_CONJ := "conj"
+const CONTENT_ALL: Array[String] = [CONTENT_WORDS, CONTENT_DECL, CONTENT_CONJ]
+
 ## Neue Aufgaben (ADR 0027): so viele Einführungen je Welle, solange es in der Welle noch
 ## nicht gezeigte bekannte Aufgaben gibt; danach kommen erst die.
 const INTRODUCTIONS_PER_WAVE := 5
@@ -565,9 +572,12 @@ func _candidates(pool: Dictionary, limit: int = 0) -> Array:
 			var id := str(lx.get("id", ""))
 			return listed.has(id) or bonus_only.has(id))
 	var direction_mode := str(pool.get("direction_mode", ""))
+	var content: Array = pool.get("content", CONTENT_ALL)
 	var result: Array = []
 	for definition in ContentRegistry.task_definitions.values():
 		if not definition_allowed(definition, task_types, direction):
+			continue
+		if not content_of(definition) in content:
 			continue
 		if not TestLists.direction_allows(direction_mode, str(definition.get("direction", ""))):
 			continue
@@ -578,6 +588,13 @@ func _candidates(pool: Dictionary, limit: int = 0) -> Array:
 		if limit > 0 and result.size() >= limit:
 			break
 	return result
+
+
+## Zu welchem Teil der Abfrage (CONTENT_ALL) eine task_definition gehört.
+static func content_of(definition: Dictionary) -> String:
+	if str(definition.get("task_type", "")) != Endings.TASK_TYPE:
+		return CONTENT_WORDS
+	return CONTENT_DECL if str(definition.get("ending_table", "")) == "decl" else CONTENT_CONJ
 
 
 ## Passt eine task_definition zu den Filtern des Pools? Leere `task_types` und leere
