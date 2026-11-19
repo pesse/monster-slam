@@ -84,6 +84,11 @@ func _place_header() -> void:
 	header.modulate.a = 0.0
 	await get_tree().process_frame
 	_canvas.place_header(header, MapLayout.unit_points(MapLayout.data(MapSelection.book)).values())
+	# Steht der Kopf unten links, nimmt der Endungen-Knopf seinen Platz oben links.
+	if header.anchor_top > 0.5:
+		var corner := %EndingsCorner as Control
+		corner.grow_vertical = Control.GROW_DIRECTION_END
+		corner.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT, Control.PRESET_MODE_MINSIZE)
 	header.modulate.a = 1.0
 
 
