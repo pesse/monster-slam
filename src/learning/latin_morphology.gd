@@ -100,6 +100,17 @@ static func form_type_of(cell: String) -> String:
 	return "la_%s_%s" % [bits[0], bits[1]]
 
 
+## Die Tabelle, deren Zelle ein ausgeschriebener Formtyp ist („la_imp_sg" → „imp"), leer
+## für die Grundformen (Genitiv, 1. Person Präsens, Perfekt) und alles andere.
+static func table_of_form_type(form_type: String) -> String:
+	for table in TABLES:
+		for cell in CELLS[table]:
+			var key := "%s.%s" % [table, cell]
+			if form_type_of(key) == form_type and not key in ["decl.gen_sg", "pres.1sg", "perf.1sg"]:
+				return table
+	return ""
+
+
 ## Klasse und Stamm eines Nomens, leer, wenn die Regel sie nicht bestimmt. `genitive` darf
 ## fehlen (das Buch führt ihn später ein); dann reichen Endung und Genus für a/o.
 ## `plural`: das Wort hat nur Plural (Genitiv auf -um).

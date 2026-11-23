@@ -202,3 +202,15 @@ func test_a_level_asks_only_what_was_chosen() -> void:
 			"content": [WaveGenerator.CONTENT_WORDS, WaveGenerator.CONTENT_CONJ]})
 	assert_array(no_decl.filter(func(u): return str(u).begins_with("decl."))).is_empty()
 	assert_array(no_decl).contains(["pres.cons.3pl"])
+
+
+## Eine ausgeschriebene Zelle wie dūc gehört zur Konjugation, Genitiv und Perfekt bleiben
+## Grundformen: ohne Endungen fragt ein Level auch dūc nicht.
+func test_a_written_out_cell_counts_to_its_table() -> void:
+	var forms := func(form_type: String) -> Dictionary:
+		return {"task_type": "forms", "requires_form": form_type}
+	assert_str(WaveGenerator.content_of(forms.call("la_imp_sg"))).is_equal(WaveGenerator.CONTENT_CONJ)
+	assert_str(WaveGenerator.content_of(forms.call("la_dat_pl"))).is_equal(WaveGenerator.CONTENT_DECL)
+	for form_type in ["la_genitive", "la_present_1sg", "la_perfect", "la_gender", "la_ppp", ""]:
+		assert_str(WaveGenerator.content_of(forms.call(form_type))).is_equal(WaveGenerator.CONTENT_WORDS)
+	assert_str(WaveGenerator.content_of({"task_type": "translate"})).is_equal(WaveGenerator.CONTENT_WORDS)

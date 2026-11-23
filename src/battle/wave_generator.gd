@@ -591,10 +591,15 @@ func _candidates(pool: Dictionary, limit: int = 0) -> Array:
 
 
 ## Zu welchem Teil der Abfrage (CONTENT_ALL) eine task_definition gehört.
+## Eine ausgeschriebene Zelle (ADR 0032 Punkt 4, etwa *dūc*) zählt zu ihrer Tabelle, nicht
+## zu den Grundformen.
 static func content_of(definition: Dictionary) -> String:
+	var table := str(definition.get("ending_table", ""))
 	if str(definition.get("task_type", "")) != Endings.TASK_TYPE:
-		return CONTENT_WORDS
-	return CONTENT_DECL if str(definition.get("ending_table", "")) == "decl" else CONTENT_CONJ
+		table = LatinMorphology.table_of_form_type(str(definition.get("requires_form", "")))
+		if table.is_empty():
+			return CONTENT_WORDS
+	return CONTENT_DECL if table == "decl" else CONTENT_CONJ
 
 
 ## Passt eine task_definition zu den Filtern des Pools? Leere `task_types` und leere
