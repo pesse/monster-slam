@@ -107,7 +107,10 @@ Nomen, Infinitiv, 1. Person und Perfekt beim Verb.
     - Trägerwörter kommen zuerst aus den Wörtern der Liste, sonst nach Punkt 6.
     - Der Richtungsfilter zählt Endungen zu „Deutsch gefragt“ (`from_de`), wie die
       Formen: gefragt ist die lateinische Form.
-    - Ausgeschriebene Formen unregelmäßiger Wörter kommen wie bisher mit ihrem Wort.
+    - Ausgeschriebene Formen unregelmäßiger Wörter (*esse* → *este*) kommen mit ihrem Wort,
+      aber nur, wenn die Liste eine Endungsgruppe derselben Tabelle markiert hat; ohne
+      Endungen fragt sie nur Übersetzungen und Grundformen. Ebenso zählt die Abfragewahl
+      der Karte sie zu Deklination bzw. Konjugation, nicht zu den Grundformen.
 
 ## Folgen
 

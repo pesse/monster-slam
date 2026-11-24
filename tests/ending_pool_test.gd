@@ -214,3 +214,15 @@ func test_a_written_out_cell_counts_to_its_table() -> void:
 	for form_type in ["la_genitive", "la_present_1sg", "la_perfect", "la_gender", "la_ppp", ""]:
 		assert_str(WaveGenerator.content_of(forms.call(form_type))).is_equal(WaveGenerator.CONTENT_WORDS)
 	assert_str(WaveGenerator.content_of({"task_type": "translate"})).is_equal(WaveGenerator.CONTENT_WORDS)
+
+
+## Eine Liste ohne Endungen fragt dūc nicht; mit einer Konjugationsgruppe des Imperativs schon.
+func test_a_test_list_asks_written_out_cells_only_with_their_table() -> void:
+	var imp := {"task_type": "forms", "requires_form": "la_imp_sg"}
+	assert_bool(WaveGenerator.test_asks_form(imp, [])).is_false()
+	assert_bool(WaveGenerator.test_asks_form(imp, ["decl.3", "pres.cons"])).is_false()
+	assert_bool(WaveGenerator.test_asks_form(imp, ["imp"])).is_true()
+	assert_bool(WaveGenerator.test_asks_form(
+			{"task_type": "forms", "requires_form": "la_abl_sg"}, ["decl.o"])).is_true()
+	assert_bool(WaveGenerator.test_asks_form(
+			{"task_type": "forms", "requires_form": "la_perfect"}, [])).is_true()

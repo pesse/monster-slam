@@ -579,6 +579,8 @@ func _candidates(pool: Dictionary, limit: int = 0) -> Array:
 			continue
 		if not content_of(definition) in content:
 			continue
+		if pool.has("lexeme_ids") and not test_asks_form(definition, pool.get("ending_groups", [])):
+			continue
 		if not TestLists.direction_allows(direction_mode, str(definition.get("direction", ""))):
 			continue
 		if str(definition.get("task_type", "")) == Endings.TASK_TYPE:
@@ -600,6 +602,18 @@ static func content_of(definition: Dictionary) -> String:
 		if table.is_empty():
 			return CONTENT_WORDS
 	return CONTENT_DECL if table == "decl" else CONTENT_CONJ
+
+
+## Fragt eine Testliste mit diesen `groups` die Definition? Eine ausgeschriebene Zelle
+## (etwa *esse* → Imp. Pl.) nur, wenn eine Endungsgruppe derselben Tabelle markiert ist.
+static func test_asks_form(definition: Dictionary, groups: Array) -> bool:
+	var table := LatinMorphology.table_of_form_type(str(definition.get("requires_form", "")))
+	if table.is_empty():
+		return true
+	for group in groups:
+		if str(group).get_slice(".", 0) == table:
+			return true
+	return false
 
 
 ## Passt eine task_definition zu den Filtern des Pools? Leere `task_types` und leere
