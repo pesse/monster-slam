@@ -1,8 +1,20 @@
 [gd_resource type="Resource" script_class="MusicSet" format=3 uid="uid://ceb4lrix5eoh"]
 
 [ext_resource type="Script" uid="uid://bts4dyo1wc8yg" path="res://src/core/music_set.gd" id="1_set"]
+[ext_resource type="AudioStream" uid="uid://dqxvia46l5s1d" path="res://assets/audio/music/standard/kingdom_at_dawn_1.ogg" id="2_kingdom_at_dawn_1"]
+[ext_resource type="AudioStream" uid="uid://dvplyloftl83j" path="res://assets/audio/music/standard/kingdom_at_dawn_2.ogg" id="3_kingdom_at_dawn_2"]
+[ext_resource type="AudioStream" uid="uid://r0wim61a4byu" path="res://assets/audio/music/standard/twilight_kingdom_1.ogg" id="4_twilight_kingdom_1"]
+[ext_resource type="AudioStream" uid="uid://bi4unxuyo8flg" path="res://assets/audio/music/standard/twilight_kingdom_2.ogg" id="5_twilight_kingdom_2"]
+[ext_resource type="AudioStream" uid="uid://c11thmpy0pp5j" path="res://assets/audio/music/standard/tactical_ambience_1.ogg" id="6_tactical_ambience_1"]
+[ext_resource type="AudioStream" uid="uid://bwr27o6khqbp7" path="res://assets/audio/music/standard/tactical_ambience_2.ogg" id="7_tactical_ambience_2"]
+[ext_resource type="AudioStream" uid="uid://6k5gd5cnr1ob" path="res://assets/audio/music/standard/tactical_ambience_3.ogg" id="8_tactical_ambience_3"]
+[ext_resource type="AudioStream" uid="uid://ospifujbvy72" path="res://assets/audio/music/standard/relentless_low_string_1.ogg" id="9_relentless_low_string_1"]
+[ext_resource type="AudioStream" uid="uid://cuj5ia84v3oos" path="res://assets/audio/music/standard/relentless_low_string_2.ogg" id="10_relentless_low_string_2"]
+[ext_resource type="AudioStream" uid="uid://buxklh5ttw0um" path="res://assets/audio/music/standard/iron_resolve.ogg" id="11_iron_resolve"]
 
 [resource]
 script = ExtResource("1_set")
 id = &"standard"
 title = "Standard"
+lobby = Array[AudioStream]([ExtResource("2_kingdom_at_dawn_1"), ExtResource("3_kingdom_at_dawn_2"), ExtResource("4_twilight_kingdom_1"), ExtResource("5_twilight_kingdom_2")])
+battle = Array[AudioStream]([ExtResource("6_tactical_ambience_1"), ExtResource("7_tactical_ambience_2"), ExtResource("8_tactical_ambience_3"), ExtResource("9_relentless_low_string_1"), ExtResource("10_relentless_low_string_2"), ExtResource("11_iron_resolve")])

@@ -39,6 +39,16 @@ denselben Commit.
 | `sfx/badge_better.wav` | ElevenLabs Sound Effects (`eleven_text_to_sound_v2`), generiert 2026-10-12 | ElevenLabs-Nutzungsbedingungen (Abo des Projekts) | ElevenLabs, Prompt s. u. |
 | `sfx/badge_last_second.wav` | ElevenLabs Sound Effects (`eleven_text_to_sound_v2`), generiert 2026-10-13 | ElevenLabs-Nutzungsbedingungen (Abo des Projekts) | ElevenLabs, Prompt s. u. |
 | `sfx/badge_elephant.wav` | ElevenLabs Sound Effects (`eleven_text_to_sound_v3`), generiert 2026-11-08 | ElevenLabs-Nutzungsbedingungen (Abo des Projekts) | ElevenLabs, Prompt s. u. |
+| `music/standard/kingdom_at_dawn_1.ogg` | Suno, „Kingdom at Dawn“, generiert 2026-11-12, Id `b15d4856-fd58-4a79-8f0e-be8228734cd1` | Suno-Nutzungsbedingungen (bezahlter Plan des Projekts) | Suno (Generierung im Projekt), s. u. |
+| `music/standard/kingdom_at_dawn_2.ogg` | Suno, „Kingdom at Dawn“, generiert 2026-11-12, Id `9f47e165-7e51-4020-b755-2d7f5893791a` | Suno-Nutzungsbedingungen (bezahlter Plan des Projekts) | Suno (Generierung im Projekt), s. u. |
+| `music/standard/twilight_kingdom_1.ogg` | Suno, „twilight kingdom“, generiert 2026-11-12, Id `93f27ec8-980f-473f-b676-6a592d1fff2a` | Suno-Nutzungsbedingungen (bezahlter Plan des Projekts) | Suno (Generierung im Projekt), s. u. |
+| `music/standard/twilight_kingdom_2.ogg` | Suno, „twilight kingdom“, generiert 2026-11-12, Id `71289591-b94f-4b76-a0d4-c6bbf20b03e4` | Suno-Nutzungsbedingungen (bezahlter Plan des Projekts) | Suno (Generierung im Projekt), s. u. |
+| `music/standard/tactical_ambience_1.ogg` | Suno, „Tactical Ambience“, generiert 2026-11-12, Id `fcfe4799-85c7-4308-819c-307cbc05943e` | Suno-Nutzungsbedingungen (bezahlter Plan des Projekts) | Suno (Generierung im Projekt), s. u. |
+| `music/standard/tactical_ambience_2.ogg` | Suno, „Tactical Ambience“, generiert 2026-11-12, Id `45bd6c39-1389-4e03-9e4b-8a64bdce9041` | Suno-Nutzungsbedingungen (bezahlter Plan des Projekts) | Suno (Generierung im Projekt), s. u. |
+| `music/standard/tactical_ambience_3.ogg` | Suno, „Tactical Ambience“, generiert 2026-11-12, Id `e0432332-8cbe-46af-96a9-ee68675e1a94` | Suno-Nutzungsbedingungen (bezahlter Plan des Projekts) | Suno (Generierung im Projekt), s. u. |
+| `music/standard/relentless_low_string_1.ogg` | Suno, „Relentless Low String“, generiert 2026-11-12, Id `78af855e-0fd7-4ffc-a1df-979619fd91d2` | Suno-Nutzungsbedingungen (bezahlter Plan des Projekts) | Suno (Generierung im Projekt), s. u. |
+| `music/standard/relentless_low_string_2.ogg` | Suno, „Relentless Low String“, generiert 2026-11-12, Id `9029675e-fe60-45bc-987a-c3a8bf92ddfd` | Suno-Nutzungsbedingungen (bezahlter Plan des Projekts) | Suno (Generierung im Projekt), s. u. |
+| `music/standard/iron_resolve.ogg` | Suno, „Iron Resolve“, generiert 2026-11-12, Id `56a136aa-c15a-4702-bf2c-ba1248e59bcc` | Suno-Nutzungsbedingungen (bezahlter Plan des Projekts) | Suno (Generierung im Projekt), s. u. |
 
 `sfx/wave_cleared.wav` ist die verlustfreie WAV-Fassung der dort angebotenen FLAC-Datei —
 Godot 4.7 lädt FLAC nicht („No loader found for resource"). Die Quelle ist innen bereits
@@ -87,3 +97,7 @@ Gehör gewählt). Bearbeitung: MP3 als 16-Bit-WAV, Pegel auf −16 dBFS im laute
 - `sfx/badge_better.wav`: „Two or three gentle friendly rising marimba notes, soft and warm, encouraging, casual fantasy game reward sound", 0,8 s, Variante 3; vorher „Correct Answer / That's Right!" von Beetlemuse (https://freesound.org/people/Beetlemuse/sounds/528957/).
 - `sfx/badge_last_second.wav`: „Close call sting: three quick tense clock ticks accelerating, then a bright relieved bell chime with a small sparkle, just made it in the last second, fantasy game reward sound", 0,9 s, Variante 3.
 - `sfx/badge_elephant.wav`: „Short cute cartoon baby elephant trumpet toot, playful and friendly, followed by a warm soft bell chime with a gentle sparkle, remembering something, casual fantasy game reward sound", 0,9 s, Variante 3.
+
+Die Stücke unter `music/standard/` sind Suno-MP3s (Id aus dem Kommentar-Tag der Datei),
+ohne Metadaten als OGG Vorbis (Qualität 4) neu kodiert und linear auf −16 LUFS gebracht;
+sonst unverändert. Varianten desselben Titels sind eigene Generierungen.
