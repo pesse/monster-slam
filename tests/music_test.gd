@@ -37,15 +37,26 @@ func test_pick_avoids_the_last_track() -> void:
 	assert_object(Music.pick([] as Array[AudioStream], a)).is_null()
 
 
-func test_a_boss_with_its_own_track_gets_it() -> void:
+func test_a_boss_with_its_own_tracks_gets_them() -> void:
 	var music_set := MusicSet.new()
 	var general := _stream()
-	var own := _stream()
+	var own_a := _stream()
+	var own_b := _stream()
 	music_set.boss = [general]
-	music_set.boss_tracks = {"rambler": own}
-	assert_object(music_set.tracks(BOSS, "rambler")[0]).is_same(own)
-	assert_object(music_set.tracks(BOSS, "grammar_golem")[0]).is_same(general)
+	music_set.boss_tracks = {"boss.rambler": [own_a, own_b], "boss.empty": []}
+	assert_array(music_set.tracks(BOSS, "boss.rambler")).contains_exactly([own_a, own_b])
+	assert_array(music_set.tracks(BOSS, "boss.grammar_golem")).contains_exactly([general])
+	assert_array(music_set.tracks(BOSS, "boss.empty")).contains_exactly([general])
 	assert_array(music_set.tracks(BATTLE)).is_empty()
+
+
+## Die Schlüssel in `boss_tracks` sind echte Boss-Ids; ein Tippfehler bliebe sonst still.
+func test_boss_tracks_name_existing_bosses() -> void:
+	for music_set in Music.sets():
+		for boss_id: String in music_set.boss_tracks:
+			assert_dict(ContentRegistry.get_entry("bosses", boss_id)) \
+					.override_failure_message("Set '%s' nennt unbekannten Boss '%s'" % [music_set.id, boss_id]) \
+					.is_not_empty()
 
 
 func test_the_standard_set_exists_and_comes_first() -> void:

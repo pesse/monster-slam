@@ -15,9 +15,9 @@ gelassen, weil es keine Bedienung gab.
    laufenden Szene (`Music.area_for_scene`): Kampf, Bosskampf, Werkbänke (still), alles
    andere ist Lobby. Menü → Buchwahl → Karte wechselt das Stück nicht.
 2. **Bosskampf**: das Stück kommt mit `EventBus.boss_started` und der Boss-Id; ein Set kann
-   je Boss ein eigenes tragen (`MusicSet.boss_tracks`), sonst gilt sein allgemeines.
-   `boss_ended` blendet aus, damit die Sieges-Fanfare allein steht. Kein Feld an
-   `data/bosses/*.json`, damit kein Pack sein `min_app_version` heben muss.
+   je Boss eigene tragen (`MusicSet.boss_tracks`, Schlüssel ist die Boss-Id), sonst gilt sein
+   allgemeines. `boss_ended` blendet aus, damit die Sieges-Fanfare allein steht. Kein Feld
+   an `data/bosses/*.json`, damit kein Pack sein `min_app_version` heben muss.
 3. **Musik-Set als Resource** `assets/audio/music/<id>/set.tres` (`MusicSet`), in der EXE,
    nicht im Pack. Ein Bereich ohne Stücke fällt auf das Set `standard` zurück, ein
    unbekanntes Set ist das Standard-Set. Mehrere Stücke je Bereich wechseln sich ab, ein

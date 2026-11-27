@@ -20,8 +20,9 @@ const DEFAULT_ID := &"standard"
 @export var battle: Array[AudioStream] = []
 ## Bosskampf ohne eigenes Stück in [member boss_tracks].
 @export var boss: Array[AudioStream] = []
-## Boss-Id (wie `data/bosses/<id>.json`) → eigenes Stück.
-@export var boss_tracks: Dictionary[String, AudioStream] = {}
+## Boss-Id (das `id` in `data/bosses/*.json`, z. B. „boss.rambler“) → eigene Stücke, die
+## sich abwechseln.
+@export var boss_tracks: Dictionary[String, Array] = {}
 
 
 ## Die Stücke eines Bereichs; leer, wenn das Set dort nichts trägt.
@@ -32,8 +33,7 @@ func tracks(area: Area, boss_id := "") -> Array[AudioStream]:
 		Area.BATTLE:
 			return battle
 		Area.BOSS:
-			if not boss_tracks.has(boss_id):
-				return boss
-			var own: Array[AudioStream] = [boss_tracks[boss_id]]
-			return own
+			var own: Array[AudioStream] = []
+			own.assign(boss_tracks.get(boss_id, []))
+			return boss if own.is_empty() else own
 	return []
