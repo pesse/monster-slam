@@ -753,7 +753,9 @@ Runden-Setup (`session_setup.tscn`) ist der Expertenmodus.
   Bildaufbau. Die Kosten misst `battle_theme_lab -- --fps`; gemessen waren MSAA 11–29 % der
   Bildzeit, Glow 11–15 %, Schatten 7–15 %, Weg und Bodenflecken um 14 %, Wolken, Teilchen,
   Wind und Farbkorrektur je 0–8 %. Das alte `graphics_simple`
-  wird als „Schnell" gelesen, solange keine Stufe gespeichert ist.
+  wird als „Schnell" gelesen, solange keine Stufe gespeichert ist. Unabhängig von der Stufe
+  zeichnet das Spiel höchstens 60 Bilder je Sekunde (`application/run/max_fps`), sonst folgt
+  es der Bildwiederholrate des Monitors (bis 240 Hz); `--fps` hebt die Grenze zum Messen auf.
 
 ## Fähigkeitsbäume: wofür die Punkte da sind
 
