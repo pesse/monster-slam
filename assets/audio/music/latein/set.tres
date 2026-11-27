@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="MusicSet" format=3 uid="uid://pmauwjvnvf66"]
+
+[ext_resource type="Script" uid="uid://bts4dyo1wc8yg" path="res://src/core/music_set.gd" id="1_set"]
+[ext_resource type="AudioStream" uid="uid://cd34fnw5k3eug" path="res://assets/audio/music/latein/custodes_silentii_1.ogg" id="2_custodes_silentii_1"]
+[ext_resource type="AudioStream" uid="uid://bv2ffowity8jo" path="res://assets/audio/music/latein/custodes_silentii_2.ogg" id="3_custodes_silentii_2"]
+[ext_resource type="AudioStream" uid="uid://bhs6rcnhsscsm" path="res://assets/audio/music/latein/bellum_aeternum.ogg" id="4_bellum_aeternum"]
+[ext_resource type="AudioStream" uid="uid://caty2eh3wgu74" path="res://assets/audio/music/latein/vox_profundorum.ogg" id="5_vox_profundorum"]
+[ext_resource type="AudioStream" uid="uid://r7khfujdrljq" path="res://assets/audio/music/latein/dies_ultimus.ogg" id="6_dies_ultimus"]
+[ext_resource type="AudioStream" uid="uid://bbpkjklk62eri" path="res://assets/audio/music/latein/rex_oblitus.ogg" id="7_rex_oblitus"]
+
+[resource]
+script = ExtResource("1_set")
+id = &"latein"
+title = "Latein"
+lobby = Array[AudioStream]([ExtResource("2_custodes_silentii_1"), ExtResource("3_custodes_silentii_2")])
+battle = Array[AudioStream]([ExtResource("4_bellum_aeternum"), ExtResource("5_vox_profundorum"), ExtResource("6_dies_ultimus")])
+boss = Array[AudioStream]([ExtResource("7_rex_oblitus")])

@@ -36,7 +36,8 @@ stellt sich das Spiel auf dessen Einstellungen um, auch Grafik, Menügröße und
   Spiel. Ganz links ist der jeweilige Ton aus. Nach dem Loslassen des Effekte-Reglers
   ist ein Beispiel zu hören.
 - **„Musik-Set“**: welche Musik im Menü, im Kampf und beim Boss läuft. Das gewählte Set
-  steht gedrückt; ein Wechsel ist sofort zu hören.
+  steht gedrückt; ein Wechsel ist sofort zu hören. „Latein“ bringt Mönchschor und Metal
+  mit lateinischen Texten und ein eigenes Stück für den Bosskampf.
 
 Im Kampf läuft die Musik leiser, solange das Spiel pausiert, und klingt gedämpft, solange
 die Zeitlupe beim Tippen läuft.

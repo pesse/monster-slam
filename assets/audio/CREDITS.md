@@ -49,6 +49,12 @@ denselben Commit.
 | `music/standard/relentless_low_string_1.ogg` | Suno, „Relentless Low String“, generiert 2026-11-12, Id `78af855e-0fd7-4ffc-a1df-979619fd91d2` | Suno-Nutzungsbedingungen (bezahlter Plan des Projekts) | Suno (Generierung im Projekt), s. u. |
 | `music/standard/relentless_low_string_2.ogg` | Suno, „Relentless Low String“, generiert 2026-11-12, Id `9029675e-fe60-45bc-987a-c3a8bf92ddfd` | Suno-Nutzungsbedingungen (bezahlter Plan des Projekts) | Suno (Generierung im Projekt), s. u. |
 | `music/standard/iron_resolve.ogg` | Suno, „Iron Resolve“, generiert 2026-11-12, Id `56a136aa-c15a-4702-bf2c-ba1248e59bcc` | Suno-Nutzungsbedingungen (bezahlter Plan des Projekts) | Suno (Generierung im Projekt), s. u. |
+| `music/latein/custodes_silentii_1.ogg` | Suno, „Lobby metal 1“, generiert 2026-11-26, Id `974e7da2-372f-40bf-8395-221c76eebf80` | Suno-Nutzungsbedingungen (bezahlter Plan des Projekts) | Suno (Generierung im Projekt), s. u. |
+| `music/latein/custodes_silentii_2.ogg` | Suno, „Custodes Silentii“, generiert 2026-11-26, Id `03576f03-7975-4750-a7bf-62177b8080df` | Suno-Nutzungsbedingungen (bezahlter Plan des Projekts) | Suno (Generierung im Projekt), s. u. |
+| `music/latein/bellum_aeternum.ogg` | Suno, „Bellum Aeternum“, generiert 2026-11-26, Id `6675b097-6416-4bff-bc80-1934e1d932ec` | Suno-Nutzungsbedingungen (bezahlter Plan des Projekts) | Suno (Generierung im Projekt), s. u. |
+| `music/latein/vox_profundorum.ogg` | Suno, „Vox Profundorum“, generiert 2026-11-26, Id `519420f6-2cc3-4ede-959c-deb7e82601c8` | Suno-Nutzungsbedingungen (bezahlter Plan des Projekts) | Suno (Generierung im Projekt), s. u. |
+| `music/latein/dies_ultimus.ogg` | Suno, „Dies Ultimus“, generiert 2026-11-26, Id `5fa5b580-55e6-4f8b-9c12-ebb2fe7b03b5` | Suno-Nutzungsbedingungen (bezahlter Plan des Projekts) | Suno (Generierung im Projekt), s. u. |
+| `music/latein/rex_oblitus.ogg` | Suno, „Rex Oblitus“, generiert 2026-11-26, Id `3cb6b257-76c3-4bfc-9a3e-201f036dfc82` | Suno-Nutzungsbedingungen (bezahlter Plan des Projekts) | Suno (Generierung im Projekt), s. u. |
 
 `sfx/wave_cleared.wav` ist die verlustfreie WAV-Fassung der dort angebotenen FLAC-Datei —
 Godot 4.7 lädt FLAC nicht („No loader found for resource"). Die Quelle ist innen bereits
@@ -98,6 +104,8 @@ Gehör gewählt). Bearbeitung: MP3 als 16-Bit-WAV, Pegel auf −16 dBFS im laute
 - `sfx/badge_last_second.wav`: „Close call sting: three quick tense clock ticks accelerating, then a bright relieved bell chime with a small sparkle, just made it in the last second, fantasy game reward sound", 0,9 s, Variante 3.
 - `sfx/badge_elephant.wav`: „Short cute cartoon baby elephant trumpet toot, playful and friendly, followed by a warm soft bell chime with a gentle sparkle, remembering something, casual fantasy game reward sound", 0,9 s, Variante 3.
 
-Die Stücke unter `music/standard/` sind Suno-MP3s (Id aus dem Kommentar-Tag der Datei),
-ohne Metadaten als OGG Vorbis (Qualität 4) neu kodiert und linear auf −16 LUFS gebracht;
-sonst unverändert. Varianten desselben Titels sind eigene Generierungen.
+Die Stücke unter `music/standard/` und `music/latein/` sind Suno-MP3s (Id aus dem
+Kommentar-Tag der Datei), ohne Metadaten als OGG Vorbis (Qualität 4) neu kodiert und linear
+auf −16 LUFS gebracht; sonst unverändert. Varianten desselben Titels sind eigene
+Generierungen; `custodes_silentii_1` hieß bei Suno „Lobby metal 1“ und trägt denselben Text
+wie `custodes_silentii_2`.
